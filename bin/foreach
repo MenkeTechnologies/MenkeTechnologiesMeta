@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+# foreach — run an arbitrary command inside every submodule.
+# Wraps `git submodule foreach --recursive` with a banner per repo
+# and a final pass/fail summary.
+#
+# Usage:  ./bin/foreach '<command>'
+# Example:
+#   ./bin/foreach 'test -f Cargo.toml && cargo build --release || true'
+#   ./bin/foreach 'git log -1 --oneline'
+#   ./bin/foreach 'wc -l README.md'
+set -eu
+
+META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$META_ROOT"
+
+if [ $# -lt 1 ]; then
+  echo "usage: $0 '<command>'" >&2
+  echo "example: $0 'git log -1 --oneline'" >&2
+  exit 2
+fi
+
+if [ ! -f .gitmodules ]; then
+  echo "foreach: $(pwd) has no .gitmodules — wrong directory?" >&2
+  exit 1
+fi
+
+CMD="$1"
+
+git submodule foreach --recursive --quiet "
+  printf '\033[36m==> %s\033[0m\n' \"\$name\"
+  if $CMD; then
+    :
+  else
+    printf '\033[31m    [FAIL %s in %s]\033[0m\n' \$? \"\$name\" >&2
+  fi
+"

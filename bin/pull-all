@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# pull-all — fetch every submodule and fast-forward to remote tip.
+# Idempotent.  Runs in the meta repo root; no args.
+#
+# Usage:  ./bin/pull-all
+set -eu
+
+META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$META_ROOT"
+
+if [ ! -f .gitmodules ]; then
+  echo "pull-all: $(pwd) has no .gitmodules — wrong directory?" >&2
+  exit 1
+fi
+
+JOBS="${JOBS:-8}"
+
+echo "==> fetching all submodules (jobs=$JOBS)"
+git submodule sync --quiet --recursive
+git submodule update --init --recursive --jobs "$JOBS" --remote --merge --no-fetch || \
+  git submodule update --init --recursive --jobs "$JOBS" --remote --merge
+
+echo "==> done"
+echo "Stage + commit pointer bumps with:  ./bin/sync-pointers && git push"

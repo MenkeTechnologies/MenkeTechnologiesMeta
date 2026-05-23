@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+# status-all — one-line status per submodule: branch, ahead/behind remote,
+# dirty marker.  No args.
+#
+# Usage:  ./bin/status-all
+set -eu
+
+META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$META_ROOT"
+
+if [ ! -f .gitmodules ]; then
+  echo "status-all: $(pwd) has no .gitmodules — wrong directory?" >&2
+  exit 1
+fi
+
+printf '%-30s  %-12s  %-12s  %s\n' "SUBMODULE" "BRANCH" "AHEAD/BEHIND" "DIRTY"
+printf '%-30s  %-12s  %-12s  %s\n' "------------------------------" "------------" "------------" "-----"
+
+git submodule foreach --quiet '
+  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
+  if [ "$branch" = "HEAD" ]; then branch="detached"; fi
+
+  upstream=$(git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>/dev/null || echo "")
+  if [ -n "$upstream" ]; then
+    ahead=$(git rev-list --count "${upstream}..HEAD" 2>/dev/null || echo "?")
+    behind=$(git rev-list --count "HEAD..${upstream}" 2>/dev/null || echo "?")
+    ab="+${ahead}/-${behind}"
+  else
+    ab="(no upstream)"
+  fi
+
+  if [ -z "$(git status --porcelain 2>/dev/null)" ]; then
+    dirty="clean"
+  else
+    dirty="DIRTY"
+  fi
+
+  printf "%-30s  %-12s  %-12s  %s\n" "$name" "$branch" "$ab" "$dirty"
+'

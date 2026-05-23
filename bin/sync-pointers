@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+# sync-pointers — stage every submodule pointer bump and create a single
+# commit.  Run after `pull-all` (or any time submodules moved forward).
+#
+# Usage:  ./bin/sync-pointers [optional commit message]
+set -eu
+
+META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$META_ROOT"
+
+if [ ! -f .gitmodules ]; then
+  echo "sync-pointers: $(pwd) has no .gitmodules — wrong directory?" >&2
+  exit 1
+fi
+
+MSG="${1:-submodules: pointer sync ($(date -u +%Y-%m-%d))}"
+
+# Stage only submodule pointer changes (avoid sweeping in stray edits).
+CHANGED=$(git status --porcelain | awk '$2 ~ /^[A-Za-z0-9_-]/ && system("test -f \"" $2 "/.git\" -o -d \"" $2 "/.git\"") == 0 { print $2 }')
+
+if [ -z "$CHANGED" ]; then
+  echo "sync-pointers: no submodule pointer changes to commit"
+  exit 0
+fi
+
+echo "==> staging:"
+printf '    %s\n' $CHANGED
+
+for path in $CHANGED; do
+  git add "$path"
+done
+
+git commit -m "$MSG"
+
+echo ""
+echo "==> done.  Push with:  git push"
