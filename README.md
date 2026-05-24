@@ -116,7 +116,7 @@ Predecessors / siblings referenced from Tier 1 projects.
 |---|---|
 | [`lsofng`](lsofng/) | The modernized `lsof` fork that `lsofrs` rewrote. C source still maintained as the compat reference. |
 | [`nmaprs`](nmaprs/) | Rust port of `nmap` (in progress). |
-| [`zsh-more-completions`](zsh-more-completions/) | 16,806-file zsh completion corpus. ⭐ 53. The largest curated completion collection in existence. |
+| [`zsh-more-completions`](zsh-more-completions/) | 27,387-file zsh completion corpus (9,253 `src/` + 13,659 `more_src/` + 3,398 `man_src/` + 1,067 `architecture_src/` + 10 `override_src/`). ⭐ 53. The largest curated completion collection in existence. |
 
 ### Tier 4 — Zsh ecosystem plugins (14)
 
