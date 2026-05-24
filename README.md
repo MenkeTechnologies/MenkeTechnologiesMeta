@@ -87,11 +87,11 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 
 ### Tier 2 — Stryke ecosystem (16)
 
-The `strykelang` distribution stack and per-service connector libraries.
+MenkeTechnologies distribution (single tap for every CLI tool) + per-service connector libraries for `stryke`.
 
 | Project | What it is |
 |---|---|
-| [`homebrew-stryke`](homebrew-stryke/) | Homebrew tap for installing `stryke` on macOS / Linuxbrew. |
+| [`homebrew-menketech`](homebrew-menketech/) | Single Homebrew tap for all 7 MenkeTechnologies CLI tools (`stryke` / `zshrs` / `lsofrs` / `iftoprs` / `awkrs` / `nmaprs` / `temprs`). Formulas auto-bumped by each tool's `Release` workflow. |
 | [`stryke-arrow`](stryke-arrow/) | Apache Arrow integration. |
 | [`stryke-aws`](stryke-aws/) | AWS SDK bindings (S3, EC2, SQS, Lambda, ...). |
 | [`stryke-demo`](stryke-demo/) | Demo scripts + example programs. |
@@ -258,9 +258,9 @@ cd MenkeTechnologiesMeta
 # install zpwr (the terminal OS)
 ./zpwr/install/zpwrInstall.sh
 
-# install strykelang via the homebrew tap
-brew tap MenkeTechnologies/stryke "$(pwd)/homebrew-stryke"
-brew install stryke
+# install any CLI tool via the unified homebrew tap
+brew tap MenkeTechnologies/menketech
+brew install stryke zshrs lsofrs iftoprs awkrs nmaprs temprs
 ```
 
 ### CI / Docker
