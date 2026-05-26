@@ -7,18 +7,19 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-42-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-44-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-9_core-cyan.svg)](#tier-1--core-9)
 [![Tier 2](https://img.shields.io/badge/tier_2-16_stryke-green.svg)](#tier-2--stryke-ecosystem-16)
 [![Tier 3](https://img.shields.io/badge/tier_3-3_siblings-magenta.svg)](#tier-3--sibling-rust-tools--zsh-more-completions-3)
 [![Tier 4](https://img.shields.io/badge/tier_4-14_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-14)
+[![Tier 5](https://img.shields.io/badge/tier_5-2_apps_+_extensions-orange.svg)](#tier-5--apps--extensions-2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 42 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 44 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `temprs` / `awkrs` / `iftoprs` (the Rust CLI tools), `Audio-Haxor` (the Tauri GUI), `zpwr` (the terminal OS), the 16-repo stryke ecosystem (`stryke-aws`, `stryke-k8s`, `stryke-kafka`, ...), and the 14-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, ...).
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `temprs` / `awkrs` / `iftoprs` (the Rust CLI tools), `Audio-Haxor` (the Tauri GUI), `zpwr` (the terminal OS), the 16-repo stryke ecosystem (`stryke-aws`, `stryke-k8s`, `stryke-kafka`, ...), the 14-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, ...), and the companion apps `traderview` (Tauri v2 + axum trading journal) and `zpwrchrome` (Chrome MRU-tabs extension).
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -47,7 +48,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 42 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 44 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -67,7 +68,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 42 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 44 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (9)
 
@@ -138,6 +139,15 @@ The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh.
 | [`zsh-sed-sub`](zsh-sed-sub/) | sed substitution helper. |
 | [`zsh-sudo`](zsh-sudo/) | `Esc Esc` to prepend `sudo` to the current line. |
 | [`zsh-xcode-completions`](zsh-xcode-completions/) | Xcode CLI tools completion. |
+
+### Tier 5 — Apps & extensions (2)
+
+Standalone end-user apps and browser extensions that sit outside the CLI / language / shell core.
+
+| Project | What it is |
+|---|---|
+| [`traderview`](traderview/) | TraderVue-style trading journal. Rust workspace, Postgres backend, vanilla JS + uPlot frontend. Ships as a Tauri v2 desktop app (with embedded Postgres) **and** as a multi-user axum web service from the same crates. |
+| [`zpwrchrome`](zpwrchrome/) | The fastest recent-tabs Chrome extension with the most keyboard shortcuts. Manifest V3, cross-window MRU stack, 29 commands (4 default-keyed + 25 user-bindable), sub-popup live-filter search, companion Chrome theme matching the strykelang HUD palette. |
 
 ---
 
@@ -316,7 +326,8 @@ git commit -am 'config: track strykelang main branch'
 | Tier 2 | 16 | +5 MB |
 | Tier 3 | 3 | +20 MB |
 | Tier 4 | 14 | +200 MB |
-| **Total** | **42** | **~930 MB** |
+| Tier 5 | 2 | +2 MB |
+| **Total** | **44** | **~932 MB** |
 
 The bulk is in `zshrs/src/zsh/` (vendored upstream zsh C source) and `strykelang/`. Cargo `target/` directories are `.gitignore`d and re-derived during build.
 
