@@ -137,3 +137,60 @@ jobs:
             echo "::error::README submodule badge says $claimed but .gitmodules has $actual"
             exit 1
           fi
+
+      - name: README per-tier row counts match the (N) in each ### Tier header
+        run: |
+          set -euo pipefail
+          # Each "### Tier N — Label (N)" section must contain exactly N
+          # table rows starting with "| [" (the canonical link-cell row).
+          # Catches drift when somebody adds a row but forgets to bump the
+          # header count, or vice versa. Also sums the tier counts and
+          # compares against the .gitmodules total — third independent check.
+          fail=0
+          tier_sum=0
+          for tier_n in 1 2 3 4 5 6; do
+            start=$(grep -nE "^### Tier $tier_n " README.md | head -1 | cut -d: -f1)
+            if [ -z "$start" ]; then
+              echo "::error::Tier $tier_n header not found in README"
+              fail=1
+              continue
+            fi
+            end=$(awk -v s="$start" 'NR > s && (/^### Tier /||/^## /||/^---/){print NR; exit}' README.md)
+            [ -z "$end" ] && end=99999
+            rows=$(sed -n "${start},${end}p" README.md | grep -cE '^\| \[' || true)
+            claimed=$(grep -nE "^### Tier $tier_n " README.md | head -1 | grep -oE '\([0-9]+\)' | tr -d '()')
+            tier_sum=$((tier_sum + claimed))
+            if [ "$rows" != "$claimed" ]; then
+              echo "::error::Tier $tier_n header claims ($claimed) but section has $rows rows"
+              fail=1
+            else
+              echo "Tier $tier_n: $rows rows match header ($claimed)"
+            fi
+          done
+          actual=$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | wc -l | tr -d ' ')
+          if [ "$tier_sum" != "$actual" ]; then
+            echo "::error::Tier headers sum to $tier_sum but .gitmodules has $actual submodules"
+            fail=1
+          else
+            echo "Tier sum $tier_sum matches .gitmodules count $actual"
+          fi
+          exit $fail
+
+      - name: docs/index.html stat-cards match README + .gitmodules
+        run: |
+          set -euo pipefail
+          fail=0
+          if [ -f docs/index.html ]; then
+            actual_sub=$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | wc -l | tr -d ' ')
+            docs_sub=$(grep -oE '"n">[0-9]+</div><div class="l">submodules' docs/index.html | grep -oE '[0-9]+' | head -1)
+            if [ -n "$docs_sub" ] && [ "$docs_sub" != "$actual_sub" ]; then
+              echo "::error::docs/index.html submodules stat-card says $docs_sub but .gitmodules has $actual_sub"
+              fail=1
+            fi
+            docs_tiers=$(grep -oE '"n">[0-9]+</div><div class="l">tiers' docs/index.html | grep -oE '[0-9]+' | head -1)
+            if [ -n "$docs_tiers" ] && [ "$docs_tiers" != "6" ]; then
+              echo "::error::docs/index.html tiers stat-card says $docs_tiers but README documents 6 tiers"
+              fail=1
+            fi
+          fi
+          exit $fail
