@@ -21,7 +21,7 @@
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `temprs` / `awkrs` / `iftoprs` / `nmaprs` (the Rust CLI tools), `Audio-Haxor` (the Tauri GUI), `zpwr` (the terminal OS), the 16-repo stryke ecosystem (`stryke-aws`, `stryke-k8s`, `stryke-kafka`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `tmux-fzf-url`), apps (`traderview`, `zpwrchrome`, `storageshower`, `MenkeTechnologies.github.io`), and ports / experiments (`spring-boot-rest-generator` Rust port, `powerliners` Rust port of powerline-status, `LearningCollectionAPI`).
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `zpwr` (the terminal OS), the 16-repo stryke ecosystem (`stryke-aws`, `stryke-k8s`, `stryke-kafka`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and ports / experiments (`spring-boot-rest-generator` Rust port, `powerliners` Rust port of powerline-status, `LearningCollectionAPI`).
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -88,11 +88,11 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`strykelang`](strykelang/) | The fastest dynamic language for parallel ops. Perl 5 interpreter in Rust, bytecode VM + Cranelift JIT, 10,431 builtins. |
 | [`zshrs`](zshrs/) | The first compiled Unix shell. 1:1 zsh C-port + extensions, persistent worker pool, AOP intercept, rkyv bytecode cache. |
 | [`fusevm`](fusevm/) | Language-agnostic bytecode VM with fused superinstructions and 3-tier Cranelift JIT. The execution engine behind strykelang, zshrs, awkrs. |
-| [`lsofrs`](lsofrs/) | Rust rewrite of `lsof` — 5–21× faster, 7-tab TUI, 31 cyberpunk themes. |
+| [`lsofrs`](lsofrs/) | Rust rewrite of `lsof` — 5–21× faster, **7-tab TUI** (ratatui), 31 cyberpunk themes. |
 | [`temprs`](temprs/) | Temporary file stack manager. Atomic `flock`-protected master record, dual indexing (position or `@name`). |
 | [`awkrs`](awkrs/) | AWK in Rust. Bytecode VM + Cranelift JIT + persistent rkyv bytecode cache + parallel records. |
-| [`iftoprs`](iftoprs/) | Real-time bandwidth monitor. ratatui TUI, 31 themes, process attribution via `lsof`, NDJSON streaming. |
-| [`Audio-Haxor`](Audio-Haxor/) | Tauri v2 + JUCE desktop app. VST2/VST3/AU/CLAP scanner, sample vault, DAW project index, KVR version checker. |
+| [`iftoprs`](iftoprs/) | Real-time bandwidth monitor. **TUI** built on ratatui, 31 themes, process attribution via `lsof`, NDJSON streaming. |
+| [`Audio-Haxor`](Audio-Haxor/) | **Tauri v2 desktop GUI app** + JUCE engine. VST2/VST3/AU/CLAP scanner, sample vault, DAW project index, KVR version checker. |
 | [`zpwr`](zpwr/) | The terminal OS. 506+ verbs, 172k LOC, zinit-based, stryke-powered. ⭐ 220 |
 
 ### Tier 2 — Stryke ecosystem (16)
@@ -178,9 +178,9 @@ Standalone end-user apps, browser extensions, and the public website.
 
 | Project | What it is |
 |---|---|
-| [`traderview`](traderview/) | TraderVue-style trading journal. Rust workspace, Postgres backend, vanilla JS + uPlot frontend. Ships as a Tauri v2 desktop app (with embedded Postgres) **and** as a multi-user axum web service from the same crates. |
+| [`traderview`](traderview/) | TraderVue-style trading journal. **Tauri v2 desktop GUI app** (sibling to Audio-Haxor) with embedded Postgres, **and** a multi-user axum web service from the same Rust workspace crates. Vanilla JS + uPlot frontend. |
 | [`zpwrchrome`](zpwrchrome/) | The fastest recent-tabs Chrome extension with the most keyboard shortcuts. Manifest V3, cross-window MRU stack, 38 commands (3 default-keyed + 35 user-bindable), sub-popup live-filter search, companion Chrome theme matching the strykelang HUD palette. |
-| [`storageshower`](storageshower/) | Disk-usage TUI in Rust. Walks a directory tree, presents space-by-folder with sort + drill-down. |
+| [`storageshower`](storageshower/) | Disk-usage **TUI** in Rust (sibling to iftoprs). Walks a directory tree, presents space-by-folder with sort + drill-down. |
 | [`MenkeTechnologies.github.io`](MenkeTechnologies.github.io/) | Public-facing personal site / project landing page (cyberpunk HUD, static HTML + CSS). |
 
 ### Tier 7 — Ports & experiments (3)
