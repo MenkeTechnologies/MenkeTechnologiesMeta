@@ -300,9 +300,12 @@ cd MenkeTechnologiesMeta
 # install zpwr (the terminal OS)
 ./zpwr/install/zpwrInstall.sh
 
-# install any CLI tool via the unified homebrew tap
+# install any CLI tool via the unified homebrew tap (10 formulas)
 brew tap MenkeTechnologies/menketech
-brew install stryke zshrs lsofrs iftoprs awkrs nmaprs temprs
+brew install stryke zshrs lsofrs iftoprs awkrs nmaprs temprs powerliners storageshower
+# `zshrs-all` is the full zshrs install (shell + zd client + recorder +
+# daemon). It conflicts_with `zshrs` — pick one. Use `zshrs-all` if you
+# want the recorder/daemon tooling alongside the shell binary.
 ```
 
 ### CI / Docker
