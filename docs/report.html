@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="MenkeTechnologiesMeta — engineering report. Scale, per-tier breakdown, CI matrix, polish gates, dep posture across the 64-submodule umbrella.">
+  <title>MenkeTechnologiesMeta — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hud-static.css">
+  <style>
+    .report-main { max-width: 78rem; padding: 1.5rem 1.5rem 4rem; margin: 0 auto; }
+    pre, code { font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    pre {
+      background: var(--bg); border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem; overflow-x: auto; font-size: 12px; color: var(--text);
+    }
+    table.report {
+      width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px;
+    }
+    table.report th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; text-align: left;
+      padding: 6px 10px; border: 1px solid var(--border);
+    }
+    table.report td {
+      padding: 6px 10px; border: 1px solid var(--border); color: var(--text); vertical-align: top;
+    }
+    table.report td code { background: var(--bg); color: var(--accent-light); padding: 0 4px; }
+    table.report td a { color: var(--cyan); text-decoration: none; }
+    table.report .ok { color: #39ff14; font-weight: 700; }
+    table.report .pend { color: var(--accent); font-weight: 700; }
+    table.report .fail { color: #f55; font-weight: 700; }
+    .report-section {
+      margin: 1.6rem 0; padding: 1rem 1.2rem 1.2rem; border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px;
+    }
+    .report-section h2 {
+      font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--cyan);
+      letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 0.6rem;
+    }
+    .report-section p, .report-section li { color: var(--text); font-size: 13px; line-height: 1.55; }
+    .report-header {
+      border-bottom: 1px solid var(--border); padding: 1.2rem 1.5rem;
+      background: linear-gradient(180deg, #070714 0%, #0d0d22 60%, var(--bg-secondary) 100%);
+    }
+    .report-header-inner { max-width: 78rem; margin: 0 auto; }
+    .report-brand {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.1rem, 2.4vw, 1.6rem); font-weight: 900;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), #fff, var(--accent), var(--cyan));
+      background-size: 300% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px var(--cyan-glow));
+      margin: 0 0 0.4rem;
+    }
+    .report-crumbs {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px; color: var(--text-dim); letter-spacing: 0.04em;
+    }
+    .report-crumbs a { color: var(--cyan); text-decoration: none; }
+    .report-crumbs .sep { color: var(--text-muted); margin: 0 6px; }
+    .report-crumbs .current { color: var(--accent); }
+    .report-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin: 0.6rem 0 0.4rem;
+    }
+    .report-title .step-hash { color: var(--cyan); margin-right: 0.4rem; }
+  </style>
+</head>
+<body class="crt">
+  <header class="report-header">
+    <div class="report-header-inner">
+      <h1 class="report-brand">// MENKETECHNOLOGIESMETA &mdash; ENGINEERING REPORT</h1>
+      <nav class="report-crumbs" aria-label="Breadcrumb">
+        <a href="index.html">Docs</a>
+        <span class="sep">/</span>
+        <span class="current">Engineering report</span>
+        <span class="sep">/</span>
+        <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="report-main">
+    <h2 class="report-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+    <p>MenkeTechnologiesMeta is a single umbrella git repository that vendors every active MenkeTechnologies project as a submodule. The goal: one <code>git clone --recurse-submodules</code> produces a fully-loaded development workstation with the language, shell, VM, CLIs, GUIs, plugins, completions, and supporting infrastructure already in place. Currently 64 submodules across 6 tiers, ~990 MB on disk, ~25 Rust crates + 28 zsh plugins + 2 Tauri desktop apps + 1 Chrome extension + 2 web-API services + the public website.</p>
+
+    <section class="report-section">
+      <h2>~ SCALE &amp; POSITION</h2>
+      <table class="report">
+        <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
+        <tr><td>Submodules</td><td>64</td><td>All canonical URLs <code>https://github.com/MenkeTechnologies/&lt;repo&gt;.git</code>, flat layout</td></tr>
+        <tr><td>Tiers</td><td>6</td><td>Core, Stryke ecosystem, completions, zsh plugins, editor/multiplexer plugins, apps/web/APIs</td></tr>
+        <tr><td>Rust crates</td><td>25</td><td>All clippy/fmt/doc clean under <code>-D warnings</code></td></tr>
+        <tr><td>Zsh plugins (Tier 4)</td><td>28</td><td>All have <code>.github/workflows/ci.yml</code> running zunit on each push</td></tr>
+        <tr><td>Total checkout</td><td>~990 MB</td><td>Bulk is zshrs (~715 MB), zsh-more-completions (~18 MB), rest small</td></tr>
+        <tr><td>Homebrew tap</td><td>10 formulas</td><td><code>MenkeTechnologies/menketech</code> — auto-bumped by each repo's release.yml</td></tr>
+      </table>
+    </section>
+
+    <section class="report-section">
+      <h2># TIER BREAKDOWN</h2>
+      <table class="report">
+        <tr><th>Tier</th><th>Count</th><th>Description</th></tr>
+        <tr><td>Tier 1 — Core</td><td>12</td><td>strykelang, zshrs, fusevm, lsofrs, temprs, awkrs, iftoprs, Audio-Haxor, traderview, nmaprs, powerliners, zpwr</td></tr>
+        <tr><td>Tier 2 — Stryke ecosystem</td><td>16</td><td>homebrew-menketech + 15 stryke-* per-service connectors</td></tr>
+        <tr><td>Tier 3 — zsh-more-completions</td><td>1</td><td>28,010-file completion corpus; data + functions only</td></tr>
+        <tr><td>Tier 4 — Zsh plugins</td><td>28</td><td>full ZPWR_GH_PLUGINS canonical list</td></tr>
+        <tr><td>Tier 5 — Editor / multiplexer</td><td>2</td><td>VimColorSchemes (731 schemes), tmux-fzf-url</td></tr>
+        <tr><td>Tier 6 — Apps, ext, web, APIs</td><td>5</td><td>zpwrchrome, storageshower, MenkeTechnologies.github.io, spring-boot-rest-generator, LearningCollectionAPI</td></tr>
+      </table>
+    </section>
+
+    <section class="report-section">
+      <h2>! POLISH GATES (per Rust crate)</h2>
+      <p>Every Rust crate in the meta repo must pass all four gates locally and in CI before a tag is cut. The shared release flow then promotes the binary to <code>MenkeTechnologies/homebrew-menketech</code> via the <code>HOMEBREW_TAP_TOKEN</code> cross-repo write secret.</p>
+      <ul>
+        <li><strong>fmt</strong> — <code>cargo fmt --all -- --check</code>, zero diff</li>
+        <li><strong>clippy</strong> — <code>cargo clippy --all-targets --locked -- -D warnings</code>, zero error</li>
+        <li><strong>doc</strong> — <code>RUSTDOCFLAGS=&quot;-D warnings&quot; cargo doc --no-deps</code>, zero broken intra-doc-link / mis-fenced code block</li>
+        <li><strong>test</strong> — <code>cargo test --locked --no-fail-fast</code>, all green on the per-repo matrix (ubuntu-latest + macos-latest typical)</li>
+      </ul>
+    </section>
+
+    <section class="report-section">
+      <h2>@ META REPO CI</h2>
+      <p><code>.github/workflows/ci.yml</code> on the meta repo runs 5 gate jobs on every push:</p>
+      <ol>
+        <li><strong>.gitmodules syntax</strong> — path/url count match, every URL is canonical <code>https://github.com/MenkeTechnologies/*.git</code>, no nested paths</li>
+        <li><strong>Submodule URL reachability</strong> — <code>git ls-remote</code> every URL</li>
+        <li><strong>Shellcheck</strong> across <code>bin/*</code> helper scripts</li>
+        <li><strong>bin/ smoke</strong> — <code>bin/status-all</code> + <code>bin/foreach</code> don't crash on empty checkout</li>
+        <li><strong>README link sanity</strong> — every <code>.gitmodules</code> path is referenced from README; submodule-count badge matches actual entry count (hard-errors on drift)</li>
+      </ol>
+    </section>
+
+    <section class="report-section">
+      <h2>% HELPER SCRIPTS (<code>bin/</code>)</h2>
+      <table class="report">
+        <tr><th>Script</th><th>Role</th></tr>
+        <tr><td><code>bin/pull-all</code></td><td>Pull every submodule to its tracking-branch tip in parallel</td></tr>
+        <tr><td><code>bin/status-all</code></td><td>One-line status for every submodule (branch + ahead/behind + dirty marker)</td></tr>
+        <tr><td><code>bin/foreach</code></td><td>Run an arbitrary shell command inside every submodule</td></tr>
+        <tr><td><code>bin/sync-pointers</code></td><td>Stage + commit all submodule pointer bumps as one commit</td></tr>
+      </table>
+    </section>
+
+    <section class="report-section">
+      <h2>^ DEPENDENCY POSTURE</h2>
+      <p>Cross-repo Cargo.lock sweep run periodically — <code>cargo update</code> across all 25 Rust crates, lockfile committed, CI re-run. Dependabot security PRs (e.g. <code>rustls-webpki</code>, <code>rand</code>) get absorbed into the same sweep when they appear. Major-version bumps require maintainer review and aren't auto-applied.</p>
+    </section>
+
+    <section class="report-section">
+      <h2>. NEXT</h2>
+      <p>Roadmap is per-repo; consult each project's <code>docs/report.html</code> for codebase-specific milestones. Meta repo's own roadmap is light:</p>
+      <ul>
+        <li>Add cross-cutting <code>./bin/release-all</code> for coordinated tag bumps across multiple sibling crates</li>
+        <li>Audit Tier 4 plugin install paths against zinit's actual loader options (turbo vs lucid vs wait)</li>
+        <li>Extend meta CI with a periodic submodule-staleness alert (PR comment when a sibling repo's main is &gt; 30 days ahead of the pinned SHA)</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
