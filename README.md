@@ -123,7 +123,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 
 | Project | What it is |
 |---|---|
-| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 28,010-file zsh completion corpus (9,253 `src/` + 14,225 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`). ⭐ 53. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
+| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 27,973-file zsh completion corpus (9,253 `src/` + 14,225 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`). ⭐ 53. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
 
 ### Tier 4 — Zsh ecosystem plugins (28)
 
@@ -156,7 +156,7 @@ The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh. T
 | [`fzf-zsh-plugin`](https://github.com/MenkeTechnologies/fzf-zsh-plugin) | fzf-shipped zsh keybindings + completion + history search. |
 | [`gh_reveal`](https://github.com/MenkeTechnologies/gh_reveal) | `reveal` — open the current git project in the default browser. |
 | [`jhipster-oh-my-zsh-plugin`](https://github.com/MenkeTechnologies/jhipster-oh-my-zsh-plugin) | JHipster CLI completion + aliases. |
-| [`kubectl-aliases`](https://github.com/MenkeTechnologies/kubectl-aliases) | 800+ `kubectl` aliases (kg=get, kgp=get-pods, …). |
+| [`kubectl-aliases`](https://github.com/MenkeTechnologies/kubectl-aliases) | 790 `kubectl` aliases (kg=get, kgp=get-pods, …). |
 | [`revolver`](https://github.com/MenkeTechnologies/revolver) | Spinner / progress widget for zsh scripts. |
 | [`zunit`](https://github.com/MenkeTechnologies/zunit) | Powerful zsh unit-testing framework. |
 
