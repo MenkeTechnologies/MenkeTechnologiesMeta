@@ -123,7 +123,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 
 | Project | What it is |
 |---|---|
-| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 27,973-file zsh completion corpus (9,253 `src/` + 14,225 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`). ⭐ 53. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
+| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 28,097-completion zsh corpus (9,253 `src/` + 14,349 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 53. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
 
 ### Tier 4 — Zsh ecosystem plugins (28)
 
