@@ -192,5 +192,25 @@ jobs:
               echo "::error::docs/index.html tiers stat-card says $docs_tiers but README documents 6 tiers"
               fail=1
             fi
+            # `zsh plugins` stat-card must match the Tier 4 (N) header in README
+            docs_zsh=$(grep -oE '"n">[0-9]+</div><div class="l">zsh plugins' docs/index.html | grep -oE '[0-9]+' | head -1)
+            t4_count=$(grep -nE '^### Tier 4 ' README.md | head -1 | grep -oE '\([0-9]+\)' | tr -d '()')
+            if [ -n "$docs_zsh" ] && [ -n "$t4_count" ] && [ "$docs_zsh" != "$t4_count" ]; then
+              echo "::error::docs/index.html zsh-plugins stat-card says $docs_zsh but README Tier 4 header has ($t4_count)"
+              fail=1
+            fi
+            # `rust crates` stat-card must match actual Cargo.toml count
+            # (any submodule with top-level Cargo.toml is a Rust crate).
+            actual_rust=0
+            while read -r path; do
+              if [ -f "$path/Cargo.toml" ]; then
+                actual_rust=$((actual_rust + 1))
+              fi
+            done < <(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+            docs_rust=$(grep -oE '"n">[0-9]+</div><div class="l">rust crates' docs/index.html | grep -oE '[0-9]+' | head -1)
+            if [ -n "$docs_rust" ] && [ "$docs_rust" != "$actual_rust" ]; then
+              echo "::error::docs/index.html rust-crates stat-card says $docs_rust but actual top-level Cargo.toml count is $actual_rust"
+              fail=1
+            fi
           fi
           exit $fail
