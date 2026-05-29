@@ -7,19 +7,21 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-44-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-65-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-9_core-cyan.svg)](#tier-1--core-9)
 [![Tier 2](https://img.shields.io/badge/tier_2-16_stryke-green.svg)](#tier-2--stryke-ecosystem-16)
 [![Tier 3](https://img.shields.io/badge/tier_3-3_siblings-magenta.svg)](#tier-3--sibling-rust-tools--zsh-more-completions-3)
-[![Tier 4](https://img.shields.io/badge/tier_4-14_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-14)
-[![Tier 5](https://img.shields.io/badge/tier_5-2_apps_+_extensions-orange.svg)](#tier-5--apps--extensions-2)
+[![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
+[![Tier 5](https://img.shields.io/badge/tier_5-2_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-2)
+[![Tier 6](https://img.shields.io/badge/tier_6-4_apps_+_web-orange.svg)](#tier-6--apps--extensions--web-4)
+[![Tier 7](https://img.shields.io/badge/tier_7-3_ports_+_exp-red.svg)](#tier-7--ports--experiments-3)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 44 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 65 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `temprs` / `awkrs` / `iftoprs` (the Rust CLI tools), `Audio-Haxor` (the Tauri GUI), `zpwr` (the terminal OS), the 16-repo stryke ecosystem (`stryke-aws`, `stryke-k8s`, `stryke-kafka`, ...), the 14-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, ...), and the companion apps `traderview` (Tauri v2 + axum trading journal) and `zpwrchrome` (Chrome MRU-tabs extension).
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `temprs` / `awkrs` / `iftoprs` / `nmaprs` (the Rust CLI tools), `Audio-Haxor` (the Tauri GUI), `zpwr` (the terminal OS), the 16-repo stryke ecosystem (`stryke-aws`, `stryke-k8s`, `stryke-kafka`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `tmux-fzf-url`), apps (`traderview`, `zpwrchrome`, `storageshower`, `MenkeTechnologies.github.io`), and ports / experiments (`spring-boot-rest-generator` Rust port, `powerliners` Rust port of powerline-status, `LearningCollectionAPI`).
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -29,6 +31,13 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
+  - [Tier 1 — Core (9)](#tier-1--core-9)
+  - [Tier 2 — Stryke ecosystem (16)](#tier-2--stryke-ecosystem-16)
+  - [Tier 3 — Sibling Rust tools + zsh-more-completions (3)](#tier-3--sibling-rust-tools--zsh-more-completions-3)
+  - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
+  - [Tier 5 — Editor / multiplexer plugins (2)](#tier-5--editor--multiplexer-plugins-2)
+  - [Tier 6 — Apps & extensions & web (4)](#tier-6--apps--extensions--web-4)
+  - [Tier 7 — Ports & experiments (3)](#tier-7--ports--experiments-3)
 - [\[0x02\] Common Operations](#0x02-common-operations)
 - [\[0x03\] Helper Scripts](#0x03-helper-scripts)
 - [\[0x04\] Updating Submodule Pointers](#0x04-updating-submodule-pointers)
@@ -48,7 +57,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 44 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 65 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -68,7 +77,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 44 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 65 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (9)
 
@@ -76,7 +85,7 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 
 | Project | What it is |
 |---|---|
-| [`strykelang`](strykelang/) | The fastest dynamic language for parallel ops. Perl 5 interpreter in Rust, bytecode VM + Cranelift JIT, 10,329 builtins. |
+| [`strykelang`](strykelang/) | The fastest dynamic language for parallel ops. Perl 5 interpreter in Rust, bytecode VM + Cranelift JIT, 10,431 builtins. |
 | [`zshrs`](zshrs/) | The first compiled Unix shell. 1:1 zsh C-port + extensions, persistent worker pool, AOP intercept, rkyv bytecode cache. |
 | [`fusevm`](fusevm/) | Language-agnostic bytecode VM with fused superinstructions and 3-tier Cranelift JIT. The execution engine behind strykelang, zshrs, awkrs. |
 | [`lsofrs`](lsofrs/) | Rust rewrite of `lsof` — 5–21× faster, 7-tab TUI, 31 cyberpunk themes. |
@@ -117,11 +126,11 @@ Predecessors / siblings referenced from Tier 1 projects.
 |---|---|
 | [`lsofng`](lsofng/) | The modernized `lsof` fork that `lsofrs` rewrote. C source still maintained as the compat reference. |
 | [`nmaprs`](nmaprs/) | Rust port of `nmap` (in progress). |
-| [`zsh-more-completions`](zsh-more-completions/) | 27,387-file zsh completion corpus (9,253 `src/` + 13,659 `more_src/` + 3,398 `man_src/` + 1,067 `architecture_src/` + 10 `override_src/`). ⭐ 53. The largest curated completion collection in existence. |
+| [`zsh-more-completions`](zsh-more-completions/) | 28,010-file zsh completion corpus (9,253 `src/` + 14,225 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`). ⭐ 53. The largest curated completion collection in existence. |
 
-### Tier 4 — Zsh ecosystem plugins (14)
+### Tier 4 — Zsh ecosystem plugins (28)
 
-The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh.
+The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh. The full `ZPWR_GH_PLUGINS` canonical list plus the legacy zsh-* family.
 
 | Project | What it is |
 |---|---|
@@ -139,15 +148,50 @@ The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh.
 | [`zsh-sed-sub`](zsh-sed-sub/) | sed substitution helper. |
 | [`zsh-sudo`](zsh-sudo/) | `Esc Esc` to prepend `sudo` to the current line. |
 | [`zsh-xcode-completions`](zsh-xcode-completions/) | Xcode CLI tools completion. |
+| [`zsh-docker-aliases`](zsh-docker-aliases/) | Docker aliases + functions. |
+| [`zsh-openshift-aliases`](zsh-openshift-aliases/) | 52 `oc`-* aliases + login macros (`ocdev`, `ocqa`) + auto-sourced `oc` completion. |
+| [`zsh-travis`](zsh-travis/) | `tg`/`tb`/`tbr`/`tpr` — open Travis CI build pages from inside the project. |
+| [`zsh-very-colorful-manuals`](zsh-very-colorful-manuals/) | Neon-tints `man` page output via `LESS_TERMCAP_*` env. |
+| [`zsh-z`](zsh-z/) | `z <dir>` — frecency-jump to recently visited directories. |
+| [`zsh-zinit-final`](zsh-zinit-final/) | Empty-by-design latch for zinit `atinit` / `atload` ices that need to fire after every other plugin. |
+| [`fasd-simple`](fasd-simple/) | Frecency `cd` / file picker. v1.0.x cleanup of the original `fasd`. |
+| [`fzf-tab`](fzf-tab/) | Replace zsh's default tab completion with fzf. |
+| [`fzf-zsh-plugin`](fzf-zsh-plugin/) | fzf-shipped zsh keybindings + completion + history search. |
+| [`gh_reveal`](gh_reveal/) | `reveal` — open the current git project in the default browser. |
+| [`jhipster-oh-my-zsh-plugin`](jhipster-oh-my-zsh-plugin/) | JHipster CLI completion + aliases. |
+| [`kubectl-aliases`](kubectl-aliases/) | 800+ `kubectl` aliases (kg=get, kgp=get-pods, …). |
+| [`revolver`](revolver/) | Spinner / progress widget for zsh scripts. |
+| [`zunit`](zunit/) | Powerful zsh unit-testing framework. |
 
-### Tier 5 — Apps & extensions (2)
+### Tier 5 — Editor / multiplexer plugins (2)
 
-Standalone end-user apps and browser extensions that sit outside the CLI / language / shell core.
+Plugins that target Vim/Neovim and tmux rather than zsh proper.
+
+| Project | What it is |
+|---|---|
+| [`VimColorSchemes`](VimColorSchemes/) | 731 hand-curated Vim colorschemes packaged as a single Pathogen / vim-plug / lazy.nvim bundle. The largest one-bundle scheme collection. |
+| [`tmux-fzf-url`](tmux-fzf-url/) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
+
+### Tier 6 — Apps & extensions & web (4)
+
+Standalone end-user apps, browser extensions, and the public website.
 
 | Project | What it is |
 |---|---|
 | [`traderview`](traderview/) | TraderVue-style trading journal. Rust workspace, Postgres backend, vanilla JS + uPlot frontend. Ships as a Tauri v2 desktop app (with embedded Postgres) **and** as a multi-user axum web service from the same crates. |
-| [`zpwrchrome`](zpwrchrome/) | The fastest recent-tabs Chrome extension with the most keyboard shortcuts. Manifest V3, cross-window MRU stack, 29 commands (4 default-keyed + 25 user-bindable), sub-popup live-filter search, companion Chrome theme matching the strykelang HUD palette. |
+| [`zpwrchrome`](zpwrchrome/) | The fastest recent-tabs Chrome extension with the most keyboard shortcuts. Manifest V3, cross-window MRU stack, 38 commands (3 default-keyed + 35 user-bindable), sub-popup live-filter search, companion Chrome theme matching the strykelang HUD palette. |
+| [`storageshower`](storageshower/) | Disk-usage TUI in Rust. Walks a directory tree, presents space-by-folder with sort + drill-down. |
+| [`MenkeTechnologies.github.io`](MenkeTechnologies.github.io/) | Public-facing personal site / project landing page (cyberpunk HUD, static HTML + CSS). |
+
+### Tier 7 — Ports & experiments (3)
+
+Source-language-conversion ports and in-progress rewrites. The upstream source tree is preserved alongside the port for reference.
+
+| Project | What it is |
+|---|---|
+| [`spring-boot-rest-generator`](spring-boot-rest-generator/) | Rust port (v0.2.0+) of the Kotlin Spring-Boot-REST-API generator. Same templates, same SQL dialect support (MySQL/PostgreSQL/SQLite/MSSQL), same Java/Kotlin/Groovy output. Kotlin source kept under `src/main/kotlin/` for reference. |
+| [`powerliners`](powerliners/) | Rust port (early) of Python's [`powerline-status`](https://github.com/powerline/powerline). Target: drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. |
+| [`LearningCollectionAPI`](LearningCollectionAPI/) | Java/Kotlin Spring Boot REST API — backing service for the `zsh-learn` plugin (save / query / quiz / search vocabulary cards over HTTP). |
 
 ---
 
@@ -322,12 +366,14 @@ git commit -am 'config: track strykelang main branch'
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 | 9 | ~705 MB |
-| Tier 2 | 16 | +5 MB |
-| Tier 3 | 3 | +20 MB |
-| Tier 4 | 14 | +200 MB |
-| Tier 5 | 2 | +2 MB |
-| **Total** | **44** | **~932 MB** |
+| Tier 1 — Core | 9 | ~705 MB |
+| Tier 2 — Stryke ecosystem | 16 | +5 MB |
+| Tier 3 — Siblings + zsh-more-completions | 3 | +20 MB |
+| Tier 4 — Zsh ecosystem plugins | 28 | +220 MB |
+| Tier 5 — Editor / multiplexer plugins | 2 | +25 MB |
+| Tier 6 — Apps & extensions & web | 4 | +12 MB |
+| Tier 7 — Ports & experiments | 3 | +5 MB |
+| **Total** | **65** | **~992 MB** |
 
 The bulk is in `zshrs/src/zsh/` (vendored upstream zsh C source) and `strykelang/`. Cargo `target/` directories are `.gitignore`d and re-derived during build.
 
