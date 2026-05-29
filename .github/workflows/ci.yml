@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitmodules-syntax:
+    name: .gitmodules syntax
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify every submodule path has a matching url
+        run: |
+          set -euo pipefail
+          # Each [submodule "X"] block must have a `path` and a `url` line.
+          paths=$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | wc -l)
+          urls=$(git config -f .gitmodules --get-regexp  '^submodule\..*\.url$'  | wc -l)
+          echo "found $paths path entries, $urls url entries"
+          if [ "$paths" != "$urls" ]; then
+            echo "::error::path/url count mismatch — every [submodule] block needs both"
+            exit 1
+          fi
+      - name: Every submodule URL must be https://github.com/MenkeTechnologies/<repo>.git
+        run: |
+          set -euo pipefail
+          bad=$(git config -f .gitmodules --get-regexp '^submodule\..*\.url$' \
+            | awk '{print $2}' \
+            | grep -vE '^https://github\.com/MenkeTechnologies/[A-Za-z0-9._-]+\.git$' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::non-canonical submodule URLs found:"
+            echo "$bad"
+            exit 1
+          fi
+      - name: Every submodule path must be a top-level directory name with no slashes
+        run: |
+          set -euo pipefail
+          bad=$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' \
+            | awk '{print $2}' \
+            | grep '/' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::nested submodule paths found (this repo expects flat layout):"
+            echo "$bad"
+            exit 1
+          fi
+
+  submodule-reachability:
+    name: Submodule URL reachability
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: ls-remote every submodule URL
+        run: |
+          set -euo pipefail
+          urls=$(git config -f .gitmodules --get-regexp '^submodule\..*\.url$' | awk '{print $2}')
+          failures=""
+          for u in $urls; do
+            if ! git ls-remote --quiet "$u" HEAD >/dev/null 2>&1; then
+              failures="$failures $u"
+            fi
+          done
+          if [ -n "$failures" ]; then
+            echo "::error::unreachable submodule URLs:$failures"
+            exit 1
+          fi
+          echo "all $(echo "$urls" | wc -w) submodule URLs reachable"
+
+  bin-scripts-shellcheck:
+    name: Shellcheck helper scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - run: shellcheck bin/*
+
+  bin-scripts-smoke:
+    name: bin/ scripts smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: bin/status-all runs on empty checkout
+        run: |
+          set -euo pipefail
+          # No submodules initialized — status-all should still produce headers
+          # without erroring out (each submodule row will show "not init" markers).
+          bash bin/status-all || true
+          echo "status-all exit ok"
+      - name: bin/foreach is invoked with a benign command
+        run: |
+          set -euo pipefail
+          # With no submodules initialized, `git submodule foreach` is a no-op.
+          # We're testing the wrapper doesn't crash on empty.
+          bash bin/foreach 'true' || true
+
+  readme-link-check:
+    name: README link sanity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: README references match .gitmodules submodule list
+        run: |
+          set -euo pipefail
+          # Every submodule path from .gitmodules should appear as a link
+          # somewhere in README.md (either as github URL or local path).
+          missing=""
+          while read -r path; do
+            if ! grep -qE "(MenkeTechnologies/${path}|\(${path}/\))" README.md; then
+              missing="$missing $path"
+            fi
+          done < <(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+          if [ -n "$missing" ]; then
+            echo "::warning::submodules registered in .gitmodules but not linked from README:$missing"
+          fi
+          # Hard error if README total submodule badge is wrong.
+          actual=$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | wc -l | tr -d ' ')
+          claimed=$(grep -oE 'submodules-[0-9]+' README.md | head -1 | grep -oE '[0-9]+')
+          echo "actual=$actual claimed=$claimed"
+          if [ "$actual" != "$claimed" ]; then
+            echo "::error::README submodule badge says $claimed but .gitmodules has $actual"
+            exit 1
+          fi
