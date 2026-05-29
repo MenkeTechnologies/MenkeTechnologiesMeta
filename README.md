@@ -290,7 +290,7 @@ Or use the helper:
 ### macOS / Linux
 
 ```bash
-# prereq: git 2.13+ (parallel submodule clones) and ~2 GB free
+# prereq: git 2.13+ (parallel submodule clones) and ~3 GB free
 git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git
 cd MenkeTechnologiesMeta
 
@@ -352,17 +352,19 @@ git commit -am 'config: track strykelang main branch'
 
 ## [0x07] DISK FOOTPRINT
 
+Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --recurse-submodules`):
+
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 12 | ~720 MB |
-| Tier 2 — Stryke ecosystem | 16 | +5 MB |
-| Tier 3 — zsh-more-completions | 1 | +18 MB |
-| Tier 4 — Zsh ecosystem plugins | 28 | +220 MB |
-| Tier 5 — Editor / multiplexer plugins | 2 | +25 MB |
-| Tier 6 — Apps, extensions, web & web-APIs | 5 | +5 MB |
-| **Total** | **64** | **~993 MB** |
+| Tier 1 — Core | 12 | ~685 MB |
+| Tier 2 — Stryke ecosystem | 16 | ~7 MB |
+| Tier 3 — zsh-more-completions | 1 | ~122 MB |
+| Tier 4 — Zsh ecosystem plugins | 28 | ~20 MB |
+| Tier 5 — Editor / multiplexer plugins | 2 | ~7 MB |
+| Tier 6 — Apps, extensions, web & web-APIs | 5 | ~530 MB |
+| **Total** | **64** | **~1.4 GB** |
 
-The bulk is in `zshrs/src/zsh/` (vendored upstream zsh C source) and `strykelang/`. Cargo `target/` directories are `.gitignore`d and re-derived during build.
+The bulk is in `MenkeTechnologies.github.io/` (~505 MB — accumulated screenshot history) and `Audio-Haxor/` (~156 MB — Tauri v2 frontend assets + JUCE C++). `zshrs/` is ~120 MB and `zsh-more-completions/` is ~122 MB. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
 To save space on a host where you only need a subset, init only those:
 
