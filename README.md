@@ -7,17 +7,17 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-65-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-9_core-cyan.svg)](#tier-1--core-9)
+[![Submodules](https://img.shields.io/badge/submodules-64-blue.svg)](#0x01-submodule-map)
+[![Tier 1](https://img.shields.io/badge/tier_1-10_core-cyan.svg)](#tier-1--core-10)
 [![Tier 2](https://img.shields.io/badge/tier_2-16_stryke-green.svg)](#tier-2--stryke-ecosystem-16)
-[![Tier 3](https://img.shields.io/badge/tier_3-3_siblings-magenta.svg)](#tier-3--sibling-rust-tools--zsh-more-completions-3)
+[![Tier 3](https://img.shields.io/badge/tier_3-2_siblings-magenta.svg)](#tier-3--sibling-rust-tools--zsh-more-completions-2)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-2_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-2)
-[![Tier 6](https://img.shields.io/badge/tier_6-4_apps_+_web-orange.svg)](#tier-6--apps--extensions--web-4)
+[![Tier 6](https://img.shields.io/badge/tier_6-3_apps_+_web-orange.svg)](#tier-6--apps--extensions--web-3)
 [![Tier 7](https://img.shields.io/badge/tier_7-3_ports_+_exp-red.svg)](#tier-7--ports--experiments-3)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 65 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 64 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -31,12 +31,12 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (9)](#tier-1--core-9)
+  - [Tier 1 — Core (10)](#tier-1--core-10)
   - [Tier 2 — Stryke ecosystem (16)](#tier-2--stryke-ecosystem-16)
-  - [Tier 3 — Sibling Rust tools + zsh-more-completions (3)](#tier-3--sibling-rust-tools--zsh-more-completions-3)
+  - [Tier 3 — Sibling Rust tools + zsh-more-completions (2)](#tier-3--sibling-rust-tools--zsh-more-completions-2)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (2)](#tier-5--editor--multiplexer-plugins-2)
-  - [Tier 6 — Apps & extensions & web (4)](#tier-6--apps--extensions--web-4)
+  - [Tier 6 — Apps & extensions & web (3)](#tier-6--apps--extensions--web-3)
   - [Tier 7 — Ports & experiments (3)](#tier-7--ports--experiments-3)
 - [\[0x02\] Common Operations](#0x02-common-operations)
 - [\[0x03\] Helper Scripts](#0x03-helper-scripts)
@@ -57,7 +57,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 65 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 64 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -79,7 +79,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 All 65 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (9)
+### Tier 1 — Core (10)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -93,6 +93,7 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`awkrs`](awkrs/) | AWK in Rust. Bytecode VM + Cranelift JIT + persistent rkyv bytecode cache + parallel records. |
 | [`iftoprs`](iftoprs/) | Real-time bandwidth monitor. **TUI** built on ratatui, 31 themes, process attribution via `lsof`, NDJSON streaming. |
 | [`Audio-Haxor`](Audio-Haxor/) | **Tauri v2 desktop GUI app** + JUCE engine. VST2/VST3/AU/CLAP scanner, sample vault, DAW project index, KVR version checker. |
+| [`traderview`](traderview/) | **Tauri v2 desktop GUI app** (sibling to Audio-Haxor) — TraderVue-style trading journal with embedded Postgres, vanilla JS + uPlot frontend. The same Rust workspace crates also ship a multi-user axum web service. |
 | [`zpwr`](zpwr/) | The terminal OS. 506+ verbs, 172k LOC, zinit-based, stryke-powered. ⭐ 220 |
 
 ### Tier 2 — Stryke ecosystem (16)
@@ -118,13 +119,12 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 | [`stryke-redis`](stryke-redis/) | Redis client. |
 | [`stryke-spark`](stryke-spark/) | Apache Spark integration. |
 
-### Tier 3 — Sibling Rust tools + zsh-more-completions (3)
+### Tier 3 — Sibling Rust tools + zsh-more-completions (2)
 
-Predecessors / siblings referenced from Tier 1 projects.
+Sibling projects referenced from Tier 1.
 
 | Project | What it is |
 |---|---|
-| [`lsofng`](lsofng/) | The modernized `lsof` fork that `lsofrs` rewrote. C source still maintained as the compat reference. |
 | [`nmaprs`](nmaprs/) | Rust port of `nmap` (in progress). |
 | [`zsh-more-completions`](zsh-more-completions/) | 28,010-file zsh completion corpus (9,253 `src/` + 14,225 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`). ⭐ 53. The largest curated completion collection in existence. |
 
@@ -172,13 +172,12 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 | [`VimColorSchemes`](VimColorSchemes/) | 731 hand-curated Vim colorschemes packaged as a single Pathogen / vim-plug / lazy.nvim bundle. The largest one-bundle scheme collection. |
 | [`tmux-fzf-url`](tmux-fzf-url/) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
-### Tier 6 — Apps & extensions & web (4)
+### Tier 6 — Apps & extensions & web (3)
 
-Standalone end-user apps, browser extensions, and the public website.
+Browser extensions, supporting apps, and the public website. (Tauri v2 desktop GUI apps `traderview` and `Audio-Haxor` live in Tier 1.)
 
 | Project | What it is |
 |---|---|
-| [`traderview`](traderview/) | TraderVue-style trading journal. **Tauri v2 desktop GUI app** (sibling to Audio-Haxor) with embedded Postgres, **and** a multi-user axum web service from the same Rust workspace crates. Vanilla JS + uPlot frontend. |
 | [`zpwrchrome`](zpwrchrome/) | The fastest recent-tabs Chrome extension with the most keyboard shortcuts. Manifest V3, cross-window MRU stack, 38 commands (3 default-keyed + 35 user-bindable), sub-popup live-filter search, companion Chrome theme matching the strykelang HUD palette. |
 | [`storageshower`](storageshower/) | Disk-usage **TUI** in Rust (sibling to iftoprs). Walks a directory tree, presents space-by-folder with sort + drill-down. |
 | [`MenkeTechnologies.github.io`](MenkeTechnologies.github.io/) | Public-facing personal site / project landing page (cyberpunk HUD, static HTML + CSS). |
@@ -366,14 +365,14 @@ git commit -am 'config: track strykelang main branch'
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 9 | ~705 MB |
+| Tier 1 — Core | 10 | ~715 MB |
 | Tier 2 — Stryke ecosystem | 16 | +5 MB |
-| Tier 3 — Siblings + zsh-more-completions | 3 | +20 MB |
+| Tier 3 — Siblings + zsh-more-completions | 2 | +18 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | +220 MB |
 | Tier 5 — Editor / multiplexer plugins | 2 | +25 MB |
-| Tier 6 — Apps & extensions & web | 4 | +12 MB |
+| Tier 6 — Apps & extensions & web | 3 | +2 MB |
 | Tier 7 — Ports & experiments | 3 | +5 MB |
-| **Total** | **65** | **~992 MB** |
+| **Total** | **64** | **~990 MB** |
 
 The bulk is in `zshrs/src/zsh/` (vendored upstream zsh C source) and `strykelang/`. Cargo `target/` directories are `.gitignore`d and re-derived during build.
 
