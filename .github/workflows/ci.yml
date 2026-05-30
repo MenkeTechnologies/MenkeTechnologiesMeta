@@ -421,6 +421,19 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y shellcheck
           bash tests/shellcheck-tests.sh
+      - name: Per-Rust Cargo.toml version >= latest git tag (monotonic semver)
+        # Catches the regression failure mode where someone reverts
+        # Cargo.toml's version below the latest published tag. The
+        # release.yml on tag would attempt to re-upload an older
+        # version; crates.io rejects duplicate version uploads, so
+        # the publish silently fails. Three states surfaced:
+        #   cargo == tag: PASS (just released, quiescent)
+        #   cargo > tag: INFO (dev cycle ahead — normal)
+        #   cargo < tag: FAIL (semver regression)
+        # Iteration 33 add-time state: 24 PASS, 2 INFO (Audio-Haxor
+        # 1.28.15 ahead of v1.28.9; powerliners 0.2.2 ahead of v0.2.1),
+        # 0 regressions.
+        run: bash tests/cargo-vs-tag-version.sh
 
   readme-link-check:
     name: README link sanity
