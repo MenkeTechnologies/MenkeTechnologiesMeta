@@ -1084,6 +1084,20 @@ jobs:
         # 90/90 workflow files green at iter-85 add — pure
         # regression floor.
         run: bash tests/workflow-needs-references.sh
+      - name: Every publishable dep has version/workspace/path/git
+        # Third publish-blocker gate after iter-62 (wildcards)
+        # and iter-66 (git-only). crates.io rejects publishes
+        # whose deps lack a source pointer ("dependency does not
+        # specify a version"). A bare table like
+        # `foo = { features = ["full"] }` has features but no
+        # version → publish fails at upload time. Lint-time
+        # check is sub-second; publish-time failure is
+        # post-tag-push.
+        # publish=false crates skipped (workspace-internal, free
+        # to use loose deps).
+        # 11/11 publishable crates green at iter-86 add — pure
+        # regression floor.
+        run: bash tests/cargo-deps-have-version.sh
 
   readme-link-check:
     name: README link sanity
