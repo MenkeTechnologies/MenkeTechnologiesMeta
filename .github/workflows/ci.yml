@@ -291,6 +291,20 @@ jobs:
         # behind their Cargo.toml by 0.0.x to 0.2.x versions); bulk-
         # fixed via sed-replace on the .TH header line only.
         run: bash tests/man-page-version-sync.sh
+      - name: Every Rust Cargo.toml has repository = MenkeTechnologies/<name>
+        # Cargo.toml's repository field surfaces on crates.io, in
+        # `cargo metadata` consumers (dependabot, advisory DBs), and
+        # in `cargo search` output. Missing → publish warnings +
+        # broken tool resolution. Wrong → broken bug-report links and
+        # bad audit data. Test handles both direct `repository = "..."`
+        # entries and `repository.workspace = true` inheritance (Tauri
+        # apps like traderview use the workspace-package indirection).
+        # Caught 2 missing fields (Audio-Haxor / traderview src-tauri)
+        # 2026-05-30; fixed via direct addition (Audio-Haxor) and
+        # workspace-resolution support in the test (traderview already
+        # had the right value, the test just needed to follow the
+        # inheritance chain).
+        run: bash tests/cargo-repository-field.sh
 
   readme-link-check:
     name: README link sanity
