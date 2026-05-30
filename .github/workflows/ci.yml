@@ -1209,6 +1209,19 @@ jobs:
         # 90/90 workflows green at iter-96 add — pure regression
         # floor.
         run: bash tests/workflow-needs-acyclic.sh
+      - name: Cargo.toml edition is 2021 or 2024
+        # Once an edition is two cycles old, new lints / idiom
+        # suggestions / std-lib improvements stop applying.
+        # Clippy's rust_2018_idioms rules don't fire on 2018
+        # crates because older idioms are still "current" by
+        # that edition's standard. Threshold: 2021 or later.
+        # Handles workspace inheritance via
+        # `edition.workspace = true` walking to the workspace
+        # root's [workspace.package].edition.
+        # 27/27 crates green at iter-97 add (5 on 2024, 21 on
+        # 2021, 1 inheriting from workspace root) — pure
+        # regression floor against accidental edition downgrade.
+        run: bash tests/cargo-edition-modern.sh
 
   readme-link-check:
     name: README link sanity
