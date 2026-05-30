@@ -601,6 +601,18 @@ jobs:
         # via perl one-liner; per-repo commits pushed. 27/27 green
         # after fix.
         run: bash tests/cargo-description-no-trailing-period.sh
+      - name: Every formula's target triples match its repo's release.yml matrix
+        # Catches the failure mode where release.yml drops a target
+        # from its build matrix but the formula still has a URL for
+        # that target — `brew install` 404s on the missing tarball.
+        # Inverse: release.yml adds a target but the formula doesn't
+        # surface it, leaving users on that platform unable to brew-
+        # install. Test scopes grep to actual `target: <triple>` matrix
+        # lines (NOT comments) — caught false positive in iter-48 dev
+        # where awkrs/release.yml had `# x86_64-apple-darwin dropped`
+        # in a comment that the naive grep classified as a build
+        # target. 9/9 formula↔release pairs in sync.
+        run: bash tests/formula-release-targets.sh
 
   readme-link-check:
     name: README link sanity
