@@ -1615,6 +1615,20 @@ jobs:
         # 0/90 workflows green at iter-184 add — pure
         # regression floor.
         run: bash tests/workflow-no-http-download.sh
+      - name: No direct secret interpolation into echo/export/printf
+        # `${{ secrets.X }}` substitutes BEFORE bash sees
+        # the line. Direct interpolation into echo/export/
+        # printf places the value in command-line arguments
+        # where GitHub log-masking is less reliable
+        # (substring/transform bypass; export persists to
+        # env; pre-masking logging tools capture raw).
+        # Correct pattern: pass via `env:` block; bash
+        # expands at runtime under masking. Forms secret-
+        # leakage triad with iter-112 (github.event
+        # injection) and iter-114 (env-dump). FOURTEENTH
+        # security gate. 0/90 workflows green at iter-185
+        # add — pure regression floor.
+        run: bash tests/workflow-no-secret-echo.sh
       - name: Cargo [features] entries are array literals
         # Cargo strictly requires feature values to be arrays
         # of strings. Bare strings / scalars / tables fail
