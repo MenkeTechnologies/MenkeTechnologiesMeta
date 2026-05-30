@@ -53,18 +53,24 @@ has_license_file() {
 for p in "${paths[@]}"; do
     [[ -d "$p" && -n "$(ls -A "$p" 2>/dev/null)" ]] || continue
 
-    # Identify the canonical Cargo.toml (top-level or src-tauri).
+    # Identify the canonical Cargo.toml that declares license=. Falls
+    # through to src-tauri/ when top-level Cargo.toml is a workspace
+    # root with no [package] license field (Audio-Haxor pattern —
+    # caught iter 37: workspace-root Cargo.toml has no license,
+    # src-tauri/Cargo.toml has license="MIT", and the old logic
+    # exited at the workspace root without ever finding the license
+    # declaration).
     cargo=""
-    if [[ -f "$p/Cargo.toml" ]]; then
-        cargo="$p/Cargo.toml"
-    elif [[ -f "$p/src-tauri/Cargo.toml" ]]; then
-        cargo="$p/src-tauri/Cargo.toml"
-    fi
-    [[ -n "$cargo" ]] || continue
-
-    # Look for `license = "..."` in the [package] section. Skip if absent
-    # OR explicitly empty.
-    lic=$(grep -m1 -E '^license[[:space:]]*=[[:space:]]*"' "$cargo" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/')
+    lic=""
+    for candidate in "$p/Cargo.toml" "$p/src-tauri/Cargo.toml"; do
+        [[ -f "$candidate" ]] || continue
+        v=$(grep -m1 -E '^license[[:space:]]*=[[:space:]]*"' "$candidate" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/')
+        if [[ -n "$v" ]]; then
+            cargo="$candidate"
+            lic="$v"
+            break
+        fi
+    done
     if [[ -z "$lic" ]]; then
         # Some workspace-root Cargo.toml files don't have [package] / license —
         # the license lives in each member. Skip informationally.
