@@ -844,6 +844,23 @@ jobs:
         # 90/90 workflow files green at iter-67 add — pure
         # regression floor.
         run: bash tests/workflow-no-deprecated-runners.sh
+      - name: Every workflow YAML parses cleanly (no syntax errors)
+        # GitHub Actions SILENTLY ignores workflows that fail to
+        # parse — no PR annotation, no email, no entry under the
+        # Actions tab. The "broken workflow" signal is the
+        # ABSENCE of a check run, which is indistinguishable from
+        # "you forgot to trigger CI." This is the worst possible
+        # failure mode: it looks like everything's working until
+        # someone notices CI hasn't run in 3 weeks.
+        # Common breakages: tab indentation (YAML requires
+        # spaces), unbalanced ${{ }} braces, missing colon after
+        # a key, unescaped colons in inline run: strings.
+        # Test uses Python's yaml.safe_load — same parser GitHub
+        # uses internally. A clean parse here = GitHub will
+        # parse it identically.
+        # 90/90 workflow files green at iter-68 add — pure
+        # regression floor against the silent-ignore failure mode.
+        run: bash tests/workflow-yaml-parseable.sh
 
   readme-link-check:
     name: README link sanity
