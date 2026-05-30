@@ -123,7 +123,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 
 | Project | What it is |
 |---|---|
-| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 28,097-completion zsh corpus (9,253 `src/` + 14,349 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 53. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
+| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 28,085-completion zsh corpus (9,253 `src/` + 14,337 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 53. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
 
 ### Tier 4 — Zsh ecosystem plugins (28)
 
@@ -359,15 +359,15 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 12 | ~685 MB |
-| Tier 2 — Stryke ecosystem | 16 | ~7 MB |
-| Tier 3 — zsh-more-completions | 1 | ~122 MB |
-| Tier 4 — Zsh ecosystem plugins | 28 | ~20 MB |
-| Tier 5 — Editor / multiplexer plugins | 2 | ~7 MB |
-| Tier 6 — Apps, extensions, web & web-APIs | 5 | ~530 MB |
-| **Total** | **64** | **~1.4 GB** |
+| Tier 1 — Core | 12 | ~804 MB |
+| Tier 2 — Stryke ecosystem | 16 | ~32 MB |
+| Tier 3 — zsh-more-completions | 1 | ~203 MB |
+| Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
+| Tier 5 — Editor / multiplexer plugins | 2 | ~12 MB |
+| Tier 6 — Apps, extensions, web & web-APIs | 5 | ~549 MB |
+| **Total** | **64** | **~1.7 GB** |
 
-The bulk is in `MenkeTechnologies.github.io/` (~505 MB — accumulated screenshot history) and `Audio-Haxor/` (~156 MB — Tauri v2 frontend assets + JUCE C++). `zshrs/` is ~120 MB and `zsh-more-completions/` is ~122 MB. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
+The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
 To save space on a host where you only need a subset, init only those:
 
