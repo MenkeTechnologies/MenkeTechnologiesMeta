@@ -933,6 +933,24 @@ jobs:
         # 38/38 Cargo.toml files green at iter-73 add — pure
         # regression floor.
         run: bash tests/cargo-toml-parseable.sh
+      - name: Every Homebrew formula declares sha256 digest
+        # Homebrew verifies the download URL's actual digest
+        # against the formula's `sha256 "..."` line; mismatch =
+        # install rejected. This is the supply-chain integrity
+        # guarantee — even a compromised GitHub release tarball
+        # can't slip through `brew install` undetected.
+        # Failure modes: formula generated without sha256 (auto-
+        # bump script gap → brew installs WITHOUT verification,
+        # only emitting a soft warning); typo in digest (e.g. O
+        # for 0 → install rejected); truncated digest (paste error
+        # losing chars → install rejected). Per CLAUDE.md's
+        # audit-tool tampering rule, silently removing a sha256
+        # to "make brew install work" IS the capital-offense
+        # tampering pattern; this gate makes that fail at lint
+        # time.
+        # 10/10 formulas green at iter-74 add — security-critical
+        # regression floor.
+        run: bash tests/formula-sha256-present.sh
 
   readme-link-check:
     name: README link sanity
