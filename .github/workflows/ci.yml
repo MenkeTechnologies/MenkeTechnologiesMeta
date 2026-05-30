@@ -170,6 +170,15 @@ jobs:
         # This gate catches missing-reference at PR time; it cannot
         # catch expired-PAT (runtime concern).
         run: bash tests/release-workflow-tap-secret.sh
+      - name: Every Rust release.yml must build with --locked
+        # Without --locked, `cargo build` silently rolls forward
+        # transitive deps between tag-cut and rebuild — a user
+        # `brew install`ing v1.2.3 today might get different transitive
+        # crate versions than the same `brew install` next week, even
+        # from the SAME upstream Cargo.toml. --locked refuses to mutate
+        # Cargo.lock; CI fails if the lockfile is missing instead of
+        # silently producing an unreproducible binary.
+        run: bash tests/release-locked-build.sh
 
   readme-link-check:
     name: README link sanity
