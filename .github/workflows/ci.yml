@@ -535,6 +535,20 @@ jobs:
         # docs/. Iter-41 snapshot: 78 HTML files across 44 dirs, 0
         # broken — regression-prevention floor.
         run: bash tests/docs-static-deps-exist.sh
+      - name: Every publishable Cargo.toml `keywords` array is crates.io-conformant
+        # crates.io's ingest endpoint enforces 4 constraints on the
+        # `keywords` array:
+        #   - max 5 entries per crate
+        #   - each entry ≤ 20 chars
+        #   - each entry must start with a lowercase letter
+        #   - each entry must contain only [a-z0-9_-]
+        # Violations are rejected at the API level (cargo publish
+        # fails with 400 from the registry) but not caught locally
+        # before pushing — wasting the release.yml workflow run and
+        # requiring a manual roll-forward. Test pins all 4 rules.
+        # Skips publish=false crates (Tauri apps + stryke-* connectors).
+        # Iter-42: 11/11 publishable crates green.
+        run: bash tests/cargo-keywords-conformant.sh
 
   readme-link-check:
     name: README link sanity
