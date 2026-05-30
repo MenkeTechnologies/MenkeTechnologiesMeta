@@ -2074,6 +2074,21 @@ jobs:
         # resolve at iter-208 add — pure regression
         # floor.
         run: bash tests/workflow-matrix-runs-on-defined.sh
+      - name: curl uses -f / --fail flag
+        # curl WITHOUT -f silently writes HTTP 4xx/5xx
+        # response bodies to files / pipes. Endpoint
+        # down → curl writes HTML to script.sh → bash
+        # tries to execute HTML; release URL 403 →
+        # binary file contains denial XML →
+        # chmod +x → first invocation fails; conditional
+        # install pipes error HTML through grep that
+        # never matches and silently skips install.
+        # -f exits 22 on HTTP errors. Canonical
+        # combination is `curl -fsSL` (also -s silent,
+        # -S show-errors, -L follow-redirects). 32/32
+        # curl commands at iter-209 add — pure
+        # regression floor.
+        run: bash tests/workflow-curl-fail-flag.sh
       - name: Brew formula url and homepage are distinct
         # url = release tarball location; homepage = project
         # URL. Collapse breaks brew info display (visual
