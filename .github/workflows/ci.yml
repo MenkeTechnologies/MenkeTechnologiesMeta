@@ -580,6 +580,17 @@ jobs:
         # `content=""` is functionally equivalent to absence.
         # Iter-45: 73/73 docs files clean — regression-prevention floor.
         run: bash tests/docs-meta-tags.sh
+      - name: Every Cargo.toml version is strict X.Y.Z[-prerelease] semver
+        # Cargo accepts loose forms like `1.0` (no patch) or `1`
+        # (only major) but each triggers surprising downstream
+        # behaviors: dependabot/release-please/brew-bumpers have
+        # inconsistent handling; iter-33's cargo-vs-tag gate's semver
+        # comparison breaks (`1.0` < `1.0.0` lexically); prerelease
+        # shapes without numeric ordering segments compare weirdly.
+        # Test enforces `^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$`.
+        # Resolves `version.workspace = true` inheritance through
+        # `[workspace.package].version`. Iter-46: 27/27 clean.
+        run: bash tests/cargo-version-semver.sh
 
   readme-link-check:
     name: README link sanity
