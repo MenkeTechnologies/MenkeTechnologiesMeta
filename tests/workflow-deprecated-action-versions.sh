@@ -7,6 +7,10 @@
 #   actions/upload-artifact@v1 / v2 / v3   — v3 EOL Nov 2024
 #   actions/download-artifact@v1 / v2 / v3 — v3 EOL Nov 2024
 #   actions/cache@v1 / v2 / v3             — v3 deprecated 2024
+#   actions/setup-python@v1 / v2 / v3 / v4 — v4 deprecated 2024
+#   actions/setup-node@v1 / v2 / v3        — v3 deprecated 2024
+#   actions/setup-java@v1 / v2 / v3        — v3 deprecated 2024
+#   actions/setup-go@v1 / v2 / v3 / v4     — v4 deprecated 2024
 #
 # All three were retired because v3 relies on Node 16, which
 # reached EOL in 2023. Once the runtime is dropped from the
@@ -26,6 +30,10 @@
 #   actions/upload-artifact     >= v4
 #   actions/download-artifact   >= v4
 #   actions/cache               >= v4   (added iter-140)
+#   actions/setup-python        >= v5   (added iter-146)
+#   actions/setup-node          >= v4   (added iter-146)
+#   actions/setup-java          >= v4   (added iter-146)
+#   actions/setup-go            >= v5   (added iter-146)
 #
 # Pinned-by-SHA references (no `@v...` tag, just a 40-char hex
 # SHA) are PASSED — those are the most reproducible reference
@@ -49,6 +57,15 @@ declare -A MIN_VER=(
     # party v3s (Node 16 EOL). v4 is the supported minimum since
     # 2024. Added at iter-140.
     [actions/cache]=4
+    # Language-setup actions. Added at iter-146.
+    # setup-python@v4 was deprecated (Node 16). v5+ uses Node 20.
+    [actions/setup-python]=5
+    # setup-node@v3 was deprecated (Node 16). v4+ supported.
+    [actions/setup-node]=4
+    # setup-java@v3 was deprecated alongside the Node 16 cohort.
+    [actions/setup-java]=4
+    # setup-go@v4 was deprecated; v5+ uses Node 20.
+    [actions/setup-go]=5
 )
 
 checked_files=0
