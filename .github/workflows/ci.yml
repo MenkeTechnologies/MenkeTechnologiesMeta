@@ -1262,6 +1262,19 @@ jobs:
         # 12/12 python3-invoking gates with skip fallback at
         # iter-100 add — pure regression floor.
         run: bash tests/meta-python3-skip-fallback.sh
+      - name: Every find-using gate excludes .git
+        # Fourth recursive meta-self-audit (after iter-65 shape,
+        # iter-99 wiring, iter-100 portability). `.git/` is a
+        # massive binary tree; scanning it doubles gate runtime,
+        # leaks submodule git history into PR CI logs, and
+        # produces false matches on internal git fixture files
+        # that happen to match generic patterns (e.g.,
+        # `.git/modules/*/info/exclude`). Lenient detection:
+        # accepts -prune, -not -path, or any form that names
+        # .git in the find command.
+        # 23/23 find-using gates green at iter-101 add — pure
+        # regression floor.
+        run: bash tests/meta-find-excludes-git.sh
 
   readme-link-check:
     name: README link sanity
