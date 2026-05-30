@@ -1424,6 +1424,17 @@ jobs:
         # 90/90 workflows green at iter-114 add — security-
         # critical regression floor against secret leakage.
         run: bash tests/workflow-no-env-dump.sh
+      - name: Brew formula system calls use array form
+        # Ruby `system "cmd --flag"` goes through /bin/sh -c
+        # (shell parsing); array form `system "cmd", "--flag"`
+        # uses execvp directly (no shell). Interpolated args
+        # in string form become shell-injection vectors. brew
+        # audit --strict catches some cases but not
+        # interpolated-content forms. This gate catches SHAPE:
+        # single-string system with multi-word arg.
+        # 10/10 formulas green at iter-115 add — pure
+        # regression floor.
+        run: bash tests/formula-system-array-form.sh
 
   readme-link-check:
     name: README link sanity
