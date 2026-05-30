@@ -874,6 +874,20 @@ jobs:
         # regression floor against accidental name-field deletion
         # during reformatting.
         run: bash tests/workflow-top-name.sh
+      - name: Cargo.toml default-run matches a real [[bin]] name
+        # `default-run` controls which binary `cargo run` (without
+        # `--bin <name>`) executes when a crate has multiple bins.
+        # If [[bin]] is renamed (`name = "foo"` → `"foo-cli"`)
+        # without updating default-run, OR if default-run points
+        # at a removed bin, OR there's a typo — `cargo run` fails
+        # at command time with "a bin target must be available".
+        # `cargo test` doesn't surface this; the drift sits dormant
+        # until someone hits the workflow that runs the binary.
+        # Implicit bin name (package-name when src/main.rs exists)
+        # also counted as valid.
+        # 2/2 Cargo.toml files with default-run set green at
+        # iter-70 add — pure regression floor.
+        run: bash tests/cargo-default-run-valid.sh
 
   readme-link-check:
     name: README link sanity
