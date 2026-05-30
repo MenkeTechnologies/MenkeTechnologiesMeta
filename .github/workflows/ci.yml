@@ -1657,6 +1657,16 @@ jobs:
         # security gate. 0/90 workflows green at iter-188
         # add — pure regression floor.
         run: bash tests/workflow-no-reset-hard.sh
+      - name: No rm -rf targeting dangerous paths in workflows
+        # rm -rf / | $HOME | ~ | .. | * wipes cached deps,
+        # runner state, persisted caches. On self-hosted
+        # runners catastrophic. Acts as script-injection
+        # amplifier (iter-107/112/185 miss gets weaponized
+        # via rm -rf $HOME). Relative paths (target/,
+        # node_modules/) allowed. EIGHTEENTH security gate.
+        # 0/90 workflows green at iter-189 add — pure
+        # regression floor.
+        run: bash tests/workflow-no-dangerous-rm.sh
       - name: Cargo [features] entries are array literals
         # Cargo strictly requires feature values to be arrays
         # of strings. Bare strings / scalars / tables fail
