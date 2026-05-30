@@ -447,6 +447,16 @@ jobs:
         # 3 clean, 8 with bloat (largest: powerliners 5 MB from vendor/
         # Python upstream checkout, storageshower 5 MB, fusevm 3 MB).
         run: bash tests/cargo-exclude-bloat.sh
+      - name: Every man page's .SH NAME line has canonical format
+        # Pins the man-pages(7) convention: the first content line
+        # under `.SH NAME` must be `<stem>[, <alias>...] \- <description>`.
+        # Mis-formatted .SH NAME silently breaks `whatis`, `apropos`,
+        # and `mandb -c`. Test regex accepts the canonical multi-name
+        # alias form (e.g. `temprs, tp \- ...`) per man-pages(7) §10
+        # ("Several short identifiers, separated by commas, may be
+        # listed if commands share a man page"). 22/22 man pages green
+        # at add time (iter 35) — gate prevents future regressions.
+        run: bash tests/man-page-name-format.sh
 
   readme-link-check:
     name: README link sanity
