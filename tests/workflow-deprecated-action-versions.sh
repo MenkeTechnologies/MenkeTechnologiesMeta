@@ -6,6 +6,7 @@
 #   actions/checkout@v1 / v2 / v3        — v3 deprecated 2024
 #   actions/upload-artifact@v1 / v2 / v3   — v3 EOL Nov 2024
 #   actions/download-artifact@v1 / v2 / v3 — v3 EOL Nov 2024
+#   actions/cache@v1 / v2 / v3             — v3 deprecated 2024
 #
 # All three were retired because v3 relies on Node 16, which
 # reached EOL in 2023. Once the runtime is dropped from the
@@ -24,6 +25,7 @@
 #   actions/checkout            >= v4
 #   actions/upload-artifact     >= v4
 #   actions/download-artifact   >= v4
+#   actions/cache               >= v4   (added iter-140)
 #
 # Pinned-by-SHA references (no `@v...` tag, just a 40-char hex
 # SHA) are PASSED — those are the most reproducible reference
@@ -43,6 +45,10 @@ declare -A MIN_VER=(
     [actions/checkout]=4
     [actions/upload-artifact]=4
     [actions/download-artifact]=4
+    # actions/cache@v3 was deprecated alongside the other first-
+    # party v3s (Node 16 EOL). v4 is the supported minimum since
+    # 2024. Added at iter-140.
+    [actions/cache]=4
 )
 
 checked_files=0
