@@ -497,6 +497,19 @@ jobs:
         # `found` flag gating the END block — surfaced as inline
         # comment in the test for future authors.
         run: bash tests/cargo-lock-version-sync.sh
+      - name: Every Cargo.toml exclude entry references a real directory
+        # Catches stale exclude entries left over after refactors. A
+        # `/parity/` or `/bench/` entry that's removed from the file
+        # tree but kept in Cargo.toml's exclude still "works" silently
+        # (cargo just ignores non-matching patterns) but signals stale
+        # intent and produces noise on cargo publish.
+        # Test gotcha discovered: leading-slash patterns aren't
+        # necessarily dirs — `/zshrs_dump.*` is a glob for runtime-
+        # generated dump files, not a directory. Initial dir-detection
+        # was too loose; refined to require trailing-slash AND no glob
+        # chars (`*`, `?`, `[`). Glob patterns and file paths skipped
+        # entirely — only dir entries are validated.
+        run: bash tests/cargo-exclude-entries-exist.sh
 
   readme-link-check:
     name: README link sanity
