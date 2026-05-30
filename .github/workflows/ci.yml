@@ -1222,6 +1222,20 @@ jobs:
         # 2021, 1 inheriting from workspace root) — pure
         # regression floor against accidental edition downgrade.
         run: bash tests/cargo-edition-modern.sh
+      - name: Brew formula explicit version appears in url
+        # When `version "..."` is set explicitly (Homebrew can
+        # otherwise infer from url path), it MUST appear as a
+        # substring of `url "..."`. Drift between version and
+        # url makes `brew info` show version X while the
+        # downloaded artifact is Y — install succeeds (sha256
+        # matches what's actually downloaded) but every
+        # version-checking tool (brew bump, brew outdated)
+        # produces nonsense. Substring match tolerates v1.2.3
+        # vs 1.2.3 prefix variation.
+        # 10/10 formulas green at iter-98 add (all have explicit
+        # version) — pure regression floor against auto-bump
+        # script drift.
+        run: bash tests/formula-version-matches-url.sh
 
   readme-link-check:
     name: README link sanity
