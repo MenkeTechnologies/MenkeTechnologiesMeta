@@ -1111,6 +1111,17 @@ jobs:
         # 360 first-party action refs across 90 workflows green
         # at iter-87 add — pure regression floor.
         run: bash tests/workflow-deprecated-action-versions.sh
+      - name: Every brew formula declares a test do block
+        # Without `test do`, `brew test <formula>` exits 0
+        # silently — homebrew-menketech's auto-bumped formula
+        # never validates that the new binary actually runs.
+        # Catches "binary segfaults on launch" and "wrong version
+        # published" before users hit it. Test block convention
+        # is the Homebrew `brew audit --strict` requirement;
+        # this gate enforces presence at tap-CI lint time.
+        # 10/10 formulas green at iter-88 add — pure regression
+        # floor.
+        run: bash tests/formula-test-block.sh
 
   readme-link-check:
     name: README link sanity
