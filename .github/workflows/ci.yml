@@ -122,6 +122,21 @@ jobs:
         # .gitmodules + checks `[[ -d $path ]]` on the (empty) dirs.
         run: bash tests/submodule-integrity.sh
 
+  homebrew-formulas:
+    name: Homebrew tap formula quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Init homebrew-menketech submodule only
+        # The full --recurse takes minutes; we only need one submodule.
+        run: git submodule update --init --depth 1 homebrew-menketech
+      - name: Formula version / sha256 / url / install invariants
+        # Catches placeholder sha256s (broken auto-bump where the release
+        # workflow couldn't push to the tap), url-vs-version drift, missing
+        # install blocks. Same script as the local-runnable one in tests/.
+        run: bash tests/homebrew-formulas.sh
+
   readme-link-check:
     name: README link sanity
     runs-on: ubuntu-latest
