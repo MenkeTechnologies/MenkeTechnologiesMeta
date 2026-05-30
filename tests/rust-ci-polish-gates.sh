@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# For every Rust submodule, pin that .github/workflows/ci.yml runs the
+# four canonical polish gates the meta-repo's docs/report.html claims:
+#
+#   fmt    — cargo fmt --all -- --check
+#   clippy — cargo clippy ... -- -D warnings
+#   doc    — RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+#   test   — cargo test --locked
+#
+# Per docs/report.html lines 124-130:
+#   "Every Rust crate in the meta repo must pass all four gates locally
+#    and in CI before a tag is cut. The shared release flow then promotes
+#    the binary to MenkeTechnologies/homebrew-menketech via the
+#    HOMEBREW_TAP_TOKEN cross-repo write secret."
+#
+# A CI that omits one of these gates means the public doc claim is false
+# and a regression in that gate could silently ship.
+#
+# Library-only crates and stryke-* connectors are in scope (they all
+# share the same Rust quality bar). Non-Rust repos are skipped.
+set -uo pipefail
+root="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$root"
+ok=1
+
+paths=()
+while IFS= read -r line; do
+    paths+=("${line#$'\tpath = '}")
+done < <(grep $'^\tpath = ' .gitmodules)
+
+init_count=0
+for p in "${paths[@]}"; do
+    [[ -d "$p" && -n "$(ls -A "$p" 2>/dev/null)" ]] && init_count=$((init_count + 1))
+done
+if [[ $init_count -eq 0 ]]; then
+    echo "SKIP  no submodules initialized"
+    exit 0
+fi
+
+# Returns 0 if file contains a line matching the canonical gate pattern.
+# Regexes tolerate `cargo --locked fmt` (flag-before-subcmd) and
+# `cargo fmt --check` (no --all), since real-world ci.yml lines drift
+# in flag order without losing the gate's semantics.
+has_fmt() {
+    grep -qE 'cargo[^|&\n]+fmt[^|&\n]*--check' "$1"
+}
+has_clippy() {
+    grep -qE 'cargo[^|&\n]+clippy[^|&\n]*-D ?warnings' "$1"
+}
+has_doc() {
+    # `cargo doc --no-deps` AND a RUSTDOCFLAGS env that contains -D warnings,
+    # possibly on different lines (`env:` block vs `run:` step).
+    if grep -qE 'cargo[^|&\n]+doc[^|&\n]*--no-deps' "$1" \
+       && grep -qE 'RUSTDOCFLAGS:?\s*["'"'"']?-D ?warnings' "$1"; then
+        return 0
+    fi
+    return 1
+}
+has_test() {
+    grep -qE 'cargo[^|&\n]+(test|nextest)' "$1"
+}
+
+checked=0
+missing=0
+
+for p in "${paths[@]}"; do
+    [[ -d "$p" && -n "$(ls -A "$p" 2>/dev/null)" ]] || continue
+    [[ -f "$p/Cargo.toml" || -f "$p/src-tauri/Cargo.toml" ]] || continue
+
+    ci="$p/.github/workflows/ci.yml"
+    if [[ ! -f "$ci" ]]; then
+        # Some library crates legitimately ship without a per-repo CI
+        # (the workspace umbrella covers them). Skip with INFO.
+        echo "INFO  $p: no .github/workflows/ci.yml"
+        continue
+    fi
+
+    checked=$((checked + 1))
+    miss=""
+    has_fmt    "$ci" || miss="$miss fmt"
+    has_clippy "$ci" || miss="$miss clippy"
+    has_doc    "$ci" || miss="$miss doc"
+    has_test   "$ci" || miss="$miss test"
+
+    if [[ -z "$miss" ]]; then
+        echo "PASS  $p: ci.yml has fmt + clippy + doc + test gates"
+    else
+        echo "FAIL  $p: ci.yml missing gate(s):$miss"
+        missing=$((missing + 1))
+        ok=0
+    fi
+done
+
+echo "---"
+echo "Summary: $checked Rust repos with ci.yml checked, $missing missing one or more canonical gates"
+
+[[ $ok -eq 1 ]] && exit 0 || exit 1
