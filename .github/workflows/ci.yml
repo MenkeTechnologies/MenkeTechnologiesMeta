@@ -830,6 +830,20 @@ jobs:
         # 0/11 publishable crates with git deps at iter-66 add
         # (16 publish=false skipped) — pure regression floor.
         run: bash tests/cargo-no-git-deps.sh
+      - name: No deprecated GitHub-hosted runners in workflows
+        # GitHub retires hosted runner images on a published
+        # schedule (ubuntu-20.04 retired 2025-04-15, windows-2019
+        # retired 2025-06-30, macos-11 retired 2024-06-28). Once
+        # retired, workflows referencing the image FAIL hard on
+        # the next push. Workflows that still reference a
+        # deprecation-announced (but not-yet-retired) image
+        # continue running with warning annotations until the
+        # retirement deadline — at which point they fail
+        # silently for anyone who hasn't been watching the GitHub
+        # blog. This gate catches the drift the moment it lands.
+        # 90/90 workflow files green at iter-67 add — pure
+        # regression floor.
+        run: bash tests/workflow-no-deprecated-runners.sh
 
   readme-link-check:
     name: README link sanity
