@@ -1137,6 +1137,22 @@ jobs:
         # 10/10 formulas green at iter-89 add — pure regression
         # floor.
         run: bash tests/formula-install-method.sh
+      - name: Cargo [features] default refs resolve to real features or deps
+        # Each item in `default = [...]` must reference either a
+        # feature declared in the same [features] table OR an
+        # optional/declared dependency. Stale ref (deleted
+        # feature, renamed without updating, typo) → cargo build
+        # emits "feature not found" warning and downstream
+        # consumers hit compile errors when they enable a
+        # different feature subset. The cost is paid by every
+        # consumer, not just the crate author.
+        # Implementation note: `dep:` prefix stripped with slice
+        # not lstrip (lstrip is char-set, would corrupt feature
+        # names starting with d/e/p — bit me during iter-91
+        # survey before being caught).
+        # 3/3 crates with [features] green at iter-91 add —
+        # pure regression floor.
+        run: bash tests/cargo-features-default-valid.sh
 
   readme-link-check:
     name: README link sanity
