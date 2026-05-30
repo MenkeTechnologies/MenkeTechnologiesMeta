@@ -1322,6 +1322,18 @@ jobs:
         # at iter-105 add — pure regression floor against the
         # exact bug I introduced in iter-83.
         run: bash tests/workflow-name-no-colon-space.sh
+      - name: No curl-pipe-shell patterns in any workflow step
+        # `curl ... | sh` (or wget|bash) trusts the remote
+        # endpoint to deliver safe code under the workflow's
+        # privileges — any DNS hijack, TLS downgrade, upstream
+        # compromise = instant RCE with full secret access.
+        # No audit trail (script source disappears after run);
+        # no version pin (remote can change without git history
+        # changing). Org policy: use pinned actions/releases/
+        # cargo+npm with explicit versions.
+        # 90/90 workflow files green at iter-106 add — security-
+        # critical regression floor.
+        run: bash tests/workflow-no-curl-pipe-sh.sh
 
   readme-link-check:
     name: README link sanity
