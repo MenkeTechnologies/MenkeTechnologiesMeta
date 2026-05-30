@@ -98,4 +98,60 @@ else
     echo "PASS  no duplicate submodule urls"
 fi
 
+# Every checked-out submodule path must have a populated .git/ (either a
+# directory or a `.git` file pointing into the parent's .git/modules/<...>).
+# An empty checkout means `git submodule update --init` was never run; the
+# submodule looks like an empty directory and any operation against it
+# silently no-ops. This check is INFORMATIONAL in CI where submodules
+# aren't initialized — the path-exists guard above already skips there.
+if [[ $check_path_exists -eq 1 ]]; then
+    missing_dotgit=0
+    for p in "${paths[@]}"; do
+        # `.git` can be a directory (older / detached) OR a file (gitlink
+        # to the parent's modules/ dir, modern submodules). Both are OK.
+        if [[ ! -e "$p/.git" ]]; then
+            echo "FAIL  submodule has no .git/: $p"
+            missing_dotgit=$((missing_dotgit + 1))
+            ok=0
+        fi
+    done
+    [[ $missing_dotgit -eq 0 ]] && echo "PASS  every checked-out submodule has a populated .git/"
+fi
+
+# Every `branch = ` field, if present, must be `main` or `master`. A
+# detached or "HEAD" branch field means `git submodule update --remote`
+# would either fail or pick an arbitrary ref. Empty .gitmodules entries
+# (no branch field at all) are tolerated — git defaults to the submodule
+# HEAD, which is what we want for SHA-pinned submodules.
+bad_branch=0
+while IFS= read -r line; do
+    val="${line#$'\tbranch = '}"
+    case "$val" in
+        main|master) :;;
+        *)
+            echo "FAIL  branch field '$val' is neither 'main' nor 'master'"
+            bad_branch=$((bad_branch + 1))
+            ok=0
+            ;;
+    esac
+done < <(grep $'^\tbranch = ' "$gm")
+[[ $bad_branch -eq 0 ]] && echo "PASS  every declared branch field is main or master"
+
+# `git submodule status` must succeed (return 0) and emit one line per
+# submodule. A failure here means a submodule entry is corrupt OR the
+# repo isn't a git repo at all. Skip when submodules aren't initialized.
+if [[ $check_path_exists -eq 1 ]] && command -v git >/dev/null 2>&1; then
+    if status_lines=$(git submodule status 2>/dev/null) && [[ -n "$status_lines" ]]; then
+        status_n=$(printf '%s\n' "$status_lines" | wc -l | tr -d ' ')
+        if [[ "$status_n" -eq "${#paths[@]}" ]]; then
+            echo "PASS  git submodule status emits one line per .gitmodules entry ($status_n)"
+        else
+            echo "FAIL  git submodule status emitted $status_n lines for ${#paths[@]} entries"
+            ok=0
+        fi
+    else
+        echo "SKIP  git submodule status (not a populated submodule tree)"
+    fi
+fi
+
 [[ $ok -eq 1 ]] && exit 0 || exit 1
