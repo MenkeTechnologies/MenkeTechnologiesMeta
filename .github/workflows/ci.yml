@@ -1012,6 +1012,18 @@ jobs:
         # 37/37 [[bin]] blocks green at iter-79 add — pure
         # regression floor against silent-rename drift.
         run: bash tests/cargo-bin-name-field.sh
+      - name: Every workflow yml declares at least one job
+        # A workflow with 0 jobs parses cleanly as YAML and has a
+        # valid `on:` trigger, but GitHub Actions runs it as a
+        # no-op: appears in Actions tab, "succeeds", does nothing.
+        # Worse failure mode than iter-68's parse gate — produces
+        # a GREEN check mark on PRs without running any tests,
+        # merges happen against unchecked code. Sneaks in from
+        # jobs accidentally indented BELOW jobs:, broken YAML
+        # anchors, cut/paste from `jobs: {}` template.
+        # 90/90 workflow files green at iter-80 add — pure
+        # regression floor against the silent-no-op failure mode.
+        run: bash tests/workflow-has-jobs.sh
 
   readme-link-check:
     name: README link sanity
