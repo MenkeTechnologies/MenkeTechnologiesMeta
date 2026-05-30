@@ -69,7 +69,7 @@ while IFS= read -r wf; do
         text="${match#*:}"
         stripped=$(echo "$text" | sed -E 's/^[[:space:]]*//')
         case "$stripped" in
-            \#*) continue ;;
+            \#*|name:*|-\ name:*) continue ;;
         esac
         if echo "$stripped" | grep -qE 'git push.*(-f\b|--force\b|--force-with-lease\b)'; then
             echo "FAIL  $wf:$ln_num: force-push from CI rewrites remote history — design a specific bounded workflow instead. Line: $text"

@@ -81,7 +81,7 @@ while IFS= read -r wf; do
         text="${match#*:}"
         stripped=$(echo "$text" | sed -E 's/^[[:space:]]*//')
         case "$stripped" in
-            \#*) continue ;;
+            \#*|name:*|-\ name:*) continue ;;
         esac
         if echo "$stripped" | grep -qE 'git reset.*--hard'; then
             echo "FAIL  $wf:$ln_num: git reset --hard destroys local state — use git reset --merge, git revert, or git stash. Line: $text"

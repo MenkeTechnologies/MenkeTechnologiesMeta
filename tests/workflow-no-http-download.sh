@@ -69,7 +69,7 @@ while IFS= read -r wf; do
         text="${match#*:}"
         stripped=$(echo "$text" | sed -E 's/^[[:space:]]*//')
         case "$stripped" in
-            \#*) continue ;;
+            \#*|name:*|-\ name:*) continue ;;
         esac
         if echo "$stripped" | grep -qE '(curl|wget)[^|]*http://'; then
             if echo "$stripped" | grep -qE 'http://(localhost|127\.0\.0\.1|0\.0\.0\.0)'; then

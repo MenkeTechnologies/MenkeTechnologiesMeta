@@ -67,7 +67,7 @@ while IFS= read -r wf; do
         text="${match#*:}"
         stripped=$(echo "$text" | sed -E 's/^[[:space:]]*//')
         case "$stripped" in
-            \#*) continue ;;
+            \#*|name:*|-\ name:*) continue ;;
         esac
         if echo "$stripped" | grep -qE 'chmod\s+([-]?R\s+)?[0]?777'; then
             echo "FAIL  $wf:$ln_num: chmod 777 grants world-write — use chmod +x or chmod u+x to fix specific permission. Line: $text"

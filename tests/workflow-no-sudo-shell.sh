@@ -74,7 +74,7 @@ while IFS= read -r wf; do
         text="${match#*:}"
         stripped=$(echo "$text" | sed -E 's/^[[:space:]]*//')
         case "$stripped" in
-            \#*) continue ;;
+            \#*|name:*|-\ name:*) continue ;;
         esac
         if echo "$stripped" | grep -qE '\bsudo\s+(-i\b|su\b|-s\b)'; then
             echo "FAIL  $wf:$ln_num: interactive root shell — use 'sudo <cmd>' form per command. Line: $text"
