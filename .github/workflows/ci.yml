@@ -241,6 +241,19 @@ jobs:
         # tools like gen-docs / bench-autoload stay out of brew while
         # remaining in Cargo.toml as build targets).
         run: bash tests/formula-binary-coverage.sh
+      - name: Per-submodule README.md ToC anchors all resolve to a real header
+        # Each Markdown `(#anchor)` link is validated against the gfm
+        # slug computed for every `# / ## / ###` header in the README.
+        # Catches the failure mode where a section is renamed but the
+        # ToC link is left pointing at the stale slug; GitHub renders
+        # the link as a broken jump to the top of the page. Caught 8
+        # broken anchors across powerliners + strykelang + lsofrs +
+        # traderview 2026-05-30; all bulk-fixed in iters 17–18.
+        # Slugger preserves underscores and consecutive hyphens, does
+        # NOT trim leading/trailing hyphens — matches the actual gfm
+        # behavior even on unusual headers like `## \`> STATUS\``
+        # (slug `-status`, leading hyphen preserved).
+        run: bash tests/readme-toc-anchors.sh
 
   readme-link-check:
     name: README link sanity
