@@ -637,6 +637,18 @@ jobs:
         # across the umbrella verified clean at iter-50 add (818
         # in Audio-Haxor's API docs alone). Regression-prevention.
         run: bash tests/docs-doctype.sh
+      - name: Every docs/*.html <html> tag carries a lang attribute
+        # Without `lang`, accessibility (WCAG 2.1 Level A: 3.1.1)
+        # and SEO both degrade silently. Screen readers can't switch
+        # pronunciation rules; Google language detection takes a
+        # guess. Lighthouse and axe-core fail without it.
+        # Test scans every line for `<html [...] lang=` rather than
+        # just the file top — zshrs/port_report.html has a long
+        # `<!-- PORT-REPORT-SCHEMA -->` comment header pushing the
+        # <html> tag to line 41. Initial 5-line-scan version
+        # falsely flagged it; refined during iter-51. 894/894 docs
+        # green at add.
+        run: bash tests/docs-html-lang.sh
 
   readme-link-check:
     name: README link sanity
