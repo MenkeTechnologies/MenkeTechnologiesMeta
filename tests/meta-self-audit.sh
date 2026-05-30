@@ -69,9 +69,14 @@ for f in tests/*.sh; do
     fi
 
     # 2. `set -uo pipefail` (or any pipefail-bearing set) somewhere
-    #    in the first 60 lines.
-    if ! head -60 "$f" | grep -qE '^set .*pipefail'; then
-        echo "FAIL  $f: no \`set ... pipefail\` directive in first 60 lines"
+    #    in the first 120 lines. Window was 60 originally; bumped
+    #    to 120 because docstring headers grew (iter-191+ gates
+    #    document the WHY/HOW/COVERAGE in 60-80 line headers and
+    #    push `set` past line 60). Window is a sanity bound — the
+    #    `set` line must still be near the top, just not within
+    #    the first 60.
+    if ! head -120 "$f" | grep -qE '^set .*pipefail'; then
+        echo "FAIL  $f: no \`set ... pipefail\` directive in first 120 lines"
         no_pipefail=$((no_pipefail + 1))
         local_ok=0
         ok=0
