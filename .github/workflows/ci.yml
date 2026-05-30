@@ -999,6 +999,19 @@ jobs:
         # floor against a downgrade or stale-cargo-generated lock
         # slipping through review.
         run: bash tests/cargo-lock-format-version.sh
+      - name: Every Cargo.toml [[bin]] block declares a name field
+        # Cargo falls back to the file stem of `path = "..."` if
+        # `name` is missing. The fallback works, but a rename of
+        # `path = "src/bin/foo.rs"` → `"src/bin/bar.rs"` silently
+        # changes the bin name from "foo" to "bar" — breaking
+        # every brew formula `bin.install`, every workflow
+        # `cargo run --bin foo`, every shell alias, every
+        # iter-70 default-run reference. Explicit `name =`
+        # decouples the published bin name from source-file
+        # location.
+        # 37/37 [[bin]] blocks green at iter-79 add — pure
+        # regression floor against silent-rename drift.
+        run: bash tests/cargo-bin-name-field.sh
 
   readme-link-check:
     name: README link sanity
