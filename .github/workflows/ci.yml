@@ -1700,6 +1700,17 @@ jobs:
         # = true. Across 573 dep lines, 0 redundant entries
         # at iter-148 add — pure regression floor.
         run: bash tests/cargo-no-redundant-default-features.sh
+      - name: Optional deps are activated by at least one feature
+        # `optional = true` deps never referenced in [features]
+        # are dead metadata — cargo metadata resolves their
+        # transitive graph for nothing; dep audits include them
+        # pointlessly; reviewers waste time tracing them.
+        # Detection accepts pre-1.60 ("dep_name"), 1.60+
+        # ("dep:dep_name"), and feature-of-dep ("dep_name/feat")
+        # syntax in the [features] body.
+        # 11/11 optional deps activated at iter-149 add — pure
+        # regression floor.
+        run: bash tests/cargo-optional-deps-activated.sh
       - name: Workflow matrix.include entries are mappings
         # GitHub Actions matrix include format requires each
         # entry to be a dimension-name → value mapping. Bare
