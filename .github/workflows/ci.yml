@@ -397,6 +397,17 @@ jobs:
         # Covers v/d/l/dr badge shapes. Skips READMEs without any
         # crates.io badge (the field is optional).
         run: bash tests/readme-crates-badge.sh
+      - name: Every README binary-count claim matches Cargo.toml [[bin]] count
+        # Codifies the iter-9 powerliners audit finding: the README
+        # listed a "powerliners" binary that had been dropped in v0.1.1
+        # but was still in the binary table. Without this gate,
+        # future drift between the README's "N-binary suite" claim
+        # and Cargo.toml's actual [[bin]] entries would require
+        # repeated manual audits.
+        # Detects strict shapes only ("N-binary", "ships N binaries",
+        # "the N binaries", "N binaries:") to avoid false positives
+        # from prose like "Perl 5 binary-protocol".
+        run: bash tests/readme-binary-count-claim.sh
 
   readme-link-check:
     name: README link sanity
