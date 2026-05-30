@@ -213,6 +213,17 @@ jobs:
         # as binary-eligibility signals, including workspace-root
         # Cargo.toml with src-tauri member binaries (Audio-Haxor pattern).
         run: bash tests/cargo-lock-committed.sh
+      - name: Every Rust ci.yml runs the 4 canonical polish gates (fmt + clippy + doc + test)
+        # Per docs/report.html "POLISH GATES" section: every Rust crate
+        # should pass `cargo fmt --check`, `cargo clippy -- -D warnings`,
+        # `RUSTDOCFLAGS=-D warnings cargo doc --no-deps`, and `cargo test`
+        # in CI before a tag is cut. Initially caught 23 of 27 Rust
+        # submodules missing one or more gates 2026-05-30; bulk-fixed 17
+        # (14 stryke-* connectors + storageshower + iftoprs + nmaprs).
+        # Allowlist (justified): strykelang/zshrs/fusevm mark fmt/clippy
+        # advisory; Audio-Haxor/traderview use pnpm-driven Tauri builds;
+        # spring-boot-rest-generator is mid Kotlin→Rust transition.
+        run: bash tests/rust-ci-polish-gates.sh
 
   readme-link-check:
     name: README link sanity
