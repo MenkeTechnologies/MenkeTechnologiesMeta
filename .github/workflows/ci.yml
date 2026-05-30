@@ -1236,6 +1236,19 @@ jobs:
         # version) — pure regression floor against auto-bump
         # script drift.
         run: bash tests/formula-version-matches-url.sh
+      - name: Every tests/*.sh gate is wired in ci.yml
+        # Meta self-audit extension. Iter-65's meta-self-audit
+        # pinned that every gate file has the right shape
+        # (shebang, pipefail, exec bit, root= pattern). This
+        # gate pins INVOCATION: a shaped gate that never runs in
+        # CI catches nothing. Failure: add tests/foo.sh but
+        # forget to add `run: bash tests/foo.sh` to ci.yml —
+        # locally PASSes, CI silently skips. The reported gate
+        # count becomes a lie. Detection: grep `bash tests/<base>`
+        # for every tests/*.sh file.
+        # 94/94 audit gates wired at iter-99 add — pure
+        # regression floor against ci.yml drift.
+        run: bash tests/meta-gates-wired-in-ci.sh
 
   readme-link-check:
     name: README link sanity
