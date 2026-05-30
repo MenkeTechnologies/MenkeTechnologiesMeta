@@ -692,6 +692,20 @@ jobs:
         # against a Cargo declaring "MIT OR Apache-2.0" because
         # MIT is in the OR-set. 9/9 formula↔Cargo pairs in sync.
         run: bash tests/formula-license-matches-cargo.sh
+      - name: Crates with docs/ have homepage distinct from repository URL
+        # Catches the inverse of iter-26's bulk-add: a crate that
+        # HAS docs/index.html but its homepage still duplicates the
+        # repository URL (legacy state predating iter-26's GH Pages
+        # convention). crates.io shows both as separate links —
+        # if they point at the same URL, "Homepage" adds zero value
+        # and signals "no separate docs site". Caught temprs at
+        # iter-56 add (homepage was repo URL despite docs/ existing);
+        # fixed via temprs@dbd4c3238f to point at
+        # https://menketechnologies.github.io/temprs/. 24/24 green.
+        # Crates without docs/ legitimately keep homepage == repo
+        # (storageshower, spring-boot-rest-generator) — gate scoped
+        # to docs/-having crates only.
+        run: bash tests/cargo-homepage-not-repo-duplicate.sh
 
   readme-link-check:
     name: README link sanity
