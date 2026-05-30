@@ -305,6 +305,17 @@ jobs:
         # had the right value, the test just needed to follow the
         # inheritance chain).
         run: bash tests/cargo-repository-field.sh
+      - name: Every release.yml triggers on `push: tags: ['v*']`
+        # Silent-failure catcher: someone bumps + tags a release, runs
+        # `git push --tags`, and the workflow never fires because the
+        # trigger expects a different tag shape (e.g. typo'd
+        # `tags: ['release-*']`) or is missing the `tags:` block. The
+        # user thinks the release is shipping — no GitHub Release is
+        # ever created, formulas never bump, brew users stay on the
+        # old version forever. Test accepts the canonical inline form
+        # `tags: ['v*']` plus equivalent yaml variants (no quotes,
+        # double-quotes, list-form `- 'v*'`).
+        run: bash tests/release-tag-trigger.sh
 
   readme-link-check:
     name: README link sanity
