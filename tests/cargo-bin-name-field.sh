@@ -33,6 +33,11 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root" || exit
 ok=1
 
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "SKIP  python3 not on PATH"
+    exit 0
+fi
+
 paths=()
 while IFS= read -r line; do
     paths+=("${line#$'\tpath = '}")

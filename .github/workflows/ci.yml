@@ -1249,6 +1249,19 @@ jobs:
         # 94/94 audit gates wired at iter-99 add — pure
         # regression floor against ci.yml drift.
         run: bash tests/meta-gates-wired-in-ci.sh
+      - name: Every python3-invoking gate has skip fallback
+        # Most gates run on ubuntu-latest (bundles python3),
+        # but minimal CI containers (Alpine, BusyBox+git
+        # images) don't always have it. A bare python3 invocation
+        # there fails with exit 127, marking the step FAILED —
+        # noisy false-positive failures train everyone to ignore
+        # audit output. Skip fallback turns python3-absent into
+        # a soft SKIP exit 0. Self-exempt because the meta gate's
+        # own description text references the literal invocation
+        # patterns.
+        # 12/12 python3-invoking gates with skip fallback at
+        # iter-100 add — pure regression floor.
+        run: bash tests/meta-python3-skip-fallback.sh
 
   readme-link-check:
     name: README link sanity
