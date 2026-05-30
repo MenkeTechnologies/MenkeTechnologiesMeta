@@ -137,6 +137,25 @@ jobs:
         # install blocks. Same script as the local-runnable one in tests/.
         run: bash tests/homebrew-formulas.sh
 
+  cargo-doc-version-sync:
+    name: Cargo.toml ↔ docs/*.html version sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - name: Per-submodule docs/*.html highest version >= Cargo.toml version
+        # Catches the failure mode seen 2026-05-30 with powerliners:
+        # Cargo.toml was at "0.2.1" while docs/report.html still claimed
+        # "v0.0.8" — the docs got refreshed via per-stat batches that
+        # missed the version field, so the public docs lied about the
+        # current release. This script greps each submodule's
+        # docs/*.html for the highest vN.N.N (skipping Perl/Python/Rust
+        # toolchain mentions) and FAILs if it's behind Cargo.toml's
+        # version field.
+        run: bash tests/cargo-doc-version-sync.sh
+
   readme-link-check:
     name: README link sanity
     runs-on: ubuntu-latest
