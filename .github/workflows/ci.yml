@@ -316,6 +316,19 @@ jobs:
         # `tags: ['v*']` plus equivalent yaml variants (no quotes,
         # double-quotes, list-form `- 'v*'`).
         run: bash tests/release-tag-trigger.sh
+      - name: Every Rust Cargo.toml has explicit `edition = "2021"` or "2024"
+        # Missing edition silently defaults to 2015 — a 10-year-old
+        # edition with `extern crate` requirements, trait-object
+        # syntax differences, and pre-NLL borrow checker behavior.
+        # A repo working today on edition 2021 by accident (the
+        # compiler default in newer toolchains shifts) silently
+        # regresses to 2015 when an older or differently-configured
+        # toolchain is used. Test accepts `edition = "2021"` /
+        # `"2024"` directly OR `edition.workspace = true` resolved
+        # through workspace root's `[workspace.package]`. 2018
+        # produces a WARN (still supported but org default is 2021);
+        # 2015 / missing / unknown fail.
+        run: bash tests/cargo-edition-field.sh
 
   readme-link-check:
     name: README link sanity
