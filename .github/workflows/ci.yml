@@ -232,6 +232,15 @@ jobs:
         # state 2026-05-30 (powerliners was the only one with brew install
         # documented); bulk-fixed in iteration 15.
         run: bash tests/readme-brew-install.sh
+      - name: Every brew formula's bin.install is a subset of its repo's Cargo.toml [[bin]]
+        # Catches typos / stale renames in formula install blocks. If
+        # bin.install references a binary that doesn't exist in
+        # Cargo.toml, `brew install` errors at install time with a
+        # missing-file message. Subset check (not equality): formulas
+        # can legitimately install a subset of all [[bin]] (e.g. dev
+        # tools like gen-docs / bench-autoload stay out of brew while
+        # remaining in Cargo.toml as build targets).
+        run: bash tests/formula-binary-coverage.sh
 
   readme-link-check:
     name: README link sanity
