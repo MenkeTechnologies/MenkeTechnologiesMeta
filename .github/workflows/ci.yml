@@ -1402,6 +1402,18 @@ jobs:
         # 90/90 workflows green at iter-112 add — security-
         # critical regression floor.
         run: bash tests/workflow-no-script-injectable-fields.sh
+      - name: cargo --release in workflows is invoked with --locked
+        # Without --locked, Cargo can silently UPDATE Cargo.lock
+        # when published-version patterns newly resolve higher
+        # — successive CI runs of the same commit produce
+        # different bytecode if a dep gets a patch release in
+        # between. Release tarballs become non-reproducible;
+        # supply-chain auditors can't rebuild the artifact;
+        # bisecting a dep-bug regression is impossible. Comment
+        # lines (documentation references) are skipped.
+        # 90/90 workflows green at iter-113 add — pure regression
+        # floor.
+        run: bash tests/workflow-cargo-release-locked.sh
 
   readme-link-check:
     name: README link sanity
