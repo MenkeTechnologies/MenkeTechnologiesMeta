@@ -254,6 +254,20 @@ jobs:
         # behavior even on unusual headers like `## \`> STATUS\``
         # (slug `-status`, leading hyphen preserved).
         run: bash tests/readme-toc-anchors.sh
+      - name: Every formula bin.install entry is actually built by release.yml
+        # Closes the pairwise loop: iter-16 verified each formula bin
+        # exists as a [[bin]] in Cargo.toml; this verifies each formula
+        # bin is ALSO actually built and packaged by release.yml. Two
+        # failure modes:
+        #   (a) formula adds a new bin.install but release.yml's
+        #       explicit --bin set doesn't include it — release tarball
+        #       lacks the binary and `brew install` errors at install
+        #       with "no such file"
+        #   (b) release.yml drops --bin foo while formula still ships
+        #       bin.install "foo" — same failure mode
+        # Handles yaml `cargo build \\` line-continuation pattern by
+        # joining backslash-terminated lines before scanning for --bin.
+        run: bash tests/release-builds-formula-bins.sh
 
   readme-link-check:
     name: README link sanity
