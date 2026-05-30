@@ -179,6 +179,16 @@ jobs:
         # Cargo.lock; CI fails if the lockfile is missing instead of
         # silently producing an unreproducible binary.
         run: bash tests/release-locked-build.sh
+      - name: Every Tier 1 Rust binary ships man/man1/<bin>.1 + <bin>all.1
+        # Pins the README line-82 convention: every Tier 1 Rust binary
+        # submodule (excludes fusevm/Audio-Haxor/traderview/zpwr which
+        # have different docs conventions) must ship the basic + "all"
+        # variant man pages. Catches the failure mode where a new
+        # binary is added to Tier 1 but the man-page step in its
+        # build pipeline gets skipped (would have caught the 2026-05-30
+        # powerliners gap that shipped v0.0.1 → v0.2.1 without man
+        # pages while every sibling shipped them).
+        run: bash tests/tier1-man-pages.sh
 
   readme-link-check:
     name: README link sanity
