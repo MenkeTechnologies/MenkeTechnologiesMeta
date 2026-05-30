@@ -521,6 +521,20 @@ jobs:
         # Iter-40 snapshot: 245 checkout@v6 dominant, 29 stragglers on
         # @v4; 0 of 726 references are SHA-pinned.
         run: bash tests/workflow-actions-versions.sh
+      - name: Every docs/*.html relative stylesheet+script dependency exists
+        # Pins every `<link rel="stylesheet" href="...">` and
+        # `<script src="...">` with a relative URL (not https://)
+        # resolves to a file in the same docs/ directory. Catches:
+        #   (a) a CSS/JS file rename (hud-static.css → hud-shared.css)
+        #       that wasn't applied to all consumers — GitHub Pages
+        #       returns 404 for the asset, page renders unstyled.
+        #   (b) docs/index.html copy-pasted from a sibling without the
+        #       sibling's co-located dependencies — same 404 silent
+        #       break.
+        # Adds the meta repo's own docs/ on top of every submodule
+        # docs/. Iter-41 snapshot: 78 HTML files across 44 dirs, 0
+        # broken — regression-prevention floor.
+        run: bash tests/docs-static-deps-exist.sh
 
   readme-link-check:
     name: README link sanity
