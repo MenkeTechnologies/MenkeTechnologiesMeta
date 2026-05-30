@@ -1919,6 +1919,18 @@ jobs:
         # use deprecated commands at iter-196 add —
         # pure regression floor.
         run: bash tests/workflow-no-deprecated-commands.sh
+      - name: No secret-leaking debug env vars
+        # ACTIONS_STEP_DEBUG / ACTIONS_RUNNER_DEBUG /
+        # GIT_TRACE / GIT_CURL_VERBOSE / GIT_TRACE_*
+        # all bypass the runner's secret-masking layer
+        # in different ways. Hardcoded in env: blocks,
+        # they leak GITHUB_TOKEN, Bearer headers, and
+        # pre-mask content on EVERY run. Correct
+        # pattern: enable per-run via GitHub UI's
+        # "Re-run with debug logging" button. 0/90
+        # workflows at iter-197 add — pure regression
+        # floor.
+        run: bash tests/workflow-no-debug-env-vars.sh
       - name: Brew formula url and homepage are distinct
         # url = release tarball location; homepage = project
         # URL. Collapse breaks brew info display (visual
