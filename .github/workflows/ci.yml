@@ -280,6 +280,17 @@ jobs:
         # (redis, mongodb-community, etc.) so cross-references to
         # external formulas don't false-fail.
         run: bash tests/readme-brew-install-formula-exists.sh
+      - name: Every man page's .TH version matches its repo's Cargo.toml version
+        # `.TH NAME 1 "DATE" "<name> X.Y.Z" "User Commands"` is what
+        # `man <name>` prints at the top of the page. When Cargo.toml
+        # bumps via the bp shortcut but the man page isn't refreshed,
+        # users see misleading version info AND downstream automation
+        # that reads "report bugs against <version>" gets a stale
+        # number. Caught 14 of 18 man pages drifted 2026-05-30
+        # (iftoprs/lsofrs/awkrs/temprs/nmaprs/strykelang/zshrs all
+        # behind their Cargo.toml by 0.0.x to 0.2.x versions); bulk-
+        # fixed via sed-replace on the .TH header line only.
+        run: bash tests/man-page-version-sync.sh
 
   readme-link-check:
     name: README link sanity
