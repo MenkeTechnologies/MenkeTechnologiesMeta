@@ -1122,6 +1122,21 @@ jobs:
         # 10/10 formulas green at iter-88 add — pure regression
         # floor.
         run: bash tests/formula-test-block.sh
+      - name: Every brew formula has a def install method
+        # Without `def install`, `brew install <name>` fetches
+        # and unpacks the tarball, then exits 0 (Homebrew's base
+        # class default for install is a no-op). No files land
+        # in the Cellar; `brew list` shows the formula installed
+        # with zero files; the expected binary is missing from
+        # $PATH. Worst case: a stale older-version binary from
+        # the Cellar silently keeps serving while the user
+        # thinks they upgraded.
+        # Required by `brew audit --strict` but the tap-level
+        # audit only fires on install/test paths — formulas
+        # added but never installed slip past.
+        # 10/10 formulas green at iter-89 add — pure regression
+        # floor.
+        run: bash tests/formula-install-method.sh
 
   readme-link-check:
     name: README link sanity
