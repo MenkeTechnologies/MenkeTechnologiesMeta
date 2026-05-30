@@ -1992,6 +1992,20 @@ jobs:
         # pattern. 22/22 gh steps at iter-202 add —
         # pure regression floor.
         run: bash tests/workflow-gh-cli-token-env.sh
+      - name: Build/test workflows have actions/checkout
+        # GitHub Actions does NOT auto-clone the repo
+        # into the runner workspace. Without
+        # actions/checkout, every file-touching
+        # command fails: "could not find Cargo.toml",
+        # "file or directory not found",
+        # "ENOENT package.json". First run fails; PR
+        # check goes red; debugging time wasted on
+        # cryptic errors. Build-command matchers:
+        # cargo/npm/pnpm/yarn/pytest/make/cmake/
+        # gradle/mvn/go/shellcheck/bundle. 58/58
+        # build-using workflows have checkout at
+        # iter-203 add — pure regression floor.
+        run: bash tests/workflow-build-needs-checkout.sh
       - name: Brew formula url and homepage are distinct
         # url = release tarball location; homepage = project
         # URL. Collapse breaks brew info display (visual
