@@ -765,6 +765,17 @@ jobs:
         # [[test]] currently empty (pure regression floor for any
         # future addition).
         run: bash tests/cargo-target-path-exists.sh
+      - name: No wildcard "*" dependency versions in Cargo.toml
+        # crates.io's publish API REJECTS any crate with wildcard
+        # deps. `cargo publish` fails with "dependencies cannot
+        # have wildcard versions". This is a publish-time gate
+        # (slow feedback); same check at lint time gives instant
+        # feedback. Catches both short form (name = "*") and table
+        # form (name = { version = "*", ... }) across
+        # [dependencies], [dev-dependencies], [build-dependencies],
+        # [workspace.dependencies]. 0/27 wildcards at iter-62 add
+        # — pure regression floor.
+        run: bash tests/cargo-no-wildcard-deps.sh
 
   readme-link-check:
     name: README link sanity
