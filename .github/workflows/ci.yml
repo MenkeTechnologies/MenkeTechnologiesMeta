@@ -1334,6 +1334,18 @@ jobs:
         # 90/90 workflow files green at iter-106 add — security-
         # critical regression floor.
         run: bash tests/workflow-no-curl-pipe-sh.sh
+      - name: No line-leading bash eval in any workflow step
+        # eval re-parses arguments as shell code. In CI where
+        # step inputs can come from PR titles, issue comments,
+        # workflow_dispatch inputs, github contexts (templated
+        # before bash sees them), eval is a shell-injection
+        # oracle. Every legitimate use has a non-eval alternative
+        # (direct invocation, declare builtin, file-based env).
+        # Detection ignores --eval flag (mongosh, node, gh) and
+        # only flags line-leading eval (the canonical bash form).
+        # 90/90 workflow files green at iter-107 add — pure
+        # regression floor.
+        run: bash tests/workflow-no-eval.sh
 
   readme-link-check:
     name: README link sanity
