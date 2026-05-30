@@ -74,22 +74,22 @@ while IFS= read -r line; do
 
     case "$path" in
         /*)
-            echo "FAIL  .gitmodules: \"$path\" starts with `/` — must be relative"
+            echo "FAIL  .gitmodules: \"$path\" starts with '/' — must be relative"
             bad=$((bad + 1))
             ok=0
             ;;
         ./*)
-            echo "FAIL  .gitmodules: \"$path\" starts with `./` — redundant current-directory marker"
+            echo "FAIL  .gitmodules: \"$path\" starts with './' — redundant current-directory marker"
             bad=$((bad + 1))
             ok=0
             ;;
         *../*|*..)
-            echo "FAIL  .gitmodules: \"$path\" contains `..` — parent-directory traversal forbidden"
+            echo "FAIL  .gitmodules: \"$path\" contains '..' — parent-directory traversal forbidden"
             bad=$((bad + 1))
             ok=0
             ;;
         */)
-            echo "FAIL  .gitmodules: \"$path\" ends with `/` — canonical form omits trailing slash"
+            echo "FAIL  .gitmodules: \"$path\" ends with '/' — canonical form omits trailing slash"
             bad=$((bad + 1))
             ok=0
             ;;

@@ -67,8 +67,12 @@ for f in tests/*.sh; do
     # so it would self-match. The script is hand-verified to
     # follow the convention without needing the audit.
     [[ "$(basename "$f")" == "meta-python3-skip-fallback.sh" ]] && continue
-    # Only check gates that actually invoke python3.
-    if ! grep -qE 'python3 -c|python3 - "|python3 <<' "$f"; then
+    # Only check gates that actually invoke python3. Strip
+    # comment lines first so docstring examples / regex
+    # pattern strings (e.g., the catalog of expected
+    # invocation forms in meta-python-heredoc-quoted.sh)
+    # don't false-positive as real invocations.
+    if ! grep -vE '^\s*#' "$f" | grep -qE 'python3 -c|python3 - "|python3 <<'; then
         continue
     fi
     checked=$((checked + 1))

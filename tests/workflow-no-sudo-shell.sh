@@ -77,7 +77,7 @@ while IFS= read -r wf; do
             \#*) continue ;;
         esac
         if echo "$stripped" | grep -qE '\bsudo\s+(-i\b|su\b|-s\b)'; then
-            echo "FAIL  $wf:$ln_num: interactive root shell — use `sudo <cmd>` form per command. Line: $text"
+            echo "FAIL  $wf:$ln_num: interactive root shell — use 'sudo <cmd>' form per command. Line: $text"
             risky=$((risky + 1))
             ok=0
         fi

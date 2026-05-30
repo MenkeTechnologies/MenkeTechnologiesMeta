@@ -46,7 +46,7 @@
 #   make / cmake / ninja
 #   gradle / mvn
 #   go (build | test | vet)
-#   shellcheck
+#   the shellcheck linter
 #   ruby / bundle (exec | install)
 #
 # Workflows that ONLY use first-party setup actions

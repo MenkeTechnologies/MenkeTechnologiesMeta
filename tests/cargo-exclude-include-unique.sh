@@ -53,7 +53,7 @@ fi
 # When the drift is fixed in the sibling repo, remove the entry
 # and ratchet the gate up.
 declare -A KNOWN_DRIFT=(
-    [strykelang/Cargo.toml:exclude]="duplicate `/.github/` entry; meta-only scope blocks fix"
+    [strykelang/Cargo.toml:exclude]="duplicate /.github/ entry; meta-only scope blocks fix"
 )
 
 paths=()
