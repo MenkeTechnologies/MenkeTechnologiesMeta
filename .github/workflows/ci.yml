@@ -790,6 +790,19 @@ jobs:
         # 11/11 publishable crates green at iter-63 add — pure
         # regression floor.
         run: bash tests/cargo-documentation-docsrs.sh
+      - name: Cargo.toml repository URL matches submodule directory
+        # Catches the classic rename/typo drift: a submodule
+        # renamed at the GitHub level (awkrs → awk-rs, audio_haxor
+        # → Audio-Haxor) but Cargo.toml's `repository` field still
+        # pointing at the old URL. crates.io renders `repository`
+        # as a clickable link on the crate card; stale URL leads
+        # to GitHub 404 while the crate appears healthy.
+        # Pattern: repository == https://github.com/MenkeTechnologies/
+        # <dir-name-from-.gitmodules>. Trailing `/` and `.git`
+        # accepted. Casing must match the directory exactly.
+        # 26/26 Rust crates green at iter-64 add — pure
+        # regression floor.
+        run: bash tests/cargo-repository-matches-path.sh
 
   readme-link-check:
     name: README link sanity
