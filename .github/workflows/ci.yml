@@ -2377,6 +2377,21 @@ jobs:
         # 274/274 checkout uses at iter-230 add —
         # pure regression floor.
         run: bash tests/workflow-checkout-canonical-with.sh
+      - name: actions/cache with-block uses canonical keys
+        # Typo'd cache with-keys (restore_keys snake,
+        # enable_cross_os_archive vs camelCase
+        # enableCrossOsArchive — the ONE camelCase
+        # field in cache@v4 schema, irregular by
+        # convention) silently ignored. restore_keys
+        # → empty fallback; full rebuild from scratch
+        # every PR. enableCrossOsArchive snake →
+        # OS-specific cache; macos+ubuntu matrix loses
+        # 50% effective hit rate. fail_on_cache_miss
+        # snake → cache dependency assumption broken
+        # silently. save_always snake → cache stays
+        # stale on test failure. 14/14 cache uses at
+        # iter-231 add — pure regression floor.
+        run: bash tests/workflow-cache-canonical-with.sh
       - name: Brew formula url and homepage are distinct
         # url = release tarball location; homepage = project
         # URL. Collapse breaks brew info display (visual
