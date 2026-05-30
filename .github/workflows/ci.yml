@@ -434,6 +434,19 @@ jobs:
         # 1.28.15 ahead of v1.28.9; powerliners 0.2.2 ahead of v0.2.1),
         # 0 regressions.
         run: bash tests/cargo-vs-tag-version.sh
+      - name: Per-Rust Cargo.toml exclude audit (informational — bloat surfacing)
+        # Reports each publishable crate's unexcluded dev dirs (docs/,
+        # tests/, benches/, vendor/, parity/, .github/, fuzz/). Without
+        # an explicit exclude, `cargo publish` ships everything `git
+        # ls-files` matches, bloating the .crate file with content
+        # downstream consumers don't need.
+        # Informational only — never fails CI. The "right" exclude
+        # set is opinionated (examples/ is sometimes wanted), so the
+        # signal is "here's your bloat in MB; decide whether to
+        # exclude" — not a forced rule. Add-time state (iter 34):
+        # 3 clean, 8 with bloat (largest: powerliners 5 MB from vendor/
+        # Python upstream checkout, storageshower 5 MB, fusevm 3 MB).
+        run: bash tests/cargo-exclude-bloat.sh
 
   readme-link-check:
     name: README link sanity
