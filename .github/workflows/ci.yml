@@ -1978,6 +1978,20 @@ jobs:
         # invocations at iter-201 add — pure
         # regression floor.
         run: bash tests/workflow-apt-noninteractive.sh
+      - name: gh CLI steps have GH_TOKEN env
+        # gh v2.x reads GH_TOKEN preferentially. Without
+        # GH_TOKEN or GITHUB_TOKEN in env, gh falls
+        # through to ~/.config/gh/hosts.yml
+        # (nonexistent in CI), then `gh auth login`
+        # interactive (fails — no stdin), then hard
+        # error. Some runner configs (reusable
+        # workflows, composite actions, self-hosted)
+        # don't auto-populate GITHUB_TOKEN env-var
+        # even though secrets.GITHUB_TOKEN works.
+        # Explicit env: GH_TOKEN is the documented
+        # pattern. 22/22 gh steps at iter-202 add —
+        # pure regression floor.
+        run: bash tests/workflow-gh-cli-token-env.sh
       - name: Brew formula url and homepage are distinct
         # url = release tarball location; homepage = project
         # URL. Collapse breaks brew info display (visual
