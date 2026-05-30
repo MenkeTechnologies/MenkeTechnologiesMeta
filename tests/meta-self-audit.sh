@@ -2,7 +2,7 @@
 # Meta self-audit: every shell script under tests/ must satisfy
 # the same hygiene baseline the audit gates enforce on submodules.
 #
-# Three rules pinned:
+# Four rules pinned:
 #
 #   1. Shebang line: `#!/usr/bin/env bash` or `#!/bin/bash`.
 #      Without it, a script invoked directly as `./tests/foo.sh`
@@ -24,6 +24,16 @@
 #      file-type icon in IDEs that warn "this looks like a script
 #      but isn't marked runnable."
 #
+#   4. Canonical root-detection: every gate must derive its
+#      working directory from $0:
+#         root="$(cd "$(dirname "$0")/.." && pwd)"
+#         cd "$root" || exit
+#      Without this, the gate's `grep`/`find` calls are relative
+#      to whatever the caller's CWD was. A gate works from the
+#      meta root but breaks when invoked from inside tests/ or
+#      from a Makefile recipe with a different CWD. The pattern
+#      pin keeps every gate location-independent.
+#
 # This gate IS an audit-tool — but it's the unique kind of audit
 # tool whose ONLY behavior is to make every other audit tool more
 # trustworthy. Violations here invalidate every other gate's
@@ -42,6 +52,7 @@ checked=0
 no_shebang=0
 no_pipefail=0
 no_execbit=0
+no_root=0
 
 for f in tests/*.sh; do
     [[ -f "$f" ]] || continue
@@ -74,6 +85,22 @@ for f in tests/*.sh; do
         ok=0
     fi
 
+    # 4. Canonical root-detection pattern: every audit gate must
+    #    derive its working directory from $0 so it works whether
+    #    invoked as `bash tests/foo.sh` from the meta root OR
+    #    `./foo.sh` from inside tests/ OR via an absolute path
+    #    from a Makefile rule. Pattern enforced:
+    #      root="$(cd "$(dirname "$0")/.." && pwd)"
+    #    Inconsistent root resolution = broken when run from a
+    #    different CWD, which CI might do, the user definitely
+    #    does, and Makefile/justfile recipes often do.
+    if ! grep -qE '^root=.*cd.*dirname.*\$0.*&&.*pwd' "$f"; then
+        echo "FAIL  $f: no canonical \`root=\$(cd \$(dirname \$0)/.. && pwd)\` line"
+        no_root=$((no_root + 1))
+        local_ok=0
+        ok=0
+    fi
+
     [[ $local_ok -eq 1 ]] && echo "PASS  $f"
 done
 
@@ -82,5 +109,6 @@ echo "Summary: $checked tests/*.sh checked"
 echo "  $no_shebang missing shebang"
 echo "  $no_pipefail missing \`set ... pipefail\`"
 echo "  $no_execbit missing executable bit"
+echo "  $no_root missing canonical root= pattern"
 
 [[ $ok -eq 1 ]] && exit 0 || exit 1
