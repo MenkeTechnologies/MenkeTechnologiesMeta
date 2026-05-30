@@ -1298,6 +1298,19 @@ jobs:
         # 90/90 workflow files green at iter-103 add — pure
         # regression floor against Actions-minute drain.
         run: bash tests/workflow-push-filtered.sh
+      - name: release.yml workflows declare contents:write permission
+        # GitHub tightened default token permissions to
+        # `contents: read` for new repos (late 2023). release.yml
+        # needs `contents: write` to create GitHub Releases,
+        # upload artifacts, tag commits. Without it, the
+        # workflow fails at release-create with "Resource not
+        # accessible by integration" — message doesn't mention
+        # permissions, sends investigators down rabbit holes.
+        # Detection: top-level `permissions:` or inline
+        # `contents: write` anywhere in the file.
+        # 24/24 release.yml files green at iter-104 add —
+        # pure regression floor.
+        run: bash tests/release-workflow-permissions.sh
 
   readme-link-check:
     name: README link sanity
