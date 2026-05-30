@@ -903,6 +903,21 @@ jobs:
         # 11/11 publishable crates green at iter-71 add — pure
         # regression floor.
         run: bash tests/cargo-name-matches-dir.sh
+      - name: Every Cargo workspace member directory exists
+        # Cargo walks the [workspace].members list at every command
+        # (build, test, metadata, tree). A stale entry that no
+        # longer points at a valid sub-crate fails with "failed
+        # to load manifest for workspace member" — dormant until
+        # the next cargo build, easily missed by rust-analyzer
+        # until restart.
+        # Drift: rename a sub-crate dir without updating members,
+        # delete a sub-crate without removing its entry, typo
+        # in entry path, members entry pointing at a dir lacking
+        # Cargo.toml. Glob entries ("crates/*") are SKIPPED —
+        # they resolve at runtime.
+        # 11/11 workspace member paths green at iter-72 add —
+        # pure regression floor (traderview's 6 sub-crates).
+        run: bash tests/cargo-workspace-members-exist.sh
 
   readme-link-check:
     name: README link sanity
