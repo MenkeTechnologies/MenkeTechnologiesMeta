@@ -988,6 +988,17 @@ jobs:
         # 10/10 formulas green at iter-77 add — pure regression
         # floor.
         run: bash tests/formula-url-canonical.sh
+      - name: Every Cargo.lock uses format version >= 3
+        # Cargo.lock format history: v1 (2018), v2 (2020),
+        # v3 (Jun 2021), v4 (May 2024, current default). v1 lacks
+        # `package.checksum` (supply-chain gap on fresh fetches).
+        # v2 has patched-dep resolution bugs that v3 fixed. v3+ is
+        # the modern baseline for reproducible builds and
+        # `cargo build --locked` (iter-32) reliability.
+        # 27/27 Cargo.lock at v4 at iter-78 add — pure regression
+        # floor against a downgrade or stale-cargo-generated lock
+        # slipping through review.
+        run: bash tests/cargo-lock-format-version.sh
 
   readme-link-check:
     name: README link sanity
