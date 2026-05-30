@@ -408,6 +408,19 @@ jobs:
         # "the N binaries", "N binaries:") to avoid false positives
         # from prose like "Perl 5 binary-protocol".
         run: bash tests/readme-binary-count-claim.sh
+      - name: shellcheck tests/*.sh — audit the auditors
+        # Meta-meta gate: the audit scripts in tests/ are themselves
+        # code that can have bugs. shellcheck catches dropped `cd ||
+        # exit` guards, unquoted variables, unreferenced locals, etc.
+        # Iteration 32 cleanup: bulk-added `|| exit` guards to 28 cd
+        # calls (SC2164) so a missing $root dir wouldn't silently
+        # operate on the wrong tree. Severity gate is `error` only —
+        # warning/info findings are surfaced but don't fail CI to
+        # avoid noise from intentional patterns (e.g. version_gt
+        # function's IFS-based array split, deliberate `tr -d '\\'`).
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          bash tests/shellcheck-tests.sh
 
   readme-link-check:
     name: README link sanity

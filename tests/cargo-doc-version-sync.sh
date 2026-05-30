@@ -21,7 +21,7 @@
 # submodules are initialized.
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$root"
+cd "$root" || exit
 ok=1
 
 # Collect all submodule paths from .gitmodules

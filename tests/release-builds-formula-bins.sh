@@ -18,7 +18,7 @@
 #     get built. Each formula bin must appear in the --bin set.
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$root"
+cd "$root" || exit
 ok=1
 
 if [[ ! -d homebrew-menketech/Formula ]]; then

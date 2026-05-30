@@ -18,7 +18,7 @@
 # categories at publish time.
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$root"
+cd "$root" || exit
 ok=1
 
 paths=()

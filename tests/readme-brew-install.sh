@@ -23,7 +23,7 @@
 #   zshrs-all.rb    → zshrs (umbrella variant, same repo)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$root"
+cd "$root" || exit
 ok=1
 
 # Map formula stem → submodule path.

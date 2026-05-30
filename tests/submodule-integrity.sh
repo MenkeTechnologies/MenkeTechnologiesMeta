@@ -5,7 +5,7 @@
 # (c) declare its branch field, (d) match path basename = repo name.
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$root"
+cd "$root" || exit
 ok=1
 
 gm=".gitmodules"
