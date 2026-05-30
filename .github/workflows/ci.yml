@@ -1047,6 +1047,19 @@ jobs:
         # — pure regression floor against the workflow-vanishes
         # failure mode.
         run: bash tests/workflow-jobs-have-runs-on.sh
+      - name: Every workflow step has run: or uses:
+        # FINEST-grained silent-no-op gate in the workflow stack:
+        #   iter-80: workflow with no jobs    (no-op workflow)
+        #   iter-81: job with no steps        (no-op job)
+        #   iter-83: step with no run/uses    (no-op step)
+        # Each level adds a degree of granularity. A 10-step job
+        # where 1 step silently no-ops still shows GREEN with
+        # 10% of testing skipped. Steps end up actionless when
+        # `run:` block is removed but `name:` kept for "later"
+        # restoration that never happens.
+        # 1358 steps across 90 workflows green at iter-83 add —
+        # pure regression floor.
+        run: bash tests/workflow-steps-actionable.sh
 
   readme-link-check:
     name: README link sanity
