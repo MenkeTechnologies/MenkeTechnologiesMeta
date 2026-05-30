@@ -2522,6 +2522,21 @@ jobs:
         # 90/90 if-expressions balanced at iter-240
         # add — pure regression floor.
         run: bash tests/workflow-if-balanced-syntax.sh
+      - name: actions/checkout token uses interpolation
+        # Bare token strings (PAT pasted literally
+        # without ${{ }} wrapping) commit the secret
+        # to git history forever. Push protection
+        # catches obvious ghp_/gho_/ghs_ prefixes but
+        # not custom token formats, deploy keys,
+        # bearer tokens. Secret scanning can be
+        # disabled at org level. Once in git, any
+        # reader (entire internet for public repos)
+        # has it. ${{ secrets.X }} keeps token in
+        # GitHub's secret store, resolves only at
+        # runtime in runner memory. 10/10 checkout
+        # tokens use interpolation at iter-241 add —
+        # pure regression floor.
+        run: bash tests/workflow-checkout-token-interpolated.sh
       - name: Brew formula url and homepage are distinct
         # url = release tarball location; homepage = project
         # URL. Collapse breaks brew info display (visual
