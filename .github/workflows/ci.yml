@@ -649,6 +649,19 @@ jobs:
         # falsely flagged it; refined during iter-51. 894/894 docs
         # green at add.
         run: bash tests/docs-html-lang.sh
+      - name: Every docs/*.html declares <meta charset="utf-8">
+        # Without `<meta charset>`, browsers fall back to encoding
+        # heuristics (or the HTTP Content-Type, which GitHub Pages
+        # serves with a generic header). For UTF-8 content with
+        # em-dashes, typographic quotes, or any non-ASCII char, the
+        # fallback produces mojibake (— rendered as â€").
+        # HTML5 spec: `<meta charset>` must be within the first 1024
+        # bytes — the parser starts encoding detection at byte 0 and
+        # can't change midway. Test verifies presence AND that the
+        # value is exactly utf-8 (case-insensitive) — a non-utf-8
+        # value like iso-8859-1 would pass naive presence but still
+        # break content. 894/894 green at iter-52 add.
+        run: bash tests/docs-charset.sh
 
   readme-link-check:
     name: README link sanity
