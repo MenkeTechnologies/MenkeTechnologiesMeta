@@ -1670,6 +1670,19 @@ jobs:
         # 90/90 workflows green at iter-144 add — pure
         # regression floor.
         run: bash tests/workflow-env-uppercase.sh
+      - name: Workspace.dependencies entries are used by sub-crates
+        # Orphan entries in [workspace.dependencies] are dead
+        # code: cargo metadata resolves their transitive
+        # graph for nothing (slow), reviewers waste time
+        # tracing them, and their version drifts from current
+        # as nothing forces bumps. Walk every sub-crate
+        # Cargo.toml for `dep.workspace = true` references;
+        # set-difference declared vs used. Workspace root
+        # itself is INCLUDED (zshrs/Cargo.toml pattern: both
+        # workspace root AND [package] crate).
+        # 36/36 workspace deps green at iter-145 add — pure
+        # regression floor.
+        run: bash tests/cargo-workspace-deps-used.sh
       - name: Workflow matrix.include entries are mappings
         # GitHub Actions matrix include format requires each
         # entry to be a dimension-name → value mapping. Bare
