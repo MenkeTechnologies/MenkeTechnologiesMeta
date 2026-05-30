@@ -457,6 +457,14 @@ jobs:
         # listed if commands share a man page"). 22/22 man pages green
         # at add time (iter 35) — gate prevents future regressions.
         run: bash tests/man-page-name-format.sh
+      - name: Every Rust submodule's .gitignore excludes target/
+        # Caught powerliners 2026-05-30: no .gitignore at all. The
+        # user's ~/.gitignore_global protected this dev, but fresh CI
+        # clones / new-contributor workstations without that global
+        # config would silently commit the cargo build directory.
+        # Fix: add `/target/` to repo-local .gitignore (+ `!Cargo.lock`
+        # override for binary crates per the iter-11 lock convention).
+        run: bash tests/gitignore-target.sh
 
   readme-link-check:
     name: README link sanity
