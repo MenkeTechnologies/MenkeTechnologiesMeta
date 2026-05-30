@@ -352,6 +352,17 @@ jobs:
         # Test accepts MenkeTechnologies-attributable https URLs and
         # workspace inheritance.
         run: bash tests/cargo-homepage-field.sh
+      - name: Every Rust Cargo.toml description stays under the 150-char display cap
+        # crates.io search results truncate descriptions at ~100 chars
+        # in the card view; the crate page itself wraps awkwardly past
+        # ~150 chars. Thresholds: <= 100 PASS, 100-150 WARN (still
+        # acceptable), > 150 FAIL. Caught 2 over hard cap 2026-05-30
+        # (fusevm 152 chars dropped to 108; spring-boot-rest-generator
+        # 202 chars dropped to 119). Test does NOT enforce the
+        # Homebrew 80-char cap on Cargo's description — brew has its
+        # own desc field enforced by homebrew-menketech's
+        # formula-consistency.rb.
+        run: bash tests/cargo-description-length.sh
 
   readme-link-check:
     name: README link sanity
