@@ -613,6 +613,19 @@ jobs:
         # in a comment that the naive grep classified as a build
         # target. 9/9 formula↔release pairs in sync.
         run: bash tests/formula-release-targets.sh
+      - name: Every Rust binary release strips debug symbols
+        # Unstripped Rust release binaries are ~5-10x larger than
+        # stripped equivalents (debug symbols, type metadata, source
+        # paths). For brew users, that's bandwidth on every install
+        # for zero benefit (Rust panic backtraces work without
+        # embedded debug info).
+        # Accepts either `strip = true`/`"symbols"` in
+        # [profile.release] OR a `strip` invocation in release.yml.
+        # Resolves workspace inheritance: Tauri apps put
+        # [profile.release] in workspace-root Cargo.toml (NOT
+        # src-tauri/Cargo.toml) — test refined during iter-49 dev to
+        # check both. 22/22 binary crates with release.yml green.
+        run: bash tests/release-strips-symbols.sh
 
   readme-link-check:
     name: README link sanity
