@@ -268,6 +268,18 @@ jobs:
         # Handles yaml `cargo build \\` line-continuation pattern by
         # joining backslash-terminated lines before scanning for --bin.
         run: bash tests/release-builds-formula-bins.sh
+      - name: Every `brew install <name>` command in any README/doc refers to a real formula
+        # Catches typos: `brew install awks` (typo for awkrs),
+        # `brew install stryke-lang` (formula is `stryke`),
+        # `brew install zshrs-cli` (no such formula). Users copy-pasting
+        # the documented command hit `Error: No available formula`.
+        # Strict line-pattern: only matches `brew install` as a command
+        # (start of line after whitespace) — sentence-style mentions in
+        # prose like "you might brew install something" are skipped.
+        # Allowlist covers homebrew/core and known third-party-tap names
+        # (redis, mongodb-community, etc.) so cross-references to
+        # external formulas don't false-fail.
+        run: bash tests/readme-brew-install-formula-exists.sh
 
   readme-link-check:
     name: README link sanity
