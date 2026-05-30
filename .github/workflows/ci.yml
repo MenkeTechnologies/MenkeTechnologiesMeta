@@ -1414,6 +1414,16 @@ jobs:
         # 90/90 workflows green at iter-113 add — pure regression
         # floor.
         run: bash tests/workflow-cargo-release-locked.sh
+      - name: No env-dump patterns in workflow run blocks
+        # `printenv` / `env > file` / `env | tee` exposes
+        # secrets to logs (GitHub masks substring matches against
+        # secret VALUES but bypasses on regenerated rotations,
+        # transformations, and substrings of other secrets) and
+        # uploaded artifacts (no masking). Allowlist:
+        # `env > $GITHUB_ENV` (canonical env-passing pattern).
+        # 90/90 workflows green at iter-114 add — security-
+        # critical regression floor against secret leakage.
+        run: bash tests/workflow-no-env-dump.sh
 
   readme-link-check:
     name: README link sanity
