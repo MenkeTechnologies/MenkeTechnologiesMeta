@@ -480,6 +480,23 @@ jobs:
         # reached src-tauri/Cargo.toml's license="MIT"); fixed via
         # Audio-Haxor@f06873e0bc + iter-10 test fall-through refinement.
         run: bash tests/license-canonical-text.sh
+      - name: Every Cargo.lock self-version matches its Cargo.toml version
+        # Catches the failure mode where someone bumps Cargo.toml's
+        # version (via the `bp` shortcut or manual edit) but skips
+        # running `cargo update`/`cargo build` to refresh the lockfile.
+        # Cargo.lock's [[package]] entry for the crate's OWN name then
+        # references an older release. Consequences:
+        #   - `cargo build --locked` (the iter-6 release pattern) FAILS
+        #     because the requested dependency version doesn't match
+        #   - cargo publish proceeds but ships a broken bundled lockfile;
+        #     downstream `cargo install --locked` users hit build errors
+        # The fix is `cargo update -p <crate>`. 26/26 green at add time.
+        # Awk gotcha discovered while writing the test: the natural
+        # `print cur_ver; exit` pattern also re-fires the END block on
+        # the matched record, producing double output. Fixed via a
+        # `found` flag gating the END block — surfaced as inline
+        # comment in the test for future authors.
+        run: bash tests/cargo-lock-version-sync.sh
 
   readme-link-check:
     name: README link sanity
