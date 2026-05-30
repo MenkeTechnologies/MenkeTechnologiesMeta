@@ -1489,6 +1489,17 @@ jobs:
         # 24/24 release.yml workflows green at iter-125 add —
         # pure regression floor.
         run: bash tests/release-workflow-tag-pattern.sh
+      - name: "No workflow uses permissions: write-all"
+        # `write-all` is the legacy catch-all over-privilege
+        # grant. Any compromised step gets: push to any branch
+        # (incl. main), open/close/merge PRs, publish packages,
+        # mint OIDC tokens, approve checks bypassing branch
+        # protection. Modern workflows enumerate scoped
+        # permissions instead. Pairs with iter-116
+        # (id-token:write specifically).
+        # 90/90 workflows green at iter-126 add — security-
+        # critical regression floor.
+        run: bash tests/workflow-no-write-all.sh
       - name: Brew formula class name matches TitleCased filename
         # Homebrew loads formulas by looking up a Ruby constant
         # equal to the kebab-to-camel conversion of the filename.
