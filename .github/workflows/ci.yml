@@ -1047,7 +1047,7 @@ jobs:
         # — pure regression floor against the workflow-vanishes
         # failure mode.
         run: bash tests/workflow-jobs-have-runs-on.sh
-      - name: Every workflow step has run: or uses:
+      - name: "Every workflow step has run: or uses:"
         # FINEST-grained silent-no-op gate in the workflow stack:
         #   iter-80: workflow with no jobs    (no-op workflow)
         #   iter-81: job with no steps        (no-op job)
@@ -1060,6 +1060,19 @@ jobs:
         # 1358 steps across 90 workflows green at iter-83 add —
         # pure regression floor.
         run: bash tests/workflow-steps-actionable.sh
+      - name: Every workflow on-trigger is a known GitHub event
+        # Pins TRIGGER VALIDITY past iter-69 (top-level name) and
+        # iter-68 (YAML parseable). A workflow's `on:` field must
+        # reference at least one known GitHub Actions event type
+        # — a typo (`on: poosh`) parses as `{poosh: null}` which
+        # is valid YAML AND has a top-level on key, but the
+        # workflow never fires because GitHub doesn't recognize
+        # the event. Yet another silent-no-op vector.
+        # YAML 1.1 quirk handled: `on` parses as boolean True so
+        # lookup tries both string "on" and boolean True keys.
+        # 90/90 workflows green at iter-84 add — pure regression
+        # floor.
+        run: bash tests/workflow-on-trigger-valid.sh
 
   readme-link-check:
     name: README link sanity
