@@ -2033,6 +2033,20 @@ jobs:
         # missing runtime dep). 10/10 formulas at
         # iter-205 add — pure regression floor.
         run: bash tests/formula-test-has-exec.sh
+      - name: Concurrency group references github.* context
+        # Without github.* in the group string, the
+        # lane is STATIC: every PR, every push, every
+        # workflow_dispatch shares the same lane.
+        # Push to branch A blocks push to B; PR #100
+        # blocks PR #200; cancel-in-progress: true
+        # cancels unrelated in-flight runs across
+        # branches. Canonical pattern:
+        # group: ${{ github.workflow }}-${{ github.ref
+        # }}. Content-shape complement to existing
+        # workflow-concurrency-group (presence). 59/59
+        # concurrency blocks at iter-206 add — pure
+        # regression floor.
+        run: bash tests/workflow-concurrency-group-scoped.sh
       - name: Brew formula url and homepage are distinct
         # url = release tarball location; homepage = project
         # URL. Collapse breaks brew info display (visual
