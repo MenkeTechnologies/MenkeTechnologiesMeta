@@ -1165,6 +1165,19 @@ jobs:
         # 27/27 crates green at iter-92 add — pure regression
         # floor.
         run: bash tests/cargo-name-shape.sh
+      - name: No workflow uses pull_request_target trigger
+        # pull_request_target runs in BASE branch context (has
+        # secret access) but checks out HEAD (PR content). That
+        # combo is the most common GitHub Actions supply-chain
+        # attack surface — malicious contributor PR runs with
+        # secrets and exfiltrates them. Default policy for this
+        # org: hard NO. Legitimate uses (comment on fork PRs)
+        # require careful explicit scoping that's hard to get
+        # right; the default-deny is safer than case-by-case
+        # review.
+        # 90/90 workflow files green at iter-93 add — pure
+        # regression floor against accidental introduction.
+        run: bash tests/workflow-no-pull-request-target.sh
 
   readme-link-check:
     name: README link sanity
