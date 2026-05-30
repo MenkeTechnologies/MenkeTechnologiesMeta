@@ -918,6 +918,21 @@ jobs:
         # 11/11 workspace member paths green at iter-72 add —
         # pure regression floor (traderview's 6 sub-crates).
         run: bash tests/cargo-workspace-members-exist.sh
+      - name: Every Cargo.toml parses as valid TOML 1.0
+        # Cargo's own parser rejects invalid TOML, but `cargo
+        # build` has to spin up rustc + dep resolution before the
+        # error surfaces. Lint-time TOML validation cuts the
+        # round trip from minutes to seconds: a contributor PR
+        # with a broken Cargo.toml gets fast-fail without burning
+        # a full Rust build slot.
+        # Common breakages: duplicate keys, mismatched braces in
+        # inline tables, unescaped backslash in Windows paths,
+        # missing closing `]` on array literals.
+        # Test uses python tomllib (stdlib 3.11+) which matches
+        # Cargo's toml_edit parsing tolerance.
+        # 38/38 Cargo.toml files green at iter-73 add — pure
+        # regression floor.
+        run: bash tests/cargo-toml-parseable.sh
 
   readme-link-check:
     name: README link sanity
