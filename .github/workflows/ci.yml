@@ -730,6 +730,18 @@ jobs:
         # crates.io's crate page loses a clickable link.
         # 11/11 publishable crates green at iter-57 add.
         run: bash tests/cargo-three-url-distinct.sh
+      - name: Every Cargo.toml [[bin]] path points at an existing file
+        # Cargo's `[[bin]]` table accepts `path = "src/bin/foo.rs"`.
+        # If the source file is renamed/moved/deleted without
+        # updating Cargo.toml — or if Cargo.toml gets a typo'd
+        # path — `cargo build` fails with "could not find source
+        # file" only at build time (slowest possible feedback loop).
+        # This gate stat()s the path at lint time: instant feedback,
+        # zero compilation cost. Resolves paths RELATIVE to the
+        # directory containing Cargo.toml (Cargo's own rule).
+        # 37/37 [[bin]] path entries green at iter-59 add — pure
+        # regression floor against rename/move/typo drift.
+        run: bash tests/cargo-bin-path-exists.sh
 
   readme-link-check:
     name: README link sanity
