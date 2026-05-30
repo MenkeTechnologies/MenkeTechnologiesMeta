@@ -816,6 +816,20 @@ jobs:
         # pure regression floor (the gate that protects all
         # other gates).
         run: bash tests/meta-self-audit.sh
+      - name: No `git = "..."` dependencies in publishable Cargo.toml
+        # crates.io's publish API REJECTS git deps at publish time
+        # with "all dependencies must have a version specified".
+        # Same publish-time blocker class as iter-62's wildcard
+        # gate, same fix (catch at lint time). Git deps sneak in
+        # from tutorials pinning to an upstream main branch for
+        # an unreleased feature, or from copy-paste of internal
+        # workspace patterns into publishable crates.
+        # publish=false crates SKIPPED — they never go to crates.io
+        # and sometimes legitimately need git deps for unreleased
+        # upstream fixes.
+        # 0/11 publishable crates with git deps at iter-66 add
+        # (16 publish=false skipped) — pure regression floor.
+        run: bash tests/cargo-no-git-deps.sh
 
   readme-link-check:
     name: README link sanity
