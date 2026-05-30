@@ -682,6 +682,16 @@ jobs:
         # Test fails distinct cases: missing tag vs whitespace-
         # only content. 894/894 docs clean at add.
         run: bash tests/docs-title-present.sh
+      - name: Every formula's license field matches its Cargo.toml license
+        # Catches the failure mode where Cargo.toml's license
+        # changes (e.g., MIT → "MIT OR Apache-2.0" relicensing)
+        # but the formula's license field doesn't follow. brew's
+        # `brew audit` checks the formula license but doesn't
+        # validate it against the source crate.
+        # SPDX-aware matching: a formula declaring "MIT" PASSes
+        # against a Cargo declaring "MIT OR Apache-2.0" because
+        # MIT is in the OR-set. 9/9 formula↔Cargo pairs in sync.
+        run: bash tests/formula-license-matches-cargo.sh
 
   readme-link-check:
     name: README link sanity
