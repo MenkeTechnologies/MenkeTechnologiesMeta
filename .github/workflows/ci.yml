@@ -329,6 +329,18 @@ jobs:
         # produces a WARN (still supported but org default is 2021);
         # 2015 / missing / unknown fail.
         run: bash tests/cargo-edition-field.sh
+      - name: Every Rust Cargo.toml has authors attributing MenkeTechnologies
+        # crates.io publish proceeds without an authors field but the
+        # crate page silently drops attribution — downstream advisory
+        # DBs / mirror tools / dependabot can't resolve maintainer.
+        # Catches missing authors AND post-fork attribution drift
+        # (someone-else's name with no MenkeTechnologies/Jacob Menke
+        # identifier). Test accepts the canonical org form
+        # `["MenkeTechnologies"]` plus explicit-contact variants and
+        # workspace inheritance. Caught 4 missing fields 2026-05-30
+        # (awkrs / iftoprs / nmaprs / storageshower); bulk-fixed with
+        # the org-name form matching 20+ siblings.
+        run: bash tests/cargo-authors-field.sh
 
   readme-link-check:
     name: README link sanity
