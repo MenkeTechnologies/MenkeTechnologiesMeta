@@ -199,6 +199,20 @@ jobs:
         # text (same as siblings strykelang/iftoprs). Test accepts
         # LICENSE/LICENSE.md/LICENSE-MIT/LICENSE-APACHE dual-license forms.
         run: bash tests/license-file-present.sh
+      - name: Every Rust binary submodule commits Cargo.lock
+        # `cargo build --locked` is the standard release pattern, but it
+        # only works when Cargo.lock is committed. Without it, release
+        # builds silently roll forward transitive deps between tag-cut
+        # and rebuild, producing unreproducible binaries. The Rust
+        # community convention: library crates skip Cargo.lock; binary
+        # crates commit it. Caught 2 of 26 binary repos in this state
+        # 2026-05-30 (Audio-Haxor + spring-boot-rest-generator — both
+        # blocked by ~/.gitignore_global's library-default rule).
+        # Bulk-fixed via `cargo generate-lockfile --offline && git add -f`.
+        # Test recognizes [[bin]] / default-run / src/main.rs / src/bin/*
+        # as binary-eligibility signals, including workspace-root
+        # Cargo.toml with src-tauri member binaries (Audio-Haxor pattern).
+        run: bash tests/cargo-lock-committed.sh
 
   readme-link-check:
     name: README link sanity
