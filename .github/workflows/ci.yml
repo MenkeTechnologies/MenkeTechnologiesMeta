@@ -291,6 +291,51 @@ jobs:
         # behind their Cargo.toml by 0.0.x to 0.2.x versions); bulk-
         # fixed via sed-replace on the .TH header line only.
         run: bash tests/man-page-version-sync.sh
+      - name: Every man page is free of trailing whitespace
+        # Trailing whitespace on a .1 file is invisible in `man` output
+        # but corrupts roff input: `.B word ` becomes a 3-arg call to
+        # .B (bold-roman-bold alternation, renderer-dependent);
+        # whatis/apropos parse `.SH NAME \- description` wrong when the
+        # final `\-` carries trailing spaces; every "fix typo" PR shows
+        # a 20-line diff because the whitespace-strip cascades.
+        # Excludes */target/* (e.g. mp3lame-sys' vendored manpages).
+        run: bash tests/man-page-no-trailing-whitespace.sh
+      - name: Every man page ends with a final newline
+        # POSIX defines a line as terminated by `\n`. A man page without
+        # one breaks `cat`-concatenation builds, shows `\ No newline at
+        # end of file` in every diff (every edit looks like a 2-line
+        # replacement), undercounts in `wc -l`, and triggers a
+        # `missing newline before end-of-file` warning in groff under
+        # warnings-to-errors. Catches the editor-saved-without-newline
+        # regression class.
+        run: bash tests/man-page-final-newline.sh
+      - name: Every standard binary man page has a .SH SYNOPSIS section
+        # `.SH SYNOPSIS` is the machine-readable argument grammar that
+        # downstream completion generators consume (fish's
+        # create_manpage_completions, zsh's _man, bash-completion's
+        # man-page parser). A page without it silently emits no
+        # completion fixtures for the affected binary. Scope: the
+        # canonical `<name>.1` pages only; the `<name>all.1`
+        # comprehensive-reference companion uses OVERVIEW + numbered
+        # chapters per the user's convention (see tier1-man-pages.sh)
+        # and is exempt.
+        run: bash tests/man-page-synopsis-section.sh
+      - name: Every tests/*.sh script is executable in git index
+        # The meta repo's tests/ scripts (and their iter-50 vendored
+        # copies in each submodule's tests/) need to run as both
+        # `bash tests/foo.sh` (CI) and `./tests/foo.sh` (humans during
+        # development). Without +x in git, the direct-invocation path
+        # errors with "Permission denied" on a fresh clone. Pin mode
+        # 100755 in the git index for every tracked `tests/*.sh`.
+        run: bash tests/tests-shell-executable.sh
+      - name: Every tests/*.sh script has a canonical shebang
+        # A script without a `#!` falls back to either the invoking
+        # shell or /bin/sh (Linux default = dash on Debian/Ubuntu,
+        # which rejects `[[` / arrays / `local` outright). Pin the
+        # shebang to one of `#!/usr/bin/env (bash|sh)` or
+        # `#!/bin/(bash|sh)` so the interpreter is explicit and
+        # deterministic regardless of how the script is invoked.
+        run: bash tests/tests-shell-shebang.sh
       - name: Every Rust Cargo.toml has repository = MenkeTechnologies/<name>
         # Cargo.toml's repository field surfaces on crates.io, in
         # `cargo metadata` consumers (dependabot, advisory DBs), and
