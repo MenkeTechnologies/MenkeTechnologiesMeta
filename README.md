@@ -93,8 +93,8 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`Audio-Haxor`](https://github.com/MenkeTechnologies/Audio-Haxor) | **Tauri v2 desktop GUI app** + JUCE engine. VST2/VST3/AU/CLAP scanner, sample vault, DAW project index, KVR version checker. |
 | [`traderview`](https://github.com/MenkeTechnologies/traderview) | **Tauri v2 desktop GUI app** (sibling to Audio-Haxor) — TraderVue-style trading journal with embedded Postgres, vanilla JS + uPlot frontend. The same Rust workspace crates also ship a multi-user axum web service. |
 | [`nmaprs`](https://github.com/MenkeTechnologies/nmaprs) | Rust port of `nmap`. Full async TCP/UDP/SCTP/IP-protocol scans, idle/zombie scans, NSE-style script probes, ARP/ICMP/timestamp/mask host discovery, top-ports list embedded. |
-| [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | **Rust CLI** — mature port of Python's [`powerline-status`](https://github.com/powerline/powerline) (v0.2.1, 2,500+ `#[test]` functions, 5-binary suite: `powerline` / `powerline-daemon` / `powerline-config` / `powerline-render` / `powerline-lint`, parity-tested against upstream Python). Drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. |
-| [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | The terminal OS. 506+ verbs, 172k LOC, zinit-based, stryke-powered. ⭐ 220 |
+| [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | **Rust CLI** — mature port of Python's [`powerline-status`](https://github.com/powerline/powerline) (v0.2.11, 2,750+ `#[test]` functions, 5-binary suite: `powerline` / `powerline-daemon` / `powerline-config` / `powerline-render` / `powerline-lint`, parity-tested against upstream Python). Drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. |
+| [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | The terminal OS. 463+ verbs, 172k LOC, zinit-based, stryke-powered. ⭐ 221 |
 
 ### Tier 2 — Stryke ecosystem (16)
 
@@ -123,7 +123,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 
 | Project | What it is |
 |---|---|
-| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 28,085-completion zsh corpus (9,253 `src/` + 14,337 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 53. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
+| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 28,847-completion zsh corpus (9,253 `src/` + 15,099 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 53. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
 
 ### Tier 4 — Zsh ecosystem plugins (28)
 
@@ -166,7 +166,7 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 
 | Project | What it is |
 |---|---|
-| [`VimColorSchemes`](https://github.com/MenkeTechnologies/VimColorSchemes) | 731 hand-curated Vim colorschemes packaged as a single Pathogen / vim-plug / lazy.nvim bundle. The largest one-bundle scheme collection. |
+| [`VimColorSchemes`](https://github.com/MenkeTechnologies/VimColorSchemes) | 732 hand-curated Vim colorschemes packaged as a single Pathogen / vim-plug / lazy.nvim bundle. The largest one-bundle scheme collection. |
 | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
 ### Tier 6 — Apps, extensions, web & web-APIs (5)
