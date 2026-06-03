@@ -580,6 +580,39 @@ jobs:
         # `content=""` is functionally equivalent to absence.
         # Iter-45: 73/73 docs files clean — regression-prevention floor.
         run: bash tests/docs-meta-tags.sh
+      - name: Every docs/*.html `<a target="_blank">` carries rel="...noopener..."
+        # Tab-nabbing security floor. Without rel="noopener", a linked
+        # page can read window.opener.location and silently swap the
+        # parent tab to a phishing URL. Modern Chrome/Firefox/Safari
+        # treat target=_blank as implicit noopener — but older WebViews,
+        # Tauri-bundled WebKit on older macOS, and in-app browsers in
+        # social apps (Slack/Discord/Twitter) still need the explicit
+        # attribute. Mandatory across all docs/*.html.
+        run: bash tests/docs-target-blank-rel-noopener.sh
+      - name: Every docs/*.html href/src URL is https:// (no http://)
+        # Mixed-content blocking: a page loaded over https has its
+        # http:// script/img/stylesheet refs silently stripped by
+        # modern browsers — page renders wrong, cause is invisible
+        # without devtools. Even passive http:// <a href> exposes the
+        # referrer + browsing pattern to on-path observers. GitHub
+        # Pages hosting is https-only; every http:// ref here is
+        # either a mistake or a rusty link that's long since migrated
+        # upstream. Local-dev URLs (http://localhost / 127.0.0.1 /
+        # 0.0.0.0 / [::1]) are exempt.
+        run: bash tests/docs-no-http-links.sh
+      - name: Every docs/*.html is free of inline DOM event-handlers
+        # Tauri v2 release CSP defaults to script-src 'self' — no
+        # 'unsafe-inline'. Inline handlers (onclick / oninput /
+        # onchange / ...) are CSP-equivalent to inline <script> blocks
+        # and get silently dropped at parse time. Audio-Haxor and
+        # traderview bundle their docs into release artifacts — inline
+        # handlers there poison the release-only behavior path that
+        # works in dev. Future GitHub Pages site-level CSP tightening
+        # also makes this gate forward-compatible. Allowlists
+        # rustdoc-generated trees (Audio-Haxor/docs/api/) and
+        # zshrs/docs/port_report.html (load-bearing interactive UI in a
+        # hand-rolled report generator owned by gen_port_report.py).
+        run: bash tests/docs-no-inline-handlers.sh
       - name: Every Cargo.toml version is strict X.Y.Z[-prerelease] semver
         # Cargo accepts loose forms like `1.0` (no patch) or `1`
         # (only major) but each triggers surprising downstream
