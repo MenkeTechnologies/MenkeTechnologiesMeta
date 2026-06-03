@@ -658,6 +658,41 @@ jobs:
         # zshrs/docs/port_report.html (load-bearing interactive UI in a
         # hand-rolled report generator owned by gen_port_report.py).
         run: bash tests/docs-no-inline-handlers.sh
+      - name: Every docs/*.html contains at least one <h1> element
+        # h1 is the document's top-level heading: required by HTML5
+        # outline algorithm (validator.w3.org + Lighthouse a11y flag
+        # missing h1 as "Document does not have a main landmark");
+        # the screen-reader navigation anchor (NVDA/JAWS/VoiceOver
+        # users press `h` to jump heading-to-heading — no h1 means
+        # no obvious top-of-content); the search-engine primary-topic
+        # signal (Google's structured-data guidelines). Allowlists
+        # rustdoc-generated trees (help.html / settings.html fixtures
+        # don't always emit h1).
+        run: bash tests/docs-has-h1.sh
+      - name: Every docs/*.html is free of obsolete HTML4 tags
+        # Pre-HTML5 presentational tags (center, font, marquee, blink,
+        # strike, tt, big, frame, frameset, noframes, applet) were
+        # removed in HTML5 or marked obsolete in HTML5.1. They render
+        # in legacy mode in modern browsers but each has a defined
+        # replacement (CSS for layout/font, <code> for tt, <iframe>
+        # for frame, <del> for strike) and most are subject to future
+        # removal. blink and applet are already dead (browsers
+        # dropped support 2013 + 2017-2018 respectively). Allowlists
+        # rustdoc-generated trees (legacy rustdoc emitted <tt> for
+        # code refs).
+        run: bash tests/docs-no-deprecated-tags.sh
+      - name: Every docs/*.html avoids placeholder href values
+        # `href="#"` is the wireframe-HTML copy-paste artifact: scrolls
+        # to top + adds `#` to URL bar + announces as a navigable link
+        # to screen readers (sending users to a no-op destination).
+        # `href="javascript:..."` is the inline-JS-as-URL anti-pattern:
+        # CSP-blocked in modern Tauri + GitHub Pages, leaks JS into
+        # URL bar history, breaks middle-click-open-new-tab. Both are
+        # canonical scaffolding artifacts that ship to prod by accident.
+        # Allowlists rustdoc-generated trees (`<a id="back"
+        # href="javascript:void(0)" onclick="history.back();">` is a
+        # rustdoc fixture pattern owned upstream).
+        run: bash tests/docs-no-placeholder-href.sh
       - name: Every Cargo.toml version is strict X.Y.Z[-prerelease] semver
         # Cargo accepts loose forms like `1.0` (no patch) or `1`
         # (only major) but each triggers surprising downstream
