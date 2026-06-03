@@ -17,14 +17,21 @@
 # Canonical shebangs accepted:
 #   - `#!/usr/bin/env bash`  (PATH-portable; preferred org standard)
 #   - `#!/usr/bin/env sh`    (POSIX-portable; for sh-only scripts)
-#   - `#!/bin/bash`          (absolute; works on Linux + macOS)
-#   - `#!/bin/sh`            (absolute POSIX; works everywhere)
+#   - `#!/usr/bin/env zsh`   (zsh — the org's daily-driver shell;
+#                            zshrs / zpwr / zsh-* plugins ship
+#                            zsh-specific test harnesses)
+#   - `#!/bin/bash` / `#!/bin/sh` / `#!/bin/zsh` (absolute variants)
 #
-# Anything else (no shebang, `#!/usr/bin/python`, `#!zsh`, `#!`
-# alone) is flagged. The point isn't to homogenize on bash —
-# scripts can legitimately be sh-only — but to make the interpreter
+# Anything else (no shebang, `#!/usr/bin/python`, `#!`, etc.) is
+# flagged. The point isn't to homogenize on bash — scripts can
+# legitimately be sh- or zsh-only — but to make the interpreter
 # explicit so the script behavior is deterministic regardless of
 # invocation context.
+#
+# Scope: depth-1 only (top-level `tests/*.sh`), NOT nested
+# `tests/<subdir>/*.sh`. Nested paths hold fixtures / corpora
+# (e.g. zshrs `tests/lexer_corpus/*.sh` — bare command snippets
+# fed to the lexer parity harness, by design lacking shebangs).
 #
 # Test reads the first byte of each tests/*.sh and matches against
 # the accepted shebang set.
@@ -33,7 +40,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root" || exit
 ok=1
 
-shebang_re='^#!(/usr/bin/env[[:space:]]+(bash|sh)|/bin/(bash|sh))([[:space:]]|$)'
+shebang_re='^#!(/usr/bin/env[[:space:]]+(bash|sh|zsh)|/bin/(bash|sh|zsh))([[:space:]]|$)'
 
 checked=0
 flagged=0
@@ -42,8 +49,9 @@ files_with_issues=()
 while IFS= read -r p; do
     [[ -f "$p" ]] || continue
     [[ "$p" == *.sh ]] || continue
-    # Restrict to */tests/ and ./tests/ paths only.
-    [[ "$p" =~ ^[^/]*/tests/ || "$p" =~ ^tests/ ]] || continue
+    # Depth-1 only: tests/foo.sh or <submodule>/tests/foo.sh.
+    # Excludes nested fixture/corpus dirs (tests/lexer_corpus/foo.sh).
+    [[ "$p" =~ ^tests/[^/]+\.sh$ || "$p" =~ ^[^/]+/tests/[^/]+\.sh$ ]] || continue
     checked=$((checked + 1))
     first=$(head -1 "$p")
     if ! [[ "$first" =~ $shebang_re ]]; then

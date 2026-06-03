@@ -16,9 +16,15 @@
 # depending on the author's style. +x is the universal floor that
 # works in both modes.
 #
-# Test scans `git ls-files` for `tests/*.sh` paths, queries the
-# git index for the file mode (100755 = executable, 100644 = not),
-# and fails on any file whose mode is non-executable.
+# Test scans `git ls-files` for `tests/*.sh` paths at depth 1 ONLY
+# (i.e., top-level `tests/foo.sh`, NOT nested `tests/corpus/foo.sh`
+# or `tests/data/foo.sh`). Nested paths conventionally hold
+# fixtures / corpora / vendored test data — `.sh` files there are
+# inputs to the test runner, not test scripts themselves. zshrs's
+# `tests/lexer_corpus/*.sh` is the canonical example: bare command
+# snippets fed to the lexer's parity harness. Querying git index
+# mode (100755 = executable, 100644 = not), the test fails on any
+# top-level `tests/*.sh` whose mode is non-executable.
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root" || exit
@@ -33,7 +39,9 @@ files_with_issues=()
 while IFS=$'\t' read -r meta path; do
     mode=$(echo "$meta" | awk '{print $1}')
     [[ "$path" == *.sh ]] || continue
-    [[ "$path" =~ ^[^/]*/tests/ || "$path" =~ ^tests/ ]] || continue
+    # Depth-1 only: tests/foo.sh or <submodule>/tests/foo.sh.
+    # Excludes tests/<subdir>/foo.sh (fixtures / corpora).
+    [[ "$path" =~ ^tests/[^/]+\.sh$ || "$path" =~ ^[^/]+/tests/[^/]+\.sh$ ]] || continue
     checked=$((checked + 1))
     if [[ "$mode" != "100755" ]]; then
         echo "FAIL  $path: git mode=$mode (expected 100755 / executable)"
