@@ -102,7 +102,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 
 | Project | What it is |
 |---|---|
-| [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | Single Homebrew tap for 10 MenkeTechnologies CLI formulas (`awkrs` / `iftoprs` / `lsofrs` / `nmaprs` / `powerliners` / `storageshower` / `stryke` / `temprs` / `zshrs` / `zshrs-all`). Formulas auto-bumped by each tool's `Release` workflow via `HOMEBREW_TAP_TOKEN`. |
+| [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | Single Homebrew tap for 11 MenkeTechnologies CLI formulas (`awkrs` / `iftoprs` / `lsofrs` / `nmaprs` / `powerliners` / `storageshower` / `stryke` / `temprs` / `zpwrchrome-host` / `zshrs` / `zshrs-all`). Formulas auto-bumped by each tool's `Release` workflow via `HOMEBREW_TAP_TOKEN`. |
 | [`stryke-arrow`](https://github.com/MenkeTechnologies/stryke-arrow) | Apache Arrow integration. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-arrow/) · [report](https://menketechnologies.github.io/stryke-arrow/report.html)</sub> |
 | [`stryke-aws`](https://github.com/MenkeTechnologies/stryke-aws) | AWS SDK bindings (S3, EC2, SQS, Lambda, ...). &middot; <sub>[docs](https://menketechnologies.github.io/stryke-aws/) · [report](https://menketechnologies.github.io/stryke-aws/report.html)</sub> |
 | [`stryke-demo`](https://github.com/MenkeTechnologies/stryke-demo) | Demo scripts + example programs. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-demo/) · [report](https://menketechnologies.github.io/stryke-demo/report.html)</sub> |
@@ -175,7 +175,7 @@ Browser extensions, supporting apps, public website, and web-API services. (Taur
 
 | Project | What it is |
 |---|---|
-| [`zpwrchrome`](https://github.com/MenkeTechnologies/zpwrchrome) | The fastest recent-tabs Chrome extension with the most keyboard shortcuts. Manifest V3, cross-window MRU stack, 38 commands (3 default-keyed + 35 user-bindable), sub-popup live-filter search, companion Chrome theme matching the strykelang HUD palette. &middot; <sub>[docs](https://menketechnologies.github.io/zpwrchrome/) · [report](https://menketechnologies.github.io/zpwrchrome/report.html)</sub> |
+| [`zpwrchrome`](https://github.com/MenkeTechnologies/zpwrchrome) | Browser power-tool: UNIX `pass` integration, segmented multi-connection download manager (default Chrome takeover), JetBrains-style tab switcher with cross-window MRU + scenes + opener-tree + minimap, fzf history search, Tampermonkey-equivalent userscripts, full-page screenshot, Wappalyzer-compatible tech detection, cyberpunk page-theme injector, Turn Off the Lights cinema dimmer, reader mode, post-download custom commands, JSON viewer, UA switcher, find-in-all-tabs. Manifest V3, ~60 user-bindable commands. Ships a companion Chrome theme + the **native messaging host** `zpwrchrome-host` (the Rust port of browserpass-native + the segmented downloader + `run.spawn` for post-download commands) — installable via `brew install zpwrchrome-host` from the [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) tap. &middot; <sub>[docs](https://menketechnologies.github.io/zpwrchrome/) · [report](https://menketechnologies.github.io/zpwrchrome/report.html)</sub> |
 | [`storageshower`](https://github.com/MenkeTechnologies/storageshower) | Disk-usage **TUI** in Rust (sibling to iftoprs). Walks a directory tree, presents space-by-folder with sort + drill-down. |
 | [`MenkeTechnologies.github.io`](https://github.com/MenkeTechnologies/MenkeTechnologies.github.io) | Public-facing personal site / project landing page (cyberpunk HUD, static HTML + CSS). |
 | [`spring-boot-rest-generator`](https://github.com/MenkeTechnologies/spring-boot-rest-generator) | **Web-API codegen tool.** Rust port (v0.2.0+) of the original Kotlin Spring-Boot-REST-API generator — feed it MySQL / PostgreSQL / SQLite / MSSQL DDL, get a fully wired Spring Boot REST backend (entities, controllers, DAOs, repositories) in Java / Kotlin / Groovy. Kotlin source preserved under `src/main/kotlin/` for reference. |
@@ -300,9 +300,9 @@ cd MenkeTechnologiesMeta
 # install zpwr (the terminal OS)
 ./zpwr/install/zpwrInstall.sh
 
-# install any CLI tool via the unified homebrew tap (10 formulas: awkrs, iftoprs, lsofrs, nmaprs, powerliners, storageshower, stryke, temprs, zshrs, zshrs-all)
+# install any CLI tool via the unified homebrew tap (11 formulas: awkrs, iftoprs, lsofrs, nmaprs, powerliners, storageshower, stryke, temprs, zpwrchrome-host, zshrs, zshrs-all)
 brew tap MenkeTechnologies/menketech
-brew install stryke zshrs lsofrs iftoprs awkrs nmaprs temprs powerliners storageshower
+brew install stryke zshrs lsofrs iftoprs awkrs nmaprs temprs powerliners storageshower zpwrchrome-host
 # `zshrs-all` is the full zshrs install (shell + zd client + recorder +
 # daemon). It conflicts_with `zshrs` — pick one. Use `zshrs-all` if you
 # want the recorder/daemon tooling alongside the shell binary.
