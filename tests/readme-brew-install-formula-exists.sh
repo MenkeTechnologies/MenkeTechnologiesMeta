@@ -36,7 +36,7 @@ tap_formulas=$(
 # reference. These don't live in our tap but are real, installable
 # formulas. Add explicitly so the test fails loudly on typos within
 # our own ecosystem.
-core_allowlist="jq pnpm tmux zsh node python3 git rustup ripgrep fd bat eza go cmake protobuf libpcap pkg-config openssl libsodium gh redis mongodb-community apache-spark librdkafka ccze"
+core_allowlist="jq pnpm tmux zsh node python3 git rustup ripgrep fd bat eza go cmake protobuf libpcap pkg-config openssl libsodium gh redis mongodb-community apache-spark librdkafka ccze tesseract"
 
 # Extract all `brew install <name>` invocations from a file. Handles:
 #   brew install foo
