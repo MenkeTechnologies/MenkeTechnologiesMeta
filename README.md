@@ -83,18 +83,18 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 
 | Project | What it is |
 |---|---|
-| [`strykelang`](https://github.com/MenkeTechnologies/strykelang) | The fastest dynamic language for parallel ops. Perl 5 interpreter in Rust, bytecode VM + Cranelift JIT, 10,431 builtins. |
-| [`zshrs`](https://github.com/MenkeTechnologies/zshrs) | The first compiled Unix shell. 1:1 zsh C-port + extensions, persistent worker pool, AOP intercept, rkyv bytecode cache. |
-| [`fusevm`](https://github.com/MenkeTechnologies/fusevm) | Language-agnostic bytecode VM with fused superinstructions and 3-tier Cranelift JIT. The execution engine behind strykelang, zshrs, awkrs. |
-| [`lsofrs`](https://github.com/MenkeTechnologies/lsofrs) | Rust rewrite of `lsof` — 5–21× faster, **7-tab TUI** (ratatui), 31 cyberpunk themes. |
-| [`temprs`](https://github.com/MenkeTechnologies/temprs) | Temporary file stack manager. Atomic `flock`-protected master record, dual indexing (position or `@name`). |
-| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | AWK in Rust. Bytecode VM + Cranelift JIT + persistent rkyv bytecode cache + parallel records. |
-| [`iftoprs`](https://github.com/MenkeTechnologies/iftoprs) | Real-time bandwidth monitor. **TUI** built on ratatui, 31 themes, process attribution via `lsof`, NDJSON streaming. |
-| [`Audio-Haxor`](https://github.com/MenkeTechnologies/Audio-Haxor) | **Tauri v2 desktop GUI app** + JUCE engine. VST2/VST3/AU/CLAP scanner, sample vault, DAW project index, KVR version checker. |
-| [`traderview`](https://github.com/MenkeTechnologies/traderview) | **Tauri v2 desktop GUI app** (sibling to Audio-Haxor) — TraderVue-style trading journal with embedded Postgres, vanilla JS + uPlot frontend. The same Rust workspace crates also ship a multi-user axum web service. |
-| [`nmaprs`](https://github.com/MenkeTechnologies/nmaprs) | Rust port of `nmap`. Full async TCP/UDP/SCTP/IP-protocol scans, idle/zombie scans, NSE-style script probes, ARP/ICMP/timestamp/mask host discovery, top-ports list embedded. |
-| [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | **Rust CLI** — mature port of Python's [`powerline-status`](https://github.com/powerline/powerline) (v0.2.15, 3,000+ `#[test]` functions, 5-binary suite: `powerline` / `powerline-daemon` / `powerline-config` / `powerline-render` / `powerline-lint`, parity-tested against upstream Python). Drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. |
-| [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | The terminal OS. 463+ verbs, 172k LOC, zinit-based, stryke-powered. ⭐ 221 |
+| [`strykelang`](https://github.com/MenkeTechnologies/strykelang) | The fastest dynamic language for parallel ops. Perl 5 interpreter in Rust, bytecode VM + Cranelift JIT, 10,431 builtins. &middot; <sub>[docs](https://menketechnologies.github.io/strykelang/) · [report](https://menketechnologies.github.io/strykelang/report.html) · [reference](https://menketechnologies.github.io/strykelang/reference.html)</sub> |
+| [`zshrs`](https://github.com/MenkeTechnologies/zshrs) | The first compiled Unix shell. 1:1 zsh C-port + extensions, persistent worker pool, AOP intercept, rkyv bytecode cache. &middot; <sub>[docs](https://menketechnologies.github.io/zshrs/) · [report](https://menketechnologies.github.io/zshrs/report.html) · [reference](https://menketechnologies.github.io/zshrs/reference.html)</sub> |
+| [`fusevm`](https://github.com/MenkeTechnologies/fusevm) | Language-agnostic bytecode VM with fused superinstructions and 3-tier Cranelift JIT. The execution engine behind strykelang, zshrs, awkrs. &middot; <sub>[docs](https://menketechnologies.github.io/fusevm/) · [report](https://menketechnologies.github.io/fusevm/report.html)</sub> |
+| [`lsofrs`](https://github.com/MenkeTechnologies/lsofrs) | Rust rewrite of `lsof` — 5–21× faster, **7-tab TUI** (ratatui), 31 cyberpunk themes. &middot; <sub>[docs](https://menketechnologies.github.io/lsofrs/) · [report](https://menketechnologies.github.io/lsofrs/report.html)</sub> |
+| [`temprs`](https://github.com/MenkeTechnologies/temprs) | Temporary file stack manager. Atomic `flock`-protected master record, dual indexing (position or `@name`). &middot; <sub>[docs](https://menketechnologies.github.io/temprs/) · [report](https://menketechnologies.github.io/temprs/report.html)</sub> |
+| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | AWK in Rust. Bytecode VM + Cranelift JIT + persistent rkyv bytecode cache + parallel records. &middot; <sub>[docs](https://menketechnologies.github.io/awkrs/) · [report](https://menketechnologies.github.io/awkrs/report.html)</sub> |
+| [`iftoprs`](https://github.com/MenkeTechnologies/iftoprs) | Real-time bandwidth monitor. **TUI** built on ratatui, 31 themes, process attribution via `lsof`, NDJSON streaming. &middot; <sub>[docs](https://menketechnologies.github.io/iftoprs/) · [report](https://menketechnologies.github.io/iftoprs/report.html)</sub> |
+| [`Audio-Haxor`](https://github.com/MenkeTechnologies/Audio-Haxor) | **Tauri v2 desktop GUI app** + JUCE engine. VST2/VST3/AU/CLAP scanner, sample vault, DAW project index, KVR version checker. &middot; <sub>[docs](https://menketechnologies.github.io/Audio-Haxor/) · [report](https://menketechnologies.github.io/Audio-Haxor/report.html)</sub> |
+| [`traderview`](https://github.com/MenkeTechnologies/traderview) | **Tauri v2 desktop GUI app** (sibling to Audio-Haxor) — TraderVue-style trading journal with embedded Postgres, vanilla JS + uPlot frontend. The same Rust workspace crates also ship a multi-user axum web service. &middot; <sub>[docs](https://menketechnologies.github.io/traderview/) · [report](https://menketechnologies.github.io/traderview/report.html)</sub> |
+| [`nmaprs`](https://github.com/MenkeTechnologies/nmaprs) | Rust port of `nmap`. Full async TCP/UDP/SCTP/IP-protocol scans, idle/zombie scans, NSE-style script probes, ARP/ICMP/timestamp/mask host discovery, top-ports list embedded. &middot; <sub>[docs](https://menketechnologies.github.io/nmaprs/) · [report](https://menketechnologies.github.io/nmaprs/report.html)</sub> |
+| [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | **Rust CLI** — mature port of Python's [`powerline-status`](https://github.com/powerline/powerline) (v0.2.15, 3,000+ `#[test]` functions, 5-binary suite: `powerline` / `powerline-daemon` / `powerline-config` / `powerline-render` / `powerline-lint`, parity-tested against upstream Python). Drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. &middot; <sub>[docs](https://menketechnologies.github.io/powerliners/) · [report](https://menketechnologies.github.io/powerliners/report.html)</sub> |
+| [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | The terminal OS. 463+ verbs, 172k LOC, zinit-based, stryke-powered. ⭐ 221 &middot; <sub>[docs](https://menketechnologies.github.io/zpwr/) · [report](https://menketechnologies.github.io/zpwr/report.html)</sub> |
 
 ### Tier 2 — Stryke ecosystem (16)
 
@@ -103,27 +103,27 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 | Project | What it is |
 |---|---|
 | [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | Single Homebrew tap for 10 MenkeTechnologies CLI formulas (`awkrs` / `iftoprs` / `lsofrs` / `nmaprs` / `powerliners` / `storageshower` / `stryke` / `temprs` / `zshrs` / `zshrs-all`). Formulas auto-bumped by each tool's `Release` workflow via `HOMEBREW_TAP_TOKEN`. |
-| [`stryke-arrow`](https://github.com/MenkeTechnologies/stryke-arrow) | Apache Arrow integration. |
-| [`stryke-aws`](https://github.com/MenkeTechnologies/stryke-aws) | AWS SDK bindings (S3, EC2, SQS, Lambda, ...). |
-| [`stryke-demo`](https://github.com/MenkeTechnologies/stryke-demo) | Demo scripts + example programs. |
-| [`stryke-docker`](https://github.com/MenkeTechnologies/stryke-docker) | Docker engine API client. |
-| [`stryke-duckdb`](https://github.com/MenkeTechnologies/stryke-duckdb) | DuckDB embedded analytics. |
-| [`stryke-gcp`](https://github.com/MenkeTechnologies/stryke-gcp) | Google Cloud Platform SDK bindings. |
-| [`stryke-grpc`](https://github.com/MenkeTechnologies/stryke-grpc) | gRPC client/server. |
-| [`stryke-k8s`](https://github.com/MenkeTechnologies/stryke-k8s) | Kubernetes API client. |
-| [`stryke-kafka`](https://github.com/MenkeTechnologies/stryke-kafka) | Kafka producer/consumer (rdkafka bindings). |
-| [`stryke-mongo`](https://github.com/MenkeTechnologies/stryke-mongo) | MongoDB driver. |
-| [`stryke-mysql`](https://github.com/MenkeTechnologies/stryke-mysql) | MySQL/MariaDB driver. |
-| [`stryke-parquet`](https://github.com/MenkeTechnologies/stryke-parquet) | Apache Parquet read/write. |
-| [`stryke-postgres`](https://github.com/MenkeTechnologies/stryke-postgres) | PostgreSQL driver. |
-| [`stryke-redis`](https://github.com/MenkeTechnologies/stryke-redis) | Redis client. |
-| [`stryke-spark`](https://github.com/MenkeTechnologies/stryke-spark) | Apache Spark integration. |
+| [`stryke-arrow`](https://github.com/MenkeTechnologies/stryke-arrow) | Apache Arrow integration. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-arrow/) · [report](https://menketechnologies.github.io/stryke-arrow/report.html)</sub> |
+| [`stryke-aws`](https://github.com/MenkeTechnologies/stryke-aws) | AWS SDK bindings (S3, EC2, SQS, Lambda, ...). &middot; <sub>[docs](https://menketechnologies.github.io/stryke-aws/) · [report](https://menketechnologies.github.io/stryke-aws/report.html)</sub> |
+| [`stryke-demo`](https://github.com/MenkeTechnologies/stryke-demo) | Demo scripts + example programs. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-demo/) · [report](https://menketechnologies.github.io/stryke-demo/report.html)</sub> |
+| [`stryke-docker`](https://github.com/MenkeTechnologies/stryke-docker) | Docker engine API client. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-docker/) · [report](https://menketechnologies.github.io/stryke-docker/report.html)</sub> |
+| [`stryke-duckdb`](https://github.com/MenkeTechnologies/stryke-duckdb) | DuckDB embedded analytics. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-duckdb/) · [report](https://menketechnologies.github.io/stryke-duckdb/report.html)</sub> |
+| [`stryke-gcp`](https://github.com/MenkeTechnologies/stryke-gcp) | Google Cloud Platform SDK bindings. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-gcp/) · [report](https://menketechnologies.github.io/stryke-gcp/report.html)</sub> |
+| [`stryke-grpc`](https://github.com/MenkeTechnologies/stryke-grpc) | gRPC client/server. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-grpc/) · [report](https://menketechnologies.github.io/stryke-grpc/report.html)</sub> |
+| [`stryke-k8s`](https://github.com/MenkeTechnologies/stryke-k8s) | Kubernetes API client. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-k8s/) · [report](https://menketechnologies.github.io/stryke-k8s/report.html)</sub> |
+| [`stryke-kafka`](https://github.com/MenkeTechnologies/stryke-kafka) | Kafka producer/consumer (rdkafka bindings). &middot; <sub>[docs](https://menketechnologies.github.io/stryke-kafka/) · [report](https://menketechnologies.github.io/stryke-kafka/report.html)</sub> |
+| [`stryke-mongo`](https://github.com/MenkeTechnologies/stryke-mongo) | MongoDB driver. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-mongo/) · [report](https://menketechnologies.github.io/stryke-mongo/report.html)</sub> |
+| [`stryke-mysql`](https://github.com/MenkeTechnologies/stryke-mysql) | MySQL/MariaDB driver. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-mysql/) · [report](https://menketechnologies.github.io/stryke-mysql/report.html)</sub> |
+| [`stryke-parquet`](https://github.com/MenkeTechnologies/stryke-parquet) | Apache Parquet read/write. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-parquet/) · [report](https://menketechnologies.github.io/stryke-parquet/report.html)</sub> |
+| [`stryke-postgres`](https://github.com/MenkeTechnologies/stryke-postgres) | PostgreSQL driver. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-postgres/) · [report](https://menketechnologies.github.io/stryke-postgres/report.html)</sub> |
+| [`stryke-redis`](https://github.com/MenkeTechnologies/stryke-redis) | Redis client. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-redis/) · [report](https://menketechnologies.github.io/stryke-redis/report.html)</sub> |
+| [`stryke-spark`](https://github.com/MenkeTechnologies/stryke-spark) | Apache Spark integration. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-spark/) · [report](https://menketechnologies.github.io/stryke-spark/report.html)</sub> |
 
 ### Tier 3 — zsh-more-completions (1)
 
 | Project | What it is |
 |---|---|
-| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 33,175-completion zsh corpus (9,253 `src/` + 19,427 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 55. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. |
+| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 33,175-completion zsh corpus (9,253 `src/` + 19,427 `more_src/` + 3,398 `man_src/` + 1,087 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 55. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-more-completions/) · [report](https://menketechnologies.github.io/zsh-more-completions/report.html)</sub> |
 
 ### Tier 4 — Zsh ecosystem plugins (28)
 
@@ -131,20 +131,20 @@ The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh. T
 
 | Project | What it is |
 |---|---|
-| [`zsh-expand`](https://github.com/MenkeTechnologies/zsh-expand) | Expand aliases / global aliases / typos on space. ⭐ 42. |
-| [`zsh-cargo-completion`](https://github.com/MenkeTechnologies/zsh-cargo-completion) | Cargo completion. ⭐ 35. |
-| [`zsh-learn`](https://github.com/MenkeTechnologies/zsh-learn) | MySQL/MariaDB-backed learning collection — save, query, quiz. ⭐ 8. |
-| [`zsh-git-acp`](https://github.com/MenkeTechnologies/zsh-git-acp) | `git add commit push` in one keybinding. ⭐ 6. |
-| [`zsh-better-npm-completion`](https://github.com/MenkeTechnologies/zsh-better-npm-completion) | Better npm completion. |
-| [`zsh-cpan-completion`](https://github.com/MenkeTechnologies/zsh-cpan-completion) | CPAN completion. |
-| [`zsh-dotnet-completion`](https://github.com/MenkeTechnologies/zsh-dotnet-completion) | .NET completion. |
-| [`zsh-gem-completion`](https://github.com/MenkeTechnologies/zsh-gem-completion) | Ruby gem completion. |
-| [`zsh-git-repo-cache`](https://github.com/MenkeTechnologies/zsh-git-repo-cache) | Git repo cache helper. |
-| [`zsh-nginx`](https://github.com/MenkeTechnologies/zsh-nginx) | nginx config completion. |
-| [`zsh-pip-description-completion`](https://github.com/MenkeTechnologies/zsh-pip-description-completion) | pip completion with package descriptions. |
-| [`zsh-sed-sub`](https://github.com/MenkeTechnologies/zsh-sed-sub) | sed substitution helper. |
-| [`zsh-sudo`](https://github.com/MenkeTechnologies/zsh-sudo) | `Esc Esc` to prepend `sudo` to the current line. |
-| [`zsh-xcode-completions`](https://github.com/MenkeTechnologies/zsh-xcode-completions) | Xcode CLI tools completion. |
+| [`zsh-expand`](https://github.com/MenkeTechnologies/zsh-expand) | Expand aliases / global aliases / typos on space. ⭐ 42. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-expand/) · [report](https://menketechnologies.github.io/zsh-expand/report.html)</sub> |
+| [`zsh-cargo-completion`](https://github.com/MenkeTechnologies/zsh-cargo-completion) | Cargo completion. ⭐ 35. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-cargo-completion/) · [report](https://menketechnologies.github.io/zsh-cargo-completion/report.html)</sub> |
+| [`zsh-learn`](https://github.com/MenkeTechnologies/zsh-learn) | MySQL/MariaDB-backed learning collection — save, query, quiz. ⭐ 8. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-learn/) · [report](https://menketechnologies.github.io/zsh-learn/report.html)</sub> |
+| [`zsh-git-acp`](https://github.com/MenkeTechnologies/zsh-git-acp) | `git add commit push` in one keybinding. ⭐ 6. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-git-acp/) · [report](https://menketechnologies.github.io/zsh-git-acp/report.html)</sub> |
+| [`zsh-better-npm-completion`](https://github.com/MenkeTechnologies/zsh-better-npm-completion) | Better npm completion. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-better-npm-completion/) · [report](https://menketechnologies.github.io/zsh-better-npm-completion/report.html)</sub> |
+| [`zsh-cpan-completion`](https://github.com/MenkeTechnologies/zsh-cpan-completion) | CPAN completion. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-cpan-completion/) · [report](https://menketechnologies.github.io/zsh-cpan-completion/report.html)</sub> |
+| [`zsh-dotnet-completion`](https://github.com/MenkeTechnologies/zsh-dotnet-completion) | .NET completion. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-dotnet-completion/) · [report](https://menketechnologies.github.io/zsh-dotnet-completion/report.html)</sub> |
+| [`zsh-gem-completion`](https://github.com/MenkeTechnologies/zsh-gem-completion) | Ruby gem completion. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-gem-completion/) · [report](https://menketechnologies.github.io/zsh-gem-completion/report.html)</sub> |
+| [`zsh-git-repo-cache`](https://github.com/MenkeTechnologies/zsh-git-repo-cache) | Git repo cache helper. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-git-repo-cache/) · [report](https://menketechnologies.github.io/zsh-git-repo-cache/report.html)</sub> |
+| [`zsh-nginx`](https://github.com/MenkeTechnologies/zsh-nginx) | nginx config completion. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-nginx/) · [report](https://menketechnologies.github.io/zsh-nginx/report.html)</sub> |
+| [`zsh-pip-description-completion`](https://github.com/MenkeTechnologies/zsh-pip-description-completion) | pip completion with package descriptions. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-pip-description-completion/) · [report](https://menketechnologies.github.io/zsh-pip-description-completion/report.html)</sub> |
+| [`zsh-sed-sub`](https://github.com/MenkeTechnologies/zsh-sed-sub) | sed substitution helper. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-sed-sub/) · [report](https://menketechnologies.github.io/zsh-sed-sub/report.html)</sub> |
+| [`zsh-sudo`](https://github.com/MenkeTechnologies/zsh-sudo) | `Esc Esc` to prepend `sudo` to the current line. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-sudo/) · [report](https://menketechnologies.github.io/zsh-sudo/report.html)</sub> |
+| [`zsh-xcode-completions`](https://github.com/MenkeTechnologies/zsh-xcode-completions) | Xcode CLI tools completion. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-xcode-completions/) · [report](https://menketechnologies.github.io/zsh-xcode-completions/report.html)</sub> |
 | [`zsh-docker-aliases`](https://github.com/MenkeTechnologies/zsh-docker-aliases) | Docker aliases + functions. |
 | [`zsh-openshift-aliases`](https://github.com/MenkeTechnologies/zsh-openshift-aliases) | 52 `oc`-* aliases + login macros (`ocdev`, `ocqa`) + auto-sourced `oc` completion. |
 | [`zsh-travis`](https://github.com/MenkeTechnologies/zsh-travis) | `tg`/`tb`/`tbr`/`tpr` — open Travis CI build pages from inside the project. |
@@ -175,7 +175,7 @@ Browser extensions, supporting apps, public website, and web-API services. (Taur
 
 | Project | What it is |
 |---|---|
-| [`zpwrchrome`](https://github.com/MenkeTechnologies/zpwrchrome) | The fastest recent-tabs Chrome extension with the most keyboard shortcuts. Manifest V3, cross-window MRU stack, 38 commands (3 default-keyed + 35 user-bindable), sub-popup live-filter search, companion Chrome theme matching the strykelang HUD palette. |
+| [`zpwrchrome`](https://github.com/MenkeTechnologies/zpwrchrome) | The fastest recent-tabs Chrome extension with the most keyboard shortcuts. Manifest V3, cross-window MRU stack, 38 commands (3 default-keyed + 35 user-bindable), sub-popup live-filter search, companion Chrome theme matching the strykelang HUD palette. &middot; <sub>[docs](https://menketechnologies.github.io/zpwrchrome/) · [report](https://menketechnologies.github.io/zpwrchrome/report.html)</sub> |
 | [`storageshower`](https://github.com/MenkeTechnologies/storageshower) | Disk-usage **TUI** in Rust (sibling to iftoprs). Walks a directory tree, presents space-by-folder with sort + drill-down. |
 | [`MenkeTechnologies.github.io`](https://github.com/MenkeTechnologies/MenkeTechnologies.github.io) | Public-facing personal site / project landing page (cyberpunk HUD, static HTML + CSS). |
 | [`spring-boot-rest-generator`](https://github.com/MenkeTechnologies/spring-boot-rest-generator) | **Web-API codegen tool.** Rust port (v0.2.0+) of the original Kotlin Spring-Boot-REST-API generator — feed it MySQL / PostgreSQL / SQLite / MSSQL DDL, get a fully wired Spring Boot REST backend (entities, controllers, DAOs, repositories) in Java / Kotlin / Groovy. Kotlin source preserved under `src/main/kotlin/` for reference. |
