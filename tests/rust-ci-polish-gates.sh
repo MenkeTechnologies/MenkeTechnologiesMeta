@@ -87,7 +87,7 @@ is_allowed() {
             # cargo subset is a means, not the gate.
             return 0
             ;;
-        spring-boot-rest-generator)
+        api-rest-generator)
             # Mid-transition from Kotlin to Rust — Rust code is still
             # the secondary path. Treat as opt-out until the transition
             # completes.

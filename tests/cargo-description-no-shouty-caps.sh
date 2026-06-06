@@ -21,7 +21,7 @@
 #
 #   stryke-arrow: "JSON in Apache Arrow / Parquet / IPC /
 #                  CSV / JSON bridge..."
-#   spring-boot-rest-generator: "REST in Spring Boot REST
+#   api-rest-generator: "REST in Spring Boot REST
 #                                API generator..."
 #
 # TODO (4 chars) is NOT caught by this gate's threshold,

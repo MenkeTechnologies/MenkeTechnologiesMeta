@@ -19,7 +19,7 @@
 # repository → GitHub source. Both visible, both useful.
 #
 # Allowlist: crates without docs/ legitimately keep homepage ==
-# repository (storageshower, spring-boot-rest-generator). The
+# repository (storageshower, api-rest-generator). The
 # duplicate is the correct state when no docs URL exists.
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
