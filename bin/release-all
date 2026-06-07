@@ -1,0 +1,271 @@
+#!/usr/bin/env sh
+# release-all — coordinated tag bumps across every menketech formula-backed crate.
+#
+# Source of truth is homebrew-menketech/Formula/*.rb.  Each formula's `homepage`
+# line names a MenkeTechnologies repo; that repo is expected to be a sibling
+# submodule of this meta repo.  For each such submodule the script:
+#
+#   1. bumps the version in Cargo.toml (patch by default)
+#   2. commits the bump
+#   3. creates an annotated tag (prefix derived from the formula's release URL,
+#      so awkrs gets `vX.Y.Z` and zpwrchrome-host gets `host-vX.Y.Z`)
+#   4. pushes the branch + tag to origin
+#
+# Multiple formulae that share a repo (e.g. zshrs.rb + zshrs-all.rb) collapse
+# to one bump.  The script does NOT regenerate Formula/*.rb afterwards — the
+# new tags trigger each crate's release CI, and once artifacts exist you bump
+# Formula sha256/url separately and commit the tap.
+#
+# Usage:
+#   ./bin/release-all                       # bump patch, push everywhere
+#   ./bin/release-all --bump=minor
+#   ./bin/release-all --bump=none           # retag current version, no Cargo edit
+#   ./bin/release-all --only=awkrs,zshrs    # subset (formula names OR repo dirs)
+#   ./bin/release-all --dry-run             # preview, no writes
+#   ./bin/release-all --no-push             # tag locally only
+#   ./bin/release-all --allow-dirty         # skip clean-tree precondition
+set -eu
+
+META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$META_ROOT"
+
+FORMULA_DIR="homebrew-menketech/Formula"
+
+BUMP="patch"
+ONLY=""
+DRY_RUN=0
+PUSH=1
+ALLOW_DIRTY=0
+
+usage() {
+  sed -n '2,/^set -eu$/{ /^set -eu$/d; s/^# \{0,1\}//; p; }' "$0" >&2
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --bump=*)      BUMP="${1#--bump=}";;
+    --bump)        shift; BUMP="${1:-}";;
+    --only=*)      ONLY="${1#--only=}";;
+    --only)        shift; ONLY="${1:-}";;
+    --dry-run)     DRY_RUN=1;;
+    --no-push)     PUSH=0;;
+    --allow-dirty) ALLOW_DIRTY=1;;
+    -h|--help)     usage; exit 0;;
+    *) echo "release-all: unknown arg: $1" >&2; usage; exit 2;;
+  esac
+  shift
+done
+
+case "$BUMP" in
+  patch|minor|major|none) ;;
+  *) echo "release-all: invalid --bump: $BUMP (want patch|minor|major|none)" >&2; exit 2;;
+esac
+
+[ -f .gitmodules ] || { echo "release-all: not in meta repo (no .gitmodules at $(pwd))" >&2; exit 1; }
+[ -d "$FORMULA_DIR" ] || { echo "release-all: $FORMULA_DIR missing — is homebrew-menketech submodule checked out?" >&2; exit 1; }
+
+ONLY_LIST=""
+if [ -n "$ONLY" ]; then
+  ONLY_LIST=$(printf '%s' "$ONLY" | tr ',' ' ')
+fi
+
+in_only() {
+  [ -z "$ONLY_LIST" ] && return 0
+  for n in $ONLY_LIST; do
+    [ "$n" = "$1" ] && return 0
+  done
+  return 1
+}
+
+# bump_semver VERSION KIND  →  next version on stdout
+bump_semver() {
+  printf '%s\n' "$1" | awk -F. -v k="$2" 'BEGIN{OFS="."}
+    {
+      while (NF < 3) { NF++; $NF = 0 }
+      if (k == "patch")       { $3 = $3 + 1 }
+      else if (k == "minor")  { $2 = $2 + 1; $3 = 0 }
+      else if (k == "major")  { $1 = $1 + 1; $2 = 0; $3 = 0 }
+      print
+    }'
+}
+
+# parse_formula PATH  →  "REPO|VERSION|TAG_PREFIX" (exit 1 if unparseable)
+parse_formula() {
+  awk '
+    /^[[:space:]]*homepage[[:space:]]+"/ {
+      if (match($0, /MenkeTechnologies\/[A-Za-z0-9._-]+/))
+        repo = substr($0, RSTART+18, RLENGTH-18)
+    }
+    /^[[:space:]]*version[[:space:]]+"/ {
+      if (match($0, /"[^"]+"/))
+        version = substr($0, RSTART+1, RLENGTH-2)
+    }
+    !tag && /releases\/download\// {
+      if (match($0, /releases\/download\/[^\/]+\//)) {
+        tag = substr($0, RSTART+18, RLENGTH-19)
+        prefix = tag
+        sub(/[0-9]+\.[0-9]+\.[0-9]+.*$/, "", prefix)
+      }
+    }
+    END {
+      if (repo == "" || version == "") exit 1
+      if (prefix == "") prefix = "v"
+      printf "%s|%s|%s\n", repo, version, prefix
+    }
+  ' "$1"
+}
+
+# find_cargo_toml REPO_DIR  →  relative path to Cargo.toml that owns the version
+find_cargo_toml() {
+  d="$1"
+  if [ -f "$d/Cargo.toml" ] && grep -qE '^(version[[:space:]]*=|\[workspace\.package\])' "$d/Cargo.toml"; then
+    printf '%s/Cargo.toml\n' "$d"
+    return 0
+  fi
+  for f in "$d"/*/Cargo.toml; do
+    [ -f "$f" ] || continue
+    if grep -qE '^\[package\]|^\[workspace\.package\]' "$f" && grep -qE '^version[[:space:]]*=[[:space:]]*"' "$f"; then
+      printf '%s\n' "$f"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# rewrite_cargo_version FILE NEW_VERSION
+# Replaces the first plain `version = "..."` line, skipping `version.workspace = true`.
+rewrite_cargo_version() {
+  f="$1"; new="$2"
+  awk -v new="$new" '
+    !done && /^version[[:space:]]*=[[:space:]]*"/ {
+      sub(/"[^"]+"/, "\"" new "\"")
+      done = 1
+    }
+    { print }
+    END { exit done ? 0 : 1 }
+  ' "$f" > "$f.relnew"
+  if [ $? -ne 0 ]; then
+    rm -f "$f.relnew"
+    echo "release-all: no version line found in $f" >&2
+    return 1
+  fi
+  mv "$f.relnew" "$f"
+}
+
+PLAN_FILE=$(mktemp -t release-all.XXXXXX)
+trap 'rm -f "$PLAN_FILE" "$PLAN_FILE".tmp' EXIT INT TERM
+
+seen=""
+for formula in "$FORMULA_DIR"/*.rb; do
+  [ -f "$formula" ] || continue
+  fname=$(basename "$formula" .rb)
+
+  if ! parsed=$(parse_formula "$formula"); then
+    printf '\033[33m[skip]\033[0m %s: could not parse (missing homepage/version)\n' "$fname" >&2
+    continue
+  fi
+  repo=$(printf '%s\n' "$parsed" | cut -d'|' -f1)
+  fver=$(printf '%s\n' "$parsed" | cut -d'|' -f2)
+  prefix=$(printf '%s\n' "$parsed" | cut -d'|' -f3)
+
+  if ! in_only "$fname" && ! in_only "$repo"; then
+    continue
+  fi
+
+  case " $seen " in
+    *" $repo "*)
+      continue
+      ;;
+  esac
+  seen="$seen $repo"
+
+  if [ ! -e "$repo/.git" ]; then
+    printf '\033[33m[skip]\033[0m %s: submodule %s/ not initialized\n' "$fname" "$repo" >&2
+    continue
+  fi
+
+  printf '%s\t%s\t%s\n' "$repo" "$fver" "$prefix" >> "$PLAN_FILE"
+done
+
+if [ ! -s "$PLAN_FILE" ]; then
+  echo "release-all: nothing to do (no formula-backed submodules matched filter)" >&2
+  exit 0
+fi
+
+printf '\033[36m==> release plan\033[0m  bump=%s  push=%s  dry_run=%s\n' "$BUMP" "$PUSH" "$DRY_RUN"
+printf '%-22s  %-12s  %-12s  %s\n' "REPO" "OLD" "NEW" "TAG"
+printf '%-22s  %-12s  %-12s  %s\n' "----------------------" "------------" "------------" "----------"
+while IFS='	' read -r repo old prefix; do
+  [ -z "$repo" ] && continue
+  if [ "$BUMP" = "none" ]; then
+    new="$old"
+  else
+    new=$(bump_semver "$old" "$BUMP")
+  fi
+  printf '%-22s  %-12s  %-12s  %s%s\n' "$repo" "$old" "$new" "$prefix" "$new"
+done < "$PLAN_FILE"
+echo
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  echo "release-all: --dry-run, exiting before any writes"
+  exit 0
+fi
+
+while IFS='	' read -r repo old prefix; do
+  [ -z "$repo" ] && continue
+  if [ "$BUMP" = "none" ]; then
+    new="$old"
+  else
+    new=$(bump_semver "$old" "$BUMP")
+  fi
+  tag="$prefix$new"
+
+  printf '\033[36m==> %s\033[0m  %s → %s  tag=%s\n' "$repo" "$old" "$new" "$tag"
+
+  if [ "$ALLOW_DIRTY" -eq 0 ]; then
+    if [ -n "$(git -C "$repo" status --porcelain)" ]; then
+      echo "release-all: $repo has uncommitted changes (use --allow-dirty to override)" >&2
+      exit 1
+    fi
+  fi
+
+  if git -C "$repo" rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+    echo "  [skip] tag $tag already exists locally in $repo"
+    continue
+  fi
+
+  if [ "$BUMP" != "none" ]; then
+    if ! cargo_toml=$(find_cargo_toml "$repo"); then
+      echo "release-all: no Cargo.toml with a [package]/[workspace.package] version in $repo" >&2
+      exit 1
+    fi
+    rewrite_cargo_version "$cargo_toml" "$new"
+    relative="${cargo_toml#$repo/}"
+    git -C "$repo" add "$relative"
+    if [ -f "$repo/Cargo.lock" ] && [ -n "$(git -C "$repo" status --porcelain -- Cargo.lock 2>/dev/null)" ]; then
+      git -C "$repo" add Cargo.lock
+    fi
+    git -C "$repo" commit -m "release: $tag"
+  fi
+
+  git -C "$repo" tag -a "$tag" -m "release $tag"
+
+  if [ "$PUSH" -eq 1 ]; then
+    branch=$(git -C "$repo" rev-parse --abbrev-ref HEAD)
+    if [ "$branch" = "HEAD" ]; then
+      echo "release-all: $repo is in detached HEAD, refusing to push" >&2
+      exit 1
+    fi
+    git -C "$repo" push origin "$branch"
+    git -C "$repo" push origin "$tag"
+  fi
+done < "$PLAN_FILE"
+
+echo
+echo "release-all: done"
+if [ "$PUSH" -eq 1 ]; then
+  echo "next: wait for each crate's release CI to publish artifacts, then update"
+  echo "      $FORMULA_DIR/*.rb (url + sha256 + version) and commit homebrew-menketech."
+else
+  echo "next: tags created locally only — run 'git -C <repo> push origin <branch> --tags' to publish."
+fi

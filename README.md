@@ -243,6 +243,7 @@ The `bin/` directory ships a few wrappers for common operations. All are POSIX s
 | [`bin/status-all`](bin/status-all) | One-line status for every submodule (branch + ahead/behind + dirty marker). |
 | [`bin/foreach`](bin/foreach) | Run an arbitrary shell command inside every submodule. |
 | [`bin/sync-pointers`](bin/sync-pointers) | After running pull-all, stage + commit all submodule pointer bumps in one commit. |
+| [`bin/release-all`](bin/release-all) | Coordinated `Cargo.toml` bump + commit + tag + push across every submodule that backs a homebrew formula. |
 
 ```bash
 # pull everything
@@ -256,7 +257,15 @@ The `bin/` directory ships a few wrappers for common operations. All are POSIX s
 
 # bump every pointer to current submodule HEAD
 ./bin/sync-pointers && git push
+
+# preview a coordinated patch-bump across every formula-backed crate
+./bin/release-all --dry-run
+
+# cut a minor release across two crates and push tags
+./bin/release-all --bump=minor --only=awkrs,zshrs
 ```
+
+`release-all` reads `homebrew-menketech/Formula/*.rb` to learn which submodules ship as binaries, derives the tag prefix from each formula's release URL (so `awkrs` gets `vX.Y.Z` and `zpwrchrome-host` gets `host-vX.Y.Z`), and dedupes formulae that share a repo (e.g. `zshrs.rb` + `zshrs-all.rb` → one bump). It does **not** regenerate the formulae — each crate's release CI builds the artifacts; once those exist, update `Formula/*.rb` (url + sha256 + version) and commit the tap.
 
 ---
 
