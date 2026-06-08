@@ -132,12 +132,14 @@
 
     <section class="report-section">
       <h2>@ META REPO CI</h2>
-      <p><code>.github/workflows/ci.yml</code> on the meta repo runs 5 gate jobs on every push:</p>
+      <p><code>.github/workflows/ci.yml</code> on the meta repo runs 7 gate jobs on every push:</p>
       <ol>
         <li><strong>.gitmodules syntax</strong> — path/url count match, every URL is canonical <code>https://github.com/MenkeTechnologies/*.git</code>, no nested paths</li>
         <li><strong>Submodule URL reachability</strong> — <code>git ls-remote</code> every URL</li>
         <li><strong>Shellcheck</strong> across <code>bin/*</code> helper scripts</li>
         <li><strong>bin/ smoke</strong> — <code>bin/status-all</code> + <code>bin/foreach</code> don't crash on empty checkout</li>
+        <li><strong>Homebrew tap formula quality</strong> — every <code>homebrew-menketech/Formula/*.rb</code> parses, declares <code>version</code>, <code>homepage</code>, <code>license</code>, and ships per-platform <code>sha256</code> + <code>url</code></li>
+        <li><strong>Cargo.toml ↔ docs/*.html version sync</strong> — every Rust crate's shipped version in <code>Cargo.toml</code> agrees with what <code>docs/index.html</code> and per-repo report cards advertise</li>
         <li><strong>README link sanity</strong> — 5 independent drift gates: (a) every <code>.gitmodules</code> path is referenced from README, (b) submodule-count badge matches actual entry count, (c) each <code>### Tier N — Label (M)</code> header has exactly M table rows + tier-counts sum to total submodules, (d) <code>docs/index.html</code> stat-cards for <em>submodules</em>, <em>tiers</em>, and <em>zsh plugins</em> match README values, (e) <em>rust crates</em> stat-card matches actual top-level <code>Cargo.toml</code> count (skipped when submodules aren't initialized in this job's checkout)</li>
       </ol>
     </section>
@@ -150,6 +152,7 @@
         <tr><td><code>bin/status-all</code></td><td>One-line status for every submodule (branch + ahead/behind + dirty marker)</td></tr>
         <tr><td><code>bin/foreach</code></td><td>Run an arbitrary shell command inside every submodule</td></tr>
         <tr><td><code>bin/sync-pointers</code></td><td>Stage + commit all submodule pointer bumps as one commit</td></tr>
+        <tr><td><code>bin/release-all</code></td><td>Coordinated <code>Cargo.toml</code> bump + commit + tag + push across every submodule that backs a homebrew formula (derives the tag prefix from each formula's release URL, dedupes formulae that share a repo)</td></tr>
       </table>
     </section>
 
@@ -162,7 +165,7 @@
       <h2>. NEXT</h2>
       <p>Roadmap is per-repo; consult each project's <code>docs/report.html</code> for codebase-specific milestones. Meta repo's own roadmap is light:</p>
       <ul>
-        <li>Add cross-cutting <code>./bin/release-all</code> for coordinated tag bumps across multiple sibling crates</li>
+        <li>Wire <code>bin/release-all</code> into the bin/ smoke job — currently only <code>status-all</code> + <code>foreach</code> are exercised on empty checkout; <code>release-all --dry-run</code> against the live formula list would catch parser regressions before they ship</li>
         <li>Audit Tier 4 plugin install paths against zinit's actual loader options (turbo vs lucid vs wait)</li>
         <li>Extend meta CI with a periodic submodule-staleness alert (PR comment when a sibling repo's main is &gt; 30 days ahead of the pinned SHA)</li>
       </ul>
