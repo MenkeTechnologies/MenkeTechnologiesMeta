@@ -136,15 +136,14 @@ find_cargo_toml() {
 # Replaces the first plain `version = "..."` line, skipping `version.workspace = true`.
 rewrite_cargo_version() {
   f="$1"; new="$2"
-  awk -v new="$new" '
+  if ! awk -v new="$new" '
     !done && /^version[[:space:]]*=[[:space:]]*"/ {
       sub(/"[^"]+"/, "\"" new "\"")
       done = 1
     }
     { print }
     END { exit done ? 0 : 1 }
-  ' "$f" > "$f.relnew"
-  if [ $? -ne 0 ]; then
+  ' "$f" > "$f.relnew"; then
     rm -f "$f.relnew"
     echo "release-all: no version line found in $f" >&2
     return 1
@@ -240,7 +239,7 @@ while IFS='	' read -r repo old prefix; do
       exit 1
     fi
     rewrite_cargo_version "$cargo_toml" "$new"
-    relative="${cargo_toml#$repo/}"
+    relative="${cargo_toml#"$repo"/}"
     git -C "$repo" add "$relative"
     if [ -f "$repo/Cargo.lock" ] && [ -n "$(git -C "$repo" status --porcelain -- Cargo.lock 2>/dev/null)" ]; then
       git -C "$repo" add Cargo.lock
