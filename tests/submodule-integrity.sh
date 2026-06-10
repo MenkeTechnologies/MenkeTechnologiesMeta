@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pins structural invariants on .gitmodules so the 66-submodule org-wide
+# Pins structural invariants on .gitmodules so the 67-submodule org-wide
 # graph can't quietly drift: every entry must (a) have a present path,
 # (b) point to a https github.com/MenkeTechnologies/<name>.git url,
 # (c) declare its branch field, (d) match path basename = repo name.
