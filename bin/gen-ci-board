@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 # gen-ci-board — regenerate the [0x02] CI STATUS BOARD tables in README.md.
 #
 # Tier grouping comes from the [0x01] SUBMODULE MAP tables in README.md;
@@ -10,9 +10,9 @@
 #   bin/gen-ci-board               # print board markdown to stdout
 #   bin/gen-ci-board --in-place    # splice tables into README.md
 #
-# Requires: gh (authenticated), zsh.
-setopt extendedglob pipefail
-cd "${0:h}/.." || exit 1
+# Requires: gh (authenticated), bash 4.4+.
+set -euo pipefail
+cd "$(dirname "$0")/.." || exit 1
 
 base=https://github.com/MenkeTechnologies
 
@@ -21,50 +21,59 @@ gen() {
     local -a wf extras
     # Source of truth is the [0x01] SUBMODULE MAP section only — the board's
     # own tables also match these patterns, so never grep the whole file.
-    awk '/^## \[0x01\] SUBMODULE MAP/{on=1; next} on && /^## \[/{exit} on' README.md |
-        grep -E '^### Tier |^\| \[`' | while IFS= read -r line; do
+    while IFS= read -r line; do
         if [[ $line == "### Tier"* ]]; then
-            print ""
-            print "${line/\#\#\#/####}"
-            print ""
-            print "| Repo | CI | Release |"
-            print "|---|---|---|"
+            printf '\n#%s\n\n' "$line"
+            printf '| Repo | CI | Release |\n|---|---|---|\n'
             continue
         fi
-        r=${line#*\[\`}; r=${r%%\`*}
+        r=${line#*[\`}
+        r=${r%%\`*}
         [[ $r == */* ]] && continue
-        br=$(gh api "repos/MenkeTechnologies/$r" --jq .default_branch 2>/dev/null)
-        wf=("${(@f)$(gh api "repos/MenkeTechnologies/$r/actions/workflows" \
+        br=$(gh api "repos/MenkeTechnologies/$r" --jq .default_branch 2>/dev/null) || br=main
+        mapfile -t wf < <(gh api "repos/MenkeTechnologies/$r/actions/workflows" \
             --jq '.workflows[] | select(.state=="active") | .path' 2>/dev/null |
-            grep -v dynamic | sed 's|.github/workflows/||')}")
-        wf=(${wf:#""})
-        cf=""; rf=""; extras=()
-        for w in $wf; do
+            grep -v dynamic | sed 's|.github/workflows/||' || true)
+        cf=""
+        rf=""
+        extras=()
+        for w in "${wf[@]}"; do
+            [[ -z $w ]] && continue
             case $w in
-                release*.y*ml) rf=$w;;
-                ci.yml|test.yaml|test.yml) cf=$w;;
-                *) extras+=($w);;
+                release*.yml | release*.yaml) rf=$w ;;
+                ci.yml | test.yaml | test.yml) cf=$w ;;
+                *) extras+=("$w") ;;
             esac
         done
         # No conventional CI file: promote the first leftover workflow.
-        if [[ -z $cf && ${#extras} -gt 0 ]]; then cf=${extras[1]}; extras=(${extras[2,-1]}); fi
+        if [[ -z $cf && ${#extras[@]} -gt 0 ]]; then
+            cf=${extras[0]}
+            extras=("${extras[@]:1}")
+        fi
         if [[ -z $cf ]]; then
             ci="—"
         else
             ci="[![CI]($base/$r/actions/workflows/$cf/badge.svg?branch=$br)]($base/$r/actions/workflows/$cf)"
-            for w in $extras; do
+            for w in "${extras[@]}"; do
                 ci+=" [![${w%.y*ml}]($base/$r/actions/workflows/$w/badge.svg?branch=$br)]($base/$r/actions/workflows/$w)"
             done
         fi
-        [[ -n $rf ]] && relb="[![Release]($base/$r/actions/workflows/$rf/badge.svg)]($base/$r/actions/workflows/$rf)" || relb="—"
-        print "| [\`$r\`]($base/$r) | $ci | $relb |"
-    done
-    print ""
+        if [[ -n $rf ]]; then
+            relb="[![Release]($base/$r/actions/workflows/$rf/badge.svg)]($base/$r/actions/workflows/$rf)"
+        else
+            relb="—"
+        fi
+        # shellcheck disable=SC2016  # backticks are literal markdown, not expansion
+        printf '| [`%s`](%s) | %s | %s |\n' "$r" "$base/$r" "$ci" "$relb"
+    done < <(awk '/^## \[0x01\] SUBMODULE MAP/{on=1; next} on && /^## \[/{exit} on' README.md |
+        grep -E '^### Tier |^\| \[`')
+    printf '\n'
 }
 
 if [[ ${1:-} == --in-place ]]; then
-    local tmp=$(mktemp)
-    gen > "$tmp" || exit 1
+    tmp=$(mktemp)
+    trap 'rm -f "$tmp"' EXIT
+    gen >"$tmp"
     BOARD_FILE=$tmp perl -e '
         local $/;
         open my $f, "<", "README.md" or die; my $md = <$f>; close $f;
@@ -72,9 +81,8 @@ if [[ ${1:-} == --in-place ]]; then
         my $n = ($md =~ s/(^## \[0x02\] CI STATUS BOARD\n.*?actions\/workflows`\)\.\n).*?(?=^## \[)/$1$board/ms);
         die "gen-ci-board: board section markers not found in README.md\n" unless $n == 1;
         open my $o, ">", "README.md" or die; print $o $md; close $o;
-    ' || { rm -f "$tmp"; exit 1; }
-    rm -f "$tmp"
-    print "gen-ci-board: README.md board refreshed"
+    '
+    echo "gen-ci-board: README.md board refreshed"
 else
     gen
 fi

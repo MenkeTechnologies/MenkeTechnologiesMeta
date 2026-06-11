@@ -346,7 +346,7 @@ Prefix `+` means the working tree diverges from the pinned SHA; `-` means the su
 
 ## [0x04] HELPER SCRIPTS
 
-The `bin/` directory ships a few wrappers for common operations. All are POSIX shell with no dependencies beyond `git`, except `gen-ci-board` (zsh + authenticated `gh`).
+The `bin/` directory ships a few wrappers for common operations. All are POSIX shell with no dependencies beyond `git`, except `gen-ci-board` (bash + authenticated `gh`).
 
 | Script | What it does |
 |---|---|
