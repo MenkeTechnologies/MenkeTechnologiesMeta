@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="MenkeTechnologiesMeta — engineering report. Scale, per-tier breakdown, CI matrix, polish gates, dep posture across the 65-submodule umbrella.">
+  <meta name="description" content="MenkeTechnologiesMeta — engineering report. Scale, per-tier breakdown, CI matrix, polish gates, dep posture across the 68-submodule umbrella.">
   <title>MenkeTechnologiesMeta — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -91,15 +91,15 @@
 
   <main class="report-main">
     <h2 class="report-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-    <p>MenkeTechnologiesMeta is a single umbrella git repository that vendors every active MenkeTechnologies project as a submodule. The goal: one <code>git clone --recurse-submodules</code> produces a fully-loaded development workstation with the language, shell, VM, CLIs, GUIs, plugins, completions, and supporting infrastructure already in place. Currently 66 submodules across 6 tiers, ~1.7 GB on disk, 28 Rust crates + 28 zsh plugins + 2 Tauri desktop apps + 1 Chrome extension + 2 web-API services + the public website.</p>
+    <p>MenkeTechnologiesMeta is a single umbrella git repository that vendors every active MenkeTechnologies project as a submodule. The goal: one <code>git clone --recurse-submodules</code> produces a fully-loaded development workstation with the language, shell, VM, CLIs, GUIs, plugins, completions, and supporting infrastructure already in place. Currently 68 submodules across 6 tiers, ~1.7 GB on disk, 29 Rust crates + 28 zsh plugins + 2 Tauri desktop apps + 1 Chrome extension + 2 web-API services + the public website.</p>
 
     <section class="report-section">
       <h2>~ SCALE &amp; POSITION</h2>
       <table class="report">
         <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
-        <tr><td>Submodules</td><td>66</td><td>All canonical URLs <code>https://github.com/MenkeTechnologies/&lt;repo&gt;.git</code>, flat layout</td></tr>
+        <tr><td>Submodules</td><td>68</td><td>All canonical URLs <code>https://github.com/MenkeTechnologies/&lt;repo&gt;.git</code>, flat layout</td></tr>
         <tr><td>Tiers</td><td>6</td><td>Core, Stryke ecosystem, completions, zsh plugins, editor/multiplexer plugins, apps/web/APIs</td></tr>
-        <tr><td>Rust crates</td><td>28</td><td>All clippy/fmt/doc clean under <code>-D warnings</code></td></tr>
+        <tr><td>Rust crates</td><td>29</td><td>All clippy/fmt/doc clean under <code>-D warnings</code></td></tr>
         <tr><td>Zsh plugins (Tier 4)</td><td>28</td><td>All have <code>.github/workflows/ci.yml</code> running zunit on each push</td></tr>
         <tr><td>Total checkout</td><td>~1.7 GB</td><td>Bulk: MenkeTechnologies.github.io (~514 MB — image history), strykelang (~352 MB — vendored compiler/runtime), zsh-more-completions (~203 MB), Audio-Haxor (~161 MB — Tauri + JUCE C++), zshrs (~120 MB), rest small</td></tr>
         <tr><td>Homebrew tap</td><td>11 formulas</td><td><code>MenkeTechnologies/menketech</code> — auto-bumped by each repo's release.yml</td></tr>
@@ -111,7 +111,7 @@
       <table class="report">
         <tr><th>Tier</th><th>Count</th><th>Description</th></tr>
         <tr><td>Tier 1 — Core</td><td>12</td><td>strykelang, zshrs, fusevm, lsofrs, temprs, awkrs, iftoprs, Audio-Haxor, traderview, nmaprs, powerliners, zpwr</td></tr>
-        <tr><td>Tier 2 — Stryke ecosystem</td><td>18</td><td>homebrew-menketech + 17 stryke-* packages (15 per-service connectors + stryke-demo + stryke-gui GUI automation bridge)</td></tr>
+        <tr><td>Tier 2 — Stryke ecosystem</td><td>20</td><td>homebrew-menketech + 19 stryke-* packages (16 per-service connectors + stryke-demo + stryke-gui GUI automation bridge + stryke-utils pure-stryke library)</td></tr>
         <tr><td>Tier 3 — zsh-more-completions</td><td>1</td><td>37,003-completion corpus (counts <code>_*</code> functions only — per <code>scripts/print-repo-stats.zsh</code>)</td></tr>
         <tr><td>Tier 4 — Zsh plugins</td><td>28</td><td>full ZPWR_GH_PLUGINS canonical list</td></tr>
         <tr><td>Tier 5 — Editor / multiplexer</td><td>2</td><td>VimColorSchemes (732 schemes), tmux-fzf-url</td></tr>
@@ -121,7 +121,7 @@
 
     <section class="report-section">
       <h2>! POLISH GATES (per Rust crate)</h2>
-      <p>The target polish bar for every Rust crate in the meta repo is to pass all four gates locally and in CI before a tag is cut. The shared release flow then promotes the binary to <code>MenkeTechnologies/homebrew-menketech</code> via the <code>HOMEBREW_TAP_TOKEN</code> cross-repo write secret. Audit gate <code>tests/rust-ci-polish-gates.sh</code> in the meta repo verifies the per-submodule <code>ci.yml</code> coverage; current state is 22 of 28 crates running all four (the 7 Tier 1 Rust binaries lsofrs/temprs/awkrs/iftoprs/nmaprs/storageshower/powerliners + all 15 <code>stryke-*</code> connectors). The remaining 6 enforce a subset — strykelang explicitly marks fmt/clippy advisory in its <code>ci.yml</code> header; zshrs and fusevm follow the same pattern; Audio-Haxor and traderview are Tauri apps with pnpm-driven build pipelines; api-rest-generator is mid-transition from Kotlin to Rust.</p>
+      <p>The target polish bar for every Rust crate in the meta repo is to pass all four gates locally and in CI before a tag is cut. The shared release flow then promotes the binary to <code>MenkeTechnologies/homebrew-menketech</code> via the <code>HOMEBREW_TAP_TOKEN</code> cross-repo write secret. Audit gate <code>tests/rust-ci-polish-gates.sh</code> in the meta repo verifies the per-submodule <code>ci.yml</code> coverage; current state is 23 of 29 crates running all four (the 7 Rust binaries lsofrs/temprs/awkrs/iftoprs/nmaprs/storageshower/powerliners + all 16 <code>stryke-*</code> connector crates). The remaining 6 enforce a subset — strykelang explicitly marks fmt/clippy advisory in its <code>ci.yml</code> header; zshrs and fusevm follow the same pattern; Audio-Haxor and traderview are Tauri apps with pnpm-driven build pipelines; api-rest-generator is mid-transition from Kotlin to Rust.</p>
       <ul>
         <li><strong>fmt</strong> — <code>cargo fmt --all -- --check</code>, zero diff</li>
         <li><strong>clippy</strong> — <code>cargo clippy --all-targets --locked -- -D warnings</code>, zero error</li>
