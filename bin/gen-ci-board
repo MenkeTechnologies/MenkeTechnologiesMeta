@@ -1,0 +1,80 @@
+#!/usr/bin/env zsh
+# gen-ci-board — regenerate the [0x02] CI STATUS BOARD tables in README.md.
+#
+# Tier grouping comes from the [0x01] SUBMODULE MAP tables in README.md;
+# each repo's active workflows and default branch come live from the GitHub
+# API (no baked-in data). CI badges pin the repo's default branch; release
+# workflows (tag-triggered) get an unpinned badge in the Release column.
+#
+# Usage:
+#   bin/gen-ci-board               # print board markdown to stdout
+#   bin/gen-ci-board --in-place    # splice tables into README.md
+#
+# Requires: gh (authenticated), zsh.
+setopt extendedglob pipefail
+cd "${0:h}/.." || exit 1
+
+base=https://github.com/MenkeTechnologies
+
+gen() {
+    local line r br ci relb cf rf w
+    local -a wf extras
+    # Source of truth is the [0x01] SUBMODULE MAP section only — the board's
+    # own tables also match these patterns, so never grep the whole file.
+    awk '/^## \[0x01\] SUBMODULE MAP/{on=1; next} on && /^## \[/{exit} on' README.md |
+        grep -E '^### Tier |^\| \[`' | while IFS= read -r line; do
+        if [[ $line == "### Tier"* ]]; then
+            print ""
+            print "${line/\#\#\#/####}"
+            print ""
+            print "| Repo | CI | Release |"
+            print "|---|---|---|"
+            continue
+        fi
+        r=${line#*\[\`}; r=${r%%\`*}
+        [[ $r == */* ]] && continue
+        br=$(gh api "repos/MenkeTechnologies/$r" --jq .default_branch 2>/dev/null)
+        wf=("${(@f)$(gh api "repos/MenkeTechnologies/$r/actions/workflows" \
+            --jq '.workflows[] | select(.state=="active") | .path' 2>/dev/null |
+            grep -v dynamic | sed 's|.github/workflows/||')}")
+        wf=(${wf:#""})
+        cf=""; rf=""; extras=()
+        for w in $wf; do
+            case $w in
+                release*.y*ml) rf=$w;;
+                ci.yml|test.yaml|test.yml) cf=$w;;
+                *) extras+=($w);;
+            esac
+        done
+        # No conventional CI file: promote the first leftover workflow.
+        if [[ -z $cf && ${#extras} -gt 0 ]]; then cf=${extras[1]}; extras=(${extras[2,-1]}); fi
+        if [[ -z $cf ]]; then
+            ci="—"
+        else
+            ci="[![CI]($base/$r/actions/workflows/$cf/badge.svg?branch=$br)]($base/$r/actions/workflows/$cf)"
+            for w in $extras; do
+                ci+=" [![${w%.y*ml}]($base/$r/actions/workflows/$w/badge.svg?branch=$br)]($base/$r/actions/workflows/$w)"
+            done
+        fi
+        [[ -n $rf ]] && relb="[![Release]($base/$r/actions/workflows/$rf/badge.svg)]($base/$r/actions/workflows/$rf)" || relb="—"
+        print "| [\`$r\`]($base/$r) | $ci | $relb |"
+    done
+    print ""
+}
+
+if [[ ${1:-} == --in-place ]]; then
+    local tmp=$(mktemp)
+    gen > "$tmp" || exit 1
+    BOARD_FILE=$tmp perl -e '
+        local $/;
+        open my $f, "<", "README.md" or die; my $md = <$f>; close $f;
+        open my $b, "<", $ENV{BOARD_FILE} or die; my $board = <$b>; close $b;
+        my $n = ($md =~ s/(^## \[0x02\] CI STATUS BOARD\n.*?actions\/workflows`\)\.\n).*?(?=^## \[)/$1$board/ms);
+        die "gen-ci-board: board section markers not found in README.md\n" unless $n == 1;
+        open my $o, ">", "README.md" or die; print $o $md; close $o;
+    ' || { rm -f "$tmp"; exit 1; }
+    rm -f "$tmp"
+    print "gen-ci-board: README.md board refreshed"
+else
+    gen
+fi

@@ -36,12 +36,13 @@
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (2)](#tier-5--editor--multiplexer-plugins-2)
   - [Tier 6 — Apps, extensions, web & web-APIs (5)](#tier-6--apps-extensions-web--web-apis-5)
-- [\[0x02\] Common Operations](#0x02-common-operations)
-- [\[0x03\] Helper Scripts](#0x03-helper-scripts)
-- [\[0x04\] Updating Submodule Pointers](#0x04-updating-submodule-pointers)
-- [\[0x05\] Per-Host Setup](#0x05-per-host-setup)
-- [\[0x06\] Working Inside a Submodule](#0x06-working-inside-a-submodule)
-- [\[0x07\] Disk Footprint](#0x07-disk-footprint)
+- [\[0x02\] CI Status Board](#0x02-ci-status-board)
+- [\[0x03\] Common Operations](#0x03-common-operations)
+- [\[0x04\] Helper Scripts](#0x04-helper-scripts)
+- [\[0x05\] Updating Submodule Pointers](#0x05-updating-submodule-pointers)
+- [\[0x06\] Per-Host Setup](#0x06-per-host-setup)
+- [\[0x07\] Working Inside a Submodule](#0x07-working-inside-a-submodule)
+- [\[0x08\] Disk Footprint](#0x08-disk-footprint)
 - [\[0xFF\] License](#0xff-license)
 
 ---
@@ -189,7 +190,111 @@ Browser extensions, supporting apps, public website, and web-API services. (Taur
 
 ---
 
-## [0x02] COMMON OPERATIONS
+## [0x02] CI STATUS BOARD
+
+Live GitHub Actions status for every submodule, grouped by tier — scan the whole org from one page. CI badges pin each repo's default branch; Release badges show the latest tag-triggered run. `—` = no workflow yet. The board is generated from `.gitmodules` + each repo's active workflow list (`gh api repos/MenkeTechnologies/<repo>/actions/workflows`).
+
+#### Tier 1 — Core (12)
+
+| Repo | CI | Release |
+|---|---|---|
+| [`strykelang`](https://github.com/MenkeTechnologies/strykelang) | [![CI](https://github.com/MenkeTechnologies/strykelang/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/strykelang/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/strykelang/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/strykelang/actions/workflows/release.yml) |
+| [`zshrs`](https://github.com/MenkeTechnologies/zshrs) | [![CI](https://github.com/MenkeTechnologies/zshrs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zshrs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/zshrs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zshrs/actions/workflows/release.yml) |
+| [`fusevm`](https://github.com/MenkeTechnologies/fusevm) | [![CI](https://github.com/MenkeTechnologies/fusevm/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/fusevm/actions/workflows/ci.yml) | — |
+| [`lsofrs`](https://github.com/MenkeTechnologies/lsofrs) | [![CI](https://github.com/MenkeTechnologies/lsofrs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/lsofrs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/lsofrs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/lsofrs/actions/workflows/release.yml) |
+| [`temprs`](https://github.com/MenkeTechnologies/temprs) | [![CI](https://github.com/MenkeTechnologies/temprs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/temprs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/temprs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/temprs/actions/workflows/release.yml) |
+| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | [![CI](https://github.com/MenkeTechnologies/awkrs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/awkrs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/awkrs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/awkrs/actions/workflows/release.yml) |
+| [`iftoprs`](https://github.com/MenkeTechnologies/iftoprs) | [![CI](https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/iftoprs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/iftoprs/actions/workflows/release.yml) |
+| [`Audio-Haxor`](https://github.com/MenkeTechnologies/Audio-Haxor) | [![CI](https://github.com/MenkeTechnologies/Audio-Haxor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/Audio-Haxor/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/Audio-Haxor/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/Audio-Haxor/actions/workflows/release.yml) |
+| [`traderview`](https://github.com/MenkeTechnologies/traderview) | [![CI](https://github.com/MenkeTechnologies/traderview/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/traderview/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/traderview/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/traderview/actions/workflows/release.yml) |
+| [`nmaprs`](https://github.com/MenkeTechnologies/nmaprs) | [![CI](https://github.com/MenkeTechnologies/nmaprs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/nmaprs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/nmaprs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/nmaprs/actions/workflows/release.yml) |
+| [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | [![CI](https://github.com/MenkeTechnologies/powerliners/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/powerliners/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/powerliners/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/powerliners/actions/workflows/release.yml) |
+| [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | [![CI](https://github.com/MenkeTechnologies/zpwr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwr/actions/workflows/ci.yml) | — |
+
+#### Tier 2 — Stryke ecosystem (22)
+
+| Repo | CI | Release |
+|---|---|---|
+| [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | [![CI](https://github.com/MenkeTechnologies/homebrew-menketech/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/homebrew-menketech/actions/workflows/ci.yml) | — |
+| [`stryke-arrow`](https://github.com/MenkeTechnologies/stryke-arrow) | [![CI](https://github.com/MenkeTechnologies/stryke-arrow/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-arrow/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-arrow/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-arrow/actions/workflows/release.yml) |
+| [`stryke-aws`](https://github.com/MenkeTechnologies/stryke-aws) | [![CI](https://github.com/MenkeTechnologies/stryke-aws/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-aws/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-aws/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-aws/actions/workflows/release.yml) |
+| [`stryke-demo`](https://github.com/MenkeTechnologies/stryke-demo) | [![CI](https://github.com/MenkeTechnologies/stryke-demo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-demo/actions/workflows/ci.yml) | — |
+| [`stryke-docker`](https://github.com/MenkeTechnologies/stryke-docker) | [![CI](https://github.com/MenkeTechnologies/stryke-docker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-docker/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-docker/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-docker/actions/workflows/release.yml) |
+| [`stryke-duckdb`](https://github.com/MenkeTechnologies/stryke-duckdb) | [![CI](https://github.com/MenkeTechnologies/stryke-duckdb/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-duckdb/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-duckdb/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-duckdb/actions/workflows/release.yml) |
+| [`stryke-fleet`](https://github.com/MenkeTechnologies/stryke-fleet) | — | — |
+| [`stryke-gcp`](https://github.com/MenkeTechnologies/stryke-gcp) | [![CI](https://github.com/MenkeTechnologies/stryke-gcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-gcp/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-gcp/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-gcp/actions/workflows/release.yml) |
+| [`stryke-grpc`](https://github.com/MenkeTechnologies/stryke-grpc) | [![CI](https://github.com/MenkeTechnologies/stryke-grpc/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-grpc/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-grpc/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-grpc/actions/workflows/release.yml) |
+| [`stryke-gui`](https://github.com/MenkeTechnologies/stryke-gui) | [![CI](https://github.com/MenkeTechnologies/stryke-gui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-gui/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-gui/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-gui/actions/workflows/release.yml) |
+| [`stryke-k8s`](https://github.com/MenkeTechnologies/stryke-k8s) | [![CI](https://github.com/MenkeTechnologies/stryke-k8s/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-k8s/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-k8s/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-k8s/actions/workflows/release.yml) |
+| [`stryke-kafka`](https://github.com/MenkeTechnologies/stryke-kafka) | [![CI](https://github.com/MenkeTechnologies/stryke-kafka/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-kafka/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-kafka/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-kafka/actions/workflows/release.yml) |
+| [`stryke-mcpd`](https://github.com/MenkeTechnologies/stryke-mcpd) | — | — |
+| [`stryke-mongo`](https://github.com/MenkeTechnologies/stryke-mongo) | [![CI](https://github.com/MenkeTechnologies/stryke-mongo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-mongo/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-mongo/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-mongo/actions/workflows/release.yml) |
+| [`stryke-mysql`](https://github.com/MenkeTechnologies/stryke-mysql) | [![CI](https://github.com/MenkeTechnologies/stryke-mysql/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-mysql/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-mysql/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-mysql/actions/workflows/release.yml) |
+| [`stryke-parquet`](https://github.com/MenkeTechnologies/stryke-parquet) | [![CI](https://github.com/MenkeTechnologies/stryke-parquet/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-parquet/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-parquet/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-parquet/actions/workflows/release.yml) |
+| [`stryke-polars`](https://github.com/MenkeTechnologies/stryke-polars) | [![CI](https://github.com/MenkeTechnologies/stryke-polars/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-polars/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-polars/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-polars/actions/workflows/release.yml) |
+| [`stryke-postgres`](https://github.com/MenkeTechnologies/stryke-postgres) | [![CI](https://github.com/MenkeTechnologies/stryke-postgres/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-postgres/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-postgres/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-postgres/actions/workflows/release.yml) |
+| [`stryke-redis`](https://github.com/MenkeTechnologies/stryke-redis) | [![CI](https://github.com/MenkeTechnologies/stryke-redis/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-redis/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-redis/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-redis/actions/workflows/release.yml) |
+| [`stryke-selenium`](https://github.com/MenkeTechnologies/stryke-selenium) | [![CI](https://github.com/MenkeTechnologies/stryke-selenium/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-selenium/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-selenium/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-selenium/actions/workflows/release.yml) |
+| [`stryke-spark`](https://github.com/MenkeTechnologies/stryke-spark) | [![CI](https://github.com/MenkeTechnologies/stryke-spark/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-spark/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-spark/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-spark/actions/workflows/release.yml) |
+| [`stryke-utils`](https://github.com/MenkeTechnologies/stryke-utils) | [![CI](https://github.com/MenkeTechnologies/stryke-utils/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-utils/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-utils/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-utils/actions/workflows/release.yml) |
+
+#### Tier 3 — zsh-more-completions (1)
+
+| Repo | CI | Release |
+|---|---|---|
+| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | [![CI](https://github.com/MenkeTechnologies/zsh-more-completions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-more-completions/actions/workflows/ci.yml) | — |
+
+#### Tier 4 — Zsh ecosystem plugins (28)
+
+| Repo | CI | Release |
+|---|---|---|
+| [`zsh-expand`](https://github.com/MenkeTechnologies/zsh-expand) | [![CI](https://github.com/MenkeTechnologies/zsh-expand/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-expand/actions/workflows/ci.yml) | — |
+| [`zsh-cargo-completion`](https://github.com/MenkeTechnologies/zsh-cargo-completion) | [![CI](https://github.com/MenkeTechnologies/zsh-cargo-completion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-cargo-completion/actions/workflows/ci.yml) | — |
+| [`zsh-learn`](https://github.com/MenkeTechnologies/zsh-learn) | [![CI](https://github.com/MenkeTechnologies/zsh-learn/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-learn/actions/workflows/ci.yml) | — |
+| [`zsh-git-acp`](https://github.com/MenkeTechnologies/zsh-git-acp) | [![CI](https://github.com/MenkeTechnologies/zsh-git-acp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-git-acp/actions/workflows/ci.yml) | — |
+| [`zsh-better-npm-completion`](https://github.com/MenkeTechnologies/zsh-better-npm-completion) | [![CI](https://github.com/MenkeTechnologies/zsh-better-npm-completion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-better-npm-completion/actions/workflows/ci.yml) | — |
+| [`zsh-cpan-completion`](https://github.com/MenkeTechnologies/zsh-cpan-completion) | [![CI](https://github.com/MenkeTechnologies/zsh-cpan-completion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-cpan-completion/actions/workflows/ci.yml) | — |
+| [`zsh-dotnet-completion`](https://github.com/MenkeTechnologies/zsh-dotnet-completion) | [![CI](https://github.com/MenkeTechnologies/zsh-dotnet-completion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-dotnet-completion/actions/workflows/ci.yml) | — |
+| [`zsh-gem-completion`](https://github.com/MenkeTechnologies/zsh-gem-completion) | [![CI](https://github.com/MenkeTechnologies/zsh-gem-completion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-gem-completion/actions/workflows/ci.yml) | — |
+| [`zsh-git-repo-cache`](https://github.com/MenkeTechnologies/zsh-git-repo-cache) | [![CI](https://github.com/MenkeTechnologies/zsh-git-repo-cache/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-git-repo-cache/actions/workflows/ci.yml) | — |
+| [`zsh-nginx`](https://github.com/MenkeTechnologies/zsh-nginx) | [![CI](https://github.com/MenkeTechnologies/zsh-nginx/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-nginx/actions/workflows/ci.yml) | — |
+| [`zsh-pip-description-completion`](https://github.com/MenkeTechnologies/zsh-pip-description-completion) | [![CI](https://github.com/MenkeTechnologies/zsh-pip-description-completion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-pip-description-completion/actions/workflows/ci.yml) | — |
+| [`zsh-sed-sub`](https://github.com/MenkeTechnologies/zsh-sed-sub) | [![CI](https://github.com/MenkeTechnologies/zsh-sed-sub/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-sed-sub/actions/workflows/ci.yml) | — |
+| [`zsh-sudo`](https://github.com/MenkeTechnologies/zsh-sudo) | [![CI](https://github.com/MenkeTechnologies/zsh-sudo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-sudo/actions/workflows/ci.yml) | — |
+| [`zsh-xcode-completions`](https://github.com/MenkeTechnologies/zsh-xcode-completions) | [![CI](https://github.com/MenkeTechnologies/zsh-xcode-completions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-xcode-completions/actions/workflows/ci.yml) | — |
+| [`zsh-docker-aliases`](https://github.com/MenkeTechnologies/zsh-docker-aliases) | [![CI](https://github.com/MenkeTechnologies/zsh-docker-aliases/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/zsh-docker-aliases/actions/workflows/ci.yml) | — |
+| [`zsh-openshift-aliases`](https://github.com/MenkeTechnologies/zsh-openshift-aliases) | [![CI](https://github.com/MenkeTechnologies/zsh-openshift-aliases/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/zsh-openshift-aliases/actions/workflows/ci.yml) | — |
+| [`zsh-travis`](https://github.com/MenkeTechnologies/zsh-travis) | [![CI](https://github.com/MenkeTechnologies/zsh-travis/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/zsh-travis/actions/workflows/ci.yml) | — |
+| [`zsh-very-colorful-manuals`](https://github.com/MenkeTechnologies/zsh-very-colorful-manuals) | [![CI](https://github.com/MenkeTechnologies/zsh-very-colorful-manuals/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/zsh-very-colorful-manuals/actions/workflows/ci.yml) | — |
+| [`zsh-z`](https://github.com/MenkeTechnologies/zsh-z) | [![CI](https://github.com/MenkeTechnologies/zsh-z/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/zsh-z/actions/workflows/ci.yml) | — |
+| [`zsh-zinit-final`](https://github.com/MenkeTechnologies/zsh-zinit-final) | [![CI](https://github.com/MenkeTechnologies/zsh-zinit-final/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/zsh-zinit-final/actions/workflows/ci.yml) | — |
+| [`fasd-simple`](https://github.com/MenkeTechnologies/fasd-simple) | [![CI](https://github.com/MenkeTechnologies/fasd-simple/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/fasd-simple/actions/workflows/ci.yml) | — |
+| [`fzf-tab`](https://github.com/MenkeTechnologies/fzf-tab) | [![CI](https://github.com/MenkeTechnologies/fzf-tab/actions/workflows/test.yaml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/fzf-tab/actions/workflows/test.yaml) | — |
+| [`fzf-zsh-plugin`](https://github.com/MenkeTechnologies/fzf-zsh-plugin) | [![CI](https://github.com/MenkeTechnologies/fzf-zsh-plugin/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/fzf-zsh-plugin/actions/workflows/ci.yml) [![awesomebot](https://github.com/MenkeTechnologies/fzf-zsh-plugin/actions/workflows/awesomebot.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/fzf-zsh-plugin/actions/workflows/awesomebot.yml) [![superlinter](https://github.com/MenkeTechnologies/fzf-zsh-plugin/actions/workflows/superlinter.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/fzf-zsh-plugin/actions/workflows/superlinter.yml) | — |
+| [`gh_reveal`](https://github.com/MenkeTechnologies/gh_reveal) | [![CI](https://github.com/MenkeTechnologies/gh_reveal/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/gh_reveal/actions/workflows/ci.yml) | — |
+| [`jhipster-oh-my-zsh-plugin`](https://github.com/MenkeTechnologies/jhipster-oh-my-zsh-plugin) | [![CI](https://github.com/MenkeTechnologies/jhipster-oh-my-zsh-plugin/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/jhipster-oh-my-zsh-plugin/actions/workflows/ci.yml) | — |
+| [`kubectl-aliases`](https://github.com/MenkeTechnologies/kubectl-aliases) | [![CI](https://github.com/MenkeTechnologies/kubectl-aliases/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/kubectl-aliases/actions/workflows/ci.yml) | — |
+| [`revolver`](https://github.com/MenkeTechnologies/revolver) | [![CI](https://github.com/MenkeTechnologies/revolver/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/revolver/actions/workflows/ci.yml) | — |
+| [`zunit`](https://github.com/MenkeTechnologies/zunit) | [![CI](https://github.com/MenkeTechnologies/zunit/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/zunit/actions/workflows/ci.yml) | — |
+
+#### Tier 5 — Editor / multiplexer plugins (2)
+
+| Repo | CI | Release |
+|---|---|---|
+| [`VimColorSchemes`](https://github.com/MenkeTechnologies/VimColorSchemes) | [![CI](https://github.com/MenkeTechnologies/VimColorSchemes/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/VimColorSchemes/actions/workflows/ci.yml) | — |
+| [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | [![CI](https://github.com/MenkeTechnologies/tmux-fzf-url/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/MenkeTechnologies/tmux-fzf-url/actions/workflows/ci.yml) | — |
+
+#### Tier 6 — Apps, extensions, web & web-APIs (5)
+
+| Repo | CI | Release |
+|---|---|---|
+| [`zpwrchrome`](https://github.com/MenkeTechnologies/zpwrchrome) | [![CI](https://github.com/MenkeTechnologies/zpwrchrome/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwrchrome/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/zpwrchrome/actions/workflows/release-host.yml/badge.svg)](https://github.com/MenkeTechnologies/zpwrchrome/actions/workflows/release-host.yml) |
+| [`storageshower`](https://github.com/MenkeTechnologies/storageshower) | [![CI](https://github.com/MenkeTechnologies/storageshower/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/storageshower/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/storageshower/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/storageshower/actions/workflows/release.yml) |
+| [`MenkeTechnologies.github.io`](https://github.com/MenkeTechnologies/MenkeTechnologies.github.io) | [![CI](https://github.com/MenkeTechnologies/MenkeTechnologies.github.io/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/MenkeTechnologies.github.io/actions/workflows/ci.yml) | — |
+| [`api-rest-generator`](https://github.com/MenkeTechnologies/api-rest-generator) | [![CI](https://github.com/MenkeTechnologies/api-rest-generator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/api-rest-generator/actions/workflows/ci.yml) | — |
+| [`LearningCollectionAPI`](https://github.com/MenkeTechnologies/LearningCollectionAPI) | [![CI](https://github.com/MenkeTechnologies/LearningCollectionAPI/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/LearningCollectionAPI/actions/workflows/ci.yml) | — |
+
+## [0x03] COMMON OPERATIONS
 
 ### Pull every submodule to its remote tip
 
@@ -239,9 +344,9 @@ Prefix `+` means the working tree diverges from the pinned SHA; `-` means the su
 
 ---
 
-## [0x03] HELPER SCRIPTS
+## [0x04] HELPER SCRIPTS
 
-The `bin/` directory ships a few wrappers for common operations. All are POSIX shell, no dependencies beyond `git`.
+The `bin/` directory ships a few wrappers for common operations. All are POSIX shell with no dependencies beyond `git`, except `gen-ci-board` (zsh + authenticated `gh`).
 
 | Script | What it does |
 |---|---|
@@ -250,6 +355,7 @@ The `bin/` directory ships a few wrappers for common operations. All are POSIX s
 | [`bin/foreach`](bin/foreach) | Run an arbitrary shell command inside every submodule. |
 | [`bin/sync-pointers`](bin/sync-pointers) | After running pull-all, stage + commit all submodule pointer bumps in one commit. |
 | [`bin/release-all`](bin/release-all) | Coordinated `Cargo.toml` bump + commit + tag + push across every submodule that backs a homebrew formula. |
+| [`bin/gen-ci-board`](bin/gen-ci-board) | Regenerate the [\[0x02\] CI Status Board](#0x02-ci-status-board) from the submodule map + live workflow lists (`--in-place` splices README.md). |
 
 ```bash
 # pull everything
@@ -275,7 +381,7 @@ The `bin/` directory ships a few wrappers for common operations. All are POSIX s
 
 ---
 
-## [0x04] UPDATING SUBMODULE POINTERS
+## [0x05] UPDATING SUBMODULE POINTERS
 
 A submodule entry in `.gitmodules` points to a specific commit SHA in the submodule's history. The meta repo doesn't auto-follow new commits — you bump the pointer explicitly.
 
@@ -300,7 +406,7 @@ Or use the helper:
 
 ---
 
-## [0x05] PER-HOST SETUP
+## [0x06] PER-HOST SETUP
 
 ### macOS / Linux
 
@@ -343,7 +449,7 @@ git clone --recurse-submodules --mirror https://github.com/MenkeTechnologies/Men
 
 ---
 
-## [0x06] WORKING INSIDE A SUBMODULE
+## [0x07] WORKING INSIDE A SUBMODULE
 
 Submodules check out in **detached HEAD** state at the pinned SHA. Before committing changes:
 
@@ -368,7 +474,7 @@ git commit -am 'config: track strykelang main branch'
 
 ---
 
-## [0x07] DISK FOOTPRINT
+## [0x08] DISK FOOTPRINT
 
 Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --recurse-submodules`):
 
