@@ -17,14 +17,17 @@ cd "$(dirname "$0")/.." || exit 1
 base=https://github.com/MenkeTechnologies
 
 gen() {
-    local line r br ci relb cf rf w
+    local line r br ci relb cf rf w tier
     local -a wf extras
+    tier=""
+    printf '\n| Tier | Repo | CI | Release |\n|---|---|---|---|\n'
     # Source of truth is the [0x01] SUBMODULE MAP section only — the board's
-    # own tables also match these patterns, so never grep the whole file.
+    # own table also matches these patterns, so never grep the whole file.
     while IFS= read -r line; do
         if [[ $line == "### Tier"* ]]; then
-            printf '\n#%s\n\n' "$line"
-            printf '| Repo | CI | Release |\n|---|---|---|\n'
+            # "### Tier 4 — Zsh ecosystem plugins (28)" -> "4 — Zsh ecosystem plugins"
+            tier=${line#\#\#\# Tier }
+            tier=${tier% (*}
             continue
         fi
         r=${line#*[\`}
@@ -64,7 +67,7 @@ gen() {
             relb="—"
         fi
         # shellcheck disable=SC2016  # backticks are literal markdown, not expansion
-        printf '| [`%s`](%s) | %s | %s |\n' "$r" "$base/$r" "$ci" "$relb"
+        printf '| %s | [`%s`](%s) | %s | %s |\n' "$tier" "$r" "$base/$r" "$ci" "$relb"
     done < <(awk '/^## \[0x01\] SUBMODULE MAP/{on=1; next} on && /^## \[/{exit} on' README.md |
         grep -E '^### Tier |^\| \[`')
     printf '\n'
