@@ -1,8 +1,8 @@
 # BUGS
 
-Defects surfaced by the two `coverage` audit workflows (read-the-code findings, each with a `file:line` and a quoted evidence snippet). Reported, not auto-fixed — per the project rule that bug fixes are reviewed individually. These live in the submodule worktrees; the path in each entry is relative to that submodule.
+Defects surfaced by the two `coverage` audit workflows (read-the-code findings, each with a `file:line` and a quoted evidence snippet). Reported here, then fixed individually under review. Paths are relative to the named submodule worktree; `file:line` is **as audited** — a few line numbers drift slightly after a fix lands in the same file (the function name in each entry locates it).
 
-**Counts:** 3 high · 19 medium · 23 low open · 3 fixed.
+**Open:** 3 high · 17 medium · 23 low.  **Fixed:** 6.
 
 **2×** marks a defect found independently by both audit passes (higher confidence).
 
@@ -10,12 +10,14 @@ Defects surfaced by the two `coverage` audit workflows (read-the-code findings, 
 
 ## Fixed
 
-- **storageshower** `src/columns.rs:37` (high) — fixed in `de40ef3105`. mount_col_width panics (process abort) when a custom mount width is configured (prefs.col_mount_w > 0) and the inner terminal width is below 28. clamp(8, inner_w.saturating_sub(20)) yields clamp(min=8, max<8) which violates Rust's min<=max precondition and panics. inner_w comes from the live terminal width minus borders (ui.rs:388 `inner_w = w.saturating_sub(lm+rm)`), and mount_col_width is called every frame in the render path (ui.rs:547, ui.rs:616) and in mouse hit-testing (mouse.rs:82). Any user with col_mount_w set in prefs who renders in a sub-28-column pane (narrow tmux split, side panel) crashes the TUI. Reproduced: `cargo test --test columns_mount_width_narrow_custom_no_panic_integration` -> panic at src/columns.rs:37:45 'min > max. min = 8, max = 7' (inner_w=27) and 'min = 8, max = 0' (inner_w=1).
-- **stryke-duckdb** `src/lib.rs:373` (high) — fixed in `fa74d31e1a`. duckdb__dump interpolates the caller-controlled `source` field raw into `SELECT * FROM {source}` with NO validate_identifier() guard, unlike duckdb__import (line 387) and duckdb__export (line 447) which both validate their `table` param. A `source` value like `t; DROP TABLE t; SELECT * FROM t` reaches run_query -> conn.prepare. prepare() typically executes one statement so the blast radius is narrower than execute_batch, but the asymmetry is the bug: dump is the one FROM-clause interpolation site left unvalidated, so any stryke caller routing untrusted input through dump's `source` gets a different (weaker) safety contract than import/export. Same module already documents (lines 414-419) that raw identifier interpolation is the exact injection class validate_identifier exists to close.
-- **traderview** `crates/traderview-ocr/src/parse.rs:1098` (medium) — fixed in `a3737cdc20`. guess_category over-matches via the 2-character keyword "ad" (and "ads") in the first-declared 'advertising' category. Keyword matching is substring-based (n.contains(kw)), so "ad" matches any item name containing the bigram 'ad' — e.g. 'Unleaded' (fuel), 'Gatorade', 'lemonade', 'avocado', 'bread'-adjacent tokens. Combined with tie-to-first resolution, real fuel/grocery items get tagged 'advertising' (a Schedule C deduction line), producing wrong tax-category defaults.
+- **storageshower** `src/columns.rs:37` (high) — `de40ef3105`. mount_col_width panics (process abort) when a custom mount width is configured (prefs.col_mount_w > 0) and the inner terminal width is below 28. clamp(8, inner_w.saturating_sub(20)) yields clamp(min=8, max<8) which violates Rust's min<=max precondition and panics. inner_w comes from the live terminal width minus borders (ui.rs:388 `inner_w = w.saturating_sub(lm+rm)`), and mount_col_width is called every frame in the render path (ui.rs:547, ui.rs:616) and in mouse hit-testing (mouse.rs:82). Any user with col_mount_w set in prefs who renders in a sub-28-column pane (narrow tmux split, side panel) crashes the TUI. Reproduced: `cargo test --test columns_mount_width_narrow_custom_no_panic_integration` -> panic at src/columns.rs:37:45 'min > max. min = 8, max = 7' (inner_w=27) and 'min = 8, max = 0' (inner_w=1).
+- **stryke-duckdb** `src/lib.rs:373` (high) — `fa74d31e1a`. duckdb__dump interpolates the caller-controlled `source` field raw into `SELECT * FROM {source}` with NO validate_identifier() guard, unlike duckdb__import (line 387) and duckdb__export (line 447) which both validate their `table` param. A `source` value like `t; DROP TABLE t; SELECT * FROM t` reaches run_query -> conn.prepare. prepare() typically executes one statement so the blast radius is narrower than execute_batch, but the asymmetry is the bug: dump is the one FROM-clause interpolation site left unvalidated, so any stryke caller routing untrusted input through dump's `source` gets a different (weaker) safety contract than import/export. Same module already documents (lines 414-419) that raw identifier interpolation is the exact injection class validate_identifier exists to close.
+- **stryke-mysql** `src/lib.rs:85` (medium) — `9e408baba5`. json_to_my_value narrows every non-integral JSON number to f32 via `f as f32`, throwing away ~29 bits of f64 mantissa for every floating bind parameter — including DECIMAL, monetary, and coordinate values. A bound 0.1 is sent as the f32 approximation, not the f64. (Already pinned by the pre-existing j2mv_f64_zero_point_one_loses_precision_via_f32_cast test; surfaced here as the underlying defect — the obvious fix is MyValue::Double(f).)
+- **stryke-mysql** `src/lib.rs:303/317` (medium) — `9e408baba5`. split_sql_statements reconstructs each statement byte-by-byte using `b as char`, which reinterprets every raw byte as a Unicode codepoint. For any multibyte UTF-8 in a SQL string literal (accented identifiers, CJK text, emoji), each continuation byte 0x80-0xFF becomes a Latin-1 codepoint, corrupting the statement that gets sent to query_drop. A statement like INSERT INTO t (name) VALUES ('Renée') is mangled because 'é' (0xC3 0xA9) is split into two garbage chars. The splitter advances over the input as `bytes` (line 254) but emits via `cur.push(bytes[i] as char)` at lines 303, 318 (and 263, 266-282 in the quote-scan loop), so non-ASCII payloads are corrupted before execution.
+- **traderview** `crates/traderview-ocr/src/parse.rs:1098` (medium) — `a3737cdc20`. guess_category over-matches via the 2-character keyword "ad" (and "ads") in the first-declared 'advertising' category. Keyword matching is substring-based (n.contains(kw)), so "ad" matches any item name containing the bigram 'ad' — e.g. 'Unleaded' (fuel), 'Gatorade', 'lemonade', 'avocado', 'bread'-adjacent tokens. Combined with tie-to-first resolution, real fuel/grocery items get tagged 'advertising' (a Schedule C deduction line), producing wrong tax-category defaults.
+- **stryke-mysql** `src/lib.rs:415` (low) — `9e408baba5`. op_dump interpolates `table` into `SELECT * FROM {}` WITHOUT calling validate_identifier (unlike op_schema at lib.rs:170 and op_insert_many at lib.rs:331). The `table` field flows raw from opts["table"].as_str() into format!, leaving an injection vector via the dump op (e.g. table = `t; DROP TABLE x`). `limit` is also interpolated as a raw i64 with no bound.
 
 ---
-
 
 ## HIGH
 
@@ -141,7 +143,7 @@ Binary-payload handling is inconsistent and lossy across the two read paths. op_
 op_pubsub_pull: `.decode(data_b64).ok().and_then(|b| String::from_utf8(b).ok()).unwrap_or_default()` (lines 342-346) — non-UTF-8 -> empty string. Contrast op_gcs_get_object: `Err(_) => { ... Value::String(format!("base64:{}", ...encode(&bytes))) }` (lines 195-201) which preserves binary.
 ```
 
-### stryke-gui `src/keyboard.rs:18` **2×** (also reported at `src/keyboard.rs:851`)
+### stryke-gui `src/keyboard.rs:18` **2×** (also `keyboard.rs:851`)
 
 gui__key_keys returns the KEYBOARD_KEY_NAMES table to .stk scripts as the canonical list of names accepted by `gui key press/down/up`, but on macOS 50 of those advertised names are rejected by parse_key with 'unrecognized key name'. The names are only mapped in parse_key_platform arms gated to Windows/Linux (cfg(any(windows, all(unix, not(macos))))). A user reads a name from the public discovery list, passes it back, and gets an error: discovery-vs-execution mismatch. Symmetric gaps exist on Linux for the Windows-only and macOS-only names.
 
@@ -163,22 +165,6 @@ ffi_call_async silently substitutes Value::Null for any args bytes that fail JSO
 
 ```
 Lines 360-362: `let cs = unsafe { CStr::from_ptr(args) }; serde_json::from_slice::<Value>(cs.to_bytes()).unwrap_or(Value::Null)` — parse failure is swallowed into Null rather than returned as `{"error":"malformed JSON args"}`.
-```
-
-### stryke-mysql `src/lib.rs:303` **2×** (also reported at `src/lib.rs:317`)
-
-split_sql_statements reconstructs each statement byte-by-byte using `b as char`, which reinterprets every raw byte as a Unicode codepoint. For any multibyte UTF-8 in a SQL string literal (accented identifiers, CJK text, emoji), each continuation byte 0x80-0xFF becomes a Latin-1 codepoint, corrupting the statement that gets sent to query_drop. A statement like INSERT INTO t (name) VALUES ('Renée') is mangled because 'é' (0xC3 0xA9) is split into two garbage chars. The splitter advances over the input as `bytes` (line 254) but emits via `cur.push(bytes[i] as char)` at lines 303, 318 (and 263, 266-282 in the quote-scan loop), so non-ASCII payloads are corrupted before execution.
-
-```
-let bytes = sql.as_bytes(); ... _ => { cur.push(b as char); i += 1; }  // line 316-319: byte-as-codepoint, breaks multibyte UTF-8
-```
-
-### stryke-mysql `src/lib.rs:85`
-
-json_to_my_value narrows every non-integral JSON number to f32 via `f as f32`, throwing away ~29 bits of f64 mantissa for every floating bind parameter — including DECIMAL, monetary, and coordinate values. A bound 0.1 is sent as the f32 approximation, not the f64. (Already pinned by the pre-existing j2mv_f64_zero_point_one_loses_precision_via_f32_cast test; surfaced here as the underlying defect — the obvious fix is MyValue::Double(f).)
-
-```
-lib.rs:84-85 `} else if let Some(f) = n.as_f64() { MyValue::Float(f as f32) }`.
 ```
 
 ### stryke-polars `src/extras.rs:444`
@@ -303,20 +289,20 @@ op_count casts the driver's u64 count to i64 with `n as i64`. For a collection w
 Line 215: `Ok(json!({"value": n as i64}))` where `n` is the u64 returned by `count_documents`. No checked/try_into conversion; wraps silently on overflow.
 ```
 
+### stryke-mysql `src/lib.rs:302`
+
+Block-comment skip in split_sql_statements has an off-by-one at EOF. The scan loop bound `i + 1 < bytes.len()` (line 302) stops one byte early when a block comment runs to the exact end of input without a closing `*/`. The trailing `if i + 1 < bytes.len()` (line 306) is then false, so the final pre-EOF byte is neither consumed as comment nor emitted — it is silently dropped. For a SQL string ending in an unterminated `/* ... x` the last char `x` is lost from the reconstructed statement.
+
+```
+while i + 1 < bytes.len() && !(bytes[i] == b'*' && bytes[i + 1] == b'/') { cur.push(bytes[i] as char); i += 1; } if i + 1 < bytes.len() { cur.push_str("*/"); i += 2; }
+```
+
 ### stryke-mysql `src/lib.rs:48`
 
 url_from_opts performs no validation on `port` (read as i64) or on password/host containing URL-significant characters. Negative/zero/>65535 ports and passwords containing `@` or `/` are concatenated verbatim into the mysql:// URL, producing malformed URLs that fail at connect time with a low-level message rather than at config time. (Pinned by pre-existing url_port_* and url_password_with_slash tests.)
 
 ```
 lib.rs:48 `let port = opts.get("port").and_then(|v| v.as_i64()).unwrap_or(3306);` and lib.rs:55 `format!("{}:{}", user, password)` with no percent-encoding.
-```
-
-### stryke-mysql `src/lib.rs:415`
-
-op_dump interpolates `table` into `SELECT * FROM {}` WITHOUT calling validate_identifier (unlike op_schema at lib.rs:170 and op_insert_many at lib.rs:331). The `table` field flows raw from opts["table"].as_str() into format!, leaving an injection vector via the dump op (e.g. table = `t; DROP TABLE x`). `limit` is also interpolated as a raw i64 with no bound.
-
-```
-lib.rs:411-419: `let table = opts["table"].as_str().ok_or_else(...)?.to_string();` then `format!("SELECT * FROM {} LIMIT {}", table, n)` — no validate_identifier call, contrast lib.rs:170-175 in op_schema.
 ```
 
 ### stryke-postgres `src/lib.rs:877`
