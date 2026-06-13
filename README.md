@@ -7,20 +7,20 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-70-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-71-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-12_core-cyan.svg)](#tier-1--core-12)
-[![Tier 2](https://img.shields.io/badge/tier_2-22_stryke-green.svg)](#tier-2--stryke-ecosystem-22)
+[![Tier 2](https://img.shields.io/badge/tier_2-23_stryke-green.svg)](#tier-2--stryke-ecosystem-23)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-2_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-2)
 [![Tier 6](https://img.shields.io/badge/tier_6-5_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-5)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 70 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 71 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `zpwr` (the terminal OS), the 22-repo stryke ecosystem (`stryke-aws`, `stryke-k8s`, `stryke-kafka`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `zpwr` (the terminal OS), the 23-repo stryke ecosystem (`stryke-aws`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -31,7 +31,7 @@
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
   - [Tier 1 — Core (12)](#tier-1--core-12)
-  - [Tier 2 — Stryke ecosystem (22)](#tier-2--stryke-ecosystem-22)
+  - [Tier 2 — Stryke ecosystem (23)](#tier-2--stryke-ecosystem-23)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (2)](#tier-5--editor--multiplexer-plugins-2)
@@ -97,7 +97,7 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | **Rust CLI** — mature port of Python's [`powerline-status`](https://github.com/powerline/powerline) (v0.2.15, 3,000+ `#[test]` functions, 5-binary suite: `powerline` / `powerline-daemon` / `powerline-config` / `powerline-render` / `powerline-lint`, parity-tested against upstream Python). Drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. &middot; <sub>[docs](https://menketechnologies.github.io/powerliners/) · [report](https://menketechnologies.github.io/powerliners/report.html)</sub> |
 | [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | The terminal OS. 505 verbs, 190k LOC, zinit-based, stryke-powered. ⭐ 221 &middot; <sub>[docs](https://menketechnologies.github.io/zpwr/) · [report](https://menketechnologies.github.io/zpwr/report.html)</sub> |
 
-### Tier 2 — Stryke ecosystem (22)
+### Tier 2 — Stryke ecosystem (23)
 
 MenkeTechnologies distribution (single tap for every CLI tool) + per-service connector libraries for `stryke`.
 
@@ -125,6 +125,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 | [`stryke-selenium`](https://github.com/MenkeTechnologies/stryke-selenium) | Selenium WebDriver bindings — browser automation. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-selenium/) · [report](https://menketechnologies.github.io/stryke-selenium/report.html)</sub> |
 | [`stryke-spark`](https://github.com/MenkeTechnologies/stryke-spark) | Apache Spark integration. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-spark/) · [report](https://menketechnologies.github.io/stryke-spark/report.html)</sub> |
 | [`stryke-utils`](https://github.com/MenkeTechnologies/stryke-utils) | Pure stryke library — shared helpers written in stryke itself, no Rust or external deps. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-utils/) · [report](https://menketechnologies.github.io/stryke-utils/report.html)</sub> |
+| [`stryke-zmq`](https://github.com/MenkeTechnologies/stryke-zmq) | ZeroMQ client — brokerless req/rep, pub/sub, push/pull, dealer/router. cdylib with libzmq vendored. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-zmq/) · [report](https://menketechnologies.github.io/stryke-zmq/report.html)</sub> |
 
 ### Tier 3 — zsh-more-completions (1)
 
@@ -230,6 +231,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 2 — Stryke ecosystem | [`stryke-selenium`](https://github.com/MenkeTechnologies/stryke-selenium) | [![CI](https://github.com/MenkeTechnologies/stryke-selenium/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-selenium/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-selenium/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-selenium/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-selenium?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-selenium/tags) |
 | 2 — Stryke ecosystem | [`stryke-spark`](https://github.com/MenkeTechnologies/stryke-spark) | [![CI](https://github.com/MenkeTechnologies/stryke-spark/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-spark/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-spark/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-spark/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-spark?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-spark/tags) |
 | 2 — Stryke ecosystem | [`stryke-utils`](https://github.com/MenkeTechnologies/stryke-utils) | [![CI](https://github.com/MenkeTechnologies/stryke-utils/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-utils/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-utils/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-utils/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-utils?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-utils/tags) |
+| 2 — Stryke ecosystem | [`stryke-zmq`](https://github.com/MenkeTechnologies/stryke-zmq) | [![CI](https://github.com/MenkeTechnologies/stryke-zmq/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-zmq/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-zmq/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-zmq/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-zmq?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-zmq/tags) |
 | 3 — zsh-more-completions | [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | [![CI](https://github.com/MenkeTechnologies/zsh-more-completions/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-more-completions/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zsh-more-completions?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zsh-more-completions/tags) |
 | 4 — Zsh ecosystem plugins | [`zsh-expand`](https://github.com/MenkeTechnologies/zsh-expand) | [![CI](https://github.com/MenkeTechnologies/zsh-expand/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-expand/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zsh-expand?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zsh-expand/tags) |
 | 4 — Zsh ecosystem plugins | [`zsh-cargo-completion`](https://github.com/MenkeTechnologies/zsh-cargo-completion) | [![CI](https://github.com/MenkeTechnologies/zsh-cargo-completion/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zsh-cargo-completion/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zsh-cargo-completion?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zsh-cargo-completion/tags) |
