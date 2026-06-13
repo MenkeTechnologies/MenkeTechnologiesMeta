@@ -12,11 +12,11 @@ gm=".gitmodules"
 [[ -f "$gm" ]] || { echo "FAIL  no $gm"; exit 1; }
 
 n=$(grep -c "^\[submodule" "$gm")
-if [[ $n -ne 70 ]]; then
-    echo "FAIL  expected 70 submodule entries, got $n"
+if [[ $n -ne 71 ]]; then
+    echo "FAIL  expected 71 submodule entries, got $n"
     ok=0
 else
-    echo "PASS  .gitmodules has 70 submodule entries"
+    echo "PASS  .gitmodules has 71 submodule entries"
 fi
 
 # Parse paths and urls in order
