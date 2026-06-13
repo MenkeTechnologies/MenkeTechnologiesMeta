@@ -17,10 +17,10 @@ cd "$(dirname "$0")/.." || exit 1
 base=https://github.com/MenkeTechnologies
 
 gen() {
-    local line r br ci relb cf rf w tier
+    local line r br ci relb verb cf rf w tier
     local -a wf extras
     tier=""
-    printf '\n| Tier | Repo | CI | Release |\n|---|---|---|---|\n'
+    printf '\n| Tier | Repo | CI | Release | Version |\n|---|---|---|---|---|\n'
     # Source of truth is the [0x01] SUBMODULE MAP section only — the board's
     # own table also matches these patterns, so never grep the whole file.
     while IFS= read -r line; do
@@ -66,8 +66,11 @@ gen() {
         else
             relb="—"
         fi
+        # Latest git tag, semver-sorted. Repos with no tags render a grey
+        # "no releases" badge — same as a hand-authored row would.
+        verb="[![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/$r?sort=semver&label=&color=blue)]($base/$r/tags)"
         # shellcheck disable=SC2016  # backticks are literal markdown, not expansion
-        printf '| %s | [`%s`](%s) | %s | %s |\n' "$tier" "$r" "$base/$r" "$ci" "$relb"
+        printf '| %s | [`%s`](%s) | %s | %s | %s |\n' "$tier" "$r" "$base/$r" "$ci" "$relb" "$verb"
     done < <(awk '/^## \[0x01\] SUBMODULE MAP/{on=1; next} on && /^## \[/{exit} on' README.md |
         grep -E '^### Tier |^\| \[`')
     printf '\n'
