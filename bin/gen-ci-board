@@ -17,7 +17,7 @@ cd "$(dirname "$0")/.." || exit 1
 base=https://github.com/MenkeTechnologies
 
 gen() {
-    local line r br ci relb verb cf rf w tier
+    local line r br priv ci relb verb cf rf w tier
     local -a wf extras
     tier=""
     printf '\n| Tier | Repo | CI | Release | Version |\n|---|---|---|---|---|\n'
@@ -33,7 +33,16 @@ gen() {
         r=${line#*[\`}
         r=${r%%\`*}
         [[ $r == */* ]] && continue
-        br=$(gh api "repos/MenkeTechnologies/$r" --jq .default_branch 2>/dev/null) || br=main
+        IFS=$'\t' read -r br priv < <(gh api "repos/MenkeTechnologies/$r" \
+            --jq '[.default_branch, .private] | @tsv' 2>/dev/null) || { br=main; priv=false; }
+        [[ -z $br ]] && br=main
+        # Private repos have no public Actions runs, badges, or tags — shields.io
+        # and the GitHub badge endpoint both render "repo not found". Emit em
+        # dashes so the board stays clean instead of showing broken images.
+        if [[ $priv == true ]]; then
+            printf '| %s | [`%s`](%s) | — | — | — |\n' "$tier" "$r" "$base/$r"
+            continue
+        fi
         mapfile -t wf < <(gh api "repos/MenkeTechnologies/$r/actions/workflows" \
             --jq '.workflows[] | select(.state=="active") | .path' 2>/dev/null |
             grep -v dynamic | sed 's|.github/workflows/||' || true)
