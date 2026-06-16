@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["ATTR_BIT_MAP_COUNT","ATTR_CMN_MODTIME","ATTR_CMN_NAME","ATTR_CMN_OBJTYPE","ATTR_CMN_RETURNED_ATTRS","ATTR_FILE_DATALENGTH","FSOPT_PACK_INVAL_ATTRS","VDIR","VLNK","VREG"],"fn":["_path_buf_unused","getattrlistbulk","read_dir_bulk_fast","read_u32"],"struct":["AttributeSet","Attrlist"]};

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 10 · Floating player &amp; transport</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">10 · Player</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="09-palette.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">09 · Command palette</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="11-tray.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">11 · Tray popover</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:52.63%"></div></div>
+        <span class="meter-count">10 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">10.</span>Floating player &amp; transport</h2>
+      <p class="tutorial-subtitle">Waveform seek, three-band EQ, gain, pan, mono, speed, reverse playback, loop modes, A/B loop, shuffle, drag-reorderable history, and an autoplay chain that survives EOFs even when the WebView is throttled.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/player.png" alt="Floating player docked at the right of the app with waveform, transport, EQ, and recently-played list" loading="lazy">
+        <figcaption>assets/player.png · Floating player</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Where the player lives</h2>
+        <p>The floating player is not a tab — it's a draggable, collapsible HUD panel owned by <code>frontend/js/audio.js</code> (7 600+ lines). It's where every preview-audio action ends up. Show or hide it with <code>P</code>. Collapse it to a compact pill with <code>E</code> (<em>expand/collapse</em>). Close it entirely with the × button (<code>npCloseBtn</code>). Drag its title bar to reposition; drag the resize handle to resize. Both position and size persist in prefs.</p>
+        <p>The player can also <strong>snap to a dock</strong> — drag it near any of the four corners and it locks to <code>dock-tl</code> / <code>dock-tr</code> / <code>dock-bl</code> / <code>dock-br</code> (<code>playerDock</code> pref). On every successful snap the app emits a <code>toast.player_docked</code> notification. Each of the player's interior sections (<em>transport</em>, <em>waveform</em>, <em>EQ</em>, <em>history</em>, …) is itself drag-reorderable — the order persists as <code>playerSectionOrder</code> and drops emit <code>toast.reordered_np_sections</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Transport</h2>
+        <ul>
+          <li><strong>Play / pause</strong> — <code>npBtnPlay</code>. Shortcut <code>Space</code>. Function <code>toggleAudioPlayback()</code> (~line 2845).</li>
+          <li><strong>Previous / next</strong> — <code>npBtnPrev</code> / <code>npBtnNext</code>. Shortcuts <code>Cmd+←</code> / <code>Cmd+→</code>. Functions <code>prevTrack(opts)</code> / <code>nextTrack(opts)</code>. The floating buttons always walk the player history list; shortcuts/tray/menu use <code>{ respectAutoplaySource: true }</code> so the order follows <code>autoplayNextSource</code> (either the player history or the visible Samples table).</li>
+          <li><strong>Mute</strong> — <code>npBtnMute</code>. Shortcut <code>M</code>. Persisted in prefs (<code>audioMuted</code>).</li>
+          <li><strong>Volume</strong> — <code>npVolume</code> slider, 0–100. Value displayed in <code>npVolumePct</code>. Pref <code>audioVolume</code>. Shortcut <code>Cmd+↑</code> / <code>Cmd+↓</code> nudges ±5%.</li>
+          <li><strong>Speed</strong> — <code>npSpeed</code> select. Preset values: 0.25×, 0.5×, 0.75×, 1×, 1.25×, 1.5×, 2×. In reverse-playback mode the effective range widens to 0.0625–16×. Function <code>setPlaybackSpeed(value)</code> (~line 3579).</li>
+          <li><strong>Reverse</strong> — <code>npBtnReverse</code> and <code>npEqBtnReverse</code>. Decodes the full file to an AudioBuffer, reverses the samples via <code>reverseAudioBufferAsync()</code> (yields every 250k samples so long tracks don't stall the UI), and plays the reversed buffer through the same EQ chain.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Waveform scrubber</h2>
+        <p>The waveform canvas (<code>npWaveformCanvas</code>) is both a visualization and a seek surface. Pointer-down anywhere on the waveform seeks. The progress overlay (<code>npProgress</code>) fills as playback advances; the cursor (<code>npCursor</code>) marks the playhead; the time display (<code>npTime</code>) shows <em>elapsed / total</em>. The canvas is fed by the same decoded-peaks cache used by the Samples table expanded rows.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Loop modes</h2>
+        <ul>
+          <li><strong>Track loop</strong> — <code>npBtnLoop</code>, shortcut <code>L</code>. <code>toggleAudioLoop()</code> (~line 2881) flips the <code>audioLooping</code> state, persists to pref <code>audioLoop</code>, and also syncs the flag to the AudioEngine subprocess via <code>syncEnginePlaybackLoop(audioLooping)</code> for engine-mode playback.</li>
+          <li><strong>A/B loop</strong> — <code>npAbA</code> sets the loop start at the current playhead, <code>npAbB</code> sets the end, <code>npAbClear</code> clears it. Shortcut <code>B</code>. Start/end markers <code>npAbMarkerA</code> / <code>npAbMarkerB</code> render inside the waveform. State is held in <code>_abLoop = { start, end }</code>.</li>
+          <li><strong>Shuffle</strong> — <code>npBtnShuffle</code>, shortcut <code>S</code>. Pref <code>shuffleMode</code>. When on, <code>getAutoplayNextPathAfter()</code> picks a random next path from the current autoplay source.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>3-band parametric EQ</h2>
+        <p>Open the EQ section with <code>Q</code> (<code>toggleEqSection()</code>, ~line 998). The EQ chain is a cascade of Web Audio <code>BiquadFilter</code> nodes built inside <code>ensureAudioGraph()</code>. Three bands:</p>
+        <ul>
+          <li><strong>Low</strong> — <code>npEqLow</code> slider, range −12 dB to +12 dB, center ≈200 Hz, label <code>npEqLowVal</code>.</li>
+          <li><strong>Mid</strong> — <code>npEqMid</code> slider, range −12 dB to +12 dB, center ≈1 kHz, label <code>npEqMidVal</code>.</li>
+          <li><strong>High</strong> — <code>npEqHigh</code> slider, range −12 dB to +12 dB, center ≈8 kHz, label <code>npEqHighVal</code>.</li>
+        </ul>
+        <p>The <strong>EQ canvas</strong> (<code>npEqCanvas</code>) plots the combined frequency response in real time so you can see the curve you've sculpted. Drag the canvas resize handle (<code>npEqCanvasResizeHandle</code>) to grow or shrink the plot. EQ gains restore from prefs when a new track loads.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Preamp gain, pan, mono</h2>
+        <ul>
+          <li><strong>Preamp gain</strong> — <code>npGainSlider</code>, 0 – 2 (0%–200%), label <code>npGainVal</code>. Function <code>setPreampGain(value)</code> (~line 964). Pref <code>preampGain</code>. Routed through a Web Audio <code>GainNode</code>.</li>
+          <li><strong>Pan</strong> — <code>npPanSlider</code>, −1 to +1. Label shows <em>L</em>, <em>C</em>, <em>R</em> with a percentage. Routed through a <code>StereoPannerNode</code>. Pref <code>audioPan</code>.</li>
+          <li><strong>Mono</strong> — <code>npBtnMono</code> (<em>M</em>). Shortcut <code>U</code>. Implementation sets pan to 0 rather than doing a full ChannelMerger split so the CPU cost is trivial.</li>
+        </ul>
+        <p>All three settings also push their values into the AudioEngine subprocess (<code>playback_set_dsp</code>) when engine-mode playback is active, so the engine path applies the same DSP as Web Audio preview.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Favorite / tag / note the current track</h2>
+        <ul>
+          <li><strong>Favorite current track</strong> — <code>npBtnFav</code> toggles the playing file in the favorites list (see step 12).</li>
+          <li><strong>Tag / note current track</strong> — <code>npBtnTag</code> opens the tag-and-note editor for the playing file. <code>updateNoteBtn()</code> (~line 4590) keeps the button's active state in sync with whether the track currently has a note or tags.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>History list &amp; filter</h2>
+        <p>Below the transport lives the recently-played list (<code>npHistoryList</code>), built by <code>getPlayerHistoryListItems()</code> from the in-memory <code>recentlyPlayed</code> array. The array is hydrated from prefs on startup and capped by the <strong>Max recently played</strong> setting (20–500, default 50).</p>
+        <p>The list is drag-reorderable — reorder tracks to change playback order. Drops emit a <code>toast.reordered_recently_played</code> toast. Above it is a search input (<code>npSearchInput</code>) wired through the unified filter framework (<code>registerFilter('filterNowPlaying', …)</code>) — type to filter history + live sample search. Double-click any row to jump to that track.</p>
+        <p>The command palette (step 09) ships ready-made <em>player track actions</em>: <em>Player → Play current</em>, <em>Player → Previous / Next</em>, <em>Player → Toggle loop / mute / shuffle</em>, <em>Player → Reverse current</em>, <em>Player → Show / hide / expand / collapse</em>. Use these as a fallback when the player isn't focused (e.g. when the visualizer is active).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Autoplay chain</h2>
+        <p>When the current track hits EOF, the <code>'ended'</code> listener calls <code>nextTrack({ autoplay: true })</code>. Advance is gated on <code>canAutoplayAdvanceTrack()</code> — pref <code>autoplayNext</code> must be on. <code>getAutoplayNextSource()</code> chooses between <em>player history</em> and <em>samples table</em> based on pref <code>autoplayNextSource</code>.</p>
+        <p>If a preview <em>fails</em> (bad file, decode error), <code>tryPreviewAutoplayNextOnFailureAsync(failedPath)</code> chains forward along the same source — you can walk through a directory of corrupt files and the player will skip past them until it finds something playable.</p>
+        <p>When the WebView is hidden/minimized/unfocused, macOS throttles timers, which breaks the <code>'ended'</code> event. Rust side compensates with an EOF watchdog (<code>audio_engine_eof_watchdog_start</code>) that polls playback status at 1 Hz and emits <code>audio-engine-playback-eof</code>; the JS listener forwards that to <code>handleEnginePlaybackEofFromPoll()</code> so the chain keeps advancing even with the app minimized.</p>
+        <p>On top of the EOF watchdog, the player also pins itself against macOS's <strong>App Nap</strong>: when an idle background app gets paged out, the first sample after a long idle would otherwise lag for seconds. A <code>NSProcessInfo</code> activity assertion holds the host unthrottled (the same option set Music.app uses), the audio-engine subprocess gets a 30 s keep-alive ping, and the playhead/cursor render loop drives a parallel <code>setInterval</code> at ~100 ms so the cursor doesn't freeze even when WKWebView throttles <code>requestAnimationFrame</code> to ~1 Hz on focus loss.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Engine mode vs Web Audio mode</h2>
+        <p>Short previews use the browser's Web Audio pipeline (<code>audioPlayer</code> = HTMLAudioElement piped into the EQ chain). Longer or engine-routed playback uses the AudioEngine subprocess — the same DSP controls (gain, pan, EQ, speed, loop, reverse) apply either way because the JS layer mirrors every change into both code paths. See step 16 for the Audio Engine tab's direct controls.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Clear / export / import recently played</h2>
+        <ul>
+          <li><strong>Clear history</strong> — shortcut <code>Cmd+H</code>.</li>
+          <li><strong>Export history</strong> — from the player's settings menu, exports the <code>recentlyPlayed</code> array.</li>
+          <li><strong>Import history</strong> — restore from a previously exported file.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>The EQ, gain, pan, speed, and reverse state travel with the player across tracks. Set up a preset once and every subsequent preview inherits your tone, until you explicitly reset.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="09-palette.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">09 · Command palette</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="11-tray.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">11 · Tray popover</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

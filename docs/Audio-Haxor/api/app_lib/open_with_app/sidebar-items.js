@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["open_macos","open_with_application"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["AUDIO_EXTENSIONS"],"fn":["audio_format_tags_for_app_info","is_audio_extension_lowercase"]};

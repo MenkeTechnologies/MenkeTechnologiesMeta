@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["read_dir_bulk","read_dir_bulk_portable"],"mod":["macos"],"struct":["BulkEntry"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PRESET_EXTENSIONS"],"fn":["format_size","get_preset_roots","is_preset_extension_lowercase","normalize_macos_path","walk_dir_parallel","walk_for_presets"]};

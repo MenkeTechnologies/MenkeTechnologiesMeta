@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 16 · Community</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">16 · Community</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="15-expenses-ocr.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">15 · Expenses &amp; OCR</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="17-dashboards.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">17 · Dashboards &amp; watchlists</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:88.88%"></div></div>
+        <span class="meter-count">16 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">16.</span>Community — shares, forum, mentorship, boards, sentiment</h2>
+      <p class="tutorial-subtitle">Public trade shares with slug URLs, threaded forum, mentor / mentee pairing, public / private symbol boards, and the live Reddit WSB + StockTwits sentiment feed wired into the per-symbol research dossier.</p>
+
+      <section class="tutorial-section">
+        <h2>Shares — one trade, one URL</h2>
+        <p><code>GET/POST /api/shares</code>. Pick a trade from your Trades view → right-click → <em>Share</em>. A new <code>shares</code> row is created with a random slug; the share URL is <code>/shared/{slug}</code> (public, no auth). The shared view shows:</p>
+        <ul>
+          <li><strong>Trade summary</strong> — symbol, entry / exit, P&amp;L, R-multiple, hold duration.</li>
+          <li><strong>Chart with markers</strong> — entry / exit arrows on the OHLC bars around the trade.</li>
+          <li><strong>Journal body</strong> — optional. The share creator toggles whether to include the per-trade journal.</li>
+          <li><strong>Tags + setup</strong>.</li>
+        </ul>
+        <p>The share is publishable / unpublishable per row, expirable (24h / 7d / 30d / never), and revocable. The slug is opaque (random 12-char alphanumeric) so URLs don't leak ID ordering.</p>
+        <p>Privacy: the share excludes account ID, account size, and absolute dollar P&amp;L unless explicitly enabled. The default share carries R-multiple and % of account (anonymized).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Forum — threaded discussion</h2>
+        <p><code>GET /api/forum/threads</code>, <code>GET /api/forum/threads/{id}/posts</code>. A simple threaded forum: top-level threads with replies, tagged by symbol / category, markdown-rendered. Designed to be the destination for "let's talk about my shared trade" without becoming Twitter:</p>
+        <ul>
+          <li><strong>One-vote-per-post</strong> from authenticated users.</li>
+          <li><strong>Sorting</strong> — newest, top this week, top this month.</li>
+          <li><strong>Symbol filter</strong> — every post is taggable with a symbol; symbol filter is a primary search dimension.</li>
+          <li><strong>Reply markdown</strong> — code fences, blockquotes, embedded trade shares (via slug URL).</li>
+        </ul>
+        <p>In desktop mode the forum is a no-op (single-user); in web mode it's the social layer between users on the same hosted instance.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Mentorship</h2>
+        <p><code>/api/mentorships</code>. Mentors offer slots; mentees apply. Once paired:</p>
+        <ul>
+          <li><strong>Mentor sees mentee's shared trades</strong> — even private ones the mentee has flagged as "share with my mentor".</li>
+          <li><strong>Mentor's annotations</strong> appear on the mentee's Trade Review form (step 04).</li>
+          <li><strong>Scheduled check-ins</strong> — a per-pair calendar with notes.</li>
+        </ul>
+        <p>The mentorship surface is opt-in per user; no automatic discovery without listing yourself as available.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Boards — public &amp; private symbol boards</h2>
+        <p><code>GET/POST /api/boards</code>. A board is a long-running watchlist + chat-thread combo, scoped to a theme (e.g. <em>"Solar &amp; battery"</em>, <em>"Earnings this week"</em>, <em>"My swing book"</em>).</p>
+        <ul>
+          <li><strong>Symbols</strong> — pinned to the board; the board page shows mini-charts + recent catalysts / halts per symbol.</li>
+          <li><strong>Posts</strong> — threaded discussion attached to the board, with optional symbol-scoped sub-threads.</li>
+          <li><strong>Visibility</strong> — public (anyone with the slug), private (only you), shared (specific users).</li>
+        </ul>
+        <p>Boards are intentionally more durable than forum threads; they're meant to be the long-running collaborative space.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sentiment feed — Reddit WSB + StockTwits</h2>
+        <ul>
+          <li><strong><code>/api/sentiment/feed</code></strong> — live feed of recent WSB posts + StockTwits messages.</li>
+          <li><strong><code>/api/sentiment/ranked</code></strong> — symbols ranked by mention volume / unique-author count over the last N hours.</li>
+          <li><strong><code>/api/sentiment/symbol/{sym}</code></strong> — per-symbol thread of recent mentions.</li>
+          <li><strong><code>/api/sentiment/series/{sym}</code></strong> — time series of mention count + bullish/bearish classification.</li>
+        </ul>
+        <p>WSB is polled every 60 s; StockTwits per-symbol every 60 s for the union of (your watchlists ∪ top-ranked tickers ∪ open positions). Bullish / bearish classification is a small fixed lexicon — not an LLM — so it's deterministic and free.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Crypto feed</h2>
+        <p>Tangentially adjacent: <code>/api/crypto/markets</code> (CoinGecko top market caps), <code>/api/crypto/global</code> (global market dominance), <code>/api/crypto/btc/chain</code> (blockchain.com BTC chain stats — hashrate, difficulty, miner revenue). The Crypto tile renders the standard markets grid + a BTC chain panel. No live order-book; this is research-grade, not execution-grade.</p>
+        <div class="tutorial-callout">
+          <strong>Spirit</strong>
+          The community surface is intentionally minimal. The goal is "small group of serious traders" — not "social network with a feed algorithm". No likes, no follow counts on the share page, no engagement metrics surfaced. Sort and filter; that's it.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="15-expenses-ocr.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">15 · Expenses &amp; OCR</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="17-dashboards.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">17 · Dashboards &amp; watchlists</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

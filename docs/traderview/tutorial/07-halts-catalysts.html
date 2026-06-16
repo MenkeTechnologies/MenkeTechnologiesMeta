@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 07 · Halts &amp; catalysts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">07 · Halts &amp; catalysts</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="06-live-scanner.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">06 · Live scanner</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="08-charts-research.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">08 · Charts &amp; research</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:38.88%"></div></div>
+        <span class="meter-count">07 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">07.</span>Halts &amp; catalyst radar</h2>
+      <p class="tutorial-subtitle">Nasdaq trade-halt RSS at 3 seconds, SEC EDGAR Atom every 6 seconds, four PR wires every 30 seconds, and a ticker-extraction NER pass over every headline. All live, all bounded, all WebSocket fan-out to every connected browser.</p>
+
+      <section class="tutorial-section">
+        <h2>Halts — Nasdaq RSS at 3-second cadence</h2>
+        <p>The poller in <code>crates/traderview-web/src/live/halts.rs</code> fetches <code>nasdaqtrader.com/rss.aspx?feed=tradehalts</code> every 3 seconds. New entries (by halt timestamp + symbol) push to the in-process VecDeque (cap 2 000) and broadcast on <code>WS /ws/halts</code>. The Halts tile shows the live list with reason-code badges and the row's age in seconds.</p>
+        <ul>
+          <li><strong>Reason codes</strong> — looked up against a static table. T1 = news-pending, T2 = additional-info, T5 = single-stock-circuit-breaker, LUDP = limit-up-limit-down pause, MWC1/2/3 = market-wide level 1/2/3, H10 = SEC trading suspension, etc.</li>
+          <li><strong>Resumption</strong> — the same feed emits resumption rows. The tile shows resumed halts with a struck-through paused glyph; you can filter to only-currently-halted.</li>
+          <li><strong>TTS</strong> — the same voice-alert pipeline from the scanner reads new halts aloud ("Halt: S H W Z, code T-One"). Configurable per-account (enable / disable / filter by reason code).</li>
+          <li><strong>Symbol nav</strong> — every halt row exposes the standard 6-way symbol-nav context menu (Charts / Options / Research / Earnings / News / Copy).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Catalyst radar — EDGAR + 4 PR wires</h2>
+        <p>The catalyst pipeline aggregates SEC filings and press releases into a single chronological feed with extracted tickers. Five sources, five separate pollers, all writing to the shared <code>catalysts</code> VecDeque (cap 10 000):</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Source</th><th>URL</th><th>Cadence</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>SEC EDGAR</strong></td><td><code>sec.gov/cgi-bin/browse-edgar?action=getcurrent&amp;type=4&amp;output=atom</code></td><td>6s</td></tr>
+            <tr><td><strong>Business Wire</strong></td><td>RSS</td><td>30s</td></tr>
+            <tr><td><strong>PR Newswire</strong></td><td>RSS</td><td>30s</td></tr>
+            <tr><td><strong>GlobeNewswire</strong></td><td>RSS</td><td>30s</td></tr>
+            <tr><td><strong>AccessWire</strong></td><td>RSS</td><td>30s</td></tr>
+          </tbody>
+        </table>
+        <p>EDGAR is the highest-signal source (Form 4 insider trades, 8-K material events, 13G/D stake disclosures) and runs at the tightest cadence the SEC's own throttling allows. The PR wires capture earnings, drug approvals, dividend declarations, M&amp;A, and the long tail of company-issued news.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Ticker extraction (NER)</h2>
+        <p>Catalysts are most useful when you can filter to <em>your</em> symbols. Each ingested headline + summary goes through a ticker-extraction pass:</p>
+        <ul>
+          <li><strong><code>$SYM</code> cashtags</strong> — the easiest win. Match <code>\$([A-Z]{1,5})\b</code>.</li>
+          <li><strong>Parenthetical <code>(SYM)</code></strong> — second-easiest. Match <code>\(([A-Z]{1,5})\)</code>, then filter against a stop-word list (so <code>(LLC)</code>, <code>(USA)</code>, <code>(NYSE)</code> don't get flagged as tickers).</li>
+          <li><strong>Exchange-prefixed forms</strong> — <code>NYSE:</code>, <code>NASDAQ:</code>, <code>AMEX:</code>, <code>OTC:</code>, <code>TSX:</code>. Match <code>(?:NYSE|NASDAQ|AMEX|OTC|TSX):([A-Z]{1,5})</code>.</li>
+          <li><strong>Validation</strong> — every extracted candidate is checked against the local <code>symbols</code> table (populated from your imports + the world-markets snapshot universe). Unknown tickers are dropped to keep noise low.</li>
+        </ul>
+        <p>The extracted set lands on the catalyst row as <code>tickers: string[]</code> so the UI can render badges and the search box can filter to "<em>show me only catalysts mentioning my watchlist</em>".</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The Catalysts view</h2>
+        <p><code>frontend/js/views/catalysts.js</code>. Chronological list (newest first) with:</p>
+        <ul>
+          <li><strong>Source chip</strong> — color-coded per wire.</li>
+          <li><strong>Ticker badges</strong> — clickable, jump to per-symbol research dossier (step 08).</li>
+          <li><strong>Headline + 2-line summary</strong> — full body on hover or click-to-expand.</li>
+          <li><strong>Source link</strong> — opens the original filing / press release.</li>
+          <li><strong>Filter chips</strong> — by source, by my-watchlist-only, by has-ticker (drops generic market commentary), by time window.</li>
+          <li><strong>Search box</strong> — full-text over the catalyst body.</li>
+        </ul>
+        <p><code>WS /ws/catalysts</code> pushes new rows live; the page does not poll. New rows animate in at the top; resorting is preserved.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FINRA Reg-SHO short-sale data</h2>
+        <p>Distinct from halts/catalysts but related. <code>cdn.finra.org/equity/regsho/daily/</code> publishes daily short-sale volume. The Reg-SHO endpoint back-walks the publishing window on demand (not a poller — too much data, too low frequency). Used by the Short Interest view in step 08.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Resilience</h2>
+        <ul>
+          <li><strong>One feed failing doesn't kill the others.</strong> Each poller has its own task; one PR wire timing out for 60 seconds doesn't block the EDGAR poller.</li>
+          <li><strong>Backoff on consecutive failures.</strong> A poller that errors 3 times in a row doubles its interval (capped at 5 minutes) and recovers on first success.</li>
+          <li><strong>Empty-update suppression.</strong> Repeated polls that return zero new entries don't broadcast anything — the WebSocket only carries deltas.</li>
+          <li><strong>User-Agent.</strong> The HTTP client sets a descriptive UA so the SEC's automated abuse-monitor doesn't block us. If you self-host the web binary at scale, set <code>TRADERVIEW_USER_AGENT</code> to something identifying.</li>
+        </ul>
+        <div class="tutorial-callout">
+          <strong>What this replaces</strong>
+          DayTradeDash ($187/mo) is most of a Warrior Trading subscription's value — and this pipeline (Live Scanner + Halts + Catalysts) is roughly the same surface. No subscription, no upload of your watchlists to a third party.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="06-live-scanner.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">06 · Live scanner</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="08-charts-research.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">08 · Charts &amp; research</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

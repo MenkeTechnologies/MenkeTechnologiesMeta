@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 16 · Audio Engine tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">16 · Audio Engine</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="15-visualizer.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">15 · Visualizer</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="17-theme.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">17 · Theme &amp; color schemes</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:84.21%"></div></div>
+        <span class="meter-count">16 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">16.</span>Audio Engine tab — <code>F6</code></h2>
+      <p class="tutorial-subtitle">The developer surface for the JUCE-backed subprocess. Device &amp; sample-rate selection, buffer frames, the VST3 / AU plugin insert chain with editor windows, input-monitor peak meters, subprocess stats, and a restart button.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/audioengine.png" alt="Audio Engine tab with device selects, plugin insert chain, and process diagnostics" loading="lazy">
+        <figcaption>assets/audioengine.png · Audio Engine tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>What is the Audio Engine?</h2>
+        <p>AUDIO_HAXOR spawns a separate child process — an audio helper built on top of JUCE — as its real-time playback backend. The main Rust process communicates with it over JSON lines on stdin/stdout via the <code>audio_engine_invoke</code> Tauri command. This keeps the WebView's Web Audio API as a preview fallback, while the real audio path (bit-perfect device selection, plugin hosting, low-latency buffers) lives in native code.</p>
+        <p>The Audio Engine tab is the configuration + diagnostics UI for that subprocess. It's developer-leaning — most end users will never need it — but it's the only place you configure a specific audio interface, dial in a buffer size, or host a VST3 / AU plugin chain on library playback.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Output device configuration</h2>
+        <p>Populated by <code>aePopulateAudioDeviceTypeSelect()</code>, <code>aePopulateSampleRateSelect()</code>, and <code>aePopulateBufferFramesSelect()</code> in <code>frontend/js/audio-engine.js</code>.</p>
+        <ul>
+          <li><strong>Device type</strong> — dropdown listing every JUCE driver family detected on the machine (Core Audio on macOS; WASAPI, DirectSound, ASIO on Windows; ALSA, JACK on Linux). Pref <code>audioEngineJuceDeviceType</code>. Population IPC: <code>list_audio_device_types</code>.</li>
+          <li><strong>Output device</strong> — dropdown of physical outputs for the selected type. Pref <code>audioEngineOutputDeviceId</code>. Population IPC: <code>get_output_device_info { type }</code>.</li>
+          <li><strong>Sample rate</strong> — populated from the device's supported list. Pref <code>audioEngineSampleRateHz</code>. Leave empty for <em>driver selected</em>.</li>
+          <li><strong>Buffer frames</strong> — output buffer size in frames, clamped to <code>AE_MAX_BUFFER_FRAMES = 8192</code>. Pref <code>audioEngineBufferFramesOutput</code>. Lower values → lower latency, higher CPU.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Input device configuration</h2>
+        <p>Same pattern for the input stream:</p>
+        <ul>
+          <li>Device type (same dropdown as output).</li>
+          <li>Input device — pref <code>audioEngineInputDeviceId</code>. Population IPC: <code>get_input_device_info { type }</code>.</li>
+          <li>Input buffer frames — pref <code>audioEngineBufferFramesInput</code>.</li>
+        </ul>
+        <p>Once started, the input stream feeds a peak meter. <code>tickAeInputPeakPoll()</code> polls <code>input_stream_status</code> every 100 ms (<code>AE_INPUT_PEAK_POLL_MS</code>) and updates the level display. Polling pauses entirely when the tab is hidden or the app is in heavy-CPU idle mode, via <code>bindAeInputPeakVisibilityOnce()</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Plugin insert chain</h2>
+        <p>The insert chain is a set of numbered slots (typically 1–8) where you can drop VST3 or AU plugins to process playback in real time. The chain works for any file loaded into the engine path (samples previewed with engine-mode playback, or files loaded directly in this tab).</p>
+        <h3>Plugin discovery</h3>
+        <p>The engine scans your system for plugins via the <code>plugin_chain</code> IPC command. Response fields:</p>
+        <ul>
+          <li><code>ok</code> — bool.</li>
+          <li><code>scan_done</code>, <code>scan_total</code>, <code>scan_skipped</code> — scan progress.</li>
+          <li><code>scan_cache_loaded</code> — whether a cached result was used.</li>
+          <li><code>scan_current_format</code>, <code>scan_current_name</code> — live progress (what's being validated right now).</li>
+          <li><code>plugins</code> — the list of successfully-discovered plugins with metadata.</li>
+        </ul>
+        <p>While the scan runs, a single non-expiring toast updates in place (<code>AE_PLUGIN_SCAN_PROGRESS_TOAST_ID</code>), so you don't get drowned in toast spam. The full plugin catalog is cached on the JS side in <code>aePluginCatalog</code> and <code>aeLastPluginChain</code> (used for re-filtering when the "show instruments" toggle changes).</p>
+        <h3>Inserting plugins</h3>
+        <p>Each insert slot has its own dropdown picker tracked in <code>aeInsertPickers</code>. When you pick a plugin from the list, the frontend calls <code>playback_set_inserts { paths: [...] }</code> with the new chain and the engine loads the plugins in order.</p>
+        <h3>Editor windows</h3>
+        <p>On macOS and Windows, each inserted plugin exposes a native editor window. Launch it with <code>playback_open_insert_editor { slot }</code>, close it with <code>playback_close_insert_editor { slot }</code>. The window is a full native plugin UI — same as what you'd see in a DAW.</p>
+        <div class="tutorial-callout warn">
+          <strong>Note</strong>Ad-hoc signed builds on macOS may show blank AU editor windows because <code>audiocomponentd</code> refuses XPC view delivery to unsigned hosts. A Developer ID-signed build with the audio-plugin host entitlements resolves this.
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Engine-side playback commands</h2>
+        <p>Every command the engine accepts, in rough order of how you'd use them (all sent via <code>audio_engine_invoke</code>):</p>
+        <pre>engine_state
+start_output_stream { sample_rate_hz?, device_id, buffer_frames? }
+start_playback
+playback_load { path }
+playback_pause
+playback_seek { position_sec }
+playback_set_dsp { ... }                    // gain, pan, EQ
+playback_set_speed { speed }                // 0.25-2.0
+playback_set_reverse { enabled }
+playback_set_loop { enabled }
+playback_status                             // elapsed_sec, total_sec, playing,
+                                            //   optional spectrum bins
+playback_stop
+playback_set_inserts { paths: [ ... ] }     // VST3 / AU chain
+playback_open_insert_editor { slot }
+playback_close_insert_editor { slot }
+stop_output_stream
+start_input_stream { ... }
+input_stream_status
+stop_input_stream
+set_output_tone { freq_hz?, gain? }         // test signal generator
+plugin_chain                                // scan + query current chain
+list_audio_device_types
+get_output_device_info { type }
+get_input_device_info { type }</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Process diagnostics</h2>
+        <p><code>refreshAeProcessStats()</code> (~line 102) fetches <code>get_audio_engine_process_stats</code> on a 3-second interval (only while the tab is active and the app isn't in heavy-CPU idle mode). Stats container <code>#aeProcessStats</code> populates:</p>
+        <ul>
+          <li><code>aeStatCores</code> — CPU cores.</li>
+          <li><code>aeStatCpu</code> — CPU usage.</li>
+          <li><code>aeStatRss</code> — resident memory.</li>
+          <li><code>aeStatVirt</code> — virtual memory.</li>
+          <li><code>aeStatThr</code> — thread count.</li>
+          <li><code>aeStatFd</code> — open file descriptors.</li>
+          <li><code>aeStatUp</code> — uptime (humanized).</li>
+          <li><code>aeStatPid</code> — subprocess PID.</li>
+        </ul>
+        <p>When the engine isn't running, <code>#aeProcessStatsInactive</code> takes over with an explanatory message.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Restart &amp; EOF watchdog</h2>
+        <ul>
+          <li><strong>Restart engine</strong> — dispatches <code>audio_engine_restart</code>, which rebuilds the child process without touching the main window. Use this if the helper gets stuck or you've just changed a buffer-size setting.</li>
+          <li><strong>EOF watchdog</strong> — <code>audio_engine_eof_watchdog_start</code> / <code>audio_engine_eof_watchdog_stop</code>. A background thread polling playback status at 1 Hz (<code>EOF_WATCHDOG_POLL_MS = 1000</code>), emitting the <code>audio-engine-playback-eof</code> event on a rising-edge EOF transition. This is what keeps autoplay advancing when the WebView's timers are throttled by the OS.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Background diagnostics</h2>
+        <p>You don&rsquo;t need to touch any of these from the UI &mdash; they are passive log channels &mdash; but they are the fastest way to diagnose &ldquo;the engine got slow / crashed / went silent&rdquo; reports. All of them land in the data directory (<code>~/Library/Application Support/com.menketechnologies.audio-haxor/</code> on macOS).</p>
+        <h3>Host-side keep-alive ping</h3>
+        <p>The host runs a <strong>HEALTH sampler</strong> thread (spawned at the end of <code>setup()</code> in <code>src-tauri/src/lib.rs</code>) that wakes every 30 seconds and writes one line to <code>app.log</code>:</p>
+        <pre>HEALTH | rss=&hellip;MB virt=&hellip;MB thr=&hellip; |
+        engine_main=&hellip;MB(pid=&hellip;) preview=&hellip;MB(pid=&hellip;) |
+        ipc_main n=&hellip; avg=&hellip;ms max=&hellip;ms peak_q=&hellip; now=&hellip; |
+        ipc_prev n=&hellip; avg=&hellip;ms max=&hellip;ms peak_q=&hellip; now=&hellip;</pre>
+        <p>If the previous 30-second window had fewer than 5 IPC calls (the engine is effectively idle), the sampler also fires a <code>{ &quot;cmd&quot;: &quot;ping&quot; }</code> request to the audio-engine subprocess via <code>dedicated_audio_engine_request</code>. The ping itself is a no-op &mdash; its purpose is to <strong>touch JUCE&rsquo;s working set</strong> so macOS does not page out the helper after hours of zero traffic. Without the ping, the first <code>playback_load</code> after a long idle blocks for seconds while the kernel pages everything back in.</p>
+        <p>During active use the ping is automatically suppressed (the IPC counter exceeds the threshold), so it costs nothing.</p>
+        <h3>HEALTH-JS sampler</h3>
+        <p><code>_startJsHealthSampler</code> in <code>frontend/js/audio.js</code> runs on the same 30-second cadence and writes a parallel <code>HEALTH-JS</code> line via <code>vstUpdater.appendLog</code>:</p>
+        <pre>HEALTH-JS | heap=&lt;used&gt;/&lt;total&gt;MB(lim=&lt;limit&gt;MB) |
+           wf_cache=&hellip; sg_cache=&hellip; wf_hydrating=&hellip; decode_pending=&hellip; |
+           actx=&lt;running|suspended|none&gt; playback=&lt;running|suspended|none&gt;</pre>
+        <p>Useful for catching frontend memory creep, runaway waveform / spectrogram caches, decode-worker backpressure, and AudioContext state that drifted out of sync with what the UI thinks it is.</p>
+        <h3>Engine fatal-signal crash dump</h3>
+        <p>The JUCE subprocess installs a signal handler for SIGSEGV / SIGBUS / SIGABRT that dumps a self-contained record to <code>engine.log</code> before the helper aborts:</p>
+        <pre>[ENGINE crash] handler entered
+ENGINE [fatal signal &lt;n&gt;] si_addr=0x&hellip;
+0x&hellip;       &lt;raw frame addresses, top of stack first&gt;
+0x&hellip;
+&hellip;
+
+[ENGINE crash] dyld images
+image 0x&hellip; /Applications/AUDIO_HAXOR.app/&hellip;/audio-engine
+image 0x&hellip; /System/Library/Frameworks/&hellip;
+&hellip;</pre>
+        <p>The writer is signal-safe (<code>write(2)</code> only, no malloc / no flush) so it survives any state the engine was in when the signal fired. To symbolicate, take any frame address minus the dyld base of its containing image and feed both to <code>atos</code>:</p>
+        <pre>atos -o /Applications/AUDIO_HAXOR.app/Contents/MacOS/AudioHaxorEngine.app/Contents/MacOS/audio-engine \
+     -l 0x&lt;dyld_base_of_audio-engine&gt; 0x&lt;frame_addr&gt;</pre>
+        <p>Crashes that happen during teardown (engine sees <em>stdin closed, exiting</em> right before the signal) are usually the host shutting down faster than JUCE can drain its audio-graph &mdash; benign and not worth chasing unless you also see signal frames pointing into your own playback path. Crashes that happen mid-session need a real symbolicated trace.</p>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>If you want to test a mastering chain, host your mastering plugins in the insert chain, play back a few reference tracks via engine mode, and compare against your DAW's output. Same plugin binaries, same sample rate, same buffer — just a different host.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="15-visualizer.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">15 · Visualizer</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="17-theme.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">17 · Theme &amp; color schemes</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

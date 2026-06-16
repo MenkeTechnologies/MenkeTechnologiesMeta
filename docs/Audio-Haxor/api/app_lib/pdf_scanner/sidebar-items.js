@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PDF_EXTENSION"],"fn":["format_size","get_pdf_roots","normalize_macos_path","walk_dir_parallel","walk_for_pdfs"]};

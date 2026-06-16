@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PLUGIN_EXTS"],"fn":["classify","get_watched_dirs","is_watching","minimize_scan_roots","scan_root_for_changed_path","start_watching","stop_watching"],"struct":["FileWatcherState"]};

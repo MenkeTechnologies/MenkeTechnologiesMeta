@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["READ_CHUNK"],"fn":["find_byte_duplicate_groups","hash_file_sha256"],"struct":["ContentDupGroup","ContentDupPath","ContentDupScanResult"]};

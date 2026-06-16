@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["compute_fingerprint","find_similar","fingerprint_distance"],"struct":["AudioFingerprint"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["parse_midi","read_var_len"],"struct":["MidiInfo"]};

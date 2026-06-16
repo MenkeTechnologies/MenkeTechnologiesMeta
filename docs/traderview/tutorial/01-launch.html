@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 01 · First launch &amp; orientation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">01 · First launch</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <div class="nav-stub">
+          <span class="nav-label">Start</span>
+          <span class="nav-title">—</span>
+        </div>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="02-accounts-import.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">02 · Accounts &amp; broker import</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:5.55%"></div></div>
+        <span class="meter-count">01 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">01.</span>First launch &amp; orientation</h2>
+      <p class="tutorial-subtitle">Desktop vs web binary, embedded Postgres bootstrap, auto-login local user, the topbar, the Cmd-K tile launcher, and the boot path from <code>main.rs</code> to <code>app.js</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>One workspace, two binaries</h2>
+        <p>TraderView ships from a single Rust workspace and produces two executable shells. Both depend on the same library crates (<code>traderview-core</code>, <code>traderview-db</code>, <code>traderview-import</code>, <code>traderview-expense</code>, <code>traderview-ocr</code>) and serve the same vanilla-JS frontend verbatim. The only thing that distinguishes them is the Postgres backend and the auth layer.</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Mode</th><th>Binary</th><th>Postgres</th><th>Auth</th><th>Audience</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Desktop</td><td><code>traderview-desktop</code></td><td>embedded (downloaded via <code>postgresql_embedded</code> on first launch)</td><td>auto-login <code>local</code> user</td><td>single user, offline</td></tr>
+            <tr><td>Web</td><td><code>server</code></td><td>external (<code>DATABASE_URL</code>)</td><td>argon2 + JWT bearer</td><td>multi-user, hosted</td></tr>
+          </tbody>
+        </table>
+        <p>Pick the mode that matches your deployment and skip the rest of the table — the UI is identical from here on.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Desktop boot — embedded Postgres bootstrap</h2>
+        <p>On macOS the app installs into <code>/Applications</code> and launches like any Tauri v2 app. The Rust side does the following before the WebView is shown:</p>
+        <ol>
+          <li><strong>Locate the app-data dir.</strong> <code>~/Library/Application Support/com.menketechnologies.traderview/pg/</code> (macOS), <code>~/.local/share/com.menketechnologies.traderview/pg/</code> (Linux), <code>%APPDATA%\com.menketechnologies.traderview\pg\</code> (Windows).</li>
+          <li><strong>Recover from a stale lock.</strong> If <code>postmaster.pid</code> exists, the bootstrap reads the recorded PID and checks if that process is still alive. If not, the lockfile is removed — a SIGKILL'd parent on the previous run no longer blocks startup.</li>
+          <li><strong>Reuse the persisted password.</strong> A random password file (mode 0600) is written on first init and reused on every subsequent launch so authentication survives across runs.</li>
+          <li><strong>Download Postgres if missing.</strong> First launch fetches a portable PostgreSQL into <code>~/.theseus</code> (~80 MB). Subsequent launches reuse that cache.</li>
+          <li><strong>Start the cluster, bind to a random localhost port, run migrations.</strong> 46 migrations under <code>migrations/0001_*.sql</code> through <code>migrations/0046_*.sql</code> are applied in order; new migrations apply on the next launch.</li>
+          <li><strong>Hold the <code>Embedded</code> handle across <code>axum::serve</code>.</strong> The worker thread owns the handle for the lifetime of the server and drops it explicitly after serve returns. An earlier version dropped at function exit, which silently called <code>pg_ctl stop</code> mid-request — every subsequent query timed out with <em>"pool timed out"</em>.</li>
+          <li><strong>Start the axum router on the localhost port and the Tauri WebView.</strong> The WebView loads <code>frontend/index.html</code> via the <code>tauri://localhost</code> custom scheme.</li>
+        </ol>
+        <p>No external services. No cloud account. No network round-trip required after the first-run download. Embedded Postgres is shut down cleanly when you quit the app.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Web boot — external Postgres + JWT</h2>
+        <p>The web binary (<code>cargo run --bin server</code> or the <code>server</code> binary from a release archive) expects two required environment variables and a handful of optional ones:</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Variable</th><th>Default</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>DATABASE_URL</code></td><td><em>required</em></td><td>Postgres connection string. Pool is <code>max_connections=32</code>, <code>min_connections=4</code>, <code>acquire_timeout=15s</code>.</td></tr>
+            <tr><td><code>TRADERVIEW_JWT_SECRET</code></td><td><em>required</em></td><td>HMAC secret for JWT signing. Rotate to invalidate outstanding tokens.</td></tr>
+            <tr><td><code>TRADERVIEW_BIND</code></td><td><code>0.0.0.0:8080</code></td><td>axum listen address.</td></tr>
+            <tr><td><code>TRADERVIEW_CORS_ORIGIN</code></td><td><code>*</code></td><td>CORS allowlist.</td></tr>
+            <tr><td><code>TRADERVIEW_LOG</code></td><td><code>info</code></td><td><code>tracing-subscriber</code> env-filter directive (e.g. <code>traderview_web=debug,tower_http=info</code>).</td></tr>
+          </tbody>
+        </table>
+        <p>First load: visit <code>/</code> → register a user → log in → JWT lands in <code>localStorage</code> → every <code>fetch</code> from <code>js/api.js</code> attaches <code>Authorization: Bearer …</code>. The <code>/health</code>, <code>/config</code>, <code>/auth/*</code>, and <code>/client-errors</code> routes are public; everything else requires the bearer header.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The topbar — what every chip means</h2>
+        <p>Across the top of every view sits a thin strip with eleven actions and a search box. Left to right:</p>
+        <ul>
+          <li><strong>Logo + brand</strong> — wordmark and version string (synced at build time from <code>Cargo.toml</code>).</li>
+          <li><strong>Account picker</strong> — switch between accounts. Each broker import lands in its own <code>accounts</code> row; the picker scopes every downstream query.</li>
+          <li><strong>Quick-nav chips</strong> — Dashboard · Trades · Journal · Reports · Watchlists · Charts · Live · Scanner. These are the same 8 routes the global keyboard shortcuts target (<code>Cmd+Opt+D/T/J/R/W/C/L/M</code>).</li>
+          <li><strong>Symbol search</strong> — full-text autocomplete over <code>symbols</code> + your watchlists. Enter jumps to the per-symbol research dossier (step 08).</li>
+          <li><strong>Cmd-K launcher button</strong> — opens the 648-tile categorized launcher. The same overlay opens on <code>Cmd+K</code> from any view.</li>
+          <li><strong>Help / tutorial</strong> — the <code>?</code> key (no modifier) opens an in-app keyboard cheat-sheet across three searchable tables (48 globals + 70+ scoped ctxmenu items + view-scoped binds).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The Cmd-K launcher — 648 tiles, 10 categories</h2>
+        <p>There is no fixed nav strip. The topbar carries the most-used routes; everything else lives in the Cmd-K launcher. Tiles are grouped into the categories below; type any substring to filter; Enter jumps to the first match.</p>
+        <pre>⚡ Live Markets         6 tiles    Scanner / Halts / Catalysts / Pre-market / Tape / Heatmap
+📊 Trading            16 tiles    Webull / Live Positions / Paper / New Trade / Plans / Hotkeys
+📓 Journal             9 tiles    Journal / AI Journal / Trade Reviews / Compare / Replay / Discipline
+🔎 Charts &amp; Research 178 tiles    Charts / Research / Watchlists / Screener / Scanners / Sectors / …
+📈 Reports            23 tiles    Dashboard / Reports / R-Multiple / Forecast / Fill Quality / Tax / …
+🧷 Strategy            7 tiles    Backtest / Walk-forward / Custom Indicators / Strategy Alerts / Alerts / Webhooks
+💬 Community           4 tiles    Shares / Forum / Mentorship / Boards
+⚙️  Admin             18 tiles    Import / CSV Wizard / Exports / Accounts / Tags / Search / Settings / API tokens</pre>
+        <p>The exact tile count drifts as views are added — the launcher reads its catalog from a single registry at boot, so the count in the README is generated, not typed. Pin / unpin tiles from the launcher to put your daily routes on the topbar.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Recommended first-run path</h2>
+        <ol>
+          <li><strong>Open the launcher</strong> (<code>Cmd+K</code>), type <em>"accounts"</em>, Enter — create an account row for each broker you'll import (step 02).</li>
+          <li><strong>Import a broker CSV</strong> from the Import tile, or run the Generic column-mapping wizard for anything not on the built-in list.</li>
+          <li><strong>Run the FIFO roll-up</strong> — <code>POST /api/trades/rollup</code> is called automatically on every import, but you can re-run it on demand from the Trades view.</li>
+          <li><strong>Open the Dashboard</strong> (<code>Cmd+Opt+D</code>) — equity curve + summary stats + world-markets snapshot grid all populate from the roll-up.</li>
+          <li><strong>Press <code>?</code></strong> at any time for the in-app shortcut cheat-sheet.</li>
+        </ol>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Boot-time hardening you don't have to configure</h2>
+        <ul>
+          <li><strong>Per-view race tokens.</strong> Every navigation increments a global token in <code>app.js</code>. Each view captures the token at render start and bails after each <code>await</code> if it has gone stale — prevents the <code>document.getElementById(...)</code>-returns-null crash that hits naïve SPAs when slow async resolves into a replaced DOM.</li>
+          <li><strong>Browser-side error sink.</strong> <code>window.onerror</code>, <code>unhandledrejection</code>, and an overridden <code>console.error</code> all POST to <code>/api/client-errors</code>, queue-capped at 200 so a console-error loop can't run away.</li>
+          <li><strong>WebKit SecurityError guards.</strong> Under Tauri's <code>tauri://localhost</code> custom scheme, <code>navigator.sendBeacon</code>, <code>Notification.requestPermission</code>, <code>new Notification</code>, <code>speechSynthesis.speak</code>, and <code>localStorage</code> all throw cross-origin SecurityErrors. Each is try/caught so boot survives.</li>
+          <li><strong>CSP allows <code>ws://127.0.0.1:*</code></strong> so WebSocket connections to the dynamic backend port aren't blocked under the custom scheme.</li>
+          <li><strong>Real concurrency for fan-out routes.</strong> <code>premarket::snapshot</code>, <code>markets::snapshot</code>, <code>market_data::quotes</code>, and <code>compare::compare</code> all use <code>futures_util::future::join_all</code>; a previous serial-loop version blocked <code>/api/premarket/snapshot</code> for 150 seconds and starved the pool.</li>
+        </ul>
+        <div class="tutorial-callout">
+          <strong>Diagnose</strong>
+          If the WebView loads but every view says "loading…" forever, the Postgres pool probably can't connect. Check the desktop log at <code>~/Library/Logs/com.menketechnologies.traderview/app.log</code> (macOS) or run the web binary in the foreground — both surface the actual <code>sqlx</code> error.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <div class="nav-stub">
+          <span class="nav-label">Start</span>
+          <span class="nav-title">—</span>
+        </div>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="02-accounts-import.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">02 · Accounts &amp; broker import</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

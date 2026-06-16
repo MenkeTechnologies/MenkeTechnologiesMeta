@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 01 · First launch &amp; orientation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">01 · First launch</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <div class="nav-stub">
+          <span class="nav-label">Start</span>
+          <span class="nav-title">—</span>
+        </div>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="02-settings.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">02 · Configure scan roots</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:5.26%"></div></div>
+        <span class="meter-count">01 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">01.</span>First launch &amp; orientation</h2>
+      <p class="tutorial-subtitle">Boot sequence, HUD header, process stats strip, tab bar with eighteen surfaces, and the welcome panel that seeds your first scan.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/plugins.png" alt="Main window on first launch — HUD header, process stats strip, tab bar, and the default Plugins landing tab" loading="lazy">
+        <figcaption>assets/plugins.png · Default landing — header + stats + tab bar + plugins table. On a fresh install the Plugins tab shows a welcome panel instead of a populated table until the first scan runs.</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>What loads when you open the app</h2>
+        <p>AUDIO_HAXOR is a Tauri v2 desktop app. When you launch it from <strong>Applications</strong> (macOS), the Start menu (Windows), or your application menu (Linux), the Rust backend in <code>src-tauri/</code> initializes first: SQLite opens in WAL mode with a single writer and a round-robin read-pool, the walker thread pools spin up, preferences are loaded from the file-backed store, and the audio-engine subprocess is spawned.</p>
+        <p>Next, the WebView loads <code>frontend/index.html</code> and <code>frontend/js/app.js</code> runs its boot sequence (lines 87–143):</p>
+        <ol>
+          <li>Show the global progress indicator.</li>
+          <li>Load preferences via <code>prefs.load()</code>.</li>
+          <li>Fetch i18n strings with <code>get_app_strings</code> using the <code>uiLocale</code> pref.</li>
+          <li>Hide <em>Stop</em> / <em>Resume all</em> unless a scan is already in progress.</li>
+          <li>Restore every setting from preferences.</li>
+          <li>Initialize the audio engine output stream.</li>
+          <li>Render cache stats (Settings → Database Caches).</li>
+          <li>Restore audio player state and dimensions.</li>
+          <li>Initialize tab drag-reorder, multi-filters, sort persistence, settings-section drag.</li>
+          <li>Load recently-played, global tag bar, xref cache, filter states, FZF search params.</li>
+          <li>Initialize smart playlists.</li>
+          <li>Show the floating player if <em>Show player on startup</em> is on and history exists.</li>
+          <li>Start the folder watcher if <em>Folder watch</em> is enabled.</li>
+          <li>Dismiss the splash screen after build info.</li>
+          <li>Restore the last active tab.</li>
+          <li>Auto-load the first page of every SQLite-backed tab in parallel.</li>
+        </ol>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>HUD header — what every chip means</h2>
+        <p>The strip across the top is your command center. Left to right:</p>
+        <ul>
+          <li><strong>Logo &amp; brand</strong> — musical note glyph, "AUDIO_HAXOR" wordmark, "by MenkeTechnologies" byline. Version string (<code>id="appVersion"</code>) comes from <code>package.json</code> / <code>tauri.conf.json</code> / <code>Cargo.toml</code>, synchronized at build time by <code>scripts/sync-static-build-meta.mjs</code>. Optional git rev shows in <code>id="appGitRev"</code>.</li>
+          <li><strong>Process stats chips</strong> — live process telemetry from <code>get_process_stats</code>:
+            <ul>
+              <li><code>CORES</code> — CPU core count</li>
+              <li><code>CPU</code> — current usage percentage</li>
+              <li><code>RSS</code> — resident memory</li>
+              <li><code>VIRT</code> — virtual memory</li>
+              <li><code>THR</code> — thread count</li>
+              <li><code>POOL</code> — Rayon worker pool size</li>
+              <li><code>FD</code> — open file descriptors</li>
+              <li><code>UP</code> — process uptime</li>
+              <li><code>PID</code> — process ID</li>
+            </ul>
+          </li>
+          <li><strong>Inventory counters</strong> — <code>PLG · SMP · DAW · PRE · MID · PDF</code>. Populated from <code>get_active_scan_inventory_counts</code>.</li>
+          <li><strong>Scan buttons</strong>:
+            <ul>
+              <li><code>Scan All</code> (🗲) — <code>id="btnScanAll"</code>, dispatches <code>scan_unified</code>.</li>
+              <li><code>Stop All</code> (■) — <code>id="btnStopAll"</code>, hidden when idle, visible mid-scan.</li>
+              <li><code>Resume All</code> (▶) — <code>id="btnResumeAll"</code>, only visible when one or more walkers are paused.</li>
+            </ul>
+          </li>
+          <li><strong>Scan status badge</strong> — <code>id="scanStatusBadge"</code> — free-form status line populated by scanners.</li>
+          <li><strong>Stats dot row</strong> — colored dots for <em>Plugins Found</em>, <em>Up to Date</em>, <em>Updates Available</em>, <em>Samples</em>, <em>MIDI</em>, <em>DAW Projects</em>.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The tab bar — 18 surfaces</h2>
+        <p>Directly under the header, in declared order, with default keyboard bindings where they apply:</p>
+        <pre>Plugins      Cmd+1    Samples      Cmd+2    DAW          Cmd+3
+Presets      Cmd+4    MIDI         Cmd+5    PDF          Cmd+6
+Videos       (none)   Favorites    Cmd+7    Notes        Cmd+8
+Tags         Cmd+9    Files        Cmd+0    History      F3
+Visualizer   F4       Walkers      F5       Audio Engine F6
+ALS Generator (none)  Crate        (none)   Settings     Cmd+,</pre>
+        <p>Videos, ALS Generator, and Crate are reachable from the tab bar (drag them into any slot you like) and from the command palette (<code>Cmd+K</code>); they do not ship with a default <code>Cmd+N</code> binding because the digit row is already saturated. Rebind any of them in <em>Settings → Keyboard Shortcuts</em> if you want a hotkey.</p>
+        <p>Tabs are draggable (<code>frontend/js/drag-reorder.js</code>) and the order persists across launches; a drop emits the <code>toast.reordered_main_tabs</code> toast. To reset to defaults use the command palette entry <em>Reset Tab Order</em>.</p>
+        <p>Active-tab state is persisted — when you relaunch, you land back where you left off. Switching tabs is instantaneous; the per-tab data is loaded lazily via <code>db_query_*</code> calls so a 400 000-row sample library doesn't stall the boot sequence.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The welcome panel</h2>
+        <p>On first launch, the Plugins tab shows a welcome card prompting you to kick off a scan. This card is gated on <code>db_plugin_filter_stats</code> returning zero rows — as soon as any scan finishes, the welcome card disappears and is replaced by the normal table view. You can reproduce the welcome state on any tab by clearing that tab's SQLite table (Settings → <em>Clear All Databases</em>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>First actions — the recommended path</h2>
+        <ol>
+          <li>Press <code>Cmd+,</code> to open Settings (step 02).</li>
+          <li>Paste your sample / plugin / DAW / preset / MIDI / PDF roots into the respective <em>Scan Directories</em> textareas. Each scanner has its own list — this is intentional so you can point each walker at a different tree.</li>
+          <li>Set up your blacklist (node_modules, .Trash, backups, etc.).</li>
+          <li>Return to the main view and hit <code>Scan All</code> in the header (step 03).</li>
+          <li>While the scan runs, switch to the <strong>Walkers</strong> tab (<code>F5</code>) to watch live per-walker directory streams.</li>
+        </ol>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Survival tips</h2>
+        <ul>
+          <li>Press <code>?</code> at any time to toggle the help overlay with the full shortcut cheat sheet.</li>
+          <li>Press <code>Cmd+K</code> for the command palette — every action in the app (including the ~150 entries added across recent releases for per-scanner stops, per-tab export/import, player track actions, and resets) is reachable from there.</li>
+          <li>If you want a light theme, press <code>Cmd+Y</code> or hit the <em>Theme</em> button in the HUD header.</li>
+          <li>If the CRT scanlines distract you, press <code>F1</code> to toggle them. Neon-glow toggles with <code>F2</code>.</li>
+          <li>If a scan goes sideways, <code>Cmd+.</code> stops every active walker and subprocess.</li>
+          <li>Every keybinding above is rebindable in <em>Settings → Keyboard Shortcuts</em> (~120 customizable entries — see step 18).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>macOS platform polish</h2>
+        <p>Several quality-of-life fixes run silently in the background on macOS &mdash; you do not configure them, but it&rsquo;s useful to know they exist when something looks &ldquo;wrong&rdquo; and isn&rsquo;t.</p>
+        <ul>
+          <li><strong>Mission Control / Spaces previews</strong> &mdash; on stock WKWebView, switching to Mission Control or moving the window to another Space shows a blank gray thumbnail (WebKit bug 146877, open since 2015). AUDIO_HAXOR layers an <code>NSImageView</code> snapshot above the WebView and refreshes it every 1.5 s while focused, so Mission Control / Cmd-Tab / Spaces grab a real bitmap of what you were just looking at instead of an empty rectangle. The live WebView is unhidden the moment focus returns. Source: <code>src-tauri/src/space_preview_macos.rs</code>.</li>
+          <li><strong>App Nap mitigation</strong> &mdash; macOS will throttle, coalesce timers, and (under memory pressure) page out the app after long idle, which makes the first sample playback after walking away for hours lag for several seconds. AUDIO_HAXOR holds an <code>NSProcessInfo</code> activity assertion (same option set Music.app uses) so the host stays unthrottled. The laptop can still sleep when you walk away &mdash; we just block the Nap throttle, not full system sleep. The <code>audio-engine</code> subprocess gets its own keep-alive: the host pings it every 30 s of idle so JUCE&rsquo;s pages stay resident.</li>
+          <li><strong>Tray popover Escape key</strong> &mdash; the menu-bar popover is a borderless <code>NSPanel</code>, so its WKWebView rarely becomes first responder and JS <code>keydown</code> never fires. <code>tray_popover_escape_macos.rs</code> installs a local <code>NSEvent</code> monitor so Escape closes the popover anyway.</li>
+          <li><strong>Background-mode breadcrumbs</strong> &mdash; <code>app.log</code> picks up <code>APP BG: resignActive</code> / <code>APP BG: becomeActive</code> on every focus transition, plus <code>HEALTH</code> + <code>HEALTH-JS</code> lines every 30 s with RSS, IPC counters, JS heap, cache sizes, and audio-engine subprocess vitals. If the app ever feels sluggish, that log + <code>engine.log</code> (which captures stack frames + dyld images on engine SIGSEGV) is the fastest path to a diagnosis.</li>
+        </ul>
+      </section>
+
+      <nav class="tutorial-nav">
+        <div class="nav-stub">
+          <span class="nav-label">Start</span>
+          <span class="nav-title">—</span>
+        </div>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="02-settings.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">02 · Configure scan roots</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

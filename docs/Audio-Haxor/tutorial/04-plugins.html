@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 04 · Plugins tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">04 · Plugins</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="03-walkers.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">03 · Scan All</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="05-samples.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">05 · Audio samples</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:21.05%"></div></div>
+        <span class="meter-count">04 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">04.</span>Plugins tab</h2>
+      <p class="tutorial-subtitle">VST / VST3 / AU / CLAP inventory, status badges, KVR resolve &amp; update queue, dependency graph, reverse xref, disk-usage strip. This is the tab AUDIO_HAXOR was born around.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/plugins.png" alt="Plugins tab with status badges, KVR buttons, and disk usage strip" loading="lazy">
+        <figcaption>assets/plugins.png · Plugins tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Open the tab</h2>
+        <p>Press <code>Cmd+1</code> or click <strong>Plugins</strong>. The tab header exposes:</p>
+        <ul>
+          <li><strong>Scan Plugins</strong> (<code>id="btnScan"</code>) — dispatches <code>scan_plugins</code> with <code>{ customRoots, excludePaths }</code>. While running the label becomes <em>⟳ X / Y + ETA</em>.</li>
+          <li><strong>Resume Scan</strong> (<code>id="btnResumeScan"</code>) — visible only if a previous scan was stopped partway.</li>
+          <li><strong>Stop</strong> (<code>id="btnStopPlugins"</code>) — appears during an active scan.</li>
+          <li><strong>Check Updates</strong> (<code>id="btnCheckUpdates"</code>) — dispatches <code>check_updates</code> against KVR for every plugin. Disabled if no plugins have been scanned yet.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The plugin list — columns &amp; status badges</h2>
+        <p>Each row is built by <code>buildPluginCardHtml()</code> in <code>frontend/js/plugins.js:416</code>. Fields shown:</p>
+        <ul>
+          <li><strong>Name</strong> — with search-match highlighting.</li>
+          <li><strong>Type</strong> — <code>VST2</code> / <code>VST3</code> / <code>AU</code> / <code>CLAP</code>, rendered as a colored chip (<code>type-vst2</code>, <code>type-vst3</code>, etc.).</li>
+          <li><strong>Manufacturer</strong>.</li>
+          <li><strong>Size</strong> — humanized (e.g. "2.3 MB").</li>
+          <li><strong>Modified</strong> — mtime.</li>
+          <li><strong>Architectures</strong> — one badge per slice found inside the plugin bundle (x86, x64, ARM64, etc.).</li>
+        </ul>
+        <p>Three status categories drive the update badge (from <code>pluginStatusCategory()</code> at <code>frontend/js/plugins.js:409</code>):</p>
+        <ul>
+          <li><strong>Update available</strong> — <code>badge-update</code>. KVR says a newer version exists.</li>
+          <li><strong>Up to date</strong> — <code>badge-current</code>. KVR has a version string and it matches.</li>
+          <li><strong>Unknown latest</strong> — <code>badge-unknown</code>. KVR couldn't find the plugin by name / manufacturer.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Per-row actions</h2>
+        <ul>
+          <li><strong>Web</strong> (<code>btn-mfg</code>) — opens the manufacturer URL. Disabled as <code>btn-no-web</code> when KVR hasn't resolved a URL.</li>
+          <li><strong>KVR</strong> (<code>btn-kvr</code>) — opens the KVR product page.</li>
+          <li><strong>Download</strong> (<code>btn-dl-kvr</code>) — only rendered when an update is available; opens the download URL.</li>
+          <li><strong>Folder</strong> (<code>btn-folder</code>) — reveals the plugin bundle in Finder / Explorer / your native file manager.</li>
+        </ul>
+        <p>Right-click any row for the context menu (<em>Favorite</em>, <em>Add note</em>, <em>Copy path</em>, <em>Export selection</em>, etc.). The delete sub-tree comes from the shared <code>_pathDeleteItems()</code> helper at <code>frontend/js/context-menu.js:14</code> — every inventory row across the app (plugins, samples, presets, MIDI, PDF, video, files) gets the same items: <em>Move to Trash</em>, <em>Securely delete</em> (3-pass DoD 5220.22-M overwrite via the <code>fs_secure_delete</code> Tauri command at <code>src-tauri/src/lib.rs:8567</code>), and <em>Copy path</em>. Adding a new inventory tab automatically inherits the same menu.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Filters, search, and sort</h2>
+        <ul>
+          <li><strong>Search input</strong> — fuzzy search across name + manufacturer. Toggle the <strong>regex</strong> button (<code>regexPlugins</code>) to switch from FZF to full regex.</li>
+          <li><strong>Type filter</strong> — multi-select dropdown (VST3, VST2, AU, CLAP). Converted from a native <code>&lt;select&gt;</code> into a cyberpunk multi-check widget by <code>frontend/js/multi-filter.js</code>.</li>
+          <li><strong>Status filter</strong> — multi-select (update, current, unknown).</li>
+          <li><strong>Sort</strong> — click any column header. Default: name ascending. State persists across launches via <code>sort-persist.js</code>.</li>
+        </ul>
+        <p>The query is dispatched to <code>db_query_plugins({ search, type_filter, status_filter, sort_key, sort_asc, search_regex, offset, limit })</code>. The tab paginates — you don't see all 20 000 plugins at once, you see the current page.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Disk-usage strip</h2>
+        <p>At the top of the table is a compact disk-usage row (<code>frontend/js/disk-usage.js</code>, <code>updatePluginDiskUsage()</code> around line 124). It pulls aggregates from <code>db_plugin_filter_stats</code> and displays:</p>
+        <ul>
+          <li><strong>Total count</strong> (or <em>"X / Y"</em> when a filter is applied)</li>
+          <li><strong>Per-type counts</strong>: VST3, VST2, AU, CLAP, Other</li>
+          <li><strong>Total size</strong> on disk</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>KVR resolve &amp; update flow</h2>
+        <p>KVR lookups are managed by <code>frontend/js/kvr.js</code>. The core flow (<code>resolveKvrDownloads()</code>, line 3):</p>
+        <ol>
+          <li>Deduplicate the plugin list by <code>manufacturer.toLowerCase() ||| name.toLowerCase()</code>.</li>
+          <li>Skip any plugin whose key is already in the cache (loaded from <code>kvr_cache_get</code>).</li>
+          <li>For each remaining plugin, call <code>resolve_kvr(kvrUrl, pluginName)</code> — the Rust side fetches the KVR product page and extracts the current version and download URL.</li>
+          <li>Write results to the cache via <code>kvr_cache_update</code>, and re-render each plugin card in place.</li>
+          <li>Rate-limit: 2 seconds between requests to stay polite.</li>
+        </ol>
+        <p>While the queue runs, the header shows a status line like <em>"3 downloads found · 18 pending"</em>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Dependency graph — <code>Cmd+G</code></h2>
+        <p>Press <code>Cmd+G</code> (or the <em>Show Dependency Graph</em> action) to open the modal from <code>frontend/js/dep-graph.js</code>. It draws from the xref cache (<code>_xrefCache</code>, keyed by project path → plugin references) and exposes four views:</p>
+        <ul>
+          <li><strong>Most Used</strong> — plugins sorted by how many projects reference them.</li>
+          <li><strong>By Project</strong> — projects sorted by plugin count, drill into each.</li>
+          <li><strong>Orphaned</strong> — plugins installed on disk that appear in zero projects.</li>
+          <li><strong>Analytics</strong> — breakdowns by type, manufacturer, extremes (biggest plugin chain, smallest, etc.).</li>
+        </ul>
+        <p>The header shows unique plugins, projects indexed, total references, orphaned count. A fuzzy search box filters the active view. The xref cache itself is built by the <em>Build plugin xref index</em> action (see step 07) which walks every supported DAW project and parses its plugin references.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Import / export</h2>
+        <ul>
+          <li><strong>Export JSON</strong> — <code>export_plugins_json</code>.</li>
+          <li><strong>Export CSV</strong> — <code>export_plugins_csv</code>.</li>
+          <li><strong>Import JSON</strong> — <code>import_plugins_json</code>. Merges into the live table.</li>
+          <li><strong>Export plugin xref</strong> — writes the entire xref cache (project → plugin list) as JSON. Action <code>exportPluginXref</code>, default <code>Cmd+Shift+J</code>.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Scan history for plugins</h2>
+        <p>Every plugin scan writes a snapshot to the <code>plugin_scans</code> table. Use the <strong>History</strong> tab (step 14) to inspect individual runs, compare two runs with <strong>Diff</strong>, or delete old entries. IPC: <code>history_get_scans</code>, <code>history_get_detail</code>, <code>history_delete</code>, <code>history_clear</code>, <code>history_diff</code>, <code>history_latest</code>.</p>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>On first scan, run <em>Check Updates</em> <strong>and</strong> <em>Build plugin xref index</em> so the dependency graph is ready. Both are long-running but cached — later scans are incremental.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="03-walkers.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">03 · Scan All</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="05-samples.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">05 · Audio samples</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

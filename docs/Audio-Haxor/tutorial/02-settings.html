@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 02 · Configure scan roots</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">02 · Scan roots</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="01-welcome.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">01 · First launch</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="03-walkers.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">03 · Run Scan All</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:10.53%"></div></div>
+        <span class="meter-count">02 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">02.</span>Configure scan roots</h2>
+      <p class="tutorial-subtitle">Seven per-scanner directory lists, a shared blacklist, auto-scan / folder-watch / incremental toggles, performance tunables, the customizable shortcut editor, and the built-in color schemes. Most of this tour lives behind <code>Cmd+,</code>.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/settings.png" alt="Settings tab with scan roots, appearance, and color scheme sections" loading="lazy">
+        <figcaption>assets/settings.png · Settings tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Open Settings + the fuzzy search bar</h2>
+        <p>Press <code>Cmd+,</code> (or click the <strong>Settings</strong> tab). The first thing you'll see at the top of the page is a fuzzy search input — <code>id="settingsSearchInput"</code>, powered by <code>frontend/js/settings-search.js</code>. Type any setting name, label, or description fragment and the page collapses to matching rows only. Examples: <em>"root"</em> jumps straight to the six scan-root textareas, <em>"lufs"</em> reveals analysis toggles, <em>"crt"</em> finds the scanline overlay switch.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Per-scanner scan directories</h2>
+        <p>AUDIO_HAXOR does <strong>not</strong> use a single unified root list. Each inventory scanner has its own textarea so you can target different trees — e.g. plugins live in <code>/Library/Audio/Plug-Ins/</code>, samples in <code>~/Music/Samples/</code>, DAW projects in <code>~/Music/Logic/</code>, PDFs in <code>~/Documents/Manuals/</code>. Put one absolute path per line. Each textarea has a <strong>Browse</strong> button that opens the native file dialog for quick appending, plus a <strong>Save</strong> button that persists the list.</p>
+        <h3>The seven scanner root lists</h3>
+        <ul>
+          <li><strong>Plugin scan directories</strong> — <code>id="settingCustomDirs"</code>. Walker uses this for VST/VST3/AU/CLAP discovery via <code>scan_plugins</code>.</li>
+          <li><strong>Audio scan directories</strong> — <code>id="settingAudioScanDirs"</code>. Feeds <code>scan_audio_samples</code> (WAV, MP3, AIFF, FLAC, OGG, M4A, AAC, OPUS, WMA, REX, RX2, SF2, SFZ).</li>
+          <li><strong>DAW scan directories</strong> — <code>id="settingDawScanDirs"</code>. Feeds <code>scan_daw_projects</code> across every supported DAW format (see step 07).</li>
+          <li><strong>Preset scan directories</strong> — <code>id="settingPresetScanDirs"</code>. Feeds <code>scan_presets</code> for FXP / FXB / VSTPRESET / AUPRESET / ADV / ADG / NKI / NKSN / H2P / SYX / TFX / PJUNOXL.</li>
+          <li><strong>MIDI scan directories</strong> — <code>id="settingMidiScanDirs"</code>. Feeds <code>scan_midi_files</code>.</li>
+          <li><strong>PDF scan directories</strong> — <code>id="settingPdfScanDirs"</code>. Feeds <code>scan_pdfs</code>.</li>
+          <li><strong>Video scan directories</strong> — <code>id="settingVideoScanDirs"</code>. Feeds <code>scan_videos</code> (MP4 / MOV / MKV / AVI / WEBM / M4V / WMV / FLV / MPG / MTS / 3GP). The Videos tab uses these roots; see step 13 for the inventory + audio-route + maximize playback flow.</li>
+        </ul>
+        <p>All seven are also the source of truth for the unified <code>Scan All</code> button — <code>scan_unified</code> walks the union of these lists once and fans progress events into the per-type tabs.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Directory blacklist (shared)</h2>
+        <p>The <strong>Directory Blacklist</strong> textarea — <code>id="settingBlacklist"</code> — lists directory names (not full paths) that every scanner will skip. Default entries:</p>
+        <pre>#recycle
+@eaDir
+.Spotlight-V100
+$RECYCLE.BIN
+System Volume Information
+node_modules
+.git
+.Trash</pre>
+        <p>Add anything that wastes walker time — CI artifacts, build folders, backup directories, Dropbox caches. The list is matched case-sensitively against directory name segments, so <code>node_modules</code> catches it at any depth.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Scanning behavior toggles</h2>
+        <ul>
+          <li><strong>Auto-scan on launch</strong> — <code>data-action="settingToggleAutoScan"</code>. When on, <code>scan_unified</code> runs immediately after boot. Default off.</li>
+          <li><strong>Folder watch</strong> — <code>data-action="settingToggleFolderWatch"</code>. Enables the <code>notify</code>-based file watcher (<code>start_file_watcher</code>) that re-runs targeted scans when files change inside configured roots.</li>
+          <li><strong>Incremental directory scan</strong> — <code>data-action="settingToggleIncrementalDirectoryScan"</code>. Instead of re-walking the entire tree, only visit directories whose mtime has changed since the last scan.</li>
+          <li><strong>Auto check for updates</strong> — <code>data-action="settingToggleAutoUpdate"</code>. After plugin scans, automatically queue KVR update checks.</li>
+          <li><strong>Include Ableton backup &amp; crash sets</strong> — <code>data-action="settingToggleIncludeBackups"</code>. By default, <code>.als</code> files in Ableton's <em>Backup</em> and <em>Crash</em> directories are skipped; toggle this on to include them.</li>
+          <li><strong>Prune old scan snapshots</strong> — <code>settingPruneOldScans</code>, paired with <strong>Scan history to keep</strong> (<code>settingPruneOldScansKeep</code>, 1–100, default 3). On startup, older completed scan runs beyond the last N per scanner are deleted.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Playback preferences</h2>
+        <ul>
+          <li><strong>Single-click sample playback</strong> — <code>settingSingleClickPlay</code>. Click a Samples row to start playback instead of requiring a double-click.</li>
+          <li><strong>Play on keyboard selection</strong> — <code>settingAutoPlaySampleOnSelect</code>. When you move the selection with <code>j</code> / <code>k</code> / arrows in the Samples tab, auto-preview each row.</li>
+          <li><strong>Expand sample row on double-click</strong> — <code>settingExpandOnClick</code>. Default on. Shows the expanded metadata panel (waveform + spectrogram + full fields).</li>
+          <li><strong>Show player on startup</strong> — <code>settingShowPlayerOnStartup</code>. Restores the floating player with the last track when the app opens.</li>
+          <li><strong>Autoplay next track</strong> — <code>settingAutoplayNext</code>. When a track ends, automatically advance.</li>
+          <li><strong>Autoplay next queue source</strong> — <code>settingAutoplayNextSource</code>. <em>samples</em> (visible Samples table) or <em>player</em> (recently-played history).</li>
+          <li><strong>Max recently played</strong> — <code>settingMaxRecent</code>, 20–500, default 50.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Performance tunables</h2>
+        <p>These live in the <em>Performance</em> section. Most require a restart (the label says so) because they reconfigure the Rayon pool or SQLite connection pool at boot.</p>
+        <ul>
+          <li><strong>Table page size</strong> — 100–2000, default 200 rows per page for Samples / DAW / Presets / MIDI / PDF tables.</li>
+          <li><strong>UI update throttle</strong> — 50–1000 ms, default 100. Minimum interval between DOM batches during scans.</li>
+          <li><strong>Thread pool multiplier</strong> — 1–8, default 4. Threads per CPU core for parallel walks.</li>
+          <li><strong>SQLite read pool extra</strong> — 0–32, 0 = Auto. Adds extra read-only connections so palette queries / table pagination don't block the writer.</li>
+          <li><strong>Channel buffer size</strong> — 64–2048, default 512. IPC buffer capacity between scanner threads and the UI.</li>
+          <li><strong>Scan batch size</strong> — 10–200, default 100. Items per progress batch.</li>
+          <li><strong>File descriptor limit</strong> — 256–65536, default 10240. Raise if scans abort on huge libraries.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Analysis settings</h2>
+        <ul>
+          <li><strong>Visualizer FPS cap</strong> — 10–60 Hz.</li>
+          <li><strong>Max cached waveforms</strong> — cap for the in-memory waveform-peak cache.</li>
+          <li><strong>Auto analyze startup</strong> — on startup, queue BPM / key / LUFS batch analysis for un-analyzed samples.</li>
+          <li><strong>Analysis pause (seconds)</strong> — 0–10, delay before resuming background analysis after user activity.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>PDF settings</h2>
+        <p><strong>Background PDF metadata (auto)</strong> — <code>settingPdfMetadataAutoExtract</code>. When on, page counts resolve lazily in the background while the PDF tab is visible. When off, use the command palette's <em>Extract PDF metadata</em> action to do a full sweep.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reset &amp; clear</h2>
+        <ul>
+          <li><strong>Reset UI layout</strong> — <code>settingResetAllUI</code>. Wipes tab order, section order, column widths back to defaults.</li>
+          <li><strong>Reset tab order</strong> — restore the default tab sequence.</li>
+          <li><strong>Reset settings layout</strong> — restore the default Settings section order.</li>
+          <li><strong>Reset columns</strong> — restore default column widths for every table.</li>
+          <li><strong>Clear all history</strong> — wipe every scan history entry across all types.</li>
+          <li><strong>Clear KVR cache</strong> — forget cached plugin-version / update URLs from KVR.</li>
+          <li><strong>Clear analysis cache</strong> — wipe cached BPM / key / LUFS values (they'll be recomputed on next access).</li>
+          <li><strong>Clear all databases</strong> — nuke every inventory table (plugins, audio, DAW, presets, MIDI, PDF) and start from a blank state.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Appearance</h2>
+        <ul>
+          <li><strong>Interface language</strong> — locale select backed by the SQLite <code>app_i18n</code> table (<code>src-tauri/src/app_i18n.rs</code>) with 27 seeded locales: English, Chinese, Japanese, Korean, German, Czech, Greek, Polish, Spanish, LatAm Spanish, Swedish, Danish, Norwegian, Finnish, French, Hungarian, Italian, Portuguese, Brazilian Portuguese, Romanian, Russian, Dutch, Turkish, Ukrainian, Vietnamese, Indonesian, Hindi. Changes trigger <code>reloadAppStrings(locale)</code> which re-binds every translatable element and refreshes the native menu without a relaunch.</li>
+          <li><strong>CRT scanline effects</strong> — toggle the animated scanline + vignette overlay.</li>
+          <li><strong>Neon glow animations</strong> — toggle pulsing neon borders on panels, modals, tiles.</li>
+          <li><strong>Tag filter bar</strong> — show/hide the tag multi-filter widget above (or below) tables.</li>
+          <li><strong>Tag bar position</strong> — <em>Top</em> or <em>Bottom</em>.</li>
+          <li><strong>Tooltip hover delay</strong> — 0–5000 ms, default 600 ms. Delay before dense tooltips appear.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Keyboard Shortcuts editor</h2>
+        <p>The <em>Keyboard Shortcuts</em> section of Settings exposes every keybinding in the app (~120 entries — tab switches, scan controls, playback, palette, exports, per-scanner stops, toggle flags) as an editable row. Click a row, press the new chord, hit save. Bindings are merged on top of <code>DEFAULT_SHORTCUT_DEFS</code> in <code>frontend/js/shortcuts.js</code> and persisted under the <code>customShortcuts</code> pref. <em>Reset Shortcuts</em> drops the custom layer and falls back to defaults.</p>
+        <p>The full list lives behind a search field — type <em>"scan"</em> to find every scanner trigger, <em>"export"</em> to find every export entry, etc. See step 18 for the catalog and pinning recipes.</p>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>Settings is draggable. You can reorder the whole <em>sections</em> of this page (Appearance, Scanning, Color Scheme, Playback, Keyboard Shortcuts, etc.) and the order persists. If you mess it up, use <em>Reset Settings Layout</em>.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="01-welcome.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">01 · First launch</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="03-walkers.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">03 · Run Scan All</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

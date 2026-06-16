@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 06 · BPM / key / LUFS analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">06 · Analysis</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="05-samples.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">05 · Audio samples</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="07-daw.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">07 · DAW projects</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:31.58%"></div></div>
+        <span class="meter-count">06 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">06.</span>BPM / key / LUFS batch analysis</h2>
+      <p class="tutorial-subtitle">Three native Rust analyzers (onset-autocorrelation BPM, Krumhansl-Kessler key, BS.1770-style LUFS), a batch queue you can pause/resume, per-file caches, and a direct pipeline into smart playlists.</p>
+
+      <section class="tutorial-section">
+        <h2>Where the analysis lives</h2>
+        <p>Analysis is a post-scan enrichment pass that fills the <code>bpm</code>, <code>key</code>, and <code>lufs</code> columns on the audio library table. Frontend triggers are in <code>frontend/js/audio.js</code>; backend algorithms are in <code>src-tauri/src/bpm.rs</code>, <code>src-tauri/src/key_detect.rs</code>, and <code>src-tauri/src/lufs.rs</code>. The database columns are updated through <code>db_update_bpm</code>, <code>db_update_key</code>, <code>db_update_lufs</code>, and the one-shot <code>db_update_analysis</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Kick off a batch</h2>
+        <ul>
+          <li><strong>Palette action</strong> — <code>Cmd+K</code> → <em>Start BPM/Key/LUFS Analysis</em>.</li>
+          <li><strong>Shortcut</strong> — <code>Cmd+Shift+V</code> to start, <code>Cmd+Shift+C</code> to stop.</li>
+          <li><strong>Auto on startup</strong> — Settings → <em>Auto Analyze Startup</em>. When enabled, the app runs the analysis pass on all unanalyzed rows shortly after boot.</li>
+          <li><strong>Per-file</strong> — context menu on any Samples row, or the analysis button inside the expanded metadata panel.</li>
+        </ul>
+        <p>The queue targets every row where <code>bpm</code>, <code>key</code>, or <code>lufs</code> is <code>NULL</code>. It's a stream — you can stop mid-batch and resume from where you left off without losing progress.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The IPC surface</h2>
+        <ul>
+          <li><code>estimate_bpm({ filePath })</code> → <code>f32</code>.</li>
+          <li><code>detect_audio_key({ filePath })</code> → <code>"C Major"</code>, <code>"F# Minor"</code>, etc.</li>
+          <li><code>measure_lufs({ filePath })</code> → <code>f64</code> (dBFS-like LUFS).</li>
+          <li><code>batch_analyze({ paths })</code> — runs all three in one round trip per file.</li>
+          <li><code>db_get_analysis</code>, <code>db_unanalyzed_paths</code>, <code>db_backfill_audio_meta</code> — backfill helpers.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>BPM — onset-strength autocorrelation</h2>
+        <p><code>src-tauri/src/bpm.rs</code>. Supported formats: WAV, AIFF, MP3, FLAC, OGG, M4A, AAC, OPUS. The pipeline:</p>
+        <ol>
+          <li>Decode PCM via Symphonia, mixing to mono (first channel).</li>
+          <li>Cap the signal at roughly 30 seconds at 44.1 kHz so the whole pipeline stays bounded in memory.</li>
+          <li>Compute an energy envelope / onset-strength function.</li>
+          <li>Autocorrelation over the 50–220 BPM range to find the dominant period.</li>
+          <li>Convert the period back to beats-per-minute and return <code>Some(bpm)</code> or <code>None</code>.</li>
+        </ol>
+        <p>No external deps, no model download, no Python. Works offline.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Key — 12-bin chromagram + Krumhansl-Kessler</h2>
+        <p><code>src-tauri/src/key_detect.rs</code>. The classic musical-key-detection pipeline:</p>
+        <ol>
+          <li>Decode first ~30 s of PCM.</li>
+          <li>Frame with a Hann window.</li>
+          <li>For each frame, run Goertzel against 84 target frequencies — C1 (32.7 Hz) through B7 (3951 Hz), 7 octaves × 12 pitch classes.</li>
+          <li>Sum into a 12-bin chromagram (C, C#, D, …, B).</li>
+          <li>Normalize by the maximum bin.</li>
+          <li>Match against 24 key profiles (12 major + 12 minor Krumhansl-Kessler) using Pearson correlation.</li>
+          <li>Return the highest-correlated key name, e.g. <em>"D Minor"</em>.</li>
+        </ol>
+        <p>Accuracy is good on tonal music; noisy percussive loops will sometimes come back with a close but not perfect guess.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>LUFS — simplified BS.1770</h2>
+        <p><code>src-tauri/src/lufs.rs</code>. A simplified ITU-R BS.1770 implementation — integrated loudness without the K-weighting filter, computed across the first 60 seconds of the file:</p>
+        <ol>
+          <li>Read PCM, mix to mono.</li>
+          <li>Compute <em>mean square</em> of samples (<code>Σx² / N</code>).</li>
+          <li>LUFS = <code>-0.691 + 10 × log10(mean_sq)</code>.</li>
+          <li>Clamp silence to <code>-70.0 LUFS</code>.</li>
+          <li>Round to one decimal place.</li>
+        </ol>
+        <p>This gives you a comparable loudness number across your library — good enough for sorting loud vs quiet samples and building smart playlists like <em>"LUFS &gt; -14 AND BPM BETWEEN 120 AND 128"</em>. It is <strong>not</strong> a broadcast-certified EBU R128 measurement.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Caching &amp; stopping</h2>
+        <p>Results are written to SQLite immediately as they come in (<code>db_update_bpm</code> etc.), so stopping mid-batch never loses progress. The in-memory caches <code>_bpmCache[path]</code>, <code>_keyCache[path]</code>, and <code>_lufsCache[path]</code> are also updated so the UI reflects new values instantly.</p>
+        <p>To wipe analysis entirely and re-run from scratch, use <strong>Settings → Clear analysis cache</strong> (<code>Cmd+Shift+9</code>), then trigger the batch again.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Consuming the analysis</h2>
+        <ul>
+          <li>Sort the Samples table by BPM, key, or LUFS (click column headers).</li>
+          <li>Build <em>Smart playlists</em> with <code>bpm_range</code>, <code>key</code>, or LUFS-based rules.</li>
+          <li>View the <strong>BPM distribution</strong> and <strong>Key distribution</strong> cards in the Heatmap dashboard.</li>
+          <li>Compare analysis snapshots across scan runs in the History tab.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>Let the analysis run in the background while you're organizing other things. The UI-idle backoff in <code>ui-idle.js</code> will lower the analysis priority when you're interacting with the app, so you won't feel a frame drop.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="05-samples.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">05 · Audio samples</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="07-daw.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">07 · DAW projects</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

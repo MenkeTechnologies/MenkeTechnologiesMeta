@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 06 · Live scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">06 · Live scanner</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="05-reports.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">05 · Reports</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="07-halts-catalysts.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">07 · Halts &amp; catalysts</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:33.33%"></div></div>
+        <span class="meter-count">06 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">06.</span>Live scanner &amp; Finnhub WS pipeline</h2>
+      <p class="tutorial-subtitle">The 6-panel intraday scanner, the 25-symbol chunked subscription layer, the in-process DashMap fan-out, TTS voice alerts, and the Webull read-only live snapshot. All live stores are bounded with oldest-first eviction so multi-day sessions don't grow without limit.</p>
+
+      <section class="tutorial-section">
+        <h2>The six panels</h2>
+        <p>The scanner view (<code>frontend/js/views/live_scanner.js</code>) is a six-panel grid where each panel is an independent leaderboard over the same Finnhub WebSocket tick stream. By default:</p>
+        <ul>
+          <li><strong>% Gainers</strong> — biggest % up vs prior close.</li>
+          <li><strong>% Losers</strong> — biggest % down.</li>
+          <li><strong>Volume leaders</strong> — highest cumulative session volume.</li>
+          <li><strong>Volume vs avg-10</strong> — biggest relative-volume spike (RVOL).</li>
+          <li><strong>Range expansion</strong> — biggest intraday range relative to ATR(14).</li>
+          <li><strong>Tape velocity</strong> — most prints per second (works best mid-session).</li>
+        </ul>
+        <p>Each panel is independently filterable (price range, min volume, min market cap, exclude OTC, exclude ETFs) and independently sortable. The leaderboard re-renders at most twice per second to keep the WebView responsive even on a hot tape.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Finnhub WebSocket — chunked subs</h2>
+        <p>The free Finnhub tier caps a single WebSocket at 25 simultaneous symbol subscriptions. The scanner needs hundreds. The pipeline:</p>
+        <ol>
+          <li><strong>Universe</strong> — the set of symbols the panels collectively need. Re-computed every minute from the union of: panel filters (e.g. "all US equities &gt; $5 with volume &gt; 1M") + your watchlists + open positions.</li>
+          <li><strong>Chunking</strong> — split the universe into N chunks of 25. Open N WebSocket connections, each subscribed to one chunk.</li>
+          <li><strong>Fan-in</strong> — every chunk's ticks land in a single in-process <code>DashMap&lt;Symbol, Tick&gt;</code> + <code>tokio::sync::broadcast</code> channel.</li>
+          <li><strong>Fan-out</strong> — the browser opens <code>WS /ws/ticks</code>, picks a per-panel filter, and only receives ticks for symbols its filter matches. The server-side filter keeps WS bandwidth bounded even when the universe is large.</li>
+          <li><strong>Reconnect</strong> — chunks reconnect on disconnect with exponential backoff (start 1 s, cap 60 s, jitter ±20%). The in-memory tick store keeps the last value for every symbol so panels stay populated through a reconnect.</li>
+        </ol>
+        <p>The free tier is honored with no premium key. Bring your own Finnhub key from <em>Settings → API Keys → Finnhub</em> if you want the paid tier (more symbols / connection, no rate-limit reconnects).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>TTS voice alerts</h2>
+        <p>The <em>Voice alerts</em> toggle in the scanner header reads matching leaderboard entries out loud via <code>speechSynthesis</code>. The phrasing is templated:</p>
+        <pre>"Halt:  S H W Z, code T-One."
+"Volume spike:  N V D A, R-VOL twelve point three."
+"New gainer:  A M D, plus four point five percent."</pre>
+        <p>Ticker symbols are spelled letter-by-letter (better than the synth's word-guess), volumes are quantized to a one-decimal multiplier, percentages round to one place. Throttled to one utterance per 3 s per panel to avoid talk-over.</p>
+        <p>Under Tauri's custom scheme <code>speechSynthesis.speak</code> can throw a cross-origin SecurityError on first call; it's wrapped in a try/catch so the panel keeps working — speech just silently fails. Falls back gracefully if no voices are available.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Bounded in-memory stores</h2>
+        <p>Every live stream is sized so a multi-day session can't OOM the host:</p>
+        <ul>
+          <li><strong>Ticks</strong> — DashMap keyed by symbol, last-tick-only. Bounded by the universe size (rotates as the universe shifts).</li>
+          <li><strong>Halts</strong> — VecDeque, cap 2 000 oldest-first eviction (step 07).</li>
+          <li><strong>Catalysts</strong> — VecDeque, cap 10 000 oldest-first eviction (step 07).</li>
+          <li><strong>Webull snapshot</strong> — single struct, last poll only.</li>
+        </ul>
+        <p>The cap values are configurable in <code>config.default.toml</code> if you want to keep more history in memory; defaults are sized for a 16 GB host running everything else.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Webull live snapshot</h2>
+        <p>Paste your Webull session tokens once in <em>Settings → Webull</em>. The server-side adapter polls <code>tradeapi.webullbroker.com</code> every 5 seconds and pushes a snapshot containing positions, day P&amp;L, buying power, and open orders to <code>WS /ws/webull</code>. Tokens stay in memory only — never written to disk, never logged — and expire when you quit the app.</p>
+        <ul>
+          <li><strong>What it can do</strong> — read-only position + order display, live P&amp;L on the Live Positions tile.</li>
+          <li><strong>What it can't do</strong> — place orders. By design.</li>
+          <li><strong>If the token expires</strong> — the adapter logs a warning, stops polling, and the Live Positions tile shows "session expired — re-paste tokens". The rest of the app is unaffected.</li>
+        </ul>
+        <div class="tutorial-callout warn">
+          <strong>Treat tokens as credentials</strong>
+          Don't paste Webull tokens on a shared machine. The in-memory-only guarantee covers disk and logs, but it doesn't cover your <code>~/.bash_history</code> if you pasted them from a terminal you ran <code>echo</code> in.
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Pre-market &amp; markets snapshot</h2>
+        <p>The Pre-market tile (<code>GET /api/premarket/snapshot</code>) shows futures + commodities + crypto + FX + economic events in one cached page. The Markets tile (<code>GET /api/markets/snapshot</code>) gives a 16-symbol world-markets grid (S&amp;P, NASDAQ, DAX, FTSE, Nikkei, Hang Seng, etc.). Both routes use <code>futures_util::future::join_all</code> internally — the serial-loop version blocked for 150 s and starved the pool; the join_all version finishes in ~3 s.</p>
+        <p>Markets snapshot is cached for 60 s in-process so the grid doesn't re-fan-out on every browser refresh.</p>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="05-reports.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">05 · Reports</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="07-halts-catalysts.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">07 · Halts &amp; catalysts</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

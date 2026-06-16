@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 15 · Real-time visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">15 · Visualizer</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="14-history.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">14 · History &amp; diffs</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="16-audio-engine.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">16 · Audio Engine</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:78.95%"></div></div>
+        <span class="meter-count">15 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">15.</span>Real-time visualizer — <code>F4</code></h2>
+      <p class="tutorial-subtitle">Six live tiles driven by either the audio-engine subprocess or a Web Audio AnalyserNode fallback. Drag to reorder, double-click to go fullscreen, pause the FFT to freeze a snapshot, and trust the idle backoff to stay invisible when you're not looking.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/visualizers.png" alt="Visualizer tab with six live tiles — FFT, oscilloscope, spectrogram, stereo, levels, bands" loading="lazy">
+        <figcaption>assets/visualizers.png · Visualizer tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Open the tab</h2>
+        <p>Press <code>F4</code> or click <strong>Visualizer</strong>. The tab uses a grid layout with two display modes held in <code>_vizMode</code> (<code>frontend/js/visualizer.js</code>):</p>
+        <ul>
+          <li><strong>Grid mode</strong> — <code>'all'</code>. All six tiles visible at once at 20 FPS.</li>
+          <li><strong>Single mode</strong> — one tile fills the full viewport at 30 FPS.</li>
+        </ul>
+        <p>Double-click any tile to toggle single-mode / grid-mode. Drag tiles by their handle to reorder — drops emit a <code>toast.reordered_viz_tiles</code> toast (<code>frontend/js/visualizer.js:1597</code>) and the order persists via the shared drag-reorder utility.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The six tiles</h2>
+        <ol>
+          <li><strong>FFT</strong> — frequency spectrum bars. Parameters: <code>fftSmoothing = 0.8</code> (exponential moving average between frames), <code>fftLogScale = true</code> (log frequency axis). Pause the animation with the dedicated button (<code>toggleFftAnimationPaused()</code>, ~line 1393) to freeze a snapshot in <code>_vizFftFrozenCopy</code> for close inspection.</li>
+          <li><strong>Oscilloscope</strong> — real-time waveform trace. Two modes controlled by <code>oscilloscopeTriggeredSweep</code>: free-run or triggered sweep (aligns the trace to a zero-crossing like a scope). <code>_vizOscLastTrigger</code> carries the previous trigger index across frames so the trace stays stable even when a buffer contains no new crossing.</li>
+          <li><strong>Spectrogram</strong> — scrolling waterfall plot of the spectrum over time, driven by a ring buffer (<code>_vizSpectrogramData</code>) with write index <code>_vizSpectrogramIdx</code>. Scroll speed is <code>spectrogramSpeed = 1</code>.</li>
+          <li><strong>Stereo</strong> — per-channel L/R amplitude meters with peak hold.</li>
+          <li><strong>Levels</strong> — overall RMS + peak. Peak hold is a decay timer (<code>_vizPeakHold</code> / <code>_vizPeakTimer</code>) controlled by <code>levelsHold = true</code>.</li>
+          <li><strong>Bands</strong> — 10 equal-loudness bands with peak indicators per band (<code>bandsCount = 10</code>).</li>
+        </ol>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Data sources — engine vs Web Audio</h2>
+        <p>The visualizer prefers the AudioEngine subprocess's <code>playback_status.spectrum</code> bins and falls back to the Web Audio <code>AnalyserNode</code>.</p>
+        <ul>
+          <li><strong>Engine spectrum (preferred)</strong> — <code>window._engineSpectrumU8</code>, a <code>Uint8Array</code> populated from the engine's <code>playback_status</code> response (see <code>frontend/js/audio-engine.js</code>). Sample rate in <code>window._engineSpectrumSrHz</code>. Optional overall peak in <code>window._enginePlaybackPeak</code>. FFT order is configurable (8–15 = 256–32 768 bins) via the Audio Engine tab; <em>off</em> skips the spectrum altogether for minimum CPU.</li>
+          <li><strong>Shim</strong> — <code>_vizEngineShim</code> wraps the engine array in an AnalyserNode-compatible façade with matching <code>frequencyBinCount</code>, <code>fftSize</code>, <code>getByteFrequencyData(arr)</code>, and a synthesized <code>getFloatTimeDomainData(arr)</code> for the oscilloscope tile.</li>
+          <li><strong>Fallback</strong> — <code>_analyser</code> from <code>audio.js</code>, set in <code>ensureAudioGraph()</code>. 2048-point FFT = 1024 frequency bins.</li>
+        </ul>
+        <p>Net result: any audio going through the app — Web Audio preview, engine playback, video audio route (engine mode), input-stream monitoring — lights up every tile with the same visuals.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Frame scheduling</h2>
+        <p>The animation loop (<code>_vizRAF</code>) runs as <code>requestAnimationFrame</code> and is throttled to a target FPS based on mode:</p>
+        <ul>
+          <li><code>_VIZ_FPS_SINGLE = 30</code></li>
+          <li><code>_VIZ_FPS_ALL = 20</code></li>
+        </ul>
+        <p>Last frame time is tracked in <code>_vizLastFrame</code>; if not enough time has passed, the frame is skipped instead of forcing a redraw.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Idle backoff</h2>
+        <p>When the app goes into heavy-CPU idle mode (minimized, hidden, unfocused), <code>ui-idle.js</code> emits <code>ui-idle-heavy-cpu</code>. The visualizer sets <code>_vizBackoffTimer</code> and defers its animation loop so GPU/CPU drops to zero while the tab isn't visible. It resumes instantly when you bring the window back.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Customization</h2>
+        <ul>
+          <li><strong>Frame rate cap</strong> — Settings → <em>Visualizer FPS cap</em>, 10–60 Hz.</li>
+          <li><strong>Smoothing</strong> — <code>_vizParams.fftSmoothing</code>, default 0.8. No UI exposed; changeable at runtime through the DevTools console.</li>
+          <li><strong>Colors</strong> — every tile uses CSS variables (<code>--cyan</code>, <code>--magenta</code>, <code>--accent</code>, etc.) so color-scheme switches (step 17) flow through immediately.</li>
+          <li><strong>Right-click a tile</strong> for its context menu — close, fullscreen, reset, export snapshot.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>The FFT pause button is the underrated one — freeze a spectrum snapshot of a tricky sample, then sort your library for similar frequency content with smart playlists. Works especially well for finding kicks with matching harmonic profiles.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="14-history.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">14 · History &amp; diffs</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="16-audio-engine.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">16 · Audio Engine</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 07 · DAW projects tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">07 · DAW</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="06-analysis.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">06 · Analysis</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="08-midi-presets-pdf.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">08 · MIDI / Presets / PDFs</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:36.84%"></div></div>
+        <span class="meter-count">07 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">07.</span>DAW projects tab</h2>
+      <p class="tutorial-subtitle">Thirteen DAW formats, per-format plugin extraction, two-way xref between projects and plugins, and the caches that make the dependency graph tick.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/daw.png" alt="DAW tab listing Ableton, Logic, FL Studio, REAPER, Bitwig projects" loading="lazy">
+        <figcaption>assets/daw.png · DAW tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Supported DAW formats</h2>
+        <p>From <code>src-tauri/src/daw_scanner.rs</code>. All of these are walked by <code>scan_daw_projects</code> (and by extension <code>scan_unified</code>):</p>
+        <ul>
+          <li><strong>Ableton Live</strong> — <code>.als</code> (gzip-compressed XML)</li>
+          <li><strong>Logic Pro</strong> — <code>.logicx</code> (macOS bundle with plist/binary innards)</li>
+          <li><strong>FL Studio</strong> — <code>.flp</code> (custom binary)</li>
+          <li><strong>Cubase</strong> — <code>.cpr</code> (binary)</li>
+          <li><strong>Nuendo</strong> — <code>.npr</code> (binary)</li>
+          <li><strong>Bitwig Studio</strong> — <code>.bwproject</code> (ZIP of XML)</li>
+          <li><strong>REAPER</strong> — <code>.rpp</code> + <code>.rpp-bak</code> (plaintext)</li>
+          <li><strong>Pro Tools</strong> — <code>.ptx</code> (v10+) and <code>.ptf</code> (validated by magic bytes)</li>
+          <li><strong>Studio One</strong> — <code>.song</code> (XML)</li>
+          <li><strong>Reason</strong> — <code>.reason</code></li>
+          <li><strong>Audacity</strong> — <code>.aup</code> / <code>.aup3</code></li>
+          <li><strong>GarageBand</strong> — <code>.band</code> (validated by presence of <code>projectData</code> plist inside)</li>
+          <li><strong>Ardour</strong> — <code>.ardour</code></li>
+          <li><strong>DAWproject</strong> — <code>.dawproject</code> (open XML standard)</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Table columns</h2>
+        <p>From <code>initDawTable()</code> at <code>frontend/js/daw.js:226</code>:</p>
+        <ul>
+          <li>Checkbox — batch select.</li>
+          <li><strong>Name</strong> — sortable (<code>data-key="name"</code>).</li>
+          <li><strong>DAW</strong> — colored badge ("Ableton Live", "Logic Pro", "FL Studio", etc.).</li>
+          <li><strong>Format</strong> — extension chip, with an <strong>xref badge</strong> button on supported formats that opens the plugin extraction modal.</li>
+          <li><strong>Size</strong>.</li>
+          <li><strong>Modified</strong>.</li>
+          <li><strong>Path</strong>.</li>
+          <li><strong>Actions</strong> — reveal in Finder, open project in its native DAW.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Filters &amp; header stats</h2>
+        <p>The header carries a search input (fuzzy or regex via toggle) and a multi-select DAW filter (<code>dawFilter</code>) covering every supported DAW plus <em>Other</em>. Stats row (<code>updateDawStats()</code> at <code>frontend/js/daw.js:111</code>):</p>
+        <ul>
+          <li>Total count (or <em>X / Y</em> when filtered).</li>
+          <li>Per-DAW counts: Ableton, Logic, FL Studio, REAPER, Other.</li>
+          <li>Total size on disk.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Extract plugins — the xref modal</h2>
+        <p>Click the xref badge on any supported-format row to open <code>showProjectPlugins(path, name)</code> in <code>frontend/js/xref.js</code>. The flow:</p>
+        <ol>
+          <li>Show loading modal.</li>
+          <li>Call <code>extract_project_plugins({ filePath })</code>.</li>
+          <li>Cache the result under <code>_xrefCache[projectPath]</code>.</li>
+          <li>Render the plugin list: name, type, manufacturer.</li>
+          <li><strong>Export</strong> button — dumps the result as JSON via <code>exportXrefPlugins()</code>.</li>
+        </ol>
+        <p>The cache lives in <code>xref-cache.json</code> inside the app data dir; a prefs fallback keeps it portable when the file hasn't been written yet.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Per-format extraction — <code>src-tauri/src/xref.rs</code></h2>
+        <p>Each format has a tailored parser:</p>
+        <ul>
+          <li><strong>Ableton (.als)</strong> — gzip-decompress the file, run regex over the XML: <code>&lt;VstPluginInfo&gt;</code> blocks → <code>&lt;PlugName&gt;</code> + <code>&lt;Manufacturer&gt;</code>, <code>&lt;Vst3PluginInfo&gt;</code> → <code>&lt;Name&gt;</code> + <code>&lt;DeviceCreator&gt;</code>, <code>&lt;AuPluginInfo&gt;</code> → <code>&lt;Name&gt;</code> + <code>&lt;Manufacturer&gt;</code>.</li>
+          <li><strong>REAPER (.rpp)</strong> — plaintext, regex for <code>&lt;VST "TYPE: Name (Manufacturer)"</code>. Types: VST, VST3, AU, CLAP.</li>
+          <li><strong>Bitwig (.bwproject)</strong> — unzip, parse the XML project.</li>
+          <li><strong>Studio One (.song)</strong> — regex over the XML for <code>plugName="..."</code> + <code>deviceName="..."</code>.</li>
+          <li><strong>DAWproject</strong> — follow the open XML schema.</li>
+          <li><strong>FL Studio / Logic / Cubase / Nuendo / Pro Tools / Reason</strong> — format-specific binary parsers.</li>
+        </ul>
+        <p>Plugin names are normalized before caching: architecture suffixes (<em>x64, x86, ARM64, 64-bit, 32-bit</em>) are stripped, whitespace is collapsed, and the result is lowercased. This is how <em>"Serum (x64)"</em> and <em>"Serum"</em> end up pointing at the same node in the dependency graph.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Build the full xref index</h2>
+        <p>One-off extraction is fine for a single project, but the dependency graph needs every project indexed. Run <em>Build Plugin Index</em> (<code>Cmd+Shift+X</code>, or the <em>Build plugin index</em> palette row). The pass:</p>
+        <ol>
+          <li>Fetches every DAW project with a supported format.</li>
+          <li>Loops through them, calling <code>extract_project_plugins</code> per project.</li>
+          <li>Writes incremental results to <code>_xrefCache</code>.</li>
+          <li>Surfaces toast progress every 25%.</li>
+        </ol>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reverse xref — from plugin to projects</h2>
+        <p>On a plugin row in the Plugins tab (step 04), the context menu offers <em>Projects using this plugin</em>. <code>xref.js</code> searches <code>_xrefCache</code> for entries whose normalized plugin names match the current plugin and shows a modal with the matching project list. Clicking a project in that modal reveals or opens it.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Open, reveal, history</h2>
+        <ul>
+          <li><strong>Open project</strong> → <code>open_daw_project({ filePath })</code> launches the project in its native DAW via OS-level <em>open</em>.</li>
+          <li><strong>Reveal folder</strong> → <code>open_daw_folder</code>.</li>
+          <li><strong>History</strong> → <code>daw_history_*</code> commands: save, get scans, get detail, delete, clear, latest, diff. Compare two scans to see what DAW projects were added, removed, or renamed between runs.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Import / export</h2>
+        <ul>
+          <li><strong>Export JSON</strong> — <code>export_daw_json</code>.</li>
+          <li><strong>Export DSV</strong> — <code>export_daw_dsv</code>.</li>
+          <li><strong>Import JSON</strong> — <code>import_daw_json</code>.</li>
+          <li><strong>Export xref</strong> — entire cache to JSON via <code>Cmd+Shift+J</code>.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>If you maintain a huge project library across multiple drives, run <em>Build plugin xref index</em> overnight. It takes time on first run (many projects have dozens of plugin references each) but it's cached forever and incrementally updated on re-scans.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="06-analysis.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">06 · Analysis</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="08-midi-presets-pdf.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">08 · MIDI / Presets / PDFs</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

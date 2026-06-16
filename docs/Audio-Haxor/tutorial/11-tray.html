@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 11 · Tray popover &amp; menu bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">11 · Tray</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="10-player.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">10 · Floating player</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="12-favorites-notes-tags.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">12 · Favorites / Notes / Tags</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:57.89%"></div></div>
+        <span class="meter-count">11 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">11.</span>Tray popover &amp; menu bar</h2>
+      <p class="tutorial-subtitle">A separate WebView living in the macOS menu bar / Windows system tray / Linux panel. Track info, mini-waveform with playhead + sample-loop region overlay, scrubber drag, shift+drag paint-a-loop, volume, speed, transport, and full theme + color scheme sync from the main window.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/tray.png" alt="Tray popover showing now-playing title, scrubber, transport, volume, speed" loading="lazy">
+        <figcaption>assets/tray.png · Tray popover</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Open the popover</h2>
+        <p>Click the AUDIO_HAXOR icon in your menu bar (macOS) or system tray (Windows/Linux). On macOS this is a dedicated NSStatusItem managed by Tauri. The popover is a standalone WebView loaded from <code>frontend/tray-popover.html</code> and driven by <code>frontend/js/tray-popover.js</code>, completely separate from the main window process.</p>
+        <p>Right-clicking the tray icon opens the native OS menu with seven actions: <em>Show AUDIO_HAXOR</em>, <em>Scan All</em>, <em>Stop All</em>, <em>Previous Track</em>, <em>Play / Pause</em>, <em>Next Track</em>, and <em>Quit</em> (IDs <code>tray_show</code>, <code>tray_scan_all</code>, <code>tray_stop_all</code>, <code>tray_prev</code>, <code>tray_play_pause</code>, <code>tray_next</code>, <code>tray_quit</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>HUD layout</h2>
+        <p>From top to bottom (IDs defined in <code>frontend/tray-popover.html</code>):</p>
+        <ul>
+          <li><strong>Title</strong> — <code>#trayPopoverTitle</code>. Two-line clamp with ellipsis.</li>
+          <li><strong>Subtitle</strong> — <code>#subtitle</code>. Three-line clamp. Cleared when redundant with the title (basename-only path matching the displayed name).</li>
+          <li><strong>Idle hint</strong> — <code>#idleHint</code>. Shows when no track is playing (falls back to the <code>tray.popover_idle</code> i18n string).</li>
+          <li><strong>Scrubber bar</strong> — <code>#trackBar</code> hosting the <strong>mini-waveform canvas</strong> (<code>#trayWaveformCanvas</code>), a translucent progress fill <code>#fill</code>, a vertical playhead <code>#trackThumb</code> spanning the full 28 px canvas height, and an optional <strong>sample-loop region overlay</strong> with yellow brace markers matching the main-window meta waveform.</li>
+          <li><strong>Elapsed / total</strong> — <code>#elapsed</code> / <code>#total</code>. Orbitron font, <code>M:SS</code> format.</li>
+          <li><strong>Volume row</strong> — label <code>#trayVolLabel</code>, slider <code>#trayVol</code> (0–100), percentage <code>#trayVolPct</code>.</li>
+          <li><strong>Speed row</strong> — label <code>#traySpeedLabel</code>, select <code>#traySpeed</code> (0.25, 0.5, 0.75, 1, 1.25, 1.5, 2).</li>
+          <li><strong>Transport</strong> — <code>#btnPrev</code> ◀, <code>#btnPlay</code> ▶/⏸, <code>#btnNext</code> ▶▶.</li>
+          <li><strong>Build info</strong> — <code>#trayBuildMeta</code>, version string populated from <code>get_build_info</code>.</li>
+          <li><strong>CRT wash</strong> — <code>.crt-wash</code> — the signature scanline overlay gets its own copy here so the popover looks consistent with the main window.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>State sync from the main window</h2>
+        <p>Whenever playback changes, the main window calls <code>update_tray_now_playing</code> with a <code>TrayNowPlayingPayload</code> (defined in <code>src-tauri/src/tray_menu.rs</code>). The payload carries:</p>
+        <ul>
+          <li><code>title_bar</code>, <code>tooltip</code>, <code>idle</code>.</li>
+          <li><code>popover_title</code>, <code>popover_subtitle</code>, <code>popover_idle_label</code>.</li>
+          <li><code>elapsed_sec</code>, <code>total_sec</code>, <code>popover_playing</code>.</li>
+          <li><code>playback_speed</code>, <code>volume_pct</code>.</li>
+          <li><code>waveform_peaks</code> — flat <code>[max0, min0, max1, min1, …]</code> array sent once per track load; cached in <code>_trayWaveformPeaks</code> and only re-rendered when the signature actually changes.</li>
+          <li><code>loop_region_enabled</code>, <code>loop_region_start_sec</code>, <code>loop_region_end_sec</code> — sample-loop region overlay state.</li>
+          <li><code>ui_theme</code> — <em>"light"</em> or <em>"dark"</em>.</li>
+          <li><code>appearance</code> — a map of CSS scheme variables (every key in <code>SCHEME_VAR_KEYS</code>) so the popover recolors to match your active color scheme instantly.</li>
+        </ul>
+        <p>Rust relays the payload via <code>emit_to("tray-popover", "tray-popover-state", emit)</code>; the JS side's <code>applyState()</code> normalizes snake/camel keys, updates every element, and re-bases the animation model. Theme changes emit <code>tray-popover-ui-theme</code> separately. SMB / network-share syscalls run in a separate task so they never block <code>tray_popover_action</code>; the Rust-side now-playing cache is mutated synchronously inside the action handler so the next state push reflects the latest seek/volume immediately.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Scrubber drag &amp; shift-paint sample loop</h2>
+        <p>The scrubber is a pointer-driven seek control:</p>
+        <ol>
+          <li><code>pointerdown</code> on <code>#trackBar</code> captures the pointer and sets <code>_dragging = true</code>.</li>
+          <li><code>pointermove</code> updates <code>_dragFrac</code> from the mouse X coordinate.</li>
+          <li><code>pointerup</code>/<code>pointercancel</code> sends <code>tray_popover_action { action: "seek:<frac>" }</code> (4 decimal places, e.g. <code>seek:0.3425</code>) and re-bases the animation model.</li>
+        </ol>
+        <p><strong>Shift+drag</strong> on the trackbar paints a new sample-loop region — release fires <code>tray_popover_action { action: "loop_region_paint:<lo>:<hi>" }</code> with 4-decimal-place seconds, and the yellow brace markers appear over the canvas immediately. <strong>Shift+click</strong> a single point with no drag sends <code>loop_region_disable</code> to clear the region. The same loop region honored by the main-window player drives the tray overlay, so painting from the tray loops the running track without raising the main window.</p>
+        <p>The animation loop in <code>animationTick</code> runs at 60 fps while not idle and linearly interpolates between host state pushes using <code>performance.now()</code>, so the playhead moves smoothly even though the host only pushes state every ~500 ms.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Volume &amp; speed changes</h2>
+        <p>Both controls emit the same <code>tray_popover_action</code> IPC but with different <code>action</code> strings:</p>
+        <ul>
+          <li><strong>Volume slider input</strong> → <code>action: "volume:<pct>"</code> (integer 0–100). Updates <code>#trayVolPct</code> text immediately, then fires the IPC.</li>
+          <li><strong>Speed select change</strong> → <code>action: "speed:<rate>"</code> (float, 0.25–2.0).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Transport &amp; menu IDs</h2>
+        <p>The popover's transport buttons emit the same menu-action IDs as the native menu bar and the tray context menu:</p>
+        <ul>
+          <li><code>#btnPrev</code> → <code>send('prev_track')</code> → main window <code>prevTrack({ respectAutoplaySource: true })</code></li>
+          <li><code>#btnPlay</code> → <code>send('play_pause')</code> → main window <code>toggleAudioPlayback()</code></li>
+          <li><code>#btnNext</code> → <code>send('next_track')</code> → main window <code>nextTrack({ respectAutoplaySource: true })</code></li>
+        </ul>
+        <p>The <code>respectAutoplaySource</code> flag means prev/next from the tray follow whichever autoplay source you chose in Settings (samples table vs player history) — unlike the floating-player buttons which always walk the history list.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Idle vs playing state</h2>
+        <p>When <code>idle === true</code>, a <code>.idle</code> class is added to <code>#shell</code>. CSS then:</p>
+        <ul>
+          <li>Reduces opacity on progress / transport / volume / speed.</li>
+          <li>Shows the idle hint text.</li>
+          <li>Disables interaction on the transport buttons.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Theme &amp; color scheme sync</h2>
+        <p>When you toggle theme or change color scheme in the main window, <code>applyTrayDocumentTheme(theme)</code> sets <code>document.documentElement.data-theme</code> on the popover, which triggers the full cascade of light/dark CSS rules. The <code>appearance</code> map in the payload pushes per-variable overrides so custom color schemes also carry over — your tray popover always matches the main window, including mid-session scheme swaps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Window sizing</h2>
+        <p><code>syncWindowSize()</code> measures the rendered <code>#shell</code> content plus padding and calls <code>tray_popover_resize</code> to update the popover's window dimensions. The body is allowed to <em>shrink-wrap</em> to its actual rendered shell — no min-height padding, no excess gutters — so the macOS NSPanel stays tight against the content. Bounds are clamped 240 – 520 px wide and 280 – 800 px tall on the Rust side. A ResizeObserver re-syncs on font load, text changes, locale swaps, and waveform-peaks delivery.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>macOS Escape-key handling</h2>
+        <p>The macOS NSPanel rarely becomes first responder, so a JS <code>keydown</code> for <code>Escape</code> never fires inside the popover. <code>src-tauri/src/tray_popover_escape_macos.rs</code> installs a local <code>NSEvent</code> monitor on app launch so pressing Escape anywhere while the popover is open closes it. On Linux / Windows, the standard <code>keydown</code> path closes the popover directly.</p>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>The popover is the fastest way to scrub through a long loop without raising the main window. Grab the thumb, drag, release — the main window's engine or Web Audio playback jumps to the new position.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="10-player.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">10 · Floating player</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="12-favorites-notes-tags.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">12 · Favorites / Notes / Tags</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

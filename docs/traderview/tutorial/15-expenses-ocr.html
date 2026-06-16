@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 15 · Expenses &amp; receipt OCR (Schedule C)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">15 · Expenses &amp; OCR</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="14-tax-lots.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">14 · Tax lots</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="16-community.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">16 · Community</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:83.33%"></div></div>
+        <span class="meter-count">15 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">15.</span>Expenses + receipt OCR — Schedule C without a SaaS</h2>
+      <p class="tutorial-subtitle">Statement parsers for Amazon / BoA / Chase / Apple Card, on-device receipt OCR via Apple Vision (macOS) or Tesseract (fallback), 20-bucket Schedule-C taxonomy, merchant canonicalization with learned mappings, duplicate detection, full-text search. $0 / receipt, no LLMs, no paid APIs.</p>
+
+      <section class="tutorial-section">
+        <h2>Why this is in a trading app</h2>
+        <p>If you trade as a business (sole prop / single-member LLC / S-corp), you file Schedule C for expenses against your trading income. The categories — Office / Software / Education / Equipment / Travel / Internet / etc. — match cleanly across self-employed individuals. The expense tracker is built into TraderView so the receipts that justify your home-office deduction, your data-feed subscription, your trading-education book sit in the same database as the trades they support.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Statement parsers</h2>
+        <p><code>POST /api/expense/import</code> accepts a PDF or CSV statement; the parser dispatches by signature column / heading:</p>
+        <ul>
+          <li><strong>Amazon order history CSV</strong> — itemized order lines with shipping / tax broken out.</li>
+          <li><strong>Bank of America statement PDF</strong> — debit / credit transactions, balance / type columns.</li>
+          <li><strong>Chase statement PDF</strong> — credit card monthly statements with merchant + amount + date.</li>
+          <li><strong>Apple Card monthly statement PDF</strong> — Daily Cash + purchase rows + merchant categories.</li>
+        </ul>
+        <p>Output: one row per transaction in <code>expense_transactions</code>. The merchant string from the statement is normalized through a canonicalization layer (see below). The same idempotent insert pattern as broker import (dedupe on date + amount + last-4 + raw description) prevents duplicates on re-import.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Receipt OCR — on device, no cloud</h2>
+        <p>Receipts are images / PDFs you drop into the Expense → Receipts pane. <code>traderview-ocr</code> extracts:</p>
+        <ul>
+          <li><strong>Merchant</strong> — top-of-receipt name.</li>
+          <li><strong>Total</strong> — bottom-of-receipt amount.</li>
+          <li><strong>Date</strong> — parsed flexibly (handles US / EU / ISO).</li>
+          <li><strong>Itemized lines</strong> — for receipts that include them.</li>
+        </ul>
+        <p>Two backends:</p>
+        <ul>
+          <li><strong>Apple Vision (macOS only)</strong> — wraps <code>VNRecognizeTextRequest</code> via a Swift bridge. Fast, accurate on printed receipts, free.</li>
+          <li><strong>Tesseract (fallback)</strong> — used on Linux / Windows and on macOS if Vision isn't available. Slower, less accurate on thermal-printed receipts, free.</li>
+        </ul>
+        <p>The OCR pass is async (Tokio task per receipt); the upload returns immediately and the parsed fields populate when ready. Re-OCR is a button per row — useful when you tweak the OCR config or rotate the source image.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>20-bucket Schedule-C taxonomy</h2>
+        <p>Categories match Schedule C Part II line items, expanded for trader-specific buckets:</p>
+        <pre>Advertising · Car &amp; Truck · Commissions/Fees · Contract Labor ·
+Depreciation · Insurance · Interest · Legal &amp; Professional ·
+Office · Pension/Profit-sharing · Rent (Office) · Rent (Equipment) ·
+Repairs · Supplies · Taxes &amp; Licenses · Travel · Meals ·
+Utilities · Other (specify) ·  + Trading subcategories:
+Data Feeds · Trading Software · Trading Education · Internet (home office)</pre>
+        <p>Each <code>expense_transactions</code> row carries a category. Sub-totals roll up on the Schedule C report (<code>GET /api/expense/report/schedule_c?year=</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Merchant canonicalization + learned mappings</h2>
+        <p>Statement descriptions are noisy: <code>"AMZN MKTP US*N04QV0RT3"</code> is Amazon, <code>"COSTCO WHSE #1142"</code> is Costco. The canonicalizer normalizes to a canonical merchant name + applies your learned-category mapping.</p>
+        <ul>
+          <li><strong>Regex passes</strong> — strip transaction IDs, store numbers, terminal codes.</li>
+          <li><strong>Prefix table</strong> — built-in mappings for the ~200 most common merchants.</li>
+          <li><strong>Learned mappings</strong> — when you re-categorize a row (e.g. "this Amazon order was actually office supplies, not personal"), the canonical merchant → category mapping is recorded in <code>expense_rules</code>. Future imports with the same merchant + similar amount pattern auto-categorize.</li>
+          <li><strong>Bulk re-categorize</strong> — selecting multiple rows + setting category writes one rule that covers all selected merchants.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Duplicate detection</h2>
+        <p>When a receipt is uploaded for a transaction that's already in the database (because you also imported the statement that contained it), the receipt is attached to the existing row rather than creating a duplicate. The matcher:</p>
+        <ul>
+          <li><strong>Same date ± 3 days</strong> — receipts and statement postings often differ by a few days.</li>
+          <li><strong>Same total (exact)</strong>.</li>
+          <li><strong>Merchant fuzzy match</strong> — case-insensitive, token-bag.</li>
+        </ul>
+        <p>Multiple candidates → manual pick in the UI. No-match → new transaction row is created from the receipt alone (useful for cash purchases that don't show on a card statement).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reports + export</h2>
+        <ul>
+          <li><strong>Schedule C report</strong> (<code>GET /api/expense/report/schedule_c?year=</code>) — Part II line items rolled up. One-click CSV export.</li>
+          <li><strong>Top merchants</strong> — where the money goes.</li>
+          <li><strong>Category trend</strong> — monthly bar chart per category.</li>
+          <li><strong>Receipt missing</strong> — list of transactions over $X (configurable threshold) without an attached receipt. The audit-trail companion for "do I have documentation if I get audited?".</li>
+        </ul>
+        <div class="tutorial-callout">
+          <strong>Privacy</strong>
+          Receipts, statements, learned mappings — all live in your local Postgres. No statement bytes leave the machine. OCR is on-device. Even the merchant canonicalization is a regex pass plus a local table, not an API call.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="14-tax-lots.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">14 · Tax lots</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="16-community.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">16 · Community</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

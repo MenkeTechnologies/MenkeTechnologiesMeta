@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 17 · Dashboards &amp; watchlists</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">17 · Dashboards</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="16-community.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">16 · Community</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="18-shortcuts-launcher.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">18 · Shortcuts &amp; launcher</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:94.44%"></div></div>
+        <span class="meter-count">17 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">17.</span>Dashboards &amp; watchlists</h2>
+      <p class="tutorial-subtitle">User-defined widget dashboards as your morning landing page, watchlists with per-symbol context menus, screener / scanner presets bookmarked, and the 16-symbol world-markets snapshot grid that runs on a 60 s cache.</p>
+
+      <section class="tutorial-section">
+        <h2>The default Dashboard</h2>
+        <p>The Dashboard tile (<code>Cmd+Opt+D</code>) renders a fixed default layout if you haven't created a custom one:</p>
+        <ul>
+          <li><strong>Equity curve</strong> — your account equity over the selected date range.</li>
+          <li><strong>Top stats strip</strong> — YTD P&amp;L, MTD P&amp;L, win rate, expectancy, profit factor.</li>
+          <li><strong>R-distribution mini-chart</strong> — current account, configurable lookback.</li>
+          <li><strong>Open positions list</strong> — live mark-to-market.</li>
+          <li><strong>World markets grid</strong> — 16 symbols across regions, on a 60 s cache.</li>
+          <li><strong>Today's catalysts</strong> — last 10 from the catalyst radar (step 07).</li>
+          <li><strong>Recent halts</strong> — last 5 from the halt feed.</li>
+        </ul>
+        <p>The default is sized to look right on a 1080p monitor and reflow to a single column on phone-narrow widths (mostly relevant in web mode).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Custom dashboards</h2>
+        <p><code>GET/POST /api/dashboards</code>. Build your own from the widget palette. A dashboard is a 12-column grid; widgets place at <code>(col, row, w, h)</code>. Available widgets:</p>
+        <ul>
+          <li><strong>Equity curve</strong> — account / date range parameter.</li>
+          <li><strong>Stat tile</strong> — pick a stat from a long enum (win rate, expectancy, max drawdown, current streak, days-since-loss, etc.).</li>
+          <li><strong>Watchlist</strong> — references a watchlist ID; renders live quotes + sparklines.</li>
+          <li><strong>Scanner / Screener</strong> — references a saved screener / scanner preset; renders top N results.</li>
+          <li><strong>Symbol chart</strong> — uPlot mini-chart, configurable timeframe + overlays.</li>
+          <li><strong>Custom indicator value</strong> — current value of a referenced custom indicator, as a number / gauge / spark.</li>
+          <li><strong>News / catalyst feed</strong> — filtered by symbol / source.</li>
+          <li><strong>Heatmap</strong> — sector / S&amp;P / watchlist.</li>
+          <li><strong>HTML note</strong> — a markdown-rendered text widget. Pin your daily checklist here.</li>
+        </ul>
+        <p>Multiple dashboards per user; the sidebar lists them. Each dashboard has a slug; bookmark the dashboard URL for one-click access.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Watchlists</h2>
+        <ul>
+          <li><strong>Per-account, per-user.</strong> Watchlists live in <code>watchlists</code> + <code>watchlist_symbols</code>. Each symbol row has an optional note (your thesis on the name) and a tag set.</li>
+          <li><strong>Live quotes.</strong> The watchlist view subscribes to <code>WS /ws/ticks</code> for its symbols; price / change / volume update live.</li>
+          <li><strong>Sparkline</strong> — last 5d intraday or last 30d daily, configurable.</li>
+          <li><strong>Per-symbol ctxmenu</strong> — the standard 6-way Charts / Options / Research / Earnings / News / Copy menu, plus watchlist-specific actions (Remove, Add note, Tag).</li>
+          <li><strong>Bulk add</strong> — paste a comma-separated list of tickers; unknown tickers are flagged.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Screener &amp; scanner presets as bookmarks</h2>
+        <p>Screener (step 08) and scanner (step 09) outputs are URL-addressable with the filter set + preset name in the query string. Save a preset → it shows up in the launcher tile filter AND becomes a candidate for dashboard widgets. Saved screeners + scanners are first-class watchlists in everything but name.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>World markets snapshot</h2>
+        <p><code>GET /api/markets/snapshot</code>. 16 symbols across regions:</p>
+        <pre>S&amp;P 500 / NASDAQ / Russell 2000 / Dow Jones /
+DAX / FTSE 100 / CAC 40 / Euro Stoxx 50 /
+Nikkei 225 / Hang Seng / Shanghai Comp / KOSPI /
+ASX 200 / TSX / Bovespa / Sensex</pre>
+        <p>The snapshot route fans out to Yahoo v8 with <code>futures_util::future::join_all</code> — real concurrency, not serial. Caches in-process for 60 s so the dashboard widget doesn't re-fan-out on every browser refresh.</p>
+        <p>Pre-market variant (<code>GET /api/premarket/snapshot</code>) replaces the world-equity grid with futures + commodities + crypto + FX + econ events (step 06).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Live Positions tile</h2>
+        <p>The Live Positions tile is the live version of the Trades view filtered to <code>status = 'open'</code>. Real-time unrealized P&amp;L via <code>WS /ws/ticks</code>. Per-row ctxmenu adds:</p>
+        <ul>
+          <li><strong>Set stop / target</strong> — writes to <code>trade.planned_stop</code> / <code>trade.planned_target</code>. Used by the alert engine to ping you when the level is touched.</li>
+          <li><strong>Move to breakeven</strong> — sets stop to entry-avg.</li>
+          <li><strong>Open chart with markers</strong> — same as Trades view.</li>
+        </ul>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="16-community.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">16 · Community</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="18-shortcuts-launcher.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">18 · Shortcuts &amp; launcher</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

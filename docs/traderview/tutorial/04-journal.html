@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 04 · Journal &amp; AI post-mortem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">04 · Journal</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="03-trades-executions.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">03 · Trades &amp; executions</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="05-reports.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">05 · Reports</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:22.22%"></div></div>
+        <span class="meter-count">04 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">04.</span>Journal &amp; AI post-mortem</h2>
+      <p class="tutorial-subtitle">Per-trade + daily + general notes, markdown templates, mandatory trade reviews when <code>|R| ≥ 2</code>, GPT analysis with cache, mood / discipline analytics. The journal is the second-most-used surface after Trades — and the one that turns a trade log into a feedback loop.</p>
+
+      <section class="tutorial-section">
+        <h2>Three journal layers</h2>
+        <p>The journal lives at three granularities, all in markdown, all queryable:</p>
+        <ul>
+          <li><strong>Per-trade entries</strong> — one body per trade. Backed by <code>trade_journal_entries</code>. Pre-trade plan + post-trade reflection in one document; the divider you put between them is yours.</li>
+          <li><strong>Per-day entries</strong> — one body per trading date. Backed by <code>daily_journal_entries</code>. Watchlist, market thesis, end-of-day recap, gratitude — whatever you want to capture at the day level.</li>
+          <li><strong>General entries</strong> — free-form long-form journal, not tied to a trade or a day. Backed by <code>general_journal_entries</code>. Strategy ideas, books-read notes, mental-game work.</li>
+        </ul>
+        <p>All three load via <code>GET /api/journal/trade/{id}</code>, <code>GET /api/journal/day/{day}</code>, <code>GET /api/journal/general</code>; all three save via the same routes with <code>POST</code>. The body is markdown, rendered with a built-in renderer (no remote CDN — the renderer is vendored).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Templates</h2>
+        <p>Templates live under <em>Settings → Journal Templates</em>. You define them once and the journal editor seeds new entries from the matching template. Each template has:</p>
+        <ul>
+          <li><strong>Scope</strong> — per-trade, per-day, or general.</li>
+          <li><strong>Asset-class filter</strong> — apply only to options / futures / etc.</li>
+          <li><strong>Direction filter</strong> — long-only, short-only, both.</li>
+          <li><strong>Body</strong> — markdown with placeholders: <code>{{symbol}}</code>, <code>{{entry_price}}</code>, <code>{{planned_risk}}</code>, <code>{{date}}</code>, <code>{{r_multiple}}</code>, <code>{{tags}}</code>, etc.</li>
+        </ul>
+        <p>Most-specific template wins (asset+direction beats asset, asset beats none). If nothing matches you get an empty editor.</p>
+        <pre># {{symbol}} — {{date}}
+
+## Pre-trade
+- Setup:
+- Entry trigger:
+- Planned risk: {{planned_risk}}
+- Profit target / R-multiple:
+
+## Post-trade
+- What happened:
+- What I did right:
+- What I'd change:
+- Lesson:
+</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Mandatory trade reviews — the <code>|R| ≥ 2</code> rule</h2>
+        <p>Any trade whose absolute R-multiple is ≥ 2 (a big winner <em>or</em> a big loser) is flagged for forced reflection. The <code>trade_reviews</code> table tracks one per qualifying trade; the topbar shows a count of pending reviews; views nag you until they're written.</p>
+        <ul>
+          <li><code>GET /api/trade-reviews/needed/{account_id}</code> — the worklist.</li>
+          <li><code>POST /api/trade-reviews</code> — submit a review (status moves <code>pending → completed</code>; the body is a small structured form: <em>setup recognized</em>, <em>plan followed</em>, <em>risk size correct</em>, plus free-form notes).</li>
+        </ul>
+        <p>The threshold (<code>2.0</code> default) and whether to require reviews at all are configurable per-account. Set the threshold to <code>1.0</code> to force a review on every trade with a planned-risk entry; set it to <code>0</code> to disable.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>AI Journal — GPT post-mortem with cache</h2>
+        <p>The AI Journal tile takes a trade ID, fetches the executions + chart bars + your free-form journal entry, builds a prompt, and asks an LLM for a structured post-mortem. Results land in <code>ai_journal_cache</code> keyed by <code>(trade_id, prompt_hash)</code> so a re-render is free.</p>
+        <ul>
+          <li><code>POST /api/journal-ai/{trade_id}/analyze</code> — runs analysis. Honors <code>Cache-Control: no-cache</code> to force re-run.</li>
+          <li><strong>Provider</strong> — configured per-user in <em>Settings → AI</em>. Bring-your-own-key (OpenAI / Anthropic / local Ollama). The API key is encrypted at rest with a per-install passphrase.</li>
+          <li><strong>Prompt</strong> — the default prompt is in <code>traderview-core::ai_prompt</code>. Override per-user in Settings; <code>{{trade_summary}}</code>, <code>{{journal_body}}</code>, <code>{{r_multiple}}</code>, and <code>{{ohlc_bars}}</code> are the available variables.</li>
+          <li><strong>Output</strong> — markdown rendered inline. Sections: Setup classification, Plan adherence, Sizing critique, Exit critique, One-line lesson.</li>
+        </ul>
+        <p>The cache is invalidated whenever the underlying trade's executions change (rollup re-fires) so a hand-edit + AI re-run gives a fresh post-mortem without you remembering to bust the cache.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Trade Compare</h2>
+        <p>The Trade Compare tile takes 2-6 trades and renders them side-by-side: small OHLC chart with entry / exit markers, planned-risk vs realized R, hold duration, side-by-side journal bodies. The intended use is "what's different between my best and worst <em>same-setup</em> trades?" Tag-filter to find the cohort first, then compare.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Replay &amp; Tape Replay</h2>
+        <p><strong>Replay</strong> reconstructs the price action around a trade: bars before entry, the entry, the hold, the exit. Useful for "where on the chart did I actually pull the trigger?" inspection. <strong>Tape Replay</strong> goes one level deeper — if you have time &amp; sales captured for the symbol during the trade, it scrolls the prints around your fills so you can study the order-flow context.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Mood &amp; discipline analytics</h2>
+        <p>Two sister views feed off your journal metadata:</p>
+        <ul>
+          <li><strong>Discipline</strong> (<code>GET /api/discipline/{account_id}</code>) — % of trades with a planned-risk set, % with a journal entry, % with a review completed. Trend over time. The goal is the lagging quantification of <em>"am I actually doing the work?"</em></li>
+          <li><strong>Mood Analytics</strong> (<code>GET /api/mood-analytics/{account_id}</code>) — if your journal entries are tagged with a 1-5 mood score (or a free-form word the tagger normalizes), this view correlates mood with R-distribution, day-of-week, and account drawdown. Catches "I trade worst after a green Tuesday morning" type patterns.</li>
+        </ul>
+        <div class="tutorial-callout">
+          <strong>Tip</strong>
+          The mood tags are derived from a small fixed vocabulary (<code>focused / scattered / revenge / fomo / patient / impatient / tired</code>). Add to it in <em>Settings → Journal → Mood Vocabulary</em>. Free-form words still flow through but unique mood words don't aggregate.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="03-trades-executions.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">03 · Trades &amp; executions</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="05-reports.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">05 · Reports</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

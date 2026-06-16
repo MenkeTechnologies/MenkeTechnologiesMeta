@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 08 · Charts &amp; research</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">08 · Charts &amp; research</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="07-halts-catalysts.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">07 · Halts &amp; catalysts</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="09-backtest.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">09 · Backtest engine</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:44.44%"></div></div>
+        <span class="meter-count">08 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">08.</span>Charts &amp; per-symbol research</h2>
+      <p class="tutorial-subtitle">uPlot OHLC + persisted drawings + technical overlays, the per-symbol dossier (quote / signals / news / earnings / dividends / insiders / fundamentals / holders), the options chain + Greeks + IV surface, and the right-click symbol-nav menu that connects every grid in the app.</p>
+
+      <section class="tutorial-section">
+        <h2>The Charts view</h2>
+        <p><code>frontend/js/views/charts.js</code>. uPlot (vendored under <code>frontend/lib/uPlot/</code>, no CDN at runtime) renders the price + volume panes. Bars are fetched from <code>GET /api/symbols/{sym}/bars?tf=&amp;from=&amp;to=</code>, cached locally for the session, and lazy-extended as you scroll the time axis.</p>
+        <ul>
+          <li><strong>Timeframes</strong> — 1m / 5m / 15m / 30m / 60m / 1d / 1w / 1mo.</li>
+          <li><strong>Overlays</strong> — VWAP, SMA, EMA, Bollinger Bands, Donchian, Ichimoku, anchored VWAP, supertrend. Toggle from the overlay menu; the active set persists per-symbol.</li>
+          <li><strong>Indicator panes</strong> — RSI, MACD, ATR, ADX, OBV, volume profile. Stack as many sub-panes as fit.</li>
+          <li><strong>Drawings</strong> — trend lines, horizontal levels, Fib retracements, rectangles, text labels. Saved to <code>chart_drawings</code> keyed by symbol; survive across launches.</li>
+          <li><strong>Trade markers</strong> — your executions on the symbol appear as up/down arrows at the bar of <code>executed_at</code>, with the trade ID on hover.</li>
+          <li><strong>Crosshair sync</strong> — open the same symbol in two charts (multi-monitor); crosshairs synchronize across them.</li>
+        </ul>
+        <p>The chart uses uPlot's tier of canvas rendering — comfortable with 50 000+ bars on screen. Scrolling further back lazy-fetches via the same bars endpoint.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Per-symbol research dossier</h2>
+        <p>Open Research on any symbol (right-click → Research, or Cmd+K → Research → type symbol) and you land on a one-page dossier. Each section is a route under <code>/api/symbols/{sym}/...</code>:</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Section</th><th>Route</th><th>Source</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Quote + 1d/1mo/1y mini-charts</td><td><code>/symbols/{sym}/quote</code></td><td>Yahoo v8 (cached 60s)</td></tr>
+            <tr><td>Top signals</td><td><code>/signals</code></td><td>Local TA over recent bars</td></tr>
+            <tr><td>News</td><td><code>/news</code></td><td>Yahoo + PR-wire local store</td></tr>
+            <tr><td>Earnings + IV crush history</td><td><code>/earnings</code></td><td>Yahoo + locally derived IV</td></tr>
+            <tr><td>Dividends</td><td><code>/dividends</code></td><td>Yahoo v10</td></tr>
+            <tr><td>Analyst recommendations</td><td><code>/recommendations</code></td><td>Yahoo v10</td></tr>
+            <tr><td>Insider transactions</td><td><code>/insiders</code></td><td>EDGAR Form 4</td></tr>
+            <tr><td>Fundamentals</td><td><code>/fundamentals</code></td><td>Yahoo v10</td></tr>
+            <tr><td>Institutional holders</td><td><code>/holders</code></td><td>Yahoo v10</td></tr>
+            <tr><td>Short interest</td><td><code>/short-interest/{sym}</code></td><td>FINRA Reg-SHO daily</td></tr>
+            <tr><td>Sentiment</td><td><code>/sentiment/symbol/{sym}</code></td><td>Reddit WSB + StockTwits</td></tr>
+            <tr><td>Sentiment time series</td><td><code>/sentiment/series/{sym}</code></td><td>derived from the feed</td></tr>
+          </tbody>
+        </table>
+        <p>Every section is independently loadable — slow sections don't block the rest of the page. Failures show a small inline error and a retry link; the page never goes blank because one route 5xx'd.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Options chain + Greeks + IV surface</h2>
+        <p>Options live in their own subtree:</p>
+        <ul>
+          <li><code>GET /api/options/{sym}</code> — the chain. Expiries × strikes × calls/puts grid; bid / ask / last / volume / open interest / IV / Greeks per leg.</li>
+          <li><code>GET /api/greeks</code> — Black-Scholes Greeks for an arbitrary contract spec (used by the chain view and the position-size calculator).</li>
+          <li><code>GET /api/vol-surface/{sym}</code> — implied-vol surface (strike × tenor). Rendered as a heatmap + a smile / skew line chart at the user-selected tenor.</li>
+          <li><code>GET /api/iv/scan</code> — IV-rank / IV-percentile scanner across a universe. Highlights symbols at unusually high or low IV.</li>
+          <li><code>GET /api/iv/symbols/{sym}</code> — per-symbol IV history + rank/percentile.</li>
+        </ul>
+        <p>The chain view supports strategy builders (vertical / iron condor / calendar / diagonal / butterfly) — picking the legs writes a paper trade with computed Greeks and breakevens.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Screener + scanners</h2>
+        <ul>
+          <li><strong>Screener</strong> (<code>GET /api/screener/run</code>) — multi-filter equity screener: price / market cap / volume / RVOL / float / sector / technical conditions (above SMA50, RSI &lt; 30, etc.). Save filter sets per-user.</li>
+          <li><strong>Top signals</strong> (<code>GET /api/screener/top</code>) — the screener's "most interesting today" preset stack.</li>
+          <li><strong>Scanners</strong> (<code>GET /api/scans/run</code>) — 24 preset scanners: gap-and-go, opening range break, parabolic, mean reversion, end-of-day momentum, earnings reaction, etc. The presets live in <code>traderview-core::scanners</code>; user customs land in step 10.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compare / Pairs / Correlation</h2>
+        <ul>
+          <li><strong>Compare</strong> (<code>GET /api/compare</code>) — multi-symbol % return + cumulative return + drawdown comparison over a date range.</li>
+          <li><strong>Pairs</strong> — long/short pair analytics: spread, ratio, z-score, half-life of mean reversion. Useful for cointegrated-pair traders.</li>
+          <li><strong>Correlation</strong> — multi-symbol correlation matrix on configurable lookback + returns frequency. Sortable + heatmapped.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sectors, breadth, fear &amp; greed</h2>
+        <ul>
+          <li><strong>Sectors</strong> — sector ETF performance grid + heatmap.</li>
+          <li><strong>Sector Rotation</strong> — relative-strength rotation chart (RRG) of the 11 SPDR sectors vs SPY.</li>
+          <li><strong>Breadth</strong> — advance/decline, new highs / new lows, % of S&amp;P above 50/200 SMA.</li>
+          <li><strong>Fear &amp; Greed</strong> — composite indicator (volatility + momentum + breadth + safe-haven demand + put/call + junk-bond demand).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Right-click symbol-nav — 222 paths</h2>
+        <p>Every grid that emits a symbol (Trades, Executions, Live Scanner, Halts, Catalysts, Watchlists, Screener results, Scanner results, Reports by-symbol, Tax Lots, Open Positions, Compare results, Sentiment, Top Signals, Earnings Cal, Disclosures, Dark Pool, Short Interest, IV Scan, the chart's own symbol header, …) registers a <code>data-context-scope</code> slug; the global ctxmenu handler attaches the same 6-way symbol-nav menu (<em>Charts / Options / Research / Earnings / News / Copy</em>).</p>
+        <p>37 distinct symbol-aware view scopes × 6 nav targets = 222 distinct nav paths. Items are registered in a single <code>ALL_SCOPED_ITEMS</code> array; handler bodies are 3-4 LoC each via 6 shared helpers (<code>clipboardWrite</code> / <code>refreshView</code> / <code>dataFromTarget</code> / <code>toastErr</code> / <code>toastOk</code> / <code>symbolFromTarget</code>). Two regression tests pin that every emitting tag carries the data-* attrs its handler reads, and that every registered scope is documented.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Per-row context scopes — 18 of them</h2>
+        <p>Symbol nav is one menu; data scopes are another. Per-row scopes give you row-specific actions (delete, edit, copy ID, duplicate, mark reviewed, …):</p>
+        <pre>trade-row, symbol-row, journal-entry, tag-chip, webhook-row,
+api-token-row, account-row, plan-row, share-row, board-row,
+dashboard-sidebar-item, hotkey-row, custom-indicator-row,
+alert-rule-row, strategy-alert-row, watchlist-symbol-row,
+position-row, backtest-preset-row</pre>
+        <p>Every right-click is handled by the same global handler — adding a new scope is one line in <code>ALL_SCOPED_ITEMS</code>.</p>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="07-halts-catalysts.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">07 · Halts &amp; catalysts</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="09-backtest.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">09 · Backtest engine</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

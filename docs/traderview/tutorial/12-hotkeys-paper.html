@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 12 · Hotkeys &amp; paper trading</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">12 · Hotkeys &amp; paper</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="11-alerts-webhooks.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">11 · Alerts &amp; webhooks</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="13-risk-sizing.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">13 · Risk &amp; sizing</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:66.66%"></div></div>
+        <span class="meter-count">12 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">12.</span>Hotkeys &amp; paper trading</h2>
+      <p class="tutorial-subtitle">Define hotkey actions (write a journal note, tag the current trade, paper-buy/sell at market) and bind them to single-key combos. Paper accounts run the same FIFO roll-up as real accounts — separate <code>paper</code> tier so they don't pollute your live equity curve.</p>
+
+      <section class="tutorial-section">
+        <h2>The Hotkeys editor</h2>
+        <p><code>GET/POST /api/hotkeys</code>. Hotkeys are user-defined actions bound to a single key or chord. Each hotkey has:</p>
+        <ul>
+          <li><strong>Key</strong> — letter / digit / function key + modifiers (Cmd / Opt / Ctrl / Shift).</li>
+          <li><strong>Action</strong> — one of: <em>paper-buy</em>, <em>paper-sell</em>, <em>paper-close-all</em>, <em>tag-current-trade</em>, <em>journal-current-trade</em>, <em>refresh-view</em>, <em>open-research</em>, <em>open-chart</em>, <em>run-custom</em>.</li>
+          <li><strong>Scope</strong> — global, or limited to certain views (Charts, Scanner, Trades, Live Positions).</li>
+          <li><strong>Parameters</strong> — for paper-buy: quantity / dollar amount / position-size formula; for tag: which tag; for run-custom: an HTTP request to dispatch.</li>
+          <li><strong>Confirm</strong> — pop a non-blocking confirm before executing (defaults on for paper-buy / paper-sell, off for tag / journal).</li>
+        </ul>
+        <p>Hotkeys conflict-check against the 48-key global shortcut registry on save (step 18) — you can't bind <code>R</code> to a custom action without first deciding to override the existing view-scoped <em>Refresh</em> binding.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Paper accounts</h2>
+        <p>Paper accounts (<code>POST /api/paper/accounts</code>) are isolated from live data — their executions land in the same <code>executions</code> table but tagged <code>account.tier = 'paper'</code>, and reports / dashboards default to <code>tier = 'live'</code> so the paper book doesn't pollute your equity curve.</p>
+        <ul>
+          <li><strong>Create</strong> — name, starting cash, asset classes enabled.</li>
+          <li><strong>Positions</strong> — <code>GET /api/paper/accounts/{id}/positions</code> mirrors the Live Positions tile against the paper executions.</li>
+          <li><strong>Orders</strong> — <code>POST /api/paper/accounts/{id}/orders</code>. Market / limit / stop / stop-limit. Market orders fill at the next tick (live) or next bar's open (replay).</li>
+          <li><strong>Reset</strong> — <code>POST /api/paper/accounts/{id}/reset</code>. Wipes all executions on the paper account, restores starting cash. Useful for clean walk-forward retests.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Hotkey → paper trade flow</h2>
+        <ol>
+          <li>You're watching the Scanner panel. A symbol catches your eye.</li>
+          <li>Right-click → Charts (or hit <code>C</code>, the view-scoped binding) → land on the symbol's chart.</li>
+          <li>Press <code>B</code> (your hotkey for paper-buy with $500 risk, position-sized by Kelly). The non-blocking confirm appears.</li>
+          <li>Enter to confirm; the paper order is placed at market and fills at the next tick.</li>
+          <li>An execution lands in <code>executions</code>; the rollup fires; a new open trade appears in your paper Trades view; the journal slot is created with the appropriate template (step 04).</li>
+          <li>Press <code>J</code> (your hotkey for journal-current-trade) → editor opens with the template seeded, you type your thesis, save.</li>
+          <li>Later: press <code>S</code> (paper-sell all current paper positions) to close. Exit execution lands, trade rolls up to closed, R-multiple calculated, journal entry tagged <em>completed</em>.</li>
+        </ol>
+        <p>End-to-end, the workflow is keyboard-only. The mouse is for chart drawings.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Paper trading isn't simulation</h2>
+        <p>Paper orders fill against the live tick stream — slippage / partial fills aren't modeled, but timing is real. A paper buy on a thin name still respects the bid/ask at the time of fill; you can't paper-fill at the midpoint of a 10-cent spread.</p>
+        <ul>
+          <li><strong>Market orders</strong> fill at the live ask (buy) or bid (sell) at the moment the order is submitted.</li>
+          <li><strong>Limit orders</strong> rest until the live last touches the limit; fill at the limit price.</li>
+          <li><strong>Stop orders</strong> convert to market on stop-trigger.</li>
+          <li><strong>No queue-position modeling.</strong> If your limit is at the top of the book and the last touches, you fill — even though in reality the order ahead of you might fill first.</li>
+        </ul>
+        <p>Replay mode (Charts → Replay) runs the same paper-order machinery against historical bars at user-controlled playback speed — useful for practicing without waiting for a real session.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Position-size calculator</h2>
+        <p>The position-size tile (Trading → Position Size) and the same calculator inline in the New Trade form take account equity, planned stop distance, account risk %, and optional correlation context, and return:</p>
+        <ul>
+          <li><strong>Shares / contracts</strong> for the requested risk.</li>
+          <li><strong>Dollar at risk</strong> per share / contract.</li>
+          <li><strong>Total dollar at risk</strong> (validates against the account risk % cap).</li>
+          <li><strong>Kelly fraction</strong> — full Kelly + capped fractional-Kelly suggestion based on the symbol's historical R-distribution.</li>
+          <li><strong>Correlation adjustment</strong> — if you have open positions correlated with the symbol, the suggested size shrinks proportionally so total portfolio risk stays within the cap.</li>
+        </ul>
+        <p>Accepting the recommendation writes the resulting size into the order form and sets <code>planned_risk</code> on the trade (drives R-multiple in reports).</p>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="11-alerts-webhooks.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">11 · Alerts &amp; webhooks</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="13-risk-sizing.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">13 · Risk &amp; sizing</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

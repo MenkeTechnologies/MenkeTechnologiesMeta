@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 14 · Scan history &amp; diffs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">14 · History</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="13-files.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">13 · Files browser</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="15-visualizer.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">15 · Visualizer</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:73.68%"></div></div>
+        <span class="meter-count">14 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">14.</span>Scan history &amp; diffs — <code>F3</code></h2>
+      <p class="tutorial-subtitle">A merged sidebar of every scan run across every inventory type, a typed detail pane per run, and a diff view showing what was added or removed between two runs.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/history.png" alt="History tab with merged scan list on the left and detail pane on the right" loading="lazy">
+        <figcaption>assets/history.png · History tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+        <p><code>frontend/js/history.js</code>. Two panes:</p>
+        <ul>
+          <li><strong>Sidebar</strong> (<code>.history-sidebar</code>) — scrollable list of all scan records, merged from every inventory type. Header has <em>"Scan History"</em> label and a <strong>Clear All</strong> button.</li>
+          <li><strong>Detail pane</strong> (<code>#historyDetail</code>) — right side, shows the selected run's full payload with a delete button and a compare dropdown.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sidebar items</h2>
+        <p>Each history row carries the following, built by <code>buildHistorySidebarItemHtml(s)</code> (~line 137):</p>
+        <ul>
+          <li><strong>Timestamp</strong> — absolute date/time (e.g. "Mar 10 2026 3:45 PM").</li>
+          <li><strong>Scan type tag</strong> — colored label: <em>Plugins</em>, <em>Samples</em>, <em>DAW</em>, <em>Presets</em>, <em>PDF</em>, <em>MIDI</em>.</li>
+          <li><strong>Count</strong> — "42 plugins", "1,204 samples", etc.</li>
+          <li><strong>Relative time</strong> — "2 hours ago".</li>
+          <li><strong>Roots hint</strong> — hover to see the full root paths that were scanned.</li>
+          <li><strong>Selected state</strong> — <code>.selected</code> class on the active row.</li>
+        </ul>
+        <p>The sidebar renders in chunks of <code>HISTORY_SIDEBAR_CHUNK = 100</code> to stay fast even when you have hundreds of runs.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sidebar data sources</h2>
+        <p>The sidebar is a merge-sort of six per-type lists:</p>
+        <ul>
+          <li><code>historyScanList</code> — plugins (from <code>history_get_scans</code>).</li>
+          <li><code>historyAudioScanList</code> — audio (from <code>audio_history_get_scans</code>).</li>
+          <li><code>historyDawScanList</code> — DAW (from <code>daw_history_get_scans</code>).</li>
+          <li><code>historyPresetScanList</code> — presets.</li>
+          <li><code>historyPdfScanList</code> — PDFs.</li>
+          <li><code>historyMidiScanList</code> — MIDI.</li>
+        </ul>
+        <p><code>fetchHistoryListsAndRender()</code> (~line 75) fetches all six in parallel, merges into <code>historyMergedList[]</code>, sorts by timestamp (newest first), and hands the result to the renderer. Selecting any row calls into a type-specific <code>select*Scan()</code> function that fetches the payload and populates the detail pane.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Detail pane — per-type</h2>
+        <p>Each scan type has its own renderer but they share a common layout:</p>
+        <ul>
+          <li><strong>Date header</strong> — weekday, month, day, year.</li>
+          <li><strong>Meta line</strong> — e.g. for plugin scans: <em>"Scan: 3:45 PM, 412 plugins (VST2: 184, VST3: 192, CLAP: 18, AU: 18)"</em>. For audio scans: format counts instead of plugin type breakdown.</li>
+          <li><strong>Scanned roots</strong> — code blocks listing the root directories.</li>
+          <li><strong>Delete button</strong> — <code>deleteScanEntry</code>, removes this specific run from the database.</li>
+          <li><strong>Compare dropdown</strong> — <code>#compareSelect</code>, lists every <em>other</em> scan of the same type with its count; pair with the <strong>Compare</strong> button (<code>runDiff</code>).</li>
+          <li><strong>Diff results</strong> — <code>#diffResults</code> container, filled by the diff call.</li>
+          <li><strong>Full item list</strong> — scrollable, lazy-loads 200 rows at a time. Columns differ per type:
+            <ul>
+              <li>Plugins: type badge · name · manufacturer · size · open-folder.</li>
+              <li>Samples: format badge · name · size · open-folder.</li>
+              <li>DAW: format badge · name · size · date · open-folder.</li>
+              <li>Presets: format badge · name · size · open-folder.</li>
+              <li>PDFs: name · size · open-file.</li>
+              <li>MIDI: name · size · duration · open-file.</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Diffs</h2>
+        <p>Select a reference run in the compare dropdown and click <strong>Compare</strong>. The frontend calls the type-specific diff IPC:</p>
+        <ul>
+          <li><code>history_diff(oldId, newId)</code> — plugins.</li>
+          <li><code>audio_history_diff(oldId, newId)</code> — samples.</li>
+          <li><code>daw_history_diff(oldId, newId)</code> — DAW.</li>
+          <li><code>preset_history_diff</code>, <code>pdf_history_diff</code>, <code>midi_history_diff</code>.</li>
+        </ul>
+        <p>Each returns arrays of <em>added</em> and <em>removed</em> items. The UI renders two colored sections:</p>
+        <ul>
+          <li><strong>Added</strong> — <code>.diff-section.diff-added</code> — count badge + list.</li>
+          <li><strong>Removed</strong> — <code>.diff-section.diff-removed</code> — count badge + list.</li>
+        </ul>
+        <p>If both arrays are empty, the pane shows a neutral "no differences" message via <code>historyDiffMatchHtml()</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Managing the archive</h2>
+        <ul>
+          <li><strong>Delete one run</strong> — the red button in the detail pane.</li>
+          <li><strong>Clear all history of one type</strong> — from the detail pane's controls or the per-tab settings.</li>
+          <li><strong>Clear all history (every type)</strong> — Settings → <em>Clear all history</em> or the sidebar's <strong>Clear All</strong> button.</li>
+          <li><strong>Automatic pruning</strong> — Settings → <em>Prune old scan snapshots</em> + <em>Scan history to keep</em>. On startup, runs beyond the last N per scanner are deleted.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Count field compatibility</h2>
+        <p>Scan records have two possible count field shapes — legacy snake_case (<code>plugin_count</code>, <code>sample_count</code>, <code>project_count</code>, etc.) and current camelCase (<code>pluginCount</code>, <code>sampleCount</code>, <code>projectCount</code>, etc.). The helper <code>historyScanCountField(s, camelKey, snakeKey)</code> (~line 24) reads either format so upgraded databases keep rendering without migration.</p>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>Diffs are the fastest way to audit a plugin upgrade. Scan once before installing a bundle, scan again after, and compare the two runs — every new plugin shows in the <em>Added</em> section, every removed one in the <em>Removed</em> section. Same works for samples after an SD-card import.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="13-files.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">13 · Files browser</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="15-visualizer.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">15 · Visualizer</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

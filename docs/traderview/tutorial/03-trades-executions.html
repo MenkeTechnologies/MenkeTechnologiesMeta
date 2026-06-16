@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 03 · Trades &amp; executions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">03 · Trades &amp; executions</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="02-accounts-import.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">02 · Accounts &amp; import</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="04-journal.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">04 · Journal &amp; AI post-mortem</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:16.66%"></div></div>
+        <span class="meter-count">03 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">03.</span>Trades &amp; executions</h2>
+      <p class="tutorial-subtitle">Executions are the atom. Trades are FIFO-derived. The roll-up is deterministic, idempotent, and safe to re-run at any time. This page covers the data model, the views, and the editing endpoints (split / merge / risk / bulk).</p>
+
+      <section class="tutorial-section">
+        <h2>The data model in one sentence</h2>
+        <p><strong>Executions are the source of truth; trades are a materialized view.</strong> Every broker fill is one immutable row in <code>executions</code>; <code>traderview-core::rollup</code> walks those rows in <code>(account_id, symbol)</code> partitions and FIFO-matches buy/sell pairs into the <code>trades</code> table. Re-running the roll-up at any time produces the same trade IDs and P&amp;L for the same execution input.</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Table</th><th>Columns (abridged)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>executions</code></td><td><code>id, account_id, symbol, side, qty, price, multiplier, fees, executed_at, asset_class, broker_order_id, fx_rate, imported_at, import_id</code></td></tr>
+            <tr><td><code>trades</code></td><td><code>id, account_id, symbol, side (long/short), entry_avg, exit_avg, qty, gross_pnl, net_pnl, status (open/closed), opened_at, closed_at, asset_class, r_multiple, planned_risk, tags, …</code></td></tr>
+          </tbody>
+        </table>
+        <p>Every <code>trades</code> row also links to its constituent execution IDs via <code>trade_executions</code> so you can drill down to the exact fills that built it.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FIFO roll-up — what the algorithm actually does</h2>
+        <p>In <code>crates/traderview-core/src/rollup.rs</code>:</p>
+        <ol>
+          <li><strong>Group</strong> all executions by <code>(account_id, symbol)</code>.</li>
+          <li><strong>Sort</strong> each group by <code>executed_at ASC, id ASC</code> (the tie-break on <code>id</code> makes the order deterministic if two fills land in the same millisecond).</li>
+          <li><strong>Walk</strong> the sorted list with a position pointer and an open-lot queue:
+            <ul>
+              <li>Same-side fill → push a new lot onto the queue.</li>
+              <li>Opposite-side fill → pop FIFO from the queue, match qty, accumulate realized P&amp;L. If the opposite-side qty exceeds the queue, flip to short (or long) and push the residual as a new lot.</li>
+            </ul>
+          </li>
+          <li><strong>Emit</strong> one <code>trades</code> row per fully-closed position; one row per still-open position with <code>status='open'</code> and <code>exit_avg = NULL</code>.</li>
+          <li><strong>Compute statistics</strong> per-trade — <code>gross_pnl</code>, <code>net_pnl</code> (gross minus fees), <code>r_multiple</code> (<code>net_pnl / planned_risk</code> if <code>planned_risk</code> is set on the trade), hold duration, max favorable / adverse excursion.</li>
+        </ol>
+        <p>The roll-up is single-pass per <code>(account_id, symbol)</code> group, so a 100 k-execution book finishes in seconds. Re-running on an unchanged input is a no-op for the trade IDs: stable IDs are derived from the first opening execution.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The Trades view</h2>
+        <p><code>frontend/js/views/trades.js</code>. Server-side pagination (<code>GET /api/trades?account=&amp;status=&amp;limit=&amp;offset=&amp;sort=</code>), filter chips for asset class / status / R-bucket / tags, and the following per-row context menu (right-click anywhere on a trade row):</p>
+        <ul>
+          <li><strong>Open journal</strong> — jumps to the per-trade journal entry (step 04).</li>
+          <li><strong>Open chart with markers</strong> — Charts view with entry / exit markers stamped on the bar.</li>
+          <li><strong>Set planned risk</strong> — <code>POST /api/trades/{id}/risk</code>. Re-derives <code>r_multiple</code> for the row without touching executions.</li>
+          <li><strong>Split</strong> — <code>POST /api/trades/{id}/split</code>. For trades that should be modeled as two separate ideas (e.g. a position you held overnight and added to the next day).</li>
+          <li><strong>Merge</strong> — <code>POST /api/trades/merge</code>. Combine adjacent trades on the same symbol with a custom join logic.</li>
+          <li><strong>Tag</strong> — multi-select per-account tag picker. Tags are queryable in reports (step 05).</li>
+          <li><strong>Symbol nav</strong> — six per-symbol jumps (Charts / Options / Research / Earnings / News / Copy). 222 distinct symbol-nav paths are wired across the app — every grid that emits a symbol surfaces the same menu.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The Executions view</h2>
+        <p>One row per fill. Same paginated grid pattern as Trades but with a sharper filter set: account / symbol / side / asset class / date range / import batch / has-error. Useful for forensics — <em>"did that 9:31 fill at $185.04 really come through?"</em> The Executions view answers without re-deriving anything.</p>
+        <p>You can also <strong>hand-add executions</strong> from this view (<code>POST /api/executions</code>) — handy for cash dividends, broker corrections, or backfilling a missing fill the CSV didn't capture. Hand-added rows are flagged with <code>import_id = NULL</code> and survive re-imports.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Bulk operations</h2>
+        <p>Selecting multiple trades unlocks bulk endpoints. The grid uses range-select (<code>Shift+click</code>) and toggle-select (<code>Cmd+click</code>); the bulk action bar shows once anything is selected.</p>
+        <ul>
+          <li><strong>Bulk tag</strong> — adds / removes tags across the selection.</li>
+          <li><strong>Bulk set planned risk</strong> — same R for all (useful when you sized every trade the same week).</li>
+          <li><strong>Bulk delete</strong> — only deletes the trade row; executions are preserved, the rollup re-fires, and a fresh trade row appears. Net effect: trade-level metadata (tags, notes, planned-risk) is wiped without touching fills.</li>
+          <li><strong>Bulk export</strong> — CSV / JSON of the selected trades (column set matches the visible grid).</li>
+          <li><strong>Bulk POST</strong> — <code>POST /api/trades/bulk</code> takes a list of partial updates; useful when scripting against the API.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Re-running the roll-up safely</h2>
+        <p><code>POST /api/trades/rollup</code> with no body re-runs every <code>(account_id, symbol)</code> partition. Optional body narrows the scope:</p>
+        <pre>{
+  "account_id": 17,
+  "symbols": ["AAPL", "TSLA"],
+  "force": false
+}</pre>
+        <p><code>force: true</code> drops the trade rows for the targeted partitions and re-derives from scratch (also wipes per-trade metadata — tags, notes, planned-risk). The default <code>force: false</code> preserves trade IDs and metadata wherever the rolled-up rows match the existing ones; only trades whose execution membership changed are rewritten.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Open positions</h2>
+        <p>Open trades (<code>status='open'</code>) have <code>exit_avg = NULL</code> and unrealized P&amp;L computed against the latest quote in <code>quote_snapshots</code>. The Live Positions tile (step 06) shows them in real time; the Trades grid shows them with a different row tint and the equity-curve view marks them with a dashed continuation.</p>
+        <div class="tutorial-callout warn">
+          <strong>Warning</strong>
+          Don't manually delete an open trade with the bulk-delete action — the next rollup will recreate it but the planned-risk + tags you'd set are gone. Use the per-row <em>Close</em> action instead, which prompts for an exit fill.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="02-accounts-import.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">02 · Accounts &amp; import</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="04-journal.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">04 · Journal &amp; AI post-mortem</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

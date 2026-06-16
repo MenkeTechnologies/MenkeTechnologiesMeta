@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="AUDIO_HAXOR developer docs: full feature map (tabs, scans, DB, playback, engine, tooling), rustdoc, IPC, i18n, palette, shortcuts, tray. Version in package.json / tauri.conf.json.">
+  <title>AUDIO_HAXOR — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hud-static.css">
+  <link rel="stylesheet" href="tutorial/tutorial.css">
+  <style>
+    /* Docs hub: reuse tutorial.css wholesale, override just the widths
+       so the feature map has room for its long bullet lists, and put
+       the color scheme grid in its own strip below the header (a 5-wide
+       horizontal grid rather than collapsing into a 1-column stack). */
+    .tutorial-main { max-width: 64rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+
+    /* Color scheme strip: full-width horizontal row below the header. */
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+      animation: fadeSlideIn 0.5s ease 0.1s both;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 64rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — TAURI v2 AUDIO PLUGIN SCANNER</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="tutorial/index.html">Walkthrough</a>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering Report</a>
+            <span class="sep">/</span>
+            <a href="api/app_lib/index.html">Rustdoc</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/Audio-Haxor" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line" id="hudBuildMetaLine"></p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="tutorial/index.html">Tutorial</a>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/Audio-Haxor" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/Audio-Haxor/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>DEVELOPER REFERENCE</h2>
+      <p class="tutorial-subtitle">Tauri v2 · Rust backend <code>app_lib</code> · release version in <code>package.json</code> / <code>src-tauri/tauri.conf.json</code> / <code>src-tauri/Cargo.toml</code>. Main UI is <code>frontend/index.html</code>; the menu-bar tray runs a separate WebView (<code>frontend/tray-popover.html</code> + <code>frontend/js/tray-popover.js</code>).</p>
+
+      <section class="tutorial-section" id="tutorial">
+        <h2>Step-by-step tutorial — how to use AUDIO_HAXOR</h2>
+        <p>The full end-user walkthrough now lives as a 19-step, multi-page tour under <code>docs/tutorial/</code>. Each step is a proper deep-dive: every control, column, filter, row action, keybinding, and IPC command — grounded in the actual source. Cyberpunk styling, CRT scanlines, neon accents, entrance animations.</p>
+        <p><a href="tutorial/index.html" class="btn btn-secondary">Open the tutorial →</a></p>
+        <h3>Chapters</h3>
+        <ul>
+          <li><strong>01 — First launch</strong>: HUD header, process stats, tab bar, boot sequence. <a href="tutorial/01-welcome.html">Read &rarr;</a></li>
+          <li><strong>02 — Scan roots</strong>: per-scanner directory lists, blacklist, performance tunables. <a href="tutorial/02-settings.html">Read &rarr;</a></li>
+          <li><strong>03 — Scan All &amp; Walkers</strong>: unified scan, per-type scans, live walker tiles. <a href="tutorial/03-walkers.html">Read &rarr;</a></li>
+          <li><strong>04 — Plugins</strong>: VST/VST3/AU/CLAP, KVR update flow, dependency graph. <a href="tutorial/04-plugins.html">Read &rarr;</a></li>
+          <li><strong>05 — Samples</strong>: streaming table, waveform + spectrogram preview, fingerprint duplicates. <a href="tutorial/05-samples.html">Read &rarr;</a></li>
+          <li><strong>06 — BPM / key / LUFS analysis</strong>: algorithm notes (onset autocorrelation, Krumhansl-Kessler, BS.1770). <a href="tutorial/06-analysis.html">Read &rarr;</a></li>
+          <li><strong>07 — DAW projects</strong>: thirteen formats, extract plugins, xref cache. <a href="tutorial/07-daw.html">Read &rarr;</a></li>
+          <li><strong>08 — MIDI / Presets / PDFs</strong>: metadata extractors, preset catalog, PDF page counts. <a href="tutorial/08-midi-presets-pdf.html">Read &rarr;</a></li>
+          <li><strong>09 — Command palette</strong>: Cmd+K launcher, DB preview, toggles. <a href="tutorial/09-palette.html">Read &rarr;</a></li>
+          <li><strong>10 — Floating player</strong>: waveform seek, EQ, gain, pan, speed, reverse, A/B loop. <a href="tutorial/10-player.html">Read &rarr;</a></li>
+          <li><strong>11 — Tray popover</strong>: menu-bar HUD, scrubber drag, theme sync. <a href="tutorial/11-tray.html">Read &rarr;</a></li>
+          <li><strong>12 — Favorites / Notes / Tags</strong>: cross-inventory organization, multi-filter, tag cloud. <a href="tutorial/12-favorites-notes-tags.html">Read &rarr;</a></li>
+          <li><strong>13 — Files browser</strong>: navigation, bookmarks, lazy waveforms, native drag-out. <a href="tutorial/13-files.html">Read &rarr;</a></li>
+          <li><strong>14 — Scan history &amp; diffs</strong>: merged sidebar, per-type detail, added/removed diffs. <a href="tutorial/14-history.html">Read &rarr;</a></li>
+          <li><strong>15 — Visualizer</strong>: six tiles, engine spectrum vs Web Audio fallback, idle backoff. <a href="tutorial/15-visualizer.html">Read &rarr;</a></li>
+          <li><strong>16 — Audio Engine tab</strong>: device selection, plugin insert chain, diagnostics. <a href="tutorial/16-audio-engine.html">Read &rarr;</a></li>
+          <li><strong>17 — Theme &amp; color schemes</strong>: Cyberpunk, Midnight, Matrix, Ember, Arctic + custom editor. <a href="tutorial/17-theme.html">Read &rarr;</a></li>
+          <li><strong>18 — Keyboard shortcuts</strong>: full default keymap, rebinding UI, FZF syntax. <a href="tutorial/18-shortcuts.html">Read &rarr;</a></li>
+          <li><strong>19 — ALS generator</strong>: genre / key / hardness, 27-slider track counts, 6-lane × 8-bar-block section timeline, KICKS bus + group-level sidechain, return sends, Eq8 HPF + Limiter master chain. <a href="tutorial/19-als-generator.html">Read &rarr;</a></li>
+        </ul>
+      </section>
+
+
+      <section class="tutorial-section">
+        <h2>Application feature map</h2>
+        <p>Checklist-style index of shipped surfaces (verify in <code>frontend/</code> + <code>src-tauri/</code>). Deeper behavior lives in <code>README.md</code> and rustdoc.</p>
+
+        <h3>Main tabs</h3>
+        <ul>
+          <li><strong>Plugins</strong> — VST/VST3/AU/CLAP scan, SQLite table, KVR resolve + update check with queued “next update” flow (<code>js/kvr.js</code>), export/import (JSON/CSV/TOML), per-scan history + diff, optional disk-usage strip (<code>js/disk-usage.js</code>), plugin dependency graph (<code>js/dep-graph.js</code>).</li>
+          <li><strong>Samples</strong> — audio library scan + history/diff, paginated table with sort/persisted columns (<code>js/sort-persist.js</code>, <code>js/columns.js</code>), inline preview / floating player (<code>js/audio.js</code>), waveform/spectrogram caches + decode worker, BPM/key/LUFS fields and batch analysis, chromaprint fingerprint cache + <strong>find similar</strong> + <strong>content duplicates</strong>, smart playlists (<code>js/smart-playlists.js</code>).</li>
+          <li><strong>DAW</strong> — project scan (multiple DAW formats), open folder/project, extract plugins from project, xref/index build and cached plugin lists per project (<code>js/daw.js</code>, <code>js/xref.js</code>), Ableton ALS/XML and generic project file reads, Bitwig <code>.bwproject</code> via <code>read_bwproject</code>, history/diff, disk usage.</li>
+          <li><strong>Presets</strong> — preset scan, history/diff, export/import, disk usage.</li>
+          <li><strong>MIDI</strong> — MIDI scan + SQLite (<code>db_query_midi</code>), history/diff, note/tempo/key metadata (<code>js/midi.js</code>), export full tab or selection subset (<code>js/export.js</code>).</li>
+          <li><strong>PDFs</strong> — PDF scan, optional metadata extraction batch + progress events, open in viewer / default app, export DSV/JSON, import JSON, history/diff (<code>js/pdf.js</code>).</li>
+          <li><strong>Videos</strong> — video file scan + SQLite (<code>db_query_video</code>), history/diff, inline preview / fullscreen player, export/import JSON/DSV, optional AudioEngine vs HTML5 decode route in Settings (<code>js/video.js</code>).</li>
+          <li><strong>Favorites</strong> — starred paths across types (<code>js/favorites.js</code>), export/import.</li>
+          <li><strong>Notes</strong> — per-item notes (<code>js/notes.js</code>), export/import, clear.</li>
+          <li><strong>Tags</strong> — global tag manager + filter bar (position top/bottom; <code>js/multi-filter.js</code>).</li>
+          <li><strong>Files</strong> — power file browser. <strong>Multi-pane 1–4</strong> with full per-pane state (path / entries / selection / scroll / tabs / nav history / sort / ext-filter / show-hidden / search mode) in the <code>fileBrowserPanesV3State</code> persistence blob so sort column, ext-filter chip, hidden-files toggle, Spotlight-or-name search mode, scroll position, and nav history (<code>Cmd+[</code>/<code>Cmd+]</code>, capped at 50 entries) all survive across launches; one-shot bootScrollPending flag restores scroll <em>once</em> without fighting later programmatic scrolls; 250&nbsp;ms debounced scroll save. <strong>Drag-resize handles</strong> + ⇆ swap buttons between panes. <strong>Trello-style drag-reorder:</strong> drag a pane's tab strip to permute pane positions (<code>_fbReindexPanesFromDOM</code> re-interleaves resize gutters + follows the active idx with the moved content); drag any <code>.fb-tab</code> inside one pane to reorder per-pane tabs; both reuse the shared <code>initDragReorder</code> engine and emit localized <code>toast.reordered_panes</code> / <code>toast.reordered_tabs</code> via the engine's <code>toastKey</code> opt. <strong>Sync scroll</strong> toggle, cross-pane copy/move + native drag-out to Finder/Desktop (<code>tauri-plugin-drag</code>); cross-pane drops emit <code>toast.fb_drop_copied_n</code> / <code>toast.fb_drop_moved_n</code> / <code>toast.fb_drop_failed</code>; native drag-out emits <code>toast.fb_drag_started_n</code> after <code>tauri.drag.startDrag</code> resolves (previously silent on success). <strong>Tree-view sidebar</strong> (lazy-expanded, <code>fs_list_subdirs</code>). <strong>Inline previews:</strong> image thumbnails + EXIF row badge, PDF thumbnails (SQLite-cached at <code>image_preview_cache</code> / <code>pdf_preview_cache</code>), audio waveforms, video first-frame (<code>qlmanage</code> on macOS), git-status badges (<code>git status --porcelain</code>). <strong>Color labels</strong> (Finder-style 7 colors, per-pane filter chip strip below ext-filter). <strong>Modals:</strong> Get Info (size + mtime/ctime/atime + perms drwx + uid/gid + xattrs + EXIF + audio metadata from <code>audio_samples</code> + disk usage from <code>sysinfo</code>), Hash (SHA-256 single + bulk + Copy All), Chmod single + bulk, Diff two files (<code>similar</code> crate, unified diff modal), Find in Files (recursive grep — binary-skip + size cap), Find Duplicates (size+ext prefilter then SHA-256), Compare Folders (3-bucket diff active↔next pane), Symlink target editor, Bookmarks manager (rename / reorder / delete), Quick Open (recent palette), <strong>Spotlight</strong> (cross-inventory FTS5 across <code>audio_samples_fts</code>+<code>daw_projects_fts</code>+<code>presets_fts</code>+<code>midi_files_fts</code>+<code>pdfs_fts</code>+<code>video_files_fts</code>). <strong>File ops:</strong> Move to Trash (recoverable via <code>trash</code> crate) + Delete Permanently + <strong>Secure Delete</strong> (<code>fs_secure_delete</code> — overwrites file length with zero buffer in 64&nbsp;KiB chunks, <code>fsync</code>, unlink; rejects directories; symlinks unlink the link only; confirm dialog states honest SSD/CoW caveats) + Duplicate (<code>{stem} copy.ext</code>) + Make Alias (Unix symlink) + Touch (<code>filetime</code>) + Compress to .zip + Extract .zip/.tar/.tar.gz/.7z (<code>zip</code>+<code>tar</code>+<code>sevenz-rust2</code> — path-traversal safe) + Run as Program (Unix +x) + Open in External Editor (<code>$VISUAL</code>/<code>$EDITOR</code>/<code>code</code>/<code>subl</code>/platform default) + bulk Hash/Chmod/Touch/Compress/Extract. The three deletion options come from a shared <code>_pathDeleteItems(path, name, isDir, onAfter)</code> helper in <code>context-menu.js</code> and are mirrored into every inventory table row (audio / DAW / MIDI / preset / PDF / video) so right-clicking any sample / project / preset / pdf / video also exposes Move to Trash / Delete Permanently / Secure Delete. On successful delete the helper removes the matching <code>tr[data-{type}-path]</code> row from the DOM (so the user sees the deletion immediately without forcing an inventory re-query) AND reloads the file browser if the deleted path lived under the current dir using a directory-boundary-safe prefix check (<code>/foo</code> does NOT match <code>/foobar/x</code>). <strong>Hex / binary viewer</strong> preview-pane fallback (<code>fs_read_head_bytes</code> raw ArrayBuffer). <strong>Auto-reload watcher</strong> (<code>fb_watcher</code>: single-dir non-recursive notify with 300ms Rust + 150ms JS debounce). All Finder + Nautilus ops (Copy/Cut/Paste files, Pattern Select, Invert Selection, Shift+Del = permanent, Ctrl+H hidden, New Folder with Selection). <strong>Every status toast is i18n-routed</strong> — 33+ surface-specific keys (<code>toast.fb_copied_to_pane_n</code>, <code>fb_renamed_n</code>, <code>fb_chmod_on_n</code>, <code>fb_pasted_n</code>, <code>fb_moved_n_into</code>, <code>fb_compressed_to</code>, <code>fb_extracted_n_archives</code>, <code>fb_label_applied_n</code>, <code>fb_saved_n_bookmarks</code>, <code>fb_trashed_n_dupes</code>, <code>fb_permanently_deleted_n</code>, <code>fb_moved_n_to_trash</code>, <code>fb_aliased_to</code>, <code>fb_duplicated_to</code>, <code>fb_opening_in_bin</code>, <code>fb_moved_to_trash_name</code>, …) replace the generic raw-English fallback. Lossless V3 persistence in <code>prefs</code>: pane paths/tabs/active-idx/flex-widths/expanded-tree-nodes/labels/sync-scroll/show-hidden/sort-col/ext-filter/search-mode/scroll/nav-history. (<code>js/file-browser.js</code>, <code>js/context-menu.js</code>, <code>js/drag-reorder.js</code>, <code>js/native-file-drag.js</code>, <code>src-tauri/src/fb_watcher.rs</code>, ~40 <code>fs_*</code> Tauri commands in <code>lib.rs</code>.)</li>
+          <li><strong>History</strong> — unified scan run + per-inventory scan records, compare/diff, prune/delete entries (<code>js/history.js</code>).</li>
+          <li><strong>Visualizer</strong> — spectrum/waveform views driven from playback / engine (<code>js/visualizer.js</code>).</li>
+          <li><strong>Walkers</strong> — live unified-walker status (<code>js/walker-status.js</code>, <code>get_walker_status</code>).</li>
+          <li><strong>Audio Engine</strong> — subprocess JSON API: file decode, transport, seek, loop/speed/reverse, DSP/EQ/mono, optional spectrum bins, VST3/AU insert chain + editor windows (<code>js/audio-engine.js</code> + IPC <code>audio_engine_invoke</code>).</li>
+          <li><strong>Settings</strong> — file-backed prefs + SQLite app strings; UI locale; light/dark + CRT + neon; color schemes / custom presets; scan roots &amp; blacklists; auto-scan, folder watch, incremental scan, prune-old-scans, include-backups; autoplay &amp; playback toggles; auto-update; PDF metadata auto-extract; analysis auto-run; table page size; log verbosity; cache table rebuild/clear (incl. xref/fingerprint); BPM/LUFS jobs; data-dir file list; export settings/log as PDF; shortcut editor (<code>js/settings.js</code>, <code>js/settings-search.js</code>, <code>js/i18n-ui.js</code>).</li>
+        </ul>
+
+        <h3>Scanning &amp; database</h3>
+        <ul>
+          <li><strong>Unified scan</strong> — <code>scan_unified</code> walks configured roots once and fans progress into the same per-type events as standalone scans (<code>prepare_unified_scan</code>, <code>stop_unified_scan</code>, <code>get_unified_scan_run</code>).</li>
+          <li><strong>Standalone scans</strong> — plugins, samples, DAW, presets, MIDI, PDF each support custom roots, exclude paths, stop/resume where applicable, progress listeners, and a header <strong>resume all</strong> when workers are paused.</li>
+          <li><strong>SQLite</strong> — library tables for inventory + analysis fields; filter stats helpers; palette preview query; audio-library path list for fingerprints.</li>
+          <li><strong>Import/export</strong> — tab-scoped JSON/DSV/CSV/TOML where implemented; plugin xref export; smart-playlist export; favorites/notes; PDFs; MIDI export.</li>
+        </ul>
+
+        <h3>Playback &amp; tray (summary)</h3>
+        <ul>
+          <li>Floating player: history list, filter field, shuffle, loop modes, A/B loop, 3-band EQ + gain + pan, mono, volume, playback speed + reverse, favorite/tag current track, export/import/clear <strong>recently played</strong>, expand/collapse, hide/show pill — see <code>js/audio.js</code>.</li>
+          <li><strong>Autoplay next source</strong> — Settings chooses whether EOF / failure-chain advance follows player history or visible Samples table; tray/menu/shortcuts/palette use <code>respectAutoplaySource</code>; floating <strong>Next/Previous</strong> buttons use history order only (see tray section below).</li>
+        </ul>
+
+        <h3>Tooling &amp; discovery</h3>
+        <ul>
+          <li><strong>Heatmap dashboard</strong> — sample metadata visualization (<code>js/heatmap-dashboard.js</code>).</li>
+          <li><strong>Duplicate finder</strong> — content-level reports (<code>js/duplicates.js</code>).</li>
+          <li><strong>Process stats</strong> — main and audio-engine RSS/CPU/thread probes in header/settings.</li>
+          <li><strong>Logging</strong> — in-app log, clear, open log file, optional PDF export. Long-running breadcrumbs go to <code>app.log</code> in the data directory:
+            <ul>
+              <li><strong>HEALTH</strong> (every 30 s, host) &mdash; RSS, virt, thread count, audio-engine + preview-engine pids and RSS, IPC counters (avg / max / peak queue / inflight) for both engine streams. Generated by the <em>ah-health-sampler</em> thread spawned at the end of <code>setup()</code>; first tick is skipped to avoid lazy-init noise. Also fires a <code>{ &quot;cmd&quot;: &quot;ping&quot; }</code> keep-alive request to the audio-engine subprocess when the previous 30-second window had fewer than 5 IPC calls, so JUCE&rsquo;s working set never gets paged out under long idle.</li>
+              <li><strong>HEALTH-JS</strong> (every 30 s, frontend) &mdash; JS heap (used / total / limit), waveform &amp; spectrogram cache sizes, in-flight SQLite waveform hydration, decode-worker pending count, AudioContext + playback context state. Emitted by <code>_startJsHealthSampler</code> in <code>frontend/js/audio.js</code>; pushed through <code>vstUpdater.appendLog</code> to land in the same log file as the host&rsquo;s HEALTH line.</li>
+              <li><strong>Engine fatal-signal handler</strong> &mdash; <code>engine.log</code> captures <code>[ENGINE crash] handler entered</code>, <code>fatal signal &lt;n&gt;</code>, raw stack-frame addresses, and the dyld image map on SIGSEGV / SIGBUS / SIGABRT in the JUCE subprocess. Signal-safe writer; lets you symbolicate after the fact even when the helper aborted before draining buffers.</li>
+              <li><strong>App background mode</strong> (macOS) &mdash; <code>APP BG: resignActive</code> / <code>APP BG: becomeActive</code> lines mark every transition into and out of the App Nap window so you can correlate slow-first-playback reports with actual idle dwell time.</li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>UX &amp; desktop integration</h3>
+        <ul>
+          <li><strong>Help overlay</strong> — shortcut reference (<code>js/help-overlay.js</code>).</li>
+          <li><strong>Context menus</strong> — row actions across tabs (<code>js/context-menu.js</code>).</li>
+          <li><strong>Tooltips</strong> — hover titles for dense controls (<code>js/tooltip-hover.js</code>).</li>
+          <li><strong>Keyboard</strong> — navigable tables (<code>js/keyboard-nav.js</code>), batch selection (<code>js/batch-select.js</code>), drag-reorder for sections/tabs (<code>js/drag-reorder.js</code>).</li>
+          <li><strong>Embedded terminal</strong> — PTY-backed xterm.js terminal (<code>js/terminal.js</code>, <code>src-tauri/src/terminal.rs</code>). Login shell, 256-color + truecolor, drag-to-dock corners, resizable, Ctrl+T toggle. <a href="assets/terminal.png">Screenshot →</a></li>
+          <li><strong>Modals</strong> — draggable custom dialogs where enabled (<code>js/modal-drag.js</code>).</li>
+          <li><strong>UI idle</strong> — <code>js/ui-idle.js</code> sets <code>html.ui-idle-heavy-cpu</code> when the window is backgrounded/minimized/hidden to pause scanlines and suppress toasts.</li>
+          <li><strong>Native menus</strong> — macOS/Windows menu bar mirrors many actions; <strong>GitHub</strong> / <strong>Docs</strong> items open external links.</li>
+          <li><strong>macOS — Mission Control / Spaces preview fix</strong> — <code>src-tauri/src/space_preview_macos.rs</code>. WKWebView renders out-of-process via WebContent + GPU XPC, so the WindowServer&rsquo;s snapshot mechanism (Mission Control / Spaces / Cmd-Tab thumbnails when the window is in another Space) captures a blank gray rectangle (WebKit bug 146877). The fix layers an <code>NSImageView</code> overlay above the live WKWebView, periodically refreshed via <code>WKWebView.takeSnapshot:</code> while the window is key. The overlay is unhidden when the window resigns key / becomes occluded so the snapshot grabs the bitmap-backed <code>CALayer</code>; live WebView resumes when focus returns. Class lookup is done by walking the superclass chain via <code>class_getName</code> rather than sending <code>+name</code> to the class object — wry&rsquo;s <code>WryWebView</code> subclass does not implement <code>+name</code> and would otherwise throw <code>NSInvalidArgumentException</code>.</li>
+          <li><strong>macOS — App Nap mitigation</strong> — <code>src-tauri/src/app_activity_macos.rs</code>. After hours of idle, macOS throttles CPU, coalesces timers, and (under memory pressure) compresses or swaps the host&rsquo;s pages, so the next sample playback lags for seconds while the OS un-throttles. The fix holds an <code>NSProcessInfo.beginActivityWithOptions:reason:</code> token (option set <code>UserInitiatedAllowingIdleSystemSleep</code> — same as Music.app: keeps the host unthrottled but still permits the laptop to sleep when the user walks away). Installed from <code>RunEvent::Ready</code>, not <code>setup()</code>, because <code>setup()</code> runs inside <code>applicationDidFinishLaunching:</code>; an unwind across that extern "C" boundary aborts the process. Both this install and the Mission Control install are wrapped in <code>objc2::exception::catch</code> (<em>not</em> <code>std::panic::catch_unwind</code> — the latter aborts when it sees a foreign exception class).</li>
+          <li><strong>macOS — App background mode logging</strong> — <code>app_activity_macos.rs</code> registers <code>NSApplicationDidResignActiveNotification</code> and <code>NSApplicationDidBecomeActiveNotification</code> observers that write <code>APP BG: resignActive</code> / <code>APP BG: becomeActive</code> lines to <code>app.log</code>. Useful to correlate &ldquo;first playback after long idle was sluggish&rdquo; reports with how long the app was actually backgrounded.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>ALS generator (Ableton Live Set authoring)</h2>
+        <p><code>src-tauri/src/als_generator.rs</code> (template + gzip I/O) and
+           <code>track_generator.rs</code> / <code>trance_generator.rs</code> (arrangement)
+           turn the analyzed sample library into a full techno / schranz / trance
+           layout and write it as a gzipped <code>.als</code> file openable directly
+           in Ableton Live 11 / 12. The IPC entry point is
+           <code>generate_als_project</code> (see IPC inventory below). The
+           frontend UI is <code>frontend/js/als-generator.js</code> plus the
+           section-override timeline at <code>frontend/js/als-timeline.js</code>.</p>
+
+        <h3>What ships today</h3>
+        <ul>
+          <li><strong>Arrangement engine</strong> — base track types (kick, clap,
+            snare, hat, perc, ride, fill, bass, sub, lead, synth, pad, arp,
+            riser, downlifter, crash, impact, hit, sweep up/down, snare roll,
+            reverse, sub drop, boom kick, atmos, glitch, scatter, vox) across
+            seven sections (intro / build / breakdown / drop 1 / drop 2 /
+            fadedown / outro). Schranz adds a dedicated <strong>hardcore kick</strong>
+            track (<code>HARDCORE_KICK</code>) and a <strong>layered kick group</strong>
+            (PUNCH / RUMBLE / NOISE on three child tracks under one <code>KICK_LAYER</code>
+            bus, so the body / sub / hiss layers can be mixed independently and
+            sidechained as one source). All genres add a <strong>breakbeat</strong>
+            track (chopped break loops on the drum group) and a <strong>pre-drop fill</strong>
+            pattern derived from real schranz template analysis (snare
+            roll + filtered downsweep + impact landing on the downbeat).
+            Default bar counts per genre: 224 Techno (32×7), 256 Trance
+            (32/32/48/32/32/32/48), 208 Schranz (32/32/16/32/48/32/16).
+            <strong>Per-section lengths are user-editable per genre</strong> —
+            drag any section boundary in the timeline canvas (8-bar snap, min 8,
+            max 128 bars) to resize; saved under <code>alsSectionLengthsByGenre</code>
+            in prefs and plumbed through <code>ProjectConfig.section_lengths</code> to
+            the generator. Templates are authored against the canonical 224-bar
+            Techno layout and remapped onto the user&rsquo;s layout at generate
+            time via <code>remap_bar_range</code>.</li>
+          <li><strong>Section-override timeline</strong> — 6-lane HUD canvas
+            lets you pin <strong>per-8-bar-block</strong> values for chaos /
+            glitch / density / variation / parallelism / scatter. Each
+            section is subdivided on the Ableton phrase grid (28 blocks for
+            Techno, 32 for Trance, 26 for Schranz) so you can shape dynamics
+            at phrase granularity, not just at the 32-bar section level.
+            Drag top edge, shift-click to add, scroll to nudge &plusmn;0.05,
+            right-click to delete. Persists to <code>alsSectionOverrides</code>
+            in prefs as a flat bar-start &rarr; value map; legacy section-name
+            keys migrate on first load.</li>
+          <li><strong>Sample selection</strong> — key &amp; BPM-matched queries
+            against <code>audio_samples</code>, atonal filter per-type, genre-
+            specific SQL fallback categories when sample-analysis rows aren&rsquo;t
+            populated. <strong>Audio-based category inference fallback</strong>:
+            when filename / path heuristics yield zero matches for a slot
+            (long-tail manufacturer naming the manufacturer-signal table does
+            not cover), the selector consults stored audio analysis fields
+            (LUFS, spectral centroid, transient density, length bucket) to
+            decide whether the sample looks like a kick, hat, pad, etc., so
+            generation does not silently drop the slot. Blacklist / whitelist
+            modals filter the pool.</li>
+          <li><strong>Bus topology</strong> — six group buses emitted only when
+            populated (count is computed from the sample pool, not a magic
+            number): <strong>KICKS</strong> (its own bus so the kick pulse can
+            safely drive every sidechain), <strong>DRUMS</strong>,
+            <strong>BASS</strong>, <strong>BASS&nbsp;FX</strong>,
+            <strong>MELODICS</strong>, <strong>FX</strong>. Colors per category,
+            <code>TrackGroupId</code> wired so children nest in Ableton&rsquo;s
+            mixer.</li>
+          <li><strong>Group-level sidechain</strong> — a Compressor2 with
+            <code>SideChain</code> pre-enabled is injected into DRUMS / BASS /
+            BASS&nbsp;FX / MELODICS buses, routed to
+            <code>AudioIn/Track.&lt;KICKS_group_id&gt;/PostFxOut</code>.
+            One compressor per bus (not per track) to avoid stacked
+            compression. FX bus is deliberately un-ducked so risers / impacts /
+            crashes stay transient. Template:
+            <code>src-tauri/src/group_sidechain_compressor_template.xml</code>
+            (Threshold &asymp; &minus;14 dB, Ratio 4:1, Attack &asymp; 5 ms,
+            Release &asymp; 150 ms).</li>
+          <li><strong>Return-bus sends</strong> — every AudioTrack&rsquo;s two
+            Sends are populated per category by
+            <code>send_levels_for()</code>: low-end (kick / sub / bass / sub
+            drop / boom kick) stays dry; drums get a light reverb kiss; leads /
+            arps add both reverb and delay; pads / atmos run wettest; FX send
+            moderate reverb but little delay. The base template&rsquo;s Return&nbsp;A
+            (Reverb) and Return&nbsp;B (Delay) remain untouched.</li>
+          <li><strong>Master chain</strong> — MainTrack&rsquo;s DeviceChain now
+            gets an <strong>Eq8</strong> with Band.0 as a 12&nbsp;dB/oct HPF at
+            <strong>30 Hz</strong> (rumble cleanup), followed by a
+            <strong>Limiter</strong> at Ceiling <strong>&minus;0.3 dB</strong>,
+            AutoRelease on, Lookahead on, LinkChannels on. These sit
+            <em>before</em> the template&rsquo;s existing StereoGain (Utility),
+            so the chain runs rumble-cleanup &rarr; peak-catch &rarr; final
+            trim. Templates live at
+            <code>src-tauri/src/master_eq8_hpf_template.xml</code> and
+            <code>src-tauri/src/master_limiter_template.xml</code>.</li>
+          <li><strong>Locators</strong> at every section boundary (Intro /
+            Build / Drop 1 / &hellip;) across all songs, including the song key
+            label, so in-Ableton navigation is immediate. Inserted by
+            <code>create_locators_xml_multi</code>.</li>
+          <li><strong>Multi-song mode</strong> — N songs concatenated with a
+            32-bar gap; each song re-rolls sample selection from the same pool
+            so arrangements diverge. IDs are allocated through
+            <code>IdAllocator</code> (starts at 1&nbsp;000&nbsp;000 with
+            <code>HashSet</code> dedup against reserved template IDs).</li>
+          <li><strong>Deterministic seed</strong> — wizard field
+            (<code>#alsSeed</code>) with 🎲 randomize button and 🔒 Lock
+            toggle (<code>#alsSeedLocked</code>). When set, every random
+            decision (swoosh rotation, scatter hits, fills, glitches,
+            parallelism thinning, variation chunking, chaos gaps, density
+            accents, sample-shuffle tie-breakers) derives from the seed via
+            a thread-local <code>StdRng</code> in
+            <code>track_generator.rs</code> (<code>init_gen_rng</code> /
+            <code>with_gen_rng</code>), seeded at the top of
+            <code>generate()</code> and cleared on every exit path.
+            <code>generate_als_project</code> resolves
+            <code>config.seed.unwrap_or_else(rand::random)</code> and echoes
+            the used seed back in the result JSON so the wizard can display
+            &ldquo;Seed: 12345&rdquo; and offer a &ldquo;regenerate with same
+            seed&rdquo; flow. Seeds travel as JSON strings to round-trip
+            through JS <code>Number</code> precision without truncation;
+            <code>deserialize_seed</code> in <code>als_project.rs</code>
+            accepts either numeric or string form and treats empty strings as
+            &ldquo;pick a fresh random seed&rdquo;. Project names and word
+            patterns are derived from the same seed via
+            <code>generate_project_name(config, seed)</code>; the filename
+            still carries a wall-clock <code>YYYYMMDD_HHMMSS</code> suffix so
+            back-to-back locked runs never collide on disk.
+            <code>restoreAlsPrefs</code> drops the stored seed on startup
+            when Lock is off, preventing a previous session&rsquo;s seed from
+            silently pinning every new generation.</li>
+        </ul>
+
+        <h3>Deeper reference documents</h3>
+        <ul>
+          <li><a href="ALS_GENERATION_GUIDE.md">ALS_GENERATION_GUIDE.md</a> &mdash;
+            file format, ID management, track / clip / device XML, mixer,
+            transport, master chain, genre patterns, implementation
+            checklist.</li>
+          <li><a href="ALS_GENERATION_FINDINGS.md">ALS_GENERATION_FINDINGS.md</a>
+            &mdash; empirical gotchas found while reverse-engineering real
+            <code>.als</code> projects (ID collisions, warp markers, sample
+            path quirks).</li>
+          <li><a href="SAMPLE_CATEGORIZATION.md">SAMPLE_CATEGORIZATION.md</a>
+            &mdash; filename / path &rarr; track-category mapping rules the
+            selector uses.</li>
+          <li><a href="TECHNO_ARRANGEMENT_RULES.md">TECHNO_ARRANGEMENT_RULES.md</a>
+            &mdash; section energy flow, entry/exit points, arrangement
+            logic.</li>
+          <li><a href="CLIP_TIMING_REFERENCE.md">CLIP_TIMING_REFERENCE.md</a>
+            &mdash; beat / bar positioning math and warp-marker calculation.</li>
+          <li><a href="ID_MANAGEMENT.md">ID_MANAGEMENT.md</a> &mdash; ID
+            allocation strategy and NextPointeeId bookkeeping.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Rust API (rustdoc)</h2>
+        <p>Generated HTML for the library crate:</p>
+        <ul>
+          <li><a href="api/app_lib/index.html">Browse <code>app_lib</code> docs</a> (after <code>pnpm run doc:sync</code>)</li>
+          <li>Local cargo output (workspace <code>target/</code> at repo root): <code>target/doc/app_lib/index.html</code></li>
+        </ul>
+        <pre>pnpm run doc:open    # build + open in browser
+pnpm run doc:sync    # copy tree into docs/api/</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Main window IPC &amp; i18n</h2>
+        <p><code>frontend/js/ipc.js</code> is the Tauri invoke bridge (<code>window.vstUpdater</code> wraps <code>@tauri-apps/api/core</code> <code>invoke</code>):</p>
+        <ul>
+          <li><strong><code>window.vstUpdater</code>:</strong> wraps <code>invoke</code> for DB queries, prefs, scans, PDF/MIDI helpers, <code>audio_engine_invoke</code> (subprocess audio engine JSON API — UI in <code>frontend/js/audio-engine.js</code> + <code>frontend/js/audio.js</code>), and palette search (<code>db_query_palette_preview</code>).</li>
+          <li><strong>Strings:</strong> startup <code>get_app_strings</code> fills <code>window.__appStr</code>; <code>appFmt</code> / <code>toastFmt</code> for UI and toasts. <code>reloadAppStrings(locale)</code> reloads maps, reapplies i18n, invalidates the command palette static cache, refreshes the native menu (<code>refresh_native_menu</code>), and re-syncs tray now playing.</li>
+          <li><strong><code>menu-action</code> events:</strong> native menu bar and tray dispatch action IDs into the main window. Tray seek uses a single payload form <code>seek:&lt;fraction&gt;</code> (0..1) → <code>seekPlaybackToPercent</code> without a separate IPC command.</li>
+          <li><strong>Host EOF poll:</strong> <code>listen('audio-engine-playback-eof', …)</code> forwards to <code>handleEnginePlaybackEofFromPoll</code> when Rust detects end-of-file while WebView timers may be throttled — same advance behavior as the in-window playback path.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Command palette (Cmd+K)</h2>
+        <p><code>frontend/js/command-palette.js</code> — quick launcher bound by default to <strong>Cmd+K</strong> / <strong>Ctrl+K</strong> via <code>shortcuts.js</code> (<code>commandPalette</code>).</p>
+        <ul>
+          <li><strong>Static rows:</strong> jump to tabs, start/stop scans, exports/imports, transport, EQ/mono, theme/CRT, and many settings toggles. Labels use <code>appFmt</code>; shortcut hints use live <code>getShortcuts</code> + <code>formatKey</code>.</li>
+          <li><strong>Database search:</strong> with query length ≥ 2, calls <code>dbQueryPalettePreview</code> (one pooled Rust task, six capped inventory queries). Results cover plugins, audio samples, DAW projects, presets, PDFs, and MIDI files. Choosing a hit switches to the right tab and seeds that tab’s search field — the palette does not rely on in-memory paginated tables alone.</li>
+          <li><strong>Transport alignment:</strong> palette <strong>Next track</strong> / <strong>Previous track</strong> call <code>nextTrack({ respectAutoplaySource: true })</code> / <code>prevTrack({ respectAutoplaySource: true })</code>, same as the tray, menu bar, and keyboard shortcuts (see below).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Keyboard shortcuts</h2>
+        <p><code>frontend/js/shortcuts.js</code> — persisted overrides and <code>executeShortcut(id)</code> dispatch.</p>
+        <ul>
+          <li><strong>Rebinding:</strong> Settings UI lists every action in <code>SHORTCUT_LABEL_KEYS</code>; custom bindings are persisted (see that module for storage and capture UI).</li>
+          <li><strong>Scope:</strong> tab switching (plugins through audio engine), focus search, help overlay, playback (play/pause, loop, mute, volume, shuffle, A/B loop, player visibility), file ops (reveal, copy path, favorite, notes), selection, export/import current tab, dependency graph, duplicates/similar, theme, prefs, scan/stop variants, PDF metadata, fingerprint cache, BPM/key/LUFS jobs, cache clears, log verbosity, table page size, autoplay source, tag filter bar, and more.</li>
+          <li><strong>Next / Previous track keys</strong> invoke <code>nextTrack</code> / <code>prevTrack</code> with <code>respectAutoplaySource: true</code> so ordering follows <code>autoplayNextSource</code> (player history vs Samples table), not only the floating history list.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tray popover &amp; playback IPC</h2>
+        <p>High level (details in source comments):</p>
+        <ul>
+          <li><strong>State:</strong> Main window calls <code>update_tray_now_playing</code> (Tauri v2: <code>invoke(..., { payload: { … } })</code>) from <code>syncTrayNowPlayingFromPlayback</code> in <code>frontend/js/audio.js</code>. Payload includes <code>ui_theme</code>, optional <code>appearance</code> (CSS variables from <code>SCHEME_VAR_KEYS</code>), and now-playing fields.</li>
+          <li><strong>Theme &amp; color schemes:</strong> Popover applies <code>data-theme</code> and inline scheme vars so the HUD tracks Settings light/dark and color presets.</li>
+          <li><strong>Previous / Next:</strong> Snake-case menu IDs <code>prev_track</code> / <code>next_track</code> (tray popover, native menu bar, <code>tray_prev</code> / <code>tray_next</code>) call <code>prevTrack</code> / <code>nextTrack</code> with <code>respectAutoplaySource: true</code> so the list follows <code>autoplayNextSource</code> (player history vs visible Samples table). Floating player buttons use camelCase actions and stay on the history list only.</li>
+          <li><strong>Autoplay next (on/off):</strong> Gates end-of-track and <strong>failed-preview</strong> auto-advance (<code>tryPreviewAutoplayNextOnFailureAsync</code> in <code>previewAudio</code>) along the same list as EOF (<code>autoplayNextSource</code>), after an error toast; can chain across multiple bad files. Does not gate manual prev/next from tray/menu/shortcuts.</li>
+          <li><strong>Tray mirror:</strong> The popover has no separate queue — it reflects the main window via <code>syncTrayNowPlayingFromPlayback</code> after the current path updates.</li>
+          <li><strong>Tray seek:</strong> Popover scrubber sends <code>menu-action</code> with payload <code>seek:&lt;fraction&gt;</code>; see IPC section above.</li>
+          <li><strong>HUD subtitle:</strong> <code>syncTrayNowPlayingFromPlayback</code> clears a redundant subtitle when <code>#npMetaLine</code> would duplicate the track title (e.g. basename-only path matching the displayed name).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Monorepo layout</h2>
+        <p>High-level tree (names only — open the repo for full detail).</p>
+        <pre>audio-haxor/
+├── docs/              # This hub + synced rustdoc (docs/api/) + hud-static.css, hud-theme.js
+├── frontend/          # Main WebView: index.html, js/*.js, tray-popover.html
+├── i18n/              # app_i18n_*.json string catalogs
+├── reports/           # Generated artifacts (e.g. i18n audit HTML)
+├── scripts/           # pnpm wrappers, Python i18n tools, JS test runners, shell maintenance
+├── src-tauri/         # Rust crate (lib + binary), capabilities, bundled resources
+│   └── src/           # lib.rs invoke surface + domain modules (see below)
+└── package.json       # pnpm scripts; version mirrors tauri.conf / Cargo for releases</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Package scripts (pnpm)</h2>
+        <p>Entry points from <code>package.json</code> — run from repo root with <code>pnpm …</code>.</p>
+        <pre>dev / tauri:dev          → tauri dev
+build / tauri:build      → tauri build (+ postbundle audio-engine helper on full build)
+tauri:build:ci           → CI build without signing
+test → scripts/test.sh (combined)
+test:js → node scripts/run-js-tests.mjs
+test:rust                → cargo test --manifest-path src-tauri/Cargo.toml
+test:audio-engine        → node scripts/run-audio-engine-tests.mjs
+doc / doc:open / doc:sync → rustdoc; doc:sync copies target/doc → docs/api/
+clean / bust / rebuild / nuke / deploy → maintenance shell scripts
+db:vacuum / db:stats     → SQLite maintenance helpers
+i18n:sort / i18n:sort:check / i18n:audit → catalog sort + HTML audit report</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Shell helpers under <code>scripts/</code></h2>
+        <p>Thin wrappers around builds, tests, deploy, and DB housekeeping — read each file for flags and safety rails.</p>
+        <ul>
+          <li><strong>build.sh / rebuild.sh / clean.sh / nuke.sh / bust.sh</strong> — lifecycle and cache busting.</li>
+          <li><strong>test.sh / ship-check.sh</strong> — pre-ship validation.</li>
+          <li><strong>postbundle-audio-engine-helper.sh</strong> — runs after <code>pnpm build</code> to place the audio-engine helper next to the app bundle.</li>
+          <li><strong>bundle_dmg.sh / deploy.sh / cyberpunk.sh</strong> — packaging and themed extras.</li>
+          <li><strong>db-vacuum.sh / db-stats.sh</strong> — on-disk SQLite maintenance.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section" id="tauri-invoke-inventory">
+        <h2>Tauri <code>invoke</code> inventory</h2>
+        <p>Authoritative list lives in <code>src-tauri/src/lib.rs</code> inside <code>tauri::generate_handler![…]</code>. Grouped here for orientation (names only). JS calls use the string form (e.g. <code>invoke('terminal_spawn', …)</code>) even when Rust registers <code>terminal::terminal_*</code>.</p>
+        <pre>Core / filesystem
+  get_version, get_build_info, get_walker_status, get_home_dir, get_process_stats
+  open_update_url, open_prefs_file, get_prefs_path, open_file_default, open_with_app
+  fs_list_dir, delete_file, delete_inventory_item, rename_file
+  read_text_file, write_text_file, write_binary_file, ensure_snapshot_export_dir
+  read_cache_file, write_cache_file, list_data_files, delete_data_file
+
+Plugin scan + KVR + plugin history
+  scan_plugins, stop_scan, check_updates, stop_updates, resolve_kvr
+  history_get_scans, history_get_detail, history_delete, history_clear, history_diff, history_latest
+  kvr_cache_get, kvr_cache_update
+  open_plugin_folder, export_plugins_json, export_plugins_csv, import_plugins_json
+
+Audio samples + analysis + fingerprints + waveform caches
+  scan_audio_samples, stop_audio_scan, get_audio_metadata
+  audio_history_save, audio_history_get_scans, audio_history_get_detail, audio_history_delete
+  audio_history_clear, audio_history_latest, audio_history_diff
+  estimate_bpm, detect_audio_key, measure_lufs, batch_analyze
+  sample_analysis_seed, sample_analysis_start, sample_analysis_stop, sample_analysis_stats
+  compute_fingerprint, find_similar_samples, build_fingerprint_cache, stop_fingerprint_cache
+  find_content_duplicates, cancel_content_duplicate_scan
+  upsert_waveform_cache_entry, read_waveform_cache_entry, upsert_spectrogram_cache_entry
+  waveform_prefetch_start, waveform_prefetch_stop, waveform_prefetch_stats
+  open_audio_folder, export_audio_json, export_audio_dsv, import_audio_json
+
+DAW projects
+  scan_daw_projects, stop_daw_scan
+  daw_history_save, daw_history_get_scans, daw_history_get_detail, daw_history_delete, daw_history_clear, daw_history_latest, daw_history_diff
+  open_daw_folder, open_daw_project, extract_project_plugins, read_als_xml, read_bwproject, read_project_file
+  export_daw_json, export_daw_dsv, import_daw_json
+
+Presets / MIDI / PDF / Video
+  scan_presets, stop_preset_scan, preset_history_*, open_preset_folder
+  export_presets_json, export_presets_dsv, import_presets_json
+  scan_midi_files, stop_midi_scan, midi_history_*, db_query_midi, db_midi_filter_stats, get_midi_info
+  scan_video_files, stop_video_scan, db_query_video, db_video_filter_stats
+  export_videos_json, export_videos_dsv, import_videos_json
+  scan_pdfs, stop_pdf_scan, pdf_history_*, open_pdf_file, pdf_metadata_get
+  pdf_metadata_extract_abort, pdf_metadata_extract_batch, pdf_metadata_unindexed
+  export_pdfs_json, export_pdfs_dsv, import_pdfs_json, export_pdf
+
+Unified scan + logging
+  scan_unified, get_unified_scan_run, prepare_unified_scan, stop_unified_scan
+  append_log, read_log, clear_log
+
+Audio engine subprocess
+  audio_engine_invoke, audio_engine_restart
+  audio_engine_eof_watchdog_start, audio_engine_eof_watchdog_stop, set_audio_engine_next_track_hint
+  set_playback_active_flag, set_playback_active_and_wait, set_bg_job_throttle, get_bg_job_throttle
+  get_audio_engine_process_stats
+
+Preferences + favorites + player history + notes + tags
+  prefs_get_all, prefs_set, prefs_remove, prefs_save_all
+  favorites_list, favorites_add, favorites_remove, favorites_clear, favorites_is, favorites_set_all
+  player_history_list, player_history_add, player_history_remove, player_history_clear
+  player_history_reorder, player_history_import, player_history_set_all
+  note_get, note_set, notes_get_all
+  tags_standalone_list, tags_standalone_set, tags_standalone_add, tags_standalone_remove
+  tags_all, tags_counts, tags_items_with, tag_rename, tag_delete, tag_add_to_item, tag_remove_from_item, tag_has
+
+i18n + tray + native chrome
+  get_app_strings, get_toast_strings, refresh_native_menu
+  tray_menu::update_tray_now_playing, tray_menu::tray_popover_action, tray_menu::tray_popover_resize
+  tray_menu::tray_popover_get_state, tray_menu::tray_popover_push_subtitle, tray_menu::tray_popover_get_ui_theme
+  tray_menu::show_main_window, tray_menu::tray_popover_hide
+
+SQLite + DB helpers
+  db_query_audio, db_query_plugins, db_query_daw, db_query_presets, db_query_pdfs, db_query_midi, db_query_video, db_query_palette_preview
+  db_audio_stats, db_daw_stats, db_preset_stats, db_pdf_stats, db_plugin_filter_stats
+  db_audio_filter_stats, db_daw_filter_stats, db_preset_filter_stats, db_pdf_filter_stats, db_midi_filter_stats, db_video_filter_stats
+  get_active_scan_inventory_counts, db_list_scans
+  db_update_bpm, db_update_key, db_update_lufs, db_update_analysis, db_backfill_audio_meta
+  db_get_analysis, db_unanalyzed_paths, db_audio_library_paths, db_migrate_json
+  db_cache_stats, db_clear_caches, db_clear_cache_table
+
+Import/export TOML
+  export_toml, import_toml
+
+ALS + MIDI authoring + sample crates
+  generate_als_project, cancel_als_generation
+  generate_midi_lead, generate_midi_kits, generate_trance_starter, find_trance_samples
+  clear_als_sample_blacklist, get_als_blacklist_count, get_als_blacklist_entries, add_to_als_blacklist, remove_from_als_blacklist
+  get_als_whitelist_entries, get_als_whitelist_count, add_to_als_whitelist, remove_from_als_whitelist, clear_als_whitelist
+  als_query_samples, crate_category_counts, crate_facets, genre_rules_report, crate_query
+  crate_favorite_pack_toggle, crate_favorite_packs_list, crate_similar_candidates
+
+Embedded terminal
+  terminal_spawn, terminal_write, terminal_resize, terminal_kill
+
+Folder watch
+  start_file_watcher, stop_file_watcher, get_file_watcher_status</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Rust modules (<code>src-tauri/src</code>)</h2>
+        <p>One file per concern where possible; heavy lifting is split so IPC handlers stay thin.</p>
+        <ul>
+          <li><strong>lib.rs / main.rs</strong> — Tauri builder, <code>generate_handler</code>, window restore, plugin registration.</li>
+          <li><strong>db.rs</strong> — SQLite with WAL; dedicated writer mutex vs round-robin read pool (see module docs — avoids starving UI queries during migrations/writes).</li>
+          <li><strong>history.rs</strong> — scan snapshots, preferences merge, typed history structs per domain.</li>
+          <li><strong>scanner.rs</strong> — plugin inventory; <strong>audio_scanner.rs</strong>, <strong>daw_scanner.rs</strong>, <strong>preset_scanner.rs</strong>, <strong>midi_scanner.rs</strong>, <strong>pdf_scanner.rs</strong>, <strong>video_scanner.rs</strong> — parallel domain walkers.</li>
+          <li><strong>als_project.rs</strong>, <strong>als_generator.rs</strong>, <strong>track_generator.rs</strong>, <strong>trance_generator.rs</strong>, <strong>midi_generator.rs</strong> — ALS project config, template/XML + gzip I/O, techno/schranz/trance arrangement, MIDI helpers for generated sets.</li>
+          <li><strong>unified_walker.rs</strong> — single filesystem pass feeding the same progress channels as standalone scans.</li>
+          <li><strong>audio_engine.rs</strong> — subprocess lifecycle + JSON RPC bridge for decode, transport, DSP, optional plugins.</li>
+          <li><strong>bpm.rs / key_detect.rs / lufs.rs</strong> — analysis primitives; <strong>similarity.rs</strong>, <strong>content_hash.rs</strong> — chromaprint / duplicate detection helpers.</li>
+          <li><strong>kvr.rs</strong> — KVR resolve + update queue integration.</li>
+          <li><strong>xref.rs</strong> — DAW project cross-reference and cached plugin lists per project.</li>
+          <li><strong>file_watcher.rs</strong> — notify-based rescans from configured roots.</li>
+          <li><strong>midi.rs</strong>, <strong>pdf_meta.rs</strong> — format-specific metadata extraction.</li>
+          <li><strong>path_norm.rs</strong>, <strong>scanner_skip_dirs.rs</strong>, <strong>audio_extensions.rs</strong>, <strong>bulk_stat.rs</strong> — path rules, skipping, and IO batching.</li>
+          <li><strong>open_with_app.rs</strong> — platform “open with” / reveal patterns.</li>
+          <li><strong>terminal.rs</strong> — embedded PTY terminal: <code>terminal_spawn</code>, <code>terminal_write</code>, <code>terminal_resize</code>, <code>terminal_kill</code>. Reader buffers incomplete UTF-8 tails across <code>read()</code> calls so split multi-byte chars do not get dropped by <code>from_utf8_lossy</code>; xterm.js&rsquo;s <code>Ctrl+L</code> handler calls <code>term.clear()</code> before the write so the scrollback flushes (the <code>ESC[2J</code> alone does not).</li>
+          <li><strong>app_i18n.rs</strong> — loads catalogs for <code>get_app_strings</code>; <strong>native_menu.rs</strong>, <strong>tray_menu.rs</strong> — menu bar + tray popover wiring.</li>
+          <li><strong>app_activity_macos.rs</strong> (macOS) — App Nap mitigation: holds an <code>NSProcessInfo</code> activity assertion for process lifetime, registers <code>NSApplicationDidResignActive</code> / <code>DidBecomeActive</code> observers that log background-mode transitions to <code>app.log</code>. Installed from <code>RunEvent::Ready</code> (not <code>setup()</code>) and wrapped in <code>objc2::exception::catch</code>.</li>
+          <li><strong>space_preview_macos.rs</strong> (macOS) — Mission Control / Spaces / Cmd-Tab snapshot fix: layers a periodically-refreshed <code>NSImageView</code> overlay above the WKWebView so the WindowServer&rsquo;s out-of-Space snapshot grabs a bitmap-backed <code>CALayer</code> instead of an empty <code>CARemoteLayer</code> (WebKit bug 146877). Walks the runtime superclass chain via <code>class_getName</code> to match wry&rsquo;s <code>WryWebView</code> subclass.</li>
+          <li><strong>tray_popover_escape_macos.rs</strong> (macOS) — installs an <code>NSEvent</code> local key-monitor so Escape closes the tray popover even when the popover&rsquo;s WKWebView never becomes first responder (JS <code>keydown</code> would otherwise never fire).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>SQLite &amp; performance notes</h2>
+        <p>The database layer is documented in-source: WAL mode, a single writer connection for migrations and serialized writes, and a pool of read-only handles rotated for <code>db_query_*</code> so one long query does not block the whole UI.</p>
+        <ul>
+          <li><strong>Filter stats</strong> — capped aggregation helpers back tab headers and multi-filter UX without loading entire tables into the WebView.</li>
+          <li><strong>Analysis columns</strong> — BPM, musical key, LUFS, and batch backfill commands keep the library table the source of truth for sort/filter.</li>
+          <li><strong>Caches</strong> — <code>db_cache_stats</code> / <code>db_clear_cache_table</code> expose maintenance for derived tables (fingerprints, xref, etc.) without nuking raw library rows.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Audio engine subprocess</h2>
+        <p>The UI talks to a separate audio-engine binary via <code>audio_engine_invoke</code> (see <code>frontend/js/audio-engine.js</code>). Rust forwards JSON messages, restarts the child when needed, and exposes EOF watchdog hooks so backgrounded WebViews still advance transport when macOS throttles timers.</p>
+        <ul>
+          <li><strong>Playback</strong> — file load, seek, speed, reverse, loop modes, gain/pan/mono, multi-band EQ.</li>
+          <li><strong>Optional analysis path</strong> — spectrum bins for the visualizer when enabled.</li>
+          <li><strong>Plugin hosting</strong> — VST3/AU insert chain with editor windows where supported.</li>
+          <li><strong>Keep-alive ping</strong> — host&rsquo;s HEALTH sampler sends <code>{ &quot;cmd&quot;: &quot;ping&quot; }</code> every 30 s when the previous window had fewer than 5 IPC calls, keeping JUCE&rsquo;s working set resident in RAM so the first <code>playback_load</code> after long idle does not block on page-in.</li>
+          <li><strong>Fatal-signal crash dump</strong> — engine installs a signal-safe handler on SIGSEGV / SIGBUS / SIGABRT that writes <code>[ENGINE crash] handler entered</code>, <code>fatal signal &lt;n&gt; si_addr=0x&hellip;</code>, raw frame addresses, and the dyld image map to <code>engine.log</code> before the helper aborts. Symbolicate the addresses against the dyld bases with <code>atos</code> to recover function names.</li>
+          <li><strong>Tests</strong> — <code>pnpm run test:audio-engine</code> exercises the JSON surface from Node without the full Tauri shell.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Frontend <code>js/</code> module index</h2>
+        <p>Every module below is plain browser JS loaded by <code>frontend/index.html</code> (order matters for globals — release builds may differ from dev bundling assumptions; cross-file calls are guarded where noted in source).</p>
+        <h3>Shell &amp; IPC</h3>
+        <ul>
+          <li><strong>app.js</strong> — boot, tab wiring, global listeners.</li>
+          <li><strong>ipc.js</strong> — <code>window.vstUpdater</code>, string hydration, menu-action routing.</li>
+          <li><strong>utils.js</strong> — shared helpers (formatting, DOM, async guards).</li>
+        </ul>
+        <h3>Tabs &amp; data</h3>
+        <ul>
+          <li><strong>plugins.js</strong>, <strong>daw.js</strong>, <strong>presets.js</strong>, <strong>midi.js</strong>, <strong>pdf.js</strong> — table UX per inventory type.</li>
+          <li><strong>history.js</strong>, <strong>walker-status.js</strong> — scan runs and live walker HUD.</li>
+          <li><strong>xref.js</strong>, <strong>dep-graph.js</strong>, <strong>disk-usage.js</strong> — DAW xref, dependency graph, disk strip.</li>
+          <li><strong>smart-playlists.js</strong>, <strong>duplicates.js</strong>, <strong>heatmap-dashboard.js</strong> — library intelligence views.</li>
+          <li><strong>file-browser.js</strong>, <strong>native-file-drag.js</strong> — Files tab and native drag metadata.</li>
+        </ul>
+        <h3>Playback &amp; engine</h3>
+        <ul>
+          <li><strong>audio.js</strong> — floating player, history, tray sync, autoplay chains.</li>
+          <li><strong>audio-engine.js</strong> — JSON client for the subprocess engine.</li>
+          <li><strong>audio-decode-worker.js</strong> — off-main-thread decode for waveforms/spectrograms.</li>
+          <li><strong>visualizer.js</strong> — spectrum/waveform presentation.</li>
+        </ul>
+        <h3>Settings, i18n, palette</h3>
+        <ul>
+          <li><strong>settings.js</strong>, <strong>settings-search.js</strong> — prefs UI and fuzzy search over settings keys.</li>
+          <li><strong>i18n-ui.js</strong> — reapplies translated strings and locale toggles.</li>
+          <li><strong>command-palette.js</strong> — Cmd/Ctrl+K launcher + DB preview queries.</li>
+          <li><strong>shortcuts.js</strong> — keymap persistence + <code>executeShortcut</code>.</li>
+          <li><strong>kvr.js</strong> — KVR resolve/update UX.</li>
+        </ul>
+        <h3>Desktop polish</h3>
+        <ul>
+          <li><strong>context-menu.js</strong>, <strong>tooltip-hover.js</strong>, <strong>help-overlay.js</strong>, <strong>modal-drag.js</strong>.</li>
+          <li><strong>keyboard-nav.js</strong>, <strong>batch-select.js</strong>, <strong>drag-reorder.js</strong>, <strong>sort-persist.js</strong>, <strong>columns.js</strong>.</li>
+          <li><strong>multi-filter.js</strong>, <strong>favorites.js</strong>, <strong>notes.js</strong>, <strong>export.js</strong>.</li>
+          <li><strong>ui-idle.js</strong> — backs off animations when the window is not visible.</li>
+          <li><strong>terminal.js</strong> — embedded PTY terminal (xterm.js, drag-to-dock, resize, Ctrl+T).</li>
+          <li><strong>tray-popover.js</strong> — separate WebView HUD (loaded from <code>tray-popover.html</code>).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Static docs styling</h2>
+        <p>This page shares <code>hud-static.css</code> with the generated i18n audit report so <code>file://</code> and <code>tauri://</code> views stay visually aligned. <code>hud-theme.js</code> wires theme toggle, CRT overlay, neon pulse, and the same color-scheme grid as the app HUD.</p>
+        <ul>
+          <li><strong>i18n audit</strong> — <code>pnpm run i18n:audit</code> writes <code>reports/i18n_catalog_audit.html</code> by default (override with <code>-o</code>). Open that file after generation; it inlines CSS from <code>hud-static.css</code> for a self-contained artifact.</li>
+          <li><strong>Catalog maintenance</strong> — <code>pnpm run i18n:sort</code> normalizes key ordering; <code>i18n:sort:check</code> fails CI-style when catalogs drift.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Repository</h2>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/Audio-Haxor">GitHub — Audio-Haxor</a></li>
+          <li>Full prose docs: <code>README.md</code> at repo root (features, testing, architecture).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests (quick ref)</h2>
+        <p>Counts change with every commit; run locally for current totals.</p>
+        <ul>
+          <li><strong>Rust:</strong> <code>cargo test --manifest-path src-tauri/Cargo.toml</code></li>
+          <li><strong>JavaScript:</strong> <code>pnpm run test:js</code> — pure helpers and micro-tests; not DOM/Tauri/E2E (see README)</li>
+          <li><strong>Combined:</strong> <code>pnpm test</code></li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="build-meta.js"></script>
+  <script src="hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 19 · ALS generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">19 · ALS generator</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="18-shortcuts.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">18 · Keyboard shortcuts</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <div class="nav-stub">
+          <span class="nav-label">End</span>
+          <span class="nav-title">—</span>
+        </div>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:100%"></div></div>
+        <span class="meter-count">19 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">19.</span>ALS generator — arrange a techno project from your sample library</h2>
+      <p class="tutorial-subtitle">The <strong>ALS Generator</strong> tab turns your analyzed sample library into a ready-to-play Ableton Live Set (<code>.als</code>). One click produces a 50-track arrangement with grouped busses, return sends, sidechain compression, and a limited master — open it in Ableton 11 / 12 and press play.</p>
+
+      <section class="tutorial-section">
+        <h2>Before you generate: prerequisites</h2>
+        <p>The generator selects samples from the SQLite library using BPM and musical-key metadata. Make sure these are populated first:</p>
+        <ol>
+          <li><strong>Scan samples</strong> into the library — Samples tab (<a href="05-samples.html">step 05</a>) or <kbd>Cmd+Shift+S</kbd>.</li>
+          <li><strong>Run BPM / key / LUFS analysis</strong> — <kbd>Cmd+Shift+V</kbd> or the ALS tab&rsquo;s own <em>Run Analysis</em> button (<code>#alsAnalysisBtn</code>). The status line (<code>#alsAnalysisStatus</code>) shows <em>analyzed / total / unanalyzed</em> counts. The tab surfaces this because key-matched selection falls back to filename heuristics without it.</li>
+          <li>(Optional) Curate the pool with the <strong>Blacklist</strong> / <strong>Whitelist</strong> modals — paths on the blacklist never get selected; directories on the whitelist scope selection to just those trees.</li>
+        </ol>
+        <p><strong>Audio-based category inference fallback.</strong> When filename / path heuristics yield zero matches for a slot &mdash; long-tail manufacturer names the manufacturer-signal tables in <code>SAMPLE_CATEGORIZATION.md</code> have not learned yet, or generic file names like <em>One.wav</em> &mdash; the selector consults stored audio analysis fields (LUFS, spectral centroid, transient density, length bucket) to decide whether the sample <em>looks like</em> a kick, hat, pad, etc. Generation will not silently leave the slot empty. Coverage of this path improves the more samples you analyze, so an analyzed library always produces fuller arrangements than an un-analyzed one.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Open the tab</h2>
+        <p>Click the <strong>&#127932; ALS Generator</strong> tab at the end of the tab bar, between <em>Audio Engine</em> and <em>Settings</em> (<code>data-tab="alsGenerator"</code> in <code>frontend/index.html</code>). There&rsquo;s no default keyboard shortcut bound — the command palette (<kbd>Cmd+K</kbd>) can jump here too.</p>
+        <figure class="tutorial-shot">
+          <img src="../assets/als.png" alt="ALS Generator tab with Section Overrides timeline, Project Basics, Track Counts, Preview Key Samples, and Generate panels" loading="lazy">
+          <figcaption>assets/als.png · ALS Generator tab. Top: six-lane Section Overrides timeline (chaos / glitch / density / variation / parallelism / scatter), each lane subdivided into 8-bar blocks with section labels above. Bottom row: Project Basics, Track Counts grid, Preview Key Samples, Generate controls with config summary.</figcaption>
+        </figure>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Global controls</h2>
+        <p>Top strip of the panel. Every field persists to prefs so you can refine across sessions.</p>
+        <ul>
+          <li><strong>Genre</strong> (<code>#alsGenre</code>) — <em>Techno</em>, <em>Schranz</em>, or <em>Trance</em>. Genre drives arrangement length (224 / 208 / 256 bars), default BPM/hardness, and the sample-category fallback SQL patterns.</li>
+          <li><strong>BPM</strong> (<code>#alsBpm</code>) — 120–200. Defaults follow genre (Techno 132, Trance 140, Schranz 155). The tempo is baked into warp markers so loops stretch cleanly.</li>
+          <li><strong>Hardness</strong> (<code>#alsHardness</code>) — 0.00–1.00. Biases selection toward heavier / softer kicks and leads when the sample library has a <code>hardness</code> score.</li>
+          <li><strong>Key</strong> — root note (A–G) plus mode (Ionian / Dorian / Phrygian / Lydian / Mixolydian / Aeolian / Locrian). Samples with matching <code>key_name</code> are preferred; mismatched but relative-minor-of-major entries are allowed.</li>
+          <li><strong>Atonal</strong> — global override that ignores key. Useful for noise / industrial / schranz material.</li>
+          <li><strong>Songs</strong> — 1–10. Each song gets its own bar range (song length + 32-bar gap) and re-rolls sample selection from the pool, so arrangements diverge across the same <code>.als</code>.</li>
+          <li><strong>Output path</strong> (<code>#alsOutputPath</code>) — target directory picker; the filename is auto-generated from genre + hardness + key + seed unless you override <em>Project name</em>.</li>
+          <li><strong>Seed</strong> (<code>#alsSeed</code>, <code>#alsSeedLocked</code>) — optional. See the <a href="#seed">Seed / reproducibility</a> section below.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section" id="seed">
+        <h2>Seed / reproducibility</h2>
+        <p>Every random choice the generator makes &mdash; which samples win the shuffle-within-score tie-break, where scatter hits land on the 1/16 grid, which positions become fills or glitches, how the chaos gaps carve up a bar, which tracks drop out under parallelism, which 8-bar blocks receive density accents &mdash; derives from a single <strong>seed</strong>. Same seed + same config = bit-identical arrangement.</p>
+        <p>Controls live at the bottom of the Generate section, next to Project Name and Output folder:</p>
+        <ul>
+          <li><strong>Seed field</strong> (<code>#alsSeed</code>) &mdash; decimal string. Leave blank to let the backend draw a fresh random seed for this generation only. Whatever seed was used is echoed back and populated into the field after the run (look for the &ldquo;Seed: 12345&rdquo; line in the result card), so you can see exactly what produced the output you just got.</li>
+          <li><strong>🎲 Randomize</strong> (<code>[data-action=&quot;alsRandomizeSeed&quot;]</code>) &mdash; drops a fresh random 53-bit seed into the field. Chose 53 bits deliberately: it&rsquo;s <code>Number.MAX_SAFE_INTEGER</code>, so any seed that ever shows in the wizard round-trips losslessly through JS &mdash; copy one out of the result card, paste it back in later, and you get the same project.</li>
+          <li><strong>🔒 Lock</strong> (<code>#alsSeedLocked</code>) &mdash; when ticked, the current seed is preserved across app restarts via <code>prefs.alsGeneratorPrefs</code>. When unticked, <code>restoreAlsPrefs</code> drops the stored seed on startup so the next generation rolls fresh &mdash; this is the guard against &ldquo;why does every generation sound identical now?&rdquo; after you leave the app running with a seed in the box.</li>
+        </ul>
+        <p>Typical workflow:</p>
+        <ol>
+          <li>Leave the field blank. Press <strong>Generate</strong>. Listen to the result.</li>
+          <li>You like it. Tick <strong>🔒 Lock</strong>. The seed that made it is already in the field (populated from the result card). Next Generate produces the same arrangement &mdash; tweak only the parameters you want to explore (e.g. raise <em>hardness</em>, or swap <em>Techno</em> to <em>Schranz</em>) and regenerate.</li>
+          <li>You want to try something new. Hit <strong>🎲</strong> (or clear the field) and Generate again.</li>
+        </ol>
+        <h3>Implementation notes</h3>
+        <ul>
+          <li>Wizard sends <code>seed</code> as a <strong>string</strong> so u64 seeds up to <code>u64::MAX</code> (say, pasted from a blog post that uses a 64-bit hash) round-trip without JS Number precision loss. The Rust side accepts either numeric or string form via <code>deserialize_seed</code> in <code>src-tauri/src/als_project.rs</code>; empty or whitespace-only strings map to <code>None</code>, whereas non-numeric strings surface as hard errors rather than silently being dropped.</li>
+          <li><code>generate_als_project</code> in <code>src-tauri/src/lib.rs</code> resolves the concrete seed via <code>config.seed.unwrap_or_else(rand::random)</code>. The same seed feeds both the generator and <code>generate_project_name(config, seed)</code>, so the word-pattern portion of the filename is also deterministic; the <code>YYYYMMDD_HHMMSS</code> suffix keeps two locked-seed runs from overwriting each other on disk.</li>
+          <li>Seed threading uses a <strong>thread-local <code>StdRng</code></strong> in <code>src-tauri/src/track_generator.rs</code>. <code>init_gen_rng(seed)</code> runs at the top of <code>track_generator::generate</code> and <code>clear_gen_rng()</code> runs on every exit path (success and error alike, via a <code>generate_inner()</code> split). Randomness sites in that module &mdash; including <code>generate_swoosh_arrangements</code>, <code>generate_scatter_hits</code>, <code>generate_random_fills</code>, <code>generate_glitch_arrangements</code>, <code>apply_parallelism</code>, <code>apply_variation</code>, <code>apply_chaos_to_arrangements</code>, <code>apply_density_per_section</code>, <code>apply_glitch_edits</code>, and the sample-shuffle tie-break in <code>query_samples_internal</code> &mdash; pull via <code>with_gen_rng(|rng| &hellip;)</code>. When no generation is active, <code>with_gen_rng</code> seeds a fresh <code>StdRng</code> from wall-clock nanoseconds so unit tests that call helpers directly still produce output.</li>
+          <li>Rust tests: <code>test_generate_project_name_deterministic_with_seed</code> and <code>test_generate_project_name_varies_with_seed</code> in <code>als_project.rs</code>; <code>test_seeded_helper_is_deterministic</code>, <code>test_different_seeds_produce_different_output</code>, and <code>test_helper_works_without_generate_init</code> in <code>track_generator.rs</code>&rsquo;s <code>additional_tests</code> module.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Per-type track counts</h2>
+        <p>A grid of sliders (0–50 each) — one per track type: <code>KICK</code>, <code>CLAP</code>, <code>SNARE</code>, <code>HAT</code>, <code>PERC</code>, <code>RIDE</code>, <code>FILL</code>, <code>BASS</code>, <code>SUB</code>, <code>LEAD</code>, <code>SYNTH</code>, <code>PAD</code>, <code>ARP</code>, <code>RISER</code>, <code>DOWNLIFTER</code>, <code>CRASH</code>, <code>IMPACT</code>, <code>HIT</code>, <code>SWEEP UP</code>, <code>SWEEP DOWN</code>, <code>SNARE ROLL</code>, <code>REVERSE</code>, <code>SUB DROP</code>, <code>BOOM KICK</code>, <code>ATMOS</code>, <code>GLITCH</code>, <code>SCATTER</code>, <code>VOX</code>, <code>BREAKBEAT</code>, <code>HARDCORE KICK</code>, <code>KICK LAYER</code> (group of three children: <strong>PUNCH</strong> / <strong>RUMBLE</strong> / <strong>NOISE</strong>).</p>
+        <p>Set a slider to <em>3</em> and you get <code>KICK 1</code>, <code>KICK 2</code>, <code>KICK 3</code> — three parallel tracks with different samples and gradually-layered entry/exit points (Layer 1 plays the full arrangement, Layer 2 trims one section from each end, and so on). Set a slider to <em>0</em> and the type is omitted; group buses are only emitted when they have at least one child.</p>
+        <p>Adjacent to each slider is a <strong>tonal toggle</strong> — when on, that type must respect the project key (no atonal samples allowed), even if the global <em>Atonal</em> flag is off. Useful when you want atonal percs but tonal basses.</p>
+
+        <h3>Specialty kick + breakbeat tracks</h3>
+        <ul>
+          <li><strong>HARDCORE KICK</strong> &mdash; pulled by category &ldquo;hardcore_kick&rdquo;: distorted / overdriven kick samples, schranz-friendly. Defaults to non-zero for the Schranz genre and zero for Techno / Trance, but the slider lets you crank it on any genre. Routed under the <code>KICKS</code> group like the standard <code>KICK</code> track, so the same group sidechain ducks the rest of the mix off it.</li>
+          <li><strong>KICK LAYER (PUNCH / RUMBLE / NOISE)</strong> &mdash; one slider that emits a 3-track group: a <em>punch</em> child (transient body), a <em>rumble</em> child (sub tail), and a <em>noise</em> child (top-end hiss + fizz). Each layer queries its own sample category so you can dial them independently in Ableton without re-printing a mono kick. Group bus <code>KICK_LAYER</code> sits under <code>KICKS</code>; group sidechain still keys off the parent <code>KICKS</code> bus.</li>
+          <li><strong>BREAKBEAT</strong> &mdash; chopped break loops on the drum group. Available across all genres; mainly useful for breakbeat / jungle-leaning sections, but lands cleanly on top of techno / trance arrangements too. Selector picks loops whose detected BPM is a multiple of the project tempo so warp markers don&rsquo;t mangle the hits.</li>
+        </ul>
+
+        <h3>Pre-drop fill pattern</h3>
+        <p>Derived from real schranz template analysis: the four bars before every drop receive a <strong>pre-drop fill</strong> &mdash; a snare roll accelerating from 1/8 to 1/16 to 1/32, a long filtered downsweep on the FX bus, and an impact one-shot that lands on the downbeat of the drop. The pattern is emitted by the arrangement engine on top of whatever the per-type sliders chose, so you don&rsquo;t need to allocate sliders for it &mdash; it uses your existing <code>SNARE ROLL</code>, <code>SWEEP DOWN</code>, and <code>IMPACT</code> tracks if they exist (and silently drops the layer otherwise).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Section timeline (chaos / glitch / density / variation / parallelism / scatter)</h2>
+        <p><code>frontend/js/als-timeline.js</code> draws a 6-lane canvas below the sliders. Each lane represents one dynamics parameter. The lanes are subdivided into <strong>8-bar blocks</strong> — one cell per Ableton phrase — so you can shape dynamics at phrase granularity, not just per 32-bar section. Section names and their bar ranges remain as visual labels at the top, with heavier vertical dividers where each section begins.</p>
+        <p>Block count per genre (every genre lays its sections on an 8-bar grid, using the genre&rsquo;s default section lengths — users can override these):</p>
+        <ul>
+          <li><strong>Techno</strong> &mdash; 28 blocks across 224 bars (7 sections × 4 blocks).</li>
+          <li><strong>Trance</strong> &mdash; 32 blocks across 256 bars (48-bar breakdown and outro get 6 blocks each).</li>
+          <li><strong>Schranz</strong> &mdash; 26 blocks across 208 bars (16-bar breakdown and outro get 2 blocks each).</li>
+        </ul>
+
+        <h3>Resizing sections (per-genre)</h3>
+        <p>Section bar lengths are editable. Every section has a draggable handle on its right edge &mdash; two short cyan tick marks inside the header row. Hover the edge: cursor becomes <code>col&#8209;resize</code>. Click and drag:</p>
+        <ul>
+          <li>Dragging adjusts the <strong>preceding</strong> section&rsquo;s length, pushing or pulling every later section along with it.</li>
+          <li>Drag snaps to the 8-bar grid. Minimum section length is 8 bars (1 block). Maximum is 128 bars (16 blocks).</li>
+          <li>A cyan ghost line follows the cursor while you drag; the bar-count label (e.g. &ldquo;BREAKDOWN: 40 bars&rdquo;) updates live. Nothing commits until you release the mouse &mdash; on release the canvas reflows once to the new layout and the value is saved.</li>
+          <li>Pixel&#8594;bar mapping is <strong>frozen at mousedown</strong> so drag feels linear (the grid doesn&rsquo;t auto-resize under your cursor). Cursor movement always produces proportional bar movement for the whole gesture.</li>
+        </ul>
+        <p>Lengths are persisted <strong>per genre</strong> in prefs under <code>alsSectionLengthsByGenre</code>. Switching the Genre dropdown loads that genre&rsquo;s stored lengths (or its defaults if you haven&rsquo;t touched it yet). The IPC payload to the Rust generator includes your current lengths, so generated <code>.als</code> files use your section sizes &mdash; setting trance outro to 32 means Ableton opens a 32-bar outro, not 48.</p>
+        <p>Arrangement patterns are remapped at generation time from the canonical 224-bar Techno reference layout onto your chosen layout (see <code>track_generator::remap_bar_range</code>). Shrinking a section clips the tail of the template pattern to fit; extending produces a silent tail beyond the canonical template length &mdash; the template was written for 32-bar sections, so blocks past bar 32 of any section have no generator content until the arrangement engine gets the full phrase-pattern rewrite.</p>
+        <p><em>Heads-up:</em> if you shift an <em>earlier</em> section&rsquo;s length, later sections slide along absolute bar positions, and any chaos/glitch/etc. overrides you&rsquo;ve pinned in the shifted range will fall in unexpected places. The overrides themselves stay put (they&rsquo;re keyed by absolute bar, not section-relative). Right-click to clear + re-pin if anything ends up where you didn&rsquo;t intend.</p>
+        <p>Interactions on any 8-bar block (FL Studio-style paint + erase):</p>
+        <ul>
+          <li><strong>Left-click and drag</strong> (primary gesture) paints every block the cursor crosses in <strong>any lane</strong>. The paint value is captured from the <em>starting</em> block: clicking an empty block paints <code>0.5</code>; clicking a pinned block paints that block&rsquo;s value across the whole gesture &mdash; perfect for extending a region to its neighbors or stamping the same value down a diagonal. Cursor becomes a cyan paintbrush over the grid.</li>
+          <li><strong>Left-click without dragging</strong> still acts like a single click: pins (or re-uses) <code>0.5</code> and opens the popover slider for fine-tuning.</li>
+          <li><strong>Right-click and drag</strong> erases in <strong>any lane</strong>. A single right-click clears one block; dragging with the right button held clears every block the cursor crosses &mdash; sweeping a diagonal wipes a rectangular region in one gesture. Cursor becomes a pink eraser during the drag. The native context menu is suppressed.</li>
+          <li><strong>Drag the top edge</strong> (top 6&nbsp;px) of a pinned block to set the value by height (top&nbsp;=&nbsp;1.0, bottom&nbsp;=&nbsp;0.0). Top-edge drag takes priority over paint so fine-tuning one block never accidentally paints neighbors.</li>
+          <li><strong>Shift-click</strong> range-selects every 8-bar block between the current anchor and the clicked block, same lane (classic Finder/spreadsheet convention). After selecting, the popover slider adjusts every selected block at once &mdash; drag once, all of them get the same value. The anchor (last-clicked, cyan glow) is the reference block for the popover&rsquo;s default value; other selected blocks get the same cyan outline without the glow. Shift-click in a different lane degrades to a fresh single-select (so you can start a new anchor there). Shift-click is pure selection &mdash; it doesn&rsquo;t pin any values; only dragging the popover slider pins them.</li>
+          <li><strong>&#8984;/Ctrl-click</strong> (Cmd on Mac, Ctrl elsewhere) fills a linear ramp from the current anchor to the clicked block, same lane only. Start value = anchor&rsquo;s current value (or 0.5 if unpinned); end value = click Y-height in the clicked block&rsquo;s lane (top&nbsp;=&nbsp;1.0, bottom&nbsp;=&nbsp;0.0). Every 8-bar block between is linearly interpolated, inclusive. Useful for builds: click a 0.2 block, then &#8984;-click 32&nbsp;bars later near the top &rarr; a smooth 0.2&nbsp;&rarr;&nbsp;1.0 build fills the range and every filled block joins the selection so the popover can further tweak the group. While &#8984;/Ctrl is held the cursor shows a cyan ramp icon to signal the mode.</li>
+          <li><strong>Scroll wheel</strong> over a pinned block nudges &plusmn;0.05.</li>
+          <li><strong>Popover slider</strong> lets you type a precise value; the title shows the section name and the block&rsquo;s bar range (e.g. <em>CHAOS &middot; BUILD &middot; bars&nbsp;33&ndash;40</em>).</li>
+          <li><strong>Clear All</strong> wipes every block override (<em>alsSectionOverrides</em> pref).</li>
+        </ul>
+        <p>Persistence uses a flat bar-start &rarr; value map: <code>{ chaos: {"1": 0.5, "9": 0.3, "65": 0.8}, glitch: {&hellip;}, &hellip; }</code>. The Rust side (<code>als_project::SectionValues</code>) deserializes the same shape via a <code>BTreeMap&lt;String, f32&gt;</code> with <code>#[serde(transparent)]</code>. Legacy prefs keyed by section names (e.g. <code>{"intro": 0.5}</code>) migrate on first load by fanning the value out to every 8-bar block inside that section for the current genre.</p>
+        <p>The six parameters drive arrangement behavior at block resolution: higher <em>chaos</em> picks more varied samples, higher <em>density</em> adds micro-accent clips on HAT / PERC / SYNTH / ARP / PAD tracks, <em>parallelism</em> widens polyphony, <em>variation</em> forces fresh samples on repeats, <em>scatter</em> randomizes one-shot hit positions, <em>glitch</em> triggers mini-edits. Density is the most per-block-sensitive: its resolver walks all 28+ blocks and rolls a probability per block from that block's value.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Preview pane</h2>
+        <p>Below the timeline, <code>#alsPreviewList</code> shows up to five representative sample paths — kick, sub, mid bass, lead, pad — that match the current config. This is a dry-run: it calls <code>als_query_samples</code> without writing anything. Use it to sanity-check your key / hardness / blacklist setup before committing to a full generate.</p>
+        <p>The summary line (<code>#alsSummary</code>) estimates total tracks and clip count from the active slider config.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Generating</h2>
+        <p>Press <strong>Generate</strong> (<code>#alsGenerateBtn</code>). The button is replaced by a spinner + progress bar. Progress events from the Rust backend stream over the Tauri event channel:</p>
+        <ul>
+          <li><em>Loading samples for song 1/N&hellip;</em> — SQL queries against the sample pool.</li>
+          <li><em>TRACK_PROGRESS:created:total</em> — each track clone drives the bar.</li>
+          <li><em>Assembling XML</em> — track strings joined, master chain injected, NextPointeeId updated, locators stamped at every section boundary.</li>
+          <li><em>Writing &lt;filename&gt;</em> — gzip encoder flushes the final <code>.als</code>.</li>
+        </ul>
+        <p>The <strong>Cancel</strong> button (<code>#alsCancelBtn</code>) flips a shared <code>AtomicBool</code>; the generator drops out at the next cancel checkpoint.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What ends up in the file</h2>
+        <p>The generated <code>.als</code> is a gzipped XML document. Decompressed, you&rsquo;ll see:</p>
+        <ul>
+          <li><strong>Group buses</strong> — each skipped when empty. <code>KICKS</code> is its own top-level group (separate from <code>DRUMS</code>) so the kick pulse can safely feed every sidechain without feedback; <code>HARDCORE_KICK</code> tracks and the <code>KICK_LAYER</code> sub-group (<em>punch</em> / <em>rumble</em> / <em>noise</em>) nest inside <code>KICKS</code> when present. Then <code>DRUMS</code> (claps, snares, hats, percs, rides, fills, breakbeat), <code>BASS</code> (bass + sub), <code>BASS FX</code> (sub drops + boom kicks), <code>MELODICS</code> (leads / synths / pads / arps / atmos), <code>FX</code> (risers / downlifters / crashes / impacts / hits / sweeps / reverses / glitches / scatters / vox). Pre-drop fill clips are stamped on top of the existing snare-roll / sweep-down / impact tracks &mdash; no extra buses created.</li>
+          <li><strong>Per-track sends</strong> — every AudioTrack sends to Return A (Reverb) and Return B (Delay) with category-aware amounts: kick / sub / bass stay dry, drums get a light kiss, leads / arps add delay, pads / atmos run wettest. Values come from <code>send_levels_for()</code> in <code>src-tauri/src/track_generator.rs</code>.</li>
+          <li><strong>Group-level sidechain compression</strong> — a <code>Compressor2</code> is injected into DRUMS / BASS / BASS FX / MELODICS group chains, keyed to <code>AudioIn/Track.&lt;KICKS_group_id&gt;/PostFxOut</code>. Settings: Threshold &asymp; &minus;14 dB, Ratio 4:1, Attack &asymp; 5 ms, Release &asymp; 150 ms. FX bus is intentionally un-ducked so risers / impacts / crashes stay transient. Template: <code>src-tauri/src/group_sidechain_compressor_template.xml</code>.</li>
+          <li><strong>Master chain</strong> — <code>MainTrack</code> gets an <strong>Eq8</strong> (Band.0 as 12 dB/oct HPF at 30 Hz) and a <strong>Limiter</strong> (Ceiling &minus;0.3 dB, AutoRelease, Lookahead, LinkChannels) injected before the template&rsquo;s existing Utility. HPF first, Limiter second, Utility third. Templates: <code>src-tauri/src/master_eq8_hpf_template.xml</code>, <code>src-tauri/src/master_limiter_template.xml</code>.</li>
+          <li><strong>Locators</strong> at every section boundary of every song, labeled with the song&rsquo;s detected key.</li>
+          <li><strong>Warp markers</strong> on every AudioClip so non-BPM-matching samples stretch to project tempo.</li>
+          <li><strong>Track colors</strong> per category — DRUMS red-ish, BASS orange, MELODICS cyan-ish, FX purple — so the mixer reads at a glance.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Verifying in Ableton</h2>
+        <ol>
+          <li>Double-click the <code>.als</code> in Finder (or <code>open</code> it from the shell). Ableton 11 / 12 loads.</li>
+          <li>Confirm the tempo matches what you set — it&rsquo;s written to both the <code>Tempo/Manual</code> node and the first transport <code>FloatEvent</code>.</li>
+          <li>Scan the Arrangement view — you should see one labeled section locator per section per song.</li>
+          <li>Check the mixer: <strong>KICKS</strong>, <strong>DRUMS</strong>, <strong>BASS</strong>, <strong>BASS FX</strong>, <strong>MELODICS</strong>, <strong>FX</strong> group tracks expand into children. Each AudioTrack&rsquo;s two sends have non-silent values; bass tracks show &minus;&infin; dB (dry).</li>
+          <li>Open any DRUMS / BASS / MELODICS group and look at its device chain — a <strong>Compressor2</strong> with <em>KICKS · Post FX</em> as the sidechain source.</li>
+          <li>Select the Main track — Eq8 (Master HPF 30Hz) &rarr; Limiter &rarr; Utility.</li>
+          <li>Hit play. The kick should drive audible ducking on the bass and melodics buses.</li>
+        </ol>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Backend entry points (for deeper work)</h2>
+        <ul>
+          <li><strong>IPC:</strong> <code>generate_als_project(config)</code>, <code>cancel_als_generation()</code>, <code>als_query_samples(category, config, limit)</code>. Also <code>sample_analysis_seed</code> / <code>sample_analysis_start</code> / <code>sample_analysis_stop</code> / <code>sample_analysis_stats</code>; blacklist helpers <code>clear_als_sample_blacklist</code>, <code>get_als_blacklist_count</code>, <code>get_als_blacklist_entries</code>, <code>add_to_als_blacklist</code>, <code>remove_from_als_blacklist</code>; whitelist <code>get_als_whitelist_entries</code>, <code>get_als_whitelist_count</code>, <code>add_to_als_whitelist</code>, <code>remove_from_als_whitelist</code>, <code>clear_als_whitelist</code>. See the <a href="../index.html#tauri-invoke-inventory">IPC inventory</a> on the docs hub.</li>
+          <li><strong>Arrangement + emit:</strong> <code>track_generator::generate</code> in <code>src-tauri/src/track_generator.rs</code> (called from <code>generate_als_project</code> in <code>lib.rs</code>) runs sample loading &rarr; template extraction &rarr; group+track creation &rarr; post-processing &rarr; locators &rarr; master-chain injection &rarr; tempo set &rarr; gzip write. Template bytes and XML helpers live in <code>src-tauri/src/als_generator.rs</code>.</li>
+          <li><strong>Config model:</strong> <code>src-tauri/src/als_project.rs</code> — <code>ProjectConfig</code>, <code>SectionOverrides</code>, <code>TrackCounts</code>, <code>TypeAtonal</code>, plus the 7-section arrangement bounds per genre.</li>
+          <li><strong>Base template:</strong> <code>src-tauri/src/empty_project_template.als.gz</code> — ships with two <code>ReturnTrack</code>s (Reverb + Delay) pre-configured and each <code>AudioTrack</code> template already carrying an Eq8 / Gate / Channel EQ / Compressor2 chain (sidechain present but disabled by default). The generator fills in what the template leaves dormant.</li>
+          <li><strong>Frontend:</strong> <code>frontend/js/als-generator.js</code> drives the panel; <code>frontend/js/als-timeline.js</code> draws the 6-lane, 8-bar-block override canvas and handles the bar-keyed prefs schema plus legacy section-name migration.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference documents</h2>
+        <ul>
+          <li><a href="../ALS_GENERATION_GUIDE.md">ALS_GENERATION_GUIDE.md</a> — ID management, device XML, genre patterns, implementation checklist.</li>
+          <li><a href="../ALS_GENERATION_FINDINGS.md">ALS_GENERATION_FINDINGS.md</a> — gotchas from reverse-engineering real projects.</li>
+          <li><a href="../SAMPLE_CATEGORIZATION.md">SAMPLE_CATEGORIZATION.md</a> — filename / path &rarr; track-category mapping.</li>
+          <li><a href="../TECHNO_ARRANGEMENT_RULES.md">TECHNO_ARRANGEMENT_RULES.md</a> — section energy flow, entry / exit points.</li>
+          <li><a href="../CLIP_TIMING_REFERENCE.md">CLIP_TIMING_REFERENCE.md</a> — beat / bar math, warp-marker derivation.</li>
+          <li><a href="../ID_MANAGEMENT.md">ID_MANAGEMENT.md</a> — ID allocation and <code>NextPointeeId</code> bookkeeping.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Final step.</strong>You&rsquo;ve toured every tab, every overlay, every keybinding — and now you&rsquo;ve shipped a full Ableton project from nothing but a curated sample pile. Return to the <a href="../index.html">docs hub</a> for rustdoc, the IPC inventory, and module-level detail.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="18-shortcuts.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">18 · Keyboard shortcuts</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <div class="nav-stub">
+          <span class="nav-label">End</span>
+          <span class="nav-title">—</span>
+        </div>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

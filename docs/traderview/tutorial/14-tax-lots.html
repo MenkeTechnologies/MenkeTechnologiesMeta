@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 14 · Tax lots &amp; Schedule D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">14 · Tax lots</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="13-risk-sizing.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">13 · Risk &amp; sizing</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="15-expenses-ocr.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">15 · Expenses &amp; OCR</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:77.77%"></div></div>
+        <span class="meter-count">14 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">14.</span>Tax lots — Schedule D, FIFO/LIFO, wash-sale awareness</h2>
+      <p class="tutorial-subtitle">Tax-lot tracker computes per-lot cost basis and realized gain/loss at year-end, supports FIFO / LIFO / specific-ID methods, separates short-term from long-term, surfaces wash-sale adjustments, and exports Schedule D-ready CSV / JSON.</p>
+
+      <section class="tutorial-section">
+        <h2>Lot vs trade — what's the difference?</h2>
+        <p>The FIFO roll-up that produces <code>trades</code> rows (step 03) is a <em>strategy</em> view: each trade is one idea, opened and closed. The tax-lot tracker is a <em>tax</em> view of the same fills: every share / contract is tracked from acquisition to disposition with a holding period and a cost basis. The two views differ on partial closes:</p>
+        <ul>
+          <li><strong>Trade view</strong> — closing 100 of 300 leaves <em>one</em> open trade with reduced quantity.</li>
+          <li><strong>Lot view</strong> — closing 100 of 300 pulls 100 shares off the FIFO (or LIFO, etc.) lot queue and emits one disposition row with cost basis = the lot's price + fees.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Method selector</h2>
+        <p><code>GET /api/tax-lots/{account_id}?year=&amp;method=FIFO|LIFO|SpecificID</code>. Three accounting methods, selectable per query:</p>
+        <ul>
+          <li><strong>FIFO</strong> — oldest lots dispose first. The IRS default for stocks if you don't specify otherwise.</li>
+          <li><strong>LIFO</strong> — newest lots dispose first. Requires affirmative election with your broker; mostly useful for offsetting high-cost-basis lots in a declining market.</li>
+          <li><strong>Specific ID</strong> — pick lots by hand. The view shows the FIFO suggestion but lets you reassign dispositions to specific lot IDs (writes to <code>tax_lot_overrides</code>; export honors the overrides).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Holding period — short vs long term</h2>
+        <p>Long-term capital gains in the US apply when the lot was held &gt; 1 year (specifically: day after acquisition through disposition date inclusive). The tracker computes the holding period per disposition, splits each year's report into short-term and long-term subtotals, and applies the appropriate label.</p>
+        <p>Options have a wrinkle: deep-in-the-money calls that satisfy the "qualified covered call" rule have their LT eligibility suspended. The tracker flags potential QCC-suspended lots; manual confirmation required.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Wash sales</h2>
+        <p>A wash sale: you sell at a loss and buy a "substantially identical" position within 30 days (before or after). The loss is disallowed for the current tax year and the disallowed amount is added to the basis of the replacement lot.</p>
+        <p>The tracker:</p>
+        <ul>
+          <li><strong>Imports broker wash-sale adjustments</strong> from year-end 1099-B (most US brokers compute these for you and report them on the 1099).</li>
+          <li><strong>Optionally surfaces local-only wash detection</strong> — when no 1099 is available (e.g. mid-year reporting), the tracker can flag candidate wash sales against your own execution history. The local detector is a "did the broker miss anything?" sanity check, not a substitute for the 1099.</li>
+          <li><strong>Per-account scope</strong> — wash rules cross accounts you own (IRA + taxable). The tracker honors per-account scope but flags cross-account candidates; manual confirmation required (the IRS's "substantially identical" test is a judgment call your CPA needs to weigh in on).</li>
+        </ul>
+        <div class="tutorial-callout warn">
+          <strong>Not tax advice</strong>
+          The tracker computes Schedule D-ready numbers from your data. Talk to a CPA about wash-sale judgment calls, QCC suspension, mark-to-market trader status (Section 475 election), and anything else that depends on facts and circumstances. Software ≠ accountant.
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Schedule D export</h2>
+        <p>The Tax Lots view has a one-click Export at the top: CSV or JSON. The CSV layout mirrors Form 8949 / Schedule D columns:</p>
+        <pre>Description, Date Acquired, Date Sold, Proceeds,
+Cost Basis, Wash Sale Adjustment, Code, Adjustment Amount,
+Gain or Loss, Short-Term/Long-Term</pre>
+        <p>Suitable for direct entry into TurboTax / FreeTaxUSA / your CPA's workpaper. The JSON keeps the same columns plus lot IDs, source-execution IDs, and the method used (FIFO / LIFO / SpecificID), so the export is reproducible — re-running the export with the same method + year + import set yields byte-identical CSV.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Year-end checklist</h2>
+        <ol>
+          <li><strong>Verify all imports are loaded</strong> — last-day-of-year CSV from every account.</li>
+          <li><strong>Run <code>POST /api/trades/close-expired-options</code></strong> — closes any options that expired worthless or were assigned. Needed for accurate disposition dates on those positions.</li>
+          <li><strong>Import broker 1099-B wash-sale adjustments</strong> (when they arrive in January / February).</li>
+          <li><strong>Open Tax Lots → pick the year → confirm the method</strong> matches your broker election.</li>
+          <li><strong>Review wash-sale flags</strong> — every disallowed loss should match a 1099 entry; mismatches are usually due to a missing import.</li>
+          <li><strong>Export Schedule D CSV.</strong></li>
+          <li><strong>Hand off to your CPA or tax software</strong>; reconcile against the 1099-B totals before filing.</li>
+        </ol>
+        <p>Per-asset-class subtotals (stocks vs options vs futures vs forex) are surfaced so you can reconcile against the corresponding 1099 (1099-B for stocks/options, 1099-B Section 1256 for futures, 1099-MISC for forex if you haven't elected ordinary).</p>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="13-risk-sizing.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">13 · Risk &amp; sizing</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="15-expenses-ocr.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">15 · Expenses &amp; OCR</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

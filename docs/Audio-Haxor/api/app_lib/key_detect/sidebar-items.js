@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAJOR_PROFILE","MINOR_PROFILE","NOTE_NAMES"],"fn":["compute_chromagram","detect_key","goertzel","match_key_profile","profile_correlation"]};

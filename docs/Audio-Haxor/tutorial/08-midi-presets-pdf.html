@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 08 · MIDI, presets, PDFs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">08 · MIDI / Presets / PDF</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="07-daw.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">07 · DAW projects</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="09-palette.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">09 · Command palette</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:42.11%"></div></div>
+        <span class="meter-count">08 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">08.</span>MIDI, presets, PDFs, videos</h2>
+      <p class="tutorial-subtitle">Four more inventory tabs with their own streaming scanners, column sets, and history. MIDI extracts deep musical metadata; presets are a fast format-filtered catalog; PDFs lazily extract page counts; videos play inline with selectable audio routing.</p>
+
+      <div class="tutorial-shot">
+        <img src="../assets/midi.png" alt="MIDI tab with tracks, BPM, time signature, key, notes, channels, duration columns" loading="lazy">
+        <figcaption>assets/midi.png · MIDI tab</figcaption>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>MIDI tab — <code>Cmd+5</code></h2>
+        <p><code>frontend/js/midi.js</code>. The widest metadata of any tab — 12 columns:</p>
+        <ul>
+          <li>Checkbox</li>
+          <li><strong>Name</strong> (sortable, 22%)</li>
+          <li><strong>Tracks</strong> — sortable</li>
+          <li><strong>BPM</strong> — sortable</li>
+          <li><strong>Time Signature</strong> — sortable</li>
+          <li><strong>Key</strong> — sortable</li>
+          <li><strong>Notes Count</strong> — sortable</li>
+          <li><strong>Channels</strong> — sortable</li>
+          <li><strong>Duration</strong> — sortable</li>
+          <li><strong>Size</strong> — sortable</li>
+          <li><strong>Path</strong> — sortable</li>
+          <li><strong>Actions</strong></li>
+        </ul>
+        <p>Header: scan/resume/stop buttons, export/import, fuzzy search (<code>midiSearchInput</code>), regex toggle. The fast columns (name, path, size) come from the initial scan. The slow metadata columns (tracks, BPM, time sig, key, notes count, channels, duration) are populated on demand via <code>get_midi_info({ filePath })</code> and cached in <code>_midiInfoCache[path]</code> — sorting by any metadata column triggers lazy extraction for the visible page.</p>
+        <p>Stats: total count (<code>midiCount</code>) and total size (<code>midiTotalSize</code>) in the header. IPC: <code>scan_midi_files</code>, <code>stop_midi_scan</code>, <code>db_query_midi</code>, <code>db_midi_filter_stats</code>, <code>get_midi_info</code>, <code>midi_history_*</code>, <code>export_midi_palette</code> (<code>Cmd+Shift+I</code>).</p>
+      </section>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/presets.png" alt="Presets tab with format filter dropdown and name/path/size/modified columns" loading="lazy">
+        <figcaption>assets/presets.png · Presets tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Presets tab — <code>Cmd+4</code></h2>
+        <p><code>frontend/js/presets.js</code>. Columns: Checkbox, Name, Format, Path, Size, Modified, Actions. The Format filter multi-select covers:</p>
+        <pre>FXP  FXB  VSTPRESET  AUPRESET  ADV  ADG
+NKI  NKSN  H2P  SYX  TFX  PJUNOXL</pre>
+        <p>Header controls: Scan Presets (<code>btnScanPresets</code>), Resume, Stop, Export, Import, fuzzy search (<code>presetSearchInput</code>), regex toggle. Per-row action is <em>Open folder</em>. The tab shows a disk-usage strip at the top with total count, total size, and a per-format breakdown.</p>
+        <p>IPC: <code>scan_presets</code>, <code>stop_preset_scan</code>, <code>db_query_presets</code>, <code>preset_history_*</code>, <code>export_presets_json</code>, <code>export_presets_dsv</code>, <code>import_presets_json</code>.</p>
+        <p>Data is paginated — the in-memory buffer holds up to 100 000 rows during scans but the table always renders a page at a time (see <em>Table page size</em> in Settings → Performance).</p>
+      </section>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/pdf.png" alt="PDF tab with name, path, size, pages, modified columns" loading="lazy">
+        <figcaption>assets/pdf.png · PDF tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>PDF tab — <code>Cmd+6</code></h2>
+        <p><code>frontend/js/pdf.js</code>. Columns: Checkbox, Name, Path, Size, <strong>Pages</strong>, Modified, Actions. The Pages column is special — it's computed by a separate, pauseable metadata extractor.</p>
+        <h3>Scanning and stopping</h3>
+        <p>Header has two <em>Stop</em> buttons: <strong>Stop Scan</strong> (<code>btnStopPdf</code>) for the file walker, and <strong>Stop Metadata Extraction</strong> (<code>btnStopPdfMeta</code>) for the page-count extractor. You can stop either independently.</p>
+        <h3>Page-count extraction</h3>
+        <ul>
+          <li><strong>Auto-extract in background</strong> — <code>settingPdfMetadataAutoExtract</code> in Settings. When on, <code>loadPdfPagesForVisible()</code> fetches page counts for the rows currently visible on screen (up to the first 2 000) via <code>pdf_metadata_get</code>.</li>
+          <li><strong>Full sweep</strong> — palette action <em>Extract PDF metadata</em> or shortcut <code>Cmd+Shift+M</code> — runs <code>pdf_metadata_extract_batch</code> against every unindexed PDF. Progress streams via Tauri events. Stop with <code>Cmd+Shift+Z</code> → <code>pdf_metadata_extract_abort</code>.</li>
+          <li><strong>Unindexed query</strong> — <code>pdf_metadata_unindexed</code> returns the list of PDFs that still need page-count extraction.</li>
+        </ul>
+        <h3>Opening PDFs</h3>
+        <p>Row action <em>Open</em> uses <code>open_pdf_file({ filePath })</code>. Export DSV / JSON, import JSON, and history/diff work the same as every other tab.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Videos tab — drag into any tab-bar slot</h2>
+        <p><code>frontend/js/video.js</code> (<code>scanVideos()</code> at line 357). Columns mirror the audio table: Name, Format (MP4 / MOV / MKV / AVI / WEBM / M4V / WMV / FLV / MPG / MTS / 3GP), Duration, Size, Modified, Path. Header carries Scan / Resume / Stop / Export / Import / fuzzy search + regex toggle.</p>
+        <h3>Inline playback &amp; maximize</h3>
+        <p>Click a row to play inline; the row expands into a <code>&lt;video&gt;</code> element. The <strong>Maximize</strong> button (<code>btnVideoMaximize</code>) toggles a true fullscreen state via <code>requestFullscreen()</code>; the <code>video_toggle_fullscreen</code> shortcut (default <code>v</code>) is a single-key trigger because <code>Cmd+Enter</code> is unreliable inside WKWebView. Press it again or <code>Esc</code> to exit. The maximize root is <code>id="videoFullscreenRoot"</code>.</p>
+        <h3>Audio route — engine vs HTML5</h3>
+        <p>The <code>videoAudioRoute</code> pref switches between two pipelines:</p>
+        <ul>
+          <li><strong>engine</strong> (default) — audio is decoded and routed through the AudioEngine subprocess. VST3/AU inserts on the engine's master chain (step 16) apply to video playback. Bypasses the WebView's audio mixer.</li>
+          <li><strong>html5</strong> — audio rides the WebView's native <code>&lt;video&gt;</code> output. Lower latency, no insert chain, no LUFS metering.</li>
+        </ul>
+        <p>Toggle with the command-palette entries <em>Video audio route → AudioEngine</em> (<code>Cmd+Shift+7</code>) / <em>Video audio route → HTML5</em> (<code>Cmd+Shift+8</code>) or rebind in Settings → Keyboard Shortcuts.</p>
+        <p>IPC: <code>scan_videos</code>, <code>stop_video_scan</code>, <code>db_query_videos</code>, <code>video_history_*</code>, <code>export_videos_json</code>, <code>export_videos_dsv</code>, <code>import_videos_json</code>. The Videos tab does not appear on the digit-row default keymap — drag the tab into your preferred slot via the main tab bar (the drop emits <code>toast.reordered_main_tabs</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Shared behaviors across all four tabs</h2>
+        <ul>
+          <li>Fuzzy search by default, regex on toggle. Full FZF query syntax supported (<code>'exact</code>, <code>^prefix</code>, <code>suffix$</code>, <code>!term</code>, <code>a | b</code>).</li>
+          <li>Click any column header to sort. Sort state is persisted (<code>sort-persist.js</code>). Default sort per tab is configurable in Settings → Sorting.</li>
+          <li>Drag columns to reorder, drag their right edge to resize — all widths persist via <code>columns.js</code>.</li>
+          <li>Batch selection via row checkboxes + <code>Cmd+A</code> / <code>Cmd+Shift+Esc</code> for select-all / deselect.</li>
+          <li>Right-click context menus with per-row actions (reveal, copy path, favorite, add note, export selection).</li>
+          <li>History tab (<code>F3</code>) shows past scans of each type and supports diff.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>PDF metadata extraction is the slowest scan in the app because it has to crack every PDF to read its page count. If your library is large, leave auto-extract on and let it catch up in the background — or run a full sweep once after your initial scan and rely on incremental updates afterwards.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="07-daw.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">07 · DAW projects</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="09-palette.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">09 · Command palette</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

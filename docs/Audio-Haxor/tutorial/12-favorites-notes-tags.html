@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 12 · Favorites, notes, tags</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">12 · Favorites / Notes / Tags</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="11-tray.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">11 · Tray popover</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="13-files.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">13 · Files browser</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:63.16%"></div></div>
+        <span class="meter-count">12 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">12.</span>Favorites, notes, tags</h2>
+      <p class="tutorial-subtitle">Three tabs that cut <em>across</em> every inventory: starred paths (Cmd+7), per-item annotations (Cmd+8), and a global tag manager (Cmd+9) that powers every multi-filter widget in the app.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/favorites.png" alt="Favorites tab listing starred items across inventory types with a type filter dropdown" loading="lazy">
+        <figcaption>assets/favorites.png · Favorites tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Favorites — <code>Cmd+7</code></h2>
+        <p><code>frontend/js/favorites.js</code>. Favorites are a flat list of starred paths. Each item is shaped as <code>{type, path, name, format?, daw?, addedAt}</code> and stored in the <code>favorites</code> pref. Duplicates are prevented by an O(1) <code>_favsPathSet</code> cache. Use <code>F</code> on any row in any tab to toggle favorite; use <code>Cmd+7</code> to jump to the favorites tab to see them all in one place.</p>
+        <h3>Header controls</h3>
+        <ul>
+          <li><strong>Search</strong> — <code>favSearchInput</code>, fuzzy search with regex toggle.</li>
+          <li><strong>Type filter</strong> — <code>favTypeFilter</code>, multi-select: <em>Plugins, Samples, DAW Projects, Presets, Folders, Files</em>. Converted from a native <code>&lt;select&gt;</code> into the multi-check widget by <code>multi-filter.js</code>.</li>
+          <li><strong>Export</strong>, <strong>Import</strong>, <strong>Clear All</strong> — export supports PDF/CSV/TSV/TOML/JSON; import deduplicates by path.</li>
+        </ul>
+        <h3>Item cards</h3>
+        <p>Each card displays a star icon, a type badge, the name (with search highlight), format / DAW badges if applicable, and per-type row actions:</p>
+        <ul>
+          <li>For <strong>samples</strong>: a play button (<code>previewAudio</code>), loop toggle (<code>toggleRowLoop</code>), open folder, remove.</li>
+          <li>For <strong>DAW projects</strong>: double-click opens the project in its native DAW with a toast indicating which one.</li>
+          <li>For <strong>plugins</strong>: double-click opens the KVR product page (falls back to building the URL if not cached).</li>
+          <li>For <strong>presets</strong>: double-click opens the preset's enclosing folder.</li>
+        </ul>
+      </section>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/notes.png" alt="Notes tab with per-item annotation cards and tag cloud" loading="lazy">
+        <figcaption>assets/notes.png · Notes tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Notes — <code>Cmd+8</code></h2>
+        <p><code>frontend/js/notes.js</code>. Notes are per-item annotations shaped as <code>{ note, tags, updatedAt }</code> keyed by the normalized file path. Storage lives in the <code>itemNotes</code> pref.</p>
+        <h3>Editing a note</h3>
+        <p>From any tab, right-click a row → <em>Add note</em> (or press <code>N</code>). The modal <code>#noteModal</code> opens with:</p>
+        <ul>
+          <li><strong>Note textarea</strong> — <code>#noteText</code>, 4 rows, placeholder "Add a note...".</li>
+          <li><strong>Tags input</strong> — <code>#noteTags</code>, comma-separated. Placeholder shows an example like <em>"kick, bass, favorite"</em>.</li>
+          <li><strong>Tag suggestions</strong> — <code>#noteSuggestions</code>, clickable pills listing every existing tag in your library.</li>
+          <li><strong>Save</strong> / <strong>Cancel</strong> / <strong>Delete Note</strong> (if the note already exists).</li>
+        </ul>
+        <h3>Notes tab layout</h3>
+        <p>The Notes tab renders a card list of every item that has a note and/or tags, with:</p>
+        <ul>
+          <li>Filename, modified date, Edit / Delete buttons in the card header.</li>
+          <li>Full filesystem path.</li>
+          <li>Escaped note body.</li>
+          <li>Tag pills (clickable to filter the notes list).</li>
+        </ul>
+        <p>Above the list is a <strong>tag cloud</strong> with an <em>All</em> button (showing total count) and an individual pill per tag (showing per-tag count). Clicking a tag filters the list; clicking <em>All</em> clears the filter. The stats summary shows total notes and total tags.</p>
+        <h3>Tag helper functions (notes.js)</h3>
+        <ul>
+          <li><code>getAllTags()</code> — union of all tags across items + standalone tags.</li>
+          <li><code>getTagCounts()</code> — count map, includes zero-count standalone tags.</li>
+          <li><code>getItemsWithTag(tag)</code> — all items that carry a tag.</li>
+          <li><code>addTagToItem(path, tag)</code> / <code>removeTagFromItem(path, tag)</code> — single-item mutations; refreshes row badges in every open tab.</li>
+          <li><code>renameTag(old, new)</code> — rename across every item that uses it.</li>
+          <li><code>deleteTag(tag)</code> — wipe the tag from all items + the standalone list.</li>
+        </ul>
+        <p>Every row in every tab calls <code>rowBadges(path)</code> which combines the favorite star, a note-icon indicator, and the first three tags (with <em>+N more</em> if there are more than three). That's how you see your annotation state everywhere without leaving the current tab.</p>
+      </section>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/tags.png" alt="Tags tab with tag manager and multi-filter bar active over the samples table" loading="lazy">
+        <figcaption>assets/tags.png · Tags tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Tags — <code>Cmd+9</code></h2>
+        <p>The Tags tab is the global tag manager — create tags that don't yet live on any item (stored as <em>standalone tags</em> in the <code>standaloneTags</code> pref), rename tags across the whole library, delete tags, and see the complete cloud. Header controls: fuzzy search (<code>tagSearchInput</code>), regex toggle, and <strong>New Tag</strong> (<code>createTag</code>).</p>
+        <h3>Multi-filter bar</h3>
+        <p><code>frontend/js/multi-filter.js</code>. Every native <code>&lt;select class="filter-select"&gt;</code> in the app is upgraded into a cyberpunk multi-check dropdown on boot:</p>
+        <ul>
+          <li>A button (<code>.multi-filter-btn</code>) shows the current label: <em>"All"</em> when nothing is selected, <em>"X selected"</em> when multiple, or the single value name when exactly one.</li>
+          <li>The dropdown (<code>.multi-filter-dropdown</code>) has an <em>All</em> checkbox at the top, a divider, then per-option checkboxes.</li>
+          <li>Dropdowns close on outside click.</li>
+          <li><code>getMultiFilterValues(selectId)</code> returns a <code>Set</code> of selected values, or <code>null</code> if <em>All</em> is active.</li>
+          <li><code>setMultiFilterValue(selectId, value)</code> programmatically selects a value.</li>
+        </ul>
+        <p>Multi-filters are used in Plugins (type, status), Samples (format, sample rate, channels, folder), DAW (DAW), Presets (format), Favorites (type), and anywhere else a filtered view is needed.</p>
+        <h3>Tag filter bar</h3>
+        <p>When one or more tags are active, an optional tag-filter bar appears above (or below) the current tab's table — the position is controlled by <em>Tag bar position</em> in Settings → Appearance. Toggle the bar entirely with <code>Cmd+Shift+T</code>. This lets you pin a "bass / 808" filter across every tab as you navigate.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Export, import, clear (all three)</h2>
+        <p>Each of Favorites, Notes, and Tags supports its own export/import/clear flow. Exports go to PDF, CSV, TSV, TOML, or JSON depending on the type. Imports deduplicate by path so you can merge catalogs without overwriting. Clear-all always confirms before wiping.</p>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>Notes and tags are the scaffolding for smart playlists. Tag a batch of samples as <em>"drum fills"</em> and you can build a <em>tag</em>-rule smart playlist that auto-updates as you tag more. Combine with a <code>bpm_range</code> rule and you have a live "120–130 BPM drum fills" view.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="11-tray.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">11 · Tray popover</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="13-files.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">13 · Files browser</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

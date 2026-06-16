@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 13 · Risk &amp; position sizing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">13 · Risk &amp; sizing</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="12-hotkeys-paper.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">12 · Hotkeys &amp; paper</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="14-tax-lots.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">14 · Tax lots</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:72.22%"></div></div>
+        <span class="meter-count">13 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">13.</span>Risk + position sizing</h2>
+      <p class="tutorial-subtitle">Kelly criterion with sensible caps, correlation-aware multi-position sizing, R-multiple bucketing, drawdown / discipline metrics, and the Pre-trade Plan workflow that pins your thesis before the order goes in.</p>
+
+      <section class="tutorial-section">
+        <h2>R-multiple in one line</h2>
+        <p><strong>R = net P&amp;L ÷ planned risk.</strong> Planned risk is the dollar amount you decided you'd lose if the trade hit your stop, set at trade-entry time. <code>R = 1</code> means you made one unit of risk; <code>R = -1</code> means the trade hit stop. Reports thinking in R-multiples (rather than raw dollars) makes per-trade comparison meaningful across different sizing regimes.</p>
+        <p>The Reports → R-Distribution view plots a histogram of historical R-multiples; expectancy = mean(R) × win-rate − loss-rate. Positive expectancy with a sample size &gt; ~50 trades and tight standard error is the bar for "is this strategy working?".</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The position-size calculator</h2>
+        <p>The same calculator appears as the standalone Position Size tile and inline in the New Trade form. Inputs:</p>
+        <ul>
+          <li><strong>Account equity</strong> — auto-filled from the active account's current equity (cash + open-position mark-to-market).</li>
+          <li><strong>Risk %</strong> — typical 0.25 – 1.0%. Below 0.25% rounds your stop noise above your edge; above 1% blows you up faster than you can learn.</li>
+          <li><strong>Stop distance</strong> — entry price minus stop price (long) or stop price minus entry (short).</li>
+          <li><strong>Symbol / asset class</strong> — drives the contract multiplier (options × 100; futures per-contract; FX per-lot).</li>
+        </ul>
+        <p>Output:</p>
+        <ul>
+          <li><strong>Suggested shares / contracts</strong>.</li>
+          <li><strong>Dollar at risk</strong> per unit and total.</li>
+          <li><strong>% of account at risk</strong> — sanity-check against the requested risk %.</li>
+          <li><strong>Kelly-fractional alternative</strong> — see below.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Kelly criterion — implemented with caps</h2>
+        <p>Full Kelly maximizes expected log return but is too aggressive in practice (drawdowns of 50% are routine; one parameter mis-estimate ruins you). The calculator computes <strong>full Kelly</strong> from your historical R-distribution for the symbol (or for the universe if symbol-level history is thin), then offers three cap modes:</p>
+        <ul>
+          <li><strong>Half Kelly</strong> — most-recommended default. Roughly the same growth rate, materially smaller drawdowns.</li>
+          <li><strong>Quarter Kelly</strong> — for slow, capital-preservation regimes.</li>
+          <li><strong>Capped Kelly</strong> — full Kelly × X, with a hard cap on per-trade risk %.</li>
+        </ul>
+        <p>The calculator surfaces the actual computed full-Kelly fraction so you can sanity-check (a Kelly fraction &gt; 0.5 on a single trade means your inputs are probably wrong; expectancy estimates from small samples are noisy).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Correlation-aware sizing</h2>
+        <p>If you have N open positions and you're entering an N+1th, sizing in isolation is wrong — the correlation between your open positions and the new one means total portfolio risk is larger than the sum of per-trade risks if you size each one at the same %.</p>
+        <p>The calculator pulls the active account's open positions, computes pairwise correlations against the candidate symbol on a configurable lookback (default 60 days), and shrinks the suggested size to keep <em>portfolio-level R at risk</em> within the configured cap:</p>
+        <pre>portfolio_R_at_risk = sqrt(
+  sum_i sum_j corr(i, j) * R_i * R_j
+)
+target_size = solve_for_qty( portfolio_R_at_risk == cap )</pre>
+        <p>When you're long NVDA, AMD, and ASML, the recommended size for a new long on TSM will be smaller than the in-isolation Kelly fraction — because they all move together.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The Pre-trade Plan workflow</h2>
+        <p>Pre-trade Plans (<code>plans</code> table) are a thin layer over the New Trade form that forces you to write down your thesis before the order goes in. A plan has:</p>
+        <ul>
+          <li><strong>Symbol</strong>.</li>
+          <li><strong>Setup name</strong> — references the Setups taxonomy (Settings → Setups).</li>
+          <li><strong>Entry trigger</strong> — what would cause you to enter.</li>
+          <li><strong>Stop</strong> — price level + the reason.</li>
+          <li><strong>Target</strong> — price level or R-multiple goal.</li>
+          <li><strong>Sizing</strong> — auto-filled from the position-size calculator.</li>
+          <li><strong>Invalidation</strong> — what would make you abandon the plan unfilled.</li>
+        </ul>
+        <p>Plans are searchable; reports can compare planned-vs-actual outcomes (did you actually wait for the trigger? did the trade hit your planned target?). The discipline report (<code>GET /api/discipline/{account_id}</code>) surfaces % of trades that had a plan attached.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Drawdown management</h2>
+        <p>Drawdown report (step 05) shows the equity curve's max drawdown, time-underwater, and recovery distribution. Use the metric to set risk-down rules:</p>
+        <ul>
+          <li><em>"Cut size to 50% after 3 consecutive losses"</em> — encode as a custom indicator that exposes a session-level "losses today" count; reference it in the position-size calc default.</li>
+          <li><em>"No new trades after 2R drawdown for the session"</em> — encode as a strategy alert that pings you (and optionally blocks paper-trade hotkeys, configurable).</li>
+        </ul>
+        <div class="tutorial-callout">
+          <strong>What this is not</strong>
+          The calculator outputs suggestions; it doesn't block you from oversizing. You can always override. The whole journal / discipline stack is built on the assumption that you'd rather be a senior trader looking at your own data than be paternalized by software.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="12-hotkeys-paper.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">12 · Hotkeys &amp; paper</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="14-tax-lots.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">14 · Tax lots</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

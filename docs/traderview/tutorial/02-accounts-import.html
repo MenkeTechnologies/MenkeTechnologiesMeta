@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 02 · Accounts &amp; broker import</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">02 · Accounts &amp; import</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="01-launch.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">01 · First launch</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="03-trades-executions.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">03 · Trades &amp; executions</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:11.11%"></div></div>
+        <span class="meter-count">02 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">02.</span>Accounts &amp; broker import</h2>
+      <p class="tutorial-subtitle">Twelve built-in broker parsers, the Generic column-mapping wizard for everything else, idempotent re-import, asset-class auto-detection, and the immutable <code>imports</code> audit trail.</p>
+
+      <section class="tutorial-section">
+        <h2>Create an account first</h2>
+        <p>Every execution row is keyed by <code>(account_id, symbol, executed_at, side, qty, price)</code>. Before you import a single broker CSV, open the launcher (<code>Cmd+K</code>) → <em>Accounts</em>, click <em>+ New Account</em>, and pick the broker. The <code>accounts</code> row stores:</p>
+        <ul>
+          <li><strong>Name</strong> — your label (e.g. <em>"Webull · main"</em> vs <em>"Webull · IRA"</em>).</li>
+          <li><strong>Broker</strong> — drives the importer dropdown defaults later.</li>
+          <li><strong>Currency</strong> — <code>USD</code> default; FX trades convert at <code>executed_at</code>.</li>
+          <li><strong>Asset classes enabled</strong> — stocks / options / futures / forex / crypto. Determines which import column maps you'll see.</li>
+          <li><strong>Cash starting balance</strong> — anchors the equity curve. Set it to the first deposit, not zero, or your drawdown numbers are wrong from day one.</li>
+        </ul>
+        <p>You can rename or merge accounts later (<code>POST /api/accounts/merge</code>). Deleting an account cascade-deletes its executions and re-runs the rollup on its symbols — slow on a large book.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The 12 built-in broker importers</h2>
+        <p>Live in <code>crates/traderview-import/src/brokers.rs</code>. Each parser auto-detects the broker by sniffing the header row (column count, signature column names) so dragging a CSV onto the Import tile usually picks the right parser without you choosing it.</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Broker</th><th>What works</th><th>What's CSV-only</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Webull</strong></td><td>Stocks · options · paper-token live snapshot</td><td>—</td></tr>
+            <tr><td><strong>Lightspeed</strong></td><td>Stocks · options</td><td>Live broker integration is on the roadmap</td></tr>
+            <tr><td><strong>IBKR Flex</strong></td><td>Stocks · options · futures · forex · multi-currency</td><td>Use Flex query XML or CSV export</td></tr>
+            <tr><td><strong>ThinkOrSwim</strong></td><td>Stocks · options · futures · spreads collapsed to legs</td><td>—</td></tr>
+            <tr><td><strong>TD Ameritrade</strong></td><td>Stocks · options · futures</td><td>—</td></tr>
+            <tr><td><strong>Schwab</strong></td><td>Stocks · options · post-TD-merger format</td><td>—</td></tr>
+            <tr><td><strong>Fidelity</strong></td><td>Stocks · options</td><td>—</td></tr>
+            <tr><td><strong>ETrade</strong></td><td>Stocks · options</td><td>—</td></tr>
+            <tr><td><strong>Robinhood</strong></td><td>Stocks · options · crypto</td><td>—</td></tr>
+            <tr><td><strong>TradeStation</strong></td><td>Stocks · options · futures</td><td>—</td></tr>
+            <tr><td><strong>DAS Trader</strong></td><td>Stocks (intraday-focused)</td><td>—</td></tr>
+            <tr><td><strong>TradeZero</strong></td><td>Stocks · options</td><td>—</td></tr>
+          </tbody>
+        </table>
+        <p>Webull additionally has a <strong>live read-only adapter</strong> (paste your session tokens into <em>Settings → Webull</em>; tokens stay in memory only, never on disk). The adapter polls <code>tradeapi.webullbroker.com</code> every 5 s and pushes a snapshot to <code>WS /ws/webull</code>. Step 06 covers live streams.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Generic column-mapping wizard</h2>
+        <p>For anything not on the list above, point the Generic parser at any CSV. The wizard reads the header row, samples the first five data rows, and asks you to map each <code>execution</code> column:</p>
+        <ul>
+          <li><code>symbol</code> — required.</li>
+          <li><code>side</code> — required. The wizard accepts <code>BUY/SELL</code>, <code>B/S</code>, <code>LONG/SHORT</code>, <code>+/-</code>, or signed quantity.</li>
+          <li><code>qty</code> — required. Negative qty is interpreted as a sell if no side column was mapped.</li>
+          <li><code>price</code> — required. The wizard catches per-contract vs total-cost columns by sampling magnitudes.</li>
+          <li><code>executed_at</code> — required. Parses ISO-8601 + 18 common broker formats (<code>MM/DD/YYYY HH:mm:ss</code>, <code>YYYY-MM-DD HH:MM</code>, …). Timezone defaults to your local TZ, override per-mapping.</li>
+          <li><code>fees</code> — optional. If a single fee column, it's stored verbatim. If split (commission, exchange, SEC, TAF), the wizard sums them.</li>
+          <li><code>broker_order_id</code> — optional but recommended; it's the dedupe key for re-imports.</li>
+        </ul>
+        <p>The mapping is saved per-broker per-user — the next CSV with the same header signature is parsed without showing the wizard.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The import pipeline — what runs server-side</h2>
+        <ol>
+          <li><strong>Raw bytes hashed</strong> (sha256) and recorded in <code>imports</code>. The original CSV is preserved as a blob for audit / re-parse.</li>
+          <li><strong>Parser dispatches</strong> by broker enum (or via Generic with the saved mapping).</li>
+          <li><strong>Asset class auto-detected</strong> from the symbol pattern:
+            <ul>
+              <li>Options: OCC-style <code>AAPL  240119C00185000</code> or <code>SYMyyMMddCNNNN</code>.</li>
+              <li>Futures: <code>=F</code> / <code>/ES</code> / <code>ESM4</code>.</li>
+              <li>Forex: <code>=X</code> / <code>EURUSD</code> 6-letter pair.</li>
+              <li>Crypto: known ticker list + <code>-USD</code> suffix.</li>
+              <li>Stock: fallback if nothing matches.</li>
+            </ul>
+          </li>
+          <li><strong>Each row inserts into <code>executions</code></strong> with <code>ON CONFLICT (account_id, broker_order_id, executed_at, symbol, side, qty, price) DO NOTHING</code>. Re-importing the same CSV is idempotent: zero new rows.</li>
+          <li><strong>FIFO roll-up re-runs</strong> for every affected <code>(account_id, symbol)</code> pair via <code>traderview-core::rollup</code>. The <code>trades</code> table is rewritten for those pairs; everything else is untouched.</li>
+          <li><strong>Toast back to the UI</strong> with rows-added / rows-skipped + a link to the affected accounts.</li>
+        </ol>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The audit trail you can always rebuild from</h2>
+        <p>The <code>imports</code> table is immutable. Every CSV you've ever uploaded sits there with the original bytes, a content hash, the parser version, the user who uploaded, and the timestamp. From the Admin → Imports tile you can:</p>
+        <ul>
+          <li><strong>Re-parse</strong> — useful when a broker changes their CSV format and the parser is updated. Re-parse drops the old executions for that import and re-inserts under the new logic.</li>
+          <li><strong>Delete + cascade</strong> — drops the executions, re-runs the rollup. The raw bytes stay (set a tombstone flag); the historical trades disappear.</li>
+          <li><strong>Diff against the current state</strong> — shows which executions still survive vs which got merged / split by the rollup. Useful for "did my last import break anything?" forensics.</li>
+        </ul>
+        <div class="tutorial-callout">
+          <strong>Tip</strong>
+          Run the FIFO roll-up explicitly (Trades → ⟳ Rollup, or <code>POST /api/trades/rollup</code>) after a hand-edit of executions. The auto-run only fires on import / new execution; manual SQL touches skip it.
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Multi-currency &amp; options gotchas</h2>
+        <ul>
+          <li><strong>IBKR Flex multi-currency.</strong> If your account currency is USD but trades happen in EUR / CAD / JPY, the importer keeps the trade-currency price in <code>executions.price</code> and stores the FX rate in <code>executions.fx_rate</code>. The rollup converts to account currency for P&amp;L; the original is preserved for tax-lot per-currency reporting.</li>
+          <li><strong>Options contract multiplier.</strong> Stored on the <code>executions</code> row (typically 100 for equity options, but the parser honors broker-supplied multipliers for index / FX options). P&amp;L uses the row's multiplier, not a global constant.</li>
+          <li><strong>Spreads.</strong> Most brokers report a vertical / butterfly / iron condor as multiple leg rows with a shared <code>broker_order_id</code>. The importer keeps them as separate executions; the rollup rolls each leg's trade independently. The journal view groups by <code>broker_order_id</code> so you see the spread as one unit.</li>
+          <li><strong>Wash sales.</strong> Wash-sale adjustments come in on a separate import (broker year-end 1099-B for stocks; broker tax summary for options). The tax-lot tracker in step 14 reads them.</li>
+          <li><strong>Expired / assigned options.</strong> The <code>POST /api/trades/close-expired-options</code> endpoint closes positions that expired worthless or were assigned. Run it once after option expiration Friday.</li>
+        </ul>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="01-launch.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">01 · First launch</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="03-trades-executions.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">03 · Trades &amp; executions</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

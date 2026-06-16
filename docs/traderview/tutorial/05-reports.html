@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 05 · Reports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">05 · Reports</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="04-journal.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">04 · Journal</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="06-live-scanner.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">06 · Live scanner</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:27.77%"></div></div>
+        <span class="meter-count">05 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">05.</span>Reports — 17 cuts + R-multiple + Monte Carlo forecast + fill-quality TCA</h2>
+      <p class="tutorial-subtitle">Server-side aggregation, account-scoped, asset-class filters, date-range pickers, drill-down from any cell to the underlying trades. All numbers come from the materialized <code>trades</code> table — no on-the-fly re-derivation.</p>
+
+      <section class="tutorial-section">
+        <h2>The 17 cuts</h2>
+        <p>Each cut is a route in <code>crates/traderview-web/src/routes/reports.rs</code>. The frontend view is one of <code>frontend/js/views/reports_*.js</code>; each renders a small uPlot chart plus a sortable table.</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Route</th><th>What it answers</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>/reports/overview</code></td><td>Win rate, expectancy, profit factor, gross / net P&amp;L, SQN, Sharpe, Sortino, average winner / loser.</td></tr>
+            <tr><td><code>/reports/by-symbol</code></td><td>Per-symbol P&amp;L and trade count. The cell drills into Trades filtered by symbol.</td></tr>
+            <tr><td><code>/reports/by-day-of-week</code></td><td>Monday–Friday R-distribution and expectancy.</td></tr>
+            <tr><td><code>/reports/by-hour</code></td><td>Hour-of-day expectancy. Catches "I lose every trade after 14:00 ET" patterns.</td></tr>
+            <tr><td><code>/reports/by-hold</code></td><td>Buckets by hold-time (sub-minute / 1-5 min / 5-30 min / intraday / overnight / multi-day / multi-week).</td></tr>
+            <tr><td><code>/reports/r-distribution</code></td><td>Histogram of R-multiples. The forced-review cohort (|R| ≥ 2) is highlighted.</td></tr>
+            <tr><td><code>/reports/comparison</code></td><td>A/B compare two filters side by side (e.g. "tagged <em>breakout</em>" vs "tagged <em>fade</em>").</td></tr>
+            <tr><td><code>/reports/exit-efficiency</code></td><td>How much of MFE you captured. Bucketed; low buckets are scalp-out-too-early evidence.</td></tr>
+            <tr><td><code>/reports/liquidity</code></td><td>Average volume vs your sizing. Flags trades where you were &gt; 1% of bar volume.</td></tr>
+            <tr><td><code>/reports/drawdown</code></td><td>Drawdown curve, longest underwater stretch, days-to-recovery.</td></tr>
+            <tr><td><code>/reports/risk-adjusted</code></td><td>Per-unit-risk return (Sharpe / Sortino / Calmar).</td></tr>
+            <tr><td><code>/reports/calendar</code></td><td>Daily P&amp;L heatmap (Github-graph style) over the year.</td></tr>
+            <tr><td><code>/reports/by-asset</code></td><td>Stocks vs options vs futures vs forex vs crypto.</td></tr>
+            <tr><td><code>/reports/by-tag</code></td><td>Per-tag expectancy + win rate. Validates that your setup labels actually matter.</td></tr>
+            <tr><td><code>/reports/by-setup</code></td><td>If you maintain a setups table (Settings → Setups), this aggregates by setup.</td></tr>
+            <tr><td><code>/reports/streaks</code></td><td>Win / loss streak distribution. Useful when calibrating "should I cut size after 3 losers in a row?"</td></tr>
+            <tr><td><code>/reports/expectancy-curve</code></td><td>Rolling 50/200-trade expectancy over calendar time. Strategy-decay detector.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>R-multiple + planned risk</h2>
+        <p>R-multiple is <code>net_pnl / planned_risk</code> — but only computed when <code>planned_risk</code> is set on the trade. The Trades view shows a discreet "no R" badge on trades without it; the reports view excludes them from R-distribution.</p>
+        <p>Set planned risk per-trade from the Trades row menu, or default a value at trade-creation time via <em>Settings → Default Planned Risk</em>. The position-size calculator (step 13) writes <code>planned_risk</code> automatically when you accept its sizing recommendation.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Monte Carlo equity forecast</h2>
+        <p><code>POST /api/equity-forecast</code> — feeds your historical per-trade R-distribution into a Monte Carlo simulator and projects forward N trades. Configurable:</p>
+        <ul>
+          <li><strong>Simulations</strong> — number of independent equity paths to sample (default 10 000).</li>
+          <li><strong>Horizon</strong> — number of future trades to simulate (default 200).</li>
+          <li><strong>Sampling</strong> — bootstrap with replacement from your actual R distribution, or fit a parametric distribution and sample from that.</li>
+          <li><strong>Sizing</strong> — fixed-fractional or fixed-R, with cap.</li>
+        </ul>
+        <p>Output: median / 25th / 75th / 5th / 95th percentile equity paths, ruin probability, max-drawdown distribution. The view renders a fan chart and a small table.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Fill-quality TCA</h2>
+        <p><code>GET /api/fill-quality/{account_id}</code> — transaction-cost analysis. For every fill the importer captured an <code>executed_at</code>; if <code>quote_snapshots</code> has an NBBO sample around that timestamp, slippage is computed:</p>
+        <ul>
+          <li><strong>Marketable buy</strong> — slippage is <code>fill - ask</code> (positive = paid up; negative = price-improved).</li>
+          <li><strong>Marketable sell</strong> — slippage is <code>bid - fill</code>.</li>
+          <li><strong>Resting orders</strong> — relative to mid; lower confidence.</li>
+        </ul>
+        <p>Aggregated per broker, per symbol, per asset class, per hour. Catches "Broker X gives me 3¢ worse fills on options than Broker Y" — a real $$ insight if you trade enough size.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Drill-down + export</h2>
+        <p>Every report cell is a drill-down link: clicking a "Tuesday" bar in by-day-of-week opens the Trades view pre-filtered to Tuesday trades in the report's date range and account scope. Same for symbol cells, R buckets, tag buckets.</p>
+        <p>The toolbar above every report has <strong>Export CSV</strong> and <strong>Export JSON</strong>. The CSV honors the visible filter; the JSON is the raw API response (useful for piping into a separate analysis script).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Date-range &amp; scope</h2>
+        <p>Every report has the same scope picker at the top: account / asset-class / date-range / tag. The picker is sticky across the session (stored in <code>sessionStorage</code>) so flipping between reports keeps your scope. <code>Cmd+R</code> reloads the current report with the current scope; <code>R</code> alone refreshes (matches the view-scoped refresh chord on the topbar).</p>
+        <div class="tutorial-callout">
+          <strong>Tip</strong>
+          The R-distribution and by-tag reports become useful around 50 trades and decisive around 200. Before that, sample-size warnings are surfaced inline so you don't over-index on a 12-trade hot streak.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="04-journal.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">04 · Journal</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="06-live-scanner.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">06 · Live scanner</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 13 · Files browser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">13 · Files</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="12-favorites-notes-tags.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">12 · Favorites / Notes / Tags</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="14-history.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">14 · History &amp; diffs</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:68.42%"></div></div>
+        <span class="meter-count">13 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">13.</span>Files browser — <code>Cmd+0</code></h2>
+      <p class="tutorial-subtitle">A raw filesystem window with breadcrumbs, quick-nav, directory bookmarks, lazy-rendered waveforms for audio files, and native drag-out to any app. Not a scanned inventory — a direct view.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/files.png" alt="Files browser tab with breadcrumbs, quick-nav buttons, and file list" loading="lazy">
+        <figcaption>assets/files.png · Files browser</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Navigation</h2>
+        <p>The header carries a full toolbar (<code>frontend/js/file-browser.js</code>):</p>
+        <ul>
+          <li><strong>Up</strong> — <code>fileUp</code>. Parent directory.</li>
+          <li><strong>Home</strong> — <code>fileHome</code>. Jumps to <code>get_home_dir</code> result.</li>
+          <li><strong>Quick nav buttons</strong> — <code>fileQuickNav</code> with <code>data-dir="Desktop"</code>, <code>Downloads</code>, <code>Music</code>, <code>Documents</code>. One click, one IPC call, one directory switch.</li>
+          <li><strong>Bookmark</strong> — <code>btnFileFav</code>. Toggles the current directory in your favorite-directories list (<code>fileFavs</code>).</li>
+          <li><strong>Breadcrumb</strong> — <code>fileBreadcrumb</code>. Each crumb is a clickable <code>data-file-nav</code> link — jump straight to any ancestor.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Search &amp; filter</h2>
+        <p>Above the list: fuzzy search (<code>fileSearchInput</code>) with the regex toggle (<code>regexFiles</code>). Matches are highlighted and the list paginates in chunks of <code>FILE_LIST_CHUNK = 80</code> rows to keep the scroll buffer snappy even in huge directories. A monotonic <code>_fileListRenderSeq</code> invalidates stale renders so switching directories mid-render never shows the wrong listing.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Bookmarked directories</h2>
+        <p>The <strong>Favorite Directories</strong> strip (<code>#fileFavs</code>) sits above the list when you have any bookmarks. Each bookmark is a chip:</p>
+        <ul>
+          <li>Folder icon + directory basename (<code>.fav-chip-name</code>)</li>
+          <li>Remove button (<code>data-remove-fav-dir</code>)</li>
+        </ul>
+        <p>Click a chip to jump straight there. The grid is compact — meant for the 4–8 directories you touch every day.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>File list rows</h2>
+        <p>Each file row is built by <code>buildFileListRowHtml()</code> (~line 198 of <code>file-browser.js</code>). Columns shown:</p>
+        <ul>
+          <li><strong>Icon</strong> — <code>.file-icon</code>, chosen by extension: 📁 folder, 🎵 audio, 🎛 DAW, ⚡ plugin, 📄 PDF, etc.</li>
+          <li><strong>Mini waveform</strong> — for audio files, a <code>.file-waveform</code> canvas lazy-loaded by an <code>IntersectionObserver</code> (<code>_fbWfObserver</code>). The canvas decodes a few hundred peaks and draws an inline waveform strip.</li>
+          <li><strong>File name</strong> — with search highlight.</li>
+          <li><strong>Extension chip</strong> — or <em>"DIR"</em> for directories.</li>
+          <li><strong>File size</strong>.</li>
+          <li><strong>Modified date</strong>.</li>
+          <li><strong>Meta badges</strong> — star (if favorited), note icon, tag pills, plus cached BPM / key / duration badges for audio files whose analysis is already in the cache. So scanned and un-scanned files look identical if they've been analyzed before.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Row actions</h2>
+        <ul>
+          <li><strong>Single click</strong> — select the row.</li>
+          <li><strong>Double click</strong> — for directories, navigate into them. For files, open in the default OS app via <code>open_file_default({ filePath })</code>.</li>
+          <li><strong>Right click</strong> — context menu with the full power-feature surface: <em>Open in Default App</em>, <em>Reveal in Finder</em>, <em>Rename</em>, <em>Copy / Cut / Paste</em>, <em>Duplicate</em> (<code>{stem} copy.ext</code>), <em>Make Alias</em> (Unix symlink), <em>Touch</em>, <em>Compress to .zip</em>, <em>Extract</em> (.zip / .tar / .tar.gz / .7z), <em>Run as Program</em>, <em>Open in External Editor</em>, <em>Get Info</em>, <em>Hash (SHA-256)</em>, <em>Chmod</em>, <em>Symlink target editor</em>, <em>Find Similar</em>, <em>Find in Files</em>, <em>Find Duplicates</em>, <em>Color label</em> (Finder 7 colors), <em>Add to Favorites</em>, <em>Add note</em>, <em>Tag</em>, <em>Copy name / Copy path</em>. The three deletion options (<em>Move to Trash</em> · <em>Delete Permanently</em> · <em>Secure Delete</em> — files only) come from the shared <code>_pathDeleteItems</code> helper in <code>context-menu.js</code> and are mirrored into every inventory table row (audio / DAW / MIDI / preset / PDF / video) so the same three-option deletion surface is reachable from any tab. Secure Delete overwrites every byte of the file with zeros in 64 KiB chunks, fsync's, then unlinks — the confirmation dialog honestly states the SSD wear-leveling / APFS-btrfs-zfs copy-on-write caveats.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Multi-pane (1–4)</h2>
+        <p>Total-Commander-style split view. <code>Cmd+\</code> cycles the pane count 1 → 2 → 3 → 4 → 1; <code>Cmd+Alt+1..4</code> jumps the active pane; the cyan left-border marks which pane the keyboard / commands target. Each pane has its own full state:</p>
+        <ul>
+          <li>Current path · entries · selection · scroll position</li>
+          <li>Per-pane tab strip (drag any <code>.fb-tab</code> to reorder; persists)</li>
+          <li>Sort column &amp; direction · extension filter · hidden-files toggle · Spotlight-vs-name search mode</li>
+          <li>Navigation history (<code>Cmd+[</code> / <code>Cmd+]</code>, capped at 50 entries)</li>
+        </ul>
+        <p>Everything above lives in the <code>fileBrowserPanesV3State</code> persistence blob, so launching the app puts you back exactly where you left off — including the scroll position (restored once on first render via a one-shot <code>_fbBootScrollPending</code> flag, then 250 ms-debounced scroll save kicks in). Drag-resize gutters between consecutive visible panes (5 px wide, 80 px clamp on each side, double-click resets to 50 / 50). Hover the gutter for a <strong>⇆ swap button</strong> that swaps every per-pane field at once. <strong>Trello-style pane reorder:</strong> drag the per-pane tab strip to permute pane positions — the resize gutters re-interleave and the active idx follows the moved content.</p>
+        <p><strong>Sync scroll</strong> toggle scrolls every visible pane by the same <code>scrollTop / scrollHeight</code> ratio. Cross-pane <em>Copy / Move Active Selection → Next Pane</em> menu entries copy or move the current selection. Native HTML5 drag between panes uses a custom MIME type (<code>application/x-audio-haxor-paths</code>) so it doesn't clash with the OS-level drag-out; hold <code>Cmd / Opt</code> to copy, otherwise move.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tree sidebar (Cmd+B)</h2>
+        <p>Left rail collapsible folder tree. Roots = saved bookmarks + Home + <code>/</code>. Lazy expansion via the <code>fs_list_subdirs</code> Tauri command (subdirs only — much lighter than <code>fs_list_dir</code> since it skips file stat formatting). Expansion + visibility persisted in <code>fileBrowserTreeExpanded</code> and <code>fileBrowserTreeVisible</code>. The active folder is highlighted and the tree re-renders on every <code>loadDirectory</code> call so the highlight follows the main pane.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Inline previews</h2>
+        <ul>
+          <li><strong>Image thumbnails</strong> — lazy via <code>IntersectionObserver</code>; server resizes to 64 px width via the <code>image</code> crate (HiDPI-sharp at 32 px display) and caches to SQLite <code>image_preview_cache</code> with mtime-seconds invalidation.</li>
+          <li><strong>Video thumbnails</strong> — macOS-only via the system <code>qlmanage -t</code> utility (same tool Finder uses; Linux / Windows row falls through to the glyph).</li>
+          <li><strong>PDF thumbnails</strong> — PDF.js + SQLite <code>pdf_preview_cache</code>.</li>
+          <li><strong>EXIF row badge</strong> — cheap 64 KiB read + <code>Exif\0\0</code> magic search via <code>fs_has_exif</code>; cyan 📷 when present.</li>
+          <li><strong>Git status badges</strong> — patched in place via <code>fs_git_status</code> (<code>git status --porcelain=v1 -z</code>) with VSCode-convention coloring (orange modified, green added, cyan untracked, red conflict).</li>
+          <li><strong>Color labels</strong> — Finder 7 colors + None; per-pane filter chip strip below the ext-filter.</li>
+        </ul>
+        <p>Preview pane to the right of the list: full-size image with zoom (Fit / 100% / + / − buttons, Cmd/Ctrl + scroll-wheel zoom anchored to cursor, click+drag pan). For files with no typed preview, the pane shows a <strong>hex / binary viewer</strong> (<code>xxd</code>-style dump of the first 4 KiB; raw bytes via <code>tauri::ipc::Response</code> so the 0x80+ bytes don't get scrambled into U+FFFD by UTF-8 lossy conversion).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Power modals (right-click → menu, or Command Palette)</h2>
+        <ul>
+          <li><strong>Get Info</strong> — size + mtime/ctime/atime + perms <code>drwxr-xr-x</code> + uid/gid + xattrs (<code>xattr</code> crate) + EXIF (<code>kamadak-exif</code>) + audio metadata from <code>audio_samples</code> inventory + disk usage from <code>sysinfo</code>.</li>
+          <li><strong>Hash</strong> — single + bulk SHA-256 (<code>sha2</code>, 64 KiB streaming chunks) with Copy All.</li>
+          <li><strong>Chmod</strong> — single + bulk octal-mode entry (Unix).</li>
+          <li><strong>Diff Two Files</strong> — unified diff via the <code>similar</code> crate (4 MiB cap, binary rejected, red − delete / green + insert / dim equal).</li>
+          <li><strong>Compare Folders</strong> — recursive 3-bucket tree diff (<code>fs_compare_dirs</code>; 50 k entries/side cap; content-hashed when sizes match up to 16 MiB).</li>
+          <li><strong>Find in Files</strong> — recursive grep (<code>fs_grep</code>; skips binaries / dotdirs / >4 MiB; 500-result cap).</li>
+          <li><strong>Find Duplicates</strong> — two-pass: group by <code>(size, ext)</code>, hash candidates, sort by reclaim potential, trash-all-but-first per group.</li>
+          <li><strong>Symlink editor</strong> — <code>fs_symlink_retarget</code> (atomic unlink + re-symlink).</li>
+          <li><strong>Bookmarks manager</strong> — rename inline / ▲▼ reorder / ✕ delete.</li>
+          <li><strong>Quick Open</strong> — VSCode-style fuzzy palette over recent folders + files (<code>fileBrowserRecent</code>, 200 cap).</li>
+          <li><strong>Spotlight</strong> — <code>fs_global_search</code> cross-inventory FTS5 search across <code>audio_samples_fts</code> + <code>daw_projects_fts</code> + <code>presets_fts</code> + <code>midi_files_fts</code> + <code>pdfs_fts</code> + <code>video_files_fts</code>; 150 ms debounce; grouped results; click → switch inventory tab + open in default app.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Auto-reload watcher</h2>
+        <p><code>src-tauri/src/fb_watcher.rs</code>: single-directory, non-recursive <code>notify::RecommendedWatcher</code> with a 300 ms Rust-side debounce that emits <code>file-browser-change</code> with <code>{dir: canonical_path}</code> to the frontend. Distinct from the inventory recursive multi-dir watcher. JS-side 150 ms reload coalesce on top of the Rust debounce so FSEvents bursts (create + chmod + rename ~50 ms apart on macOS) never trigger more than one reload per ~half-second of activity. Strict-equality on <code>payloadDir === _fbWatchedCanonical</code> so in-flight events from a folder the user navigated away from cannot cause a stale reload.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Native drag-out</h2>
+        <p><code>frontend/js/native-file-drag.js</code>. Files can be dragged into any other native application — a DAW, Finder, Terminal, Dropbox, you name it. Detection is pointer-based:</p>
+        <ol>
+          <li><code>pointerdown</code> on a row arms the drag.</li>
+          <li><code>pointermove</code> with a delta &gt; 8 px² triggers <code>startNativeFileDrag()</code>.</li>
+          <li>The drag cursor shows a custom 128×128 cyberpunk drag icon (neon border, scanlines, spectrum bars, generated on the fly in ~line 21–143).</li>
+          <li>Drop anywhere outside the app to copy the file there (mode is always <em>copy</em> — read-only for the source).</li>
+          <li>On success, a toast (<code>toast.fb_drag_started_n</code>) confirms the count of items handed off to the OS. Previously the operation was silent on success — only failures were toasted — which made it look like nothing happened when the destination app rejected the drop.</li>
+        </ol>
+        <p>If the dragged row is part of a batch selection (via checkbox), every selected path is dragged at once. This works in every inventory tab, not just the Files browser — the drag machinery is shared with Samples, DAW, Presets, MIDI, PDF, Plugins, Favorites, and Notes rows.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>IPC surface (Files-specific)</h2>
+        <p>The Files browser ships ~40 <code>fs_*</code> Tauri commands. The most-used subset:</p>
+        <ul>
+          <li><code>fs_list_dir({ dirPath })</code> · <code>fs_list_subdirs({ dirPath })</code> (tree sidebar) · <code>fs_get_info</code></li>
+          <li><code>delete_file</code> · <code>fs_secure_delete</code> · <code>move_to_trash</code> · <code>rename_file</code> · <code>fs_make_alias</code> · <code>fs_touch</code> · <code>fs_copy_path</code></li>
+          <li><code>fs_compress_zip</code> · <code>fs_extract_archive</code> · <code>fs_grep</code> · <code>fs_find_duplicates</code> · <code>fs_compare_dirs</code> · <code>fs_hash_sha256</code> · <code>fs_chmod</code></li>
+          <li><code>fs_global_search</code> (Spotlight) · <code>fs_has_exif</code> · <code>fs_git_status</code> · <code>fs_image_thumbnail</code> · <code>fs_read_head_bytes</code> (hex viewer)</li>
+          <li><code>fb_watcher_set</code> · <code>fs_symlink_retarget</code> · <code>open_with_app</code> · <code>open_file_default</code> · <code>get_home_dir</code></li>
+        </ul>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>Need to pull a one-off file into a DAW that isn't in any of your scan roots? Files browser + native drag-out is the shortest path. Bookmark the directory once, then drag out of the app forever.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="12-favorites-notes-tags.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">12 · Favorites / Notes / Tags</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="14-history.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">14 · History &amp; diffs</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

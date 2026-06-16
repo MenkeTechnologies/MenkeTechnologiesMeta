@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 05 · Audio samples tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">05 · Samples</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="04-plugins.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">04 · Plugins</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="06-analysis.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">06 · BPM / key / LUFS</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:26.32%"></div></div>
+        <span class="meter-count">05 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">05.</span>Audio samples tab</h2>
+      <p class="tutorial-subtitle">Streaming table, waveform + spectrogram previews, context-menu actions, chromaprint fingerprints, find-similar, content-hash duplicates, smart playlists, and the heatmap dashboard. The largest tab in the app.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/samples.png" alt="Samples tab with waveform preview and floating player active" loading="lazy">
+        <figcaption>assets/samples.png · Samples tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Header controls</h2>
+        <ul>
+          <li><strong>Scan</strong> (<code>scanAudioBtn</code>) — dispatches <code>scan_audio_samples({ customRoots, excludePaths })</code>.</li>
+          <li><strong>Resume</strong> / <strong>Stop</strong> — same pattern as plugins.</li>
+          <li><strong>Search</strong> — fuzzy search (or regex via the toggle). Supports the full FZF query language (<code>'exact</code>, <code>^prefix</code>, <code>suffix$</code>, <code>!term</code>, <code>a | b</code>).</li>
+          <li><strong>Format filter</strong> — multi-select over <em>WAV, MP3, AIFF, FLAC, OGG, M4A, AAC, OPUS, WMA, REX, RX2, SF2, SFZ</em>.</li>
+          <li>Additional filters on sample rate, channel count, folder path — all multi-select widgets.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Table columns</h2>
+        <p>Built by <code>buildAudioRow()</code> in <code>frontend/js/audio.js:3516</code>:</p>
+        <ul>
+          <li><strong>Checkbox</strong> — batch selection for export, delete, favorite, tag.</li>
+          <li><strong>Name</strong> — with highlight on search match.</li>
+          <li><strong>Duration</strong> — HH:MM:SS or MM:SS.</li>
+          <li><strong>Format</strong> — chip-coded.</li>
+          <li><strong>Sample rate</strong> — e.g. "44.1 kHz", "48 kHz", "96 kHz".</li>
+          <li><strong>Channels</strong> — mono / stereo / 5.1 / etc.</li>
+          <li><strong>Size</strong>.</li>
+          <li><strong>Modified</strong>.</li>
+          <li><strong>Path</strong>.</li>
+          <li><strong>BPM / Key / LUFS</strong> — populated by the analysis jobs in step 06.</li>
+          <li><strong>Actions</strong> — expand metadata, play, reveal in Finder.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Row interactions</h2>
+        <ul>
+          <li><strong>Click</strong> — select. If <em>Single-click sample playback</em> is on (Settings → Playback), also starts playback.</li>
+          <li><strong>Double-click</strong> — if <em>Expand sample row</em> is on, expand the row to reveal the full metadata panel (waveform canvas + spectrogram + BPM / key / LUFS / tags / notes).</li>
+          <li><strong>Arrow keys / j / k</strong> — navigate. If <em>Play on keyboard selection</em> is on, each selection auto-previews.</li>
+          <li><strong>Enter</strong> — play.</li>
+          <li><strong>Space</strong> — play/pause the floating player.</li>
+          <li><strong>Drag</strong> — native OS drag. Drop into a DAW, another app, or the Files tab (see step 13). Multi-row drag works if you've checkboxed rows.</li>
+          <li><strong>Right-click</strong> — context menu: Reveal, Copy path, Favorite, Add note, Tag, Find similar, Delete, Export selection, and more.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Waveform preview</h2>
+        <p>Expanding a row triggers <code>decodePeaksViaWorker()</code> at <code>frontend/js/audio.js:202</code>. The decode pipeline has three fallbacks:</p>
+        <ol>
+          <li>Worker fetch + decode — off-main-thread.</li>
+          <li>Main-thread fetch → worker decode — if the worker can't fetch directly.</li>
+          <li>Main-thread decode — last resort.</li>
+        </ol>
+        <p>Decoded peaks are cached in <code>_waveformCache</code> (capped by the <strong>Max cached waveforms</strong> setting). <code>resolveWaveformBoxSize()</code> at <code>frontend/js/audio.js:452</code> wraps <code>getBoundingClientRect()</code> in an 8-frame rAF retry loop because WKWebView release builds can return 0×0 for briefly-unattached elements.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Spectrogram preview</h2>
+        <p>The expanded row also renders a spectrogram via <code>computeSpectrogramData()</code> in <code>frontend/js/audio-decode-worker.js</code> (~line 34). Algorithm: sliding-window FFT, 1024 bins per frame with 50% hop, mapped to 64 log-spaced frequency bins from ~0 Hz up to Nyquist. Output is a <code>Float32Array</code> heatmap of shape <code>[time][freq]</code>, rendered to canvas with an accent-color ramp.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Content duplicates — SHA-256 by size group</h2>
+        <p>Open the <strong>Duplicates</strong> modal from the tab header or context menu (shortcut <code>Cmd+D</code>). It has two tabs:</p>
+        <ul>
+          <li><strong>Name duplicates</strong> — groups rows by <code>(name, format)</code>. Instant, no scanning.</li>
+          <li><strong>Content duplicates</strong> — click <em>Scan</em> to dispatch <code>find_content_duplicates</code>. The backend groups files by size first, then SHA-256-hashes any size-collisions (the vast majority of files are unique by size and skip hashing entirely). Progress streams via the <code>content-dup-progress</code> event.</li>
+        </ul>
+        <p>Output: <code>{ groups: [{ hash_hex, size_bytes, paths: [{ kind, path }] }], files_hashed, skipped }</code>. Each group is a card listing every duplicate path so you can pick which copy to keep.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Find similar — chromaprint fingerprints</h2>
+        <p>Context menu → <em>Find similar to this</em> (shortcut <code>W</code>). Calls <code>find_similar_samples(filePath, candidatePaths, maxResults: 20)</code> against the fingerprint cache built by <code>build_fingerprint_cache</code>. The backend uses a chromaprint-style acoustic fingerprint so <em>different files that sound the same</em> (different formats, re-encodings, subtle edits) surface as hits, unlike byte-level duplicates.</p>
+        <p>Build the cache with <code>Cmd+Shift+B</code> or the <em>Build Fingerprint Cache</em> palette action. Cache lives in SQLite and is reused across launches.</p>
+        <p>Hits land in the <strong>Similar Search</strong> floating panel — a draggable dock that snaps to any of four corners (<code>similarDock</code> pref: <code>dock-tl</code> / <code>dock-tr</code> / <code>dock-bl</code> / <code>dock-br</code>, default bottom-left). The dock emits a <code>toast.similar_panel_docked</code> toast each time you snap it to a new corner.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Native drag-out to DAW / Finder</h2>
+        <p>Drag any row (or multi-selection) off the table and onto Ableton, Logic, Finder, or any other native OS target. The plumbing lives in <code>frontend/js/native-file-drag.js</code> and uses the <code>tauri-plugin-drag</code> sidecar; on a successful drag-out the app emits a <code>toast.fb_drag_started_n</code> toast so you can see exactly how many files just left the app. Single-file drag works without a checkbox selection — drag the row directly. Multi-file drag fires whenever 2+ rows are checked.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Secure delete</h2>
+        <p>Right-click → <em>Securely delete</em> on any sample row runs a 3-pass DoD 5220.22-M overwrite through the <code>fs_secure_delete</code> Tauri command (<code>src-tauri/src/lib.rs:8567</code>). The same item is available from every inventory tab via the shared <code>_pathDeleteItems()</code> helper (<code>frontend/js/context-menu.js:14</code>). A confirmation dialog (<code>confirm.fb_secure_delete_title</code>) is shown before the wipe; the row is removed from the table only after the file is gone from disk.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Smart playlists</h2>
+        <p><code>frontend/js/smart-playlists.js</code>. Create a playlist with a rule set; the view is recomputed every time the Samples table re-renders.</p>
+        <p>Rule types (from <code>matchesSmartRule()</code>, ~line 75):</p>
+        <ul>
+          <li><code>format</code> — comma-separated formats (<code>WAV,FLAC</code>).</li>
+          <li><code>bpm_range</code> — <em>min-max</em> (e.g. <code>120-130</code>).</li>
+          <li><code>tag</code> — note-tag match.</li>
+          <li><code>favorite</code> — is favorited.</li>
+          <li><code>recently_played</code> — in the floating player history.</li>
+          <li><code>name_contains</code> / <code>path_contains</code> — substring.</li>
+          <li><code>size_min</code> / <code>size_max</code> — MB bounds.</li>
+          <li><code>key</code> — musical key match (<em>C Major</em>, <em>F# Minor</em>, …).</li>
+          <li><code>duration_max</code> — seconds.</li>
+        </ul>
+        <p>Set <code>matchMode: 'all'</code> (AND) or <code>'any'</code> (OR). Playlists persist in prefs, export via <em>Export Smart Playlists</em> (<code>Cmd+Shift+\</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Heatmap dashboard</h2>
+        <p>Press <code>D</code> or run <em>Show Heatmap Dashboard</em>. <code>frontend/js/heatmap-dashboard.js</code> pulls per-type aggregates from <code>db_audio_filter_stats</code>, <code>db_plugin_filter_stats</code>, <code>db_daw_filter_stats</code>, <code>db_preset_filter_stats</code> and renders a draggable grid of cards:</p>
+        <ul>
+          <li>Format distribution (top 10 by count).</li>
+          <li>Size distribution histogram (&lt;100 KB, 100 KB–1 MB, 1–10 MB, 10–50 MB, 50–100 MB, &gt;100 MB).</li>
+          <li>Folder heatmap — top directories by file count.</li>
+          <li>BPM distribution histogram.</li>
+          <li>Key distribution wheel.</li>
+          <li>Activity timeline — files per modified month.</li>
+          <li>Plugin-type breakdown.</li>
+          <li>DAW-format breakdown.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Import / export</h2>
+        <ul>
+          <li><strong>Export JSON</strong> — <code>export_audio_json</code>.</li>
+          <li><strong>Export DSV</strong> (TSV/CSV) — <code>export_audio_dsv</code>.</li>
+          <li><strong>Import JSON</strong> — <code>import_audio_json</code>.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>The Samples tab streams up to 100 000 rows into an in-memory buffer during scans, but always paginates from SQLite for display. If you filter or search, <em>filter stats</em> (<code>db_audio_filter_stats</code>) refreshes the header count so you know how many results match your current query.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="04-plugins.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">04 · Plugins</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="06-analysis.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">06 · BPM / key / LUFS</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

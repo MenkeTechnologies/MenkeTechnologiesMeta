@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["detect_architectures","discover_plugins","format_size","get_directory_size","get_directory_size_depth","get_plugin_info","get_plugin_type","get_vst_directories","json_pick_str","read_bundle_metadata","read_plist_info","read_vst3_moduleinfo"],"struct":["PluginInfo"]};

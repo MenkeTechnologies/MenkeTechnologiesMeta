@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["extract_page_count","extract_pages_batch"]};

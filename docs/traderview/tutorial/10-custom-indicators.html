@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 10 · Custom indicators</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">10 · Custom indicators</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="09-backtest.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">09 · Backtest engine</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="11-alerts-webhooks.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">11 · Alerts &amp; webhooks</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:55.55%"></div></div>
+        <span class="meter-count">10 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">10.</span>Custom indicators — AST you write once, reuse everywhere</h2>
+      <p class="tutorial-subtitle">Author an indicator in the small DSL, save it to <code>custom_indicators</code>, evaluate it per symbol via <code>POST /custom-indicators/eval/{sym}</code>, and reference it by name from chart overlays, scanner filters, alert rules, and backtest strategies. Compiles to the same stryke bytecode the backtest engine runs.</p>
+
+      <section class="tutorial-section">
+        <h2>The DSL — small on purpose</h2>
+        <p>Custom indicators are pure functions over a bar series. The DSL has:</p>
+        <ul>
+          <li><strong>Bar accessors</strong> — <code>open</code>, <code>high</code>, <code>low</code>, <code>close</code>, <code>volume</code>, <code>time</code>.</li>
+          <li><strong>Built-in TA</strong> — <code>sma(x, n)</code>, <code>ema(x, n)</code>, <code>rsi(x, n)</code>, <code>atr(n)</code>, <code>stdev(x, n)</code>, <code>bb_upper(x, n, k)</code>, <code>highest(x, n)</code>, <code>lowest(x, n)</code>, plus the ~30 standard indicators.</li>
+          <li><strong>Arithmetic, comparison, boolean operators.</strong></li>
+          <li><strong>Time / calendar accessors</strong> — <code>hour</code>, <code>minute</code>, <code>day_of_week</code>, <code>is_market_open</code>, <code>is_first_15_min</code>.</li>
+          <li><strong>References to other custom indicators</strong> — by name. The compiler resolves the DAG and detects cycles.</li>
+          <li><strong>Plot hints</strong> — <code>@plot(line, color = "#05d9e8")</code>, <code>@plot(histogram)</code>, <code>@plot(none)</code>. Controls how the chart overlay renders the result.</li>
+        </ul>
+        <pre>// vwap_distance_z — z-score of price distance from VWAP
+@plot(line, color = "#ff2a6d", subpane = true)
+
+let vw   = vwap(session)
+let dist = close - vw
+let z    = (dist - sma(dist, 200)) / stdev(dist, 200)
+return z
+</pre>
+        <p>Indicators are stateless w.r.t. each other — every call sees the same input bar series. Look-back is implicit through the windowed TA functions; no manual indexing into <em>"the bar N ago"</em>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Authoring + saving</h2>
+        <p>The Custom Indicators tile is a list + editor. Each indicator has:</p>
+        <ul>
+          <li><strong>Name</strong> — unique per user. Used to reference the indicator from other places.</li>
+          <li><strong>Body</strong> — the DSL source.</li>
+          <li><strong>Default parameters</strong> — if the body references undeclared identifiers (e.g. <code>fast_len</code>, <code>slow_len</code>), they're surfaced as parameters with defaults.</li>
+          <li><strong>Tags</strong> — for organization.</li>
+        </ul>
+        <p>The editor has live syntax highlighting + inline errors. <code>POST /custom-indicators/eval/{sym}?from=&amp;to=&amp;tf=</code> evaluates the indicator against the symbol over the date range and renders a preview chart in the editor before you save.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Where you can reference custom indicators</h2>
+        <ul>
+          <li><strong>Charts overlays.</strong> Add <code>my_indicator</code> from the overlay menu; it renders per its <code>@plot</code> hint (line / histogram / none).</li>
+          <li><strong>Screener filters.</strong> The screener (step 08) accepts custom-indicator expressions in its filter row. <em>"<code>my_volume_spike &gt; 3.0</code>"</em>.</li>
+          <li><strong>Alert rules.</strong> Alerts (step 11) take a boolean expression over indicators; custom indicators show up by name.</li>
+          <li><strong>Strategy alerts.</strong> AND/OR/NOT boolean composition over base alerts (step 11). Each base alert can reference a custom indicator.</li>
+          <li><strong>Backtest strategies.</strong> The entry / exit / sizing expressions in a backtest preset (step 09) can call any of your custom indicators by name.</li>
+        </ul>
+        <p>The compiler resolves the call graph and rebuilds the bytecode whenever any indicator in the graph changes — backtests / alerts / overlays automatically pick up the new logic.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Evaluation modes</h2>
+        <p>The same bytecode runs in three modes:</p>
+        <ul>
+          <li><strong>Live</strong> — per incoming tick or per just-closed bar; result lands in the WebSocket alert / scanner pipelines.</li>
+          <li><strong>Historical</strong> — over a date range; renders chart overlays + backtest signals.</li>
+          <li><strong>One-shot</strong> — single evaluation at a specific bar; used by the screener and the per-symbol research dossier.</li>
+        </ul>
+        <p>The compiler emits the same bytecode in all three modes. The only difference is how bars are streamed in; the indicator code itself is identical.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Performance &amp; cost</h2>
+        <p>A typical indicator costs sub-microsecond per bar after JIT warm-up. The screener evaluates indicators across a 3 000-symbol universe in the time it takes to fetch the bars. Backtest walk-forward sweeps that evaluate the same indicator 1 000 times against 5 years of intraday bars finish in seconds, not minutes.</p>
+        <p>The expensive piece is the bar fetch, not the indicator math. The bars cache (per-symbol, per-timeframe) is sized aggressively for exactly this reason.</p>
+        <div class="tutorial-callout">
+          <strong>Tip</strong>
+          When a backtest sweep is slow, the bottleneck is almost always (a) a long-lookback indicator (<code>sma(x, 500)</code> over 1m bars = a lot of evaluation) or (b) a too-broad universe. Profile by halving each axis once.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="09-backtest.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">09 · Backtest engine</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="11-alerts-webhooks.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">11 · Alerts &amp; webhooks</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

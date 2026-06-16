@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 09 · Backtest engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">09 · Backtest engine</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="08-charts-research.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">08 · Charts &amp; research</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="10-custom-indicators.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">10 · Custom indicators</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:50.00%"></div></div>
+        <span class="meter-count">09 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">09.</span>Backtest — stryke-JIT engine + walk-forward sweeper</h2>
+      <p class="tutorial-subtitle">Strategies compile to stryke bytecode, run through the JIT, and produce a per-trade ledger that flows into the same FIFO roll-up the real broker imports use. Walk-forward sweeper splits in-sample / out-of-sample and aggregates results across windows. Deterministic, reproducible, presetable.</p>
+
+      <section class="tutorial-section">
+        <h2>Why stryke-JIT</h2>
+        <p>A backtest is a tight loop: for each bar, evaluate N conditions, maybe place an order, maybe exit, accumulate state. Interpreted-AST evaluation is the bottleneck for any non-trivial sweep. TraderView's strategies compile to <strong>stryke bytecode</strong> (the same VM the backtest engine shares with the custom-indicator AST) and execute through a Cranelift JIT — orders of magnitude faster than a tree-walking interpreter, and fast enough that walk-forward sweeps with thousands of parameter combinations finish in minutes instead of hours.</p>
+        <p>The strategy DSL is small and intentional — entry / exit conditions, sizing, stops, targets, time-based filters. Anything more exotic compiles to a custom indicator (step 10) and feeds back into the DSL.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Defining a strategy</h2>
+        <p>Strategies are stored in <code>backtest_presets</code>. Each preset has:</p>
+        <ul>
+          <li><strong>Universe</strong> — single symbol / watchlist / S&amp;P 500 / Russell 3000 / custom universe query.</li>
+          <li><strong>Timeframe</strong> — 1m through 1d.</li>
+          <li><strong>Date range</strong> — IS / OOS split is configured at sweep time.</li>
+          <li><strong>Entry conditions</strong> — boolean expression over indicators, price, volume, time-of-day, day-of-week.</li>
+          <li><strong>Exit conditions</strong> — stop loss, profit target, time-based, trailing, signal-based.</li>
+          <li><strong>Sizing</strong> — fixed shares, fixed dollar, fixed-fractional, Kelly, or a custom indicator value.</li>
+          <li><strong>Costs</strong> — per-share commission, per-trade commission, fixed slippage (bps or cents).</li>
+        </ul>
+        <pre>// Pseudocode for an opening-range breakout preset
+universe: small_caps_above_5
+timeframe: 5m
+entry: bar.high &gt; or(0930, 0935, 0940).high
+       AND volume &gt; sma(volume, 20) * 2
+       AND time &lt; 1030
+exit:  stop = entry - 1 * atr(14)
+       target = entry + 2 * atr(14)
+       time_stop = 1300
+sizing: kelly_capped(0.25, max_dollar = 5000)
+costs: 0.005/sh + 1bps slippage</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Running a backtest</h2>
+        <p><code>POST /api/backtest/run</code> with the preset ID and any date-range override. The engine:</p>
+        <ol>
+          <li><strong>Compiles</strong> the strategy DSL + referenced custom indicators to stryke bytecode.</li>
+          <li><strong>JIT-compiles</strong> hot loops via Cranelift.</li>
+          <li><strong>Streams bars</strong> from <code>bars_*</code> tables in chronological order (no look-ahead).</li>
+          <li><strong>Evaluates entries / exits</strong> per bar, emits virtual executions.</li>
+          <li><strong>Rolls up</strong> through the same FIFO logic that real trades use, into a parallel <code>backtest_trades</code> table keyed by run ID.</li>
+          <li><strong>Aggregates stats</strong> — same statistics the live Reports view uses (expectancy, R-distribution, drawdown, profit factor, SQN, Sharpe, Sortino, Calmar). Plus per-day equity series for the equity-curve chart.</li>
+        </ol>
+        <p>Results land at <code>GET /api/backtest/runs/{id}</code>. The view renders equity curve, R-distribution, by-symbol breakdown, drawdown distribution, and a paginated trade list. Trade rows have the same right-click menu as live trades — drop into Charts with markers, open the journal slot, etc.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Walk-forward sweeper</h2>
+        <p><code>POST /api/backtest/walk-forward</code>. Splits the date range into N rolling windows; for each window:</p>
+        <ol>
+          <li><strong>In-sample (IS)</strong> — sweep the parameter grid over the IS window. Pick the parameter combo with best objective (configurable: total return / Sharpe / Sortino / Calmar / expectancy).</li>
+          <li><strong>Out-of-sample (OOS)</strong> — re-run the chosen combo on the immediately-following OOS window.</li>
+          <li><strong>Roll</strong> the window forward and repeat.</li>
+        </ol>
+        <p>The output is a per-window IS-vs-OOS table + a glued-together OOS equity curve. Big IS/OOS divergence is the curve-fitting smell test.</p>
+        <ul>
+          <li><strong>Parameter grid</strong> — Cartesian product of grid axes (e.g. stop = [1.0, 1.5, 2.0] × target = [1.5, 2.0, 2.5, 3.0] × ATR window = [10, 14, 20]).</li>
+          <li><strong>Parallelism</strong> — runs fan out via Rayon across the host's cores. A 1 000-cell grid × 12 windows on a 16-core host finishes in minutes, not hours.</li>
+          <li><strong>Determinism</strong> — same preset + same date range + same seed reproduces identical equity curves.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Presets &amp; the Presets view</h2>
+        <p><code>GET/POST /api/backtest-presets</code>. Save / share / clone strategies. The Backtest Presets tile lists them with last-run R-multiple distribution and a small equity-curve sparkline so you can spot which presets are still alive.</p>
+        <p>Each preset has a unique slug; export / import as JSON (round-trips losslessly so you can pin a preset in version control and re-import on another install).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What backtests don't include</h2>
+        <ul>
+          <li><strong>Real fills.</strong> A backtest evaluates "if the bar's high &gt; trigger, fill at trigger + slippage". Live fills include queue position, latency, partial fills, and rejections. The fill-quality TCA report (step 05) compares your live fills to NBBO; the slippage assumption in the backtest is the simplest possible model.</li>
+          <li><strong>Liquidity.</strong> The default model assumes you can always fill 100 % of the requested size at the bar. The liquidity report (step 05) and the optional liquidity guard in the sizing block (configurable %-of-bar-volume cap) bring this closer to reality.</li>
+          <li><strong>Borrow cost.</strong> Short borrow is not modeled in the default cost block; configure it explicitly per-symbol if it matters for the strategy.</li>
+          <li><strong>Survivorship bias.</strong> Universes built from <em>"currently in the Russell 3000"</em> are survivorship-biased. Universe definitions support point-in-time historical constituent lists if you've imported them.</li>
+        </ul>
+        <div class="tutorial-callout warn">
+          <strong>Sanity</strong>
+          A backtest result that's >2× live expectancy is almost certainly curve-fit, look-ahead biased, or both. The walk-forward sweeper is the cheapest way to find out which.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="08-charts-research.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">08 · Charts &amp; research</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="10-custom-indicators.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">10 · Custom indicators</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

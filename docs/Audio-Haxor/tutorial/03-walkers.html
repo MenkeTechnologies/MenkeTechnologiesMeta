@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AUDIO_HAXOR — 03 · Run Scan All &amp; Walkers tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// AUDIO_HAXOR — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">03 · Scan All</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="02-settings.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">02 · Scan roots</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="04-plugins.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">04 · Plugins tab</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:15.79%"></div></div>
+        <span class="meter-count">03 / 19</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">03.</span>Run Scan All &amp; watch the Walkers tab</h2>
+      <p class="tutorial-subtitle">The unified scan pipeline, per-type scanners, the Stop / Resume-All header flow, and the live two-tile Walkers HUD that shows every worker's current directory in real time.</p>
+
+      <figure class="tutorial-shot">
+        <img src="../assets/walkers.png" alt="Walkers tab showing per-scanner live directory streams during a unified scan" loading="lazy">
+        <figcaption>assets/walkers.png · Walkers tab</figcaption>
+      </figure>
+
+      <section class="tutorial-section">
+        <h2>Scan All — the unified walker</h2>
+        <p>Click the <strong>Scan All</strong> button (🗲) in the header to dispatch <code>scan_unified</code>. The Rust side (<code>src-tauri/src/unified_walker.rs</code>) performs a single filesystem pass over the union of every configured scan-root list, classifies every encountered file, and fans progress events into the same per-type event streams as standalone scans. This is dramatically faster than running six separate scanners — each directory is <code>opendir</code>'d once, not six times.</p>
+        <p>Before dispatching the scan proper, the frontend calls <code>prepare_unified_scan</code> to snapshot the root set and produce a deterministic scan-run ID you can reference later in the History tab.</p>
+        <p>Under the hood the scan is a Rayon-parallel walker — the thread count comes from <strong>Thread pool multiplier</strong> × core count (see step 02). Progress batches are rate-limited by the <strong>UI update throttle</strong> so the WebView doesn't drown in events.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Stop, resume, and the header state machine</h2>
+        <ul>
+          <li><strong>Scan All</strong> (<code>id="btnScanAll"</code>) — visible when idle. Dispatches <code>scan_unified</code>.</li>
+          <li><strong>Stop All</strong> (<code>id="btnStopAll"</code>) — visible during an active scan. Calls <code>stop_unified_scan</code> which signals every walker to abort gracefully at the next directory boundary.</li>
+          <li><strong>Resume All</strong> (<code>id="btnResumeAll"</code>) — only visible when one or more walkers have been paused. Resumes by dispatching per-type scans with the stop flag cleared.</li>
+          <li><strong>Scan status badge</strong> — <code>id="scanStatusBadge"</code> — free-form status text (e.g., <em>"Walking /Volumes/Samples (24k / ~180k)"</em>) streamed from Rust.</li>
+        </ul>
+        <p>The Stop / Scan / Resume visibility is managed in <code>frontend/js/app.js</code> boot sequence (lines 87–143) and toggled in response to progress events.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Prefer a single-type scan? Each tab has its own button</h2>
+        <p>Sometimes you just refreshed a DAW project and only need to re-index that directory. Every inventory tab has its own scan button that dispatches <em>only</em> that type:</p>
+        <ul>
+          <li><strong>Plugins tab → Scan</strong> — <code>id="btnScan"</code> → <code>scan_plugins</code></li>
+          <li><strong>Samples tab → Scan</strong> — <code>id="btnScanAudio"</code> → <code>scan_audio_samples</code></li>
+          <li><strong>DAW tab → Scan</strong> — <code>id="btnScanDaw"</code> → <code>scan_daw_projects</code></li>
+          <li><strong>Presets tab → Scan Presets</strong> — <code>id="btnScanPresets"</code> → <code>scan_presets</code></li>
+          <li><strong>MIDI tab → Scan MIDI</strong> — <code>id="btnScanMidi"</code> → <code>scan_midi_files</code></li>
+          <li><strong>PDF tab → Scan PDFs</strong> → <code>scan_pdfs</code></li>
+          <li><strong>Videos tab → Scan Videos</strong> → <code>scan_videos</code></li>
+        </ul>
+        <p>Each has its own hidden <em>Resume</em> / <em>Stop</em> buttons that appear mid-scan (e.g. <code>btnResumeScan</code>, <code>btnStopPlugins</code>). Shortcuts <code>Cmd+Shift+P/S/` /R/F/E</code> trigger Plugins/Samples/DAW/Presets/PDFs/Videos scans directly from the keyboard. The command palette also exposes per-scanner stop entries (<em>Stop plugin scan</em>, <em>Stop samples scan</em>, etc.) for granular abort without touching <code>Cmd+.</code> which fires every walker.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Progress events</h2>
+        <p>Each scanner emits a typed progress stream via Tauri's event bus:</p>
+        <ul>
+          <li><code>scan-progress</code> — plugins. <code>phase: 'start' | 'scanning'</code>, includes processed/total counts and a batch of <code>plugins[]</code>.</li>
+          <li><code>audio-scan-progress</code> — samples. Same shape with a <code>samples[]</code> batch.</li>
+          <li><code>daw-scan-progress</code> — DAW. <code>projects[]</code> batch.</li>
+          <li>Similar events for presets, MIDI, PDF, videos.</li>
+          <li><code>update-progress</code> — KVR update checks, with <code>plugins[]</code> whose update status just changed.</li>
+          <li><code>content-dup-progress</code> — content-level duplicate scan (see step 05).</li>
+        </ul>
+        <p>The frontend subscribes in each tab's JS module and appends streaming rows to the in-memory buffers while SQLite catches up.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The Walkers tab — F5</h2>
+        <p>Switch to <strong>Walkers</strong> with <code>F5</code> (or click the tab). This is a live HUD for every active walker, polled at 500 ms cadence (<code>_walkerInterval</code> in <code>frontend/js/walker-status.js</code>) via <code>get_walker_status</code>. The payload returns an array of directories currently being visited by each scanner plus its busy flag.</p>
+        <p>The layout is a draggable two-tile grid:</p>
+        <ol>
+          <li><strong>Plugin tile</strong> — <code>walkerTilePlugin</code>. Streams the directory currently being visited by the plugin walker. Header text "scanning — N threads | M dirs in buffer" while busy, "idle — N threads in pool" when idle.</li>
+          <li><strong>Unified File Walker tile</strong> — <code>walkerTileUnified</code>. Streams whichever sub-walker under <code>scan_unified</code> is most recently active (audio / DAW / preset / MIDI / PDF / video). Hidden when idle; appears the moment <code>scan_unified</code> or any of the per-type tab scans fire.</li>
+        </ol>
+        <p>Each tile is a scrolling ring buffer — newest at the bottom, older entries scrolling up. Hovering a directory shows the full path in a native title tooltip. The grid is drag-reorderable (<code>initDragReorder(grid, '.walker-tile', 'walkerTileOrder', ...)</code> at <code>frontend/js/walker-status.js:129</code>) and the order persists; the drop emits a <code>toast.reordered_walker_tiles</code> toast like every other reorder surface (see step 13 for the universal toast catalog).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Idle backoff — why the HUD pauses</h2>
+        <p>The Walkers tab stops polling after 10 consecutive idle reads (≈5 seconds), and pauses entirely when the app window is minimized, unfocused, or hidden. This is driven by the shared <code>ui-idle.js</code> module which emits a <code>ui-idle-heavy-cpu</code> event and adds <code>html.ui-idle-heavy-cpu</code> for CSS to pause ambient animations. When you return to the tab or another scan starts, polling resumes automatically on the next visibility change.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Keyboard shortcuts for scanning</h2>
+        <pre>Cmd+S               Scan all
+Cmd+.               Stop all scans
+Cmd+Shift+P         Scan plugins only
+Cmd+Shift+S         Scan samples only
+Cmd+Shift+`         Scan DAW projects only
+Cmd+Shift+R         Scan presets only
+Cmd+Shift+F         Scan PDFs only
+Cmd+Shift+E         Scan videos only
+Cmd+Shift+Y         Stop PDF scan
+Cmd+Shift+Q         Stop video scan
+Cmd+Shift+U         Check plugin updates (KVR)
+Cmd+Shift+X         Build plugin xref index
+Cmd+Shift+B         Build fingerprint cache
+Cmd+Shift+V         Start BPM/key/LUFS analysis
+Cmd+Shift+C         Stop BPM/key/LUFS analysis
+Cmd+Shift+,         Start content-dup scan
+Cmd+Shift+.         Stop content-dup scan
+Cmd+Shift+F5        Start all background jobs
+Cmd+Shift+F6        Stop all background jobs
+Cmd+Shift+Backspace Reset all scans / clear all caches
+F5                  Jump to Walkers tab</pre>
+        <p>The command palette (step 09) exposes a dedicated entry for every per-scanner stop, every background-job start/stop, and every export/import — easier to discover than memorising the Cmd+Shift table above.</p>
+      </section>
+
+      <section class="tutorial-callout">
+        <strong>Tip</strong>A full unified scan of a 300 000-file library takes seconds, not minutes. If it feels slow, the bottleneck is almost always I/O (spinning disk, network share, Time Machine snapshot). Bump the <strong>Thread pool multiplier</strong> in Settings → Performance for SSDs, lower it for HDDs.
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="02-settings.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">02 · Scan roots</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 19 steps</span>
+        </a>
+        <a class="nav-next" href="04-plugins.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">04 · Plugins tab</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../build-meta.js"></script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

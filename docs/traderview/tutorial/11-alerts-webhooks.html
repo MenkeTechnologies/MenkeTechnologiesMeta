@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>TraderView — 11 · Strategy alerts &amp; webhooks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// TRADERVIEW — WALKTHROUGH</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="index.html">Tutorial</a>
+            <span class="sep">/</span>
+            <span class="current">11 · Alerts &amp; webhooks</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Tutorial index</a>
+          <a class="btn btn-secondary" href="../index.html">Docs hub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <nav class="tutorial-nav tutorial-nav-top">
+        <a class="nav-prev" href="10-custom-indicators.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">10 · Custom indicators</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="12-hotkeys-paper.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">12 · Hotkeys &amp; paper</span>
+        </a>
+      </nav>
+
+      <div class="step-meter">
+        <span class="meter-label">Progress</span>
+        <div class="meter-bar"><div class="meter-fill" style="width:61.11%"></div></div>
+        <span class="meter-count">11 / 18</span>
+      </div>
+
+      <h2 class="tutorial-title"><span class="step-hash">11.</span>Alerts, strategy alerts, &amp; webhooks</h2>
+      <p class="tutorial-subtitle">Two alert layers: simple price/threshold rules, and AND/OR/NOT strategy alerts composed over them. Three delivery channels: in-app toast, Discord webhook, Slack webhook, generic JSON POST. Fires are logged, retried with backoff, and replayable.</p>
+
+      <section class="tutorial-section">
+        <h2>Layer 1 — simple alerts</h2>
+        <p><code>GET/POST /api/alerts</code>. Each alert row is a (symbol, condition, threshold, status) tuple:</p>
+        <ul>
+          <li><strong>Price crosses above / below X</strong>.</li>
+          <li><strong>% change from open / prior close / arbitrary anchor &gt; X</strong>.</li>
+          <li><strong>Volume &gt; X</strong> / <strong>RVOL &gt; X</strong>.</li>
+          <li><strong>Indicator condition</strong> — any custom-indicator expression (step 10).</li>
+          <li><strong>Time-of-day window</strong> — only fire between HH:MM and HH:MM ET.</li>
+        </ul>
+        <p>Alerts evaluate against the live tick stream (step 06). Firing an alert pushes a row to <code>alert_fires</code> and dispatches the configured delivery (in-app toast at minimum; webhooks if attached). The alert row's status moves <code>armed → fired</code>; a manual toggle re-arms.</p>
+        <p><code>POST /api/alerts/{id}/toggle</code> arms / disarms without deleting. <code>POST /api/alerts/{id}/test</code> sends a synthetic fire through the delivery chain so you can verify your Discord / Slack endpoint works without waiting for a real condition.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layer 2 — strategy alerts (AND/OR/NOT)</h2>
+        <p><code>GET/POST /api/strategy-alerts</code>. A strategy alert is a boolean expression over base alerts:</p>
+        <pre>// "AAPL gap-and-go signal"
+(AAPL_price_above_premarket_high AND AAPL_rvol_above_3)
+  AND NOT halt_AAPL
+  AND time_window_0930_1030
+</pre>
+        <p>The composer is a GUI tree builder — drag base alerts in, choose AND / OR / NOT at each branch. The expression compiles to stryke bytecode (same VM as backtest / custom indicators) and evaluates on every base-alert state change rather than every tick — much cheaper.</p>
+        <p>Fires are logged to <code>strategy_alert_fires</code> with the expression's evaluation trace (which base alerts were true, which were false, the time the eval flipped). <code>GET /api/strategy-alerts/fires</code> is the query endpoint; the view is a paginated list with re-fire / replay buttons.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Webhook delivery — Discord, Slack, generic</h2>
+        <p>Webhooks live in their own table (<code>webhooks</code>) and attach to alerts / strategy alerts as delivery targets. Three preset types:</p>
+        <ul>
+          <li><strong>Discord</strong> — embeds with title / description / fields / color matching alert severity. Pings <code>@here</code> / <code>@everyone</code> configurable.</li>
+          <li><strong>Slack</strong> — Block Kit payload with the same structured content. Channel routing via webhook URL.</li>
+          <li><strong>Generic JSON</strong> — POST a templated JSON body to an arbitrary URL. Template variables include alert ID, symbol, price, condition, timestamp, fire ID. Custom headers supported (e.g. <code>Authorization: Bearer …</code> for your own backend).</li>
+        </ul>
+        <p>Each webhook has a <strong>test button</strong> — <code>POST /api/webhooks/{id}/test</code> sends a fixed sample payload through. Use this when configuring the webhook URL the first time; you don't want to wait for a real alert to discover that you fat-fingered the URL.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Retry &amp; dead-letter</h2>
+        <p>Webhook POSTs that 5xx (or time out) are retried with exponential backoff: 5 s → 30 s → 5 min → 30 min → 2 h, capped at 5 attempts. After the cap the fire row is marked <code>dead</code>; the Webhooks view surfaces dead deliveries with a one-click manual-retry button.</p>
+        <p>4xx responses are <em>not</em> retried — a 401 from your Slack webhook means the URL is wrong; retrying makes it worse. The row is marked <code>failed</code> with the body of the 4xx response captured for debugging.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The Fires view</h2>
+        <p>The Alerts → Fires view is a chronological log of every alert that fired in the date range. Each row shows the alert / strategy-alert that fired, the symbol, the price / value at fire time, the delivery status per channel, and a replay button that re-runs delivery (useful when you fix a webhook URL after a real fire was missed).</p>
+        <p>Right-click → <em>Mute alert for 1 hr / today / forever</em> when an alert is spamming. Re-arm later from the Alerts view.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What this composes with</h2>
+        <ul>
+          <li><strong>TTS voice</strong> — the same in-app voice synth that reads halts / scanner spikes also reads alert fires. Per-alert toggle.</li>
+          <li><strong>Browser notifications</strong> — under Tauri's custom scheme <code>Notification.requestPermission</code> can throw; wrapped in try/catch. In web mode notifications work normally if the user grants permission.</li>
+          <li><strong>System tray</strong> — the desktop binary has an optional tray icon that flashes on alert fire (configurable).</li>
+        </ul>
+        <div class="tutorial-callout warn">
+          <strong>Rate-limit your channels</strong>
+          A custom indicator with a noisy boolean (firing on every bar) routed to Discord will get you rate-limited by Discord within minutes. Use per-channel cooldown (alert row → <em>Min interval between fires</em>) when you wire a custom indicator to webhook delivery.
+        </div>
+      </section>
+
+      <nav class="tutorial-nav">
+        <a class="nav-prev" href="10-custom-indicators.html">
+          <span class="nav-label">Prev</span>
+          <span class="nav-title">10 · Custom indicators</span>
+        </a>
+        <a class="nav-index" href="index.html">
+          <span class="nav-label">Index</span>
+          <span class="nav-title">All 18 steps</span>
+        </a>
+        <a class="nav-next" href="12-hotkeys-paper.html">
+          <span class="nav-label">Next</span>
+          <span class="nav-title">12 · Hotkeys &amp; paper</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

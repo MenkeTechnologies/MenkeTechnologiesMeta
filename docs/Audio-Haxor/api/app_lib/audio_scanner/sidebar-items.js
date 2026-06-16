@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["format_size","get_audio_metadata","get_audio_roots","normalize_macos_path","parse_aiff","parse_flac","parse_wav","probe_with_symphonia","walk_dir_parallel","walk_for_audio"],"struct":["AudioMetadata"]};
