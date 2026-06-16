@@ -26,11 +26,14 @@ jobs:
       matrix:
         plugin: [zpwr-synth, zpwr-fx, zpwr-midi-fx]
     steps:
-      - name: Clone ${{ matrix.plugin }} (private) + public submodules
+      - name: Clone ${{ matrix.plugin }} (private) + submodules
         env:
           GH_PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
-          git clone "https://x-access-token:${GH_PAT}@github.com/MenkeTechnologies/${{ matrix.plugin }}.git" plugin
+          # Authenticate all github.com fetches so private submodules
+          # (e.g. zpwr-fx's libs/zpwr-patch-core) resolve, not just the top repo.
+          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          git clone "https://github.com/MenkeTechnologies/${{ matrix.plugin }}.git" plugin
           git -C plugin submodule update --init --recursive
 
       - name: Install JUCE Linux dependencies
