@@ -61,20 +61,17 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
+        with:
+          # SUBMODULE_PAT can read the 5 private submodules; checkout persists it
+          # as the github.com auth header so plain ls-remote reaches them too.
+          token: ${{ secrets.SUBMODULE_PAT }}
       - name: ls-remote every submodule URL
-        env:
-          # 5 submodules (the paid apps/plugins) are private; authenticate all
-          # github.com fetches so ls-remote can reach them too.
-          SUBMODULE_PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
           set -euo pipefail
           urls=$(git config -f .gitmodules --get-regexp '^submodule\..*\.url$' | awk '{print $2}')
           failures=""
           for u in $urls; do
-            # Embed the token in the URL (no git config --global) so private
-            # submodules authenticate; public ones work with the token too.
-            au="https://x-access-token:${SUBMODULE_PAT}@github.com/${u#https://github.com/}"
-            if ! git ls-remote --quiet "$au" HEAD >/dev/null 2>&1; then
+            if ! git ls-remote --quiet "$u" HEAD >/dev/null 2>&1; then
               failures="$failures $u"
             fi
           done
