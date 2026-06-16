@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-patch-core — the signal-agnostic modular patch graph by MenkeTechnologies. The shared cable-routing core behind zpwr-fx, zpwr-synth, and zpwr-midi-fx. C++20, depends only on juce_core.">
+  <title>zpwr-patch-core — MenkeTechnologies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../product.css">
+</head>
+<body class="crt">
+  <header class="tutorial-header">
+    <div class="tutorial-header-inner">
+      <h1 class="tutorial-brand">// ZPWR-PATCH-CORE</h1>
+      <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+        <a href="../">MenkeTechnologiesMeta</a>
+        <span class="sep">/</span>
+        <span class="current">zpwr-patch-core</span>
+        <span class="sep">/</span>
+        <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <span class="sep">/</span>
+        <a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">Org</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="tutorial-main">
+    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>SIGNAL-AGNOSTIC PATCH GRAPH</h2>
+    <p class="tutorial-subtitle"><strong>The shared cable-routing core behind the plugin stack.</strong> Knows nothing about audio or MIDI.</p>
+
+    <section class="tutorial-section">
+      <h2>Concept</h2>
+      <p>It owns the parts that are identical in every modular plugin and nothing
+      else, so <code>zpwr-fx</code>, <code>zpwr-synth</code>, and
+      <code>zpwr-midi-fx</code> share one routing engine instead of three copies:</p>
+      <ul>
+        <li><strong>Routing</strong> — nodes wired by source ids, fan-out, feedback.</li>
+        <li><strong>Evaluation</strong> — topological order each rebuild; cycles resolve with a one-sample delay.</li>
+        <li><strong>Mod matrix</strong> — every node param has a <code>(source, depth)</code> modulation.</li>
+        <li><strong>Per-cable</strong> gain + colour.</li>
+        <li><strong>Lock-free live edits</strong> (atomic params) + atomic graph swap on structural edits.</li>
+        <li><strong>JSON</strong> serialisation of a whole patch, with versioning + source-id migration.</li>
+        <li><strong><code>ScriptEngine</code></strong> — a small RT-safe expression VM, exposed as the <code>Expr</code> module.</li>
+      </ul>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Signal-agnostic by design</h2>
+      <p>The graph is templated on the signal type carried between nodes (a
+      <code>SignalTraits&lt;S&gt;</code> policy): <code>float</code> for audio
+      (<code>zpwr-fx</code>, <code>zpwr-synth</code>) and a note-event stream for
+      MIDI (<code>zpwr-midi-fx</code>). Each host supplies a
+      <code>ModuleRegistry</code> of node types and the external source values per
+      sample; the core resolves block outputs and leaves the rest to the host.</p>
+      <pre>ext sources  &rarr;  [ Node 0 ]  &rarr;  [ Node 1 ]  &rarr;  &hellip;  &rarr;  outputs
+  In L/R         (registry-defined compute, per-param mod matrix)
+  noise/keys     S signal out  +  float scalar projection (mod value)
+  MIDI/MPE</pre>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Shared WebEditor</h2>
+      <p><code>zpc::WebEditor&lt;Engine&gt;</code> is the WebView backend every host
+      shares — catalog / patch JSON, BinaryData serving, preset I/O, ~30 native
+      functions. Soft knobs are an expandable pool with a fixed automatable
+      ceiling; the UI's <code>+</code>/<code>−</code> controls grow the active
+      count without shifting host source ids. <strong>EZ mode</strong> exposes an
+      <strong>⚡ EZ WIRE</strong> button that connects the standard signal path for
+      linear hosts.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Dependency</h2>
+      <div class="fmt-row">
+        <span class="fmt">C++20</span><span class="fmt">juce_core only</span><span class="fmt">header + lib</span>
+      </div>
+      <p>Consumers add it via <code>add_subdirectory</code> and link
+      <code>zpwr::patch_core</code>. No audio, MIDI, GUI, or networking coupling —
+      JUCE's curl path is disabled.</p>
+    </section>
+
+    <div class="note">Part of the paid MenkeTechnologies audio stack — the private
+    routing core reused across the three JUCE plugins.</div>
+
+    <nav class="product-nav">
+      <a href="report.html">Engineering report</a>
+      <span class="sep">·</span>
+      <a href="README.md">README</a>
+      <span class="sep">·</span>
+      <a href="../zpwr-fx/">zpwr-fx</a>
+      <span class="sep">·</span>
+      <a href="../zpwr-synth/">zpwr-synth</a>
+      <span class="sep">·</span>
+      <a href="../zpwr-midi-fx/">zpwr-midi-fx</a>
+      <span class="sep">·</span>
+      <a href="../">MenkeTechnologiesMeta</a>
+    </nav>
+  </main>
+</body>
+</html>
