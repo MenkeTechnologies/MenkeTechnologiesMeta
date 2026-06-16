@@ -62,8 +62,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: ls-remote every submodule URL
+        env:
+          # 5 submodules (the paid apps/plugins) are private; authenticate all
+          # github.com fetches so ls-remote can reach them too.
+          SUBMODULE_PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
           set -euo pipefail
+          git config --global url."https://x-access-token:${SUBMODULE_PAT}@github.com/".insteadOf "https://github.com/"
           urls=$(git config -f .gitmodules --get-regexp '^submodule\..*\.url$' | awk '{print $2}')
           failures=""
           for u in $urls; do
@@ -113,8 +118,8 @@ jobs:
         # without args. Matches the checked-in tests/bin-scripts.sh
         # so contributors can run the same script locally.
         run: bash tests/bin-scripts.sh
-      - name: submodule integrity pins (73 entries, paths exist, urls valid)
-        # Pin .gitmodules structural invariants: 73 entries, every path
+      - name: submodule integrity pins (77 entries, paths exist, urls valid)
+        # Pin .gitmodules structural invariants: 77 entries, every path
         # exists in the working tree, every url is
         # https://github.com/MenkeTechnologies/<name>.git, repo name
         # matches path basename, no duplicates. Runs without needing
@@ -145,6 +150,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           submodules: true
+          # Needed to clone the 5 private submodules (paid apps/plugins).
+          token: ${{ secrets.SUBMODULE_PAT }}
       - name: Per-submodule docs/*.html highest version >= Cargo.toml version
         # Catches the failure mode seen 2026-05-30 with powerliners:
         # Cargo.toml was at "0.2.1" while docs/report.html still claimed
