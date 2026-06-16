@@ -30,11 +30,10 @@ jobs:
         env:
           GH_PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
-          # Authenticate all github.com fetches so private submodules
-          # (e.g. zpwr-fx's libs/zpwr-patch-core) resolve, not just the top repo.
-          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
-          git clone "https://github.com/MenkeTechnologies/${{ matrix.plugin }}.git" plugin
-          git -C plugin submodule update --init --recursive
+          # Token-in-URL (no git config --global). The per-command `-c insteadOf`
+          # propagates auth to private submodules (e.g. zpwr-fx's zpwr-patch-core).
+          git clone "https://x-access-token:${GH_PAT}@github.com/MenkeTechnologies/${{ matrix.plugin }}.git" plugin
+          git -C plugin -c "url.https://x-access-token:${GH_PAT}@github.com/.insteadOf=https://github.com/" submodule update --init --recursive
 
       - name: Install JUCE Linux dependencies
         run: |

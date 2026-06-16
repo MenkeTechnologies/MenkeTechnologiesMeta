@@ -68,11 +68,13 @@ jobs:
           SUBMODULE_PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
           set -euo pipefail
-          git config --global url."https://x-access-token:${SUBMODULE_PAT}@github.com/".insteadOf "https://github.com/"
           urls=$(git config -f .gitmodules --get-regexp '^submodule\..*\.url$' | awk '{print $2}')
           failures=""
           for u in $urls; do
-            if ! git ls-remote --quiet "$u" HEAD >/dev/null 2>&1; then
+            # Embed the token in the URL (no git config --global) so private
+            # submodules authenticate; public ones work with the token too.
+            au="https://x-access-token:${SUBMODULE_PAT}@github.com/${u#https://github.com/}"
+            if ! git ls-remote --quiet "$au" HEAD >/dev/null 2>&1; then
               failures="$failures $u"
             fi
           done
