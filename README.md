@@ -7,7 +7,7 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-77-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-78-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-12_core-cyan.svg)](#tier-1--core-12)
 [![Tier 2](https://img.shields.io/badge/tier_2-25_stryke-green.svg)](#tier-2--stryke-ecosystem-25)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
@@ -18,11 +18,11 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 77 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 78 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` (JUCE audio plugins) + `app-store` (the storefront), `zpwr` (the terminal OS), the 25-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` (JUCE audio plugins) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `app-store` (the storefront), `zpwr` (the terminal OS), the 25-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -58,7 +58,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 77 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 78 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -78,7 +78,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 77 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 78 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (12)
 
@@ -181,7 +181,7 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 | [`VimColorSchemes`](https://github.com/MenkeTechnologies/VimColorSchemes) | 732 hand-curated Vim colorschemes packaged as a single Pathogen / vim-plug / lazy.nvim bundle. The largest one-bundle scheme collection. |
 | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
-### Tier 6 — Apps, extensions, web & web-APIs (9)
+### Tier 6 — Apps, extensions, web & web-APIs (10)
 
 Browser extensions, supporting apps, audio plugins, public website, storefront, and web-API services. (Tauri v2 desktop GUI apps `traderview` and `Audio-Haxor` live in Tier 1; the `powerliners` CLI port lives in Tier 1 too.)
 
@@ -195,6 +195,7 @@ Browser extensions, supporting apps, audio plugins, public website, storefront, 
 | [`zpwr-synth`](https://github.com/MenkeTechnologies/zpwr-synth) | **JUCE software synthesizer** (C++). Semi-modular instrument modeled on SynthMaster 3 — 16 layers/instrument, band-limited wavetable bank, polyphonic voice pool, virtual-analog oscillators. DSP core is a pure-C++ static lib (no JUCE dep, headless-unit-testable); JUCE wrapper owns the param tree. Builds **AU / VST3 / Standalone** on macOS (ARM/Intel) + Linux (x86_64/aarch64). **Paid product** — docs vendored locally. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-synth) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-synth/report)</sub> |
 | [`zpwr-fx`](https://github.com/MenkeTechnologies/zpwr-fx) | **JUCE modular multi-effects plugin** (C++). One unit, a rack of 8 ordered effect slots (filter/delay/etc., per-slot bypass+mix), built on JUCE's static `AudioProcessorValueTreeState` for host-automation compat. Builds **VST3 / AU / CLAP / Standalone**. **Paid product** — docs vendored locally. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-fx) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-fx/report)</sub> |
 | [`zpwr-midi-fx`](https://github.com/MenkeTechnologies/zpwr-midi-fx) | **JUCE MIDI-effects plugin** — companion to `zpwr-fx`, operating on the MIDI stream (arpeggiation / chord / transform) rather than audio. New project, scaffolding stage. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-midi-fx) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-midi-fx/report)</sub> |
+| [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core) | **Signal-agnostic modular patch graph** (C++20, depends on `juce_core`). The shared cable-routing core behind the plugin stack — owns what's identical in every modular plugin (patch graph, soft knobs, shared WebEditor, patch versioning/migration) and knows nothing about audio or MIDI. Reused by `zpwr-fx`, `zpwr-synth`, and `zpwr-midi-fx`. **Private** — part of the paid audio stack. |
 | [`app-store`](https://github.com/MenkeTechnologies/app-store) | **Static storefront** (HTML/CSS/JS) for the entire MenkeTechnologies catalog — 60 products across 6 categories: paid Tauri/JUCE apps & plugins (`Audio-Haxor`, `traderview`, `zpwr-synth`, `zpwr-fx`, `zpwr-midi-fx`, licensed **per major version**) plus every free/OSS repo (`zshrs`, `stryke`, the Rust CLI tools, the stryke package ecosystem, the zsh-plugin family) with GitHub download links (`releases/latest` or `/tags`). Shopify-style checkout, search + category filters, live catalog stats. Shares the strykelang-docs HUD design system; no build step; dependency-free `node:test` suite + CI. &middot; <sub>[store](https://menketechnologies.github.io/app-store/) · [docs](https://menketechnologies.github.io/app-store/docs/) · [report](https://menketechnologies.github.io/app-store/docs/report.html)</sub> |
 
 ---
@@ -281,6 +282,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-synth`](https://github.com/MenkeTechnologies/zpwr-synth) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-fx`](https://github.com/MenkeTechnologies/zpwr-fx) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-midi-fx`](https://github.com/MenkeTechnologies/zpwr-midi-fx) | — | — | — |
+| 6 — Apps, extensions, web & web-APIs | [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`app-store`](https://github.com/MenkeTechnologies/app-store) | [![CI](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/app-store?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/app-store/tags) |
 
 ## [0x03] COMMON OPERATIONS
@@ -474,8 +476,8 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 | Tier 3 — zsh-more-completions | 1 | ~203 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
 | Tier 5 — Editor / multiplexer plugins | 2 | ~12 MB |
-| Tier 6 — Apps, extensions, web & web-APIs | 9 | ~549 MB |
-| **Total** | **77** | **~1.7 GB** |
+| Tier 6 — Apps, extensions, web & web-APIs | 10 | ~549 MB |
+| **Total** | **78** | **~1.7 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
