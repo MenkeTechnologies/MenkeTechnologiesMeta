@@ -1,0 +1,61 @@
+name: Plugins (JUCE)
+
+# Builds the private JUCE plugin repos (zpwr-synth / zpwr-fx / zpwr-midi-fx)
+# from this PUBLIC meta repo, so their CI runs on free public-repo Actions
+# minutes instead of the plugins' own (private, billed) Actions.
+#
+# Private-repo access uses the SUBMODULE_PAT secret (a token with read access
+# to the plugin repos). JUCE / clap-juce-extensions are public, so their
+# submodules need no auth.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'   # weekly, Monday 06:00 UTC, against each plugin's main
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/plugins.yml'
+
+jobs:
+  build:
+    name: Build & test ${{ matrix.plugin }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: [zpwr-synth, zpwr-fx, zpwr-midi-fx]
+    steps:
+      - name: Clone ${{ matrix.plugin }} (private) + public submodules
+        env:
+          GH_PAT: ${{ secrets.SUBMODULE_PAT }}
+        run: |
+          git clone "https://x-access-token:${GH_PAT}@github.com/MenkeTechnologies/${{ matrix.plugin }}.git" plugin
+          git -C plugin submodule update --init --recursive
+
+      - name: Install JUCE Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev libjack-jackd2-dev ladspa-sdk \
+            libcurl4-openssl-dev libfreetype6-dev \
+            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev \
+            libxinerama-dev libxrandr-dev libxrender-dev \
+            libwebkit2gtk-4.1-dev libglu1-mesa-dev mesa-common-dev libgtk-3-dev
+
+      # JUCE is pulled via FetchContent for synth/midi-fx; cache it per plugin.
+      - name: Cache CMake dependencies
+        uses: actions/cache@v4
+        with:
+          path: plugin/build/_deps
+          key: ${{ runner.os }}-${{ matrix.plugin }}-juce-${{ hashFiles(format('plugin/CMakeLists.txt')) }}
+          restore-keys: ${{ runner.os }}-${{ matrix.plugin }}-juce-
+
+      - name: Configure
+        run: cmake -B plugin/build -S plugin -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build plugin/build --config Release -j"$(nproc)"
+
+      - name: Test (headless DSP core)
+        run: ctest --test-dir plugin/build --output-on-failure --no-tests=ignore
