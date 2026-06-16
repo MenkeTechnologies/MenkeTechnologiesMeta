@@ -150,12 +150,12 @@ Ordered by value/effort. Each is standard DSP we can implement faithfully; tick 
 - [ ] Noise `Geiger` mode (sparse impulse noise)
 
 **Filters**
-- [ ] `Allpass` / `Diffuser` (phase-rotation building block)
+- [x] `Allpass` / `Diffuser` (phase-rotation building block)
 
 **Modulators**
-- [ ] `LorenzLFO` / `RosslerLFO` — strange-attractor chaos mod with X/Y outputs
+- [x] `LorenzLFO` (Rossler pending) — strange-attractor chaos mod with X/Y outputs
 - [ ] `PathLFO` — drawable XY vector path → X/Y outputs (needs small UI)
-- [ ] `Combinate` — combine two mod inputs (add/mult/min/max/AND/XOR) → 1 output
+- [x] `Combinate` — combine two mod inputs (add/mult/min/max/AND/XOR) → 1 output
 - [ ] `MSEG` — multi-segment envelope (DEFER: needs curve-editor UI)
 
 **Effects**
