@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-fx — JUCE modular multi-effects plugin by MenkeTechnologies. A rack of ordered effect slots built on JUCE's static AudioProcessorValueTreeState for host-automation compat. VST3 / AU / CLAP / Standalone.">
+  <meta name="description" content="zpwr-fx — JUCE modular multi-effects plugin by MenkeTechnologies. A full patch graph on the shared zpwr-patch-core engine: 190 audio/synth module types, unlimited layers, per-param mod matrix, EZ-wire auto-routing. VST3 / AU / CLAP / Standalone.">
   <title>zpwr-fx — MenkeTechnologies</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,17 +30,34 @@
 
   <main class="tutorial-main">
     <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>JUCE MODULAR MULTI-EFFECTS</h2>
-    <p class="tutorial-subtitle"><strong>One unit, a rack of effect slots, every effect category.</strong> <span class="tag-paid">Paid product.</span></p>
+    <p class="tutorial-subtitle"><strong>A modular patch graph of audio effects — free cabling, not a fixed slot rack.</strong> <span class="tag-paid">Paid product.</span></p>
 
     <section class="tutorial-section">
       <h2>Architecture</h2>
-      <p>JUCE's parameter model (<code>AudioProcessorValueTreeState</code>) is static —
-      the host needs the full parameter list at construction time. So the rack is a
-      fixed set of ordered slots, each with a user-selectable effect type and a bank
-      of generic macro parameters, which keeps host automation stable.</p>
-      <pre>Input &rarr; [ Slot 0 ] &rarr; [ Slot 1 ] &rarr; &hellip; &rarr; [ Slot 7 ] &rarr; Output
-          type=Filter   type=Delay        type=None
-          bypass/mix     bypass/mix        (passthrough)</pre>
+      <p>zpwr-fx is the audio host for the shared
+      <a href="../zpwr-patch-core/">zpwr-patch-core</a> engine: a free-routed graph of
+      modules (cables by source id, fan-out, feedback resolved with a one-sample
+      delay) rather than a fixed slot chain. Every node param carries a
+      <code>(source, depth)</code> entry in the mod matrix; live edits are lock-free
+      with an atomic graph swap on structural changes; whole patches serialise to
+      JSON with versioning + source-id migration.</p>
+      <pre>ext In L/R  &rarr;  [ Filter ]  &rarr;  [ Delay ]  &rarr;  &hellip;  &rarr;  Out
+                 &uarr; mod matrix      &uarr; per-cable gain + colour
+   (any node &rarr; any node; feedback allowed)</pre>
+      <p>Each <strong>layer</strong> is a full engine copy (layers are unlimited);
+      the <strong>⚡ EZ WIRE</strong> mode auto-chains In&nbsp;&rarr; blocks &rarr;&nbsp;Out
+      so linear hosts never touch a cable. The WebView UI and its expandable
+      soft-knob pool come from <code>zpc::WebEditor</code>.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Module catalog</h2>
+      <p><strong>190</strong> audio/synth module types in the shared registry
+      (<code>buildFxRegistry</code> / <code>registerAudioModules</code>) — dynamics,
+      EQ/filter, delay, reverb, modulation, distortion/saturation, pitch, spectral
+      (FFT), stereo, lo-fi, and creative/glitch families. Effect-by-effect parity
+      against every major DAW + plugin catalog is tracked in
+      <code>FX_PARITY.md</code>.</p>
     </section>
 
     <section class="tutorial-section">
