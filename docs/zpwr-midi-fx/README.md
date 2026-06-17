@@ -32,9 +32,9 @@ MIDI in  →  [ Arp ]  →  [ Chord ]  →  [ Scale ]  →  MIDI out
 
 ## Modules
 
-**54** note-stream module types (`registerMidiModules`, `dsp/MidiModules.cpp`):
+**56** note-stream module types (`registerMidiModules`, `dsp/MidiModules.cpp`):
 arpeggiation, chord generation, scale quantization, Euclidean and generative
 sequencing, ratchet/strum/humanize timing, velocity shaping, and note remapping.
-(Plus 250+ audio/synth modules in the shared registry — 300+ DSP blocks stack-wide.)
+(Plus 300+ audio/synth modules in the shared registry — 360+ DSP blocks stack-wide.)
 
 Private — part of the paid MenkeTechnologies audio stack.

@@ -39,29 +39,28 @@ ext In L/R  →  [ Filter ]  →  [ Delay ]  →  …  →  Out
 
 ## Modules
 
-**250+** audio/synth module types live in the shared registry
+**300+** audio/synth module types live in the shared registry
 (`zpc::buildFxRegistry` / `registerAudioModules` in `zpwr-patch-core`), spanning
 dynamics, EQ/filter, delay, reverb, modulation, distortion/saturation, pitch,
 spectral (FFT), stereo, lo-fi, and creative/glitch families — plus the RT-safe
 `Expr` scripting module that subsumes math/logic/phase primitives. Effect-by-effect
 parity against every major DAW + plugin catalog is tracked in `FX_PARITY.md`.
-(54 note-stream modules ship in `zpwr-midi-fx` — 300+ DSP blocks stack-wide.)
+(56 note-stream modules ship in `zpwr-midi-fx` — 360+ DSP blocks stack-wide.)
 
 ## Analog models
 
-A dedicated pack of **35** named-circuit analog models (`registerAnalog`) — faithful
-generic *topologies*, not sample/IR clones:
+A dedicated pack of **90+** named-circuit analog models (`registerAnalog` /
+`registerAnalogTime`) — faithful generic *topologies*, not sample/IR clones — spanning:
 
-- **Synth filters (7)** — Minimoog, Jupiter-8, MS-20, Oberheim SEM, EMS VCS3, EDP
-  Wasp, TB-303.
-- **Compressors (6)** — Fairchild vari-mu, LA-2A opto, 1176 FET, SSL bus, dbx 160,
-  Distressor.
-- **EQs (6)** — Pultec EQP-1A, API 550, Neve 1073, SSL E, SSL G, Manley Massive Passive.
-- **Preamps & tape (6)** — Neve 1073 pre, API 312 pre, tube console pre, SSL bus glue,
-  Studer A800, Ampex ATR-102.
-- **Distortion / pedals (7)** — Tube Screamer, RAT, Big Muff, Fuzz Face, Klon, DS-1,
-  MXR Distortion+.
-- **Phasers (3)** — MXR Phase 90, EHX Small Stone, Uni-Vibe.
+- **Synth filters** — Minimoog, Jupiter-8, MS-20, Oberheim SEM, EMS VCS3, EDP Wasp, TB-303.
+- **Compressors & limiters** — Fairchild vari-mu, LA-2A/LA-3A opto, 1176 FET, dbx 160, SSL bus, API 2500, Distressor, Sta-Level.
+- **EQs** — Pultec EQP-1A, API 550, Neve 1073, SSL E/G, Manley Massive Passive, Helios, GML.
+- **Preamps & tape** — Neve 1073, API 312, tube console, SSL bus glue, Studer A800, Ampex ATR-102.
+- **Distortion / pedals** — Tube Screamer, RAT, Big Muff, Fuzz Face, Klon, DS-1, MXR, Octavia, OCD, Metal Zone, and more.
+- **Amps** — Fender Tweed/Blackface, Marshall Plexi, Vox AC30, Mesa Rectifier.
+- **Modulation & space** — Phase 90, Small Stone, Uni-Vibe, optical/bias tremolo, Dimension D, CE-1, string ensemble, EMT 140 plate, chamber, BX-20 spring, RE-201 Space Echo, Echorec, Memory Man.
+
+(The pack keeps growing; `include/zpc/Analog.h` is the source of truth.)
 
 ## Adding a module
 
