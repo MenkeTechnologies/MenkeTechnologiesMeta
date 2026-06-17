@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-midi-fx — engineering report. JUCE MIDI-effects plugin: planned formats, rack architecture, status.">
+  <meta name="description" content="zpwr-midi-fx — engineering report. JUCE MIDI-effects plugin: note-stream patch graph on the shared zpwr-patch-core engine, 54 MIDI module types, AU/VST3/Standalone.">
   <title>zpwr-midi-fx — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,32 +30,30 @@
 
   <main class="tutorial-main">
     <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
-    <p class="tutorial-subtitle">JUCE MIDI-effects plugin — the MIDI-domain companion to <code>zpwr-fx</code>. New project.</p>
+    <p class="tutorial-subtitle">JUCE MIDI-effects plugin — the MIDI-domain companion to <code>zpwr-fx</code>, on the same shared patch-graph engine. <span class="tag-paid">Paid product.</span></p>
 
     <section class="tutorial-section">
       <h2>Build &amp; Position</h2>
       <table class="report">
         <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
         <tr><td>Language</td><td>C++</td><td>JUCE MIDI-effect plugin</td></tr>
-        <tr><td>Framework</td><td>JUCE</td><td>planned — fixed-slot rack model (shared with <code>zpwr-fx</code>)</td></tr>
-        <tr><td>Formats</td><td><span class="pend">VST3 · AU · CLAP · Standalone</span></td><td>planned; registers as a MIDI-effect category where supported</td></tr>
-        <tr><td>Domain</td><td>MIDI stream</td><td>transforms notes before they reach an instrument</td></tr>
-        <tr><td>Status</td><td><span class="pend">scaffolding</span></td><td>repo is a README stub; engine + wrapper not yet built</td></tr>
+        <tr><td>Engine</td><td><code>LayeredEngine&lt;PatchEngine&lt;NoteStream&gt;&gt;</code></td><td>shared <a href="../zpwr-patch-core/">zpwr-patch-core</a> graph instantiated on the note-event stream</td></tr>
+        <tr><td>Formats</td><td>VST3 · AU · CLAP · Standalone</td><td>CLAP via <code>clap-juce-extensions</code>; registers as a MIDI-effect category where the host supports it (Logic AU MIDI FX, CLAP note ports)</td></tr>
+        <tr><td>Modules</td><td>54 module types</td><td><code>registerMidiModules</code> — arp/chord/scale/euclid/transform/humanize/…; +239 audio in the stack = 293 blocks</td></tr>
+        <tr><td>Domain</td><td>MIDI note stream</td><td>transforms notes before they reach an instrument</td></tr>
+        <tr><td>Status</td><td>active development</td><td>graph + module catalog shipping; UI/preset build-out ongoing</td></tr>
       </table>
     </section>
 
     <section class="tutorial-section">
-      <h2>Planned Architecture</h2>
-      <pre>MIDI in &rarr; [ Slot 0 ] &rarr; [ Slot 1 ] &rarr; &hellip; &rarr; [ Slot N ] &rarr; MIDI out
-            type=Arp      type=Chord        type=None
-            bypass         bypass            (passthrough)</pre>
-      <p>Slot types target arpeggiation, chord generation, scale quantization,
-      velocity / timing shaping, and note remapping — using the same fixed-slot rack
-      as <code>zpwr-fx</code> so host automation stays stable.</p>
+      <h2>Architecture</h2>
+      <pre>MIDI in  &rarr;  [ Arp ]  &rarr;  [ Chord ]  &rarr;  [ Scale ]  &rarr;  MIDI out
+             &uarr; mod matrix     (any node &rarr; any node; free cabling)</pre>
+      <p>Not a fixed-slot rack: the same free-routed patch graph as <code>zpwr-fx</code>,
+      instantiated on <code>zmidi::NoteStream</code> instead of <code>float</code>.
+      Module types cover arpeggiation, chord generation, scale quantization, Euclidean
+      and generative sequencing, velocity / timing humanize, and note remapping.</p>
     </section>
-
-    <div class="note">This report reflects planned scope, not shipped functionality.
-    Values marked <span class="pend">pending</span> firm up as the JUCE wrapper is built.</div>
 
     <nav class="product-nav">
       <a href="./">Overview</a>

@@ -4,8 +4,8 @@ A JUCE software synthesizer by MenkeTechnologies — a semi-modular instrument
 modeled on [SynthMaster 3](https://www.kv331audio.com/synthmaster3.aspx)
 (KV331 Audio).
 
-Builds as **AU**, **VST3**, and **Standalone** on macOS (Apple Silicon / Intel)
-and Linux (x86_64 / aarch64).
+Builds as **VST3**, **AU**, **CLAP**, and **Standalone** on macOS (Apple Silicon / Intel)
+and Linux (x86_64 / aarch64). CLAP via `clap-juce-extensions`.
 
 ## Architecture
 
