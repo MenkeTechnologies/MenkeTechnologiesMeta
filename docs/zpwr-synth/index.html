@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-synth — JUCE software synthesizer by MenkeTechnologies. Semi-modular instrument modeled on SynthMaster 3: 16 layers, band-limited wavetable bank, polyphonic voice pool, virtual-analog oscillators. VST3 / AU / CLAP / Standalone.">
+  <meta name="description" content="zpwr-synth — JUCE software synthesizer by MenkeTechnologies. Fully modular patch-graph instrument on the shared zpwr-patch-core engine: 16 layers, 31 voice modules (VA/wavetable/FM/additive/supersaw/Karplus), a master+2-aux FX-bus rack running the 340+-module audio pack. VST3 / AU / CLAP / Standalone.">
   <title>zpwr-synth — MenkeTechnologies</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,22 +30,31 @@
 
   <main class="tutorial-main">
     <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>JUCE SOFTWARE SYNTHESIZER</h2>
-    <p class="tutorial-subtitle"><strong>Semi-modular instrument modeled on SynthMaster&nbsp;3</strong> (KV331 Audio). <span class="tag-paid">Paid product.</span></p>
+    <p class="tutorial-subtitle"><strong>Fully modular instrument modeled on SynthMaster&nbsp;3</strong> (KV331 Audio). <span class="tag-paid">Paid product.</span></p>
 
     <section class="tutorial-section">
       <h2>Overview</h2>
-      <p>The DSP core lives in <code>dsp/</code> as a pure-C++ static library with no
-      JUCE dependency, so it is unit-testable headless. The JUCE wrapper owns the
-      parameter tree and feeds the engine.</p>
+      <p>A fully modular instrument built on the shared
+      <a href="../zpwr-patch-core/">zpwr-patch-core</a> engine: each <strong>voice is a
+      free patch graph</strong> of modular blocks (not a fixed signal path), so you wire
+      oscillators, filters, envelopes and modulators into your own voice. The pure-C++
+      DSP core (<code>dsp/</code>) has no JUCE dependency and is headless-unit-testable;
+      the JUCE wrapper owns the parameter tree.</p>
     </section>
 
     <section class="tutorial-section">
       <h2>Architecture</h2>
       <ul>
-        <li><code>WavetableBank</code> — shared, band-limited, procedurally built</li>
-        <li><code>Layer[16]</code> — SynthMaster&nbsp;3 supports 16 layers per instrument</li>
-        <li>Polyphonic voice pool with round-robin voice stealing</li>
-        <li>Generators: basic PolyBLEP oscillator + virtual-analog oscillator (saw/pulse, PWM, unison, drift)</li>
+        <li><strong>Instrument &rarr; Layer[16] &rarr; Voice</strong> — up to 16 stacked
+        layers, each a polyphonic voice pool over its own patch graph.</li>
+        <li><strong>31 voice modules</strong> (<code>buildSynthRegistry</code>) — virtual-analog,
+        wavetable, FM, additive, supersaw, Karplus and sampler oscillators; filters
+        (SynthFilter / diode ladder); ADSR / LFO / S&amp;H modulators; VCA / mixer / scaler.</li>
+        <li><strong>FX-bus rack</strong> — a master bus plus 2 aux buses, each a patch graph
+        running the full shared <strong>340+-module audio registry</strong> (the same pack as
+        <a href="../zpwr-fx/">zpwr-fx</a>, including the 90+ analog models).</li>
+        <li>Per-param mod matrix, sidechain + global mods into the bus rack, and the shared
+        <code>zpc::WebEditor</code> WebView UI.</li>
       </ul>
     </section>
 

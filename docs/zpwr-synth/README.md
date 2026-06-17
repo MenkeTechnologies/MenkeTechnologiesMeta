@@ -1,6 +1,6 @@
 # zpwr-synth
 
-A JUCE software synthesizer by MenkeTechnologies — a semi-modular instrument
+A JUCE software synthesizer by MenkeTechnologies — a fully modular instrument
 modeled on [SynthMaster 3](https://www.kv331audio.com/synthmaster3.aspx)
 (KV331 Audio).
 
