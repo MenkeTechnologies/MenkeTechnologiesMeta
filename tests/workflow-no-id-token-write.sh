@@ -51,8 +51,15 @@ ok=1
 # (relative path from meta repo root) and document the trust
 # in a comment.
 declare -A OIDC_ALLOWLIST=(
-    # Example entry (none currently allowlisted):
+    # Example entry:
     # [./foo-repo/.github/workflows/publish.yml]="crates.io trusted publishing (trust ID: foo-publisher)"
+    #
+    # GitHub Pages deploy: actions/deploy-pages mints an OIDC token to
+    # authenticate the deployment to the github-pages environment (first-party
+    # GitHub action, no cloud-cred exchange). Lets us serve the static docs/
+    # dir from main without the legacy builder's recursive private-submodule
+    # clone (which aborts on Audio-Haxor/traderview/zpwr/fusevm/app-store).
+    [./.github/workflows/pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party; deploys docs/ from main)"
 )
 
 checked=0
