@@ -13,7 +13,7 @@
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-2_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-2)
-[![Tier 6](https://img.shields.io/badge/tier_6-9_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-9)
+[![Tier 6](https://img.shields.io/badge/tier_6-10_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-10)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -37,7 +37,7 @@
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (2)](#tier-5--editor--multiplexer-plugins-2)
-  - [Tier 6 — Apps, extensions, web & web-APIs (9)](#tier-6--apps-extensions-web--web-apis-9)
+  - [Tier 6 — Apps, extensions, web & web-APIs (10)](#tier-6--apps-extensions-web--web-apis-10)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
 - [\[0x03\] Common Operations](#0x03-common-operations)
 - [\[0x04\] Helper Scripts](#0x04-helper-scripts)
@@ -135,7 +135,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 
 | Project | What it is |
 |---|---|
-| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 38,940-completion zsh corpus (8,360 `src/` + 26,105 `more_src/`–`more_src3/` + 3,398 `man_src/` + 1,067 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 56. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-more-completions/) · [report](https://menketechnologies.github.io/zsh-more-completions/report.html)</sub> |
+| [`zsh-more-completions`](https://github.com/MenkeTechnologies/zsh-more-completions) | 39,075-completion zsh corpus (8,360 `src/` + 26,240 `more_src/`–`more_src6/` + 3,398 `man_src/` + 1,067 `architecture_src/` + 10 `override_src/`; counts `_*` completion functions only — produced by `scripts/print-repo-stats.zsh`). ⭐ 56. The largest curated completion collection in existence. Lives outside Tier 1 because it's data + completion functions, not an executable. &middot; <sub>[docs](https://menketechnologies.github.io/zsh-more-completions/) · [report](https://menketechnologies.github.io/zsh-more-completions/report.html)</sub> |
 
 ### Tier 4 — Zsh ecosystem plugins (28)
 
