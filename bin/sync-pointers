@@ -16,7 +16,12 @@ fi
 MSG="${1:-submodules: pointer sync ($(date -u +%Y-%m-%d))}"
 
 # Stage only submodule pointer changes (avoid sweeping in stray edits).
-CHANGED=$(git status --porcelain | awk '$2 ~ /^[A-Za-z0-9_-]/ && system("test -f \"" $2 "/.git\" -o -d \"" $2 "/.git\"") == 0 { print $2 }')
+# Use `git submodule status` — its '+' prefix means "checked-out HEAD differs from
+# the recorded pointer", which is exactly a pending bump. Do NOT use
+# `git status --porcelain`: it recurses into each submodule working tree to check
+# for dirtiness and aborts on nested *symlinked* submodules (e.g. zpwr-fx's
+# libs/JUCE → "expected submodule path 'libs/JUCE' not to be a symbolic link").
+CHANGED=$(git submodule status | awk '/^\+/ { print $2 }')
 
 if [ -z "$CHANGED" ]; then
   echo "sync-pointers: no submodule pointer changes to commit"
