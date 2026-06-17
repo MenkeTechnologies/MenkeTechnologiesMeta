@@ -49,6 +49,51 @@
     </section>
 
     <section class="tutorial-section">
+      <h2>Architecture</h2>
+      <figure class="diagram">
+      <svg viewBox="0 0 760 312" role="img" aria-label="zpwr-patch-core architecture: signal-agnostic templated patch graph">
+        <defs>
+          <marker id="ah-cy" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow" d="M0,0 L8,4 L0,8 Z"/></marker>
+          <marker id="ah-mag" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow-mag" d="M0,0 L8,4 L0,8 Z"/></marker>
+        </defs>
+        <rect class="d-box-mag" x="196" y="14" width="360" height="26" rx="5"/>
+        <text class="d-t-mag" x="376" y="31" text-anchor="middle">WebEditor&lt;Engine&gt; · catalog / patch / preset · JSON serialise + migrate</text>
+        <rect class="d-box" x="20" y="58" width="150" height="58" rx="6"/>
+        <text class="d-t-cy" x="95" y="78" text-anchor="middle">ext sources</text>
+        <text class="d-t-sm" x="95" y="94" text-anchor="middle">In L/R · noise · keys</text>
+        <text class="d-t-sm" x="95" y="108" text-anchor="middle">MIDI / MPE</text>
+        <rect class="d-box" x="20" y="150" width="150" height="50" rx="6"/>
+        <text class="d-t-cy" x="95" y="172" text-anchor="middle">ModuleRegistry&lt;S&gt;</text>
+        <text class="d-t-sm" x="95" y="188" text-anchor="middle">node types</text>
+        <rect class="d-group" x="196" y="50" width="360" height="170" rx="8"/>
+        <text class="d-cap" x="206" y="68">PatchEngine&lt;S&gt; — topo eval · lock-free swap</text>
+        <rect class="d-box" x="214" y="104" width="86" height="42" rx="6"/><text class="d-t" x="257" y="129" text-anchor="middle">Node 0</text>
+        <rect class="d-box" x="333" y="104" width="86" height="42" rx="6"/><text class="d-t" x="376" y="129" text-anchor="middle">Node 1</text>
+        <rect class="d-box" x="452" y="104" width="86" height="42" rx="6"/><text class="d-t" x="495" y="129" text-anchor="middle">Node N</text>
+        <line class="d-flow" x1="300" y1="125" x2="331" y2="125" marker-end="url(#ah-cy)"/>
+        <line class="d-flow" x1="419" y1="125" x2="450" y2="125" marker-end="url(#ah-cy)"/>
+        <path class="d-flow" d="M495,104 C495,76 257,76 257,102" marker-end="url(#ah-cy)"/>
+        <text class="d-t-sm" x="376" y="82" text-anchor="middle">feedback · 1-sample delay</text>
+        <path class="d-mod" d="M257,146 L257,176 L495,176 L495,148" marker-end="url(#ah-mag)"/>
+        <text class="d-t-mag" x="376" y="195" text-anchor="middle">per-param mod matrix (source, depth)</text>
+        <line class="d-flow" x1="170" y1="86" x2="212" y2="118" marker-end="url(#ah-cy)"/>
+        <line class="d-flow" x1="170" y1="172" x2="212" y2="138" marker-end="url(#ah-cy)"/>
+        <rect class="d-box" x="590" y="92" width="152" height="34" rx="6"/><text class="d-t" x="666" y="113" text-anchor="middle">S signal out</text>
+        <rect class="d-box" x="590" y="136" width="152" height="34" rx="6"/><text class="d-t-sm" x="666" y="157" text-anchor="middle">float mod projection</text>
+        <line class="d-flow" x1="538" y1="116" x2="588" y2="109" marker-end="url(#ah-cy)"/>
+        <line class="d-flow" x1="538" y1="134" x2="588" y2="150" marker-end="url(#ah-cy)"/>
+        <rect class="d-box-acc" x="20" y="252" width="352" height="44" rx="6"/>
+        <text class="d-t-acc" x="40" y="270">S = float</text>
+        <text class="d-t" x="40" y="288">→ audio · zpwr-fx, zpwr-synth</text>
+        <rect class="d-box-acc" x="390" y="252" width="352" height="44" rx="6"/>
+        <text class="d-t-acc" x="410" y="270">S = NoteStream</text>
+        <text class="d-t" x="410" y="288">→ MIDI · zpwr-midi-fx</text>
+      </svg>
+      <figcaption>One templated graph (SignalTraits&lt;S&gt;) compiled twice — float for audio, a note-event stream for MIDI.</figcaption>
+      </figure>
+    </section>
+
+    <section class="tutorial-section">
       <h2>Runtime model</h2>
       <p>Nodes are wired by source id with fan-out and feedback. The runtime graph
       is rebuilt in topological order on each structural edit; cycles resolve with a

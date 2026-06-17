@@ -41,9 +41,32 @@
       <code>(source, depth)</code> entry in the mod matrix; live edits are lock-free
       with an atomic graph swap on structural changes; whole patches serialise to
       JSON with versioning + source-id migration.</p>
-      <pre>ext In L/R  &rarr;  [ Filter ]  &rarr;  [ Delay ]  &rarr;  &hellip;  &rarr;  Out
-                 &uarr; mod matrix      &uarr; per-cable gain + colour
-   (any node &rarr; any node; feedback allowed)</pre>
+      <figure class="diagram">
+      <svg viewBox="0 0 760 244" role="img" aria-label="zpwr-fx architecture: free-routed audio patch graph">
+        <defs>
+          <marker id="ah-cy" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow" d="M0,0 L8,4 L0,8 Z"/></marker>
+          <marker id="ah-mag" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow-mag" d="M0,0 L8,4 L0,8 Z"/></marker>
+        </defs>
+        <rect class="d-group" x="36" y="44" width="688" height="150" rx="8"/>
+        <text class="d-cap" x="48" y="62">Layer — full engine copy (unlimited layers)</text>
+        <rect class="d-box-acc" x="48" y="96" width="64" height="44" rx="6"/><text class="d-t-acc" x="80" y="122" text-anchor="middle">In L/R</text>
+        <rect class="d-box" x="156" y="96" width="104" height="44" rx="6"/><text class="d-t" x="208" y="122" text-anchor="middle">Filter</text>
+        <rect class="d-box" x="304" y="96" width="104" height="44" rx="6"/><text class="d-t" x="356" y="122" text-anchor="middle">Delay</text>
+        <rect class="d-box" x="452" y="96" width="104" height="44" rx="6"/><text class="d-t" x="504" y="122" text-anchor="middle">Reverb</text>
+        <rect class="d-box-acc" x="600" y="96" width="64" height="44" rx="6"/><text class="d-t-acc" x="632" y="122" text-anchor="middle">Out</text>
+        <line class="d-flow" x1="112" y1="118" x2="154" y2="118" marker-end="url(#ah-cy)"/>
+        <line class="d-flow" x1="260" y1="118" x2="302" y2="118" marker-end="url(#ah-cy)"/>
+        <line class="d-flow" x1="408" y1="118" x2="450" y2="118" marker-end="url(#ah-cy)"/>
+        <line class="d-flow" x1="556" y1="118" x2="598" y2="118" marker-end="url(#ah-cy)"/>
+        <path class="d-flow" d="M504,96 C504,70 208,70 208,94" marker-end="url(#ah-cy)"/>
+        <text class="d-t-sm" x="356" y="76" text-anchor="middle">any node → any node · feedback (1-sample)</text>
+        <path class="d-mod" d="M208,140 L208,166 L504,166 L504,142" marker-end="url(#ah-mag)"/>
+        <text class="d-t-mag" x="356" y="184" text-anchor="middle">per-param mod matrix · per-cable gain + colour</text>
+        <text class="d-t-sm" x="48" y="222">⚡ EZ WIRE auto-chains In → blocks → Out</text>
+        <text class="d-t-cy" x="724" y="222" text-anchor="end">340+ modules · 90+ analog models</text>
+      </svg>
+      <figcaption>Free-routed audio graph on zpwr-patch-core — not a fixed slot rack. Layers stack without limit.</figcaption>
+      </figure>
       <p>Each <strong>layer</strong> is a full engine copy (layers are unlimited);
       the <strong>⚡ EZ WIRE</strong> mode auto-chains In&nbsp;&rarr; blocks &rarr;&nbsp;Out
       so linear hosts never touch a cable. The WebView UI and its expandable
