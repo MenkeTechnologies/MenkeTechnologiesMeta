@@ -125,11 +125,66 @@
     </section>
 
     <section class="tutorial-section">
+      <h2>Module families</h2>
+      <p>Representative blocks across the audio registry (full list in
+      <a href="reference.html">reference.html</a> / <a href="../zpwr-patch-core/BLOCKS.md">BLOCKS.md</a>):</p>
+      <table class="report">
+        <tr><th>Family</th><th>Blocks</th></tr>
+        <tr><td>Dynamics</td><td><code>Compressor</code>, <code>Limiter</code>, <code>Gate</code>, <code>Expander</code>, <code>Envelope</code>, <code>TranceGate</code></td></tr>
+        <tr><td>EQ / Filter</td><td><code>EQ</code>, <code>Shelf</code>, <code>Notch</code>, <code>Filter</code> (SVF), <code>Ladder</code> (Moog 4-pole), <code>Formant</code>, <code>AutoWah</code>, <code>Wah</code>, <code>DJFilter</code></td></tr>
+        <tr><td>Delay</td><td><code>Delay</code>, <code>TapeDelay</code>, <code>Comb</code>, <code>Reverse</code></td></tr>
+        <tr><td>Reverb</td><td><code>Reverb</code>, <code>Massive</code> (FDN), <code>Spring</code>, <code>Rotary</code></td></tr>
+        <tr><td>Modulation</td><td><code>Chorus</code>, <code>Ensemble</code>, <code>Phaser</code>, <code>Flanger</code>, <code>Vibrato</code>, <code>Tremolo</code>, <code>RingMod</code>, <code>LFO</code>, <code>Chaos</code></td></tr>
+        <tr><td>Distortion / saturation</td><td><code>Drive</code>, <code>Tube</code>, <code>Waveshaper</code>, <code>Shaper</code> (12-mode), <code>Wavefolder</code>, <code>Clip</code>, <code>Exciter</code></td></tr>
+        <tr><td>Pitch</td><td><code>PitchShift</code> (granular), <code>Octaver</code>, <code>Oscillator</code></td></tr>
+        <tr><td>Lo-fi / glitch</td><td><code>Bitcrush</code>, <code>Dropout</code>, <code>Stutter</code>, <code>SampleHold</code>, <code>Slew</code></td></tr>
+        <tr><td>Utility</td><td><code>Gain</code>, <code>Mixer</code>, <code>Expr</code> (code module)</td></tr>
+      </table>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>The Expr code module</h2>
+      <p><code>Expr</code> blocks run a user-written per-sample expression compiled by an
+      in-house RT-safe VM — they do what the fixed blocks can't, edited live in the block's
+      detail panel:</p>
+      <ul>
+        <li><strong>Vars</strong> — <code>in</code>, <code>t</code>, <code>sr</code>,
+        <code>p0..p7</code> (p0–p5 knobs, p6 = In&nbsp;2, p7 = Mod), <code>s0..s3</code>
+        (persistent state), <code>pi tau e</code>.</li>
+        <li><strong>Funcs</strong> — <code>sin cos tan tanh floor frac wrap saw sqr tri min
+        max pow fmod clamp lerp if step noise rand</code>, and
+        <strong><code>tap(d)</code></strong> — the block's own output <code>d</code> samples
+        ago (fractional) for combs / Karplus / feedback.</li>
+        <li><strong>Safe by construction</strong> — no loops, allocation, or memory access in
+        the hot path; output sanitised (NaN/Inf &rarr; 0); over-limit programs fail to compile.</li>
+      </ul>
+      <p>Example wavefolder: <code>out = sin(in * (1 + p0 * 8) * pi)</code>. UAD and Eventide
+      native plugins ship fixed emulations; the Bitwig Grid has primitives but no scripting
+      node — zpwr-fx has both.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Mod matrix, presets &amp; UI</h2>
+      <p>Every node param carries a <code>(source, depth)</code> mod-matrix entry. Sources
+      include the expandable <strong>soft-key</strong> macros (host-automatable, 8 active by
+      default), any <code>LFO</code>/<code>Envelope</code>/<code>Chaos</code> output, and
+      per-cable gain + colour. Live param edits are lock-free; structural edits build a new
+      graph and swap it atomically so the audio thread never blocks.</p>
+      <p>The UI is a self-contained JUCE 8 WebView (cyberpunk neon theme) with
+      <strong>Patch</strong> (sources / blocks / outputs grid + SVG cables + ⚡ EZ&nbsp;WIRE +
+      per-block detail/code panel), <strong>Presets</strong> (factory + user browser), and
+      <strong>Settings</strong> tabs. Factory presets (Stereo Slap, Filter Sweep, Comb
+      Resonator, Wavefolder); user patches save as <code>*.zfxpatch</code>. Full plugin
+      state round-trips through JUCE <code>get/setStateInformation</code>.</p>
+    </section>
+
+    <section class="tutorial-section">
       <h2>Formats</h2>
       <div class="fmt-row">
         <span class="fmt">VST3</span><span class="fmt">AU</span><span class="fmt">CLAP</span><span class="fmt">Standalone</span>
       </div>
-      <p>CLAP via <code>clap-juce-extensions</code>; AU on macOS (Logic, GarageBand).</p>
+      <p>CLAP via <code>clap-juce-extensions</code>; AU on macOS (Logic, GarageBand). JUCE 8
+      vendored via CMake <code>FetchContent</code>; macOS arm64/x86_64 + Linux x86_64/aarch64.</p>
     </section>
 
     <nav class="product-nav">

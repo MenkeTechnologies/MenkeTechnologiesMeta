@@ -139,6 +139,77 @@
       <code>SYNTH_PARITY.md</code>).</p>
     </section>
 
+    <section class="tutorial-section">
+      <h2>Defining a module</h2>
+      <p>A node type is a <code>ModuleInfo</code>: name, one-line description, category,
+      params (min/max/default), input count, and a <code>compute</code> lambda over a
+      <code>ComputeContext</code>. <code>description</code> + <code>category</code> are the
+      source of truth for the generated reference docs:</p>
+      <pre>zpc::ModuleInfo m;
+m.name = "Gain";
+m.description = "Gain trim (dB) plus a DC bias offset.";
+m.category = "Utility";
+m.params = { { "Gain", -60, 24, 0 } };
+m.numIns = 1;
+m.compute = [] (const zpc::ComputeContext&amp; c) {
+    return c.in[0] * std::pow (10.0f, c.params[0] * 0.05f);
+};
+reg.add (std::move (m));</pre>
+      <p>String literals must be ASCII (they load into <code>juce::String</code> via the
+      <code>const char*</code> ctor); a CI linter enforces it.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Editor &amp; host capabilities</h2>
+      <p>Beyond catalog/patch/preset bridging, <code>zpc::WebEditor</code> and its companion
+      headers give every host the same feature set for free:</p>
+      <ul>
+        <li><strong>BROWSE tab</strong> — SynthMaster-style faceted preset browser (PRODUCT /
+        BANK / AUTHOR / TYPE / ATTRIBUTES / STYLES columns, multi-select AND-across /
+        OR-within), fuzzy search, favourites (<code>favorites.json</code>), random-preset.</li>
+        <li><strong>Wavetable editor</strong> — draw single-cycle frames on a canvas;
+        <code>Position</code> morphs; Serum-style built-in tables.</li>
+        <li><strong>Graphical LFO / envelope editors</strong> — draggable SVG ADSR + waveform
+        panel with exact DSP shape math and a live playhead.</li>
+        <li><strong>Global modulators</strong> (<code>GlobalMods</code>) — 3 LFOs, 2 envelopes,
+        Random, S&amp;H + the full MIDI/MPE source set (mod wheel, bend, aftertouch, velocity,
+        expression, breath, sustain, MPE pressure/slide/bend, 8 assignable CCs), all 0..1.</li>
+        <li><strong>Layers + bus routing</strong> (<code>LayeredEngine</code>) — unlimited
+        layers (each a full engine copy), per-layer <strong>parallel/series</strong> route,
+        mute/solo/gain/pan, full JSON round-trip.</li>
+        <li><strong>Microtuning</strong> — Scala <code>.scl</code> &rarr; per-note cents table
+        applied as a fractional Note external (every oscillator inherits it).</li>
+        <li><strong>Colour-scheme editor</strong>, per-host log file, on-screen PERFORM
+        keyboard with pitch-bend / mod wheels.</li>
+      </ul>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Versioning &amp; migration</h2>
+      <p><code>patchToJson</code> stamps <code>"v": kPatchJsonVersion</code>;
+      <code>patchJsonVersion(json)</code> reads it (missing &rArr; 1 = legacy).
+      <code>migrateSourceIds(patch, remap)</code> rewrites every source id a patch references
+      (input cables, mod sources, outputs), so a host can shift a legacy external-source
+      layout forward on load — old patches that worked yesterday keep working.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Layout</h2>
+      <table class="report">
+        <tr><th>Path</th><th>Role</th></tr>
+        <tr><td><code>include/zpc/PatchCore.h</code></td><td>patch data, registry, runtime graph, engine, serialization</td></tr>
+        <tr><td><code>include/zpc/ScriptEngine.h</code></td><td>RT-safe expression VM (the <code>Expr</code> module)</td></tr>
+        <tr><td><code>include/zpc/WebEditor.h</code></td><td>shared WebView backend (catalog / patch / preset / browser)</td></tr>
+        <tr><td><code>include/zpc/LayeredEngine.h</code></td><td>unlimited layers + parallel/series bus routing</td></tr>
+        <tr><td><code>include/zpc/GlobalMods.h</code></td><td>shared global-modulator bus (LFOs/envelopes/random + MIDI/MPE)</td></tr>
+        <tr><td><code>include/zpc/AudioModules.h</code></td><td>float effect pack + the <code>registerX</code> registration calls</td></tr>
+        <tr><td><code>include/zpc/Wavetables.h</code> · <code>GranularSpectral.h</code> · <code>MoreOscillators.h</code></td><td>oscillator / grain / STFT packs</td></tr>
+        <tr><td><code>include/zpc/Convolution.h</code> · <code>Multisample.h</code> · <code>Scala.h</code></td><td>IR reverb · .sfz sampler · microtuning</td></tr>
+        <tr><td><code>src/PatchCore.cpp</code></td><td>routing / topo / mod-matrix / eval + core modules + migration</td></tr>
+        <tr><td><code>tests/PatchCoreTest.cpp</code> · <code>GlobalModsTest.cpp</code></td><td>headless unit tests</td></tr>
+      </table>
+    </section>
+
     <div class="note">Part of the paid MenkeTechnologies audio stack — the private
     routing core reused across the three JUCE plugins.</div>
 

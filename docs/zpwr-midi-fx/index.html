@@ -69,12 +69,59 @@
     </section>
 
     <section class="tutorial-section">
+      <h2>Module library</h2>
+      <p><strong>56+</strong> note-stream module types (<code>registerMidiModules</code>),
+      grouped by family. Any block wires to any block; each has note-stream inputs,
+      a scalar <code>Mod</code> input, up to six parameters, and one output.</p>
+      <table class="report">
+        <tr><th>Family</th><th>Modules</th></tr>
+        <tr><td>Harmony</td><td><code>Chord</code> (150+ chord types — inversion, spread, octave-double, strum), <code>Scale</code> (20 scales), <code>Transpose</code>, <code>Harmonize</code> (3 fixed intervals), <code>Invert</code> (melodic reflection)</td></tr>
+        <tr><td>Sequencing</td><td><code>Arp</code> (9 play modes, divisions, gate, octaves, swing), <code>Euclid</code> (Bjorklund), <code>Ratchet</code>, <code>Random</code> (clock-driven), <code>Quantize</code> (timing grid), <code>Strum</code>, <code>Humanize</code></td></tr>
+        <tr><td>Dynamics</td><td><code>Velocity</code> (scale/offset), <code>VelCurve</code> (gamma), <code>VelClip</code>, <code>Accent</code> (every Nth note), <code>Ramp</code> (crescendo cycle)</td></tr>
+        <tr><td>Routing</td><td><code>Merge</code>, <code>Channel</code> remap, <code>NoteFilter</code> (key zone), <code>KeySwitch</code> (split), <code>Mono</code> (note priority), <code>Latch</code>, <code>FixedNote</code></td></tr>
+        <tr><td>Voicing</td><td><code>Unison</code> (N copies, MPE channel spread), <code>Octave</code>, <code>RandOctave</code>, <code>Fold</code> (octave window)</td></tr>
+        <tr><td>Control sources</td><td><code>LFO</code> (sine/tri/saw/square), <code>Env</code> (gated ADSR follower), <code>SampleHold</code>, <code>Slew</code></td></tr>
+        <tr><td>Other</td><td><code>Echo</code> (MIDI delay + feedback), <code>NoteLength</code>, <code>Chance</code> (probability gate), tuning</td></tr>
+      </table>
+      <p>Note-offs are scheduled across audio-block boundaries, so nothing ever
+      hangs. The graph evaluates once per block in topological order. Full
+      per-module reference: <a href="reference.html">reference.html</a>.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Mod matrix &amp; cables</h2>
+      <p>A dynamic route list maps a <strong>scalar source &rarr; any block
+      parameter</strong> with a depth. Sources: an expandable pool of
+      host-automatable <strong>soft keys</strong> (8 active by default), <code>LFO</code>
+      / <code>Env</code> block outputs, <code>Random</code>, performance controllers
+      (mod wheel, pitch bend, aftertouch, velocity, expression CC11, sustain CC64),
+      and <strong>MPE</strong> per-note bend / pressure / slide. The same sources are
+      patchable into each block's <code>Mod</code> input.</p>
+      <p>Cables drag to re-patch; right-click for a per-cable <strong>Level</strong>
+      (scales note velocity on that connection — 0 mutes), <strong>Colour</strong>, and
+      Disconnect. Routing rebuilds the graph; depth/level are live lock-free tweaks.
+      The <strong>⚡ EZ WIRE</strong> button auto-wires MIDI&nbsp;In &rarr; blocks &rarr;
+      Out for a working chain without touching cables.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Presets</h2>
+      <p>A factory bank ships with the plugin (Chord Arp, Strummed Chords, Euclidean
+      Pulse, Fifth Harmonizer, Arp Echo). User patches save as
+      <code>*.zmfxpatch</code> under the user application-data directory and are managed
+      from the PRESETS tab. A patch — blocks, routing, mods — is
+      <code>zpwr-patch-core</code> JSON the WebView edits and the plugin persists in
+      its state.</p>
+    </section>
+
+    <section class="tutorial-section">
       <h2>Formats</h2>
       <div class="fmt-row">
         <span class="fmt">VST3</span><span class="fmt">AU</span><span class="fmt">CLAP</span><span class="fmt">Standalone</span>
       </div>
       <p>Registers as a MIDI-effect plugin where the host supports the category
-      (Logic AU MIDI FX, CLAP note-port plugins).</p>
+      (Logic AU MIDI FX, CLAP note-port plugins). JUCE 8 vendored via CMake
+      <code>FetchContent</code>; macOS arm64/x86_64 + Linux x86_64/aarch64.</p>
     </section>
 
     <div class="note">Part of the paid MenkeTechnologies audio stack — the MIDI-domain
