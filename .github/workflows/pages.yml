@@ -1,0 +1,47 @@
+name: pages
+
+# Serve the statically-written docs/ directory from the main branch.
+#
+# The legacy "pages build and deployment" builder checks out main with
+# `submodules: recursive` and aborts cloning the private submodules
+# (Audio-Haxor, traderview, zpwr, fusevm, app-store). docs/ is fully
+# self-contained static HTML/CSS/PDF/MD — it needs no submodule content —
+# so this workflow checks out WITHOUT submodules and uploads docs/ directly.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy docs/ to GitHub Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout (no submodules)
+        uses: actions/checkout@v6
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload docs/ artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
