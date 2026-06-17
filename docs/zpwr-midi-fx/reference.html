@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-midi-fx module reference - every patch block with its parameters, rendered from the live module registry.">
+  <title>zpwr-midi-fx - Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 72rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0; font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em; opacity: 0.8;
+    }
+    .chapter-index {
+      list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.3rem;
+    }
+    .chapter-index li {
+      border: 1px solid var(--border); padding: 0.45rem 0.65rem; border-radius: 2px;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .chapter-index li a {
+      color: var(--cyan); text-decoration: none; font-size: 13px;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+    }
+    .chapter-index li a:hover { color: var(--accent-light); }
+    .chapter-count { font-size: 10px; color: var(--text-muted); font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    .chapter-meta { font-size: 11px; color: var(--text-muted); margin: -0.3rem 0 0.8rem; font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    .src-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.6rem; }
+    .src-chip {
+      font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px;
+      border: 1px solid var(--border); border-radius: 2px; padding: 0.25rem 0.5rem;
+      color: var(--text-dim); background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    }
+    .src-chip b { color: var(--cyan); }
+    .src-chip.src-midi { color: var(--accent-light); }
+    .doc-entry {
+      margin: 1rem 0 1.4rem; padding: 0.75rem 0.9rem 0.6rem;
+      border-left: 2px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg) 94%, transparent); border-radius: 2px;
+    }
+    .doc-entry h3 {
+      margin: 0 0 0.45rem; font-family: 'Orbitron', sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan);
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .doc-entry h3 code { color: var(--accent-light); background: transparent; border: none; padding: 0; font-size: 1em; }
+    .doc-entry .doc-anchor { color: var(--text-muted); font-size: 0.85em; text-decoration: none; }
+    .doc-entry .doc-anchor:hover { color: var(--accent); }
+    .ins-badge {
+      font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 9px; font-weight: 400;
+      letter-spacing: 0.5px; text-transform: none; color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: 10px; padding: 1px 8px;
+    }
+    .doc-entry p { font-size: 13px; line-height: 1.6; color: var(--text-dim); margin: 0.35rem 0; }
+    .param-table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 0.2rem; font-size: 12px; }
+    .param-table th {
+      text-align: left; font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted);
+      border-bottom: 1px solid var(--border); padding: 0.2rem 0.5rem;
+    }
+    .param-table td {
+      padding: 0.22rem 0.5rem; border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+      color: var(--text-dim); font-family: 'Share Tech Mono', ui-monospace, monospace;
+    }
+    .param-table td code { color: var(--accent-light); background: transparent; border: none; padding: 0; font-size: 12px; }
+    .param-table td.enum { color: var(--cyan); }
+    kbd {
+      font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; padding: 1px 6px;
+      background: var(--bg-secondary); border: 1px solid var(--border); border-bottom-width: 2px;
+      border-radius: 3px; color: var(--cyan);
+    }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+  <header class="tutorial-header">
+    <div class="tutorial-header-inner">
+      <div>
+        <h1 class="tutorial-brand">// ZPWR-MIDI-FX - MODULE REFERENCE</h1>
+        <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+          <a href="index.html">Docs</a>
+          <span class="sep">/</span>
+          <span class="current">Reference</span>
+          <span class="sep">/</span>
+          <a href="https://github.com/MenkeTechnologies/zpwr-midi-fx" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+        <p class="docs-build-line">zpwr-midi-fx v0.1.0 &middot; 56 modules &middot; 9 categories &middot; AU / VST3 / Standalone &middot; generated from the live module registry</p>
+      </div>
+      <div class="tutorial-toolbar">
+        <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+        <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+        <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        <a class="btn btn-secondary" href="index.html">Hub</a>
+        <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpwr-midi-fx" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="tutorial-main">
+    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>MODULE REFERENCE</h2>
+    <p class="tutorial-subtitle">A patchable grid of MIDI note-stream modules: build arps, chords, sequencers and generators by wiring blocks together. Every patch block with its inputs and parameters, grouped by category. Use the chapter index or <kbd>Ctrl+F</kbd> for a specific name.</p>
+    <section class="tutorial-section" id="ch-sources">
+      <h2>Signal Sources</h2>
+      <p class="chapter-meta">External sources you can cable into any block input or modulation route.</p>
+      <div class="src-grid">
+        <span class="src-chip"><b>1</b> MIDI In</span>
+        <span class="src-chip"><b>3</b> Random</span>
+        <span class="src-chip src-midi">Mod Wheel</span>
+        <span class="src-chip src-midi">Pitch Bend</span>
+        <span class="src-chip src-midi">Aftertouch</span>
+        <span class="src-chip src-midi">Velocity</span>
+        <span class="src-chip src-midi">Expression</span>
+        <span class="src-chip src-midi">Sustain</span>
+        <span class="src-chip src-midi">MPE Bend</span>
+        <span class="src-chip src-midi">MPE Pressure</span>
+        <span class="src-chip src-midi">MPE Slide</span>
+      </div>
+    </section>
+    <section class="tutorial-section">
+      <h2>Categories</h2>
+      <ul class="chapter-index">
+        <li><a href="#ch-modulation">Modulation</a> <span class="chapter-count">7</span></li>
+        <li><a href="#ch-dynamics">Dynamics</a> <span class="chapter-count">6</span></li>
+        <li><a href="#ch-control">Control</a> <span class="chapter-count">5</span></li>
+        <li><a href="#ch-harmony">Harmony</a> <span class="chapter-count">13</span></li>
+        <li><a href="#ch-probability">Probability</a> <span class="chapter-count">1</span></li>
+        <li><a href="#ch-routing">Routing</a> <span class="chapter-count">8</span></li>
+        <li><a href="#ch-sequencing">Sequencing</a> <span class="chapter-count">12</span></li>
+        <li><a href="#ch-tuning">Tuning</a> <span class="chapter-count">1</span></li>
+        <li><a href="#ch-voicing">Voicing</a> <span class="chapter-count">3</span></li>
+      </ul>
+    </section>
+    <section class="tutorial-section" id="ch-modulation">
+      <h2>Modulation</h2>
+      <p class="chapter-meta">7 modules</p>
+      <article class="doc-entry" id="doc-generative">
+        <h3><a class="doc-anchor" href="#doc-generative">#</a> <code>Generative</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Probabilistic melodic random walk synced to a rate.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Rate</code></td><td class="enum" colspan="2">1/1 &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32 &middot; 1/4. &middot; 1/8. &middot; 1/16. &middot; 1/4T &middot; 1/8T &middot; 1/16T</td><td>&mdash;</td></tr>
+            <tr><td><code>Range</code></td><td>1 &ndash; 12</td><td>3</td><td>st</td></tr>
+            <tr><td><code>Low</code></td><td>0 &ndash; 127</td><td>48</td><td>&mdash;</td></tr>
+            <tr><td><code>High</code></td><td>0 &ndash; 127</td><td>72</td><td>&mdash;</td></tr>
+            <tr><td><code>Probability</code></td><td>0 &ndash; 1</td><td>0.7</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-midilfo">
+        <h3><a class="doc-anchor" href="#doc-midilfo">#</a> <code>MidiLFO</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Low-frequency modulation source (sine/tri/saw/square) on the scalar control output.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Rate</code></td><td>0.01 &ndash; 20</td><td>1</td><td>Hz</td></tr>
+            <tr><td><code>Shape</code></td><td class="enum" colspan="2">Sine &middot; Triangle &middot; Saw &middot; Square</td><td>&mdash;</td></tr>
+            <tr><td><code>Depth</code></td><td>0 &ndash; 1</td><td>1</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-midienv">
+        <h3><a class="doc-anchor" href="#doc-midienv">#</a> <code>MidiEnv</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>ADSR envelope triggered by the note gate, on the scalar control output.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Attack</code></td><td>1 &ndash; 5000</td><td>5</td><td>ms</td></tr>
+            <tr><td><code>Decay</code></td><td>1 &ndash; 5000</td><td>200</td><td>ms</td></tr>
+            <tr><td><code>Sustain</code></td><td>0 &ndash; 1</td><td>0.7</td><td>&mdash;</td></tr>
+            <tr><td><code>Release</code></td><td>1 &ndash; 5000</td><td>300</td><td>ms</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-midirandom">
+        <h3><a class="doc-anchor" href="#doc-midirandom">#</a> <code>MidiRandom</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Generates random notes within a pitch range at a synced rate.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Rate</code></td><td class="enum" colspan="2">1/1 &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32 &middot; 1/4. &middot; 1/8. &middot; 1/16. &middot; 1/4T &middot; 1/8T &middot; 1/16T</td><td>&mdash;</td></tr>
+            <tr><td><code>Low Note</code></td><td>0 &ndash; 127</td><td>48</td><td>&mdash;</td></tr>
+            <tr><td><code>High Note</code></td><td>0 &ndash; 127</td><td>72</td><td>&mdash;</td></tr>
+            <tr><td><code>Gate</code></td><td>0 &ndash; 2</td><td>0.5</td><td>&mdash;</td></tr>
+            <tr><td><code>Velocity</code></td><td>1 &ndash; 127</td><td>100</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-midisamplehold">
+        <h3><a class="doc-anchor" href="#doc-midisamplehold">#</a> <code>MidiSampleHold</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Samples and holds the incoming control value on each note.</p>
+      </article>
+      <article class="doc-entry" id="doc-midislew">
+        <h3><a class="doc-anchor" href="#doc-midislew">#</a> <code>MidiSlew</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Smooths (glides) the control value over a set time.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Time</code></td><td>0 &ndash; 2000</td><td>100</td><td>ms</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-randoctave">
+        <h3><a class="doc-anchor" href="#doc-randoctave">#</a> <code>RandOctave</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Randomly shifts notes by up to +/- Range octaves with a chance.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Range</code></td><td>1 &ndash; 3</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Chance</code></td><td>0 &ndash; 1</td><td>1</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-dynamics">
+      <h2>Dynamics</h2>
+      <p class="chapter-meta">6 modules</p>
+      <article class="doc-entry" id="doc-velocity">
+        <h3><a class="doc-anchor" href="#doc-velocity">#</a> <code>Velocity</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Scales and offsets note velocity, with a modulation amount.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Scale</code></td><td>0 &ndash; 2</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Offset</code></td><td>-64 &ndash; 64</td><td>0</td><td>&mdash;</td></tr>
+            <tr><td><code>Mod Amt</code></td><td>-64 &ndash; 64</td><td>0</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-velcurve">
+        <h3><a class="doc-anchor" href="#doc-velcurve">#</a> <code>VelCurve</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Reshapes velocity through a power curve.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Curve</code></td><td>0.2 &ndash; 5</td><td>1</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-humanize">
+        <h3><a class="doc-anchor" href="#doc-humanize">#</a> <code>Humanize</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Adds random timing and velocity jitter for a human feel.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Timing</code></td><td>0 &ndash; 50</td><td>8</td><td>ms</td></tr>
+            <tr><td><code>Velocity</code></td><td>0 &ndash; 1</td><td>0.3</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-accent">
+        <h3><a class="doc-anchor" href="#doc-accent">#</a> <code>Accent</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Boosts velocity on every Nth note.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Every</code></td><td>1 &ndash; 16</td><td>4</td><td>&mdash;</td></tr>
+            <tr><td><code>Amount</code></td><td>0 &ndash; 1</td><td>0.5</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-velclip">
+        <h3><a class="doc-anchor" href="#doc-velclip">#</a> <code>VelClip</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Clamps velocity between Min and Max.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Min</code></td><td>1 &ndash; 127</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Max</code></td><td>1 &ndash; 127</td><td>127</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-ramp">
+        <h3><a class="doc-anchor" href="#doc-ramp">#</a> <code>Ramp</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Velocity ramp over a run of notes, ascending or descending.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Length</code></td><td>2 &ndash; 16</td><td>8</td><td>&mdash;</td></tr>
+            <tr><td><code>Depth</code></td><td>0 &ndash; 1</td><td>0.6</td><td>&mdash;</td></tr>
+            <tr><td><code>Direction</code></td><td class="enum" colspan="2">Up &middot; Down</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-control">
+      <h2>Control</h2>
+      <p class="chapter-meta">5 modules</p>
+      <article class="doc-entry" id="doc-ccmap">
+        <h3><a class="doc-anchor" href="#doc-ccmap">#</a> <code>CCMap</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Remaps a CC number and scales/offsets its value.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>From</code></td><td>-1 &ndash; 127</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>To</code></td><td>0 &ndash; 127</td><td>11</td><td>&mdash;</td></tr>
+            <tr><td><code>Scale</code></td><td>0 &ndash; 2</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Offset</code></td><td>-1 &ndash; 1</td><td>0</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-note2cc">
+        <h3><a class="doc-anchor" href="#doc-note2cc">#</a> <code>Note2CC</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Emits a CC from each note (pitch or velocity).</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>CC</code></td><td>0 &ndash; 127</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Source</code></td><td class="enum" colspan="2">Pitch &middot; Velocity</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-cc2note">
+        <h3><a class="doc-anchor" href="#doc-cc2note">#</a> <code>CC2Note</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>A watched CC crossing a threshold triggers a note.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Watch</code></td><td>0 &ndash; 127</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Note</code></td><td>0 &ndash; 127</td><td>60</td><td>&mdash;</td></tr>
+            <tr><td><code>Threshold</code></td><td>0 &ndash; 1</td><td>0.5</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-bendproc">
+        <h3><a class="doc-anchor" href="#doc-bendproc">#</a> <code>BendProc</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Scales and/or inverts incoming pitch-bend.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Scale</code></td><td>0 &ndash; 2</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Invert</code></td><td>0 &ndash; 1</td><td>0</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-atproc">
+        <h3><a class="doc-anchor" href="#doc-atproc">#</a> <code>ATProc</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Scales aftertouch, optionally converting it to a CC.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Scale</code></td><td>0 &ndash; 2</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>To CC</code></td><td>-1 &ndash; 127</td><td>-1</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-harmony">
+      <h2>Harmony</h2>
+      <p class="chapter-meta">13 modules</p>
+      <article class="doc-entry" id="doc-chord">
+        <h3><a class="doc-anchor" href="#doc-chord">#</a> <code>Chord</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Turns each incoming note into a chord (165 types) with inversion, spread, octave doubling and strum.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Type</code></td><td class="enum" colspan="2">Unison &middot; Octave &middot; 5th (Power) &middot; 5th + Oct &middot; Tritone &middot; Major &middot; Minor &middot; Diminished &middot; Augmented &middot; Major (1st inv) &middot; Major (2nd inv) &middot; Minor (1st inv) &middot; Minor (2nd inv) &middot; Sus2 &middot; Sus4 &middot; Sus2 Sus4 &middot; 7 Sus4 &middot; 9 Sus4 &middot; Major 6 &middot; Minor 6 &middot; 6/9 &middot; Minor 6/9 &middot; Major 7 &middot; Dominant 7 &middot; Minor 7 &middot; Minor Maj7 &middot; Half Dim 7 &middot; Diminished 7 &middot; Augmented 7 &middot; Aug Maj7 &middot; 7 Flat5 &middot; Maj7 Flat5 &middot; Maj7 Sharp5 &middot; Major 9 &middot; Dominant 9 &middot; Minor 9 &middot; Minor Maj9 &middot; 6/9 add11 &middot; 7 Flat9 &middot; 7 Sharp9 &middot; 9 Flat5 &middot; 9 Sharp5 &middot; Maj7 Sharp9 &middot; Major 11 &middot; Dominant 11 &middot; Minor 11 &middot; Minor Maj11 &middot; 7 Sharp11 &middot; Maj7 Sharp11 &middot; 9 Sharp11 &middot; Major 13 &middot; Dominant 13 &middot; Minor 13 &middot; 13 Flat9 &middot; 13 Sharp11 &middot; 13 Sus4 &middot; Add9 &middot; Minor Add9 &middot; Add11 &middot; Minor Add11 &middot; Add13 &middot; Add9 Add11 &middot; 2 &middot; 7 Alt &middot; 7 Flat9 Sharp11 &middot; 7 Flat9 Flat13 &middot; 7 Sharp9 Sharp11 &middot; 13 Sharp9 &middot; Lydian &middot; Phrygian &middot; Mystic &middot; Petrushka &middot; Hendrix &middot; So What &middot; Quartal 3 &middot; Quartal 4 &middot; Quartal 5 &middot; Quintal 3 &middot; Cluster 3 &middot; Cluster 4 &middot; Whole Tone &middot; Major (open) &middot; Minor (open) &middot; Maj7 (open) &middot; Min7 (open) &middot; Major (drop2) &middot; Maj7 (drop2) &middot; Min7 (drop2) &middot; Dom7 (drop2) &middot; Maj7 (drop3) &middot; Major x2 Oct &middot; Minor x2 Oct &middot; 5th Stack &middot; Big Major &middot; Big Minor &middot; Maj over 5 &middot; Min over b7 &middot; Maj over 2 &middot; Poly Maj/Maj &middot; Poly Min/Maj &middot; Dom7 (1st inv) &middot; Dom7 (2nd inv) &middot; Dom7 (3rd inv) &middot; Maj7 (1st inv) &middot; Maj7 (2nd inv) &middot; Min7 (1st inv) &middot; Min7 (2nd inv) &middot; Dim (1st inv) &middot; Aug (1st inv) &middot; Dom7 (no 3) &middot; Maj7 (no 5) &middot; Min7 (no 5) &middot; Maj9 (no 5) &middot; Min9 (no 5) &middot; Dom9 (no 5) &middot; Dom13 (no 5,9) &middot; Min11 (no 5) &middot; 6 Sus2 &middot; 6 Sus4 &middot; Sus4 Add9 &middot; Sus2 Add11 &middot; Maj7 Sus2 &middot; Min7 Add11 &middot; 7 Flat13 &middot; 7 Sharp5 Sharp9 &middot; 7 Flat5 Flat9 &middot; Maj13 Sharp11 &middot; Dim Maj7 &middot; Aug Add9 &middot; Italian 6th &middot; Elektra &middot; Viennese &middot; Neapolitan &middot; Magic Hexad &middot; Quartal 6 &middot; Cluster 5 &middot; Pentatonic Stack &middot; Min Pent Stack &middot; Major +8va &middot; Major -8va &middot; Minor +8va &middot; Minor -8va &middot; Dominant 7 +8va &middot; Dominant 7 -8va &middot; Major 7 +8va &middot; Major 7 -8va &middot; Minor 7 +8va &middot; Minor 7 -8va &middot; Sus4 +8va &middot; Sus4 -8va &middot; Add9 +8va &middot; Add9 -8va &middot; Major 6 +8va &middot; Major 6 -8va &middot; Minor 9 +8va &middot; Minor 9 -8va &middot; Major 9 +8va &middot; Major 9 -8va &middot; 6/9 +8va &middot; 6/9 -8va &middot; Diminished 7 +8va &middot; Diminished 7 -8va &middot; Augmented +8va &middot; Augmented -8va &middot; Half Dim 7 +8va &middot; Half Dim 7 -8va</td><td>&mdash;</td></tr>
+            <tr><td><code>Inversion</code></td><td>0 &ndash; 4</td><td>0</td><td>&mdash;</td></tr>
+            <tr><td><code>Spread</code></td><td>0 &ndash; 2</td><td>0</td><td>&mdash;</td></tr>
+            <tr><td><code>Octave x2</code></td><td>0 &ndash; 2</td><td>0</td><td>&mdash;</td></tr>
+            <tr><td><code>Transpose</code></td><td>-24 &ndash; 24</td><td>0</td><td>st</td></tr>
+            <tr><td><code>Strum</code></td><td>0 &ndash; 200</td><td>0</td><td>ms</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-scale">
+        <h3><a class="doc-anchor" href="#doc-scale">#</a> <code>Scale</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Quantizes incoming notes to the nearest degree of the chosen root and scale.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Root</code></td><td class="enum" colspan="2">C &middot; C# &middot; D &middot; D# &middot; E &middot; F &middot; F# &middot; G &middot; G# &middot; A &middot; A# &middot; B</td><td>&mdash;</td></tr>
+            <tr><td><code>Scale</code></td><td class="enum" colspan="2">Chromatic &middot; Major &middot; Natural Minor &middot; Harmonic Minor &middot; Melodic Minor &middot; Dorian &middot; Phrygian &middot; Lydian &middot; Mixolydian &middot; Locrian &middot; Pentatonic Maj &middot; Pentatonic Min &middot; Blues &middot; Whole Tone &middot; Diminished &middot; Augmented &middot; Hungarian Min &middot; Japanese &middot; Egyptian &middot; Spanish</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-transpose">
+        <h3><a class="doc-anchor" href="#doc-transpose">#</a> <code>Transpose</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Shifts every note by a fixed semitone amount plus a modulatable offset.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Semitones</code></td><td>-24 &ndash; 24</td><td>0</td><td>st</td></tr>
+            <tr><td><code>Mod Amt</code></td><td>-24 &ndash; 24</td><td>0</td><td>st</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-harmonize">
+        <h3><a class="doc-anchor" href="#doc-harmonize">#</a> <code>Harmonize</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Adds up to three fixed-interval harmony voices to each note.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Interval 1</code></td><td>-24 &ndash; 24</td><td>7</td><td>st</td></tr>
+            <tr><td><code>Interval 2</code></td><td>-24 &ndash; 24</td><td>0</td><td>st</td></tr>
+            <tr><td><code>Interval 3</code></td><td>-24 &ndash; 24</td><td>0</td><td>st</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-drone">
+        <h3><a class="doc-anchor" href="#doc-drone">#</a> <code>Drone</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Doubles every note with a fixed pedal root.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Root</code></td><td>0 &ndash; 127</td><td>36</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-cluster">
+        <h3><a class="doc-anchor" href="#doc-cluster">#</a> <code>Cluster</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Adds symmetric tone-cluster voices above and below each note.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Width</code></td><td>0 &ndash; 4</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Spread</code></td><td>1 &ndash; 4</td><td>1</td><td>st</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-glissando">
+        <h3><a class="doc-anchor" href="#doc-glissando">#</a> <code>Glissando</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Fills a stepwise run between consecutive notes.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Rate</code></td><td>5 &ndash; 200</td><td>40</td><td>ms</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-chordmem">
+        <h3><a class="doc-anchor" href="#doc-chordmem">#</a> <code>ChordMem</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Each key plays a stored chord shape (semitone intervals from node config).</p>
+      </article>
+      <article class="doc-entry" id="doc-chordprog">
+        <h3><a class="doc-anchor" href="#doc-chordprog">#</a> <code>ChordProg</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Each note triggers the next chord in a stored root progression (node config).</p>
+      </article>
+      <article class="doc-entry" id="doc-chordvoicing">
+        <h3><a class="doc-anchor" href="#doc-chordvoicing">#</a> <code>ChordVoicing</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Re-voices each note into a jazz shape (open / shell / quartal / spread).</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Voicing</code></td><td class="enum" colspan="2">Open &middot; Shell &middot; Quartal &middot; Spread</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-octave">
+        <h3><a class="doc-anchor" href="#doc-octave">#</a> <code>Octave</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Doubles each note up and/or down by whole octaves.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Up</code></td><td>0 &ndash; 3</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Down</code></td><td>0 &ndash; 3</td><td>0</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-midifold">
+        <h3><a class="doc-anchor" href="#doc-midifold">#</a> <code>MidiFold</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Folds out-of-range notes back inside a Low..High window.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Low Note</code></td><td>0 &ndash; 127</td><td>48</td><td>&mdash;</td></tr>
+            <tr><td><code>High Note</code></td><td>0 &ndash; 127</td><td>72</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-invert">
+        <h3><a class="doc-anchor" href="#doc-invert">#</a> <code>Invert</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Mirrors pitch around a pivot note.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Pivot</code></td><td>0 &ndash; 127</td><td>60</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-probability">
+      <h2>Probability</h2>
+      <p class="chapter-meta">1 modules</p>
+      <article class="doc-entry" id="doc-chance">
+        <h3><a class="doc-anchor" href="#doc-chance">#</a> <code>Chance</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Probabilistic gate: lets each note through with the set probability.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Probability</code></td><td>0 &ndash; 1</td><td>0.8</td><td>&mdash;</td></tr>
+            <tr><td><code>Mod Amt</code></td><td>-1 &ndash; 1</td><td>0</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-routing">
+      <h2>Routing</h2>
+      <p class="chapter-meta">8 modules</p>
+      <article class="doc-entry" id="doc-split">
+        <h3><a class="doc-anchor" href="#doc-split">#</a> <code>Split</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Keyboard split: notes below the split point transpose by Low, the rest by High.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Split</code></td><td>0 &ndash; 127</td><td>60</td><td>&mdash;</td></tr>
+            <tr><td><code>Low</code></td><td>-24 &ndash; 24</td><td>0</td><td>st</td></tr>
+            <tr><td><code>High</code></td><td>-24 &ndash; 24</td><td>0</td><td>st</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-transformer">
+        <h3><a class="doc-anchor" href="#doc-transformer">#</a> <code>Transformer</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Rule: notes within a range are transposed and velocity-scaled.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Low</code></td><td>0 &ndash; 127</td><td>0</td><td>&mdash;</td></tr>
+            <tr><td><code>High</code></td><td>0 &ndash; 127</td><td>127</td><td>&mdash;</td></tr>
+            <tr><td><code>Transpose</code></td><td>-24 &ndash; 24</td><td>0</td><td>st</td></tr>
+            <tr><td><code>VelScale</code></td><td>0 &ndash; 2</td><td>1</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-merge">
+        <h3><a class="doc-anchor" href="#doc-merge">#</a> <code>Merge</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Passes both note-stream inputs through, merged into one stream.</p>
+      </article>
+      <article class="doc-entry" id="doc-notefilter">
+        <h3><a class="doc-anchor" href="#doc-notefilter">#</a> <code>NoteFilter</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Passes only notes inside a key and velocity window.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Low Note</code></td><td>0 &ndash; 127</td><td>0</td><td>&mdash;</td></tr>
+            <tr><td><code>High Note</code></td><td>0 &ndash; 127</td><td>127</td><td>&mdash;</td></tr>
+            <tr><td><code>Low Vel</code></td><td>1 &ndash; 127</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>High Vel</code></td><td>1 &ndash; 127</td><td>127</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-latch">
+        <h3><a class="doc-anchor" href="#doc-latch">#</a> <code>Latch</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Holds notes after release until the next note arrives.</p>
+      </article>
+      <article class="doc-entry" id="doc-channel">
+        <h3><a class="doc-anchor" href="#doc-channel">#</a> <code>Channel</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Reassigns notes to a fixed MIDI channel.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Channel</code></td><td>1 &ndash; 16</td><td>1</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-fixednote">
+        <h3><a class="doc-anchor" href="#doc-fixednote">#</a> <code>FixedNote</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Forces every note to a single fixed pitch (drum / trigger).</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Note</code></td><td>0 &ndash; 127</td><td>36</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-keyswitch">
+        <h3><a class="doc-anchor" href="#doc-keyswitch">#</a> <code>KeySwitch</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Splits the keyboard at a note; one zone passes, the other is filtered.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Split</code></td><td>0 &ndash; 127</td><td>60</td><td>&mdash;</td></tr>
+            <tr><td><code>Low Zone</code></td><td class="enum" colspan="2">High passes &middot; Low passes</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-sequencing">
+      <h2>Sequencing</h2>
+      <p class="chapter-meta">12 modules</p>
+      <article class="doc-entry" id="doc-arp">
+        <h3><a class="doc-anchor" href="#doc-arp">#</a> <code>Arp</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Arpeggiator: cycles held notes through a pattern at a synced rate with gate, octaves, swing and step count.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Mode</code></td><td class="enum" colspan="2">Up &middot; Down &middot; Up/Down &middot; Down/Up &middot; Converge &middot; Diverge &middot; As Played &middot; Random &middot; Chord</td><td>&mdash;</td></tr>
+            <tr><td><code>Rate</code></td><td class="enum" colspan="2">1/1 &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32 &middot; 1/4. &middot; 1/8. &middot; 1/16. &middot; 1/4T &middot; 1/8T &middot; 1/16T</td><td>&mdash;</td></tr>
+            <tr><td><code>Gate</code></td><td>0 &ndash; 2</td><td>0.5</td><td>&mdash;</td></tr>
+            <tr><td><code>Octaves</code></td><td>1 &ndash; 4</td><td>1</td><td>&mdash;</td></tr>
+            <tr><td><code>Swing</code></td><td>0 &ndash; 0.75</td><td>0</td><td>&mdash;</td></tr>
+            <tr><td><code>Steps</code></td><td>1 &ndash; 16</td><td>16</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-euclid">
+        <h3><a class="doc-anchor" href="#doc-euclid">#</a> <code>Euclid</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Euclidean rhythm gate: spreads Pulses evenly across Steps (rotatable) at a synced rate.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Pulses</code></td><td>1 &ndash; 16</td><td>5</td><td>&mdash;</td></tr>
+            <tr><td><code>Steps</code></td><td>1 &ndash; 16</td><td>8</td><td>&mdash;</td></tr>
+            <tr><td><code>Rotate</code></td><td>0 &ndash; 15</td><td>0</td><td>&mdash;</td></tr>
+            <tr><td><code>Rate</code></td><td class="enum" colspan="2">1/1 &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32 &middot; 1/4. &middot; 1/8. &middot; 1/16. &middot; 1/4T &middot; 1/8T &middot; 1/16T</td><td>&mdash;</td></tr>
+            <tr><td><code>Gate</code></td><td>0 &ndash; 2</td><td>0.5</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-swing">
+        <h3><a class="doc-anchor" href="#doc-swing">#</a> <code>Swing</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Pushes off-beat eighth-notes later for a swing/shuffle feel.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Amount</code></td><td>0 &ndash; 0.75</td><td>0.3</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-patterngate">
+        <h3><a class="doc-anchor" href="#doc-patterngate">#</a> <code>PatternGate</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Gates note-ons through a 16-step on/off pattern (bitmask).</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Pattern</code></td><td>0 &ndash; 65535</td><td>21845</td><td>&mdash;</td></tr>
+            <tr><td><code>Steps</code></td><td>1 &ndash; 16</td><td>16</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-noteoffdelay">
+        <h3><a class="doc-anchor" href="#doc-noteoffdelay">#</a> <code>NoteOffDelay</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Extends each note&#39;s gate by delaying its note-off.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Delay</code></td><td>0 &ndash; 2000</td><td>200</td><td>ms</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-ricochet">
+        <h3><a class="doc-anchor" href="#doc-ricochet">#</a> <code>Ricochet</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Accelerating bouncing retriggers with decaying velocity.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Bounces</code></td><td>1 &ndash; 16</td><td>6</td><td>&mdash;</td></tr>
+            <tr><td><code>Decay</code></td><td>0.3 &ndash; 0.98</td><td>0.7</td><td>&mdash;</td></tr>
+            <tr><td><code>Start</code></td><td>10 &ndash; 500</td><td>100</td><td>ms</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-stepseqmidi">
+        <h3><a class="doc-anchor" href="#doc-stepseqmidi">#</a> <code>StepSeqMidi</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Melodic step sequencer - semitone offsets (node config) clock the held root.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Rate</code></td><td class="enum" colspan="2">1/1 &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32 &middot; 1/4. &middot; 1/8. &middot; 1/16. &middot; 1/4T &middot; 1/8T &middot; 1/16T</td><td>&mdash;</td></tr>
+            <tr><td><code>Gate</code></td><td>0.05 &ndash; 1</td><td>0.5</td><td>&mdash;</td></tr>
+            <tr><td><code>Velocity</code></td><td>1 &ndash; 127</td><td>100</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-echo">
+        <h3><a class="doc-anchor" href="#doc-echo">#</a> <code>Echo</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>MIDI delay: repeats notes at a synced time with velocity feedback decay.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Time</code></td><td>1 &ndash; 2000</td><td>250</td><td>ms</td></tr>
+            <tr><td><code>Feedback</code></td><td>0 &ndash; 0.95</td><td>0.5</td><td>&mdash;</td></tr>
+            <tr><td><code>Repeats</code></td><td>1 &ndash; 8</td><td>3</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-strum">
+        <h3><a class="doc-anchor" href="#doc-strum">#</a> <code>Strum</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Spreads a chord&#39;s notes over time, up or down, like a guitar strum.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Spread</code></td><td>0 &ndash; 200</td><td>20</td><td>ms</td></tr>
+            <tr><td><code>Direction</code></td><td class="enum" colspan="2">Up &middot; Down</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-midiquantize">
+        <h3><a class="doc-anchor" href="#doc-midiquantize">#</a> <code>MidiQuantize</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Snaps note starts to a synced grid by a strength amount.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Rate</code></td><td class="enum" colspan="2">1/1 &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32 &middot; 1/4. &middot; 1/8. &middot; 1/16. &middot; 1/4T &middot; 1/8T &middot; 1/16T</td><td>&mdash;</td></tr>
+            <tr><td><code>Strength</code></td><td>0 &ndash; 1</td><td>1</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-ratchet">
+        <h3><a class="doc-anchor" href="#doc-ratchet">#</a> <code>Ratchet</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Retriggers each note Count times within a synced step.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Rate</code></td><td class="enum" colspan="2">1/1 &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32 &middot; 1/4. &middot; 1/8. &middot; 1/16. &middot; 1/4T &middot; 1/8T &middot; 1/16T</td><td>&mdash;</td></tr>
+            <tr><td><code>Count</code></td><td>1 &ndash; 8</td><td>4</td><td>&mdash;</td></tr>
+            <tr><td><code>Gate</code></td><td>0.05 &ndash; 1</td><td>0.9</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-notelength">
+        <h3><a class="doc-anchor" href="#doc-notelength">#</a> <code>NoteLength</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Forces a fixed note duration (gate length).</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Length</code></td><td>1 &ndash; 2000</td><td>200</td><td>ms</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-tuning">
+      <h2>Tuning</h2>
+      <p class="chapter-meta">1 modules</p>
+      <article class="doc-entry" id="doc-microtuner">
+        <h3><a class="doc-anchor" href="#doc-microtuner">#</a> <code>Microtuner</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Stretched-octave microtuning via per-note pitch detune.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Stretch</code></td><td>-50 &ndash; 50</td><td>0</td><td>cents/oct</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-voicing">
+      <h2>Voicing</h2>
+      <p class="chapter-meta">3 modules</p>
+      <article class="doc-entry" id="doc-mpeconvert">
+        <h3><a class="doc-anchor" href="#doc-mpeconvert">#</a> <code>MPEConvert</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Assigns each note its own rotating channel for per-note MPE expression.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Voices</code></td><td>2 &ndash; 15</td><td>15</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-mono">
+        <h3><a class="doc-anchor" href="#doc-mono">#</a> <code>Mono</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Monophonic note priority (last / lowest / highest).</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Priority</code></td><td class="enum" colspan="2">Last &middot; Lowest &middot; Highest</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+      <article class="doc-entry" id="doc-midiunison">
+        <h3><a class="doc-anchor" href="#doc-midiunison">#</a> <code>MidiUnison</code> <span class="ins-badge">3 inputs</span></h3>
+        <p>Doubles each note into multiple voices, optionally spread across channels.</p>
+        <table class="param-table">
+          <thead><tr><th>Param</th><th>Range</th><th>Default</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td><code>Voices</code></td><td>1 &ndash; 4</td><td>2</td><td>&mdash;</td></tr>
+            <tr><td><code>Spread</code></td><td class="enum" colspan="2">Same chan &middot; Spread chans</td><td>&mdash;</td></tr>
+          </tbody>
+        </table>
+      </article>
+    </section>
+  </main>
+  </div>
+  <script src="hud-theme.js"></script>
+</body>
+</html>
