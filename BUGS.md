@@ -16,6 +16,8 @@ Defects surfaced by the two `coverage` audit workflows (read-the-code findings, 
 - **stryke-mysql** `src/lib.rs:303/317` (medium) — `9e408baba5`. split_sql_statements reconstructs each statement byte-by-byte using `b as char`, which reinterprets every raw byte as a Unicode codepoint. For any multibyte UTF-8 in a SQL string literal (accented identifiers, CJK text, emoji), each continuation byte 0x80-0xFF becomes a Latin-1 codepoint, corrupting the statement that gets sent to query_drop. A statement like INSERT INTO t (name) VALUES ('Renée') is mangled because 'é' (0xC3 0xA9) is split into two garbage chars. The splitter advances over the input as `bytes` (line 254) but emits via `cur.push(bytes[i] as char)` at lines 303, 318 (and 263, 266-282 in the quote-scan loop), so non-ASCII payloads are corrupted before execution.
 - **traderview** `crates/traderview-ocr/src/parse.rs:1098` (medium) — `a3737cdc20`. guess_category over-matches via the 2-character keyword "ad" (and "ads") in the first-declared 'advertising' category. Keyword matching is substring-based (n.contains(kw)), so "ad" matches any item name containing the bigram 'ad' — e.g. 'Unleaded' (fuel), 'Gatorade', 'lemonade', 'avocado', 'bread'-adjacent tokens. Combined with tie-to-first resolution, real fuel/grocery items get tagged 'advertising' (a Schedule C deduction line), producing wrong tax-category defaults.
 - **stryke-mysql** `src/lib.rs:415` (low) — `9e408baba5`. op_dump interpolates `table` into `SELECT * FROM {}` WITHOUT calling validate_identifier (unlike op_schema at lib.rs:170 and op_insert_many at lib.rs:331). The `table` field flows raw from opts["table"].as_str() into format!, leaving an injection vector via the dump op (e.g. table = `t; DROP TABLE x`). `limit` is also interpolated as a raw i64 with no bound.
+- **zshrs** `src/ported/builtins/sched.rs:961` (high) — `abfd01e521`. Pre-existing build break: lib test target didn't compile — test callers of schedgetfn (takes `*mut param`) passed `std::ptr::null()` (= `*const param`), giving 9 E0308 `*const`/`*mut` mismatches. Fixed: the call sites now pass `std::ptr::null_mut()` (sched.rs:963,1079,1132,1146,1179,1255,1258,1303,1311); no `schedgetfn(std::ptr::null())` remains.
+- **zshrs** `src/ported/params.rs:12973` (high) — `abfd01e521`. Pre-existing build break (same lib test target): `argzerogetfn(_pm: &param)` was called with zero args at params.rs:12973/12981 (E0061). Fixed: the call sites now pass `&pm` (`argzerogetfn(&pm)` at params.rs:12612,14116,14124); no zero-arg call remains.
 
 ---
 
@@ -27,22 +29,6 @@ cd-emission to selected repo is built with naive double-quoting and then eval'd,
 
 ```
 autoload/zsh-git-repo-searchAllGitRepos:10  perl -ne 'chomp; print "cd \"$_\""'   (same in searchClean/Dirty/CleanCache/DirtyCache goThere) ; autoload/zsh-git-repo-searchGitCommon:9  eval "$out"  . Empirical: target '/.../$USER/repo' emits  cd "/.../$USER/repo"  which under eval expands $USER and the cd misses (PWD empty).
-```
-
-### zshrs `src/ported/builtins/sched.rs:961`
-
-Pre-existing build break: the lib test target does not compile. Test-side callers of schedgetfn (which takes *mut param) pass std::ptr::null() (= *const param), causing 9 E0308 *const/*mut mismatch errors at sched.rs:961,1077,1130,1144,1177,1253,1256,1301,1309. cargo test -p zshrs --lib fails with 11 errors total. This blocks running ANY lib unit test (verified: same 11 errors reproduce on a clean checkout with my change stashed).
-
-```
-line 585: `pub fn schedgetfn(_pm: *mut param) -> Vec<String> {`  ...  line 961: `let arr = schedgetfn(std::ptr::null());` (compiler: expected raw pointer `*mut param`, found `*const _`; suggests core::ptr::null_mut())
-```
-
-### zshrs `src/ported/params.rs:12973`
-
-Pre-existing build break (same broken lib test target): argzerogetfn is declared `pub fn argzerogetfn(_pm: &param) -> String` at params.rs:8114, but two test callers invoke it with zero arguments, producing E0061 'takes 1 argument but 0 supplied' at params.rs:12973 and 12981.
-
-```
-line 8114: `pub fn argzerogetfn(_pm: &param) -> String {`  ...  line 12973: `argzerogetfn(),` and line 12981: `argzerogetfn(),` (no &param argument passed)
 ```
 
 
