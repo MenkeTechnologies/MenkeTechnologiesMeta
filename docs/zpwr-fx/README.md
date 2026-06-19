@@ -39,17 +39,17 @@ ext In L/R  →  [ Filter ]  →  [ Delay ]  →  …  →  Out
 
 ## Modules
 
-**370+** audio/synth module types live in the shared registry
+**900+** audio/synth module types live in the shared registry
 (`zpc::buildFxRegistry` / `registerAudioModules` in `zpwr-patch-core`), spanning
 dynamics, EQ/filter, delay, reverb, modulation, distortion/saturation, pitch,
 spectral (FFT), stereo, lo-fi, and creative/glitch families — plus the RT-safe
 `Expr` scripting module that subsumes math/logic/phase primitives. Effect-by-effect
 parity against every major DAW + plugin catalog is tracked in `FX_PARITY.md`.
-(63 note-stream modules ship in `zpwr-midi-fx` — 470+ DSP blocks stack-wide.)
+(66 note-stream modules ship in `zpwr-midi-fx` — 1000+ DSP blocks stack-wide.)
 
 ## Analog models
 
-A dedicated pack of **90+** named-circuit analog models (`registerAnalog` /
+A dedicated pack of **100+** named-circuit analog models (`registerAnalog` /
 `registerAnalogTime`) — faithful generic *topologies*, not sample/IR clones — spanning:
 
 - **Synth filters** — Minimoog, Jupiter-8, MS-20, Oberheim SEM, EMS VCS3, EDP Wasp, TB-303.
