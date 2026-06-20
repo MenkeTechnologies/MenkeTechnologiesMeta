@@ -43,7 +43,7 @@ while IFS= read -r d; do
     else
         echo "PASS  $d/index.html"
     fi
-done < <(find . -path './.git' -prune -o -type d -name docs -print 2>/dev/null)
+done < <(find . -path './.git' -prune -o -path './MenkeTechnologiesPublications' -prune -o -type d -name docs -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked first-party docs/ directories checked, $missing without index.html"

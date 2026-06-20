@@ -32,6 +32,10 @@ done < <(grep $'^\tpath = ' .gitmodules)
 candidates=()
 candidates+=("./docs")
 for p in "${paths[@]}"; do
+    # MenkeTechnologiesPublications is a private paid-book repo, not a GH Pages
+    # site — its docs/ hold book artifacts (reference.html/PDFs), not styled
+    # pages — so it's out of scope for the static-dependency check.
+    [[ "$p" == MenkeTechnologiesPublications* ]] && continue
     [[ -d "$p/docs" ]] && candidates+=("$p/docs")
 done
 

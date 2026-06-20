@@ -38,7 +38,7 @@ while IFS= read -r doc; do
         missing=$((missing + 1))
         ok=0
     fi
-done < <(find . -path './.git' -prune -o -type f -path '*/docs/*.html' -print 2>/dev/null)
+done < <(find . -path './.git' -prune -o -path './MenkeTechnologiesPublications' -prune -o -type f -path '*/docs/*.html' -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked docs/*.html files checked, $missing without <!DOCTYPE>"
