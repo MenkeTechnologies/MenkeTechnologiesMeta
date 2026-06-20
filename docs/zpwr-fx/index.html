@@ -4,204 +4,70 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-fx — JUCE fully modular multi-effects plugin by MenkeTechnologies. A full patch graph on the shared zpwr-patch-core engine: 900+ audio/synth module types incl. 100+ analog-circuit models, unlimited layers, per-param mod matrix, EZ-wire auto-routing. VST3 / AU / CLAP / Standalone.">
-  <title>zpwr-fx — MenkeTechnologies</title>
+  <meta name="description" content="zpwr-fx documentation hub — modular patch effects plugin by MenkeTechnologies.">
+  <title>zpwr-fx — Docs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../hud-static.css">
-  <link rel="stylesheet" href="../product.css">
+  <link rel="stylesheet" href="hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+  <style>
+    .tutorial-main { max-width: 60rem; }
+    .hub-lede { font-size: 14px; line-height: 1.7; color: var(--text-dim); max-width: 42rem; margin: 0.4rem 0 1.4rem; }
+    .hub-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.7rem; }
+    .hub-card {
+      display: block; text-decoration: none; border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      border-radius: 2px; padding: 0.9rem 1rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    }
+    .hub-card:hover { border-left-color: var(--accent-light); }
+    .hub-card h3 { margin: 0 0 0.3rem; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); }
+    .hub-card p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); font-family: 'Share Tech Mono', ui-monospace, monospace; }
+  </style>
 </head>
-<body class="crt">
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
   <header class="tutorial-header">
     <div class="tutorial-header-inner">
-      <h1 class="tutorial-brand">// ZPWR-FX</h1>
-      <nav class="tutorial-crumbs" aria-label="Breadcrumb">
-        <a href="../">MenkeTechnologiesMeta</a>
-        <span class="sep">/</span>
-        <span class="current">zpwr-fx</span>
-        <span class="sep">/</span>
-        <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <span class="sep">/</span>
-        <a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">Org</a>
-      </nav>
+      <div>
+        <h1 class="tutorial-brand">// ZPWR-FX — DOCS</h1>
+        <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+          <span class="current">Docs</span>
+          <span class="sep">/</span>
+          <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </div>
+      <div class="tutorial-toolbar">
+        <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+        <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+        <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
     </div>
   </header>
 
   <main class="tutorial-main">
-    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>JUCE MODULAR MULTI-EFFECTS</h2>
-    <p class="tutorial-subtitle"><strong>A fully modular patch graph of audio effects — free cabling, not a fixed slot rack.</strong> <span class="tag-paid">Paid product.</span></p>
-
-    <section class="tutorial-section">
-      <h2>Architecture</h2>
-      <p>zpwr-fx is the audio host for the shared
-      <a href="../zpwr-patch-core/">zpwr-patch-core</a> engine: a free-routed graph of
-      modules (cables by source id, fan-out, feedback resolved with a one-sample
-      delay) rather than a fixed slot chain. Every node param carries a
-      <code>(source, depth)</code> entry in the mod matrix; live edits are lock-free
-      with an atomic graph swap on structural changes; whole patches serialise to
-      JSON with versioning + source-id migration.</p>
-      <figure class="diagram">
-      <svg viewBox="0 0 760 244" role="img" aria-label="zpwr-fx architecture: free-routed audio patch graph">
-        <defs>
-          <marker id="ah-cy" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow" d="M0,0 L8,4 L0,8 Z"/></marker>
-          <marker id="ah-mag" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow-mag" d="M0,0 L8,4 L0,8 Z"/></marker>
-        </defs>
-        <rect class="d-group" x="36" y="44" width="688" height="150" rx="8"/>
-        <text class="d-cap" x="48" y="62">Layer — full engine copy (unlimited layers)</text>
-        <rect class="d-box-acc" x="48" y="96" width="64" height="44" rx="6"/><text class="d-t-acc" x="80" y="122" text-anchor="middle">In L/R</text>
-        <rect class="d-box" x="156" y="96" width="104" height="44" rx="6"/><text class="d-t" x="208" y="122" text-anchor="middle">Filter</text>
-        <rect class="d-box" x="304" y="96" width="104" height="44" rx="6"/><text class="d-t" x="356" y="122" text-anchor="middle">Delay</text>
-        <rect class="d-box" x="452" y="96" width="104" height="44" rx="6"/><text class="d-t" x="504" y="122" text-anchor="middle">Reverb</text>
-        <rect class="d-box-acc" x="600" y="96" width="64" height="44" rx="6"/><text class="d-t-acc" x="632" y="122" text-anchor="middle">Out</text>
-        <line class="d-flow" x1="112" y1="118" x2="154" y2="118" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="260" y1="118" x2="302" y2="118" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="408" y1="118" x2="450" y2="118" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="556" y1="118" x2="598" y2="118" marker-end="url(#ah-cy)"/>
-        <path class="d-flow" d="M504,96 C504,70 208,70 208,94" marker-end="url(#ah-cy)"/>
-        <text class="d-t-sm" x="356" y="76" text-anchor="middle">any node → any node · feedback (1-sample)</text>
-        <path class="d-mod" d="M208,140 L208,166 L504,166 L504,142" marker-end="url(#ah-mag)"/>
-        <text class="d-t-mag" x="356" y="184" text-anchor="middle">per-param mod matrix · per-cable gain + colour</text>
-        <text class="d-t-sm" x="48" y="222">⚡ EZ WIRE auto-chains In → blocks → Out</text>
-        <text class="d-t-cy" x="724" y="222" text-anchor="end">900+ modules · 100+ analog models</text>
-      </svg>
-      <figcaption>Free-routed audio graph on zpwr-patch-core — not a fixed slot rack. Layers stack without limit.</figcaption>
-      </figure>
-      <p>Each <strong>layer</strong> is a full engine copy (layers are unlimited);
-      the <strong>⚡ EZ WIRE</strong> mode auto-chains In&nbsp;&rarr; blocks &rarr;&nbsp;Out
-      so linear hosts never touch a cable. The WebView UI and its expandable
-      soft-knob pool come from <code>zpc::WebEditor</code>.</p>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>Module catalog</h2>
-      <p><strong>900+</strong> audio/synth module types in the shared registry
-      (<code>buildFxRegistry</code> / <code>registerAudioModules</code>) — dynamics,
-      EQ/filter, delay, reverb, modulation, distortion/saturation, pitch, spectral
-      (FFT), stereo, lo-fi, and creative/glitch families (plus 66 note-stream
-      modules in <code>zpwr-midi-fx</code> — 1000+ DSP blocks across the stack).
-      Effect-by-effect parity against every major DAW + plugin catalog is tracked
-      in <code>FX_PARITY.md</code>.</p>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>Build your own — primitives + code</h2>
-      <p>Not just presets: wire the 900+ modules into your own algorithm (any node to
-      any node, feedback, mod matrix), <em>or</em> write per-sample DSP in the
-      <code>Expr</code> code module — a sandboxed VM with 8 automatable knobs,
-      persistent state, ~30 math functions, and a fractional <code>tap()</code> delay
-      line for hand-built filters/combs/delays. UAD and Eventide native plugins ship
-      fixed emulations; the Bitwig Grid has primitives but no scripting node — zpwr-fx
-      has both.</p>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>Analog models</h2>
-      <p>A dedicated pack of <strong>100+</strong> named-circuit analog models
-      (<code>registerAnalog</code>) — faithful generic <em>topologies</em>, not
-      sample/IR clones:</p>
-      <ul>
-        <li><strong>Synth filters (7)</strong> — Minimoog, Jupiter-8, MS-20, Oberheim
-        SEM, EMS VCS3, EDP Wasp, TB-303.</li>
-        <li><strong>Compressors &amp; limiters (9)</strong> — Fairchild, LA-2A, LA-3A,
-        1176, dbx 160, SSL bus, API 2500, Distressor, Sta-Level.</li>
-        <li><strong>EQs (8)</strong> — Pultec EQP-1A, API 550, Neve 1073, SSL E,
-        SSL G, Manley Massive Passive, Helios Type 69, GML 8200.</li>
-        <li><strong>Preamps &amp; tape (6)</strong> — Neve 1073 pre, API 312 pre, tube
-        console pre, SSL bus glue, Studer A800, Ampex ATR-102.</li>
-        <li><strong>Distortion / pedals (12)</strong> — Tube Screamer, RAT, Big Muff,
-        Fuzz Face, Klon, DS-1, MXR Distortion+, Octavia, Super-Fuzz, Rangemaster,
-        OCD, Metal Zone.</li>
-        <li><strong>Guitar amps (5)</strong> — Fender Tweed, Blackface, Marshall Plexi,
-        Vox AC30, Mesa Rectifier.</li>
-        <li><strong>Enhancers (2)</strong> — Aphex Aural Exciter, BBE Sonic Maximizer.</li>
-        <li><strong>Phasers / tremolo (5)</strong> — MXR Phase 90, EHX Small Stone,
-        Uni-Vibe; Fender optical + tube-bias tremolo.</li>
-        <li><strong>Chorus / ensemble (3)</strong> — Roland Dimension D, Boss CE-1,
-        string ensemble.</li>
-        <li><strong>Reverb &amp; echo units (6)</strong> — EMT 140 plate, echo chamber,
-        AKG BX-20 spring; Roland RE-201 Space Echo, Binson Echorec, EHX Memory Man.</li>
-      </ul>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>Module families</h2>
-      <p>Representative blocks across the audio registry (full list in
-      <a href="reference.html">reference.html</a> / <a href="../zpwr-patch-core/BLOCKS.md">BLOCKS.md</a>):</p>
-      <table class="report">
-        <tr><th>Family</th><th>Blocks</th></tr>
-        <tr><td>Dynamics</td><td><code>Compressor</code>, <code>Limiter</code>, <code>Gate</code>, <code>Expander</code>, <code>Envelope</code>, <code>TranceGate</code></td></tr>
-        <tr><td>EQ / Filter</td><td><code>EQ</code>, <code>Shelf</code>, <code>Notch</code>, <code>Filter</code> (SVF), <code>Ladder</code> (Moog 4-pole), <code>Formant</code>, <code>AutoWah</code>, <code>Wah</code>, <code>DJFilter</code></td></tr>
-        <tr><td>Delay</td><td><code>Delay</code>, <code>TapeDelay</code>, <code>Comb</code>, <code>Reverse</code></td></tr>
-        <tr><td>Reverb</td><td><code>Reverb</code>, <code>Massive</code> (FDN), <code>Spring</code>, <code>Rotary</code></td></tr>
-        <tr><td>Modulation</td><td><code>Chorus</code>, <code>Ensemble</code>, <code>Phaser</code>, <code>Flanger</code>, <code>Vibrato</code>, <code>Tremolo</code>, <code>RingMod</code>, <code>LFO</code>, <code>Chaos</code></td></tr>
-        <tr><td>Distortion / saturation</td><td><code>Drive</code>, <code>Tube</code>, <code>Waveshaper</code>, <code>Shaper</code> (12-mode), <code>Wavefolder</code>, <code>Clip</code>, <code>Exciter</code></td></tr>
-        <tr><td>Pitch</td><td><code>PitchShift</code> (granular), <code>Octaver</code>, <code>Oscillator</code></td></tr>
-        <tr><td>Lo-fi / glitch</td><td><code>Bitcrush</code>, <code>Dropout</code>, <code>Stutter</code>, <code>SampleHold</code>, <code>Slew</code></td></tr>
-        <tr><td>Utility</td><td><code>Gain</code>, <code>Mixer</code>, <code>Expr</code> (code module)</td></tr>
-      </table>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>The Expr code module</h2>
-      <p><code>Expr</code> blocks run a user-written per-sample expression compiled by an
-      in-house RT-safe VM — they do what the fixed blocks can't, edited live in the block's
-      detail panel:</p>
-      <ul>
-        <li><strong>Vars</strong> — <code>in</code>, <code>t</code>, <code>sr</code>,
-        <code>p0..p7</code> (p0–p5 knobs, p6 = In&nbsp;2, p7 = Mod), <code>s0..s3</code>
-        (persistent state), <code>pi tau e</code>.</li>
-        <li><strong>Funcs</strong> — <code>sin cos tan tanh floor frac wrap saw sqr tri min
-        max pow fmod clamp lerp if step noise rand</code>, and
-        <strong><code>tap(d)</code></strong> — the block's own output <code>d</code> samples
-        ago (fractional) for combs / Karplus / feedback.</li>
-        <li><strong>Safe by construction</strong> — no loops, allocation, or memory access in
-        the hot path; output sanitised (NaN/Inf &rarr; 0); over-limit programs fail to compile.</li>
-      </ul>
-      <p>Example wavefolder: <code>out = sin(in * (1 + p0 * 8) * pi)</code>. UAD and Eventide
-      native plugins ship fixed emulations; the Bitwig Grid has primitives but no scripting
-      node — zpwr-fx has both.</p>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>Mod matrix, presets &amp; UI</h2>
-      <p>Every node param carries a <code>(source, depth)</code> mod-matrix entry. Sources
-      include the expandable <strong>soft-key</strong> macros (host-automatable, 8 active by
-      default), any <code>LFO</code>/<code>Envelope</code>/<code>Chaos</code> output, and
-      per-cable gain + colour. Live param edits are lock-free; structural edits build a new
-      graph and swap it atomically so the audio thread never blocks.</p>
-      <p>The UI is a self-contained JUCE 8 WebView (cyberpunk neon theme) with
-      <strong>Patch</strong> (sources / blocks / outputs grid + SVG cables + ⚡ EZ&nbsp;WIRE +
-      per-block detail/code panel), <strong>Presets</strong> (factory + user browser), and
-      <strong>Settings</strong> tabs. Factory presets (Stereo Slap, Filter Sweep, Comb
-      Resonator, Wavefolder); user patches save as <code>*.zfxpatch</code>. Full plugin
-      state round-trips through JUCE <code>get/setStateInformation</code>.</p>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>Formats</h2>
-      <div class="fmt-row">
-        <span class="fmt">VST3</span><span class="fmt">AU</span><span class="fmt">CLAP</span><span class="fmt">Standalone</span>
-      </div>
-      <p>CLAP via <code>clap-juce-extensions</code>; AU on macOS (Logic, GarageBand). JUCE 8
-      vendored via CMake <code>FetchContent</code>; macOS arm64/x86_64 + Linux x86_64/aarch64.</p>
-    </section>
-
-    <nav class="product-nav">
-      <a href="reference.html">Module Reference (900+)</a>
-      <span class="sep">·</span>
-      <a href="reference.pdf">Reference (PDF)</a>
-      <span class="sep">·</span>
-      <a href="report.html">Engineering report</a>
-      <span class="sep">·</span>
-      <a href="README.md">README</a>
-      <span class="sep">·</span>
-      <a href="../zpwr-synth/">zpwr-synth</a>
-      <span class="sep">·</span>
-      <a href="../zpwr-midi-fx/">zpwr-midi-fx</a>
-      <span class="sep">·</span>
-      <a href="../">MenkeTechnologiesMeta</a>
-    </nav>
+    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZPWR-FX</h2>
+    <p class="hub-lede">Modular patch effects — wire primitive DSP blocks (oscillators, filters, delays,
+      reverbs, dynamics, modulation) into your own algorithm, Eventide-H3000 style, in a cyberpunk WebView UI.
+      The reference below is generated from the live module registry the plugin runs, so it never drifts from the build.</p>
+    <div class="hub-cards">
+      <a class="hub-card" href="reference.html">
+        <h3>Module Reference</h3>
+        <p>Every patch block with its inputs and parameters, grouped by category. (HTML)</p>
+      </a>
+      <a class="hub-card" href="reference.pdf">
+        <h3>Reference (PDF)</h3>
+        <p>The same reference, paginated for print — built from the same source.</p>
+      </a>
+      <a class="hub-card" href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">
+        <h3>Source</h3>
+        <p>Build instructions, the patch model, and the DSP block implementations.</p>
+      </a>
+    </div>
   </main>
+  </div>
+  <script src="hud-theme.js"></script>
 </body>
 </html>
