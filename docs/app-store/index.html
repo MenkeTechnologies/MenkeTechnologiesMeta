@@ -4,70 +4,152 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="app-store — the MenkeTechnologies App Store. A static storefront for the audio products (Audio-Haxor, traderview, zpwr-synth, zpwr-fx, zpwr-midi-fx) sharing the strykelang HUD design system.">
-  <title>app-store — MenkeTechnologies</title>
+  <meta name="description" content="MenkeTechnologies App Store — developer documentation: architecture, catalog model, pricing, checkout, design system, hosting, and CI.">
+  <title>app-store — Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../hud-static.css">
-  <link rel="stylesheet" href="../product.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <link rel="stylesheet" href="../store.css">
+  <style>
+    .tutorial-main { max-width: 64rem; }
+    .hub-scheme-strip { border-bottom: 1px dashed var(--border); background: color-mix(in srgb, var(--bg-secondary) 85%, transparent); padding: 0.55rem 1.5rem 0.65rem; }
+    .hub-scheme-strip-inner { max-width: 64rem; margin: 0 auto; display: flex; align-items: center; gap: 0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex: 0 0 auto; font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+    .hub-scheme-strip .scheme-grid { flex: 1 1 auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+    @media (max-width: 720px){ .hub-scheme-strip-inner{ flex-direction: column; align-items: stretch; } .hub-scheme-strip .scheme-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    .doc-stats { display: flex; flex-wrap: wrap; gap: 1.4rem; margin: 0.2rem 0 0; }
+    .doc-stats .s { display: flex; flex-direction: column; }
+    .doc-stats .n { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 20px; color: var(--cyan); text-shadow: 0 0 10px var(--cyan-glow); }
+    .doc-stats .l { font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+  </style>
 </head>
-<body class="crt">
-  <header class="tutorial-header">
-    <div class="tutorial-header-inner">
-      <h1 class="tutorial-brand">// APP-STORE</h1>
-      <nav class="tutorial-crumbs" aria-label="Breadcrumb">
-        <a href="../">MenkeTechnologiesMeta</a>
-        <span class="sep">/</span>
-        <span class="current">app-store</span>
-        <span class="sep">/</span>
-        <a href="https://github.com/MenkeTechnologies/app-store" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <span class="sep">/</span>
-        <a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">Org</a>
-      </nav>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// APP STORE — DOCUMENTATION 🔥</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="../index.html">Store</a>
+            <span class="sep">/</span>
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/app-store" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">Static storefront · HUD design system · client-side catalog · GitHub Pages</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <a class="btn btn-secondary" href="../index.html">Open store</a>
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
     </div>
-  </header>
 
-  <main class="tutorial-main">
-    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>MENKETECHNOLOGIES APP STORE</h2>
-    <p class="tutorial-subtitle"><strong>A static storefront for the MenkeTechnologies audio products.</strong> No build step — pure HTML / CSS / JS.</p>
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>APP STORE — DOCS</h2>
+      <p class="tutorial-subtitle"><strong>A dependency-free static storefront</strong> for the MenkeTechnologies stack, built on the stryke HUD design system and deployed on GitHub Pages. One JavaScript catalog drives the grid, product pages, cart, and checkout.</p>
 
-    <section class="tutorial-section">
-      <h2>Catalog</h2>
-      <p>Sells the audio products: <code>Audio-Haxor</code> (Tauri/JUCE plugin
-      scanner), <code>traderview</code> (self-hosted trading journal),
-      <code>zpwr-synth</code> (JUCE synthesizer), <code>zpwr-fx</code> (JUCE
-      multi-effect), and <code>zpwr-midi-fx</code> (JUCE MIDI-effect). The product
-      catalog is a single source of truth in <code>store.js</code>.</p>
-    </section>
+      <div class="doc-stats">
+        <div class="s"><span class="n" id="statProducts">—</span><span class="l">Products</span></div>
+        <div class="s"><span class="n" id="statCats">—</span><span class="l">Categories</span></div>
+        <div class="s"><span class="n" id="statFree">—</span><span class="l">Free / OSS</span></div>
+      </div>
 
-    <section class="tutorial-section">
-      <h2>Design</h2>
-      <p>Shares the strykelang-docs HUD / cyberpunk design system
-      (<code>hud-static.css</code>, <code>tutorial.css</code>,
-      <code>hud-theme.js</code>): Orbitron + Share Tech Mono, CRT scanlines, neon
-      borders, and five swappable color schemes (Cyberpunk, Midnight, Matrix, Ember,
-      Arctic) plus light / dark — the same visual language as these docs.</p>
-    </section>
+      <section class="tutorial-section">
+        <h2>Overview</h2>
+        <p>The store is pure static HTML, CSS, and vanilla JavaScript — no build step, no framework, no backend. It serves three pages over one shared catalog and design system:</p>
+        <ul>
+          <li><strong>index.html</strong> — storefront: hero, search, category filters, product grid.</li>
+          <li><strong>product.html</strong> — product detail (reads <code>?id=</code>): overview, features, pricing, buy/download.</li>
+          <li><strong>checkout.html</strong> — Shopify-style checkout: express wallets, card form, billing, order summary.</li>
+        </ul>
+        <p>All three load <code>store.js</code> (logic + catalog), <code>store.css</code> (commerce surfaces), and the vendored HUD assets <code>hud-static.css</code> / <code>tutorial.css</code> / <code>hud-theme.js</code>.</p>
+      </section>
 
-    <section class="tutorial-section">
-      <h2>Pages</h2>
-      <ul>
-        <li><code>index.html</code> — storefront: hero, search, category filters, product grid</li>
-        <li><code>product.html</code> — product detail page (reads <code>?id=&lt;product&gt;</code>)</li>
-        <li><code>checkout.html</code> — checkout: express wallets, card form, summary</li>
-      </ul>
-    </section>
+      <section class="tutorial-section">
+        <h2>Architecture</h2>
+        <p><code>store.js</code> is a single IIFE. On <code>DOMContentLoaded</code> it renders whatever mount points the current page exposes and guards out the rest, so the same script is safe on every page:</p>
+        <ul>
+          <li><code>#productGrid</code> &rarr; the storefront grid + filters + stats</li>
+          <li><code>#detailRoot</code> &rarr; the product detail page (from <code>?id=</code>)</li>
+          <li><code>#checkoutRoot</code> &rarr; the checkout page (reads the cart)</li>
+          <li><code>#cartCount</code> / <code>#modalOverlay</code> &rarr; cart badge + modal, on any page</li>
+        </ul>
+        <p>The cart lives in <code>localStorage</code> under <code>appstore-cart</code>; theme / CRT / neon / color-scheme preferences under the <code>appstore-hud-*</code> keys.</p>
+      </section>
 
-    <nav class="product-nav">
-      <a href="report.html">Engineering report</a>
-      <span class="sep">·</span>
-      <a href="README.md">README</a>
-      <span class="sep">·</span>
-      <a href="https://github.com/MenkeTechnologies/app-store" target="_blank" rel="noopener noreferrer">Source</a>
-      <span class="sep">·</span>
-      <a href="../">MenkeTechnologiesMeta</a>
-    </nav>
-  </main>
+      <section class="tutorial-section">
+        <h2>Catalog model</h2>
+        <p>The <code>PRODUCTS</code> array in <code>store.js</code> is the single source of truth. Three construction styles keep it DRY:</p>
+        <ul>
+          <li><strong>Explicit objects</strong> — the apps, audio plugins, and CLI tools, each with distinct copy.</li>
+          <li><strong><code>strykePkg(id, glyph, desc)</code></strong> — generates the 23 near-identical stryke-ecosystem packages from a compact table.</li>
+          <li><strong><code>metaProduct(id, glyph, category, tagline, pills, hasRelease)</code></strong> — generates the remaining MenkeTechnologies repos (zsh plugins, dev tools).</li>
+        </ul>
+        <p>Long-form copy (an <code>overview</code> paragraph and a rich <code>features</code> list) lives in the <code>DETAILS</code> map, ported from each repo's README / source, and is merged into <code>PRODUCTS</code> at load. Cards, search, filters, and the stat counters above are all derived — no hardcoded counts.</p>
+        <p><strong>To add a product:</strong> append one object or one table row, and optionally a <code>DETAILS</code> entry. Everything else updates automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Free vs paid &amp; download targets</h2>
+        <p>A product is free when its first tier price is <code>0</code> (the <code>isFree</code> helper). The two paths:</p>
+        <ul>
+          <li><strong>Free</strong> &rarr; a <strong>Download</strong> button. If the repo has a GitHub release it links to <code>releases/latest</code>; if not, it links to the repo's <code>/tags</code> page (per-tag source archives).</li>
+          <li><strong>Paid</strong> &rarr; <strong>Add to cart</strong> with a license-tier picker, routed through the checkout.</li>
+        </ul>
+        <p>Third-party forks mirrored in the org are intentionally excluded from the catalog — they are not MenkeTechnologies products. Proprietary paid products omit the "Source" link because their repos are private.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Pricing model</h2>
+        <p>Paid products are licensed <strong>per major version</strong>, not as a one-time purchase. Each sale licenses the current major version including all minor and patch updates within it; a future major version is a separate purchase. Cards show a <code>per major version</code> label and the detail page states the policy explicitly.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Checkout</h2>
+        <p><code>checkout.html</code> mirrors the Shopify hosted-checkout layout in the HUD theme: express wallet buttons (Shop Pay, PayPal, Google Pay, Venmo), a credit-card / Shop Pay / PayPal method accordion, contact + billing forms, discount codes (<code>DISCOUNTS</code> map), and a sticky order summary.</p>
+        <p class="tutorial-callout"><strong>Note</strong> Payments are a client-side placeholder — <code>completeOrder()</code> simulates a confirmed order; no real charge happens. Wire each method to Shopify (redirect), PayPal Smart Buttons, or Stripe before going live. Integration points are marked <code>INTEGRATION HOOKS:</code> in <code>wireCheckoutPage()</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Design system</h2>
+        <p>The store vendors the stryke docs HUD system verbatim, so the store and the docs share one visual language: Orbitron + Share Tech Mono, CRT scanline overlays, neon border pulse, and five swappable color schemes (Cyberpunk, Midnight, Matrix, Ember, Arctic) plus a light/dark toggle. Everything resolves from CSS variables, so a scheme switch recolors the entire store. <code>store.css</code> adds only the commerce surfaces — no new colors.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Hosting</h2>
+        <p>Served from GitHub Pages (branch <code>main</code>, root) at <a href="https://menketechnologies.github.io/app-store/" target="_blank" rel="noopener noreferrer">menketechnologies.github.io/app-store</a>. Because it is a pure static site, there is no build or deploy step — a push to <code>main</code> updates the live site. Pages requires a public repo on the free plan.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests &amp; CI</h2>
+        <p>A dependency-free <code>node:test</code> suite (<code>test/store.test.js</code>) loads <code>store.js</code> into a minimal DOM shim and asserts on the rendered HTML — catalog size and unique ids, free-vs-paid download wiring, per-major-version pricing copy, every detail page having an overview and rich features, checkout totals, and HTML asset references. Run it with <code>node --test</code>.</p>
+        <p><code>.github/workflows/ci.yml</code> runs <code>node --check</code> on the JavaScript, the test suite, and an HTML sanity check on every push and pull request.</p>
+      </section>
+    </main>
+
+    <footer class="tutorial-main doc-footer" style="padding-top:0;">
+      MenkeTechnologies · App Store docs · Built with the stryke HUD design system
+    </footer>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+  <script src="../store.js"></script>
 </body>
 </html>
