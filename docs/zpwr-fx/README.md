@@ -57,7 +57,7 @@ INPUTS            BLOCKS (add/delete any N)     OUTPUTS
 
 The block palette is the shared audio module pack from
 [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core) —
-**918 audio blocks** (1033 total across the audio/synth/MIDI stack, every name
+**927 audio blocks** (1042 total across the audio/synth/MIDI stack, every name
 globally unique). Any block type can be dropped into any node.
 
 ---
@@ -99,7 +99,7 @@ JUCE's parameter list must be static for host automation. So the **host-automata
 
 ## [0x04] MODULES
 
-The block palette is the shared **audio module pack** registered on the core by `zpc::registerAudioModules` (re-exported as `zfx::registerAudioModules` in `src/dsp/AudioModules.h`). It is **918 audio blocks** — filters, delays, reverbs, distortions, dynamics, modulation, oscillators, utility math, sequencers, and a large circuit-modeled set (component-level analog emulations: zero-delay-feedback ladders/SVFs, Shockley-diode and Ebers-Moll clippers, Koren triode/EL34 amp stages, Jiles-Atherton tape, Lambert-W wavefolder, four-diode ring mod). Catalog and counts are kept in [`zpwr-patch-core/BLOCKS.md`](https://github.com/MenkeTechnologies/zpwr-patch-core/blob/main/BLOCKS.md), regenerated from the registration sites — never hand-typed here so they never drift.
+The block palette is the shared **audio module pack** registered on the core by `zpc::registerAudioModules` (re-exported as `zfx::registerAudioModules` in `src/dsp/AudioModules.h`). It is **927 audio blocks** — filters, delays, reverbs, distortions, dynamics, modulation, oscillators, utility math, sequencers, and a large circuit-modeled set (component-level analog emulations: zero-delay-feedback ladders/SVFs, Shockley-diode and Ebers-Moll clippers, Koren triode/EL34 amp stages, Jiles-Atherton tape, Lambert-W wavefolder, four-diode ring mod). Catalog and counts are kept in [`zpwr-patch-core/BLOCKS.md`](https://github.com/MenkeTechnologies/zpwr-patch-core/blob/main/BLOCKS.md), regenerated from the registration sites — never hand-typed here so they never drift.
 
 The authoritative per-block reference (inputs + parameters, grouped by category) is `docs/reference.html` / `docs/reference.pdf`, generated from the live module registry — see [§0x09 Build → Reference docs](#0x09-build).
 
@@ -264,7 +264,7 @@ The routing engine itself lives in **[zpwr-patch-core](https://github.com/MenkeT
 | File | Role |
 |------|------|
 | `libs/zpwr-patch-core/`  | Shared routing core (submodule): graph, mod matrix, serialization, `ScriptEngine` |
-| `src/dsp/AudioModules.h` | Re-exports the shared `zpc::registerAudioModules` (918 audio blocks) as `zfx::` |
+| `src/dsp/AudioModules.h` | Re-exports the shared `zpc::registerAudioModules` (927 audio blocks) as `zfx::` |
 | `src/FxConfig.h`         | Soft-key/MIDI counts + external source-id layout |
 | `src/PluginProcessor.*`  | `AudioProcessor`, soft-key/master params, MIDI/MPE, audio loop feeding the core |
 | `src/PluginEditor.*`     | WebView editor: catalog/patch/preset native functions over `zpc::PatchEngine` |
