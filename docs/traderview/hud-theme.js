@@ -1,17 +1,17 @@
 /**
- * traderview docs — theme / CRT / neon / color-scheme toggles.
- * Vendored from strykelang/docs/hud-theme.js. Storage keys live under the
- * `traderview-hud-*` namespace so they don't collide with other projects
- * ever opened from the same origin.
+ * stryke docs — theme / CRT / neon / color-scheme toggles.
+ * Vendored and simplified from audio_haxor/docs/hud-theme.js.
+ * Storage keys live under the `stryke-hud-*` namespace so the two projects
+ * can't clobber each other if ever opened from the same origin.
  */
 (function () {
   'use strict';
 
   var STORAGE = {
-    theme: 'traderview-hud-theme',
-    crt: 'traderview-hud-crt',
-    neon: 'traderview-hud-neon',
-    scheme: 'traderview-hud-scheme',
+    theme: 'stryke-hud-theme',
+    crt: 'stryke-hud-crt',
+    neon: 'stryke-hud-neon',
+    scheme: 'stryke-hud-scheme',
   };
 
   var SCHEME_VAR_KEYS = [
