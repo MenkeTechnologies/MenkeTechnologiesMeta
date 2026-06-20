@@ -157,7 +157,34 @@ Both are per block, so each stage is independent; the live cable glow tracks eac
 
 ---
 
-## [0x07] PRESETS
+## [0x07] PERFORM & STEREO
+
+### Perform tab
+
+A play-the-patch surface that drives only host-automatable params, so it works editor-closed and records as automation:
+
+- **Preset Morph** — a 4-corner XY pad (A/B/C/D) that bilinearly interpolates between four captured patches; the corner snapshots live on the processor, X/Y are reserved host params (`morphX`/`morphY`), and a **🎲** assigns a random preset to all four corners.
+- **Orb** — a radial pad where the puck's *angle* selects a scene and *distance* sets its intensity; **🎲** rolls a new random scene set, **⏺** records the puck's motion, and **▶** loops the recorded motion back through the host-automatable params (so a hands-free performance gesture becomes automatable param moves).
+- **XY macro pads** — each with a per-pad **HOLD** / **SPRING** toggle (spring snaps back to centre on release).
+- **Macro knobs** — the soft knobs surfaced as plain 0..1 APVTS params.
+- **Scenes** — snapshot slots: click to recall, right-click to clear.
+- **Controls band** — global dice/randomise, arp (mode / rate / latch), and **scale + key quantize** plus a **Chord** that stacks extra intervals on each key played on the on-screen keyboard.
+
+### Stereo mode + Stereo Lock
+
+- **Stereo** (off by default) mirrors the patch graph to the right channel, so blocks process L/R independently.
+- **🔒 Lock** keeps the mirrored (clone) blocks tracking the left channel. It is **bidirectional and offset-preserving**: dragging a left knob moves its clone — and dragging a clone moves the left — each by the same delta, so the L/R offset (the width you dialled in plain Stereo) is preserved rather than reset. Set `🔒 LOCK` on for a perfect `L = R`. Both states persist in plugin state.
+
+### MIDI Program Change / Bank Select
+
+Both toggles default **on** (`PluginProcessor.cpp`):
+
+- **Program Change** — an incoming PC selects the matching program (preset). Turn off to ignore PC.
+- **Bank Select** — CC0 (MSB) / CC32 (LSB) are captured and combined with the next PC (`bank × 128 + program`) for banked preset addressing. Turn off and PCs address program 0..127 directly.
+
+---
+
+## [0x08] PRESETS
 
 - **Factory** (in code): Stereo Slap, Filter Sweep, Comb Resonator, Wavefolder.
 - **User** patches save as JSON (`patch` + soft-key values) under `<userAppData>/zpwr-fx/Presets/*.zfxpatch` (e.g. `~/Library/zpwr-fx/Presets`).
@@ -165,7 +192,7 @@ Both are per block, so each stage is independent; the live cable glow tracks eac
 
 ---
 
-## [0x08] BUILD
+## [0x09] BUILD
 
 CMake ≥ 3.22, a C++20 compiler. Dependencies are vendored git submodules (JUCE 8.0.13, `clap-juce-extensions`).
 
@@ -218,7 +245,7 @@ The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared
 
 ---
 
-## [0x09] TESTS
+## [0x0A] TESTS
 
 Two headless unit tests (no GUI/audio device, CI-friendly):
 
@@ -230,14 +257,14 @@ build/PatchGraphTest_artefacts/Debug/PatchGraphTest
 
 ---
 
-## [0x0A] KEY FILES
+## [0x0B] KEY FILES
 
 The routing engine itself lives in **[zpwr-patch-core](https://github.com/MenkeTechnologies/zpwr-patch-core)** (a git submodule under `libs/`), shared with zpwr-synth and zpwr-midi-fx. zpwr-fx supplies the audio module pack and the external sources (In L/R, noise, soft keys, MIDI/MPE); the core does the routing, topo eval, mod matrix, cables, and JSON.
 
 | File | Role |
 |------|------|
 | `libs/zpwr-patch-core/`  | Shared routing core (submodule): graph, mod matrix, serialization, `ScriptEngine` |
-| `src/dsp/AudioModules.*` | The fx audio module pack (13 DSP modules registered on the core) |
+| `src/dsp/AudioModules.h` | Re-exports the shared `zpc::registerAudioModules` (918 audio blocks) as `zfx::` |
 | `src/FxConfig.h`         | Soft-key/MIDI counts + external source-id layout |
 | `src/PluginProcessor.*`  | `AudioProcessor`, soft-key/master params, MIDI/MPE, audio loop feeding the core |
 | `src/PluginEditor.*`     | WebView editor: catalog/patch/preset native functions over `zpc::PatchEngine` |
@@ -245,7 +272,7 @@ The routing engine itself lives in **[zpwr-patch-core](https://github.com/MenkeT
 
 ---
 
-## [0x0B] ADDING A MODULE
+## [0x0C] ADDING A MODULE
 
 1. Add the enum to `ModType` and its name to `PatchDef::allTypeNames()`.
 2. Add its param metadata to `blockParamSpecs()`.
@@ -255,10 +282,9 @@ The new type appears in every block's type dropdown automatically.
 
 ---
 
-## [0x0C] KNOWN LIMITATIONS
+## [0x0D] KNOWN LIMITATIONS
 
 - **Structural edits** (type/routing/script changes) rebuild the graph and reset block DSP state; live param tweaks are lock-free and don't.
-- **Cables are read-only** visualizations of the routing dropdowns — no drag-to-connect yet.
 - The per-sample graph is interpreted; a JIT path (via fusevm/Cranelift) is the performance endgame.
 
 ---

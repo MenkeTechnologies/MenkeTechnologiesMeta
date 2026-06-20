@@ -208,7 +208,7 @@ Coverage: the chord dictionary and voicing engine, scale quantizer, Euclidean ge
 
 ## [0x07] PRESETS
 
-A factory bank ships with the plugin (Chord Arp, Strummed Chords, Euclidean Pulse, Fifth Harmonizer, Arp Echo). User patches are saved as `zpwr-midi-fx/Presets/*.zmfxpatch` under the user application data directory and managed from the PRESETS tab.
+A factory bank ships with the plugin (Chord Arp, Strummed Chords, Euclidean Pulse, Fifth Harmonizer, Arp Echo, Random Walk, Step Melody, Tone Cluster, Jazz Voicing, MPE Spread and more) spanning arps, harmony, rhythm, generative and FX chains. User patches are saved as `zpwr-midi-fx/Presets/*.zmfxpatch` under the user application data directory and managed from the PRESETS tab.
 
 ---
 
