@@ -37,7 +37,7 @@
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (2)](#tier-5--editor--multiplexer-plugins-2)
-  - [Tier 6 — Apps, extensions, web & web-APIs (10)](#tier-6--apps-extensions-web--web-apis-10)
+  - [Tier 6 — Apps, extensions, web & web-APIs (11)](#tier-6--apps-extensions-web--web-apis-11)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
 - [\[0x03\] Common Operations](#0x03-common-operations)
 - [\[0x04\] Helper Scripts](#0x04-helper-scripts)
@@ -181,7 +181,7 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 | [`VimColorSchemes`](https://github.com/MenkeTechnologies/VimColorSchemes) | 732 hand-curated Vim colorschemes packaged as a single Pathogen / vim-plug / lazy.nvim bundle. The largest one-bundle scheme collection. |
 | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
-### Tier 6 — Apps, extensions, web & web-APIs (10)
+### Tier 6 — Apps, extensions, web & web-APIs (11)
 
 Browser extensions, supporting apps, audio plugins, public website, storefront, and web-API services. (Tauri v2 desktop GUI apps `traderview` and `Audio-Haxor` live in Tier 1; the `powerliners` CLI port lives in Tier 1 too.)
 
