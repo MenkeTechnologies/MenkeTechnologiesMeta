@@ -7,7 +7,7 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-86-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-87-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-12_core-cyan.svg)](#tier-1--core-12)
 [![Tier 2](https://img.shields.io/badge/tier_2-31_stryke-green.svg)](#tier-2--stryke-ecosystem-31)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
@@ -18,7 +18,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 86 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 87 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -58,7 +58,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 86 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 87 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -78,7 +78,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 86 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 87 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (12)
 
@@ -495,7 +495,7 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
 | Tier 5 — Editor / multiplexer plugins | 2 | ~12 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 12 | ~1.06 GB |
-| **Total** | **86** | **~2.2 GB** |
+| **Total** | **87** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
