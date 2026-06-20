@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pins structural invariants on .gitmodules so the 82-submodule org-wide
+# Pins structural invariants on .gitmodules so the 86-submodule org-wide
 # graph can't quietly drift: every entry must (a) have a present path,
 # (b) point to a https github.com/MenkeTechnologies/<name>.git url,
 # (c) declare its branch field, (d) match path basename = repo name.
@@ -12,11 +12,11 @@ gm=".gitmodules"
 [[ -f "$gm" ]] || { echo "FAIL  no $gm"; exit 1; }
 
 n=$(grep -c "^\[submodule" "$gm")
-if [[ $n -ne 82 ]]; then
-    echo "FAIL  expected 82 submodule entries, got $n"
+if [[ $n -ne 86 ]]; then
+    echo "FAIL  expected 86 submodule entries, got $n"
     ok=0
 else
-    echo "PASS  .gitmodules has 82 submodule entries"
+    echo "PASS  .gitmodules has 86 submodule entries"
 fi
 
 # Parse paths and urls in order
