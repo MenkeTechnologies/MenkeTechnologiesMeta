@@ -99,9 +99,11 @@ for p in "${paths[@]}"; do
     # `license = "UNLICENSED"` in the package Cargo.toml; such repos ship
     # their own proprietary LICENSE (still pinned to exist by
     # license-file-present.sh) which must NOT match the canonical MIT.
-    cargo_lic="$p/Cargo.toml"
-    [[ -f "$cargo_lic" ]] || cargo_lic="$p/src-tauri/Cargo.toml"
-    if grep -qE '^license[[:space:]]*=[[:space:]]*"UNLICENSED"' "$cargo_lic" 2>/dev/null; then
+    # Check BOTH the workspace-root and the src-tauri package Cargo.toml —
+    # Tauri paid apps (Audio-Haxor) declare license in src-tauri/Cargo.toml
+    # while the root is a license-less workspace.
+    if grep -qhE '^license[[:space:]]*=[[:space:]]*"UNLICENSED"' \
+        "$p/Cargo.toml" "$p/src-tauri/Cargo.toml" 2>/dev/null; then
         echo "SKIP  $p: proprietary (license=\"UNLICENSED\") — paid product, not MIT"
         continue
     fi
