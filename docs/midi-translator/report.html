@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="midi-translator — Engineering report. Embeddable real-time MIDI translation engine in pure Rust: 4,168 source lines (3,381 code) across 18 files, worker-thread engine, signed-32-bit rules VM, BOME .bmtp import + export, 15 outgoing-action variants (keystroke / mouse / AppleScript / MIDI route / port / project / serial / custom), 22 tests.">
+  <title>midi-translator &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// MIDI-TRANSLATOR &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/midi-translator" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Embeddable real-time MIDI translation engine in pure Rust &middot; worker-thread engine &middot; signed-32-bit rules VM &middot; BOME <code>.bmtp</code> import + export &middot; OS-control actions (keystroke / mouse / AppleScript)
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 1: EXECUTIVE SUMMARY           -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">midi-translator is a self-contained, real-time MIDI translation engine written in pure Rust, meant to be embedded inside a host GUI/CLI application. It listens on MIDI input ports (via <code>midir</code>), matches each incoming message against per-translator triggers, runs a rules script on a small signed-32-bit integer VM, and fires an outgoing action &mdash; one of 15 <code>Outgoing</code> variants spanning MIDI out, keystroke / mouse / AppleScript synthesis (macOS), MIDI route / port / project control, launch-file, serial, timer, preset control, a host-defined custom command, and a stryke-script hook. It imports BOME MIDI Translator Pro <code>.bmtp</code> projects (INI container + <code>MID3</code>/<code>KAM3</code> XML payloads + <code>Options</code> rules blob) and exports native projects back to unsigned <code>.bmtp</code> (round-tripping through import), with <code>serde</code> JSON as the native store. The crate carries no UI of its own: the host wires the engine's <code>EngineEvent</code> stream to its interface and routes <code>Outgoing::Custom</code> back through a handler. <strong>4,168 source lines (3,381 code) across 18 Rust files, a worker-thread engine, a faithful BOME rules VM, and lossless <code>.bmtp</code> import + export &mdash; the routing core behind a MIDI-controlled desktop application.</strong></p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">4,168</div><div class="stat-label">Source Lines</div></div>
+        <div class="stat-card"><div class="stat-val">3,381</div><div class="stat-label">Code Lines</div></div>
+        <div class="stat-card"><div class="stat-val accent">18</div><div class="stat-label">Rust Files</div></div>
+        <div class="stat-card"><div class="stat-val green">22</div><div class="stat-label">Test Functions</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Integration Test Modules</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Direct Dependencies</div></div>
+        <div class="stat-card"><div class="stat-val accent">15</div><div class="stat-label">Outgoing Variants</div></div>
+        <div class="stat-card"><div class="stat-val">7</div><div class="stat-label">Incoming Triggers</div></div>
+      </div>
+
+      <div style="margin:1.2rem 0;">
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 4,168 lines</p>
+        <div class="bar-wrap" style="height:26px;">
+          <div class="bar-fill cyan" style="width:90.3%;"></div>
+          <span class="bar-pct" style="font-size:12px;">3,763 library / 405 tests &middot; 90.3% library</span>
+        </div>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Library: 15 files under <code>src/</code> (engine, rules VM, model, bmtp import/export, actions, midi, error). Tests: 3 integration modules under <code>tests/</code> (<code>bmtp_import.rs</code>, <code>engine_pipeline.rs</code>, <code>rules_vm.rs</code>). Line counts are physical <code>wc -l</code>; code-only (tokei, blanks + comments excluded) is 3,381.</p>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 2: SUBSYSTEM BREAKDOWN          -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">#</span>SUBSYSTEM BREAKDOWN</h2>
+      <p class="tutorial-subtitle">Source partitioned by role. The engine (worker thread + dispatch + timers) is the largest slice at 26.1%; <code>.bmtp</code> import + export is second at 23.3% because BOME's binary container format needs dedicated INI / XML / options parsers on the way in and an unsigned re-serializer on the way out. The rules VM is a self-contained 600-line interpreter.</p>
+
+      <table class="file-table">
+        <thead><tr><th>Subsystem</th><th>Key Files</th><th class="num">Lines</th><th class="num">%</th><th style="min-width:120px;">Share</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--accent);">Engine</td><td><code>engine/mod, engine/timers</code></td><td class="num">1,086</td><td class="num">26.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:26.1%"></div></div></td><td>Worker-thread engine: opens MIDI input ports (<code>midir</code>), runs the dispatch loop, owns active presets (including always-active presets), emits <code>EngineEvent</code>s to the host sink, routes <code>Outgoing::Custom</code> to the host handler, applies outgoing delay, and schedules timer triggers</td></tr>
+          <tr><td style="color:var(--accent);">.bmtp Import / Export</td><td><code>bmtp/mod, bmtp/options, bmtp/payload, bmtp/export</code></td><td class="num">971</td><td class="num">23.3%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:23.3%"></div></div></td><td>BOME MIDI Translator Pro project I/O: INI container, <code>MID3</code>/<code>KAM3</code> XML payloads, timer/<code>EnDi</code> payloads, and the <code>Options</code> rules blob on import; unsigned <code>.bmtp</code> re-serialization on export (round-trips through import). RSA signature ignored; undecoded encodings (<code>MID1</code>, <code>KAM1</code>, mouse, serial, launch) preserved verbatim for lossless round-trip</td></tr>
+          <tr><td style="color:var(--accent);">Rules VM</td><td><code>rules</code></td><td class="num">600</td><td class="num">14.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:14.4%"></div></div></td><td>Faithful BOME rules implementation on a signed-32-bit integer VM: assignment, arithmetic (<code>+ - * / %</code>) + bitwise (<code>&amp; | ^ &gt;&gt; &lt;&lt;</code>), <code>IF/THEN</code> with 6 comparators, <code>Goto</code>/<code>Label</code>, <code>Skip Next [n]</code>, <code>Log</code>, exit-and-execute/ignore. 10 locals + two-character globals; wrap-on-overflow; div/mod by zero = 0</td></tr>
+          <tr><td style="color:var(--accent);">Data Model</td><td><code>model</code></td><td class="num">433</td><td class="num">10.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.4%"></div></div></td><td><code>Project → Preset → Translator</code>, each translator carrying an Incoming trigger (7 variants: MIDI / keystroke / timer / preset / enable-disable / raw / none), a Rules list, and one of 15 Outgoing variants. <code>serde</code>-serializable; native projects via <code>Project::load_json</code> / <code>save_json</code></td></tr>
+          <tr><td style="color:var(--accent);">Actions</td><td><code>actions/mod, actions/macos, keycodes</code></td><td class="num">423</td><td class="num">10.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.1%"></div></div></td><td>Outgoing OS-control actions: keystroke / mouse (incl. wheel) synthesis and AppleScript (with global injection) / launch via macOS <code>CGEvent</code>; keystroke-name &rarr; platform keycode table. macOS-only &mdash; <code>Error::Unsupported</code> elsewhere; requires Accessibility grant (<code>accessibility_trusted()</code>) or returns <code>Error::NeedsAccessibility</code></td></tr>
+          <tr><td style="color:var(--accent);">Matcher</td><td><code>matcher</code></td><td class="num">97</td><td class="num">2.3%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2.3%"></div></div></td><td>Per-translator incoming-trigger matching against live MIDI messages: note / CC / pitch-bend / channel selectivity, value capture into rules-VM inputs</td></tr>
+          <tr><td style="color:var(--accent);">MIDI I/O</td><td><code>midi</code></td><td class="num">88</td><td class="num">2.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2.1%"></div></div></td><td>MIDI message types and <code>midir</code> input/output port plumbing &mdash; cross-platform, builds on macOS / Linux / Windows</td></tr>
+          <tr><td style="color:var(--accent);">Error / Entry</td><td><code>error, lib</code></td><td class="num">65</td><td class="num">1.6%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1.6%"></div></div></td><td>Crate <code>Error</code> type (<code>Unsupported</code>, <code>NeedsAccessibility</code>, parse / IO variants via <code>thiserror</code>) and the public <code>lib.rs</code> surface re-exports</td></tr>
+          <tr><td style="color:var(--green);">Tests</td><td><code>tests/bmtp_import, tests/engine_pipeline, tests/rules_vm</code></td><td class="num">405</td><td class="num">9.7%</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:9.7%"></div></div></td><td>22 <code>#[test]</code> functions across 3 integration modules (plus a <code>tests/fixtures</code> corpus): <code>.bmtp</code> import fidelity + export round-trip, end-to-end engine dispatch pipeline, and rules-VM semantics (arithmetic / bitwise / conditionals / control flow / overflow / div-by-zero)</td></tr>
+        </tbody>
+        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">4,168</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 3: FILES BY SIZE                 -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">$</span>FILES BY SIZE</h2>
+      <p class="tutorial-subtitle">All 18 Rust source files, largest first. The engine and rules VM dominate; the four <code>bmtp/</code> files together (971 lines) are the cost of natively reading and re-writing BOME's binary project container.</p>
+
+      <table class="file-table">
+        <thead><tr><th>File</th><th class="num">Lines</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>src/engine/mod.rs</td><td class="num">996</td><td>Worker-thread engine, dispatch loop, port management, event sink, custom-handler routing, outgoing delay</td></tr>
+          <tr><td>src/rules.rs</td><td class="num">600</td><td>Rules compiler + signed-32-bit integer VM</td></tr>
+          <tr><td>src/model.rs</td><td class="num">433</td><td><code>Project / Preset / Translator</code> model, 15 Outgoing + 7 Incoming variants, <code>serde</code> JSON load/save</td></tr>
+          <tr><td>src/bmtp/payload.rs</td><td class="num">331</td><td><code>MID3</code>/<code>KAM3</code> XML + timer payload decoding</td></tr>
+          <tr><td>src/bmtp/mod.rs</td><td class="num">225</td><td><code>.bmtp</code> INI container parse, <code>bmtp::import</code> entry point</td></tr>
+          <tr><td>src/bmtp/options.rs</td><td class="num">224</td><td><code>Options</code> rules-blob parser</td></tr>
+          <tr><td>src/bmtp/export.rs</td><td class="num">191</td><td>Unsigned <code>.bmtp</code> re-serializer &mdash; <code>Project</code> &rarr; <code>.bmtp</code>, round-trips through import</td></tr>
+          <tr><td>src/actions/macos.rs</td><td class="num">190</td><td>macOS <code>CGEvent</code> keystroke / mouse (incl. wheel) / AppleScript synthesis, Accessibility check</td></tr>
+          <tr><td>tests/bmtp_import.rs</td><td class="num">150</td><td><code>.bmtp</code> import-fidelity + export round-trip integration tests</td></tr>
+          <tr><td>tests/engine_pipeline.rs</td><td class="num">145</td><td>End-to-end engine dispatch integration tests</td></tr>
+          <tr><td>src/keycodes.rs</td><td class="num">120</td><td>Keystroke-name &rarr; platform keycode table</td></tr>
+          <tr><td>src/actions/mod.rs</td><td class="num">113</td><td>Action executor trait, platform dispatch, <code>Unsupported</code>/<code>NeedsAccessibility</code> gating</td></tr>
+          <tr><td>tests/rules_vm.rs</td><td class="num">110</td><td>Rules-VM semantics integration tests</td></tr>
+          <tr><td>src/matcher.rs</td><td class="num">97</td><td>Per-translator incoming-trigger matching</td></tr>
+          <tr><td>src/engine/timers.rs</td><td class="num">90</td><td>Timer trigger scheduler</td></tr>
+          <tr><td>src/midi.rs</td><td class="num">88</td><td>MIDI message types + <code>midir</code> port plumbing</td></tr>
+          <tr><td>src/error.rs</td><td class="num">37</td><td>Crate <code>Error</code> enum (<code>thiserror</code>)</td></tr>
+          <tr><td>src/lib.rs</td><td class="num">28</td><td>Public crate surface re-exports</td></tr>
+        </tbody>
+        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">4,168</td><td>18 files</td></tr></tfoot>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 4: EXECUTION PIPELINE          -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">@</span>EXECUTION PIPELINE</h2>
+      <p class="tutorial-subtitle">An incoming MIDI message flows through four stages on the engine's worker thread. The matcher selects translators whose Incoming trigger fits the message; each match runs its rules on the integer VM; the resulting Outgoing action is dispatched to MIDI out, the OS action layer, the timer scheduler, or the host's custom handler.</p>
+
+      <pre style="margin:0.5rem 0;padding:1rem;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-dim);font-size:11px;line-height:1.7;overflow-x:auto;">
+  MIDI in (midir input port)
+       │
+       ▼
+  ┌─────────────┐     ┌─────────────┐     ┌──────────────┐
+  │  midi.rs    │────▶│  matcher.rs │────▶│   rules.rs   │
+  │   (88)      │     │   (97)      │     │   (600)      │
+  │  message    │     │  per-entry  │     │  integer VM  │
+  │  types      │     │  trigger    │     │  10 locals   │
+  │  midir port │     │  match +    │     │  globals     │
+  │             │     │  capture    │     │  IF/Goto     │
+  └─────────────┘     └─────────────┘     └──────┬───────┘
+                                                  │
+                              ┌────────────────────┤
+                              │                    │
+                              ▼                    ▼
+                     ┌──────────────┐     ┌──────────────┐
+                     │ engine/mod   │     │  actions/    │
+                     │   (996)      │     │   (423)      │
+                     │  dispatch    │────▶│  CGEvent     │
+                     │  event sink  │     │  keystroke   │
+                     │  custom      │     │  mouse/wheel │
+                     │  handler     │     │  AppleScript │
+                     └──────┬───────┘     └──────────────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+       ┌──────▼──────┐ ┌────▼──────┐ ┌────▼────────┐
+       │ midir out   │ │ timers.rs │ │ host custom │
+       │ + route/    │ │   (90)    │ │ + stryke    │
+       │ port/proj   │ │ scheduler │ │ hook        │
+       └─────────────┘ └───────────┘ └─────────────┘</pre>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 5: RULES VM                      -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>RULES VM &mdash; BOME SEMANTICS</h2>
+      <p class="tutorial-subtitle">The rules language is a faithful reimplementation of BOME MIDI Translator Pro's rules, run on a small signed-32-bit integer VM. The behaviors below are pinned by <code>tests/rules_vm.rs</code> so refactors can't silently diverge from BOME.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Values &amp; Variables</h4>
+          <p>All values are signed 32-bit and <strong>wrap on overflow</strong>. Division and modulo by zero yield <code>0</code>. Variables: 10 locals (<code>oo pp qq rr ss tt uu vv ww xx</code>, lifetime = one incoming event) and two-character globals (<code>ga</code>&hellip;<code>z9</code>, initialized to 0, lifetime = project).</p>
+        </div>
+        <div class="feature-card">
+          <h4>Operators</h4>
+          <p>Arithmetic <code>+ - * / %</code> and bitwise <code>&amp; | ^ &gt;&gt; &lt;&lt;</code>. Conditionals are <code>IF a &lt;cmp&gt; b THEN &lt;action&gt;</code> with the six comparators <code>== != &gt;= &lt;= &gt; &lt;</code>.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Control Flow</h4>
+          <p><code>Goto</code> / <code>Label</code>, <code>Skip Next [n]</code>, and "exit rules and execute / ignore". <code>Log</code> emits to the host event sink. Outgoing values are mutated in place before the action fires.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Incoming Triggers</h4>
+          <p>A translator's Incoming trigger is one of 7 variants &mdash; MIDI message, keystroke, timer, preset activation, enable/disable, raw passthrough, or none. The matcher captures message bytes into VM inputs so rules can branch on note / CC / channel / value.</p>
+        </div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 6: DEPENDENCIES                  -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">+</span>DEPENDENCIES</h2>
+      <p class="tutorial-subtitle">Eight direct dependencies &mdash; five cross-platform, three macOS-only. No async runtime: the engine runs on a single dedicated worker thread and talks to the host over <code>crossbeam-channel</code>.</p>
+
+      <table class="file-table">
+        <thead><tr><th>Crate</th><th>Role</th><th>Scope</th></tr></thead>
+        <tbody>
+          <tr><td>midir</td><td>Cross-platform MIDI input/output ports</td><td>all platforms</td></tr>
+          <tr><td>serde</td><td>Derive-based serialization of the project model</td><td>all platforms</td></tr>
+          <tr><td>serde_json</td><td>Native project storage (JSON)</td><td>all platforms</td></tr>
+          <tr><td>thiserror</td><td>Crate <code>Error</code> enum derivation</td><td>all platforms</td></tr>
+          <tr><td>crossbeam-channel</td><td>Engine &harr; host event / command channels</td><td>all platforms</td></tr>
+          <tr><td>core-graphics</td><td>macOS <code>CGEvent</code> keystroke / mouse synthesis</td><td>macOS</td></tr>
+          <tr><td>core-foundation</td><td>macOS AppleScript / Accessibility plumbing</td><td>macOS</td></tr>
+          <tr><td>foreign-types</td><td>macOS Core Foundation / Core Graphics FFI wrappers</td><td>macOS</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <p style="font-size:10px;color:var(--text-muted);margin-top:1rem;text-align:center;font-family:'Share Tech Mono',monospace;">
+        Line counts measured with <code>tokei 14.0.0</code> + <code>wc -l</code> across <code>src/</code> + <code>tests/</code>. Numbers refresh as the crate adds commits.
+      </p>
+
+    </main>
+  </div>
+  <script src="hud-theme.js"></script>
+</body>
+</html>

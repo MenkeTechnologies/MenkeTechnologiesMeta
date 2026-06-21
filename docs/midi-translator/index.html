@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="midi-translator — documentation. Embeddable real-time MIDI translation engine in pure Rust: MIDI/keystroke/mouse/AppleScript routing, signed-32-bit rules VM, BOME .bmtp import, JSON project model. Hosted by a GUI/CLI application.">
+  <title>midi-translator &mdash; Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+  <style>
+    .cat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:0.75rem;margin:1rem 0; }
+    .cat-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.8rem 1rem;border-radius:2px; }
+    .cat-card h4 { font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.4rem; }
+    .cat-card p { margin:0;font-size:11.5px;color:var(--text-dim);line-height:1.5; }
+    .cat-card code { font-size:11px;color:var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// MIDI-TRANSLATOR &mdash; REAL-TIME MIDI ROUTING ENGINE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/midi-translator" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">Embeddable engine &middot; MIDI / keystroke / mouse / AppleScript routing &middot; signed-32-bit rules VM &middot; BOME <code>.bmtp</code> import &middot; JSON project model &middot; pure Rust</p>
+          <p class="docs-build-line"><span>4,168 source lines &middot; 3,381 code &middot; 18 Rust files &middot; 22 tests</span></p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/midi-translator" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EVERY KNOB, WIRED TO ANYTHING</h2>
+      <p class="tutorial-subtitle">A self-contained, real-time MIDI translation engine in pure Rust. It listens on MIDI input ports, matches each incoming message against translator entries, runs a rules script on a small signed-32-bit integer VM, and fires an outgoing action &mdash; MIDI out, keystrokes, mouse, AppleScript, timers, or host-defined commands. It imports and exports BOME MIDI Translator Pro <code>.bmtp</code> projects and stores native projects as JSON. The crate carries <strong>no UI of its own</strong>: it is the engine meant to be hosted by a GUI/CLI application.</p>
+
+      <section class="tutorial-section">
+        <h2>Pipeline</h2>
+        <p>An incoming MIDI message flows through four stages on a dedicated worker thread:</p>
+<pre>MIDI in ──▶ matcher ──▶ rules VM ──▶ outgoing action
+ (midir)    (per-entry)  (integer)   (MIDI / keys / mouse / AppleScript / timer / custom)</pre>
+        <p>The engine owns the open input ports (<code>midir</code>) and emits <code>EngineEvent</code>s back to the host through a sink callback. Actions the host wants to handle itself route through <code>Outgoing::Custom { command }</code> plus a host-installed handler &mdash; so the engine maps MIDI to host commands without being modified.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Embedding</h2>
+        <p>The crate is a library (<code>midi_translator</code>). A host wires the engine's events to its own UI and IPC:</p>
+<pre>use midi_translator::{Engine, EngineConfig, EngineEvent};
+
+let mut engine = Engine::new(EngineConfig::default())?;
+engine.set_event_sink(|ev: EngineEvent| { /* forward to UI */ });
+engine.set_custom_handler(|cmd: String| { /* host-defined actions */ });
+
+let project = midi_translator::bmtp::import("Ableton.bmtp")?;
+engine.load_project(project);
+engine.start()?;
+engine.open_input("nanoKONTROL2 SLIDER/KNOB")?;</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Data model</h2>
+        <p><code>Project → Preset → Translator</code>, where each <code>Translator</code> carries:</p>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>Incoming</h4><p>The trigger: a MIDI message, a keystroke, or a timer. The matcher captures message bytes into the rules VM's inputs.</p></div>
+          <div class="cat-card"><h4>Rules</h4><p>An ordered list of rules run on the integer VM before the action fires &mdash; conditionals, arithmetic, variable assignment, control flow.</p></div>
+          <div class="cat-card"><h4>Outgoing</h4><p>The action: MIDI out, keystroke, mouse, AppleScript, timer control, or a host-defined custom command.</p></div>
+        </div>
+        <p>The model is <code>serde</code>-serializable; native projects are stored as JSON via <code>Project::load_json</code> / <code>Project::save_json</code>. Presets group translators and can be switched at runtime.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Rules language</h2>
+        <p>A faithful implementation of BOME's rules language, compiled and run on a small signed-32-bit integer VM:</p>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>Expressions</h4><p>Arithmetic <code>+ - * / %</code> and bitwise <code>&amp; | ^ &gt;&gt; &lt;&lt;</code> over signed 32-bit values.</p></div>
+          <div class="cat-card"><h4>Conditionals</h4><p><code>IF a &lt;cmp&gt; b THEN &lt;action&gt;</code> with the six comparators <code>== != &gt;= &lt;= &gt; &lt;</code>.</p></div>
+          <div class="cat-card"><h4>Control flow</h4><p><code>Goto</code> / <code>Label</code>, <code>Skip Next [n]</code>, exit-and-execute / ignore, and <code>Log</code>.</p></div>
+          <div class="cat-card"><h4>Variables</h4><p>10 locals (<code>oo&hellip;xx</code>, one event) and two-character globals (<code>ga&hellip;z9</code>, project-lifetime, init 0).</p></div>
+        </div>
+        <p>Values <strong>wrap on overflow</strong>; division / modulo by zero yields 0 &mdash; matching BOME's documented semantics exactly. These behaviors are pinned by <code>tests/rules_vm.rs</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2><code>.bmtp</code> import + export</h2>
+        <p><code>bmtp::import(path)</code> parses BOME MIDI Translator Pro project files: the INI container, <code>MID3</code> / <code>KAM3</code> XML payloads, timer / <code>EnDi</code> payloads, and the <code>Options</code> rules blob. Export re-serializes a <code>Project</code> back to an <strong>unsigned</strong> <code>.bmtp</code> that round-trips through import. The RSA signature section is not produced, so a signed export for BomeBox / MT Player is out of scope &mdash; the native store is JSON.</p>
+        <p>Import is <strong>lossless</strong>: encodings whose binary layout is not yet decoded (older <code>MID1</code> MIDI, <code>KAM1</code> keystrokes, mouse, serial, launch) are preserved verbatim, so a project round-trips even when individual entries are not yet natively understood.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Outgoing actions &amp; platforms</h2>
+        <p>The <code>Outgoing</code> enum has 15 variants:</p>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>MIDI out</h4><p>Sent through a <code>midir</code> output port. Cross-platform.</p></div>
+          <div class="cat-card"><h4>Keystroke / mouse</h4><p>OS synthesis via macOS <code>CGEvent</code> (incl. mouse wheel), through a keycode table (<code>keycodes.rs</code>).</p></div>
+          <div class="cat-card"><h4>AppleScript / launch</h4><p>AppleScript (with global injection) and launch-file with args. macOS only &mdash; <code>Error::Unsupported</code> elsewhere.</p></div>
+          <div class="cat-card"><h4>MIDI route / port</h4><p><code>MidiRouterAction</code> and <code>MidiPort</code> manage routes and port open/close at runtime.</p></div>
+          <div class="cat-card"><h4>Project / preset</h4><p><code>ProjectAction</code> (load / save / switch) and <code>PresetControl</code> (enable / disable).</p></div>
+          <div class="cat-card"><h4>Timer / serial</h4><p>Internal scheduler (<code>engine/timers.rs</code>) drives timer translators; <code>Serial</code> writes to a serial port.</p></div>
+          <div class="cat-card"><h4>Custom / Stryke</h4><p><code>Custom</code> routes to the host via <code>Engine::set_custom_handler</code>; <code>Stryke</code> runs a stryke script through a host-installed runner hook.</p></div>
+          <div class="cat-card"><h4>Raw / None</h4><p><code>Raw</code> preserves an undecoded action for lossless <code>.bmtp</code> round-trip; <code>None</code> is the no-op.</p></div>
+        </div>
+        <p>MIDI I/O and the rules / import core build on <strong>all platforms</strong>. OS-control actions are <strong>macOS-only</strong> and require the host application to hold <strong>Accessibility</strong> permission (System Settings → Privacy &amp; Security → Accessibility). <code>actions::accessibility_trusted()</code> reports the grant; executors return <code>Error::NeedsAccessibility</code> when it is missing.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Architecture</h2>
+        <p>The crate is 18 Rust files, 4,168 source lines (3,381 code). See the <a href="report.html">engineering report</a> for the full subsystem and per-file breakdown.</p>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>engine/</h4><p>Worker-thread engine: input ports, dispatch loop, event sink, timer scheduler, outgoing delay (1,086 lines).</p></div>
+          <div class="cat-card"><h4>rules.rs</h4><p>Rules compiler + signed-32-bit integer VM (600 lines).</p></div>
+          <div class="cat-card"><h4>bmtp/</h4><p>BOME <code>.bmtp</code> import + export: INI, XML payloads, options, unsigned re-serialize, lossless passthrough (971 lines).</p></div>
+          <div class="cat-card"><h4>model.rs</h4><p><code>Project / Preset / Translator</code> model, 15 Outgoing + 7 Incoming variants, JSON load/save (433 lines).</p></div>
+          <div class="cat-card"><h4>actions/ + keycodes.rs</h4><p>macOS <code>CGEvent</code> keystroke / mouse / AppleScript synthesis (423 lines).</p></div>
+          <div class="cat-card"><h4>matcher.rs + midi.rs</h4><p>Incoming-trigger matching and <code>midir</code> message plumbing (185 lines).</p></div>
+        </div>
+      </section>
+
+      <p style="font-size:10px;color:var(--text-muted);margin:2rem 0 1rem;text-align:center;font-family:'Share Tech Mono',monospace;">
+        Proprietary &middot; part of the MenkeTechnologies paid stack &middot; <a href="report.html">engineering report</a> &middot; <a href="https://github.com/MenkeTechnologies/midi-translator" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </p>
+
+    </main>
+  </div>
+  <script src="hud-theme.js"></script>
+</body>
+</html>
