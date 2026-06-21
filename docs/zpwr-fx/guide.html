@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="ZPWR-FX user guide — Modular patch
+effects — wire primitive DSP blocks into your own algorithm..">
+  <title>zpwr-fx</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 60rem; }
+    .guide-lede { font-size: 14px; line-height: 1.7; color: var(--text-dim); margin: 0.2rem 0 1.6rem; }
+    .guide-body h1 { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--cyan); border-bottom: 1px solid var(--cyan); padding-bottom: 7px; margin: 2.4rem 0 1rem; }
+    .guide-body h2 { font-family: 'Orbitron', sans-serif; font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--accent-light); margin: 1.6rem 0 0.6rem; }
+    .guide-body p, .guide-body li { font-size: 13.5px; line-height: 1.7; color: var(--text); }
+    .guide-body code { font-family: 'Share Tech Mono', monospace; color: var(--cyan); background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 2px; padding: 1px 5px; font-size: 12.5px; }
+    .guide-body strong { color: var(--text); }
+    .guide-toc { border: 1px solid var(--border); border-left: 2px solid var(--cyan); border-radius: 2px;
+      padding: 0.8rem 1.1rem; margin: 0 0 1.8rem; background: color-mix(in srgb, var(--bg-card) 90%, transparent); }
+    .guide-toc ul { margin: 0; padding-left: 1.1rem; columns: 2; }
+    .guide-toc a { color: var(--text-dim); text-decoration: none; font-size: 12.5px; line-height: 1.9; }
+    .guide-toc a:hover { color: var(--cyan); }
+    .guide-links { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.4rem 0 0.6rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-FX — USER GUIDE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a><span class="sep">/</span><span class="current">Guide</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="reference.html">Module Reference</a>
+          <a class="btn btn-secondary" href="reference.pdf">PDF</a>
+        </div>
+      </div>
+    </header>
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>zpwr-fx</h2>
+      <p class="guide-lede">Modular patch effects — wire primitive DSP
+blocks into your own algorithm.</p>
+      <div class="guide-links">
+        <a class="btn btn-secondary" href="reference.html">Browse all modules ↗</a>
+        <a class="btn btn-secondary" href="reference.pdf">Full reference (PDF) ↗</a>
+      </div>
+      <nav class="guide-toc"><ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#getting-started" id="toc-getting-started">Getting
+started</a></li>
+<li><a href="#the-patch-model" id="toc-the-patch-model">The patch
+model</a></li>
+<li><a href="#the-interface" id="toc-the-interface">The
+interface</a></li>
+<li><a href="#modulation" id="toc-modulation">Modulation</a></li>
+<li><a href="#gain-staging" id="toc-gain-staging">Gain staging</a></li>
+<li><a href="#the-expr-block" id="toc-the-expr-block">The Expr
+block</a></li>
+<li><a href="#perform-macros" id="toc-perform-macros">Perform &amp;
+macros</a></li>
+<li><a href="#stereo-stereo-lock" id="toc-stereo-stereo-lock">Stereo
+&amp; stereo lock</a></li>
+<li><a href="#midi" id="toc-midi">MIDI</a></li>
+<li><a href="#presets" id="toc-presets">Presets</a></li>
+</ul></nav>
+      <div class="guide-body">
+<h1 id="overview">Overview</h1>
+<p>zpwr-fx is a <strong>modular patch-graph effects plugin</strong> —
+not a fixed slot rack. Instead of a preset chain of effects, you wire
+primitive DSP blocks (oscillators, filters, delays, reverbs, dynamics,
+distortion, modulation) freely into your own algorithm, in the spirit of
+the Eventide H3000 Factory, inside a cyberpunk WebView interface. It
+runs as VST3, AU, CLAP and Standalone on macOS, Linux and Windows.</p>
+<p>Any block’s output can feed any other block’s input, signals can fan
+out to unlimited destinations, and feedback is allowed — wire an output
+back to an earlier input and the graph resolves it with a one-sample
+delay. A per-parameter modulation matrix, an expandable bank of macro
+knobs, and unlimited stacked layers complete the instrument.</p>
+<h1 id="getting-started">Getting started</h1>
+<ol type="1">
+<li>Open the plugin on an audio track. The <strong>Patch</strong> tab
+shows a grid of blocks with input and output jacks.</li>
+<li>Press <strong>⚡ EZ WIRE</strong>. This auto-routes the input
+through your blocks to the output, so you hear sound immediately without
+touching a cable.</li>
+<li>Press <strong>+ ADD BLOCK</strong> to drop in a filter, delay or
+reverb, then drag from one block’s output jack onto another’s input jack
+to wire it by hand.</li>
+<li>Double-click any block to open its detail panel — its parameters,
+its modulation routes, and (for the Expr block) its code.</li>
+</ol>
+<p>Two buttons reset without starting over: <strong>INIT</strong>
+unplugs every cable and modulation route but keeps your blocks in place,
+and <strong>🗑</strong> blanks the whole patch.</p>
+<h1 id="the-patch-model">The patch model</h1>
+<ul>
+<li><strong>Sources</strong> an input can read: silence, the left/right
+audio input, internal noise, the macro soft keys, live MIDI/MPE (mod
+wheel, aftertouch, pitch bend, velocity, expression, breath, sustain,
+note, and the MPE press/slide/bend dimensions), or any block’s
+output.</li>
+<li>Each block has <strong>three inputs</strong> (In 1, In 2, Mod), up
+to <strong>six parameters</strong>, and <strong>one
+output</strong>.</li>
+<li>The graph is <strong>topologically sorted</strong> on every edit;
+cycles (feedback) resolve automatically with a one-sample delay, so you
+can build feedback patches freely.</li>
+<li>Any source can <strong>fan out</strong> to unlimited
+destinations.</li>
+</ul>
+<p><strong>Patching cables:</strong> drag an output jack onto an input
+jack to wire it; drag an input away to disconnect; drop on a different
+output to rewire. <strong>Right-click</strong> a cable for its
+<strong>level</strong> (per-cable gain) and <strong>colour</strong> —
+the cable’s brightness tracks its level, so the gain structure between
+blocks is visible while you patch.</p>
+<h1 id="the-interface">The interface</h1>
+<p>The editor is organised into tabs:</p>
+<ul>
+<li><strong>Patch</strong> — the node grid with drag-to-wire cables, the
+macro soft-key strip, and a detail panel for the selected block.
+Includes <strong>⚡ EZ WIRE</strong> (auto-route), <strong>INIT</strong>
+(unplug, keep blocks), <strong>🗑</strong> (blank), and the
+<strong>Stereo</strong> / <strong>🔒 Lock</strong> toggles. Cables glow
+with each block’s live signal level.</li>
+<li><strong>Synth</strong> — a fixed-layout panel showing every block’s
+knobs in a grid, with no cables (Serum/Spire style) for fast sound
+design.</li>
+<li><strong>Perform</strong> — macros and XY pads only, no patching;
+built for live play and automation.</li>
+<li><strong>Clip</strong> — draw a MIDI pattern and play the patch from
+it, with key/scale and key-trigger.</li>
+<li><strong>Mod Matrix</strong> — every modulation connection in the
+patch, in one list.</li>
+<li><strong>Mixer</strong> — per-layer channel strips (gain, pan, mute,
+solo) with sends to the aux FX buses, the aux returns and the master
+strip, with peak and LUFS metering.</li>
+<li><strong>Browse</strong> — search, save, tag and load patches; filter
+by bank, type, style and character.</li>
+<li><strong>Settings</strong> — master in/out and bypass, <strong>Auto
+Gain Stage</strong> and target, the brickwall limiter, scale/key
+quantize, UI scale and interface toggles.</li>
+<li><strong>About</strong> — version and engine info.</li>
+</ul>
+<h1 id="modulation">Modulation</h1>
+<p>Modulation is the patching itself. Every block parameter has a
+<strong>mod source + depth</strong> in its detail panel: any source — an
+LFO, an envelope, a macro soft key, noise, or another block’s output —
+modulates the parameter by <code>source × depth</code> in parameter
+units. Because mod sources are part of the dependency graph, modulating
+a parameter with a block’s output is ordered like any other connection.
+The <strong>Mod Matrix</strong> tab lists every modulation route in the
+patch at once.</p>
+<p><strong>Macro soft keys</strong> are an expandable pool of
+host-automatable knobs (16 active by default; the <code>+</code> /
+<code>−</code> controls above the knob row change how many are active).
+They are patchable as modulation sources, and they are what the
+<strong>Perform</strong> surfaces drive — the host-automatable bridge
+between a live performance and the patch.</p>
+<h1 id="gain-staging">Gain staging</h1>
+<p>Stacked cable gains and summing buses make it easy to drive the
+signal <em>between</em> blocks past 0 dBFS. Two per-block settings (both
+<strong>on by default</strong>) handle it:</p>
+<ul>
+<li><strong>Auto Gain Stage</strong> rides levels: each block’s output
+runs through a fast-attack / slow-release peak follower whose smoothed
+gain pulls the block down toward the <strong>Auto-Gain Target</strong>
+ceiling.</li>
+<li><strong>Soft Clip</strong> is the guarantee: an instant,
+sample-accurate tanh bound at the same ceiling on every block output,
+catching the fast transients the follower’s attack would miss. It
+saturates gently rather than clipping harshly.</li>
+</ul>
+<p>Turn either off in Settings for raw gain. Both are distinct from the
+master <strong>Brickwall Limiter</strong>, a single hard ceiling on the
+final summed output.</p>
+<h1 id="the-expr-block">The Expr block</h1>
+<p>The <strong>Expr</strong> block runs a short per-sample expression
+you write in its detail panel, doing things the fixed blocks can’t:</p>
+<ul>
+<li><strong>Variables:</strong> <code>in</code> (In 1), <code>t</code>,
+<code>sr</code>, <code>p0</code>–<code>p7</code> (p0–p5 are knobs, p6 is
+In 2, p7 is Mod), <code>s0</code>–<code>s3</code> (persistent state),
+and the constants <code>pi</code>, <code>tau</code>,
+<code>e</code>.</li>
+<li><strong>Functions:</strong> <code>sin cos tan tanh</code>,
+<code>floor frac wrap saw sqr tri</code>,
+<code>min max pow fmod clamp lerp</code>,
+<code>if step noise rand</code>, and
+<strong><code>tap(d)</code></strong> — the block’s own output
+<code>d</code> samples ago (fractional), for combs, Karplus strings and
+feedback.</li>
+<li>It is safe by construction: no loops or memory access in the audio
+path, and the output is sanitised so a bad program can never blow up the
+signal.</li>
+</ul>
+<p>Example wavefolder:
+<code>out = sin(in * (1 + p0 * 8) * pi)</code></p>
+<h1 id="perform-macros">Perform &amp; macros</h1>
+<p>The <strong>Perform</strong> tab is a play-the-patch surface that
+drives only host-automatable parameters, so it works with the editor
+closed and records as automation:</p>
+<ul>
+<li><strong>Preset Morph</strong> — a 4-corner XY pad (A/B/C/D) that
+bilinearly interpolates between four captured patches;
+<strong>🎲</strong> assigns a random preset to all four corners.</li>
+<li><strong>Orb</strong> — a radial pad where the puck’s <em>angle</em>
+selects a scene and its <em>distance</em> sets intensity;
+<strong>🎲</strong> rolls a new random scene set, <strong>⏺</strong>
+records the puck’s motion, and <strong>▶</strong> loops it back through
+the host-automatable parameters, turning a hands-free gesture into
+automation.</li>
+<li><strong>XY macro pads</strong> — each with a <strong>HOLD</strong> /
+<strong>SPRING</strong> toggle (spring snaps back to centre on
+release).</li>
+<li><strong>Macro knobs</strong> — the soft keys as plain knobs.</li>
+<li><strong>Scenes</strong> — snapshot slots: click to recall,
+right-click to clear.</li>
+<li><strong>Controls band</strong> — global randomise, an arpeggiator
+(mode / rate / latch), and <strong>scale + key quantize</strong> plus a
+<strong>Chord</strong> that stacks extra intervals on each key played on
+the on-screen keyboard.</li>
+</ul>
+<h1 id="stereo-stereo-lock">Stereo &amp; stereo lock</h1>
+<ul>
+<li><strong>Stereo</strong> (off by default) mirrors the patch graph to
+the right channel, so blocks process the left and right channels
+independently — dial in a per-knob L/R offset for width.</li>
+<li><strong>🔒 Lock</strong> keeps the mirrored blocks tracking the left
+channel. It is <strong>bidirectional and offset-preserving</strong>:
+moving a left knob moves its clone, and moving a clone moves the left,
+each by the same amount — so the width you dialled in is preserved
+rather than reset. Set Lock on for a perfect <code>L = R</code>. Both
+states are saved with the patch.</li>
+</ul>
+<h1 id="midi">MIDI</h1>
+<p>The plugin accepts MIDI and MPE input (MPE is aggregated to the most
+recent note), available everywhere as modulation sources. Two response
+toggles, both <strong>on by default</strong>:</p>
+<ul>
+<li><strong>Program Change</strong> — an incoming Program Change selects
+the matching preset. Turn it off to ignore Program Change.</li>
+<li><strong>Bank Select</strong> — CC0 (MSB) and CC32 (LSB) are captured
+and combined with the next Program Change
+(<code>bank × 128 + program</code>) for banked preset addressing. Turn
+it off and Program Changes address presets 0–127 directly.</li>
+</ul>
+<h1 id="presets">Presets</h1>
+<p>Factory patches ship in code (Stereo Slap, Filter Sweep, Comb
+Resonator, Wavefolder). Your own patches save from the
+<strong>Browse</strong> tab with facet tags (bank / type / style /
+character) for searching, and the full plugin state — the patch plus
+every parameter — is restored with your host session.</p>
+      </div>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

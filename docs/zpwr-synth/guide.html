@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="ZPWR-SYNTH user guide — Fully
+modular patch-graph synthesizer — build each voice from primitive
+blocks..">
+  <title>zpwr-synth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 60rem; }
+    .guide-lede { font-size: 14px; line-height: 1.7; color: var(--text-dim); margin: 0.2rem 0 1.6rem; }
+    .guide-body h1 { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--cyan); border-bottom: 1px solid var(--cyan); padding-bottom: 7px; margin: 2.4rem 0 1rem; }
+    .guide-body h2 { font-family: 'Orbitron', sans-serif; font-size: 12.5px; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--accent-light); margin: 1.6rem 0 0.6rem; }
+    .guide-body p, .guide-body li { font-size: 13.5px; line-height: 1.7; color: var(--text); }
+    .guide-body code { font-family: 'Share Tech Mono', monospace; color: var(--cyan); background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 2px; padding: 1px 5px; font-size: 12.5px; }
+    .guide-body strong { color: var(--text); }
+    .guide-toc { border: 1px solid var(--border); border-left: 2px solid var(--cyan); border-radius: 2px;
+      padding: 0.8rem 1.1rem; margin: 0 0 1.8rem; background: color-mix(in srgb, var(--bg-card) 90%, transparent); }
+    .guide-toc ul { margin: 0; padding-left: 1.1rem; columns: 2; }
+    .guide-toc a { color: var(--text-dim); text-decoration: none; font-size: 12.5px; line-height: 1.9; }
+    .guide-toc a:hover { color: var(--cyan); }
+    .guide-links { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.4rem 0 0.6rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-SYNTH — USER GUIDE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a><span class="sep">/</span><span class="current">Guide</span>
+          </nav>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="reference.html">Module Reference</a>
+          <a class="btn btn-secondary" href="reference.pdf">PDF</a>
+        </div>
+      </div>
+    </header>
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>zpwr-synth</h2>
+      <p class="guide-lede">Fully modular patch-graph synthesizer —
+build each voice from primitive blocks.</p>
+      <div class="guide-links">
+        <a class="btn btn-secondary" href="reference.html">Browse all modules ↗</a>
+        <a class="btn btn-secondary" href="reference.pdf">Full reference (PDF) ↗</a>
+      </div>
+      <nav class="guide-toc"><ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#getting-started" id="toc-getting-started">Getting
+started</a></li>
+<li><a href="#the-voice-graph" id="toc-the-voice-graph">The voice
+graph</a></li>
+<li><a href="#node-types" id="toc-node-types">Node types</a></li>
+<li><a href="#the-interface" id="toc-the-interface">The
+interface</a></li>
+<li><a href="#modulation" id="toc-modulation">Modulation</a></li>
+<li><a href="#gain-staging" id="toc-gain-staging">Gain staging</a></li>
+<li><a href="#stereo-stereo-lock" id="toc-stereo-stereo-lock">Stereo
+&amp; stereo lock</a></li>
+<li><a href="#perform-macros" id="toc-perform-macros">Perform &amp;
+macros</a></li>
+<li><a href="#presets" id="toc-presets">Presets</a></li>
+<li><a href="#playing" id="toc-playing">Playing</a></li>
+</ul></nav>
+      <div class="guide-body">
+<h1 id="overview">Overview</h1>
+<p>zpwr-synth is a <strong>fully modular patch-graph
+synthesizer</strong>. Each voice is not a fixed signal path but a free
+patch graph you build from oscillators, filters, envelopes, modulators
+and shapers — the same wire-anything engine as zpwr-fx, made polyphonic.
+Stack up to <strong>16 layers</strong>, each its own voice pool, route
+any source to any parameter through the mod matrix, and run the whole
+thing into a master + 2-aux <strong>FX-bus rack</strong> carrying the
+full shared audio-effects pack. It runs as VST3, AU, CLAP and Standalone
+on macOS, Linux and Windows.</p>
+<h1 id="getting-started">Getting started</h1>
+<ol type="1">
+<li>Open the plugin on an instrument track and play a note (the
+on-screen keyboard is at the bottom, or use the QWERTY home row — click
+a key once to focus, then type).</li>
+<li>Toggle <strong>⚡ EZ MODE</strong>. It lays down a complete playable
+voice — your generators feed a VCA opened by an amp envelope, into a
+filter swept by a second envelope, to the output — so any oscillator you
+add is summed straight into the sound.</li>
+<li>Press <strong>+ ADD BLOCK</strong> to add oscillators, filters and
+modulators, then drag output jacks onto input jacks to wire your own
+voice.</li>
+<li>Double-click a block for its detail panel — parameters, unison, and
+modulation routing.</li>
+</ol>
+<p><strong>INIT</strong> unplugs every cable and modulation route while
+keeping the blocks; <strong>🗑</strong> blanks the patch.</p>
+<h1 id="the-voice-graph">The voice graph</h1>
+<p>Every voice is a patch of <strong>nodes</strong>, each with a type,
+inputs, up to eight parameters and one output. Generators read the
+played <strong>Note</strong>, <strong>Gate</strong> and
+<strong>Velocity</strong> directly, so a single patch definition plays
+polyphonically across the voice pool. The two outputs select the
+left/right sources that feed the layer.</p>
+<p>Every oscillator (Osc, Wt, Supersaw, FM, Sub, Sync, Additive) has a
+<strong>Voices</strong> unison control (1–11) plus
+<strong>Detune</strong> in cents — detuned copies summed and
+loudness-normalised; <code>Voices = 1</code> is classic mono. A
+first-class <strong>Trigger</strong> source (a one-sample impulse on
+each note-on) sits alongside Note / Gate / Velocity for modular
+routing.</p>
+<h1 id="node-types">Node types</h1>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Node</th>
+<th>Role</th>
+<th>Key params</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Osc</strong></td>
+<td>analog oscillator (note-driven)</td>
+<td>wave, octave, fine, PW</td>
+</tr>
+<tr>
+<td><strong>Wt</strong></td>
+<td>wavetable oscillator</td>
+<td>table, position, octave, fine</td>
+</tr>
+<tr>
+<td><strong>Supersaw</strong></td>
+<td>7 detuned saws (JP-8000 style)</td>
+<td>octave, detune, mix</td>
+</tr>
+<tr>
+<td><strong>FM</strong></td>
+<td>2-operator phase-modulation sine</td>
+<td>ratio, index, octave</td>
+</tr>
+<tr>
+<td><strong>Karplus</strong></td>
+<td>plucked-string physical model</td>
+<td>octave, damping, feedback</td>
+</tr>
+<tr>
+<td><strong>Additive</strong></td>
+<td>summed sine harmonics</td>
+<td>partials, rolloff, odd/even</td>
+</tr>
+<tr>
+<td><strong>Sync</strong></td>
+<td>hard-sync sawtooth</td>
+<td>tune, sync ratio, octave</td>
+</tr>
+<tr>
+<td><strong>ChordOsc</strong></td>
+<td>one note → a 3-saw chord</td>
+<td>type, octave, detune</td>
+</tr>
+<tr>
+<td><strong>Vector</strong></td>
+<td>4-source XY-morph oscillator (Prophet-VS)</td>
+<td>octave, X, Y, detune</td>
+</tr>
+<tr>
+<td><strong>HardKick</strong></td>
+<td>hardstyle kick (pitch-sweep + tanh drive)</td>
+<td>tune, punch, psweep, decay, drive</td>
+</tr>
+<tr>
+<td><strong>Screech</strong></td>
+<td>hardstyle screech lead (saws → drive → formant)</td>
+<td>octave, detune, drive, formant</td>
+</tr>
+<tr>
+<td><strong>Hoover</strong></td>
+<td>Alpha-Juno hoover / Mentasm</td>
+<td>octave, PWM, chorus, sweep</td>
+</tr>
+<tr>
+<td><strong>Reese</strong></td>
+<td>DnB / neurofunk Reese bass</td>
+<td>octave, detune, voices, tone, drive</td>
+</tr>
+<tr>
+<td><strong>Sub</strong></td>
+<td>sub-oscillator below the note</td>
+<td>octave, wave, level</td>
+</tr>
+<tr>
+<td><strong>Noise</strong></td>
+<td>white / pink noise source</td>
+<td>color, level</td>
+</tr>
+<tr>
+<td><strong>Sample / Granular</strong></td>
+<td>sample playback / granular</td>
+<td>slot, start, size, rate</td>
+</tr>
+<tr>
+<td><strong>Env</strong></td>
+<td>ADSR envelope (gate-driven)</td>
+<td>A, D, S, R</td>
+</tr>
+<tr>
+<td><strong>VCA</strong></td>
+<td><code>in1 × in2</code> (audio × CV)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Filter</strong></td>
+<td>TPT state-variable</td>
+<td>cutoff, reso, mode, mod</td>
+</tr>
+<tr>
+<td><strong>DiodeLadder</strong></td>
+<td>4-pole diode-ladder LP (303 grit)</td>
+<td>cutoff, reso, mod, drive</td>
+</tr>
+<tr>
+<td><strong>Folder</strong></td>
+<td>sine wavefolder (west-coast)</td>
+<td>fold, bias, mix</td>
+</tr>
+<tr>
+<td><strong>Waveshaper</strong></td>
+<td>4-curve shaper</td>
+<td>drive, shape, mix</td>
+</tr>
+<tr>
+<td><strong>Crusher</strong></td>
+<td>bit + sample-rate reduction</td>
+<td>bits, downsample, mix</td>
+</tr>
+<tr>
+<td><strong>Glide</strong></td>
+<td>portamento on the note CV</td>
+<td>time</td>
+</tr>
+<tr>
+<td><strong>SampleHold</strong></td>
+<td>clocked sample-and-hold CV</td>
+<td>rate, glide</td>
+</tr>
+<tr>
+<td><strong>StepLFO</strong></td>
+<td>stepped LFO (stair / random S&amp;H)</td>
+<td>rate, steps, shape, smooth</td>
+</tr>
+<tr>
+<td><strong>NoiseLFO</strong></td>
+<td>coloured-noise CV + S&amp;H</td>
+<td>rate, color, depth</td>
+</tr>
+<tr>
+<td><strong>Scaler</strong></td>
+<td>scale / offset / curve a CV</td>
+<td>scale, offset, curve</td>
+</tr>
+<tr>
+<td><strong>Delay / LFO / RingMod / Drive / Gain / Mixer</strong></td>
+<td>shaping + modulation</td>
+<td>per-type</td>
+</tr>
+</tbody>
+</table>
+<h1 id="the-interface">The interface</h1>
+<ul>
+<li><strong>Patch</strong> — the node grid with drag-to-wire cables, the
+macro soft-key strip (<code>+</code> / <code>−</code> to add or remove;
+16 active by default), and the <strong>INIT</strong>,
+<strong>🗑</strong>, <strong>⚡ EZ MODE</strong>, <strong>Stereo</strong>
+and <strong>Stereo Lock</strong> controls. Double-click a block for its
+detail modal.</li>
+<li><strong>Perform</strong> — a play surface with no patching (see
+below).</li>
+<li><strong>Settings</strong> — master in/out and bypass, <strong>Auto
+Gain Stage</strong> and target, the brickwall limiter, and the rest of
+the audio-engine settings.</li>
+</ul>
+<h1 id="modulation">Modulation</h1>
+<p>Modulation is the patching itself: any LFO or envelope node output,
+or any macro soft key, patched into a node input — or mod-routed to a
+parameter — is a modulation connection. The host-automatable parameters
+are the <strong>soft keys</strong> (an expandable pool, 16 active by
+default) plus master in / out / bypass; the patch itself is saved as
+plugin state.</p>
+<h1 id="gain-staging">Gain staging</h1>
+<p>Two per-block Settings (both <strong>on by default</strong>) keep the
+signal between blocks from clipping no matter how hot the cable gains
+are, inside every voice graph and the FX buses:</p>
+<ul>
+<li><strong>Auto Gain Stage</strong> rides levels with a fast-attack /
+slow-release follower toward the <strong>Auto-Gain Target</strong>
+ceiling.</li>
+<li><strong>Soft Clip</strong> is the guarantee — an instant tanh bound
+at the same ceiling, catching transients the follower would miss,
+saturating gently rather than clipping.</li>
+</ul>
+<p>Turn either off in Settings for raw gain; the master
+<strong>Brickwall Limiter</strong> is a separate final ceiling.</p>
+<h1 id="stereo-stereo-lock">Stereo &amp; stereo lock</h1>
+<p><strong>Stereo</strong> mirrors every block into an independent
+right-channel clone (a dual-mono voice per side); knobs stay independent
+so you can dial width. <strong>🔒 Lock</strong> (shown when Stereo is
+on) keeps the two channels in sync — moving a knob on either side moves
+its clone by the <em>same delta</em>, so the L/R offset is preserved
+rather than reset, and the link is bidirectional. Locked clone blocks
+are dimmed.</p>
+<h1 id="perform-macros">Perform &amp; macros</h1>
+<p>The <strong>Perform</strong> tab is a macros-and-pads surface for
+live play, driving only host-automatable parameters so it works
+editor-closed and records as automation:</p>
+<ul>
+<li><strong>Preset Morph</strong> — a 4-corner XY pad bilinearly
+interpolating between four corner presets (A/B/C/D); <strong>🎲</strong>
+fills all four at random.</li>
+<li><strong>Orb</strong> — drag the puck where the <em>angle</em>
+selects one of eight randomised scenes and the <em>distance</em> scales
+intensity; <strong>🎲</strong> rolls fresh scenes, <strong>⏺</strong>
+records the gesture and <strong>▶</strong> loops it back through the
+macro parameters.</li>
+<li><strong>XY macro pads</strong> — each drives a pair of soft keys,
+with per-pad <strong>HOLD</strong> (leave the dot) /
+<strong>SPRING</strong> (snap back to centre).</li>
+<li><strong>Macro knobs</strong>, plus eight <strong>Snapshots</strong>
+of the whole macro surface (click empty to save, filled to recall,
+right-click to clear) and a <strong>🎲 Randomize</strong>.</li>
+<li><strong>Scale / key</strong> quantize and a <strong>Chord</strong>
+stacker (Oct / 5th / Maj / Min / Maj7 / Min7 / Sus4 / Power), an
+on-screen keyboard with pitch-bend and mod wheels, and the
+<strong>ARP</strong> controls — mode (Up / Down / Up-Down / Random /
+As-Played), rate (<code>1/4</code>…<code>1/16T</code>) and
+<strong>Latch</strong>.</li>
+<li><strong>MIDI In</strong> toggles — <strong>Program</strong> (respond
+to Program Change) and <strong>Bank</strong> (respond to Bank Select
+CC0/CC32), both on by default.</li>
+</ul>
+<h1 id="presets">Presets</h1>
+<p><strong>256 factory voices</strong> ship across <strong>Factory
+1</strong> and <strong>Factory 2</strong> (128 each), with category
+prefixes — <code>BA</code> bass, <code>LD</code> lead, <code>PD</code>
+pad, <code>KY</code> keys, <code>PL</code> pluck, <code>BR</code> brass,
+<code>BE</code> bell, <code>ST</code> strings, <code>DR</code> perc,
+<code>SEQ</code> / <code>FX</code> — spanning subtractive, FM, additive,
+supersaw, wavetable, vector, sync and Karplus voices. Three further
+genre banks are designed from documented production techniques:</p>
+<ul>
+<li><strong>Trance</strong> — stacked supersaw pluck-leads, slow-swell
+pads, a <code>1/16</code> square-LFO trance gate, and saw-LFO
+sidechain-pumped rolling bass.</li>
+<li><strong>Hard Techno</strong> — Drumcode-style FM stabs with a fully
+env-swept dirty low-pass, screaming diode 303 acid, detuned
+reese/rumble, hoover and driven lead-bass.</li>
+<li><strong>Schranz</strong> — bitcrushed/folded metallic stabs,
+filtered-noise sweeps, <code>1/16</code> gated-noise loops, two-octave
+siren wails and distorted hypnotic pulses (~160 BPM).</li>
+</ul>
+<p>Every preset carries facet tags (Type / Character / Style) so the
+browser’s facets are fully populated, and ships with named macro knobs
+plus mod-wheel / velocity routing so it loads playable. Your own patches
+save and load from the preset manager. Factory voices can also be
+exported as Native Kontrol Standard <code>.nksf</code> presets with a
+Komplete Kontrol audio preview for hardware browsing.</p>
+<h1 id="playing">Playing</h1>
+<p>The on-screen keyboard sits at the bottom of the editor; the computer
+keyboard’s home row (<code>A W S E D F T G Y H U J K …</code>) plays a
+chromatic octave around C4. Click a key once to give the keyboard focus,
+then type.</p>
+      </div>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
