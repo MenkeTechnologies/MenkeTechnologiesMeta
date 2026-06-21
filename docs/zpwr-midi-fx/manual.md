@@ -373,6 +373,30 @@ playing notes, you're playing the chord voicings and dynamics with your fingers.
 - **Presets via program change.** Step through your patches with MIDI Program Change for live set
   changes (toggle in the Perform controls).
 
+# Songwriting with MIDI effects
+
+MIDI effects aren't just for live tricks — they're a songwriting tool that suggests ideas you wouldn't
+play by hand.
+
+- **Find a progression.** Set a `Scale` to your key and play single notes through a `Chord` module,
+  trying different chord types. The voicings the module produces will suggest progressions — let the
+  tool play the harmony while you hunt for the root movement.
+- **Generate a hook.** Run `Random → Scale → Arp` and listen; when a phrase catches your ear, freeze it
+  by recording the MIDI output into your DAW and editing from there. The generator is a brainstorming
+  partner, not the final word.
+- **Build tension and release.** Automate an `Arp` division from `1/8` to `1/16` to `1/32` over a bar
+  (via a soft key) for a build; drop a `SeqRatchet` count up for a fill; pull a `Chance` probability
+  down to thin a busy section and back up for the drop.
+- **Vary a repeated part.** A looped phrase gets boring; insert `Humanize`, a low-probability
+  `RandOctave`, or a slow `Transpose` automation so the repeat is never identical.
+- **Counterpoint from one line.** Split your melody to a second branch through `Echo → Transpose`
+  (an octave or a fifth) and merge — instant two-part writing.
+- **Capture and commit.** Once a generative or harmonised part is right, record the plugin's MIDI output
+  to a clip and turn the effect off, so the part is fixed and editable like any other MIDI.
+
+The workflow that works: jam with the generators and harmonisers to *discover* parts, then capture the
+good ones as plain MIDI and arrange them. The plugin is the most productive as an idea machine.
+
 # Tips & best practices
 
 - Order matters. Put **Scale** *after* harmony modules so every generated note is locked to key, and

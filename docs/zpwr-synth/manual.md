@@ -429,6 +429,35 @@ A good habit: get the voice sounding right as a single note first, then decide w
 come from unison (inside the voice) or a layer (a whole parallel timbre), and push shared effects to
 the bus.
 
+# A patch, built step by step
+
+To tie the concepts together, here is one voice built from an empty patch, with the reasoning at each
+step — a "growling wavetable bass."
+
+1. **The core.** Add a `Wt` oscillator. Set it an octave or two down for bass. Play a note — you hear a
+   static wavetable tone. Make it the output for now so you can hear each step.
+2. **Shape the level.** Add an `Env` and a `VCA`. Wire `Wt → VCA In 1` and `Env → VCA In 2`; make the
+   VCA the output. Set a fast attack, medium decay, low sustain, short release — a plucky bass shape.
+   Now each note articulates instead of dronning.
+3. **Carve the tone.** Insert a `DiodeLadder` between the `Wt` and the `VCA`. Set the cutoff low with
+   some resonance — darker, with growl. Drive the ladder a touch for grit.
+4. **Add the growl.** Add an `LFO`, sync it to the beat at `1/16`, and route it to the `Wt`'s
+   **position**. The timbre now talks rhythmically — the defining wavetable-bass move. Route a second,
+   slower `LFO` to the ladder cutoff for extra movement.
+5. **Punch the attack.** Add a second `Env` (fast decay) and route it to the ladder cutoff with a small
+   amount, so each note opens bright then closes — punch.
+6. **Width and weight.** Set the `Wt`'s **Voices** to 3 with a little **Detune** for thickness, and add
+   a `Sub` oscillator summed in for low-end weight.
+7. **Make it playable.** Add a `Glide` on the note for slides between notes, and route **velocity** to
+   the ladder cutoff so harder hits are brighter. Assign the two LFO depths and the cutoff to **soft
+   keys** so you can perform them.
+8. **Polish on the bus.** Send a little to a reverb on the FX-bus rack, and put a gentle `Drive` or
+   `Saturator` on the master bus for cohesion.
+
+That's a complete, expressive, performable bass — and every step generalises: pick a core, shape the
+amp, carve with a filter, add movement, punch the attack, add width, make it playable, polish on the
+bus.
+
 # Tips & best practices
 
 - Start from **⚡ EZ MODE** or a factory voice near your target and modify, rather than building from

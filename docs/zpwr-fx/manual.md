@@ -725,6 +725,67 @@ delay mix, drive, a morph), assign each to a named soft key, and from then on yo
 those macros and the Perform surfaces — the patch underneath stays fixed while the performance lives
 in automation.
 
+# Effects by genre
+
+Different genres lean on different effect signatures. Here's where to start for each, and which blocks
+build the sound.
+
+**Dub / reggae.** Spring reverb and tape-style delay are everything: `Spring` + `DubDelay` with high,
+filtered feedback. Ride the delay feedback and a band-pass `Filter` on soft keys for live "throws."
+
+**Shoegaze.** Wash and pitch: layered `Reverb`/`Shimmer`, a `Flanger` or `Chorus` for movement, and a
+modeled fuzz (`Big Muff`-style) for the wall of guitar.
+
+**Techno / minimal.** Movement and space from short tempo-synced delays, a rhythmic `Filter` swept by
+an `LFO` or a trance gate (`LFO → VCA`), and a tight `Plate` reverb. Subtle `Bitcrush` for grit.
+
+**Hip-hop / lo-fi.** Character over cleanliness: `Lofi`, `BBDDelay` with wow, a band-limiting `Filter`,
+vinyl-style noise, and gentle `Drive`. The worn, warbling bed under the beat.
+
+**Ambient.** Long, evolving space: `ErbeVerb`/`Massive` reverbs, `GrainDelay`/`Morphagene` clouds,
+`SpecBlur` for smear, chaos-modulated filters, and `AutoPan` for motion. Often no dry signal at all.
+
+**Pop / vocal production.** Polish: a channel-strip chain (`Gate` → `Compressor` → `EQ`), `H910`/
+`MicroShift` doubling for width, a tasteful `Plate` reverb and a slap `Delay`, `DeEsser` for sibilance.
+
+**Metal / rock guitar.** `AmpSim` → `CabSim` is the core; add a `Gate` before for tightness, an
+`EQ`/`ParaEQ` to carve, and a short reverb. Modeled pedals (`TS808` to push the amp, `RAT` for grind)
+in front.
+
+**EDM / future bass.** Big and loud: `OTT` multiband squash, wide `StereoWidth`/`Imager`, sidechain
+`Pump`, `Shimmer` reverb, and pitch effects (`Octavox`) on leads.
+
+# Troubleshooting
+
+**No sound at all.** The output jack needs an incoming cable, and the chain must trace back to the
+input or a source. Press **⚡ EZ WIRE** to auto-route, or check the master Bypass in Settings.
+
+**Sound, but no effect.** Check the effect's **Mix** parameter (a dry-only mix passes the input
+untouched), and confirm the effect is actually in the signal path between input and output, not on a
+dead-end branch.
+
+**It's clipping / distorting unintentionally.** Turn on **Auto Gain Stage** and **Soft Clip**
+(Settings), lower the cable **levels** feeding the hot stages, or pull Master Out down. Watch the cable
+glow for the blown-out stage.
+
+**A feedback patch runs away or screams.** Lower the feedback cable's **level**, and put a `Filter` and
+a `Drive` in the loop to tame and stabilise the resonance. Self-oscillation lives right below
+runaway — back off slightly.
+
+**Modulation isn't doing anything.** Check the mod **depth** (zero depth = no effect) and that the mod
+**source** is actually moving (an LFO needs a non-zero rate; an envelope needs a trigger). Depth is in
+the parameter's units, so a tiny depth on a wide-range parameter can be inaudible.
+
+**The plugin sounds different after reopening the project.** It shouldn't — the whole patch and all
+parameters save with the host project. If a preset looks wrong, check whether an incoming Program
+Change is switching it (toggle Program Change off in Settings).
+
+**Stereo sounds collapsed or mono.** With **Stereo** on and **Lock** on at zero offset you get `L = R`
+(intentional mono-in-stereo); turn Lock off and offset the two sides for width.
+
+**High CPU.** Feedback loops, many layers, granular and convolution blocks, and large reverbs are the
+expensive ones. Bounce a heavy patch, or move shared effects to fewer instances.
+
 # Tips & best practices
 
 - Start with **⚡ EZ WIRE** to get sound, then rewire piece by piece — it is faster than building from
