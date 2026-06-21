@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="traderview engineering report — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 8 library crates + Tauri shell, 919,580 Rust LOC + 282,400 JS LOC. Tauri v2 + embedded Postgres OR axum + external Postgres + JWT. 123 tables, 104 migrations, 2,644 routes, 1330 view modules, 1325 launcher tiles, 13 broker importers, live halts + catalysts + Finnhub scanner.">
+  <meta name="description" content="traderview engineering report — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 8 library crates + Tauri shell, 943,870 Rust LOC + 299,955 JS LOC. Tauri v2 + embedded Postgres OR axum + external Postgres + JWT. 125 tables, 110 migrations, 3,095 routes, 1424 view modules, 1418 launcher tiles, 13 broker importers, live halts + catalysts + Finnhub scanner.">
   <title>TraderView &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,7 +89,7 @@
             <a href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.78;">
-            Full desktop trading suite &middot; replaces TraderVue + DayTradeDash + StockInvest ($2,604/yr saved) &middot; Rust workspace, 8 library crates + Tauri shell &middot; 919,580 Rust LOC + 282,400 JS LOC &middot; 123 tables, 104 migrations, 2,644 routes, 1330 view modules, 1325 launcher tiles &middot; 13 broker importers &middot; live halts + catalysts + Finnhub scanner
+            Full desktop trading suite &middot; replaces TraderVue + DayTradeDash + StockInvest ($2,604/yr saved) &middot; Rust workspace, 8 library crates + Tauri shell &middot; 943,870 Rust LOC + 299,955 JS LOC &middot; 125 tables, 110 migrations, 3,095 routes, 1424 view modules, 1418 launcher tiles &middot; 13 broker importers &middot; live halts + catalysts + Finnhub scanner
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -107,30 +107,30 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY            -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">traderview is a full desktop trading suite that ships as <strong>two binaries from one workspace</strong>: a Tauri v2 desktop app with embedded PostgreSQL for single-user offline use, and an axum web server with external Postgres + argon2 + JWT for multi-user hosted deployment. Both binaries depend on six shared library crates (<code>core / db / import / web / expense / ocr</code>) and a vanilla JS + uPlot frontend with no bundler. The data model treats broker fills as atoms (one row per <code>execution</code>) and derives <code>trades</code> via deterministic FIFO roll-up — re-running it is always safe. Thirteen broker importers cover Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, plus a Generic column-mapping wizard for anything else. Live streams (Nasdaq halts, SEC EDGAR + PR wires for catalysts, Finnhub WebSocket scanner, Webull read-only broker) push through bounded in-process stores to browsers via WebSocket. <strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) — $2,604/yr saved.</strong></p>
+      <p class="tutorial-subtitle">traderview is a full desktop trading suite that ships as <strong>two binaries from one workspace</strong>: a Tauri v2 desktop app with embedded PostgreSQL for single-user offline use, and an axum web server with external Postgres + argon2 + JWT for multi-user hosted deployment. Both binaries depend on eight shared library crates (<code>core / db / import / web / expense / ocr / tax / stryke</code>) and a vanilla JS + uPlot frontend with no bundler. The data model treats broker fills as atoms (one row per <code>execution</code>) and derives <code>trades</code> via deterministic FIFO roll-up — re-running it is always safe. Thirteen broker importers cover Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, plus a Generic column-mapping wizard for anything else. Live streams (Nasdaq halts, SEC EDGAR + PR wires for catalysts, Finnhub WebSocket scanner, Webull read-only broker) push through bounded in-process stores to browsers via WebSocket. <strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) — $2,604/yr saved.</strong></p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">919,580</div><div class="stat-label">Rust Lines</div></div>
-        <div class="stat-card"><div class="stat-val accent">6+1</div><div class="stat-label">Library Crates + Tauri Shell</div></div>
-        <div class="stat-card"><div class="stat-val green">120</div><div class="stat-label">Postgres Tables</div></div>
-        <div class="stat-card"><div class="stat-val">102</div><div class="stat-label">Migrations</div></div>
-        <div class="stat-card"><div class="stat-val">2,644</div><div class="stat-label">HTTP API Routes</div></div>
-        <div class="stat-card"><div class="stat-val magenta">1330</div><div class="stat-label">Frontend View Modules</div></div>
-        <div class="stat-card"><div class="stat-val accent">1325</div><div class="stat-label">Launcher Tiles</div></div>
-        <div class="stat-card"><div class="stat-val">282,400</div><div class="stat-label">JS Frontend Lines</div></div>
-        <div class="stat-card"><div class="stat-val">5,600</div><div class="stat-label">Frontend CSS Lines</div></div>
+        <div class="stat-card"><div class="stat-val">943,870</div><div class="stat-label">Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val accent">8+1</div><div class="stat-label">Library Crates + Tauri Shell</div></div>
+        <div class="stat-card"><div class="stat-val green">125</div><div class="stat-label">Postgres Tables</div></div>
+        <div class="stat-card"><div class="stat-val">110</div><div class="stat-label">Migrations</div></div>
+        <div class="stat-card"><div class="stat-val">3,095</div><div class="stat-label">HTTP API Routes</div></div>
+        <div class="stat-card"><div class="stat-val magenta">1424</div><div class="stat-label">Frontend View Modules</div></div>
+        <div class="stat-card"><div class="stat-val accent">1418</div><div class="stat-label">Launcher Tiles</div></div>
+        <div class="stat-card"><div class="stat-val">299,955</div><div class="stat-label">JS Frontend Lines</div></div>
+        <div class="stat-card"><div class="stat-val">5,677</div><div class="stat-label">Frontend CSS Lines</div></div>
         <div class="stat-card"><div class="stat-val green">13</div><div class="stat-label">Broker Importers</div></div>
         <div class="stat-card"><div class="stat-val magenta">25</div><div class="stat-label">Postgres Enum Types</div></div>
-        <div class="stat-card"><div class="stat-val">177</div><div class="stat-label">Indexes</div></div>
+        <div class="stat-card"><div class="stat-val">179</div><div class="stat-label">Indexes</div></div>
       </div>
 
       <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution — 919,580 Rust + 288,000 frontend = 1,207,580 total lines (excluding SQL + lib + vendored assets)</p>
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution — 943,870 Rust + 305,632 frontend = 1,249,502 total lines (excluding SQL + lib + vendored assets)</p>
         <div class="bar-wrap" style="height:26px;">
-          <div class="bar-fill cyan" style="width:76.2%;"></div>
-          <span class="bar-pct" style="font-size:12px;">919,580 Rust (76.2%) &middot; 282,400 JS (23.4%) &middot; 5,600 CSS (0.5%)</span>
+          <div class="bar-fill cyan" style="width:75.5%;"></div>
+          <span class="bar-pct" style="font-size:12px;">943,870 Rust (75.5%) &middot; 299,955 JS (24.0%) &middot; 5,677 CSS (0.5%)</span>
         </div>
-        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Rust dominates because both the desktop and web binaries import the same library crates plus 6 shared workspace members (no duplication). Frontend is vanilla ES modules with zero npm, zero bundler, zero framework — one render function per view, all routed by hash dispatch.</p>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Rust dominates because both the desktop and web binaries import the same library crates plus 8 shared workspace members (no duplication). Frontend is vanilla ES modules with zero npm, zero bundler, zero framework — one render function per view, all routed by hash dispatch.</p>
       </div>
 
       <hr class="section-rule">
@@ -139,7 +139,7 @@
       <!-- SECTION 2: CRATE BREAKDOWN              -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">~</span>CRATE BREAKDOWN</h2>
-      <p class="tutorial-subtitle">Seven workspace members. Six library crates (<code>core</code> + <code>db</code> + <code>import</code> + <code>web</code> + <code>expense</code> + <code>ocr</code>) and one binary (<code>src-tauri</code> a.k.a. <code>traderview-desktop</code> for the Tauri v2 desktop app, with <code>traderview-web</code> also exposing a <code>server</code> bin for the web target). Dependencies point inward — nothing depends on the binaries.</p>
+      <p class="tutorial-subtitle">Nine workspace members. Eight library crates (<code>core</code> + <code>db</code> + <code>import</code> + <code>web</code> + <code>expense</code> + <code>ocr</code> + <code>tax</code> + <code>stryke</code>) and one binary (<code>src-tauri</code> a.k.a. <code>traderview-desktop</code> for the Tauri v2 desktop app, with <code>traderview-web</code> also exposing a <code>server</code> bin for the web target). Dependencies point inward — nothing depends on the binaries.</p>
 
       <table class="file-table">
         <thead>
@@ -154,73 +154,73 @@
         <tbody>
           <tr>
             <td><code>traderview-core</code></td>
-            <td class="num">273,893</td>
-            <td class="num">29.8%</td>
-            <td><div class="bar-wrap"><div class="bar-fill cyan" style="width:29.8%;"></div></div></td>
+            <td class="num">288,931</td>
+            <td class="num">30.6%</td>
+            <td><div class="bar-wrap"><div class="bar-fill cyan" style="width:30.6%;"></div></div></td>
             <td>Domain types &middot; FIFO roll-up &middot; statistics (R-multiple / SQN / Sharpe / Sortino) &middot; position sizing &middot; Monte Carlo &middot; stryke-JIT backtest engine &middot; walk-forward &middot; sentiment scoring &middot; custom indicator AST</td>
           </tr>
           <tr>
             <td><code>traderview-db</code></td>
-            <td class="num">82,814</td>
-            <td class="num">9.0%</td>
-            <td><div class="bar-wrap"><div class="bar-fill magenta" style="width:9.0%;"></div></div></td>
-            <td>sqlx pool factory + 104 migrations &middot; embedded PostgreSQL lifecycle (stale-PID cleanup, persisted password) &middot; ~50 repo modules &middot; live stores for halts / catalysts / ticks &middot; Yahoo / FINRA / EDGAR / Finnhub / WSB / StockTwits / CoinGecko pollers</td>
+            <td class="num">87,714</td>
+            <td class="num">9.3%</td>
+            <td><div class="bar-wrap"><div class="bar-fill magenta" style="width:9.3%;"></div></div></td>
+            <td>sqlx pool factory + 110 migrations &middot; embedded PostgreSQL lifecycle (stale-PID cleanup, persisted password) &middot; ~50 repo modules &middot; live stores for halts / catalysts / ticks &middot; Yahoo / FINRA / EDGAR / Finnhub / WSB / StockTwits / CoinGecko pollers</td>
           </tr>
           <tr>
             <td><code>traderview-import</code></td>
-            <td class="num">2,071</td>
-            <td class="num">0.2%</td>
-            <td><div class="bar-wrap"><div class="bar-fill yellow" style="width:0.2%;"></div></div></td>
+            <td class="num">2,616</td>
+            <td class="num">0.3%</td>
+            <td><div class="bar-wrap"><div class="bar-fill yellow" style="width:0.3%;"></div></div></td>
             <td>13 broker parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue — plus a Generic <code>ColumnMap</code> parser. <code>Parser</code> trait + column-mapping wizard for unknown sources.</td>
           </tr>
           <tr>
             <td><code>traderview-web</code></td>
-            <td class="num">86,103</td>
-            <td class="num">9.4%</td>
-            <td><div class="bar-wrap"><div class="bar-fill green" style="width:9.4%;"></div></div></td>
-            <td>axum 0.7 router &middot; 2,644 routes split across 177 route files &middot; argon2 + JWT auth &middot; multipart upload &middot; WebSocket endpoints for halts / catalysts / live ticks / Webull &middot; request/response logging middleware &middot; browser-error sink</td>
+            <td class="num">87,554</td>
+            <td class="num">9.3%</td>
+            <td><div class="bar-wrap"><div class="bar-fill green" style="width:9.3%;"></div></div></td>
+            <td>axum 0.7 router &middot; 3,095 routes split across 180 route files &middot; argon2 + JWT auth &middot; multipart upload &middot; WebSocket endpoints for halts / catalysts / live ticks / Webull &middot; request/response logging middleware &middot; browser-error sink</td>
           </tr>
           <tr>
             <td><code>traderview-expense</code></td>
-            <td class="num">462,915</td>
-            <td class="num">50.3%</td>
-            <td><div class="bar-wrap"><div class="bar-fill cyan" style="width:50.3%;"></div></div></td>
+            <td class="num">462,973</td>
+            <td class="num">49.1%</td>
+            <td><div class="bar-wrap"><div class="bar-fill cyan" style="width:49.1%;"></div></div></td>
             <td>Trading-expense tracker &middot; categorization rules engine &middot; OCR-pipeline integration &middot; Schedule-C report generator &middot; multi-account reconciliation</td>
           </tr>
           <tr>
             <td><code>traderview-ocr</code></td>
-            <td class="num">5,119</td>
+            <td class="num">5,243</td>
             <td class="num">0.6%</td>
             <td><div class="bar-wrap"><div class="bar-fill yellow" style="width:0.6%;"></div></div></td>
             <td>Receipt OCR via system <code>tesseract</code> binary &middot; image preprocessing (binarize, deskew) &middot; merchant / amount / date extraction for the expense matcher</td>
           </tr>
           <tr>
             <td><code>traderview-tax</code></td>
-            <td class="num">5,201</td>
-            <td class="num">0.6%</td>
-            <td><div class="bar-wrap"><div class="bar-fill magenta" style="width:0.6%;"></div></div></td>
+            <td class="num">6,583</td>
+            <td class="num">0.7%</td>
+            <td><div class="bar-wrap"><div class="bar-fill magenta" style="width:0.7%;"></div></div></td>
             <td>Tax computation crate &middot; wage / cap-gains / Schedule-C lines &middot; multi-state nexus &middot; fed/state bracketing &middot; backs the tax wizard view</td>
           </tr>
           <tr>
             <td><code>traderview-stryke</code></td>
-            <td class="num">638</td>
+            <td class="num">889</td>
             <td class="num">0.1%</td>
             <td><div class="bar-wrap"><div class="bar-fill green" style="width:0.1%;"></div></div></td>
             <td>Host bridge for stryke-language lifecycle hooks &middot; runs the embedded stryke binary as a sandboxed subprocess (5s timeout, output cap) &middot; validates emitted effects (tag / note / alert / webhook / journal) against each hook's capability grant &middot; no compile-time fusevm dependency</td>
           </tr>
           <tr>
             <td><code>src-tauri</code> (<code>traderview-desktop</code>)</td>
-            <td class="num">826</td>
+            <td class="num">1,367</td>
             <td class="num">0.1%</td>
             <td><div class="bar-wrap"><div class="bar-fill pink" style="width:0.1%;"></div></div></td>
             <td>Tauri v2 shell &middot; worker-thread bring-up of embedded PG → migrations → axum &middot; native-dialog on failure &middot; <code>tracing-appender</code> non-blocking file log + panic hook &middot; <code>Embedded</code> handle held across <code>axum::serve</code></td>
           </tr>
           <tr class="total-row">
             <td>Total</td>
-            <td class="num">919,580</td>
+            <td class="num">943,870</td>
             <td class="num">100%</td>
             <td></td>
-            <td>Plus 282,400 LOC frontend JS + 5,600 LOC CSS (no bundler, no npm).</td>
+            <td>Plus 299,955 LOC frontend JS + 5,677 LOC CSS (no bundler, no npm).</td>
           </tr>
         </tbody>
       </table>
@@ -285,8 +285,8 @@
       <!-- ═══════════════════════════════════════ -->
       <!-- SECTION 4: SCHEMA                       -->
       <!-- ═══════════════════════════════════════ -->
-      <h2 class="tutorial-title"><span class="step-hash">~</span>SCHEMA — 102 MIGRATIONS, 120 TABLES</h2>
-      <p class="tutorial-subtitle">Each migration adds a self-contained feature (<code>0001_initial.sql</code> → <code>0102_*.sql</code>). 120 content tables, 179 indexes, 25 PostgreSQL enum types. <code>pgcrypto</code> for <code>gen_random_uuid()</code>. Money is <code>NUMERIC(20,8)</code> everywhere. All foreign keys cascade on delete; the user is the root of every ownership chain. Grouped by domain:</p>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SCHEMA — 110 MIGRATIONS, 125 TABLES</h2>
+      <p class="tutorial-subtitle">Each migration adds a self-contained feature (<code>0001_initial.sql</code> → <code>0110_asset_class_crypto.sql</code>). 125 content tables, 179 indexes, 25 PostgreSQL enum types. <code>pgcrypto</code> for <code>gen_random_uuid()</code>. Money is <code>NUMERIC(20,8)</code> everywhere. All foreign keys cascade on delete; the user is the root of every ownership chain. Grouped by domain:</p>
 
       <table class="file-table">
         <thead>
@@ -313,7 +313,7 @@
           <tr><td><strong>Settings &amp; AI</strong></td><td class="num">4</td><td><code>user_settings</code>, <code>ai_settings</code>, <code>ai_journal_cache</code>, <code>dashboards</code></td></tr>
           <tr><td><strong>Expenses + OCR</strong></td><td class="num">5</td><td><code>expense_accounts</code>, <code>expense_categories</code>, <code>expense_transactions</code>, <code>expense_rules</code>, <code>expense_receipts</code></td></tr>
           <tr><td><strong>sqlx tracker</strong></td><td class="num">1</td><td><code>_sqlx_migrations</code> (auto)</td></tr>
-          <tr class="total-row"><td>Total</td><td class="num">123</td><td>179 indexes &middot; 25 enum types &middot; 104 migrations</td></tr>
+          <tr class="total-row"><td>Total</td><td class="num">125</td><td>179 indexes &middot; 25 enum types &middot; 110 migrations</td></tr>
         </tbody>
       </table>
 
@@ -324,8 +324,8 @@
       <!-- ═══════════════════════════════════════ -->
       <!-- SECTION 5: HTTP API                     -->
       <!-- ═══════════════════════════════════════ -->
-      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>HTTP API SURFACE — 2,644 ROUTES</h2>
-      <p class="tutorial-subtitle">2,644 axum routes mounted at <code>/api/</code> across 177 route files in <code>crates/traderview-web/src/routes/</code>. Bearer-auth required on everything except <code>/health</code>, <code>/config</code>, <code>/auth/*</code>, and <code>/client-errors</code>. WebSocket endpoints expose four live feeds. Same surface served from either deploy target.</p>
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>HTTP API SURFACE — 3,095 ROUTES</h2>
+      <p class="tutorial-subtitle">3,095 axum routes mounted at <code>/api/</code> across 180 route files in <code>crates/traderview-web/src/routes/</code>. Bearer-auth required on everything except <code>/health</code>, <code>/config</code>, <code>/auth/*</code>, and <code>/client-errors</code>. WebSocket endpoints expose 15 live feeds. Same surface served from either deploy target.</p>
 
       <table class="file-table">
         <thead>
@@ -340,7 +340,7 @@
           <tr><td><strong>Trades + executions</strong></td><td class="num">~20</td><td><code>GET/POST /trades</code>, <code>POST /trades/rollup</code>, <code>POST /trades/{id}/risk</code>, <code>POST /trades/merge</code>, <code>POST /trades/bulk</code>, <code>GET/POST /executions</code></td></tr>
           <tr><td><strong>Journal + AI + reviews</strong></td><td class="num">~15</td><td><code>GET /journal/day/{day}</code>, <code>POST /journal-ai/{id}/analyze</code>, <code>GET /trade-reviews/needed/{acct}</code>, <code>GET/POST /note-templates</code></td></tr>
           <tr><td><strong>Reports (17 cuts)</strong></td><td class="num">~20</td><td><code>/reports/{overview, by-symbol, by-day-of-week, by-hour, by-hold, r-distribution, comparison, exit-efficiency, liquidity, drawdown, risk-adjusted, calendar}</code></td></tr>
-          <tr><td><strong>Live streams (WS)</strong></td><td class="num">4</td><td><code>WS /ws/halts</code>, <code>WS /ws/catalysts</code>, <code>WS /ws/ticks</code>, <code>WS /ws/webull</code></td></tr>
+          <tr><td><strong>Live streams (WS)</strong></td><td class="num">15</td><td><code>WS /ws/halts</code>, <code>/ws/catalysts</code>, <code>/ws/ticks</code>, <code>/ws/webull</code>, <code>/ws/after-hours</code>, <code>/ws/gamma-squeeze</code>, <code>/ws/breadth-divergence</code>, <code>/ws/rvol-accel</code>, <code>/ws/insider-stream</code>, <code>/ws/uoa-stream</code>, <code>/ws/squeeze</code>, <code>/ws/confluence</code>, <code>/ws/catalyst-correlations</code>, <code>/ws/sentiment-velocity</code>, <code>/ws/stryke-lsp</code></td></tr>
           <tr><td><strong>Research per-symbol</strong></td><td class="num">~10</td><td><code>/symbols/{sym}/{quote, signals, news, earnings, dividends, recommendations, insiders, fundamentals, holders}</code></td></tr>
           <tr><td><strong>Screener + scanners</strong></td><td class="num">~4</td><td><code>GET /screener/run</code>, <code>GET /screener/top</code>, <code>GET /scans/run</code> (24 Warrior / Zendoo presets)</td></tr>
           <tr><td><strong>Options + vol</strong></td><td class="num">~7</td><td><code>/options/{sym}</code>, <code>/greeks</code>, <code>/vol-surface/{sym}</code>, <code>/iv/scan</code>, <code>/iv/symbols/{sym}</code>, <code>/vol/{vix,yields,dollar}</code></td></tr>
@@ -359,7 +359,7 @@
           <tr><td><strong>Disclosures + earnings + news</strong></td><td class="num">~10</td><td><code>GET /disclosures</code>, <code>POST /disclosures/poll</code>, <code>GET /earnings/calendar</code>, <code>GET /news/recent</code>, <code>GET /news/search</code></td></tr>
           <tr><td><strong>API tokens + import sources</strong></td><td class="num">~7</td><td><code>GET/POST /api-tokens</code>, <code>PATCH /api-tokens/{id}/rate-limit</code>, <code>GET /imports/sources</code>, <code>POST /imports</code></td></tr>
           <tr><td><strong>Client error sink</strong></td><td class="num">1</td><td><code>POST /client-errors</code> — no auth; <code>window.onerror</code> + <code>unhandledrejection</code> + <code>console.error</code> funnel</td></tr>
-          <tr class="total-row"><td>Total</td><td class="num">2,644</td><td>177 route files. Frontend bindings: <code>frontend/js/api.js</code> exposes 1,744 method-bound helpers on the <code>api</code> object (some routes only used by direct fetch).</td></tr>
+          <tr class="total-row"><td>Total</td><td class="num">3,095</td><td>180 route files. Frontend bindings: <code>frontend/js/api.js</code> exposes 1,855 method-bound helpers on the <code>api</code> object (some routes only used by direct fetch).</td></tr>
         </tbody>
       </table>
 
@@ -512,9 +512,9 @@
       <!-- ═══════════════════════════════════════ -->
       <!-- SECTION 10: FRONTEND                    -->
       <!-- ═══════════════════════════════════════ -->
-      <h2 class="tutorial-title"><span class="step-hash">~</span>FRONTEND — VANILLA JS + uPlot, 1330 VIEWS</h2>
-      <p class="tutorial-subtitle">Zero npm. Zero bundler. Zero JS framework. 282,400 lines of JS across 1330 view modules + 222 supporting modules, 5,600 lines of CSS, no build step. Same files serve both deploy targets — Tauri loads them via the <code>tauri://localhost</code> custom scheme, axum serves them with <code>tower-http</code> <code>fs</code>.</p>
-      <p class="tutorial-subtitle">The 1325 launcher tiles are grouped into 9 category filters (defined in <code>frontend/js/views/launcher.js</code> <code>CATEGORIES</code>): Live Markets (41), Trading (81), Journal (12), Charts &amp; Research (151), Reports (635 — equity valuation, retirement, fixed income, real estate, accounting, small-business, rental, tax-code IRC § calculators, and business &amp; legal docs), Strategy &amp; Automation (14), Community (4), Admin &amp; Data (15), and Misc / Specialized (99). The Reports bucket now folds in the per-IRC-section tax calculators that were previously split out.</p>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>FRONTEND — VANILLA JS + uPlot, 1424 VIEWS</h2>
+      <p class="tutorial-subtitle">Zero npm. Zero bundler. Zero JS framework. 299,955 lines of JS across 1424 view modules + 222 supporting modules, 5,677 lines of CSS, no build step. Same files serve both deploy targets — Tauri loads them via the <code>tauri://localhost</code> custom scheme, axum serves them with <code>tower-http</code> <code>fs</code>.</p>
+      <p class="tutorial-subtitle">The 1418 launcher tiles are grouped into 10 category filters (defined in <code>frontend/js/views/launcher.js</code> <code>CATEGORIES</code>): Live Markets (41), Trading (126), Journal (12), Charts &amp; Research (156), Reports (678 — equity valuation, retirement, fixed income, real estate, accounting, small-business, rental, and business &amp; legal docs), Strategy &amp; Automation (14), Community (4), Admin &amp; Data (15), Tax Code (273 — one calculator per Internal Revenue Code section), and Misc / Specialized (99). The Tax Code bucket is a dedicated category for the per-IRC-section calculators.</p>
 
       <table class="file-table">
         <thead>
@@ -523,7 +523,7 @@
         <tbody>
           <tr><td><code>frontend/index.html</code></td>          <td class="num">171</td><td>Single-page shell, slimmed topbar (11 shortcuts), auth screen, <code>&lt;main id="app"&gt;</code> mount point. Loads <code>error_reporter.js</code> before <code>app.js</code>.</td></tr>
           <tr><td><code>frontend/js/app.js</code></td>           <td class="num">~5,173</td><td>Boot sequence (initApi → config → me → accounts → dispatch). 1,328 view route cases via hash dispatch. <strong>Per-view race-token machinery</strong> (<code>currentViewToken()</code>, <code>viewIsCurrent(tok)</code>) bumped on every navigation. Cmd-K launcher hotkey, <kbd>?</kbd> tutorial hotkey.</td></tr>
-          <tr><td><code>frontend/js/api.js</code></td>           <td class="num">~2,330</td><td><code>fetch</code> wrapper with 1,744 method-bound endpoints on the <code>api</code> object. JWT bearer in web mode, auto-token in desktop mode. ApiError class, 401 token-clear, 4xx body extraction, error reporting funnel. <code>wsUrl()</code> helper derives WS URL from real backend port (not Tauri's <code>tauri://localhost</code>).</td></tr>
+          <tr><td><code>frontend/js/api.js</code></td>           <td class="num">~2,330</td><td><code>fetch</code> wrapper with 1,855 method-bound endpoints on the <code>api</code> object. JWT bearer in web mode, auto-token in desktop mode. ApiError class, 401 token-clear, 4xx body extraction, error reporting funnel. <code>wsUrl()</code> helper derives WS URL from real backend port (not Tauri's <code>tauri://localhost</code>).</td></tr>
           <tr><td><code>frontend/js/auth.js</code></td>          <td class="num">~80</td><td>Login / register screens for web mode.</td></tr>
           <tr><td><code>frontend/js/ws.js</code></td>            <td class="num">~50</td><td>Global stream connection; reconnect; ping watchdog; <code>onWsEvent(kind, fn)</code> pub/sub.</td></tr>
           <tr><td><code>frontend/js/error_reporter.js</code></td><td class="num">~120</td><td><code>window.onerror</code> + <code>unhandledrejection</code> + overridden <code>console.error</code> → POST <code>/api/client-errors</code>. Queue-capped at 200, oldest-evicted (drop counter surfaces in extras). Loads pre-init and drains once <code>__tvApiBase</code> is set.</td></tr>
@@ -532,10 +532,10 @@
           <tr><td><code>frontend/js/hud-theme.js</code></td>     <td class="num">~700</td><td>Cyberpunk HUD chrome — color schemes (5), CRT scanlines, neon-border pulse, scheme-grid renderer.</td></tr>
           <tr><td><code>frontend/js/util.js</code></td>          <td class="num">~250</td><td>esc, fmt*, fmtMoney, fmtPct, fmtSecs, fmtDateTime, pnlClass, statCard helpers.</td></tr>
           <tr><td><code>frontend/js/charts.js</code></td>        <td class="num">~485</td><td>uPlot wrappers — equity curve, OHLC, bar chart, line+area.</td></tr>
-          <tr><td><code>frontend/js/views/*.js</code></td>       <td class="num">1330 files</td><td>One module per launcher tile. Each exports a single <code>renderX(mount, state, ...)</code> async function. World-largest: <code>charts.js</code> (drawing tools), <code>expenses.js</code> (4 modals), <code>boards.js</code> (9 widget types).</td></tr>
+          <tr><td><code>frontend/js/views/*.js</code></td>       <td class="num">1424 files</td><td>One module per launcher tile. Each exports a single <code>renderX(mount, state, ...)</code> async function. World-largest: <code>charts.js</code> (drawing tools), <code>expenses.js</code> (4 modals), <code>boards.js</code> (9 widget types).</td></tr>
           <tr><td><code>frontend/css/styles.css</code></td>      <td class="num">4,421</td><td>Full cyberpunk theme — neon palette, Orbitron + Share Tech Mono, CRT scanlines, panel borders, tile grid, modal styles. Light/dark toggle.</td></tr>
           <tr><td><code>frontend/lib/</code></td>                <td class="num">vendored</td><td>uPlot — pinned via <code>./scripts/vendor-uplot.sh</code>, no CDN at runtime.</td></tr>
-          <tr class="total-row"><td>Total</td><td class="num">282,400 JS + 5,600 CSS</td><td>No transpiler, no minifier, no module bundler. Native ES modules + import maps.</td></tr>
+          <tr class="total-row"><td>Total</td><td class="num">299,955 JS + 5,677 CSS</td><td>No transpiler, no minifier, no module bundler. Native ES modules + import maps.</td></tr>
         </tbody>
       </table>
 
@@ -621,7 +621,7 @@
           <tr><th>Area</th><th>Item</th><th>Owner crate</th><th>Status</th></tr>
         </thead>
         <tbody>
-          <tr><td>Foundation</td><td>Workspace + 8 library crates + 104 migrations + 123 tables + 179 indexes</td><td>workspace</td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
+          <tr><td>Foundation</td><td>Workspace + 8 library crates + 110 migrations + 125 tables + 179 indexes</td><td>workspace</td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Foundation</td><td>FIFO trade roll-up + stats (expectancy / R-multiple / SQN / Sharpe / Sortino)</td><td><code>traderview-core</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Foundation</td><td>Tauri v2 desktop + embedded Postgres bootstrap (stale-PID cleanup, persisted password)</td><td><code>src-tauri</code> + <code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Foundation</td><td>axum web binary with argon2 + JWT auth, custom logging middleware</td><td><code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
@@ -638,7 +638,7 @@
           <tr><td>Research</td><td>Options chain + Greeks + IV surface + earnings-IV crush + short interest + dark pool</td><td><code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Community</td><td>Public trade shares + forum + mentorship + symbol boards</td><td><code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Expenses</td><td>Multi-account expense tracker + receipt OCR (tesseract) + Schedule-C report</td><td><code>traderview-expense</code> + <code>-ocr</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
-          <tr><td>UX</td><td>1325-tile launcher (Cmd-K) + 11-shortcut topbar + in-app tutorial (<kbd>?</kbd>)</td><td><code>frontend</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
+          <tr><td>UX</td><td>1418-tile launcher (Cmd-K) + 11-shortcut topbar + in-app tutorial (<kbd>?</kbd>)</td><td><code>frontend</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Hardening</td><td>Per-view race tokens + browser-side error sink + WebKit SecurityError guards + bounded in-memory caches (halts cap 2k, catalysts cap 10k)</td><td><code>frontend</code> + <code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Hardening</td><td>Real concurrency on multi-symbol fan-outs (premarket / markets / quotes / compare) via <code>futures_util::join_all</code></td><td><code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Roadmap</td><td>Lightspeed live broker (currently CSV-only)</td><td><code>traderview-db</code></td><td><span style="color:var(--cyan);font-weight:700;">Planned</span></td></tr>

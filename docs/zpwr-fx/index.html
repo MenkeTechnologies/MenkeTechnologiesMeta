@@ -12,9 +12,10 @@
   <link rel="stylesheet" href="hud-static.css">
   <link rel="stylesheet" href="tutorial.css">
   <style>
-    .tutorial-main { max-width: 60rem; }
-    .hub-lede { font-size: 14px; line-height: 1.7; color: var(--text-dim); max-width: 42rem; margin: 0.4rem 0 1.4rem; }
-    .hub-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.7rem; }
+    .tutorial-main { max-width: 62rem; }
+    .hub-lede { font-size: 14px; line-height: 1.7; color: var(--text-dim); max-width: 44rem; margin: 0.4rem 0 1rem; }
+    .docs-build-line { margin: 0.2rem 0 1.4rem; font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em; opacity: 0.85; }
+    .hub-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.7rem; margin-bottom: 0.4rem; }
     .hub-card {
       display: block; text-decoration: none; border: 1px solid var(--border); border-left: 2px solid var(--cyan);
       border-radius: 2px; padding: 0.9rem 1rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent);
@@ -22,6 +23,19 @@
     .hub-card:hover { border-left-color: var(--accent-light); }
     .hub-card h3 { margin: 0 0 0.3rem; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); }
     .hub-card p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    .hub-prose { font-size: 13px; line-height: 1.7; color: var(--text-dim); }
+    .hub-prose p { margin: 0 0 0.8rem; }
+    .hub-prose code { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 12px; color: var(--cyan); background: color-mix(in srgb, var(--bg-card) 80%, transparent); padding: 0.05rem 0.3rem; border-radius: 2px; }
+    .hub-prose a { color: var(--magenta); }
+    .hub-prose ul { margin: 0 0 0.9rem; padding-left: 1.1rem; }
+    .hub-prose li { margin: 0.2rem 0; }
+    .hub-prose pre { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 12px; color: var(--text); background: color-mix(in srgb, var(--bg-card) 88%, transparent); border: 1px solid var(--border); border-left: 2px solid var(--cyan); border-radius: 2px; padding: 0.7rem 0.9rem; overflow-x: auto; line-height: 1.6; }
+    .hub-prose table { width: 100%; border-collapse: collapse; margin: 0 0 1rem; font-size: 12px; }
+    .hub-prose th, .hub-prose td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border); font-family: 'Share Tech Mono', ui-monospace, monospace; vertical-align: top; }
+    .hub-prose th { color: var(--cyan); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 11px; }
+    .cat-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.2rem 0 1rem; }
+    .cat-tags a { display: inline-block; text-decoration: none; font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 2px; padding: 0.2rem 0.5rem; }
+    .cat-tags a:hover { color: var(--cyan); border-color: var(--cyan); }
   </style>
 </head>
 <body>
@@ -52,11 +66,8 @@
     <p class="hub-lede">Modular patch effects — wire primitive DSP blocks (oscillators, filters, delays,
       reverbs, dynamics, modulation) into your own algorithm, Eventide-H3000 style, in a cyberpunk WebView UI.
       The reference below is generated from the live module registry the plugin runs, so it never drifts from the build.</p>
+    <p class="docs-build-line">zpwr-fx v0.1.17 &middot; 1290 audio blocks (1438 total across the stack) &middot; 42 factory presets &middot; VST3 / AU / CLAP / Standalone &middot; by MenkeTechnologies</p>
     <div class="hub-cards">
-      <a class="hub-card" href="guide.html">
-        <h3>User Guide</h3>
-        <p>Full walkthrough — patch model, the UI tabs, modulation, perform, stereo, MIDI, presets.</p>
-      </a>
       <a class="hub-card" href="reference.html">
         <h3>Module Reference</h3>
         <p>Every patch block with its inputs and parameters, grouped by category. (HTML)</p>
@@ -70,6 +81,287 @@
         <p>Build instructions, the patch model, and the DSP block implementations.</p>
       </a>
     </div>
+
+    <section class="tutorial-section" id="overview">
+      <h2><span class="step-hash">0x00</span> Overview</h2>
+      <div class="hub-prose">
+        <p>The plugin is a <strong>patch graph</strong>: a dynamic set of DSP <strong>blocks</strong> (add or
+          delete any number — there is no fixed node count, the practical limit is CPU) wired together by selecting
+          each input's source. The two stereo outputs (Out&nbsp;L/R) are summing buses — drag any number of cables into
+          each and they mix, exactly like a block input. The whole graph runs once per sample frame (mono blocks; stereo
+          only at the In/Out nodes), so feedback and cross-modulation behave like a hardware patch.</p>
+        <pre>INPUTS            BLOCKS (add/delete any N)     OUTPUTS
+ In L &#9472;&#9488;     &#9484;&#9472;[B1 Filter]&#9472;&#9488;                    Out L &#9664;&#9472; B2
+ In R  &#9500;&#9472;&#9472;&#9472;&#9472;&#9658;&#9474;   In/Mod    &#9474;&#9472;&#9472;&#9658;[B2 Delay]&#9472;&#9472;&#9658;    Out R &#9664;&#9472; B3
+ Noise&#9472;&#9496;     &#9492;&#9472;[B3 LFO]&#9472;&#9472;&#9472;&#9472;&#9496;   (feedback)
+ SK1..N (soft keys, expandable, automatable, patchable as modulation)</pre>
+        <p>The block palette is the shared audio module pack from
+          <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">zpwr-patch-core</a>
+          — <strong>1290 audio blocks</strong> (1438 total across the audio/synth/MIDI stack, every name globally unique).
+          Any block type can be dropped into any node. The full per-block catalog and counts live in
+          <a href="https://github.com/MenkeTechnologies/zpwr-patch-core/blob/main/BLOCKS.md" target="_blank" rel="noopener noreferrer">zpwr-patch-core/BLOCKS.md</a>,
+          regenerated from the registration sites so they never drift.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="formats">
+      <h2><span class="step-hash">0x01</span> Formats &amp; Platforms</h2>
+      <div class="hub-prose">
+        <ul>
+          <li><strong>VST3</strong> — cross-platform.</li>
+          <li><strong>AU</strong> — macOS (Logic, GarageBand).</li>
+          <li><strong>CLAP</strong> — via
+            <a href="https://github.com/free-audio/clap-juce-extensions" target="_blank" rel="noopener noreferrer">clap-juce-extensions</a>.</li>
+          <li><strong>Standalone</strong> — local dev/test app.</li>
+        </ul>
+        <p>Platforms: <strong>macOS</strong> (ARM + Intel; the default build is a universal binary) and
+          <strong>Linux</strong> (x86_64 / aarch64). Windows builds VST3 + CLAP (AU is macOS-only and is dropped
+          automatically).</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="patch-model">
+      <h2><span class="step-hash">0x02</span> The Patch Model</h2>
+      <div class="hub-prose">
+        <ul>
+          <li><strong>Sources</strong> an input can read: silence, In&nbsp;L, In&nbsp;R, Noise, the Soft Keys,
+            <strong>MIDI/MPE</strong> (Mod Wheel, Aftertouch, Pitch Bend, Velocity, Expression, Breath, Sustain, Note,
+            and MPE Press/Slide/Bend), or any block's output (<code>src id = 100 + blockIndex</code>). MPE is parsed via
+            <code>juce::MPEInstrument</code> and aggregated to the most recent note.</li>
+          <li>Each block has three inputs (<strong>In 1, In 2, Mod</strong>), six params, and one output.</li>
+          <li>The graph is <strong>topologically sorted</strong> each rebuild; cycles (feedback) resolve with a
+            one-sample delay automatically — wire any output back to an earlier input to build feedback patches.</li>
+          <li>Any source can fan out to <strong>unlimited destinations</strong>.</li>
+        </ul>
+        <p><strong>Patching the cables:</strong> drag an output jack to an input jack to wire it; drag an input away to
+          disconnect; drop on a different output to rewire. Right-click a cable for its <strong>level</strong> (per-cable
+          gain) and <strong>colour</strong> — the cable's brightness tracks its level.</p>
+        <p><strong>Mod matrix:</strong> every block param has a <strong>mod source + depth</strong> (detail panel →
+          MODULATION). Any source — LFO, Envelope, Soft Key, Noise, or another block — modulates the param by
+          <code>source &times; depth</code> (in param units). Mod sources are part of the dependency graph, so modulating
+          a param with a block's output is topologically ordered like any other connection.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="soft-keys">
+      <h2><span class="step-hash">0x03</span> Soft Keys</h2>
+      <div class="hub-prose">
+        <p>JUCE's parameter list must be static for host automation, so the <strong>host-automatable params are the Soft
+          Keys + Master In/Out/Bypass</strong>; the patch itself (block types, routing, block params) is plugin state the
+          UI edits and the plugin persists. The Soft Keys are an <strong>expandable pool</strong> — a fixed ceiling of 32
+          host params is created up front, and the <code>+</code>/<code>&minus;</code> controls above the knob row set how
+          many are active (16 by default). The active count is saved with the plugin state. Soft keys are patchable as
+          modulation sources — exactly the H3000 model. Editing is lock-free: atomic param writes for live tweaks, an
+          atomic graph swap on structural edits.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="modules">
+      <h2><span class="step-hash">0x04</span> Modules</h2>
+      <div class="hub-prose">
+        <p>The block palette is the shared <strong>audio module pack</strong> registered on the core by
+          <code>zpc::registerAudioModules</code> (re-exported as <code>zfx::registerAudioModules</code> in
+          <code>src/dsp/AudioModules.h</code>). It is <strong>1290 audio blocks</strong> — including a large
+          circuit-modeled set (component-level analog emulations: zero-delay-feedback ladders/SVFs, Shockley-diode and
+          Ebers-Moll clippers, Koren triode/EL34 amp stages, Jiles-Atherton tape, Lambert-W wavefolder, four-diode ring
+          mod). The authoritative per-block reference — inputs and parameters, grouped by category — is the generated
+          <a href="reference.html">Module Reference</a> (and <a href="reference.pdf">PDF</a>).</p>
+        <p>Blocks are grouped into these categories (jump into the reference):</p>
+        <div class="cat-tags">
+          <a href="reference.html#ch-oscillator">Oscillator</a>
+          <a href="reference.html#ch-filter">Filter</a>
+          <a href="reference.html#ch-distortion">Distortion</a>
+          <a href="reference.html#ch-amp">Amp</a>
+          <a href="reference.html#ch-modulation">Modulation</a>
+          <a href="reference.html#ch-delay">Delay</a>
+          <a href="reference.html#ch-reverb">Reverb</a>
+          <a href="reference.html#ch-dynamics">Dynamics</a>
+          <a href="reference.html#ch-pitch">Pitch</a>
+          <a href="reference.html#ch-utility">Utility</a>
+          <a href="reference.html#ch-eq">EQ</a>
+          <a href="reference.html#ch-effect">Effect</a>
+          <a href="reference.html#ch-envelope">Envelope</a>
+          <a href="reference.html#ch-routing">Routing</a>
+          <a href="reference.html#ch-sequencing">Sequencing</a>
+          <a href="reference.html#ch-spectral">Spectral</a>
+          <a href="reference.html#ch-stereo">Stereo</a>
+        </div>
+        <p>A few of the building blocks:</p>
+        <table>
+          <tr><th>Module</th><th>Params</th><th>Notes</th></tr>
+          <tr><td>Gain</td><td>Gain, Bias</td><td></td></tr>
+          <tr><td>Mixer</td><td>In 1, In 2, Mod Amt, Offset</td><td>sums all three inputs + DC</td></tr>
+          <tr><td>Filter</td><td>Cutoff, Reso, Mode (LP/HP/BP), Mod (oct), Drive, Mix</td><td>Mod input sweeps cutoff</td></tr>
+          <tr><td>Delay</td><td>Time, Feedback, Mod, Damp, Mix</td><td>damped feedback, time-mod</td></tr>
+          <tr><td>LFO</td><td>Rate, Shape (sin/tri/saw/pulse), Depth, Phase, Bias, Width</td><td>control source</td></tr>
+          <tr><td>Drive</td><td>Drive, Output, Bias, Tone, Mix, Type (tanh/fold/clip)</td><td></td></tr>
+          <tr><td>Expr</td><td>P0..P5 + code</td><td>user-written per-sample algorithm</td></tr>
+          <tr><td>Envelope</td><td>Attack, Release, Gain</td><td>follower &rarr; control</td></tr>
+          <tr><td>Ladder</td><td>Cutoff, Reso, Mod, Drive</td><td>Moog 4-pole resonant low-pass</td></tr>
+          <tr><td>Comb</td><td>Freq, Feedback, Damp, Mix</td><td>tuned resonator / karplus</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="expr">
+      <h2><span class="step-hash">0x05</span> The Expr Module</h2>
+      <div class="hub-prose">
+        <p><code>Expr</code> blocks run a user-written per-sample expression compiled by an in-house RT-safe VM
+          (<code>src/dsp/ScriptEngine.*</code>). It can do things the fixed blocks can't, and it's edited live in the
+          block's detail panel.</p>
+        <ul>
+          <li><strong>Vars:</strong> <code>in</code> (In 1), <code>t</code>, <code>sr</code>, <code>p0..p7</code>
+            (p0&ndash;p5 = knobs, p6 = In 2, p7 = Mod), <code>s0..s3</code> (persistent state),
+            <code>pi tau e</code>.</li>
+          <li><strong>Funcs:</strong> <code>sin cos tan tanh &hellip; floor frac wrap saw sqr tri min max pow fmod clamp
+            lerp if step noise rand</code>, and <code>tap(d)</code> — the block's own output <code>d</code> samples ago
+            (fractional) for combs / karplus / feedback.</li>
+          <li>Safe by construction: no loops, allocation, or memory access in the hot path; output is sanitized
+            (NaN/Inf &rarr; 0); over-limit programs fail to compile.</li>
+        </ul>
+        <p>Example wavefolder: <code>out = sin(in * (1 + p0 * 8) * pi)</code></p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="ui">
+      <h2><span class="step-hash">0x06</span> User Interface</h2>
+      <div class="hub-prose">
+        <p>A JUCE 8 <code>WebBrowserComponent</code> rendering an embedded cyberpunk UI (cyan/magenta on near-black,
+          Orbitron + Share Tech Mono, grid + CRT scanlines), self-contained via <code>juce_add_binary_data</code> (no node
+          build, no external files). The UI is shared with zpwr-synth and zpwr-midi-fx; the tab set:</p>
+        <ul>
+          <li><strong>Patch</strong> — drag an output jack onto an input jack to wire it; an <strong>&#9889; EZ WIRE</strong>
+            button (auto-wires In&nbsp;L &rarr; your blocks &rarr; Out&nbsp;L/R), an <strong>INIT</strong> button (unplug
+            every cable &amp; mod, keep the blocks), <strong>&#128465;</strong> (blank the whole patch), the
+            <strong>Stereo</strong> / <strong>&#128274; LOCK</strong> toggles, the soft-key strip, the sources / blocks /
+            outputs grid with SVG cables, and a detail panel for the selected block. Cables glow with each source block's
+            live signal level.</li>
+          <li><strong>Synth</strong> — a fixed-layout panel showing every module's knobs in a grid, no cables.</li>
+          <li><strong>Perform</strong> — macros + XY pads only, no patching.</li>
+          <li><strong>Clip</strong> — draw a MIDI pattern and play it (with key/scale, key-trigger).</li>
+          <li><strong>Mod Matrix</strong> — every modulation connection in one list.</li>
+          <li><strong>Mixer</strong> — per-layer channel strips (gain / pan / mute / solo) with sends to the aux FX buses,
+            the aux returns, and the master strip, with peak + LUFS metering.</li>
+          <li><strong>Browse</strong> — search, save, tag and load patches; filter by bank, type, style, character.</li>
+          <li><strong>Settings</strong> — Master In/Out + Bypass, Auto Gain Stage + target, the brickwall limiter, MIDI
+            Program Change / Bank Select toggles, scale-key/scale quantize, UI scale, interface toggles.</li>
+          <li><strong>About</strong> — version + engine info.</li>
+        </ul>
+        <p><strong>Auto gain staging:</strong> two Settings (both on by default) keep inter-block levels sane per block.
+          <strong>Auto Gain Stage</strong> rides levels with a fast-attack / slow-release peak follower that pulls each
+          block down toward the <strong>Auto-Gain Target</strong> ceiling. <strong>Soft Clip</strong> is the guarantee: an
+          instant tanh bound at the same ceiling on every block output, catching transients the AGC's ~2&nbsp;ms attack
+          and downstream cable gains let slip. Both are per block; turn either off for raw gain. Distinct from the master
+          <strong>Brickwall Limiter</strong>, a single hard ceiling on the final summed output.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="perform-stereo">
+      <h2><span class="step-hash">0x07</span> Perform &amp; Stereo</h2>
+      <div class="hub-prose">
+        <p><strong>Perform tab</strong> — a play-the-patch surface that drives only host-automatable params, so it works
+          editor-closed and records as automation:</p>
+        <ul>
+          <li><strong>Preset Morph</strong> — a 4-corner XY pad (A/B/C/D) that bilinearly interpolates between four
+            captured patches; X/Y are reserved host params (<code>morphX</code>/<code>morphY</code>), and
+            <strong>&#127922;</strong> assigns a random preset to all four corners.</li>
+          <li><strong>Orb</strong> — a radial pad where the puck's angle selects a scene and distance sets its intensity;
+            <strong>&#127922;</strong> rolls a new random scene set, <strong>&#9210;</strong> records the puck's motion,
+            and <strong>&#9654;</strong> loops the recorded motion back through the host-automatable params.</li>
+          <li><strong>XY macro pads</strong> — each with a per-pad <strong>HOLD</strong> / <strong>SPRING</strong> toggle.</li>
+          <li><strong>Macro knobs</strong> — the soft knobs surfaced as plain 0..1 APVTS params.</li>
+          <li><strong>Scenes</strong> — snapshot slots: click to recall, right-click to clear.</li>
+          <li><strong>Controls band</strong> — global dice/randomise, arp (mode / rate / latch), and scale + key quantize
+            plus a <strong>Chord</strong> that stacks extra intervals on each key played.</li>
+        </ul>
+        <p><strong>Stereo mode + Stereo Lock:</strong> <strong>Stereo</strong> (off by default) mirrors the patch graph to
+          the right channel, so blocks process L/R independently. <strong>&#128274; Lock</strong> keeps the mirrored
+          (clone) blocks tracking the left channel — bidirectional and offset-preserving: dragging a left knob moves its
+          clone, and dragging a clone moves the left, each by the same delta, so the L/R offset is preserved. Both states
+          persist in plugin state.</p>
+        <p><strong>MIDI Program Change / Bank Select</strong> (both default on): an incoming PC selects the matching
+          program (preset); CC0 (MSB) / CC32 (LSB) are captured and combined with the next PC
+          (<code>bank &times; 128 + program</code>) for banked preset addressing.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="presets">
+      <h2><span class="step-hash">0x08</span> Presets</h2>
+      <div class="hub-prose">
+        <ul>
+          <li><strong>Factory</strong> (in code, <code>ZpwrFxProcessor::factoryNames()</code>): 42 presets, exposed as
+            host programs for MIDI Program Change — e.g. DL Stereo Slap, FL Filter Sweep, FL Comb Resonator, FL Auto Wah,
+            FX Feedback Howl, DS Wavefolder, RV Iceverb Cathedral.</li>
+          <li><strong>User</strong> patches save as JSON (<code>patch</code> + soft-key values) under
+            <code>&lt;userAppData&gt;/zpwr-fx/Presets/*.zfxpatch</code> (e.g. <code>~/Library/zpwr-fx/Presets</code>).</li>
+          <li>The full plugin/host state (patch + all params) round-trips through JUCE's
+            <code>get/setStateInformation</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="record-host">
+      <h2><span class="step-hash">0x09</span> Recorder &amp; Master-Insert Host</h2>
+      <div class="hub-prose">
+        <p><strong>Output recorder:</strong> an in-plugin recorder (<code>zpc::WavRecorder</code>) captures the master
+          output to a <strong>32-bit float WAV</strong> under <code>~/Music/zpwr/&lt;product&gt;_&lt;timestamp&gt;.wav</code>.
+          It is RT-safe — <code>recorder.pushBlock()</code> runs at the end of <code>processBlock</code>, a no-op until
+          armed — and the editor drives it through the <code>startRecord</code> / <code>stopRecord</code> native functions.
+          <code>startRecord</code> returns the path it opened.</p>
+        <p><strong>Master-insert plugin host:</strong> the plugin can host one external <strong>VST3 / AU</strong> plugin on
+          its master insert (<code>zpc::PluginInsert</code> + <code>zpc::PluginHost</code>;
+          <code>JUCE_PLUGINHOST_VST3</code> / <code>JUCE_PLUGINHOST_AU</code> are enabled in CMake). The hosted plugin
+          processes in <code>processBlock</code> after the stereo widener, so it sits on the final master path. Editor
+          native functions drive it: <code>pluginScan</code>, <code>pluginList</code>, <code>pluginLoad</code>,
+          <code>pluginClear</code>, <code>pluginCurrent</code>, and <code>pluginEditorOpen</code> (a floating
+          <code>zpc::PluginInsertWindow</code> for the hosted editor). The hosted plugin's id and its own serialized state
+          save/restore with the host's <code>get/setStateInformation</code>.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="build">
+      <h2><span class="step-hash">0x0A</span> Build</h2>
+      <div class="hub-prose">
+        <p>CMake &ge; 3.22, a C++20 compiler. Dependencies are vendored git submodules (JUCE 8.0.13,
+          <code>clap-juce-extensions</code>).</p>
+        <pre>git clone --recurse-submodules &lt;repo-url&gt;
+cd zpwr-fx
+cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --target ZpwrFX_All -j$(sysctl -n hw.ncpu)</pre>
+        <p>Already cloned without submodules: <code>git submodule update --init --recursive</code>. Launch the standalone:
+          <code>open "build/ZpwrFX_artefacts/Debug/Standalone/ZpwrFx.app"</code>. On macOS the default build is a
+          universal binary (<code>x86_64;arm64</code>); for a faster host-only dev build, configure with
+          <code>-DCMAKE_OSX_ARCHITECTURES=arm64</code>.</p>
+        <p><strong>Installer package:</strong> <code>scripts/build_pkg.sh</code> bundles the built universal VST3/AU/CLAP
+          into a macOS <code>.pkg</code> and the Standalone into <code>/Applications</code>. <strong>Windows:</strong>
+          <code>scripts/build_win.ps1</code> builds VST3 + CLAP for x64 + ARM64 into <code>dist\win\&lt;arch&gt;\</code>.</p>
+        <p><strong>Reference docs:</strong> <code>docs/reference.html</code> is generated from the live module registry by
+          the <code>gen_reference</code> target; <code>docs/reference.pdf</code> is the same content paginated for print,
+          rebuilt by <code>scripts/reference_pdf.sh</code> (needs pandoc + xelatex).</p>
+        <pre>cmake --build build --target gen_reference
+build/gen_reference_artefacts/Debug/gen_reference docs/reference.html
+scripts/reference_pdf.sh</pre>
+        <p><strong>Tests:</strong> two headless unit tests (no GUI/audio device, CI-friendly) —
+          <code>ScriptEngineTest</code> and <code>PatchGraphTest</code>.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="links">
+      <h2><span class="step-hash">0x0B</span> Reference &amp; Source</h2>
+      <div class="hub-prose">
+        <ul>
+          <li><a href="reference.html">Module Reference (HTML)</a> — every block with inputs and parameters, grouped by
+            category, generated from the live registry.</li>
+          <li><a href="reference.pdf">Module Reference (PDF)</a> — the same content, paginated for print.</li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+            — build instructions, the patch model, and the DSP block implementations.</li>
+          <li>Part of the MenkeTechnologies audio stack:
+            <a href="https://github.com/MenkeTechnologies/zpwr-synth" target="_blank" rel="noopener noreferrer">zpwr-synth</a>,
+            <a href="https://github.com/MenkeTechnologies/zpwr-midi-fx" target="_blank" rel="noopener noreferrer">zpwr-midi-fx</a>,
+            <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">zpwr-patch-core</a>.</li>
+        </ul>
+      </div>
+    </section>
   </main>
   </div>
   <script src="hud-theme.js"></script>

@@ -99,11 +99,79 @@
         <p>The <code>PRODUCTS</code> array in <code>store.js</code> is the single source of truth. Three construction styles keep it DRY:</p>
         <ul>
           <li><strong>Explicit objects</strong> — the apps, audio plugins, and CLI tools, each with distinct copy.</li>
-          <li><strong><code>strykePkg(id, glyph, desc)</code></strong> — generates the 23 near-identical stryke-ecosystem packages from a compact table.</li>
+          <li><strong><code>strykePkg(id, glyph, desc)</code></strong> — generates the 30 near-identical stryke-ecosystem packages from a compact table.</li>
           <li><strong><code>metaProduct(id, glyph, category, tagline, pills, hasRelease)</code></strong> — generates the remaining MenkeTechnologies repos (zsh plugins, dev tools).</li>
         </ul>
         <p>Long-form copy (an <code>overview</code> paragraph and a rich <code>features</code> list) lives in the <code>DETAILS</code> map, ported from each repo's README / source, and is merged into <code>PRODUCTS</code> at load. Cards, search, filters, and the stat counters above are all derived — no hardcoded counts.</p>
         <p><strong>To add a product:</strong> append one object or one table row, and optionally a <code>DETAILS</code> entry. Everything else updates automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Catalog families</h2>
+        <p>The catalog spans six display categories. Counts below are a snapshot of the current <code>PRODUCTS</code> array; the live hero counters at the top of this page reflect the running catalog.</p>
+        <ul>
+          <li><strong>Desktop Apps (2, paid)</strong> — <code>audio haxor</code> (Tauri v2 / JUCE plugin manager) and <code>traderview</code> (Tauri v2 trading journal, embedded Postgres). Both proprietary, so neither links a public Source.</li>
+          <li><strong>Audio Plugins (3, paid)</strong> — <code>zpwr-synth</code>, <code>zpwr-fx</code>, <code>zpwr-midi-fx</code>: a fully-modular JUCE plugin trio shipping VST3 / AU / CLAP / Standalone. Each carries a <code>docs[]</code> entry pointing at the shared <code>zpwr-patch-core-block-catalog.pdf</code> instead of a GitHub Pages site.</li>
+          <li><strong>Developer Tools (7, free)</strong> — the flagships <code>zshrs</code> and <code>stryke</code>, plus <code>fusevm</code>, <code>api-rest-generator</code>, <code>LearningCollectionAPI</code>, <code>stryke-demo</code>, and <code>VimColorSchemes</code>.</li>
+          <li><strong>CLI Tools (8, free)</strong> — <code>awkrs</code>, <code>lsofrs</code>, <code>nmaprs</code>, <code>iftoprs</code>, <code>temprs</code>, <code>powerliners</code>, <code>storageshower</code>, <code>zpwrchrome</code>.</li>
+          <li><strong>stryke Packages (30, free, generated)</strong> — the <code>stryke-*</code> ecosystem (databases, clouds, data formats, automation), each built by <code>strykePkg()</code> from a compact <code>[id, glyph, desc]</code> row.</li>
+          <li><strong>Zsh Plugins (17, free, generated)</strong> — <code>zpwr</code>, <code>zsh-more-completions</code>, <code>zsh-expand</code>, and the rest of the zsh-plugin family, built by <code>metaProduct()</code>.</li>
+        </ul>
+        <p>Total: <strong>67 products</strong> across <strong>6 categories</strong> — <strong>5 paid</strong>, <strong>62 free / OSS</strong>. Third-party forks mirrored in the org (<code>fzf-tab</code>, <code>zsh-z</code>, <code>zunit</code>, etc.) are intentionally excluded to avoid misattributing authorship.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Documentation links</h2>
+        <p>Repos that publish their <code>docs/</code> to GitHub Pages are listed in the <code>DOC_REPOS</code> array (57 ids). For each, the detail page's Documentation section renders doc-cards built at load:</p>
+        <ul>
+          <li><strong>Documentation</strong> &rarr; <code>menketechnologies.github.io/&lt;id&gt;/</code></li>
+          <li><strong>Engineering Report</strong> &rarr; <code>&lt;base&gt;/report.html</code></li>
+          <li><strong>API Reference</strong> &rarr; <code>&lt;base&gt;/reference.html</code>, only for the ids in <code>DOC_REFERENCE</code>: <code>strykelang</code> and <code>zshrs</code>.</li>
+        </ul>
+        <p>Products with no published Pages site (the proprietary apps, and the Pages-disabled audio plugins that ship a PDF catalog instead) are omitted so no Docs link 404s. A shipped reference PDF still renders alongside the HTML doc-cards via the product's <code>docs[]</code> array.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Screenshots &amp; lightbox</h2>
+        <p>GUI products (the desktop apps and audio plugins) carry a <code>screenshots</code> array in their <code>DETAILS</code> entry — <code>[{ src, cap }]</code>. When present:</p>
+        <ul>
+          <li>the grid card and the detail hero render the <strong>first</strong> screenshot instead of the letter glyph (products with no <code>screenshots</code> keep the glyph);</li>
+          <li>the detail page renders a <strong>Screenshots</strong> gallery when there is more than one shot;</li>
+          <li>any image (hero or thumbnail) opens a keyboard-navigable lightbox — <code>&larr;</code> / <code>&rarr;</code> to step, <code>Esc</code> to close.</li>
+        </ul>
+        <p>Images live under <code>assets/</code> (one folder per multi-shot product). Captures are downsized to &le;1600&nbsp;px and converted to WebP (<code>cwebp -q 82</code>). A test asserts every referenced asset exists on disk, is WebP, and is size-budgeted, with no orphans.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Discount codes</h2>
+        <p>Codes live in the <code>DISCOUNTS</code> map in <code>store.js</code> and apply at checkout. Two ship by default:</p>
+        <ul>
+          <li><code>LAUNCH20</code> — 20% off the subtotal (percent).</li>
+          <li><code>HUD10</code> — $10 off the subtotal (flat).</li>
+        </ul>
+        <p>A discount never exceeds the subtotal — <code>discountAmount()</code> clamps with <code>Math.min</code>. Add a code by appending an entry of the form <code>{ type: 'pct' | 'flat', value, label }</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Editing the catalog</h2>
+        <p>Everything is data-driven from <code>store.js</code>:</p>
+        <ul>
+          <li><strong>Add a product</strong> — append an explicit object to <code>PRODUCTS</code>, or a row to the <code>strykePkg</code> / <code>metaProduct</code> tables. Set <code>price: 0</code> (or a <code>$0</code> first tier) for free; give <code>tiers</code> for paid.</li>
+          <li><strong>Change a price</strong> — edit the product's <code>tiers</code> (the first tier sets the card price).</li>
+          <li><strong>Add rich copy</strong> — add a <code>DETAILS</code> entry with an <code>overview</code> and a <code>features</code> list; it merges into the product at load.</li>
+          <li><strong>Add screenshots</strong> — drop WebP files in <code>assets/</code> and list them in the product's <code>screenshots</code> array.</li>
+          <li><strong>Publish docs</strong> — add the id to <code>DOC_REPOS</code> (and to <code>DOC_REFERENCE</code> if it ships <code>reference.html</code>).</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Troubleshooting</h2>
+        <ul>
+          <li><strong>Hero counters show "—".</strong> The stat spans are filled by <code>store.js</code>; if it failed to load, the dashes stay. Check the console and confirm <code>../store.js</code> resolves from the page's path.</li>
+          <li><strong>A Docs button 404s.</strong> The id is in <code>DOC_REPOS</code> but its GitHub Pages site is not published; remove the id or enable Pages on that repo.</li>
+          <li><strong>A download link is dead.</strong> Free products link <code>releases/latest</code> when <code>hasRelease</code> is true, else the repo's <code>/tags</code> page — flip the flag to match the repo's actual release state.</li>
+          <li><strong>Theme / scheme doesn't persist.</strong> Preferences are stored under the <code>appstore-hud-*</code> <code>localStorage</code> keys; private-browsing or cleared storage resets them to defaults.</li>
+        </ul>
       </section>
 
       <section class="tutorial-section">
