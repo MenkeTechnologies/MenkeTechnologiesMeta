@@ -292,6 +292,43 @@ percussive amp envelope and a short delay, and route **velocity → brightness**
 - **Velocity feel** — velocity → filter cutoff and amp level so dynamics translate to brightness and
   loudness.
 
+# A voice for every genre
+
+Ten voices to build, each naming the core and the moves that define it.
+
+**House bass.** `Osc` (saw) → `Filter` (low-pass) → amp `Env`. Short decay, a little resonance, and a
+beat-synced `LFO` → a `VCA` for the sidechain pump. Keep it mono with `Glide` for slides.
+
+**Reese bass.** The `Reese` core (or two detuned `Osc` saws) → `DiodeLadder` → `Drive`. Movement comes
+from the detuned saws beating; sweep the filter slowly with an `LFO`. The neurofunk staple.
+
+**Dubstep growl.** `Wt` oscillator with its **position** modulated fast by an `LFO` (or `StepLFO`)
+synced to the beat → `DiodeLadder` → `Folder`/`Waveshaper` → `Drive`. The rhythmic position+filter
+movement is the "talking" growl.
+
+**Trance supersaw lead.** `Supersaw` (Voices 9–11, wide Detune) → `Filter` opened by a quick `Env` →
+a slow `LFO` on cutoff. Stack a `Sub` and a second layer an octave down; send to reverb on the
+FX-bus.
+
+**FM e-piano.** `FM` (ratio 1, moderate index) with an `Env` → index so the bite decays into a round
+body, gentle amp envelope, a little `Chorus` on the FX-bus. Velocity → index for touch sensitivity.
+
+**Ambient pad.** `Wt` with a very slow `LFO` → position, long amp `Env` attack/release, gentle
+`Filter` sweep, unison `Voices` for width, and a long reverb send. Add slow `Vector` morphing for
+extra evolution.
+
+**Plucked harp.** `Karplus` with moderate damping and feedback, a percussive amp `Env`, `velocity →
+brightness`, a short `Delay`. Light and dynamic.
+
+**Acid 303.** `Osc` (saw) → `DiodeLadder` (high reso) → amp `Env`; a fast `Env` → cutoff for the
+squelch, `Glide` for slides, push the ladder **drive**, and `velocity → cutoff` for accents.
+
+**Hard-techno stab.** `FM` or `Osc` → `Filter` with a 100%-deep envelope sweep and high resonance →
+`Drive`. Very short, percussive amp envelope. Layer a `HardKick` for weight.
+
+**Glass bell.** `Additive` (sparse, odd-leaning partials) or `FM` (non-integer ratio) → long amp
+`Env` release → `Shimmer`/reverb send. Pure and metallic; velocity → level for dynamics.
+
 # Tips & best practices
 
 - Start from **⚡ EZ MODE** or a factory voice near your target and modify, rather than building from

@@ -222,6 +222,44 @@ harmony, rhythm, generative and FX chains, so the factory set doubles as worked 
 families. Your own patches save and load from the **Presets** tab, and the whole patch round-trips with
 your host project.
 
+# Generative & performance patches
+
+Ten patches to build, from one-finger players to self-running machines. Wire them in the order
+written.
+
+**1. One-finger pianist.** `Chord → Strum → Scale`. Press single keys; they voice into chords,
+strum like a guitar, and lock to your key. A whole accompaniment from one finger.
+
+**2. Endless arp.** `Random → Scale → Arp → Echo`. Random notes locked to key, arpeggiated in time,
+with trailing MIDI echoes. Modulate Random's range with an `LFO` for drifting registers.
+
+**3. Polymetric pulse.** `Arp → SeqEuclid`. Set the Arp division to `1/16` and the Euclid pattern to
+5-in-8; the two cycles phase against each other into an evolving groove. Add a second `SeqEuclid` of a
+different length on a parallel branch and `Merge`.
+
+**4. Living chords.** `Chord → Humanize → RandOctave (low probability)`. Voiced chords that breathe,
+with the occasional note jumping an octave for organic variation.
+
+**5. Bass & keys split.** `KeySwitch` into two branches: low zone `→ Mono → Transpose (−12)` for bass,
+high zone `→ Chord → Strum` for keys. `Merge` to one instrument. Play a whole arrangement two-handed.
+
+**6. Probability sequencer.** A held chord `→ Arp → Chance`. The arp spells the chord; Chance drops
+notes at random for an ever-shifting pattern. Raise Chance for density, lower it for sparseness.
+
+**7. Ratchet builds.** `Arp → SeqRatchet` with the ratchet count on a `soft key`. Automate the soft
+key up over a bar for accelerating drum-roll builds.
+
+**8. Cellular melody.** A `GameOfLife` (or `Brian's Brain`) sequencer `→ Scale → Arp`. The automaton
+evolves a pattern; Scale keeps it musical; Arp gives it rhythm. A melody that never repeats.
+
+**9. MPE expression rig.** `Chord` with the mod matrix routing **MPE slide → chord type** and **MPE
+pressure → velocity**. Press harder for louder, slide for different voicings — expressive harmony from
+an MPE controller.
+
+**10. Drum pattern generator.** `Random (narrow range) → FixedNote → SeqEuclid → Accent`. Random
+triggers forced to one drum pitch, gated on a Euclidean rhythm, with accents on the downbeat. Point
+it at a drum instrument for generative beats.
+
 # Tips & best practices
 
 - Order matters. Put **Scale** *after* harmony modules so every generated note is locked to key, and

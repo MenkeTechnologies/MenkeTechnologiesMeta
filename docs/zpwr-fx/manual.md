@@ -513,6 +513,65 @@ band-pass `Filter`. The result is a worn, warbling, band-limited texture under a
 **Spectral wash.** `SpecBlur` or `SpecMorph` on a sustained source smears it into an evolving cloud;
 follow with `Shimmer` for an ascending, pitched tail.
 
+# A cookbook of complete patches
+
+Ten finished patches you can build start to finish. Each names real blocks; wire them in the order
+written and tweak to taste.
+
+**1. Vocal doubler.** `In L → H910` (or `MicroShift`) with a few cents up, `In L → H910` a few cents
+down, pan the two copies hard left and right, mix the dry up the middle. Add a slow `Chorus` across
+both for thickness. Instant wide, natural doubling for vocals or leads.
+
+**2. Eighties gated snare.** `In L → Reverb` (`Plate`, large) `→ GatedVerb` (or a `Gate` keyed by the
+dry input's `EnvFollow`). The tail blooms then chops off hard — the unmistakable 80s drum ambience.
+
+**3. Dub siren.** An `Osc` (sine) with its pitch swept by a slow `LFO`, into a `DubDelay` with high,
+filtered feedback, into a `Spring` reverb. Ride the delay feedback on a soft key for live dub throws.
+
+**4. Multiband saturator.** Split `In L` into three `Crossover` bands; on each band add a different
+`Drive`/`Diode`/`Chebyshev` flavour and a `Gain`, then sum with a `Mixer`. Distort the lows gently,
+the mids harder, and add `Exciter` sheen on top — controlled, band-aware grit.
+
+**5. Shimmer pad machine.** `In L → Reverb` (long) with a `PitchShift` (+12) in the reverb's feedback
+path, fed back through a `Filter`. Each pass rises an octave into an angelic, infinite `Shimmer`.
+Hold a chord and let it bloom.
+
+**6. Lo-fi tape loop.** `In L → Lofi → BBDDelay` (medium time, moderate feedback) with a slow `LFO`
+on the delay time for wow, into a band-pass `Filter`, with a sprinkle of `Erosion`. Warbling,
+band-limited, nostalgic.
+
+**7. Sidechain pump on a bus.** `EnvFollow` a kick (or a `Clock`-driven `LFO`) → a `VCA` (or `Pump`)
+on your full signal. The signal ducks on every beat — the house/EDM pump, built from a follower and a
+VCA so you control the exact shape.
+
+**8. Robot voice.** `In L → RingMod` with a fixed-frequency `Osc` carrier (try 200–800 Hz), into a
+`Formant` filter for vowel character, a touch of `Bitcrush`. Metallic, talking-machine timbre.
+
+**9. Granular cloud.** `In L → GrainDelay` (or `Morphagene`) with small grain size and high density,
+its position swept by an `LFO`, into a `DiffuseDelay` and `Reverb`. A shimmering, textural cloud from
+any source.
+
+**10. Self-playing drone.** An `Osc` → `Ladder` filter with high resonance, the filter cutoff modulated
+by a slow `Lorenz` chaos source, into a long `ErbeVerb`. Patch a little of the reverb output back
+through a `Filter` to the input at a low cable level. It evolves forever, never repeating — set it and
+listen.
+
+# Mixing & mastering with zpwr-fx
+
+Because the same library carries studio-grade dynamics and EQ, the plugin doubles as a channel strip
+or mastering chain you wire yourself:
+
+- **Channel strip:** `Gate` (clean up bleed) → `Compressor` (even the level) → `EQ`/`ParaEQ` (tone)
+  → a gentle `Drive` or modeled `Tube` (harmonics). Reorder to taste — EQ before or after the
+  compressor are different sounds.
+- **Bus glue:** a slow `Compressor` or the `SSL`-style bus comp at a low ratio across a group, with a
+  touch of `Exciter` and `StereoWidth`.
+- **Master chain:** `DynEQ`/`MatchEQ` for tonal balance → multiband `OTT`/`MultiComp` (gently!) →
+  `Maximizer` or `Limiter` for loudness, with the master `Brickwall Limiter` as the true ceiling.
+  Watch the **LUFS** meter in the Mixer.
+- **Mid/side:** put a `MidSide` encoder first and a decoder last, and process the mid and side paths
+  independently in between — widen the sides, tighten the middle.
+
 # Tips & best practices
 
 - Start with **⚡ EZ WIRE** to get sound, then rewire piece by piece — it is faster than building from
