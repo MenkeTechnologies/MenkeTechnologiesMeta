@@ -29,8 +29,9 @@ The signal-agnostic **modular patch graph** behind the MenkeTechnologies plugin 
 - [\[0x02\] Defining a Module](#0x02-defining-a-module)
 - [\[0x03\] Shared WebEditor & Expandable Soft Knobs](#0x03-shared-webeditor--expandable-soft-knobs)
 - [\[0x04\] Patch Versioning & Migration](#0x04-patch-versioning--migration)
-- [\[0x05\] Build / Test](#0x05-build--test)
-- [\[0x06\] Layout](#0x06-layout)
+- [\[0x05\] User Modules & Registry](#0x05-user-modules--registry)
+- [\[0x06\] Build / Test](#0x06-build--test)
+- [\[0x07\] Layout](#0x07-layout)
 - [\[0xFF\] License](#0xff-license)
 
 ---
@@ -157,7 +158,44 @@ rendered docs. Use a plain `-`. A linter enforces this (see Build / Test).
 
 ---
 
-## [0x05] BUILD / TEST
+## [0x05] USER MODULES & REGISTRY
+
+A **user module** is a selection of blocks (plus their internal cables, mod routes and tempo-sync overrides) saved as a self-contained, reusable sub-graph — the VCV-Rack *Selection* (`.vcvs`) idea. Loading one **splices it into the current patch**: its blocks are appended and every internal id is reindexed, so the module *expands out* into real, editable blocks (Phase 1). The saved file also records its input ports and output node(s), so a future release can load the same file as one **encapsulated nested block** without a format change.
+
+**Core API** (`PatchCore.h`, signal-agnostic, unit-tested):
+
+```cpp
+ModulePorts ports;
+PatchDef sub = extractSubPatch (full, { 2, 5, 6 }, ports);  // save: subset -> normalized 0..k-1 sub-graph
+int base = spliceInsert (dst, sub, externalRemap);          // load: append + reindex; returns the append base
+```
+
+- `extractSubPatch` renumbers internal cables to local ids, cuts cables to blocks outside the selection (open inputs), keeps host externals (In L/R, soft knobs, global mods) and records them in `ports.inSources`, and marks internal sinks in `ports.outNodes`.
+- `spliceInsert` offsets every internal node-output id by the append base (and `ModRoute.node` / `ParamSync.node`); host externals pass through `externalRemap` (null ⇒ identity), a `0` result drops that cable — so a module saved in one host degrades to open inputs in a host that lacks the source.
+
+**Editor + UI.** `WebEditor` adds a second `PresetStore` (full CRUD) and the native functions `listModules` / `saveModule` / `loadModule` / `deleteModule` / `renameModule` / `cloneModule`, plus `fetchRegistry` / `importRegistryModule`. `loadModule` routes through the same undo path as every structural edit (one undoable splice). In the shared WebView UI, **Cmd/Ctrl-click** or **Shift-click** blocks to select, then **◈ MODULES** opens the manager: save the selection, drop saved modules into the patch, or browse the registry.
+
+**`.zmod` format** (envelope versioned independently of the inner patch `"v"`):
+
+```jsonc
+{ "zmod": 1, "name": "...", "category": "Filter", "desc": "...", "host": "zpwr-fx",
+  "patch": { /* a self-contained PatchDef, nodes 0..k-1 */ },
+  "inPorts": [ { "src": 1, "label": "In L", "role": "base" } ],
+  "outPorts": [ { "node": 3, "label": "Out" } ], "nodeCount": 4 }
+```
+
+**Registry.** A shared module library modeled on [library.vcvrack.com](https://library.vcvrack.com/) — a static, git-backed JSON index (no server), served from GitHub Pages and set per host via `EditorConfig::registryUrl`. The index lists published modules with metadata and download URLs; the UI browses/filters it and imports a chosen `.zmod` into the local store. Publishing is a manifest PR, mirroring VCV's submission flow.
+
+```jsonc
+// registry.json
+{ "modules": [ { "slug": "barrys-delay", "name": "Barry's Delay", "author": "MenkeTechnologies",
+                 "category": "Delay", "tags": ["delay","mod"], "license": "CC0",
+                 "host": "zpwr-fx", "desc": "...", "url": "https://.../modules/barrys-delay.zfxmod" } ] }
+```
+
+---
+
+## [0x06] BUILD / TEST
 
 Depends only on `juce::juce_core`. Consumers add it via `add_subdirectory` and link `zpwr::patch_core`; the consumer's top-level `CMAKE_OSX_ARCHITECTURES` (default `x86_64;arm64`) propagates here, so the core compiles universal as part of each plugin. The standalone test build below also defaults to universal on macOS. To build the headless test standalone, point at a JUCE checkout:
 
@@ -188,7 +226,7 @@ python3 scripts/lint_ascii_strings.py # or run it directly over the source tree
 
 ---
 
-## [0x06] LAYOUT
+## [0x07] LAYOUT
 
 | Path | Role |
 |------|------|
