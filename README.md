@@ -9,7 +9,7 @@
 
 [![Submodules](https://img.shields.io/badge/submodules-87-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-12_core-cyan.svg)](#tier-1--core-12)
-[![Tier 2](https://img.shields.io/badge/tier_2-31_stryke-green.svg)](#tier-2--stryke-ecosystem-31)
+[![Tier 2](https://img.shields.io/badge/tier_2-32_stryke-green.svg)](#tier-2--stryke-ecosystem-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-2_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-2)
@@ -33,7 +33,7 @@
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
   - [Tier 1 — Core (12)](#tier-1--core-12)
-  - [Tier 2 — Stryke ecosystem (31)](#tier-2--stryke-ecosystem-31)
+  - [Tier 2 — Stryke ecosystem (32)](#tier-2--stryke-ecosystem-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (2)](#tier-5--editor--multiplexer-plugins-2)
@@ -99,7 +99,7 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | **Rust CLI** — mature port of Python's [`powerline-status`](https://github.com/powerline/powerline) (v0.2.15, 2,400+ `#[test]` functions, 5-binary suite: `powerline` / `powerline-daemon` / `powerline-config` / `powerline-render` / `powerline-lint`, parity-tested against upstream Python). Drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. &middot; <sub>[docs](https://menketechnologies.github.io/powerliners/) · [report](https://menketechnologies.github.io/powerliners/report.html)</sub> |
 | [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | The terminal OS. 505 verbs, 190k LOC, zinit-based, stryke-powered. ⭐ 220 &middot; <sub>[docs](https://menketechnologies.github.io/zpwr/) · [report](https://menketechnologies.github.io/zpwr/report.html)</sub> |
 
-### Tier 2 — Stryke ecosystem (31)
+### Tier 2 — Stryke ecosystem (32)
 
 MenkeTechnologies distribution (single tap for every CLI tool) + per-service connector libraries for `stryke`.
 
