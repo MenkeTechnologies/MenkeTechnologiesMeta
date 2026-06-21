@@ -87,6 +87,12 @@ patches</a></li>
 patches</a></li>
 <li><a href="#modes-chords-scales" id="toc-modes-chords-scales">Modes,
 chords &amp; scales</a></li>
+<li><a href="#building-a-generative-system"
+id="toc-building-a-generative-system">Building a generative
+system</a></li>
+<li><a href="#mpe-in-depth" id="toc-mpe-in-depth">MPE in depth</a></li>
+<li><a href="#working-with-your-daw"
+id="toc-working-with-your-daw">Working with your DAW</a></li>
 <li><a href="#tips-best-practices" id="toc-tips-best-practices">Tips
 &amp; best practices</a></li>
 <li><a href="#faq" id="toc-faq">FAQ</a></li>
@@ -608,6 +614,83 @@ your <code>Scale</code> mode, set <code>Chord</code> to the colour (say
 min7), play single roots, and add <code>Strum</code> +
 <code>Humanize</code> for feel. The modules supply the theory; you
 supply the tune.</p>
+<h1 id="building-a-generative-system">Building a generative system</h1>
+<p>A generative patch makes music on its own and never repeats. The
+recipe has four stages, and each maps to a family of modules:</p>
+<ol type="1">
+<li><strong>A source of notes.</strong> Something has to produce events.
+<code>Random</code> makes notes over a range on a clock; the
+cellular-automaton sequencers (<code>GameOfLife</code>,
+<code>Brian's Brain</code>, <code>Langton's Ant</code>) evolve patterns
+from rules; or a held chord through <code>Arp</code> spells out notes in
+time. This stage decides <em>what</em> plays.</li>
+<li><strong>A musical filter.</strong> Raw randomness is rarely musical,
+so lock it to key: <code>Scale</code> snaps every note into your scale,
+<code>Fold</code> keeps it in a register, <code>NoteFilter</code>
+removes out-of-range notes. After this stage, nothing can sound
+wrong.</li>
+<li><strong>A rhythmic shape.</strong> Give it time and groove:
+<code>Arp</code> orders notes, <code>SeqEuclid</code> gates them on an
+even pulse, <code>SeqRatchet</code> adds rolls, <code>Quantize</code>
+tightens timing, <code>Strum</code> spreads chords. This stage decides
+<em>when</em> things play.</li>
+<li><strong>Variation over time.</strong> Keep it alive:
+<code>Chance</code> drops notes for ever-shifting density,
+<code>RandOctave</code> jumps registers occasionally,
+<code>Humanize</code> adds human feel, and the <strong>mod
+matrix</strong> lets an <code>LFO</code> slowly move a parameter (a
+range, a probability, a transpose) so the system drifts.</li>
+</ol>
+<p>Chain one module from each stage — say
+<code>GameOfLife → Scale → SeqEuclid → Chance</code> — and you have a
+self-playing instrument. Modulate one parameter with a slow
+<code>LFO</code> and it evolves for hours without repeating. Two such
+chains, each on a different pitch range and merged, give an interplay
+between parts.</p>
+<h1 id="mpe-in-depth">MPE in depth</h1>
+<p>MPE (MIDI Polyphonic Expression) gives every note its own continuous
+controllers — bend, pressure and slide — instead of one set shared
+across the keyboard. zpwr-midi-fx works with it both as an input and as
+a tool:</p>
+<ul>
+<li><strong>As modulation.</strong> Per-note <strong>bend</strong>,
+<strong>pressure</strong> and <strong>slide (CC74)</strong> are sources
+in the mod matrix, read from the most recently active note. Route slide
+→ <code>Chord</code> type for morphing harmony, pressure →
+<code>Velocity</code> for touch-louder, bend → <code>Transpose</code>
+for expressive pitch.</li>
+<li><strong>Creating MPE.</strong> <code>Unison</code> can spread each
+note’s copies across separate MPE channels, so a chord becomes
+per-note-addressable downstream — an instrument that supports MPE can
+then bend or press each chord note independently. This turns a normal
+keyboard performance into MPE-ready material.</li>
+<li><strong>Keeping it clean.</strong> Because note-offs are scheduled
+safely across blocks, even dense MPE chords through arps and ratchets
+won’t leave hanging notes.</li>
+</ul>
+<p>If you have an MPE controller (a Roli, a Linnstrument, a touch
+surface), routing its slide and pressure into the harmony and velocity
+modules makes the <em>transforms themselves</em> expressive — you’re not
+just playing notes, you’re playing the chord voicings and dynamics with
+your fingers.</p>
+<h1 id="working-with-your-daw">Working with your DAW</h1>
+<ul>
+<li><strong>Placement.</strong> The plugin must sit <em>before</em> the
+instrument — in a MIDI-effect slot on the instrument track, or on a MIDI
+track routed to the instrument. It rewrites the note stream the
+instrument receives.</li>
+<li><strong>Tempo sync.</strong> <code>Arp</code>,
+<code>SeqEuclid</code>, <code>Echo</code> and the clocked sources follow
+the host tempo and transport, so patterns stay locked to your
+project.</li>
+<li><strong>Automation.</strong> Soft keys are host-automatable — assign
+performance moves (arp rate, chord type, transpose, a probability) to
+them and draw automation, or play them live on the Perform tab where
+they record.</li>
+<li><strong>Presets via program change.</strong> Step through your
+patches with MIDI Program Change for live set changes (toggle in the
+Perform controls).</li>
+</ul>
 <h1 id="tips-best-practices">Tips &amp; best practices</h1>
 <ul>
 <li>Order matters. Put <strong>Scale</strong> <em>after</em> harmony

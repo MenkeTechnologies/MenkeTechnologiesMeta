@@ -93,6 +93,11 @@ id="toc-a-voice-for-every-genre">A voice for every genre</a></li>
 voices</a></li>
 <li><a href="#modulation-movement"
 id="toc-modulation-movement">Modulation &amp; movement</a></li>
+<li><a href="#how-the-factory-banks-are-built"
+id="toc-how-the-factory-banks-are-built">How the factory banks are
+built</a></li>
+<li><a href="#polyphony-layers-cpu"
+id="toc-polyphony-layers-cpu">Polyphony, layers &amp; CPU</a></li>
 <li><a href="#tips-best-practices" id="toc-tips-best-practices">Tips
 &amp; best practices</a></li>
 <li><a href="#faq" id="toc-faq">FAQ</a></li>
@@ -709,6 +714,69 @@ or filter is the classic expressive control.</li>
 <p>The art is layering movers at different rates: a fast envelope for
 the attack, a slow LFO for drift, and velocity for touch, all on the
 same filter, gives a sound that feels alive rather than looped.</p>
+<h1 id="how-the-factory-banks-are-built">How the factory banks are
+built</h1>
+<p>The three genre banks are designed from documented production
+techniques — reverse-engineering them teaches the engine.</p>
+<p><strong>Trance.</strong> The supersaw pluck-lead is a
+<code>Supersaw</code> (wide unison) → <code>Filter</code> opened by a
+<em>quick</em> amp and filter envelope so it plucks, with no sustain;
+the trance gate is a <code>1/16</code> square <code>LFO</code> into a
+<code>VCA</code>; the rolling bass is a saw <code>Osc</code> whose level
+is pumped by a saw <code>LFO</code> synced to the beat (side-chain feel)
+→ low-pass; the pads are slow-swell <code>Wt</code> voices with long
+envelopes and reverb sends. The genre’s signature is <em>rhythm in the
+modulation</em> — gates and pumps locked to tempo.</p>
+<p><strong>Hard Techno.</strong> Stabs are <code>FM</code> or
+<code>Osc</code> → <code>Filter</code> with a 100%-deep, fast envelope
+sweep and high resonance into <code>Drive</code> — very short,
+percussive, dirty. The acid is <code>DiodeLadder</code> 303 with a fast
+cutoff envelope and slides; the reese/rumble is detuned saws → low-pass
+→ drive; everything is pushed hard. The signature is <em>aggression
+through the filter envelope and saturation</em>.</p>
+<p><strong>Schranz.</strong> Metallic stabs come from
+<code>Crusher</code>/<code>Folder</code> on a simple oscillator;
+filtered-noise sweeps ride a <code>Noise → Filter</code> with a long
+cutoff envelope; gated-noise loops use a <code>1/16</code> gate; siren
+wails are an <code>Osc</code> with a two-octave pitch <code>LFO</code>;
+distorted pulses run a pulse wave into heavy <code>Drive</code>. The
+signature is <em>industrial texture from crushing, folding and
+noise</em> at ~160 BPM.</p>
+<p>The lesson across all three: pick a core that suits the timbre, shape
+it with envelopes for the attack, add tempo-synced modulation for
+rhythm, and saturate to taste. Open a factory voice and trace its cables
+to see exactly how it’s wired.</p>
+<h1 id="polyphony-layers-cpu">Polyphony, layers &amp; CPU</h1>
+<p>Understanding the cost model helps you build big without choking the
+CPU.</p>
+<ul>
+<li><strong>One patch, many voices.</strong> Your patch runs once per
+held note. A simple voice (one oscillator, an envelope, a filter) is
+cheap to stack; a heavy voice (many unison <strong>Voices</strong>,
+several oscillators, granular, big feedback) costs more per note, so a
+ten-note chord costs ten times as much.</li>
+<li><strong>Unison multiplies within a voice.</strong> Setting an
+oscillator’s <strong>Voices</strong> to 11 means eleven oscillators
+<em>per note</em>. It’s the cheapest way to get width, but it isn’t free
+— a chord of unison voices adds up fast. Use it where you need lushness,
+mono (<code>Voices = 1</code>) where you don’t.</li>
+<li><strong>Layers multiply the whole patch.</strong> Each
+<strong>layer</strong> is an independent voice pool running the entire
+patch again. Two layers double the cost. Use layers for genuine parallel
+timbres or octave stacks, not for things unison or a second oscillator
+could do inside one voice.</li>
+<li><strong>The FX-bus rack runs once.</strong> Effects on the
+master/aux buses process the summed output a single time regardless of
+polyphony, so put shared reverb and delay there rather than per
+voice.</li>
+<li><strong>Keep it on.</strong> Leave <strong>Auto Gain Stage</strong>
+/ <strong>Soft Clip</strong> on — they’re cheap and save you from the
+much costlier problem of a clipped, unusable take.</li>
+</ul>
+<p>A good habit: get the voice sounding right as a single note first,
+then decide whether width should come from unison (inside the voice) or
+a layer (a whole parallel timbre), and push shared effects to the
+bus.</p>
 <h1 id="tips-best-practices">Tips &amp; best practices</h1>
 <ul>
 <li>Start from <strong>⚡ EZ MODE</strong> or a factory voice near your

@@ -382,6 +382,53 @@ movers, each with a different feel:
 The art is layering movers at different rates: a fast envelope for the attack, a slow LFO for drift,
 and velocity for touch, all on the same filter, gives a sound that feels alive rather than looped.
 
+# How the factory banks are built
+
+The three genre banks are designed from documented production techniques — reverse-engineering them
+teaches the engine.
+
+**Trance.** The supersaw pluck-lead is a `Supersaw` (wide unison) → `Filter` opened by a *quick* amp
+and filter envelope so it plucks, with no sustain; the trance gate is a `1/16` square `LFO` into a
+`VCA`; the rolling bass is a saw `Osc` whose level is pumped by a saw `LFO` synced to the beat
+(side-chain feel) → low-pass; the pads are slow-swell `Wt` voices with long envelopes and reverb
+sends. The genre's signature is *rhythm in the modulation* — gates and pumps locked to tempo.
+
+**Hard Techno.** Stabs are `FM` or `Osc` → `Filter` with a 100%-deep, fast envelope sweep and high
+resonance into `Drive` — very short, percussive, dirty. The acid is `DiodeLadder` 303 with a fast
+cutoff envelope and slides; the reese/rumble is detuned saws → low-pass → drive; everything is pushed
+hard. The signature is *aggression through the filter envelope and saturation*.
+
+**Schranz.** Metallic stabs come from `Crusher`/`Folder` on a simple oscillator; filtered-noise sweeps
+ride a `Noise → Filter` with a long cutoff envelope; gated-noise loops use a `1/16` gate; siren wails
+are an `Osc` with a two-octave pitch `LFO`; distorted pulses run a pulse wave into heavy `Drive`. The
+signature is *industrial texture from crushing, folding and noise* at ~160 BPM.
+
+The lesson across all three: pick a core that suits the timbre, shape it with envelopes for the
+attack, add tempo-synced modulation for rhythm, and saturate to taste. Open a factory voice and trace
+its cables to see exactly how it's wired.
+
+# Polyphony, layers & CPU
+
+Understanding the cost model helps you build big without choking the CPU.
+
+- **One patch, many voices.** Your patch runs once per held note. A simple voice (one oscillator, an
+  envelope, a filter) is cheap to stack; a heavy voice (many unison **Voices**, several oscillators,
+  granular, big feedback) costs more per note, so a ten-note chord costs ten times as much.
+- **Unison multiplies within a voice.** Setting an oscillator's **Voices** to 11 means eleven
+  oscillators *per note*. It's the cheapest way to get width, but it isn't free — a chord of unison
+  voices adds up fast. Use it where you need lushness, mono (`Voices = 1`) where you don't.
+- **Layers multiply the whole patch.** Each **layer** is an independent voice pool running the entire
+  patch again. Two layers double the cost. Use layers for genuine parallel timbres or octave stacks,
+  not for things unison or a second oscillator could do inside one voice.
+- **The FX-bus rack runs once.** Effects on the master/aux buses process the summed output a single
+  time regardless of polyphony, so put shared reverb and delay there rather than per voice.
+- **Keep it on.** Leave **Auto Gain Stage** / **Soft Clip** on — they're cheap and save you from the
+  much costlier problem of a clipped, unusable take.
+
+A good habit: get the voice sounding right as a single note first, then decide whether width should
+come from unison (inside the voice) or a layer (a whole parallel timbre), and push shared effects to
+the bus.
+
 # Tips & best practices
 
 - Start from **⚡ EZ MODE** or a factory voice near your target and modify, rather than building from

@@ -653,6 +653,78 @@ built to be played, not just programmed:
 - **Effect as instrument.** Add an oscillator driven by the MIDI **note** source and play the effect
   chain melodically from a keyboard — the H3000-style "play the algorithm" approach.
 
+# The effect families in depth
+
+A closer look at the families you'll reach for most, and the controls that matter.
+
+**Filters.** Every filter has a **cutoff** (where it acts) and most have **resonance** (a boost at the
+cutoff). Low resonance is gentle tone shaping; high resonance whistles and, near the top, self-
+oscillates into a sine you can play. **Mode** picks low-pass (warm), high-pass (thin), band-pass
+(focused) or notch (hollow). The character comes from the model: `Ladder` is the round, slightly-
+distorting Moog; `DiodeLadder` is the squelchy 303; `MS20Filter` and `SteinerParker` are aggressive
+and screaming; `Formant`/`VocalFilter` impose vowels; the resonator family (`BarReson`, `BellReson`)
+rings like struck metal or glass. Drive into a filter for analog grit, and modulate the cutoff (LFO,
+envelope, or the Mod input) to make it move.
+
+**Delays.** **Time** sets the spacing, **feedback** sets how many repeats (and, high enough,
+resonance), **mix** sets wet/dry, and a **damp**/tone control darkens each repeat. Sync the time to
+tempo for rhythmic echoes; modulate it for chorus/flange. `DubDelay` saturates and filters its
+feedback like tape; `PingPong` alternates channels; `Multitap`/`Rainmaker` give rhythmic tap
+patterns; `GrainDelay`/`Morphagene` granularise the buffer; `Looper`/`Freeze` capture and sustain.
+
+**Reverbs.** **Size** is the space, **decay** the tail length, **damping** how fast highs fade, and a
+**pre-delay** (where present) sets the gap before the tail. Small + short = a tight room; large + long
++ low damping = a cathedral. `Plate` is smooth and classic, `Spring` drips and boings, `Shimmer`
+pitches the tail up for angelic clouds, `Convolution` uses sampled spaces, and `ErbeVerb`/`Massive`
+morph freely between all of it. A high-pass before the reverb keeps low end clean; a low-pass after
+darkens the tail.
+
+**Distortion.** **Drive** sets how hard you push into the non-linearity, **tone** shapes what comes
+out, **mix** blends with the dry (parallel distortion keeps the body). Soft clippers warm, hard
+clippers bite, wavefolders (`Folder`) go bright and metallic, and crushers (`Bitcrush`, `Decimator`)
+add digital grit. Filter before to choose what gets distorted, filter after to tame the harmonics.
+
+**Dynamics.** A **compressor** has threshold (where it starts), ratio (how hard), attack and release
+(how fast it grabs and lets go), and makeup gain. Fast attack tames transients; slow attack lets them
+through (punch). A **gate** is the inverse — it closes below a threshold. `Transient` skips the
+threshold idea entirely and just scales attack and sustain. `OTT` is multiband up/down compression
+for that modern, loud, even sound. Use `EnvFollow` to turn any signal into a control source for your
+own dynamics.
+
+**Modulation effects.** Chorus, flanger and phaser are all built on short modulated delays/all-passes:
+**rate** sets the sweep speed, **depth** how far, **feedback** the resonance, **mix** the intensity.
+Slow and shallow = subtle width; fast and deep = seasick warble. `RingMod` multiplies by a carrier for
+metallic, inharmonic tones; `Tremolo`/`AutoPan` move level and position.
+
+**Pitch & spectral.** Pitch shifters have an **interval** (and often a **detune** for the doubling
+effect) and a dry/wet mix; `FreqShift` moves frequencies *linearly* for inharmonic, metallic results
+rather than musical intervals. Spectral blocks work on the frequency picture: `SpecFreeze` holds it,
+`SpecBlur` smears it over time, `Soothe`/`SpecGate` clean it, `MatchEQ` copies one signal's tone onto
+another.
+
+# Automation & your DAW
+
+The plugin is built to live inside a session, not just on a screen.
+
+- **What automates.** Your DAW sees the **soft keys** plus Master In / Out / Bypass. The patch itself
+  (blocks, cables, parameters) is plugin state that saves with the project but isn't a per-knob
+  automation lane — so anything you want to automate, put on a soft key and patch that key wherever it
+  needs to go inside the graph.
+- **Recording moves.** Anything you do on the **Perform** tab — macro knobs, XY pads, the Orb, the
+  Preset Morph (its X/Y are reserved host params `morphX`/`morphY`) — writes to host parameters, so a
+  performance you play records as automation and plays back identically with the editor closed.
+- **Presets via program change.** Build a setlist and step through presets with MIDI Program Change
+  (and Bank Select for banks beyond 128); toggle the response in Settings.
+- **Bypass & gain.** Master In/Out and Bypass are host params too, for clean A/B and gain matching in
+  the mix.
+- **State recall.** The whole patch and every parameter round-trip through the host project, so
+  reopening a session restores the exact instrument you built.
+
+A practical pattern: design the patch, decide the three or four things you'll want to ride (cutoff,
+delay mix, drive, a morph), assign each to a named soft key, and from then on you work entirely from
+those macros and the Perform surfaces — the patch underneath stays fixed while the performance lives
+in automation.
+
 # Tips & best practices
 
 - Start with **⚡ EZ WIRE** to get sound, then rewire piece by piece — it is faster than building from

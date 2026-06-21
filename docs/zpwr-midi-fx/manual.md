@@ -317,6 +317,62 @@ Chord module's inversion, spread and octave-double controls are your voicing pal
 (say min7), play single roots, and add `Strum` + `Humanize` for feel. The modules supply the theory;
 you supply the tune.
 
+# Building a generative system
+
+A generative patch makes music on its own and never repeats. The recipe has four stages, and each maps
+to a family of modules:
+
+1. **A source of notes.** Something has to produce events. `Random` makes notes over a range on a
+   clock; the cellular-automaton sequencers (`GameOfLife`, `Brian's Brain`, `Langton's Ant`) evolve
+   patterns from rules; or a held chord through `Arp` spells out notes in time. This stage decides
+   *what* plays.
+2. **A musical filter.** Raw randomness is rarely musical, so lock it to key: `Scale` snaps every note
+   into your scale, `Fold` keeps it in a register, `NoteFilter` removes out-of-range notes. After this
+   stage, nothing can sound wrong.
+3. **A rhythmic shape.** Give it time and groove: `Arp` orders notes, `SeqEuclid` gates them on an
+   even pulse, `SeqRatchet` adds rolls, `Quantize` tightens timing, `Strum` spreads chords. This stage
+   decides *when* things play.
+4. **Variation over time.** Keep it alive: `Chance` drops notes for ever-shifting density,
+   `RandOctave` jumps registers occasionally, `Humanize` adds human feel, and the **mod matrix** lets
+   an `LFO` slowly move a parameter (a range, a probability, a transpose) so the system drifts.
+
+Chain one module from each stage — say `GameOfLife → Scale → SeqEuclid → Chance` — and you have a
+self-playing instrument. Modulate one parameter with a slow `LFO` and it evolves for hours without
+repeating. Two such chains, each on a different pitch range and merged, give an interplay between
+parts.
+
+# MPE in depth
+
+MPE (MIDI Polyphonic Expression) gives every note its own continuous controllers — bend, pressure and
+slide — instead of one set shared across the keyboard. zpwr-midi-fx works with it both as an input and
+as a tool:
+
+- **As modulation.** Per-note **bend**, **pressure** and **slide (CC74)** are sources in the mod
+  matrix, read from the most recently active note. Route slide → `Chord` type for morphing harmony,
+  pressure → `Velocity` for touch-louder, bend → `Transpose` for expressive pitch.
+- **Creating MPE.** `Unison` can spread each note's copies across separate MPE channels, so a chord
+  becomes per-note-addressable downstream — an instrument that supports MPE can then bend or press each
+  chord note independently. This turns a normal keyboard performance into MPE-ready material.
+- **Keeping it clean.** Because note-offs are scheduled safely across blocks, even dense MPE chords
+  through arps and ratchets won't leave hanging notes.
+
+If you have an MPE controller (a Roli, a Linnstrument, a touch surface), routing its slide and pressure
+into the harmony and velocity modules makes the *transforms themselves* expressive — you're not just
+playing notes, you're playing the chord voicings and dynamics with your fingers.
+
+# Working with your DAW
+
+- **Placement.** The plugin must sit *before* the instrument — in a MIDI-effect slot on the instrument
+  track, or on a MIDI track routed to the instrument. It rewrites the note stream the instrument
+  receives.
+- **Tempo sync.** `Arp`, `SeqEuclid`, `Echo` and the clocked sources follow the host tempo and
+  transport, so patterns stay locked to your project.
+- **Automation.** Soft keys are host-automatable — assign performance moves (arp rate, chord type,
+  transpose, a probability) to them and draw automation, or play them live on the Perform tab where
+  they record.
+- **Presets via program change.** Step through your patches with MIDI Program Change for live set
+  changes (toggle in the Perform controls).
+
 # Tips & best practices
 
 - Order matters. Put **Scale** *after* harmony modules so every generated note is locked to key, and
