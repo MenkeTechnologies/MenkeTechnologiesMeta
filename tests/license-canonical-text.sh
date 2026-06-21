@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# For every Rust submodule with a LICENSE file, pin that the text
-# matches the canonical MenkeTechnologies MIT template byte-for-byte.
+# For every FREE/OSS Rust submodule with a LICENSE file, pin that the
+# text matches the canonical MenkeTechnologies MIT template byte-for-byte.
+#
+# PAID products are exempt: they are NOT MIT-licensed (MIT would let
+# anyone use, copy, and resell them for free, defeating the paid model).
+# Detect a paid/proprietary product by the canonical marker
+# `license = "UNLICENSED"` in its Cargo.toml and skip the MIT check —
+# it ships its own proprietary LICENSE instead.
 #
 # Bulk-added in iter 10 (23 LICENSE files), expanded in iter 37 to
 # 27 (Audio-Haxor caught + workspace-root fall-through fix in
@@ -88,6 +94,17 @@ for p in "${paths[@]}"; do
     # MenkeTechnologies Rust crate has one; every third-party zsh
     # plugin doesn't.
     [[ -f "$p/Cargo.toml" || -f "$p/src-tauri/Cargo.toml" ]] || continue
+
+    # Paid / proprietary products are NOT MIT — skip them. The marker is
+    # `license = "UNLICENSED"` in the package Cargo.toml; such repos ship
+    # their own proprietary LICENSE (still pinned to exist by
+    # license-file-present.sh) which must NOT match the canonical MIT.
+    cargo_lic="$p/Cargo.toml"
+    [[ -f "$cargo_lic" ]] || cargo_lic="$p/src-tauri/Cargo.toml"
+    if grep -qE '^license[[:space:]]*=[[:space:]]*"UNLICENSED"' "$cargo_lic" 2>/dev/null; then
+        echo "SKIP  $p: proprietary (license=\"UNLICENSED\") — paid product, not MIT"
+        continue
+    fi
 
     if [[ ! -f "$p/LICENSE" ]]; then
         # Dual-license repos (nmaprs) ship LICENSE-MIT / LICENSE-APACHE
