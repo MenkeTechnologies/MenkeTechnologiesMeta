@@ -14,6 +14,8 @@
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-2_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-2)
 [![Tier 6](https://img.shields.io/badge/tier_6-12_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-12)
+[![Rust](https://img.shields.io/badge/rust-2.29M_LOC-orange.svg)](#0x09-code-volume)
+[![Code](https://img.shields.io/badge/code-9.63M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -45,6 +47,7 @@
 - [\[0x06\] Per-Host Setup](#0x06-per-host-setup)
 - [\[0x07\] Working Inside a Submodule](#0x07-working-inside-a-submodule)
 - [\[0x08\] Disk Footprint](#0x08-disk-footprint)
+- [\[0x09\] Code Volume](#0x09-code-volume)
 - [\[0xFF\] License](#0xff-license)
 
 ---
@@ -507,6 +510,49 @@ cd MenkeTechnologiesMeta
 git submodule init strykelang zshrs lsofrs    # init only what you want
 git submodule update --depth 1                # shallow clone for the initialized set
 ```
+
+---
+
+## [0x09] CODE VOLUME
+
+Measured with `tokei 14.0.0` across the full recursive working tree. **Code** is source lines only (blanks and comments excluded). `.stk` (stryke source) has no `tokei` lexer, so its code is counted separately as non-blank, non-`#`-comment lines — the same definition `tokei` uses. Build artifacts (`target/`, `node_modules/`, `.cargo/`), all `vendor/` trees (incl. the vendored fish source at `zshrs/vendor/fish/` and the upstream Python powerline under `powerliners/vendor/`), and the `MenkeTechnologiesPublications/src/{zshrs,strykelang,zpwr}` nested submodules (identical files already counted under their own top-level checkouts) are excluded so nothing is double-counted.
+
+| Language | Code | Files |
+|---|---:|---:|
+| Rust | 2,292,754 | 6,113 |
+| JSON | 2,014,314 | 368 |
+| Perl | 1,903,442 | 19,616 |
+| C Header | 444,108 | 2,185 |
+| JavaScript | 415,525 | 2,642 |
+| Zsh | 280,215 | 1,301 |
+| Stryke (`.stk`) | 200,525 | 3,372 |
+| HTML | 196,419 | 995 |
+| TeX | 138,423 | 14 |
+| Vim Script | 114,038 | 738 |
+| AWK | 82,368 | 2,191 |
+| CSS | 69,993 | 121 |
+| Shell | 60,972 | 1,811 |
+| Python | 33,363 | 370 |
+| SQL | 29,187 | 118 |
+| Kotlin | 23,672 | 173 |
+| **Total** | **9,625,473** | **45,404** |
+
+The Perl mass is `strykelang/parity/cases` — 19,505 hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5. The JSON is fixtures, completion data, and bytecode/cache snapshots.
+
+Largest single repos by source (same exclusions; `.stk` counted as above):
+
+| Repo | Primary | Secondary |
+|---|---:|---:|
+| `traderview` | Rust 742,297 | JavaScript 299,323 |
+| `zshrs` | Rust 432,116 | Zsh 50,324 |
+| `strykelang` | Rust 409,952 | Stryke 162,351 · Perl 1.9M |
+| `Audio-Haxor` | Rust 128,510 | JavaScript 64,161 |
+| `fusevm` | Rust 127,470 | — |
+| `zpwr` | Zsh 74,539 | Shell 8,197 |
+| `powerliners` | Rust 62,996 | — |
+| `awkrs` | AWK 82,138 | Rust 47,700 |
+
+Numbers refresh as repos add commits — regenerate with `tokei` (plus the `.stk` awk pass) from a fresh recursive clone.
 
 ---
 
