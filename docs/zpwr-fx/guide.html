@@ -104,456 +104,598 @@ reference</a></li>
       <div class="guide-body">
 <h1 id="overview">Overview</h1>
 <p>zpwr-fx is a <strong>modular patch-graph effects plugin</strong> —
-not a fixed slot rack. Instead of a preset chain of effects, you wire
-primitive DSP blocks (oscillators, filters, delays, reverbs, dynamics,
-distortion, modulation, utilities) freely into your own algorithm, in
-the spirit of the Eventide H3000 Factory, inside a cyberpunk WebView
-interface. It runs as VST3, AU, CLAP and Standalone on macOS, Linux and
-Windows.</p>
-<p>What makes it modular rather than a multi-effect:</p>
+not a fixed slot rack. A conventional multi-effect gives you a chain of
+slots in a fixed order: input, then effect 1, then effect 2, then
+output. zpwr-fx removes that assumption entirely. You are handed a bag
+of primitive DSP blocks (oscillators, filters, delays, reverbs,
+dynamics, distortion, modulation, utilities) and a patch field, and you
+wire them into whatever topology you want — the way the Eventide H3000
+Factory let engineers build algorithms from primitives rather than pick
+from a menu. The interface is a cyberpunk WebView; the engine is the
+shared zpwr-patch-core graph, so the same patch concepts carry across
+zpwr-synth and zpwr-midi-fx. It runs as VST3, AU, CLAP and Standalone on
+macOS, Linux and Windows.</p>
+<p>What “modular” actually buys you, in practice:</p>
 <ul>
 <li><strong>Any-to-any routing.</strong> Any block’s output can feed any
-other block’s input. There is no fixed order — you decide the
-topology.</li>
-<li><strong>Fan-out.</strong> A single source can drive unlimited
-destinations; split a signal to parallel chains and recombine them with
-a Mixer.</li>
+other block’s input. There is no implied order; a reverb can sit
+<em>before</em> a distortion, a filter can read another filter, and you
+can split one source into three parallel chains and sum them back. The
+topology is yours.</li>
+<li><strong>Fan-out.</strong> A single output can drive unlimited
+inputs. Split a signal to a dry path and several wet paths, process each
+differently, and recombine with a Mixer — true parallel processing
+instead of the serial-only chain of a slot rack.</li>
 <li><strong>Feedback.</strong> Wire an output back to an earlier input
-and the graph resolves the loop with a one-sample delay — the basis of
-combs, flangers, Karplus strings and runaway resonators.</li>
+and the graph resolves the loop with a one-sample delay. That single
+capability is the basis of combs, flangers, Karplus strings, resonators
+and self-oscillating reverbs — effects a strictly forward chain cannot
+express.</li>
 <li><strong>Modulation everywhere.</strong> Every parameter has a
-modulation source and depth; LFOs, envelopes, macro knobs and other
-blocks’ outputs all modulate freely.</li>
+modulation source and depth, and any signal in the patch — an LFO, an
+envelope, a macro knob, or another block’s output — can be that
+source.</li>
 <li><strong>Layers.</strong> Stack unlimited independent copies of the
-whole engine and mix them with the Mixer.</li>
+whole engine and mix them, for parallel timbres, wet/dry control or
+sheer thickness.</li>
 </ul>
+<p>If you have never patched a modular before, start with <strong>EZ
+WIRE</strong> (it builds a working chain for you) and rewire from there;
+if you have, the whole field is open.</p>
 <h1 id="core-concepts">Core concepts</h1>
-<p><strong>Blocks (nodes).</strong> The unit of the patch. Each block
-has a type (Filter, Delay, LFO, …), <strong>three inputs</strong> — In
-1, In 2 and <strong>Mod</strong> — up to <strong>six
-parameters</strong>, and <strong>one output</strong>. A block reads its
-inputs every sample, computes, and writes its output.</p>
-<p><strong>Sources.</strong> Anything an input can read: silence, the
-left/right audio input, internal Noise, the macro <strong>Soft
-Keys</strong>, live <strong>MIDI/MPE</strong> (mod wheel, aftertouch,
-pitch bend, velocity, expression, breath, sustain, note, and the MPE
-press / slide / bend dimensions), or <strong>any block’s
-output</strong>.</p>
-<p><strong>Signal vs control.</strong> The same cables carry audio and
-control (CV). An LFO’s output is just a slow signal; patch it into a
-Filter’s Mod input to sweep the cutoff, or into a VCA to make a tremolo.
-There is no hard wall between “audio” and “modulation” — only how fast
-the signal moves.</p>
-<p><strong>The graph.</strong> On every structural edit the patch is
-sorted into dependency order so each block runs after the blocks it
-reads. Cycles (feedback) are detected and broken with a one-sample
-delay, so the sort always succeeds. Editing is lock-free: live knob
-tweaks are atomic writes; structural edits swap the whole graph
-atomically so audio never glitches.</p>
-<p><strong>Layers.</strong> A layer is a full copy of the engine. Stack
-them for thickness (detune two layers), parallel processing (clean layer
-+ crushed layer), or wet/dry control, and balance them in the Mixer with
-sends to the aux FX buses.</p>
+<p><strong>Blocks (nodes).</strong> The block is the unit of the patch.
+Each block has a type (Filter, Delay, LFO, …), <strong>three
+inputs</strong> — In 1, In 2 and a dedicated <strong>Mod</strong> input
+— up to <strong>six parameters</strong>, and <strong>one
+output</strong>. Every sample, a block reads its inputs, runs its
+algorithm, and writes a single output value. Because there is exactly
+one output per block, you refer to a block by that output when you patch
+— “the filter’s output into the delay’s input.”</p>
+<p><strong>Sources.</strong> A “source” is anything an input can read.
+The full list: silence (an unpatched input reads zero), the left and
+right audio inputs, an internal <strong>Noise</strong> generator, the
+macro <strong>Soft Keys</strong>, the live <strong>MIDI/MPE</strong>
+dimensions (mod wheel, aftertouch, pitch bend, velocity, expression,
+breath, sustain, note, and the MPE press / slide / bend), and
+<strong>any block’s output</strong>. An unpatched input is not “off” —
+it is silence (zero), which matters when a block sums its inputs.</p>
+<p><strong>Signal vs control (there is no wall).</strong> The same
+cables carry audio and control voltage. An LFO’s output is simply a
+signal that moves slowly; a filter’s output is a signal that moves at
+audio rate. Patch the LFO into a Filter’s Mod input and it sweeps the
+cutoff; patch it into a VCA and it becomes a tremolo; patch an
+audio-rate oscillator into the same Mod input and you get FM-style
+sidebands. “Modulation” and “audio” are the same kind of thing moving at
+different speeds — which is exactly why a modular can do things a fixed
+effect cannot.</p>
+<p><strong>The graph and ordering.</strong> On every structural edit
+(adding a block, drawing or cutting a cable) the patch is re-sorted into
+dependency order, so each block runs only after the blocks it reads.
+When you create a cycle — a cable from a later block back to an earlier
+input — the sort would be impossible, so the loop is broken with a
+single-sample delay at that edge; the rest of the order is preserved.
+This is why feedback “just works” and why a feedback patch has a
+one-sample latency in its loop (the basis of its tuning for combs).
+Editing is lock-free: turning a knob is an atomic write that the audio
+thread sees immediately; a structural change builds the new graph and
+swaps it atomically, so audio never tears.</p>
+<p><strong>Layers.</strong> A layer is a complete copy of the engine
+with its own patch. Use layers for parallel processing (a clean layer
+plus a crushed layer, blended), for octave or detune stacks, or for
+wet/dry balance, and mix them in the <strong>Mixer</strong> tab with
+per-layer gain/pan and sends to the aux FX buses. A layer is heavier
+than a block but lighter than a second plugin instance, and all layers
+share the same transport and MIDI.</p>
 <h1 id="getting-started">Getting started</h1>
 <ol type="1">
 <li>Open the plugin on an audio track. The <strong>Patch</strong> tab
-shows a grid of blocks with input and output jacks.</li>
-<li>Press <strong>⚡ EZ WIRE</strong> — it auto-routes the input through
-your blocks to the output, so you hear sound immediately without
-touching a cable. It is the fastest way to get signal flowing before you
-start rewiring.</li>
-<li>Press <strong>+ ADD BLOCK</strong> and choose a Filter, Delay or
+shows a grid of blocks, each with input jacks on one side and an output
+jack on the other, and a strip of macro knobs.</li>
+<li>Press <strong>EZ WIRE</strong>. It auto-routes the input through
+whatever blocks you have to the output, so you hear signal immediately —
+the fastest way to confirm the plugin is passing audio before you start
+designing. It is non-destructive to your blocks; it only lays
+cables.</li>
+<li>Press <strong>+ ADD BLOCK</strong> and pick a Filter, Delay or
 Reverb. Drag from one block’s <strong>output</strong> jack onto another
-block’s <strong>input</strong> jack to wire them.</li>
-<li><strong>Double-click</strong> any block to open its detail panel —
-its parameters, its modulation routes, and (for the Expr block) its
-code.</li>
-<li>Tweak knobs; the cable feeding each block <strong>glows</strong>
-with that block’s live level, so you can see the gain structure as you
-work.</li>
+block’s <strong>input</strong> jack to wire them. Drag the output to a
+<em>second</em> input to fan out.</li>
+<li><strong>Double-click</strong> any block to open its detail panel:
+its parameters, a modulation source + depth for each parameter, and (for
+the Expr block) a code editor.</li>
+<li>Tweak knobs and listen. The cable feeding each block
+<strong>glows</strong> in proportion to that block’s live level, so the
+gain structure of the whole patch is visible while you work — a dim
+cable is a quiet signal, a hot glow is a stage being driven hard.</li>
 </ol>
-<p>Two buttons reset without starting over: <strong>INIT</strong>
-unplugs every cable and modulation route but keeps your blocks in place
-(handy for re-patching from scratch), and <strong>🗑</strong> blanks the
-whole patch.</p>
+<p>Two reset buttons let you start over without losing your layout:
+<strong>INIT</strong> unplugs every cable and modulation route but
+leaves all your blocks in place (ideal for re-patching a fixed set of
+blocks a new way), and <strong>Clear</strong> blanks the whole patch
+back to empty.</p>
 <h1 id="patching-cables">Patching cables</h1>
+<p>Wiring is direct manipulation:</p>
 <ul>
-<li><strong>Wire:</strong> drag an output jack onto an input jack.</li>
-<li><strong>Disconnect:</strong> drag an input jack away and drop it on
-empty space.</li>
-<li><strong>Rewire:</strong> drop an existing connection on a different
-output.</li>
-<li><strong>Fan out:</strong> drag from the same output again to a
-second input — outputs feed any number of inputs.</li>
-<li><strong>Cable level &amp; colour:</strong>
-<strong>right-click</strong> a cable for its <strong>level</strong> (a
-per-cable gain) and a <strong>colour</strong> swatch. The cable’s
-brightness tracks its level, so a dim cable is carrying a quiet signal —
-a visual gain meter built into the patch.</li>
+<li><strong>Wire</strong> — drag an output jack onto an input jack.</li>
+<li><strong>Disconnect</strong> — drag an input jack away and drop on
+empty space; that input returns to silence.</li>
+<li><strong>Rewire</strong> — drop an existing connection onto a
+different output to move it.</li>
+<li><strong>Fan out</strong> — drag from the same output again to
+another input; an output feeds any number of destinations with no
+penalty to the original path.</li>
+<li><strong>Cable level &amp; colour</strong> —
+<strong>right-click</strong> a cable for a per-cable
+<strong>level</strong> (a gain on just that connection) and a
+<strong>colour</strong> swatch. Level is the main tool for balancing a
+patch by hand: a value of <code>0</code> mutes the connection without
+deleting it (useful for A/B-ing), and the cable’s brightness and width
+track the level so you can read it at a glance. Colour is cosmetic and
+saved with the patch.</li>
 </ul>
-<p>Because the <strong>Mod</strong> input is just another input, you can
-patch a control signal into it and use it as a per-block modulation bus
-in addition to the parameter mod slots.</p>
+<p>A subtlety worth internalising: when several cables land on the
+<em>same</em> input, they <strong>sum</strong>. That is how you mix
+without a Mixer block — fan three outputs into one input and it adds
+them (subject to each cable’s level). And because the
+<strong>Mod</strong> input is just another input, you can treat it as a
+per-block modulation bus: patch a control signal there in addition to
+the per-parameter mod slots.</p>
 <h1 id="the-interface">The interface</h1>
-<p>The editor is organised into tabs along the top:</p>
+<p>The editor is a set of tabs, each a different view of the same
+patch:</p>
 <ul>
-<li><strong>Patch</strong> — the main workspace: the node grid,
-drag-to-wire cables, the macro soft-key strip, and a detail panel for
-the selected block. Carries <strong>⚡ EZ WIRE</strong> (auto-route),
-<strong>INIT</strong> (unplug, keep blocks), <strong>🗑</strong> (blank),
-and the <strong>Stereo</strong> / <strong>🔒 Lock</strong> toggles.
-Cables glow with each block’s live signal level.</li>
-<li><strong>Synth</strong> — a fixed-layout panel showing every block’s
-knobs in a grid, with no cables (Serum/Spire style). Use it for fast
-sound design once the routing is set.</li>
-<li><strong>Perform</strong> — macros and XY pads only, no patching;
-built for live play and host automation.</li>
-<li><strong>Clip</strong> — draw a MIDI pattern and play the patch from
-it, with key/scale and key-trigger, to audition a patch
-melodically.</li>
+<li><strong>Patch</strong> — the main workspace. The node grid with
+drag-to-wire cables, the macro soft-key strip, and the detail panel for
+the selected block. It carries <strong>EZ WIRE</strong>,
+<strong>INIT</strong>, <strong>Clear</strong>, and the
+<strong>Stereo</strong> / <strong>Lock</strong> toggles. The cable glow
+makes gain structure visible here.</li>
+<li><strong>Synth</strong> — a fixed-layout view that shows every
+block’s knobs in a grid with no cables, like a Serum or Spire panel.
+Once your routing is set, this is the fastest surface for sound design
+because every control is visible at once.</li>
+<li><strong>Perform</strong> — macros, XY pads, Morph and Orb only, with
+no patching. Everything here drives host-automatable parameters, so it
+works with the editor closed and records as automation; this is the
+live-performance and automation surface.</li>
+<li><strong>Clip</strong> — draw a MIDI clip and play the patch from it,
+with key/scale and key-trigger, to audition a patch melodically without
+an external sequencer.</li>
 <li><strong>Mod Matrix</strong> — every modulation connection in the
-patch in one editable list.</li>
+patch gathered into one editable list, so you can audit and rebalance
+the whole modulation scheme without hunting through block panels.</li>
 <li><strong>Mixer</strong> — per-layer channel strips (gain, pan, mute,
 solo) with sends to the aux FX buses, the aux returns and the master
-strip, with peak and LUFS metering.</li>
-<li><strong>Browse</strong> — search, save, tag and load patches; filter
-by bank, type, style and character.</li>
+strip, plus peak and LUFS metering — the mixdown stage for multi-layer
+patches.</li>
+<li><strong>Browse</strong> — a tagged preset browser: search, save, tag
+and load patches, filtering by bank, type, style and character.</li>
 <li><strong>Settings</strong> — master in/out and bypass, <strong>Auto
-Gain Stage</strong> and target, the brickwall limiter, scale/key
+Gain Stage</strong> and its target, the brickwall limiter, scale/key
 quantize, UI scale and interface toggles.</li>
 <li><strong>About</strong> — version and engine info.</li>
 </ul>
 <h1 id="modulation-in-depth">Modulation in depth</h1>
-<p>Modulation is the patching itself. Two ways to modulate:</p>
+<p>Modulation is patching by another name. There are two routes:</p>
 <ol type="1">
-<li><strong>Parameter mod slot.</strong> In a block’s detail panel, each
-parameter has a <strong>source</strong> and a <strong>depth</strong>.
-The parameter value becomes <code>base + source × depth</code>, in the
-parameter’s own units — so an LFO at depth <code>+2400</code> on a pitch
-param sweeps two octaves, while the same LFO at depth <code>0.2</code>
-on a mix param nudges it gently.</li>
+<li><strong>Per-parameter mod slot.</strong> In a block’s detail panel,
+every parameter carries a <strong>source</strong> and a
+<strong>depth</strong>. The effective value is
+<code>base + source × depth</code>, computed in the parameter’s own
+units. This is the key to predictable modulation: the same LFO at depth
+<code>2400</code> on a pitch parameter sweeps two octaves (pitch is in
+cents), while at depth <code>0.2</code> on a mix parameter it nudges the
+blend by a fifth of its range. Choose depth in the units of the thing
+you are modulating.</li>
 <li><strong>Mod input.</strong> Patch a control signal straight into a
-block’s <strong>Mod</strong> input for a per-block modulation bus.</li>
+block’s <strong>Mod</strong> input for a per-block modulation bus that
+sums with the parameter slots.</li>
 </ol>
-<p>Any source works: an <strong>LFO</strong> block, an
-<strong>Envelope</strong> follower, a <strong>macro Soft Key</strong>,
-<strong>Noise</strong>, a performance controller, or <strong>another
-block’s output</strong> (because mod sources are part of the dependency
-graph, modulating with a block’s output is ordered like any other
-connection — you can even modulate with a delayed or filtered version of
-a signal).</p>
-<p>The <strong>Mod Matrix</strong> tab gathers every modulation route in
-the patch into one list so you can audit and rebalance the whole
-modulation scheme at a glance.</p>
+<p>Any source is fair game: an <strong>LFO</strong> block (for cyclic
+movement), an <strong>Envelope</strong> follower (for dynamics-driven
+movement), a <strong>macro Soft Key</strong> (for hand or automation
+control), <strong>Noise</strong> (for randomness, often via a
+sample-and-hold), a <strong>performance controller</strong>, or
+<strong>another block’s output</strong>. That last one is the deep part:
+because modulators are ordinary nodes in the dependency graph, you can
+modulate a parameter with a <em>processed</em> signal — a filtered,
+delayed or distorted version of something else — and the engine orders
+it correctly like any cable. Audio-rate modulation (one oscillator into
+another’s Mod) gives you FM and cross-modulation timbres, not just slow
+sweeps.</p>
+<p>The <strong>Mod Matrix</strong> tab is the bird’s-eye view: it lists
+every route as (source → destination, depth) so you can see and adjust
+the entire modulation design at once.</p>
 <h1 id="macro-soft-keys">Macro soft keys</h1>
-<p>The <strong>Soft Keys</strong> are an expandable pool of
-host-automatable knobs (16 active by default). The <code>+</code> /
-<code>−</code> controls above the knob row change how many are active,
-and the active count is saved with the patch. They are special
-because:</p>
+<p>The <strong>Soft Keys</strong> are an expandable pool of macro knobs
+— 16 active by default, with <code>+</code> / <code>−</code> controls
+above the knob row to change the active count (saved with the patch).
+They exist for one structural reason and one creative reason:</p>
 <ul>
-<li>They are <strong>host-automatable</strong> — DAW automation lanes
-and the Perform surfaces drive them.</li>
-<li>They are <strong>patchable</strong> as modulation sources anywhere
-in the graph.</li>
+<li><strong>Structural:</strong> a plugin’s host-automatable parameter
+list must be fixed, but a patch’s blocks and routing change constantly.
+The soft keys are that fixed, host-facing list. The patch itself — block
+types, cables, parameters — is plugin state the editor changes and the
+plugin saves; the soft keys (plus master in/out/bypass) are what your
+DAW sees and automates.</li>
+<li><strong>Creative:</strong> because a soft key is patchable anywhere
+as a modulation source, one knob can drive many destinations at once.
+Assign a single soft key to a filter cutoff, a delay mix and a drive
+amount, and you have a one-knob macro that opens the whole patch up —
+and it records as automation and appears on the Perform surfaces.</li>
 </ul>
-<p>So a soft key is the bridge between an outside gesture (automation, a
-hardware knob, an XY pad) and the inside of your patch — assign one to a
-filter cutoff and a delay mix at once for an expressive macro.</p>
+<p>This is exactly the H3000 “soft function key” model: a small set of
+performance controls mapped into the guts of an algorithm.</p>
 <h1 id="gain-staging">Gain staging</h1>
-<p>Stacked cable gains and summing buses make it easy to drive the
-signal <em>between</em> blocks past 0 dBFS, which would clip. Two
-per-block settings (both <strong>on by default</strong>) handle it:</p>
+<p>Because cable levels stack and inputs sum, it is easy to drive the
+signal <em>between</em> blocks well past 0 dBFS — which would clip
+digitally. Two per-block settings (both <strong>on by default</strong>)
+prevent that:</p>
 <ul>
-<li><strong>Auto Gain Stage</strong> rides levels: each block’s output
-runs through a fast-attack / slow-release peak follower whose smoothed
-gain (≤ 1) pulls the block down toward the <strong>Auto-Gain
-Target</strong> ceiling, so stages stay sanely staged as you build.</li>
-<li><strong>Soft Clip</strong> is the guarantee: an instant,
-sample-accurate tanh bound at the same ceiling on every block output.
-The follower’s ~2 ms attack can let a fast transient slip through before
-it ducks, and cable gains apply downstream of the staging — Soft Clip
-catches all of it, saturating gently rather than clipping harshly.</li>
+<li><strong>Auto Gain Stage</strong> rides levels. Each block’s output
+runs through a peak follower with a fast attack and a slow release; its
+smoothed gain (never above 1) pulls the block down toward the
+<strong>Auto-Gain Target</strong> ceiling. The effect is gentle,
+automatic level-matching between stages as you build, so one hot block
+doesn’t blow out the next.</li>
+<li><strong>Soft Clip</strong> is the guarantee the follower can’t make
+alone. The follower’s ~2 ms attack lets a fast transient through before
+it ducks, and cable gains are applied <em>downstream</em> of the
+staging, so something can still exceed the ceiling momentarily. Soft
+Clip is an instant, sample-accurate tanh bound at the same ceiling on
+every block output — it catches whatever slips past, and because it is a
+tanh it saturates gently rather than clipping squarely.</li>
 </ul>
-<p>Both are per block, so each stage is independent, and the live cable
-glow tracks each block’s level. Turn either off in Settings for raw
-gain. They are distinct from the master <strong>Brickwall
-Limiter</strong>, a single hard ceiling on the final summed output.
-MIDI-effect blocks carry no audio level, so neither applies to them.</p>
+<p>Both are per block and independent, and the cable glow tracks each
+block’s post-staging level. Turn either off in Settings when you
+<em>want</em> raw, intentional gain or clipping. They are separate from
+the master <strong>Brickwall Limiter</strong>, which is a single hard
+ceiling on the final summed output (the last line of defence, not a
+per-stage tool). MIDI-effect blocks carry no audio level, so neither
+stage applies to them.</p>
 <h1 id="the-expr-block">The Expr block</h1>
 <p>The <strong>Expr</strong> block runs a short per-sample expression
-you write in its detail panel, doing things the fixed blocks can’t:</p>
+you write in its detail panel — an escape hatch for anything the fixed
+blocks don’t cover, edited live while audio runs:</p>
 <ul>
 <li><strong>Variables:</strong> <code>in</code> (In 1), <code>t</code>
-(time), <code>sr</code> (sample rate), <code>p0</code>–<code>p7</code>
-(p0–p5 are the knobs, p6 is In 2, p7 is Mod),
-<code>s0</code>–<code>s3</code> (persistent state across samples), and
-the constants <code>pi</code>, <code>tau</code>, <code>e</code>.</li>
-<li><strong>Functions:</strong> <code>sin cos tan tanh</code>,
-<code>floor frac wrap saw sqr tri</code>,
-<code>min max pow fmod clamp lerp</code>,
-<code>if step noise rand</code>, and
+(running time), <code>sr</code> (sample rate),
+<code>p0</code>–<code>p7</code> (where <code>p0</code>–<code>p5</code>
+are the six knobs, <code>p6</code> is In 2 and <code>p7</code> is the
+Mod input), <code>s0</code>–<code>s3</code> (four state variables that
+persist across samples, for filters and feedback), and the constants
+<code>pi</code>, <code>tau</code>, <code>e</code>.</li>
+<li><strong>Functions:</strong> trig (<code>sin cos tan tanh</code>),
+shaping (<code>floor frac wrap saw sqr tri</code>), math
+(<code>min max pow fmod clamp lerp</code>), control
+(<code>if step noise rand</code>), and the standout
 <strong><code>tap(d)</code></strong> — the block’s own output
-<code>d</code> samples ago (fractional), for combs, Karplus strings and
-feedback.</li>
-<li><strong>Safe by construction:</strong> no loops, allocation or
-memory access in the audio path; the output is sanitised (any NaN/Inf
-becomes 0); a program that exceeds the limits simply fails to
-compile.</li>
+<code>d</code> samples ago, with fractional interpolation, which makes
+combs, Karplus strings, delays and feedback trivial to express.</li>
+<li><strong>Safe by construction:</strong> the language has no loops,
+allocation or arbitrary memory access in the audio path; the output is
+sanitised so any NaN or Inf becomes 0; and a program that exceeds the
+complexity limit simply fails to compile rather than glitching
+audio.</li>
 </ul>
-<p>Examples:</p>
+<p>Worked snippets:</p>
 <ul>
-<li>Wavefolder: <code>out = sin(in * (1 + p0 * 8) * pi)</code></li>
-<li>Bit-reduce:
-<code>out = floor(in * (1 + p0 * 32)) / (1 + p0 * 32)</code></li>
-<li>Karplus string (with feedback into its own input):
-<code>out = (in + tap(p0 * sr)) * 0.5 * p1</code></li>
-<li>Sample-and-hold on a clock in p6:
-<code>s0 = if(p6 &gt; 0.5, noise(), s0); out = s0</code></li>
+<li><strong>Wavefolder</strong> —
+<code>out = sin(in * (1 + p0 * 8) * pi)</code>: as p0 rises the input is
+folded into more harmonics.</li>
+<li><strong>Bit reducer</strong> —
+<code>out = floor(in * (1 + p0 * 32)) / (1 + p0 * 32)</code>: quantises
+amplitude to a staircase whose steps p0 controls.</li>
+<li><strong>Tuned comb / pluck</strong> —
+<code>out = (in + tap(sr / (60 + p0 * 1000))) * p1</code>: adds a
+delayed copy of the output tuned by p0, with p1 as the feedback/decay —
+feed it noise and it rings at a pitch.</li>
+<li><strong>Sample-and-hold</strong> —
+<code>s0 = if(p6 &gt; 0.5, noise(), s0); out = s0</code>: holds a random
+value, re-sampling each time the clock on In 2 (p6) goes high.</li>
 </ul>
 <h1 id="worked-examples">Worked examples</h1>
-<p><strong>Filter sweep.</strong> Add a Filter and an LFO. Wire In L →
-Filter → Out. Open the Filter, set its Cutoff mod <strong>source =
-LFO</strong> and a depth of a few octaves. Set the LFO Rate slow. The
-cutoff now sweeps — the classic auto-wah/sweep.</p>
-<p><strong>Stereo slap.</strong> Turn on <strong>Stereo</strong>. Add a
-Delay on each side; set slightly different Times on the left and right
-clones (turn <strong>Lock</strong> off so they stay independent) for a
-widening slapback.</p>
+<p><strong>Filter sweep (auto-wah).</strong> Add a Filter and an LFO.
+Wire In L → Filter → Out. In the Filter, set the cutoff’s mod
+<strong>source = LFO</strong> with a depth of a couple of octaves and
+pick a band-pass mode; set the LFO Rate slow. The cutoff now sweeps
+cyclically. Swap the LFO for an <strong>Envelope</strong> follower of
+the input and the sweep tracks your playing dynamics instead — a real
+auto-wah.</p>
+<p><strong>Stereo slap.</strong> Turn <strong>Stereo</strong> on and
+leave <strong>Lock</strong> off so the two sides are independent. Add a
+Delay on each side and set slightly different Times left and right; feed
+each side’s input straight to its output as well so the dry passes. The
+small L/R time difference widens the slapback across the stereo
+field.</p>
 <p><strong>Comb resonator.</strong> Add an Expr block and wire its
 output back to its own In 1. Use
-<code>out = (in + tap(sr / (60 + p0 * 1000))) * p1</code> — In 1 is the
+<code>out = (in + tap(sr / (60 + p0 * 1000))) * p1</code>. In 1 is the
 live input plus a tuned, fed-back tap, so noise or transients ring at a
-pitch set by p0, with p1 as the decay/resonance.</p>
-<p><strong>Parallel crush.</strong> Add two layers in the Mixer. Leave
-layer 1 clean; on layer 2 add a Crusher and a Drive. Blend the dirty
-layer under the clean one with the layer faders for parallel
-distortion.</p>
+pitch set by p0, with p1 as the resonance/decay — a string you tuned by
+hand.</p>
+<p><strong>Parallel crush.</strong> Open the Mixer and add a second
+layer. Keep layer 1 clean; on layer 2 add a Crusher and a Drive. Blend
+the dirty layer under the clean one with the layer faders — parallel
+distortion that adds grit while keeping the body and transients of the
+dry signal intact.</p>
+<p><strong>Self-oscillating space.</strong> Add a Reverb and feed a
+little of its output back to its input through a Filter and a low cable
+level. Raise the feedback cable level slowly: the reverb tips toward
+self-oscillation, the filter shapes the resonance, and you have an
+evolving drone — the kind of patch a fixed reverb slot can never
+make.</p>
 <h1 id="perform-macros">Perform &amp; macros</h1>
 <p>The <strong>Perform</strong> tab is a play-the-patch surface that
-drives only host-automatable parameters, so it works with the editor
-closed and records as automation:</p>
+drives only host-automatable parameters, so it runs with the editor
+closed and everything you do records as automation:</p>
 <ul>
 <li><strong>Preset Morph</strong> — a 4-corner XY pad (A/B/C/D) that
-bilinearly interpolates between four captured patches;
-<strong>🎲</strong> assigns a random preset to all four corners. The X/Y
-axes are reserved host parameters, so the morph itself automates.</li>
+bilinearly interpolates between four captured patches as you move the
+puck. The X/Y axes are reserved host parameters, so the morph automates
+and recalls; <strong>Dice</strong> loads a random preset into all four
+corners for instant exploration.</li>
 <li><strong>Orb</strong> — a radial pad where the puck’s <em>angle</em>
-selects a scene and its <em>distance</em> sets intensity;
-<strong>🎲</strong> rolls a new random scene set, <strong>⏺</strong>
-records the puck’s motion, and <strong>▶</strong> loops it back through
-the host-automatable parameters — a hands-free gesture becomes recorded
-automation.</li>
-<li><strong>XY macro pads</strong> — each with a <strong>HOLD</strong> /
-<strong>SPRING</strong> toggle (spring snaps back to centre on release
-for momentary moves).</li>
-<li><strong>Macro knobs</strong> — the soft keys as plain knobs.</li>
-<li><strong>Scenes</strong> — snapshot slots: click to recall,
-right-click to clear.</li>
-<li><strong>Controls band</strong> — global randomise, an arpeggiator
+selects a scene and its <em>distance</em> sets that scene’s intensity.
+<strong>Dice</strong> rolls a fresh random scene set,
+<strong>Rec</strong> records the puck’s motion as you drag, and
+<strong>Play</strong> loops the recording back through the
+host-automatable parameters — a hands-free gesture turned into recorded,
+editable automation.</li>
+<li><strong>XY macro pads</strong> — each drives a pair of soft keys,
+with a per-pad <strong>HOLD</strong> / <strong>SPRING</strong> toggle:
+HOLD leaves the dot where you drop it, SPRING snaps both axes back to
+centre on release for momentary moves.</li>
+<li><strong>Macro knobs</strong> — the soft keys exposed as plain
+knobs.</li>
+<li><strong>Scenes</strong> — snapshot slots for the whole macro
+surface: click to recall, right-click to clear.</li>
+<li><strong>Controls band</strong> — a global randomise, an arpeggiator
 (mode / rate / latch), and <strong>scale + key</strong> quantize plus a
 <strong>Chord</strong> that stacks extra intervals on each key played on
 the on-screen keyboard.</li>
 </ul>
+<p>The throughline: every Perform control writes to soft keys (host
+params), so a live performance and a recorded automation lane are the
+same thing.</p>
 <h1 id="stereo-stereo-lock">Stereo &amp; stereo lock</h1>
 <ul>
-<li><strong>Stereo</strong> (off by default) mirrors the patch graph to
-the right channel, so blocks process the left and right channels
-independently. Dial a per-knob L/R offset for width.</li>
-<li><strong>🔒 Lock</strong> keeps the mirrored blocks tracking the left
-channel. It is <strong>bidirectional and offset-preserving</strong>:
-moving a left knob moves its clone, and moving a clone moves the left,
-each by the same amount — so the width you dialled in is preserved
-rather than reset. Set Lock on for a perfect <code>L = R</code>. Both
-states are saved with the patch, and locked clone blocks render
-dimmed.</li>
+<li><strong>Stereo</strong> (off by default) mirrors the entire patch
+graph to a second, right-channel copy, so each block processes the left
+and right channels independently. Dial a per-knob offset between the two
+sides for width — slightly different delay times, filter cutoffs or
+detune amounts left vs right.</li>
+<li><strong>Lock</strong> keeps the mirrored (clone) blocks tracking the
+left channel. It is <strong>bidirectional and
+offset-preserving</strong>: moving a left knob moves its clone, and
+moving a clone moves the left, each by the <em>same delta</em> — so the
+L/R offset (the width you dialled in plain Stereo) is preserved rather
+than collapsed. Turn Lock on with no offset for a perfect
+<code>L = R</code> mono-in-stereo. Both states save with the patch, and
+locked clone blocks render dimmed so you can see which side is
+following.</li>
 </ul>
 <h1 id="midi-mpe">MIDI &amp; MPE</h1>
-<p>The plugin accepts MIDI and MPE input; MPE is aggregated to the most
-recent note. Every MIDI dimension (mod wheel, aftertouch, pitch bend,
-velocity, expression, breath, sustain, note, and the MPE press / slide /
-bend) is available as a modulation source — so you can play the effect
-expressively from a controller. Two response toggles, both <strong>on by
-default</strong>:</p>
+<p>The plugin accepts MIDI and MPE; MPE is parsed and aggregated to the
+most recently played note. Every MIDI dimension is exposed as a
+modulation source — mod wheel, aftertouch (channel and poly), pitch
+bend, velocity, expression, breath, sustain, note, and the MPE press /
+slide / bend — so you can play an effect expressively from a controller
+(mod wheel to delay mix, aftertouch to filter cutoff, and so on). Two
+response toggles, both <strong>on by default</strong>:</p>
 <ul>
-<li><strong>Program Change</strong> — an incoming Program Change selects
-the matching preset. Turn it off to ignore Program Change.</li>
+<li><strong>Program Change</strong> — an incoming Program Change message
+selects the matching preset. Turn it off to ignore Program Change
+(e.g. when your controller sends it unintentionally).</li>
 <li><strong>Bank Select</strong> — CC0 (MSB) and CC32 (LSB) are captured
-and combined with the next Program Change
-(<code>bank × 128 + program</code>) for banked preset addressing. Turn
-it off and Program Changes address presets 0–127 directly.</li>
+and combined with the next Program Change as
+<code>bank × 128 + program</code> for banked preset addressing. Turn it
+off and Program Changes address presets 0–127 directly.</li>
 </ul>
 <h1 id="presets-browsing">Presets &amp; browsing</h1>
-<p>Factory patches ship in code — <strong>Stereo Slap, Filter Sweep,
-Comb Resonator, Wavefolder</strong> — as starting points. Save your own
-from the <strong>Browse</strong> tab with facet tags (bank / type /
-style / character) so the browser’s filters stay populated, and recall
-by searching or filtering. The full plugin state — the patch plus every
-parameter and soft-key value — round-trips through your host session,
-and an incoming Program Change can switch presets live.</p>
+<p>Factory patches ship in code as starting points — <strong>Stereo
+Slap, Filter Sweep, Comb Resonator, Wavefolder</strong> — each a small,
+legible example of a different technique. Save your own from the
+<strong>Browse</strong> tab with facet tags (bank / type / style /
+character); the browser’s filters are driven by those tags, so a
+well-tagged library stays searchable. The full plugin state — the patch
+plus every parameter and soft-key value — round-trips through your
+host’s project file, and an incoming Program Change can recall presets
+live for set-based performance.</p>
 <h1 id="the-module-library">The module library</h1>
 <p>The block palette is the full shared audio pack — over a thousand
-module types. They fall into families you mix freely:</p>
+module types. They fall into families you combine freely:</p>
 <ul>
 <li><strong>Oscillators &amp; sources</strong> — analog, wavetable, FM,
-additive, supersaw, sync, vector and physical models, plus Noise. As
-effects, use them as carriers for ring modulation, as test tones, or fed
-by the input for vocoder-style work.</li>
-<li><strong>Filters</strong> — state-variable (LP/HP/BP/notch), Moog and
-diode ladders, formant and comb filters, plus the modeled analog filters
-below. Each has a Mod input for sweeping the cutoff.</li>
+additive, supersaw, sync, vector and physical models, plus a Noise
+generator. In an effect context they are carriers for ring modulation,
+test tones, sub-bass reinforcement, or — fed by the input — the basis of
+vocoder-style work.</li>
+<li><strong>Filters</strong> — state-variable (low-pass, high-pass,
+band-pass, notch), Moog and diode ladders, formant filters, comb
+filters, and the modeled analog filters below. Each has a Mod input so
+the cutoff can be swept by an LFO, envelope or another signal.</li>
 <li><strong>Delays</strong> — clean, damped-feedback, tape, ping-pong,
-multi-tap and granular delays; modulate the time for chorus and
-flange.</li>
-<li><strong>Reverbs</strong> — rooms, halls, plates, springs and
-shimmer/feedback reverbs.</li>
+multi-tap and granular delays. Modulating the delay time turns a delay
+into a chorus or flanger; long feedback turns it into a resonator.</li>
+<li><strong>Reverbs</strong> — rooms, halls, plates, springs, and
+shimmer/feedback reverbs for everything from a tight ambience to an
+infinite wash.</li>
 <li><strong>Distortion &amp; saturation</strong> — soft drives, tube and
-diode clippers, wavefolders, bit/sample-rate crushers and the modeled
-pedals below.</li>
+diode clippers, wavefolders, bit and sample-rate crushers, and the
+modeled pedals below.</li>
 <li><strong>Dynamics</strong> — compressors, limiters, gates, transient
-shapers and the modeled studio units below.</li>
+shapers, and the modeled studio units below.</li>
 <li><strong>Modulation effects</strong> — chorus, flanger, phaser,
-tremolo, ring modulator, auto-pan.</li>
+tremolo, ring modulator and auto-pan.</li>
 <li><strong>Pitch &amp; spectral</strong> — pitch shift, frequency
 shift, harmonisers and spectral processors.</li>
 <li><strong>Utilities</strong> — mixers, gains, math, sample-and-hold,
-slew, logic, panners and routing helpers that glue a patch
+slew limiters, logic, panners and the routing helpers that glue a patch
 together.</li>
 </ul>
 <p>The <strong>Module Reference</strong> (linked from the docs hub, and
-the catalogue at the back of this manual) lists every block with its
-inputs, parameters and a description.</p>
+the full catalogue at the back of this manual) documents every block
+with its inputs, parameters and a description, generated from the live
+registry so it never drifts from the build.</p>
 <h1 id="analog-models">Analog models</h1>
-<p>A large set of the blocks are <strong>component-level analog
-emulations</strong> — faithful circuit topologies rather than IR or
-sample clones — so they respond to drive and dynamics like the
-originals. They are grouped by the gear they model:</p>
+<p>A large portion of the library is <strong>component-level analog
+emulation</strong> — modeled from the circuit topology rather than from
+impulse responses or samples — so the blocks respond to drive, bias and
+dynamics the way the originals do. Pushing the input harder pushes the
+model into its non-linear region; backing off cleans it up. They are
+grouped by the gear they model:</p>
 <ul>
 <li><strong>Filters</strong> — Minimoog ladder, Jupiter-8, MS-20,
 Oberheim SEM, EMS VCS3, Wasp, TB-303.</li>
 <li><strong>Compressors &amp; limiters</strong> — 1176, LA-2A, LA-3A,
 Fairchild, dbx 160, SSL bus, API 2500, Distressor, Sta-Level.</li>
-<li><strong>EQs</strong> — Pultec, API 550, Neve 1073, SSL E/G, Manley,
-Helios, GML, plus preamp and tape stages.</li>
+<li><strong>EQs &amp; front-ends</strong> — Pultec, API 550, Neve 1073,
+SSL E/G, Manley, Helios, GML, plus preamp and tape stages.</li>
 <li><strong>Pedals</strong> — Tube Screamer, RAT, Big Muff, Klon, DS-1,
 MXR, Octavia, OCD, Metal Zone.</li>
-<li><strong>Amps &amp; cabs</strong> — Fender, Marshall, Vox, Mesa
+<li><strong>Amps &amp; cabs</strong> — Fender, Marshall, Vox and Mesa
 voicings.</li>
-<li><strong>Time &amp; space</strong> — EMT 140 plate, AKG BX20, RE-201
-Space Echo, Binson Echorec, Memory Man, plus enhancers, phaser/tremolo
-and chorus.</li>
+<li><strong>Time &amp; space</strong> — EMT 140 plate, AKG BX20 spring,
+Roland RE-201 Space Echo, Binson Echorec, Memory Man, plus enhancers,
+phaser/tremolo and chorus.</li>
 </ul>
-<p>Wire them like any block — feed the input, set the drive, and
-modulate the controls. Because they are real topologies, pushing the
-input harder pushes the model into its non-linear region the way the
-hardware would.</p>
+<p>Use them like any block: feed the input, set the drive/character, and
+modulate the controls. Because they are real topologies you can stack
+them — a 1073-style pre into an 1176-style compressor into a
+Pultec-style EQ — and they interact the way a hardware chain would.</p>
 <h1 id="tutorials">Tutorials</h1>
 <p><strong>A dub delay throw.</strong> Add a Delay and a Filter. Wire In
-L → Delay → Filter → Out, and also feed In L → Out directly so the dry
-signal passes. Set the Delay Time to a musical division and its Feedback
-fairly high; put the Filter after it as a band-pass so the repeats
-darken as they trail. Assign a <strong>soft key</strong> to the Delay’s
-Feedback and another to its Mix, then automate them on the
-<strong>Perform</strong> tab to throw the delay in and out live.</p>
+L → Delay → Filter → Out, and also feed In L → Out so the dry passes.
+Set the Delay Time to a musical division and its Feedback fairly high;
+make the Filter a band-pass after it so each repeat darkens as it
+trails. Assign one <strong>soft key</strong> to the Delay Feedback and
+another to its Mix, then automate them on the <strong>Perform</strong>
+tab to throw the delay in and out of the mix live — the classic dub
+move, built from primitives.</p>
 <p><strong>A flanger from scratch.</strong> Add a Delay with a very
-short Time and an LFO. Route the LFO into the Delay’s Time mod with a
-small depth and a slow Rate. Mix the delayed signal back with the dry —
-the sweeping short delay is a flanger. Raise the Delay Feedback for
-resonance; speed the LFO for a chorus.</p>
+short Time and an LFO. Route the LFO into the Delay Time mod with a
+small depth and a slow Rate, then mix the delayed signal back with the
+dry — the swept short delay is a flanger. Raise the Delay Feedback for
+resonance, and speed the LFO up to cross into chorus territory. You now
+understand why flange and chorus are the same effect at different
+settings.</p>
 <p><strong>A wavefolder lead processor.</strong> Add an Expr block with
-<code>out = sin(in * (1 + p0 * 8) * pi)</code>. Patch a soft key (or an
-envelope follower of the input) into p0 so the fold amount tracks
-dynamics. Follow it with a Filter to tame the harshness and a touch of
-Reverb.</p>
+<code>out = sin(in * (1 + p0 * 8) * pi)</code>. Patch an
+<strong>Envelope</strong> follower of the input into p0 so the fold
+amount tracks dynamics — quiet notes stay clean, loud notes bloom into
+harmonics. Follow with a Filter to tame the top and a touch of Reverb
+for space.</p>
 <p><strong>Sidechain-style ducking.</strong> Add an Envelope follower
-reading a control source (or the input), and a VCA on your main signal.
-Route the follower into the VCA so the main signal ducks when the source
-is loud — a built-in sidechain compressor you wired yourself.</p>
+reading a control source (or the input) and a VCA on your main signal,
+then route the follower’s output into the VCA so the main signal ducks
+when the source is loud. You have built a sidechain compressor from a
+follower and a VCA — and you can shape its attack/release by filtering
+the follower’s output.</p>
 <p><strong>Parallel grit.</strong> Use two layers. Keep layer 1 clean.
-On layer 2 add a modeled pedal (RAT or Big Muff) and a Filter. Blend
-layer 2 under layer 1 with the layer faders for parallel distortion that
-keeps the body of the dry signal.</p>
+On layer 2 add a modeled pedal (RAT or Big Muff) and a Filter to carve
+the distorted band. Blend layer 2 under layer 1 with the layer faders,
+so the grit adds harmonics and presence without losing the dry signal’s
+body and transients.</p>
 <h1 id="modulation-cookbook">Modulation cookbook</h1>
 <ul>
 <li><strong>Vibrato</strong> — LFO → an oscillator’s pitch mod, small
 depth, ~5 Hz.</li>
 <li><strong>Auto-wah</strong> — Envelope follower of the input → Filter
 cutoff mod.</li>
-<li><strong>Tremolo</strong> — LFO → VCA, or LFO → a Gain block.</li>
-<li><strong>Random sample-and-hold</strong> — Noise → a Sample-and-Hold
-clocked by an LFO → any parameter, for stepped randomness.</li>
-<li><strong>Slow drift</strong> — a very slow LFO (or smoothed Noise) at
-tiny depth on tuning or cutoff, for analog movement.</li>
-<li><strong>Velocity to brightness</strong> — patch MIDI velocity →
-Filter cutoff mod, so harder notes open up.</li>
-<li><strong>Mod-wheel macro</strong> — assign the mod wheel to a soft
-key, then patch that soft key to several parameters at once for an
-expressive performance macro.</li>
+<li><strong>Tremolo</strong> — LFO → a VCA, or LFO → a Gain block.</li>
+<li><strong>Stepped random</strong> — Noise → a Sample-and-Hold clocked
+by an LFO → any parameter.</li>
+<li><strong>Analog drift</strong> — a very slow LFO or smoothed Noise at
+tiny depth on tuning or cutoff.</li>
+<li><strong>Velocity → brightness</strong> — MIDI velocity → Filter
+cutoff mod, so harder notes open up.</li>
+<li><strong>Mod-wheel macro</strong> — mod wheel → a soft key, then that
+soft key → several parameters at once.</li>
+<li><strong>Cross-modulation</strong> — an audio-rate oscillator →
+another oscillator’s (or filter’s) Mod input for metallic, FM-style
+timbres.</li>
 </ul>
 <h1 id="tips-best-practices">Tips &amp; best practices</h1>
 <ul>
-<li>Start with <strong>⚡ EZ WIRE</strong> to get sound, then rewire
-piece by piece.</li>
-<li>Watch the <strong>cable glow</strong> — a dim cable into a block
-means it is being driven quietly; a blown-out glow means you are
-slamming the next stage. Use cable levels to balance.</li>
+<li>Start with <strong>EZ WIRE</strong> to get sound, then rewire piece
+by piece — it is faster than building from an empty field.</li>
+<li>Read the <strong>cable glow</strong> constantly. A dim cable into a
+block means it is being driven quietly; a blown-out glow means you are
+slamming the next stage. Use cable <strong>levels</strong> to balance
+instead of reaching for a Gain block every time.</li>
 <li>Leave <strong>Auto Gain Stage</strong> and <strong>Soft
-Clip</strong> on while building; turn them off only when you want raw,
-intentional clipping.</li>
-<li>Use <strong>layers</strong> for parallel processing instead of
-forcing everything into one chain.</li>
-<li>Assign anything you will tweak live to a <strong>soft key</strong>
-so it records as automation and lives on the <strong>Perform</strong>
-surfaces.</li>
-<li>Build feedback carefully — start the feedback cable level low and
-raise it, since the one-sample loop can run away.</li>
+Clip</strong> on while building; switch them off only when you want raw,
+intentional clipping or saturation.</li>
+<li>Reach for <strong>layers</strong> when you want parallel processing
+— don’t force a parallel idea into a serial chain.</li>
+<li>Put anything you will tweak live on a <strong>soft key</strong> so
+it records as automation and shows up on the Perform surfaces.</li>
+<li>Build feedback patches carefully: start the feedback cable
+<strong>level</strong> low and raise it gradually, since the one-sample
+loop can run away into self-oscillation faster than you expect.</li>
 </ul>
 <h1 id="faq">FAQ</h1>
-<p><strong>I get no sound.</strong> Press <strong>⚡ EZ WIRE</strong>,
-or check that something is wired to the output and that a cable feeds it
-(the output jack must have an incoming connection).</p>
-<p><strong>A patch is clipping.</strong> Make sure Auto Gain Stage /
-Soft Clip are on (Settings), lower the cable levels feeding hot stages,
-or pull the Master Out down. The master Brickwall Limiter is the last
-line.</p>
+<p><strong>I get no sound.</strong> Press <strong>EZ WIRE</strong>, or
+check that something is wired to the output jack — the output must have
+an incoming cable, and the chain must trace back to the input or a
+source.</p>
+<p><strong>A patch is clipping.</strong> Confirm Auto Gain Stage / Soft
+Clip are on (Settings), lower the cable levels feeding the hot stages,
+or pull Master Out down. The master Brickwall Limiter is the final
+ceiling but shouldn’t be doing the heavy lifting.</p>
 <p><strong>Can I use it as an instrument?</strong> Yes — add oscillators
-driven by MIDI note as a source and it behaves like a synth; or use
-zpwr-synth, which is this engine built for polyphony.</p>
+driven by the MIDI <strong>note</strong> source and it plays like a
+synth; or use zpwr-synth, which is this same engine built for
+polyphony.</p>
 <p><strong>Where do my presets live?</strong> Saved patches appear in
-the <strong>Browse</strong> tab with their tags; the whole patch and its
-parameters also save inside your host project.</p>
-<p><strong>Does it support my plugin format / OS?</strong> It builds
-VST3, AU, CLAP and Standalone for macOS, Linux and Windows (AU is macOS
-only; Windows ships VST3 + CLAP).</p>
+the <strong>Browse</strong> tab with their tags, and the whole patch and
+its parameters also save inside your host project, so a session reopens
+exactly as you left it.</p>
+<p><strong>Why does my feedback patch hum at a pitch?</strong> The
+one-sample (plus your delay) loop tunes the feedback to a frequency;
+that is the comb/Karplus mechanism. Shorten the delay for a higher
+pitch, lengthen it for a lower one, and lower the feedback level to
+shorten the ring.</p>
+<p><strong>Which formats and OSes?</strong> VST3, AU, CLAP and
+Standalone for macOS, Linux and Windows (AU is macOS only; Windows ships
+VST3 + CLAP).</p>
 <h1 id="mouse-keyboard-reference">Mouse &amp; keyboard reference</h1>
 <ul>
 <li><strong>Drag output → input</strong> — wire a cable.</li>
-<li><strong>Drag input → empty</strong> — disconnect.</li>
-<li><strong>Right-click cable</strong> — level + colour editor.</li>
-<li><strong>Double-click block</strong> — open its detail panel.</li>
-<li><strong>+ ADD BLOCK</strong> — add a block; <strong>delete</strong>
-on a selected block removes it.</li>
-<li><strong>⚡ EZ WIRE</strong> — auto-route input → blocks →
-output.</li>
+<li><strong>Drag input → empty</strong> — disconnect (the input returns
+to silence).</li>
+<li><strong>Right-click cable</strong> — open the level + colour editor;
+level <code>0</code> mutes without deleting.</li>
+<li><strong>Double-click block</strong> — open its detail panel
+(parameters, mod slots, code).</li>
+<li><strong>+ ADD BLOCK</strong> — add a block; select a block and press
+delete to remove it.</li>
+<li><strong>EZ WIRE</strong> — auto-route input → blocks → output.</li>
 <li><strong>INIT</strong> — unplug all cables/mods, keep blocks.
-<strong>🗑</strong> — blank the patch.</li>
+<strong>Clear</strong> — blank the patch.</li>
 </ul>
 <h1 id="glossary">Glossary</h1>
 <ul>
-<li><strong>Block / node</strong> — one DSP unit in the patch (three
-inputs, six params, one output).</li>
+<li><strong>Block / node</strong> — one DSP unit in the patch: three
+inputs (In 1, In 2, Mod), up to six parameters, one output.</li>
 <li><strong>Source</strong> — anything an input can read (audio in,
-noise, a soft key, MIDI, another block).</li>
-<li><strong>Mod (CV)</strong> — a control signal modulating a parameter,
-<code>base + source × depth</code>.</li>
+Noise, a soft key, a MIDI dimension, another block’s output). An
+unpatched input reads silence.</li>
+<li><strong>Mod (CV)</strong> — a control signal modulating a parameter
+as <code>base + source × depth</code>, in the parameter’s units.</li>
 <li><strong>Soft key / macro</strong> — a host-automatable knob, also
-patchable as a mod source.</li>
-<li><strong>Layer</strong> — a full copy of the engine, mixed with the
-others.</li>
+patchable as a modulation source; the fixed host-facing parameter
+list.</li>
+<li><strong>Layer</strong> — a full copy of the engine with its own
+patch, mixed with the other layers.</li>
 <li><strong>Feedback</strong> — a cable from a later block back to an
 earlier input, resolved with a one-sample delay.</li>
+<li><strong>Fan-out</strong> — one output feeding multiple inputs.</li>
 <li><strong>EZ Wire</strong> — one-click auto-routing of input → blocks
 → output.</li>
+<li><strong>Brickwall Limiter</strong> — the single hard ceiling on the
+final summed output (distinct from per-block Soft Clip).</li>
 </ul>
       </div>
     </main>

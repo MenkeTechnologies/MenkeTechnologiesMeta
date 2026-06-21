@@ -1,60 +1,75 @@
 # Overview
 
 zpwr-midi-fx is a **modular MIDI-effects plugin** that transforms the note stream *before* it reaches
-an instrument — turning single keys into voiced chords, scale-locking for intelligent harmony, and
-running notes through a polymetric step arpeggiator with Euclidean rhythm generation. It is the same
-free-routed patch graph as zpwr-fx, instantiated on the note stream instead of audio samples, so you
-wire note-transform modules into your own chains rather than picking from a fixed rack. It runs as
-VST3, AU, CLAP and Standalone on macOS, Linux and Windows.
+an instrument. Where a normal MIDI effect gives you one fixed transform (an arpeggiator, say, with a
+few knobs), zpwr-midi-fx hands you the same free-routed patch graph as zpwr-fx — instantiated on a
+stream of note events instead of audio samples — so you wire note-transform modules into your own
+chains. Turn single keys into voiced chords, scale-lock for intelligent harmony, run notes through a
+polymetric step arpeggiator with Euclidean rhythm generation, split the keyboard, add probability and
+humanisation — in any order and combination you wire. It runs as VST3, AU, CLAP and Standalone on
+macOS, Linux and Windows, registering as a MIDI-effect where the host supports it.
+
+The modular advantage for MIDI: order is yours (harmonise then arpeggiate, or arpeggiate then
+harmonise, are different and both available), transforms can be modulated (an LFO sweeping a transpose,
+velocity driving a chord type), and you can fan a note stream into parallel branches (bass one way,
+chords another) and merge them.
 
 # Core concepts
 
 **The note stream.** Where zpwr-fx processes audio samples, zpwr-midi-fx processes a stream of note
-events — note-ons, note-offs, velocities and controllers. Each block reads notes in, transforms them,
-and passes notes out. Place it before an instrument and it rewrites what the instrument receives.
+events — note-ons, note-offs, velocities and controllers. Each block reads notes coming in, transforms
+them (adds, removes, retimes, retunes, re-velocities), and passes notes out. Placed before an
+instrument, it rewrites what the instrument actually receives, so a single key can arrive as a strummed
+seventh chord locked to your scale.
 
 **Blocks.** A dynamic set you add, remove and reorder. Each block has a module type, note-stream
-inputs and a scalar **Mod** input, up to six parameters, and one output. The two outputs (**Out A**,
-**Out B**) merge to the plugin's MIDI out.
+inputs and a scalar **Mod** input (any number of cables per input, summed), up to six parameters, and
+one output. The two outputs, **Out A** and **Out B**, merge to the plugin's MIDI out — so you can
+build two parallel chains and combine them.
 
-**Scalar sources.** Alongside notes, the graph carries scalar control signals — LFOs, envelopes,
-Random, the macro soft keys and the performance/MPE controllers. Patch these into a block's **Mod**
-input or route them to parameters to animate a transform (e.g. an LFO sweeping a Transpose).
+**Scalar sources.** Alongside notes the graph carries scalar control signals — LFOs, envelopes,
+Random, the macro soft keys, and the performance/MPE controllers. Patch these into a block's **Mod**
+input or route them to a parameter to animate a transform (an LFO slowly shifting a Transpose, velocity
+driving an Arp's gate, MPE slide steering harmony).
 
-**Topological evaluation.** The graph is evaluated once per audio block in dependency order, and
-note-offs are scheduled across block boundaries so a note never hangs — even with delays, ratchets and
-probability in the chain.
+**Topological evaluation, no hung notes.** The graph is evaluated once per audio block in dependency
+order, so each module runs after the modules it reads. Note-offs are scheduled across audio-block
+boundaries, so even with delays, ratchets, probability and long echoes in the chain, every note that
+starts is guaranteed to stop — the engine tracks the pairing for you.
 
 # Getting started
 
-1. Place the plugin before an instrument (in a MIDI-effect slot, or on a MIDI track routed to an
-   instrument).
-2. Press **⚡ EZ WIRE** — it auto-wires MIDI In → your blocks → Out so a chain works immediately.
-3. Press **+ ADD BLOCK** to add a Chord, Arp or Scale module, then drag output jacks onto input jacks
-   to build your own note pipeline.
+1. Place the plugin before an instrument — in a MIDI-effect slot, or on a MIDI track routed to an
+   instrument.
+2. Press **EZ WIRE** — it auto-wires MIDI In → your blocks → Out so a chain works immediately,
+   before you touch a cable.
+3. Press **+ ADD BLOCK** to add a Chord, Arp or Scale module, then drag output jacks onto input jacks to
+   build your own note pipeline. Drag an output to a second input to fan the stream into two branches.
 4. Every control has a hover tooltip; **double-click** a block for its parameters and modulation.
 
-**INIT** unplugs every cable and modulation while keeping the blocks; **🗑** blanks the patch.
+**INIT** unplugs every cable and modulation while keeping the blocks; **Clear** blanks the patch.
 
 # The patch model
 
-The **Inputs** column exposes every patchable source as a jack — the note input, every scalar
-modulator (Random plus the performance / MPE controllers) and the soft keys — so anything usable in
-the mod matrix can be cabled straight into a block.
+The **Inputs** column exposes every patchable source as a jack — the note input, every scalar modulator
+(Random plus the performance / MPE controllers) and the soft keys — so anything usable in the mod
+matrix can be cabled directly into a block as well.
 
 **Cables** are drawn between jacks and dragged to re-patch. Right-click a cable for its editor: a
-**Level** (scales note velocity on that connection — `0` mutes it, and the cable's brightness and
-width follow the level), a **Colour** swatch, and **Disconnect**. Level is a live tweak; colour is
-cosmetic and persists with the patch.
+**Level** that scales note velocity on that connection (`0` mutes it, and the cable's brightness and
+width follow the level — a built-in way to A/B a branch without deleting it), a **Colour** swatch, and
+**Disconnect**. Level is a live tweak; colour is cosmetic and persists with the patch.
 
-A simple chord-then-arp chain wires up as: `MIDI In → Chord → Arp → Out A → MIDI Out`.
+A simple chord-then-arp chain wires as `MIDI In → Chord → Arp → Out A → MIDI Out`. Because order is
+explicit, reversing it (`Arp → Chord`) is a different musical result — arpeggiate the single keys
+first, then voice each arpeggiated note into a chord — and you choose which you want by how you wire.
 
 # Module library
 
 The library spans several families. A representative selection follows; the **Module Reference** lists
 every block with its inputs and parameters, generated from the live registry so it never drifts.
 
-**Harmony** — turn one key into many notes:
+**Harmony** — turn one key into many notes, or bend pitch into key:
 
 | Module | What it does |
 |--------|--------------|
@@ -106,131 +121,108 @@ every block with its inputs and parameters, generated from the live registry so 
 | **RandOctave** | randomly shift notes by ± octaves (probability) |
 | **LFO / Env / SampleHold / Slew** | scalar control sources for the mod matrix |
 
-A family of **cellular-automaton sequencers** (Game of Life, Brian's Brain, Langton's Ant) generate
-evolving patterns for generative chains.
+A family of **cellular-automaton sequencers** (Game of Life, Brian's Brain, Langton's Ant) evolve
+patterns from simple rules for generative, ever-changing chains.
 
 # Example chains
 
-- **Instant harmony:** `Chord → Scale` — play single keys; Chord voices them, Scale locks every
-  resulting note to your key so nothing is ever out.
-- **Generative pluck:** `Random → Arp → SeqEuclid` — a random note source arpeggiated and gated into a
-  Euclidean rhythm for evolving sequences.
-- **Humanised keys:** `Chord → Strum → Humanize` — voiced chords, strummed, with subtle timing and
-  velocity jitter for a played feel.
-- **Expressive split:** `KeySwitch → (Chord | Bass via Mono+Transpose)` — left hand bass, right hand
-  voiced chords from one keyboard.
+- **Instant harmony** — `Chord → Scale`: play single keys; Chord voices them and Scale locks every
+  resulting note to your key, so nothing is ever out, no matter what you press. Add **Strum** for a roll.
+- **Generative pluck** — `Random → Scale → Arp`: Random makes notes over a range, Scale locks them to
+  key, Arp orders them rhythmically — an endless in-key sequence. Modulate Random's range with an LFO
+  for slowly shifting registers.
+- **Polymetric arp** — `Arp → SeqEuclid`: set the Arp division and the Euclid step length differently
+  so the two cycles drift against each other for evolving rhythms; add **Echo** for trailing repeats.
+- **Humanised live keys** — `Chord → Humanize → VelCurve`: voiced chords with subtle timing/velocity
+  jitter and a velocity curve matched to your controller, so a stiff performance feels played.
+- **Bass + chords split** — `KeySwitch` into two branches: the low zone through `Mono → Transpose`
+  (down an octave) for a bass line, the high zone through `Chord` for voiced chords — both hands from
+  one keyboard, merged to one instrument.
 
 # Modulation
 
-A dynamic list of routes, each mapping a **scalar source → any block parameter** with a depth.
-Sources:
+A dynamic list of routes, each mapping a **scalar source → any block parameter** with a depth. Sources:
 
-- **Soft keys** — an expandable pool of host-automatable macros (16 active by default, `+` / `−` to
-  add or remove).
+- **Soft keys** — an expandable pool of host-automatable macros (16 active by default, `+` / `−` to add
+  or remove, count saved with the patch).
 - **LFO** and **Env** block outputs, and **Random**.
-- **Performance controllers** — mod wheel, pitch bend, aftertouch, velocity, expression (CC11),
-  sustain (CC64).
-- **MPE** — per-note bend, pressure and slide (CC74), read from the most recently active note's
-  channel, so an MPE controller animates the transforms expressively.
+- **Performance controllers** — mod wheel, pitch bend, aftertouch, velocity, expression (CC11), sustain
+  (CC64).
+- **MPE** — per-note bend, pressure and slide (CC74), read from the most recently active note's channel,
+  so an MPE controller animates the transforms expressively (slide → chord type, pressure → velocity).
 
-The same sources are available on each block's **Mod** input; routing rebuilds the graph while depth
-is a live, lock-free tweak.
+The same sources feed each block's **Mod** input. Routing a source/destination rebuilds the graph;
+depth is a live, lock-free tweak, so you can ride a modulation amount in real time without glitching.
 
 # Stereo
 
-**⊞ Stereo** mirrors every block, cable and mod into an independent right-channel chain, kept in sync
-as you edit while knobs stay independent so you can dial width. **🔒 Lock** keeps the mirrored knobs
-tracking the left channel — bidirectional and offset-preserving, so a width you dialled in isn't
-reset. Locked clone blocks are dimmed.
+**Stereo** mirrors every block, cable and mod into an independent right-channel chain, kept in sync
+as you edit while the two sides' knobs stay independent so you can dial width into the patch. **Lock**
+keeps the mirrored knobs tracking the left channel — bidirectional and offset-preserving, so a width
+you dialled in isn't reset to identical sides. Locked clone blocks are dimmed.
 
 # Perform & macros
 
 The **Perform** tab is a macros-and-pads view with no patching, for live play:
 
-- **Preset Morph** — a 4-corner XY pad bilinearly interpolating four captured presets; **🎲** fills all
+- **Preset Morph** — a 4-corner XY pad bilinearly interpolating four captured presets; **Dice** fills all
   four at random.
-- **Orb** — the puck's *angle* picks one of eight random scenes, its *distance* scales intensity;
-  **🎲** rolls new scenes, **⏺** records the gesture and **▶** loops it.
+- **Orb** — the puck's *angle* picks one of eight random scenes, its *distance* scales intensity; **Dice**
+  rolls new scenes, **Rec** records the gesture and **Play** loops it.
 - **XY macro pads** — each drives a pair of soft keys, with per-pad **HOLD** / **SPRING**.
-- **Macro knobs**, eight **Snapshots** of the macro surface, and a **🎲 Randomize**.
+- **Macro knobs**, eight **Snapshots** of the macro surface, and a **Dice Randomize**.
 - **On-screen keyboard** — global **Key + Scale** quantize and a **Chord** selector (Off / Oct / 5th /
   Maj / Min / Maj7 / Min7 / Sus4 / Power) stacking intervals on each played key, plus a global arp
-  (mode / rate / latch) distinct from the per-block Arp module.
-- **MIDI In** toggles — **Program** and **Bank**, both on by default: an incoming Program Change
-  switches presets, with Bank Select (CC0 MSB / CC32 LSB) captured for the next Program Change.
+  (mode / rate / latch). The global arp is a quick performance layer; the **Arp** *module* is a
+  patchable block you can place anywhere and modulate, with its own latch — use the global one to jam,
+  the module when the arp is part of the design.
+- **MIDI In** toggles — **Program** and **Bank**, both on by default: an incoming Program Change switches
+  presets, with Bank Select (CC0 MSB / CC32 LSB) captured for the next Program Change.
 
 # Presets
 
 A factory bank ships with the plugin — Chord Arp, Strummed Chords, Euclidean Pulse, Fifth Harmonizer,
 Arp Echo, Random Walk, Step Melody, Tone Cluster, Jazz Voicing, MPE Spread and more — spanning arps,
-harmony, rhythm, generative and FX chains. Your own patches save and load from the **Presets** tab.
-
-# Tutorials
-
-**One-finger chord progressions.** Wire `Chord → Scale`. Set the Chord type (triad, 7th, etc.) and
-the Scale to your key. Now any single key you press is voiced into a chord and locked to the key, so a
-one-finger melody becomes an in-key progression. Add **Strum** after the Chord for a guitar-like roll.
-
-**A polymetric arp.** Wire `Arp → SeqEuclid`. Set the Arp mode and division for the note order, then
-let SeqEuclid gate the result on a Euclidean pulse/step pattern at a different length than your loop —
-the two cycles drift against each other for evolving, polymetric rhythms. Add **Echo** for trailing
-repeats.
-
-**Humanised live keys.** Wire `Chord → Humanize → VelCurve`. Voiced chords get subtle timing and
-velocity jitter (Humanize) and a velocity response curve shaped to your controller (VelCurve), so a
-stiff MIDI performance feels played.
-
-**A generative sequence.** Wire `Random → Scale → Arp`. Random generates notes over a range, Scale
-locks them to your key, and Arp orders them rhythmically — an endless in-key sequence. Modulate
-Random's range with an LFO from the mod matrix for slowly shifting registers.
-
-**Bass + chords split.** Wire `KeySwitch` to split the keyboard: the low zone through `Mono →
-Transpose` (down an octave) for a bass line, the high zone through `Chord` for voiced chords — both
-hands from one keyboard, into one instrument.
-
-# Recipes
-
-- **Strummed chords** — `Chord → Strum` (set direction and time spread).
-- **Octave doubling** — `Octave` adds up/down copies for thickness.
-- **Probability fills** — `Chance` before a sequencer drops random notes for variation.
-- **Ratchet rolls** — `SeqRatchet` splits notes into rapid retriggers on accents.
-- **Tempo-locked timing** — `Quantize` snaps loose playing to a grid; raise strength gradually.
-- **Drum triggering** — `FixedNote` forces every note to one pitch to trigger a drum sound.
-- **MPE expression** — route per-note pressure/slide (mod matrix) into Transpose or Velocity for
-  expressive, per-note control.
+harmony, rhythm, generative and FX chains, so the factory set doubles as worked examples of the module
+families. Your own patches save and load from the **Presets** tab, and the whole patch round-trips with
+your host project.
 
 # Tips & best practices
 
-- Order matters: put **Scale** *after* harmony modules so every generated note is locked to key.
-- Use **⚡ EZ WIRE** to chain quickly, then reorder by re-patching cables.
-- A cable **Level** of `0` mutes a connection without deleting it — handy for A/B-ing a module.
-- Assign performance moves (arp rate, chord type, transpose) to **soft keys** so they automate.
-- Watch for stuck notes only with extreme feedback in **Echo**; lower its feedback if repeats pile up
-  (note-offs are scheduled safely, but very long tails can overlap).
+- Order matters. Put **Scale** *after* harmony modules so every generated note is locked to key, and
+  put **Humanize** last so it isn't undone by a later quantiser.
+- Use **EZ WIRE** to chain quickly, then reorder by re-patching cables — reordering is musical, not
+  just cosmetic.
+- A cable **Level** of `0` mutes a connection without deleting it — the fastest way to A/B a module's
+  contribution.
+- Assign performance moves (arp rate, chord type, transpose) to **soft keys** so they automate and live
+  on the Perform pads.
+- If repeats pile up, lower **Echo** feedback — note-offs are always scheduled safely, but very long
+  tails can overlap into dense clusters by design.
 
 # FAQ
 
-**No notes reach my instrument.** Press **⚡ EZ WIRE**, or check that a chain reaches **Out A** / **Out
-B** and that the plugin is before the instrument in the signal path.
+**No notes reach my instrument.** Press **EZ WIRE**, or check that a chain reaches **Out A** / **Out
+B** and that the plugin sits before the instrument in the signal path.
 
-**My chords are out of key.** Add a **Scale** module at the end of the chain set to your key/scale.
+**My chords are out of key.** Add a **Scale** module at the end of the chain, set to your key and scale.
 
 **How is the global arp different from the Arp module?** The Perform tab's global arp is a quick
-performance layer; the **Arp** module is a patchable block you can place anywhere in the graph and
-modulate, with its own latch.
+performance layer over everything; the **Arp** module is a patchable block you place in the graph and
+modulate, with its own independent latch.
 
-**Does it do MPE?** Yes — per-note bend, pressure and slide are available as modulation sources, and
-**Unison** can spread copies across MPE channels.
+**Does it support MPE?** Yes — per-note bend, pressure and slide are modulation sources, and **Unison**
+can spread copies across MPE channels for per-note expression downstream.
 
-**Which formats / OSes?** VST3, AU, CLAP and Standalone on macOS, Linux and Windows (AU is macOS only;
-Windows ships VST3 + CLAP). It registers as a MIDI-effect where the host supports it.
+**Which formats and OSes?** VST3, AU, CLAP and Standalone on macOS, Linux and Windows (AU is macOS
+only; Windows ships VST3 + CLAP). It registers as a MIDI-effect category where the host supports it.
 
 # Glossary
 
 - **Note stream** — the flow of note events the plugin transforms before the instrument.
-- **Block / module** — one note-transform unit (note inputs, a Mod input, up to six params, one
-  output).
-- **Out A / Out B** — the two outputs that merge to the MIDI out.
+- **Block / module** — one note-transform unit: note inputs, a scalar Mod input, up to six params, one
+  output.
+- **Out A / Out B** — the two outputs that merge to the MIDI out (build two branches and combine them).
 - **Scalar source** — an LFO/Env/Random/controller/soft-key value driving the mod matrix.
 - **MPE** — per-note expression (bend, pressure, slide) usable as a modulation source.
 - **EZ Wire** — one-click auto-routing of MIDI In → blocks → Out.
