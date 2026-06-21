@@ -554,6 +554,18 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 
 Numbers refresh as repos add commits — regenerate with `tokei` (plus the `.stk` awk pass) from a fresh recursive clone.
 
+### Against a typical engineer-career
+
+Every line above is hand-authored. The standard software-engineering productivity figures (Brooks' *Mythical Man-Month*, COCOMO, Capers Jones) put *net maintained* output at roughly 20–100 lines/day sustained — call a 40-year career ~9,200 working days. The multiple below is `9,625,473 ÷ (rate × 9,200)`:
+
+| Net LOC/day baseline | Career total | This tree ÷ baseline |
+|---:|---:|---:|
+| 100/day (optimistic ceiling) | ~920,000 | **~10×** |
+| 50/day (mid estimate) | ~460,000 | ~21× |
+| 20/day (conservative) | ~184,000 | ~52× |
+
+The defensible floor is **≥10 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption. The baseline is an industry estimate, not a measured value; the 9.6M is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
+
 ---
 
 ## [0xFF] LICENSE
