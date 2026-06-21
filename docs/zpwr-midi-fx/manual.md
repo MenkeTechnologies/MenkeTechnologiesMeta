@@ -41,13 +41,13 @@ starts is guaranteed to stop — the engine tracks the pairing for you.
 
 1. Place the plugin before an instrument — in a MIDI-effect slot, or on a MIDI track routed to an
    instrument.
-2. Press **EZ WIRE** — it auto-wires MIDI In → your blocks → Out so a chain works immediately,
+2. Press **⚡ EZ WIRE** — it auto-wires MIDI In → your blocks → Out so a chain works immediately,
    before you touch a cable.
 3. Press **+ ADD BLOCK** to add a Chord, Arp or Scale module, then drag output jacks onto input jacks to
    build your own note pipeline. Drag an output to a second input to fan the stream into two branches.
 4. Every control has a hover tooltip; **double-click** a block for its parameters and modulation.
 
-**INIT** unplugs every cable and modulation while keeping the blocks; **Clear** blanks the patch.
+**INIT** unplugs every cable and modulation while keeping the blocks; **🗑** blanks the patch.
 
 # The patch model
 
@@ -156,8 +156,8 @@ depth is a live, lock-free tweak, so you can ride a modulation amount in real ti
 
 # Stereo
 
-**Stereo** mirrors every block, cable and mod into an independent right-channel chain, kept in sync
-as you edit while the two sides' knobs stay independent so you can dial width into the patch. **Lock**
+**⊞ Stereo** mirrors every block, cable and mod into an independent right-channel chain, kept in sync
+as you edit while the two sides' knobs stay independent so you can dial width into the patch. **🔒 Lock**
 keeps the mirrored knobs tracking the left channel — bidirectional and offset-preserving, so a width
 you dialled in isn't reset to identical sides. Locked clone blocks are dimmed.
 
@@ -165,12 +165,12 @@ you dialled in isn't reset to identical sides. Locked clone blocks are dimmed.
 
 The **Perform** tab is a macros-and-pads view with no patching, for live play:
 
-- **Preset Morph** — a 4-corner XY pad bilinearly interpolating four captured presets; **Dice** fills all
+- **Preset Morph** — a 4-corner XY pad bilinearly interpolating four captured presets; **🎲** fills all
   four at random.
-- **Orb** — the puck's *angle* picks one of eight random scenes, its *distance* scales intensity; **Dice**
-  rolls new scenes, **Rec** records the gesture and **Play** loops it.
+- **Orb** — the puck's *angle* picks one of eight random scenes, its *distance* scales intensity; **🎲**
+  rolls new scenes, **⏺** records the gesture and **▶** loops it.
 - **XY macro pads** — each drives a pair of soft keys, with per-pad **HOLD** / **SPRING**.
-- **Macro knobs**, eight **Snapshots** of the macro surface, and a **Dice Randomize**.
+- **Macro knobs**, eight **Snapshots** of the macro surface, and a **🎲 Randomize**.
 - **On-screen keyboard** — global **Key + Scale** quantize and a **Chord** selector (Off / Oct / 5th /
   Maj / Min / Maj7 / Min7 / Sus4 / Power) stacking intervals on each played key, plus a global arp
   (mode / rate / latch). The global arp is a quick performance layer; the **Arp** *module* is a
@@ -191,7 +191,7 @@ your host project.
 
 - Order matters. Put **Scale** *after* harmony modules so every generated note is locked to key, and
   put **Humanize** last so it isn't undone by a later quantiser.
-- Use **EZ WIRE** to chain quickly, then reorder by re-patching cables — reordering is musical, not
+- Use **⚡ EZ WIRE** to chain quickly, then reorder by re-patching cables — reordering is musical, not
   just cosmetic.
 - A cable **Level** of `0` mutes a connection without deleting it — the fastest way to A/B a module's
   contribution.
@@ -202,7 +202,7 @@ your host project.
 
 # FAQ
 
-**No notes reach my instrument.** Press **EZ WIRE**, or check that a chain reaches **Out A** / **Out
+**No notes reach my instrument.** Press **⚡ EZ WIRE**, or check that a chain reaches **Out A** / **Out
 B** and that the plugin sits before the instrument in the signal path.
 
 **My chords are out of key.** Add a **Scale** module at the end of the chain, set to your key and scale.

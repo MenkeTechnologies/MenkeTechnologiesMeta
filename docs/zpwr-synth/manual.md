@@ -44,7 +44,7 @@ CV source or macro soft key, patched into a node input or routed to a parameter,
 
 1. Open the plugin on an instrument track and play a note (the on-screen keyboard is at the bottom, or
    use the QWERTY home row — click a key once to focus, then type).
-2. Toggle **EZ MODE**. It lays down a complete playable voice — your generators feed a VCA opened by
+2. Toggle **⚡ EZ MODE**. It lays down a complete playable voice — your generators feed a VCA opened by
    an amp envelope, into a filter swept by a second envelope, to the output — so any oscillator you add
    is summed straight into the sound. It is the fastest way to get a playable starting point; build
    from there.
@@ -54,7 +54,7 @@ CV source or macro soft key, patched into a node input or routed to a parameter,
    routing.
 
 **INIT** unplugs every cable and modulation route while keeping the blocks (re-patch a fixed set a new
-way); **Clear** blanks the patch entirely.
+way); **🗑** blanks the patch entirely.
 
 # Building a voice
 
@@ -117,7 +117,7 @@ re-sampling a SampleHold or restarting an LFO.
 # The interface
 
 - **Patch** — the node grid with drag-to-wire cables, the macro soft-key strip (`+` / `−` to change
-  the active count; 16 by default), and the **INIT**, **Clear**, **EZ MODE**, **Stereo** and **Stereo
+  the active count; 16 by default), and the **INIT**, **🗑**, **⚡ EZ MODE**, **Stereo** and **Stereo
   Lock** controls. Double-click a block for its detail modal. The cable glow shows each block's live
   level so you can read the voice's gain structure.
 - **Perform** — a play surface with no patching, for live macro control (below).
@@ -166,7 +166,7 @@ Turn either off in Settings for raw gain (useful when you *want* a screaming, cl
 
 **Stereo** mirrors every block into an independent right-channel clone — a dual-mono voice per side —
 and the two sides' knobs stay independent so you can dial width by offsetting them (slightly different
-detune, cutoff or LFO phase left vs right). **Lock** (shown when Stereo is on) keeps the two channels
+detune, cutoff or LFO phase left vs right). **🔒 Lock** (shown when Stereo is on) keeps the two channels
 in sync: moving a knob on either side moves its clone by the *same delta*, so the L/R offset you dialled
 in is preserved rather than collapsed to `L = R`, and the link is bidirectional. Locked clone blocks
 render dimmed.
@@ -177,14 +177,14 @@ The **Perform** tab is a macros-and-pads surface for live play, driving only hos
 parameters so it works editor-closed and records as automation:
 
 - **Preset Morph** — a 4-corner XY pad bilinearly interpolating between four corner presets (A/B/C/D);
-  **Dice** fills all four at random, so you can sweep between four versions of a sound with one pad.
+  **🎲** fills all four at random, so you can sweep between four versions of a sound with one pad.
 - **Orb** — drag the puck where the *angle* selects one of eight randomised scenes and the *distance*
-  scales intensity; **Dice** rolls fresh scenes, **Rec** records the gesture and **Play** loops it back through
+  scales intensity; **🎲** rolls fresh scenes, **⏺** records the gesture and **▶** loops it back through
   the macro parameters for a hands-free evolving performance.
 - **XY macro pads** — each drives a pair of soft keys, with per-pad **HOLD** (leave the dot) /
   **SPRING** (snap to centre on release) for sustained vs momentary moves.
 - **Macro knobs**, eight **Snapshots** of the whole macro surface (click empty to save, filled to
-  recall, right-click to clear), and a **Dice Randomize** of all macros.
+  recall, right-click to clear), and a **🎲 Randomize** of all macros.
 - **Scale / key** quantize and a **Chord** stacker (Oct / 5th / Maj / Min / Maj7 / Min7 / Sus4 /
   Power), an on-screen keyboard with pitch-bend and mod wheels, and the **ARP** controls — mode (Up /
   Down / Up-Down / Random / As-Played), rate (`1/4`…`1/16T`) and **Latch** (keep arpeggiating held
@@ -250,7 +250,7 @@ percussive amp envelope and a short delay, and route **velocity → brightness**
 
 # Tips & best practices
 
-- Start from **EZ MODE** or a factory voice near your target and modify, rather than building from
+- Start from **⚡ EZ MODE** or a factory voice near your target and modify, rather than building from
   silence.
 - Use **unison Voices/Detune** for width inside one voice; use **layers** for parallel timbres or
   octave stacks — they cost differently (unison is cheaper than a whole extra layer).
@@ -262,7 +262,7 @@ percussive amp envelope and a short delay, and route **velocity → brightness**
 
 # FAQ
 
-**No sound when I play.** Toggle **EZ MODE**, or check that an oscillator reaches the output through
+**No sound when I play.** Toggle **⚡ EZ MODE**, or check that an oscillator reaches the output through
 a **VCA** opened by an envelope — a closed VCA (no envelope on In 2) is silent, and a raw oscillator
 with no amp shape may be there but not articulating.
 

@@ -25,7 +25,7 @@ What "modular" actually buys you, in practice:
 - **Layers.** Stack unlimited independent copies of the whole engine and mix them, for parallel
   timbres, wet/dry control or sheer thickness.
 
-If you have never patched a modular before, start with **EZ WIRE** (it builds a working chain for
+If you have never patched a modular before, start with **⚡ EZ WIRE** (it builds a working chain for
 you) and rewire from there; if you have, the whole field is open.
 
 # Core concepts
@@ -68,7 +68,7 @@ same transport and MIDI.
 
 1. Open the plugin on an audio track. The **Patch** tab shows a grid of blocks, each with input jacks
    on one side and an output jack on the other, and a strip of macro knobs.
-2. Press **EZ WIRE**. It auto-routes the input through whatever blocks you have to the output, so
+2. Press **⚡ EZ WIRE**. It auto-routes the input through whatever blocks you have to the output, so
    you hear signal immediately — the fastest way to confirm the plugin is passing audio before you
    start designing. It is non-destructive to your blocks; it only lays cables.
 3. Press **+ ADD BLOCK** and pick a Filter, Delay or Reverb. Drag from one block's **output** jack
@@ -81,7 +81,7 @@ same transport and MIDI.
 
 Two reset buttons let you start over without losing your layout: **INIT** unplugs every cable and
 modulation route but leaves all your blocks in place (ideal for re-patching a fixed set of blocks a
-new way), and **Clear** blanks the whole patch back to empty.
+new way), and **🗑** blanks the whole patch back to empty.
 
 # Patching cables
 
@@ -107,8 +107,8 @@ modulation bus: patch a control signal there in addition to the per-parameter mo
 The editor is a set of tabs, each a different view of the same patch:
 
 - **Patch** — the main workspace. The node grid with drag-to-wire cables, the macro soft-key strip,
-  and the detail panel for the selected block. It carries **EZ WIRE**, **INIT**, **Clear**, and the
-  **Stereo** / **Lock** toggles. The cable glow makes gain structure visible here.
+  and the detail panel for the selected block. It carries **⚡ EZ WIRE**, **INIT**, **🗑**, and the
+  **Stereo** / **🔒 Lock** toggles. The cable glow makes gain structure visible here.
 - **Synth** — a fixed-layout view that shows every block's knobs in a grid with no cables, like a
   Serum or Spire panel. Once your routing is set, this is the fastest surface for sound design because
   every control is visible at once.
@@ -224,7 +224,7 @@ cutoff's mod **source = LFO** with a depth of a couple of octaves and pick a ban
 LFO Rate slow. The cutoff now sweeps cyclically. Swap the LFO for an **Envelope** follower of the
 input and the sweep tracks your playing dynamics instead — a real auto-wah.
 
-**Stereo slap.** Turn **Stereo** on and leave **Lock** off so the two sides are independent. Add a
+**Stereo slap.** Turn **Stereo** on and leave **🔒 Lock** off so the two sides are independent. Add a
 Delay on each side and set slightly different Times left and right; feed each side's input straight to
 its output as well so the dry passes. The small L/R time difference widens the slapback across the
 stereo field.
@@ -250,10 +250,10 @@ runs with the editor closed and everything you do records as automation:
 
 - **Preset Morph** — a 4-corner XY pad (A/B/C/D) that bilinearly interpolates between four captured
   patches as you move the puck. The X/Y axes are reserved host parameters, so the morph automates and
-  recalls; **Dice** loads a random preset into all four corners for instant exploration.
+  recalls; **🎲** loads a random preset into all four corners for instant exploration.
 - **Orb** — a radial pad where the puck's *angle* selects a scene and its *distance* sets that scene's
-  intensity. **Dice** rolls a fresh random scene set, **Rec** records the puck's motion as you drag, and
-  **Play** loops the recording back through the host-automatable parameters — a hands-free gesture turned
+  intensity. **🎲** rolls a fresh random scene set, **⏺** records the puck's motion as you drag, and
+  **▶** loops the recording back through the host-automatable parameters — a hands-free gesture turned
   into recorded, editable automation.
 - **XY macro pads** — each drives a pair of soft keys, with a per-pad **HOLD** / **SPRING** toggle:
   HOLD leaves the dot where you drop it, SPRING snaps both axes back to centre on release for
@@ -271,7 +271,7 @@ recorded automation lane are the same thing.
 - **Stereo** (off by default) mirrors the entire patch graph to a second, right-channel copy, so each
   block processes the left and right channels independently. Dial a per-knob offset between the two
   sides for width — slightly different delay times, filter cutoffs or detune amounts left vs right.
-- **Lock** keeps the mirrored (clone) blocks tracking the left channel. It is **bidirectional and
+- **🔒 Lock** keeps the mirrored (clone) blocks tracking the left channel. It is **bidirectional and
   offset-preserving**: moving a left knob moves its clone, and moving a clone moves the left, each by
   the *same delta* — so the L/R offset (the width you dialled in plain Stereo) is preserved rather than
   collapsed. Turn Lock on with no offset for a perfect `L = R` mono-in-stereo. Both states save with
@@ -390,7 +390,7 @@ the grit adds harmonics and presence without losing the dry signal's body and tr
 
 # Tips & best practices
 
-- Start with **EZ WIRE** to get sound, then rewire piece by piece — it is faster than building from
+- Start with **⚡ EZ WIRE** to get sound, then rewire piece by piece — it is faster than building from
   an empty field.
 - Read the **cable glow** constantly. A dim cable into a block means it is being driven quietly; a
   blown-out glow means you are slamming the next stage. Use cable **levels** to balance instead of
@@ -406,7 +406,7 @@ the grit adds harmonics and presence without losing the dry signal's body and tr
 
 # FAQ
 
-**I get no sound.** Press **EZ WIRE**, or check that something is wired to the output jack — the
+**I get no sound.** Press **⚡ EZ WIRE**, or check that something is wired to the output jack — the
 output must have an incoming cable, and the chain must trace back to the input or a source.
 
 **A patch is clipping.** Confirm Auto Gain Stage / Soft Clip are on (Settings), lower the cable levels
@@ -434,8 +434,8 @@ only; Windows ships VST3 + CLAP).
 - **Right-click cable** — open the level + colour editor; level `0` mutes without deleting.
 - **Double-click block** — open its detail panel (parameters, mod slots, code).
 - **+ ADD BLOCK** — add a block; select a block and press delete to remove it.
-- **EZ WIRE** — auto-route input → blocks → output.
-- **INIT** — unplug all cables/mods, keep blocks. **Clear** — blank the patch.
+- **⚡ EZ WIRE** — auto-route input → blocks → output.
+- **INIT** — unplug all cables/mods, keep blocks. **🗑** — blank the patch.
 
 # Glossary
 
