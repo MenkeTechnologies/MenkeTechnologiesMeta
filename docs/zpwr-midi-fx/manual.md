@@ -260,6 +260,63 @@ an MPE controller.
 triggers forced to one drum pitch, gated on a Euclidean rhythm, with accents on the downbeat. Point
 it at a drum instrument for generative beats.
 
+# Ten more patches
+
+**11. Jazz comping.** `Chord (7ths/9ths, random inversions) → Strum → Humanize`. Rich, voice-led
+chords with a played feel — one-finger jazz comping.
+
+**12. Octave unison lead.** `Octave (up + down) → Unison (2)`. Every note thickened across octaves and
+doubled — huge trance/EDM leads from a single line.
+
+**13. Trance gate chords.** `Chord → SeqEuclid (fast division)`. Hold a chord; the Euclidean gate chops
+it into a rhythmic, pulsing pad.
+
+**14. Call and response.** Two branches off the input: one dry, one through `Echo → Transpose (+12)`,
+`Merge`d. Your line answers itself an octave up, a beat later.
+
+**15. Probability drums.** Several parallel `FixedNote → Chance` branches at different pitches and
+probabilities, merged — a generative drum machine where each voice has its own hit chance.
+
+**16. Mode-locked solo.** `Scale (Dorian)` after your input; every note you play is forced into the
+mode, so you can improvise freely and never hit a wrong note.
+
+**17. Strummed harp gliss.** `Chord (wide spread) → Strum (slow, up)`. A single key blooms into a
+rolled, harp-like gliss across octaves.
+
+**18. Random walk melody.** `Random (small range, slow clock) → Scale → Glide` feel via a downstream
+instrument's portamento — a wandering, in-key melodic line.
+
+**19. Velocity swell.** `Ramp` cycling velocity up over N notes → your instrument. Automatic
+crescendos on repeated notes; reverse for decrescendos.
+
+**20. MPE chord spread.** `Chord → Unison (channel spread)`. Each chord note lands on its own MPE
+channel, so per-note bends and pressure stay independent downstream — expressive, polyphonic MPE
+chords from one key.
+
+# Modes, chords & scales
+
+The harmony modules are most powerful when you know what to feed them.
+
+**Scales and modes.** A scale is a set of intervals from a root. The major scale and its **modes** —
+Ionian (major), Dorian, Phrygian, Lydian, Mixolydian, Aeolian (natural minor), Locrian — each have a
+distinct flavour (Dorian is minor-but-hopeful, Phrygian is dark and Spanish, Lydian is dreamy). The
+`Scale` module offers twenty scale/mode types; pick the one whose mood you want and every note routes
+into it.
+
+**Chord types.** Triads (major, minor, diminished, augmented) are three notes; sevenths add a fourth
+for jazz colour (maj7 is lush, dominant 7 wants to resolve, min7 is smooth); extensions (9ths, 11ths,
+13ths) pile on more. The `Chord` module's 165 types span all of these — choose by the colour you want
+under your single-key melody.
+
+**Voicings.** The same chord sounds different depending on note order and spacing. **Inversions**
+change which note is lowest (smoother movement between chords); **spread** opens the notes across
+octaves (less muddy, more open); **drop voicings** lower one note an octave (a jazz-piano staple). The
+Chord module's inversion, spread and octave-double controls are your voicing palette.
+
+**Putting it together.** A progression in a key: choose your `Scale` mode, set `Chord` to the colour
+(say min7), play single roots, and add `Strum` + `Humanize` for feel. The modules supply the theory;
+you supply the tune.
+
 # Tips & best practices
 
 - Order matters. Put **Scale** *after* harmony modules so every generated note is locked to key, and

@@ -572,6 +572,87 @@ or mastering chain you wire yourself:
 - **Mid/side:** put a `MidSide` encoder first and a decoder last, and process the mid and side paths
   independently in between — widen the sides, tighten the middle.
 
+# Ten more complete patches
+
+**11. Reverse reverb swell.** `In L → ReverseVerb` (or a `Reverb` into a reverse buffer), mixed ahead
+of the dry. The tail swells *into* each note — the inhaling, pre-echo sound used on ballad vocals and
+cinematic risers.
+
+**12. Telephone / radio.** `In L → ParaEQ` (steep band-pass around 300–3000 Hz) → `Bitcrush` (light)
+→ a touch of `Lofi`. Thin, distorted, distant — instant lo-fi voice or radio bed.
+
+**13. Tape stop.** `In L → Delay` with its time and pitch swept down to a halt by a fast envelope on a
+soft key; trigger the key for the turntable-brake effect on a drop.
+
+**14. Octave fuzz lead.** `In L → Octaver` (+12) mixed with dry → `OctaveFuzz` → `Filter`. The classic
+ring-y, octave-up guitar-fuzz lead.
+
+**15. Chorus ensemble pad.** Four short `Delay`s (or one `Ensemble`) at different LFO phases, panned
+across the field, mixed under the dry. Lush, wide, string-machine thickness.
+
+**16. Spectral de-noise.** `In L → Soothe` (or `SpecGate`) to tame harsh resonances and clean the
+spectrum, then `DynEQ` to balance — a gentle restoration chain.
+
+**17. Glitch stutter.** `In L → BeatSlicer`/`Glitch` gated by a `Clock`-derived signal, into a
+`PingPong` delay. Rhythmic, chopped, IDM-style fills from any input.
+
+**18. Drum bus.** `In L → Transient` (add attack) → `DrumBuss` (grit + glue) → `MultiComp` → a touch
+of `Reverb` on a parallel send. Punchy, cohesive drums.
+
+**19. Vowel morph.** `In L → Formant` with the vowel position swept by a slow `LFO` (A→E→I→O→U). A
+talking, vocal filter sweep — great on synths and pads.
+
+**20. Infinite ambient generator.** `Noise → Filter` (band-pass, swept by a `Lorenz` chaos source) →
+`GrainDelay` → long `ErbeVerb`, with a slow `AutoPan`. A self-evolving ambient bed that never needs an
+input — set it and let it drift.
+
+# A field guide to feedback
+
+Feedback is the capability a fixed slot rack cannot offer, and the source of the most interesting
+patches — so it is worth understanding on its own.
+
+When you cable an output back to an *earlier* input, the engine breaks the loop with a one-sample
+delay so the graph can still be ordered. That tiny delay, plus whatever Delay/filter sits in the
+loop, sets the **loop time** — and the loop time sets the pitch or rhythm of the feedback:
+
+- A loop just a few samples long rings at a high pitch (a tuned comb / Karplus string).
+- A loop a few milliseconds long flanges.
+- A loop tens of milliseconds long slaps and resonates.
+- A loop of hundreds of milliseconds or more echoes and builds.
+
+The **feedback amount** is set by the level of the cable in the loop (right-click it). Below 1.0 the
+loop decays; near 1.0 it sustains; at or above 1.0 it grows without bound — which is where
+self-oscillation lives. Three rules keep it musical:
+
+1. **Start low, raise slowly.** A loop can run away faster than you expect; bring the feedback cable
+   level up by hand and stop where it sings.
+2. **Put something in the loop.** A Filter in the loop tames runaway highs and shapes the resonance; a
+   Saturator/`Drive` softens the peaks so self-oscillation settles into a stable tone instead of
+   clipping; a slow modulator on the loop makes it evolve.
+3. **Tune by the delay.** Change the loop's Delay time to tune the pitch (shorter = higher) or the
+   rhythm (longer = slower echoes).
+
+Patches that live on feedback: combs and resonators, flangers, Karplus strings, dub delays, infinite
+reverbs, drones, and the "self-playing" patches in the cookbooks above.
+
+# Live performance setups
+
+Because everything host-automatable lives on the **soft keys** and the **Perform** tab, the plugin is
+built to be played, not just programmed:
+
+- **One-knob morph.** Map a soft key to several parameters (filter cutoff, delay mix, drive) and ride
+  one knob to open the whole patch. Put it on a hardware controller and it records as automation.
+- **Scene switching.** Use **Perform → Scenes** to snapshot whole macro states and recall them between
+  song sections; right-click clears a slot.
+- **The Orb.** Record an Orb gesture once, then loop it for hands-free, evolving movement while you do
+  something else — and it writes to host params so it bakes into the track.
+- **Preset Morph.** Capture four versions of a patch into the four corners and sweep the XY pad
+  between them live; the X/Y are host params, so a DAW can automate the morph.
+- **MIDI program changes.** Build a setlist of presets and step through them with Program Change from a
+  pedalboard or controller (toggle in Settings).
+- **Effect as instrument.** Add an oscillator driven by the MIDI **note** source and play the effect
+  chain melodically from a keyboard — the H3000-style "play the algorithm" approach.
+
 # Tips & best practices
 
 - Start with **⚡ EZ WIRE** to get sound, then rewire piece by piece — it is faster than building from

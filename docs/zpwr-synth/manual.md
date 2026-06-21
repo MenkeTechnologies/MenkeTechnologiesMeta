@@ -329,6 +329,59 @@ squelch, `Glide` for slides, push the ladder **drive**, and `velocity → cutoff
 **Glass bell.** `Additive` (sparse, odd-leaning partials) or `FM` (non-integer ratio) → long amp
 `Env` release → `Shimmer`/reverb send. Pure and metallic; velocity → level for dynamics.
 
+# Ten more voices
+
+**Hoover stab.** The `Hoover` core (PWM + chorus + note-on pitch sweep) → `Filter` → `Drive`. Short,
+aggressive, rave-era. Layer a `Sub` for weight.
+
+**Screech lead.** The `Screech` core (detuned saws → drive → formant) → high-resonance `Filter`. The
+hardstyle/gabber lead; route an envelope to the formant for movement.
+
+**Vector morph pad.** `Vector` with X and Y each swept by a slow `LFO` at different rates, long
+envelope, gentle filter, reverb send. The timbre drifts around the four-corner space forever.
+
+**Granular texture.** `Granular` over a sample with small grain size and high overlap, position swept
+by an `LFO`, into the filter and a reverb send. Evolving, cloud-like beds.
+
+**Sync sweep lead.** `Sync` with the sync ratio swept by an `Env` (or the mod wheel) → filter. The
+bright, tearing, vocal sweep of hard sync.
+
+**Additive organ.** `Additive` with several harmonics, no filter movement, a fast amp envelope, a
+little `Chorus` and `RingMod` on the bus for a tonewheel/Leslie flavour.
+
+**Detuned reese.** Two `Osc` saws (or `Reese`) detuned a few cents → `DiodeLadder` → `Drive`; sweep
+the filter slowly. The wide, growling DnB sub.
+
+**Plucked sitar.** `Karplus` with low damping and high feedback → a band-pass `Filter` → a buzzing
+`Waveshaper` for the jawari, short delay. Eastern, droning pluck.
+
+**Noise sweep riser.** `Noise → Filter` (band-pass) with the cutoff swept up by a long `Env`, into a
+reverb send. The classic build-up riser; automate the envelope time for length.
+
+**Chiptune lead.** `Osc` (pulse) with PWM, no filter, a hard `Crusher` for 8-bit grit, fast envelope,
+a `Glide` for slides. Add an arp on the Perform tab.
+
+# Modulation & movement
+
+A static patch is a starting point; movement is what makes it musical. The synth gives you several
+movers, each with a different feel:
+
+- **Envelopes (`Env`)** are one-shot contours fired by the note. Use them for anything that should
+  happen *per note*: the amp shape, a filter sweep on the attack, a pitch blip, an FM-index decay.
+  Short decays give punch; long releases give pads their tails.
+- **LFOs (`LFO`)** are repeating shapes for ongoing motion: vibrato (pitch), tremolo (level), filter
+  wobble, wavetable drift. Sync them to tempo for rhythmic gating and dubstep growls.
+- **Stepped & random (`StepLFO`, `NoiseLFO`, `SampleHold`)** give stair-stepped or random movement —
+  sequenced filter patterns, per-note pitch variation (via the **Trigger** source), analog drift.
+- **The `Scaler`** bends a modulation signal before it lands: scale it down, offset it, or curve it so
+  an envelope's shape or an LFO's range hits the destination just right.
+- **Performance controllers** — velocity, the mod wheel, aftertouch and MPE — let the *player*
+  modulate. Velocity → cutoff is the single most important "feel" routing; mod wheel → vibrato depth
+  or filter is the classic expressive control.
+
+The art is layering movers at different rates: a fast envelope for the attack, a slow LFO for drift,
+and velocity for touch, all on the same filter, gives a sound that feels alive rather than looped.
+
 # Tips & best practices
 
 - Start from **⚡ EZ MODE** or a factory voice near your target and modify, rather than building from
