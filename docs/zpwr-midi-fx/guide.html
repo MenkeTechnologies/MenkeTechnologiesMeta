@@ -63,17 +63,22 @@ stream before it reaches an instrument.</p>
       </div>
       <nav class="guide-toc"><ul>
 <li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#core-concepts" id="toc-core-concepts">Core
+concepts</a></li>
 <li><a href="#getting-started" id="toc-getting-started">Getting
 started</a></li>
 <li><a href="#the-patch-model" id="toc-the-patch-model">The patch
 model</a></li>
 <li><a href="#module-library" id="toc-module-library">Module
 library</a></li>
+<li><a href="#example-chains" id="toc-example-chains">Example
+chains</a></li>
 <li><a href="#modulation" id="toc-modulation">Modulation</a></li>
 <li><a href="#stereo" id="toc-stereo">Stereo</a></li>
 <li><a href="#perform-macros" id="toc-perform-macros">Perform &amp;
 macros</a></li>
 <li><a href="#presets" id="toc-presets">Presets</a></li>
+<li><a href="#glossary" id="toc-glossary">Glossary</a></li>
 </ul></nav>
       <div class="guide-body">
 <h1 id="overview">Overview</h1>
@@ -86,6 +91,26 @@ zpwr-fx, instantiated on the note stream instead of audio samples, so
 you wire note-transform modules into your own chains rather than picking
 from a fixed rack. It runs as VST3, AU, CLAP and Standalone on macOS,
 Linux and Windows.</p>
+<h1 id="core-concepts">Core concepts</h1>
+<p><strong>The note stream.</strong> Where zpwr-fx processes audio
+samples, zpwr-midi-fx processes a stream of note events — note-ons,
+note-offs, velocities and controllers. Each block reads notes in,
+transforms them, and passes notes out. Place it before an instrument and
+it rewrites what the instrument receives.</p>
+<p><strong>Blocks.</strong> A dynamic set you add, remove and reorder.
+Each block has a module type, note-stream inputs and a scalar
+<strong>Mod</strong> input, up to six parameters, and one output. The
+two outputs (<strong>Out A</strong>, <strong>Out B</strong>) merge to
+the plugin’s MIDI out.</p>
+<p><strong>Scalar sources.</strong> Alongside notes, the graph carries
+scalar control signals — LFOs, envelopes, Random, the macro soft keys
+and the performance/MPE controllers. Patch these into a block’s
+<strong>Mod</strong> input or route them to parameters to animate a
+transform (e.g. an LFO sweeping a Transpose).</p>
+<p><strong>Topological evaluation.</strong> The graph is evaluated once
+per audio block in dependency order, and note-offs are scheduled across
+block boundaries so a note never hangs — even with delays, ratchets and
+probability in the chain.</p>
 <h1 id="getting-started">Getting started</h1>
 <ol type="1">
 <li>Place the plugin before an instrument (in a MIDI-effect slot, or on
@@ -95,19 +120,12 @@ blocks → Out so a chain works immediately.</li>
 <li>Press <strong>+ ADD BLOCK</strong> to add a Chord, Arp or Scale
 module, then drag output jacks onto input jacks to build your own note
 pipeline.</li>
-<li>Every control has a hover tooltip; double-click a block for its
-parameters and modulation.</li>
+<li>Every control has a hover tooltip; <strong>double-click</strong> a
+block for its parameters and modulation.</li>
 </ol>
 <p><strong>INIT</strong> unplugs every cable and modulation while
 keeping the blocks; <strong>🗑</strong> blanks the patch.</p>
 <h1 id="the-patch-model">The patch model</h1>
-<p>A dynamic set of blocks (add, remove, reorder), each with a module
-type, note-stream inputs and a scalar <strong>Mod</strong> input, up to
-six parameters, and one output. Inputs select any source; the two
-outputs (<strong>Out A</strong>, <strong>Out B</strong>) merge to the
-plugin’s MIDI out. The graph is evaluated once per audio block in
-topological order, and note-offs are scheduled across block boundaries
-so a note never hangs.</p>
 <p>The <strong>Inputs</strong> column exposes every patchable source as
 a jack — the note input, every scalar modulator (Random plus the
 performance / MPE controllers) and the soft keys — so anything usable in
@@ -116,11 +134,16 @@ the mod matrix can be cabled straight into a block.</p>
 re-patch. Right-click a cable for its editor: a <strong>Level</strong>
 (scales note velocity on that connection — <code>0</code> mutes it, and
 the cable’s brightness and width follow the level), a
-<strong>Colour</strong> swatch, and <strong>Disconnect</strong>.</p>
+<strong>Colour</strong> swatch, and <strong>Disconnect</strong>. Level
+is a live tweak; colour is cosmetic and persists with the patch.</p>
+<p>A simple chord-then-arp chain wires up as:
+<code>MIDI In → Chord → Arp → Out A → MIDI Out</code>.</p>
 <h1 id="module-library">Module library</h1>
-<p>The library spans harmony, sequencing, probability, routing, control
-sources, dynamics, tuning and MPE/voicing, plus a family of
-cellular-automaton sequencers. A representative selection:</p>
+<p>The library spans several families. A representative selection
+follows; the <strong>Module Reference</strong> lists every block with
+its inputs and parameters, generated from the live registry so it never
+drifts.</p>
+<p><strong>Harmony</strong> — turn one key into many notes:</p>
 <table>
 <colgroup>
 <col style="width: 36%" />
@@ -139,9 +162,8 @@ cellular-automaton sequencers. A representative selection:</p>
 octave-double, transpose, strum)</td>
 </tr>
 <tr>
-<td><strong>Arp</strong></td>
-<td>host-synced arpeggiator (9 play modes, divisions, gate, octaves,
-swing)</td>
+<td><strong>Harmonize</strong></td>
+<td>stack up to three fixed intervals</td>
 </tr>
 <tr>
 <td><strong>Scale</strong></td>
@@ -152,44 +174,128 @@ swing)</td>
 <td>shift notes by semitones (modulatable)</td>
 </tr>
 <tr>
-<td><strong>Velocity</strong></td>
-<td>scale / offset note velocity (modulatable)</td>
+<td><strong>Octave</strong></td>
+<td>add octave-up / octave-down copies</td>
+</tr>
+<tr>
+<td><strong>Invert</strong></td>
+<td>melodic inversion — reflect notes around a pivot</td>
+</tr>
+<tr>
+<td><strong>Fold</strong></td>
+<td>octave-fold every note into a fixed [low, high] window</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sequencing &amp; rhythm</strong> — generate and reshape
+timing:</p>
+<table>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Arp</strong></td>
+<td>host-synced arpeggiator (9 play modes, divisions, gate, octaves,
+swing)</td>
 </tr>
 <tr>
 <td><strong>SeqEuclid</strong></td>
 <td>retrigger held notes on a Euclidean (Bjorklund) rhythm</td>
 </tr>
 <tr>
-<td><strong>Chance</strong></td>
-<td>per-note probability gate</td>
-</tr>
-<tr>
-<td><strong>Harmonize</strong></td>
-<td>stack up to three fixed intervals</td>
+<td><strong>SeqRatchet</strong></td>
+<td>split each note into N rapid retriggers</td>
 </tr>
 <tr>
 <td><strong>Echo</strong></td>
 <td>MIDI delay with feedback (decaying repeats)</td>
 </tr>
 <tr>
-<td><strong>Merge</strong></td>
-<td>combine two note streams</td>
+<td><strong>Strum</strong></td>
+<td>spread simultaneous notes in time (up / down)</td>
 </tr>
 <tr>
-<td><strong>LFO</strong></td>
-<td>scalar control source (sine / tri / saw / square)</td>
+<td><strong>Quantize</strong></td>
+<td>snap note timing to a grid (rate + strength)</td>
 </tr>
 <tr>
-<td><strong>Env</strong></td>
-<td>ADSR follower gated by held notes — a control source</td>
+<td><strong>Random</strong></td>
+<td>clock-driven random-note generator over a range</td>
 </tr>
 <tr>
-<td><strong>Octave</strong></td>
-<td>add octave-up / octave-down copies</td>
+<td><strong>Ramp</strong></td>
+<td>velocity crescendo / decrescendo over N notes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dynamics &amp; feel</strong> — velocity and timing:</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Velocity</strong></td>
+<td>scale / offset note velocity (modulatable)</td>
+</tr>
+<tr>
+<td><strong>VelCurve</strong></td>
+<td>reshape velocity through a gamma curve</td>
+</tr>
+<tr>
+<td><strong>VelClip</strong></td>
+<td>clamp velocity into a [min, max] window</td>
+</tr>
+<tr>
+<td><strong>Accent</strong></td>
+<td>boost the velocity of every Nth note (downbeat)</td>
+</tr>
+<tr>
+<td><strong>Humanize</strong></td>
+<td>jitter timing and velocity for a played feel</td>
+</tr>
+<tr>
+<td><strong>NoteLength</strong></td>
+<td>force every note to a fixed gate length</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Routing, probability &amp; control</strong> — gate, split and
+steer:</p>
+<table>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 63%" />
+</colgroup>
+<thead>
+<tr>
+<th>Module</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chance</strong></td>
+<td>per-note probability gate</td>
 </tr>
 <tr>
 <td><strong>NoteFilter</strong></td>
 <td>pass only notes within a note + velocity range (key zone)</td>
+</tr>
+<tr>
+<td><strong>KeySwitch</strong></td>
+<td>keyboard split — one zone plays, the other holds back</td>
 </tr>
 <tr>
 <td><strong>Mono</strong></td>
@@ -201,78 +307,49 @@ highest)</td>
 <td>toggle-hold notes — sustain until re-pressed</td>
 </tr>
 <tr>
-<td><strong>Strum</strong></td>
-<td>spread simultaneous notes in time (up / down)</td>
-</tr>
-<tr>
-<td><strong>Quantize</strong></td>
-<td>snap note timing to a grid (rate + strength)</td>
+<td><strong>FixedNote</strong></td>
+<td>force every note to one pitch (drum triggering)</td>
 </tr>
 <tr>
 <td><strong>Channel</strong></td>
 <td>remap the output MIDI channel</td>
 </tr>
 <tr>
-<td><strong>FixedNote</strong></td>
-<td>force every note to one pitch (drum triggering)</td>
+<td><strong>Unison</strong></td>
+<td>layer each note as N copies, optional MPE channel spread</td>
 </tr>
 <tr>
-<td><strong>Random</strong></td>
-<td>clock-driven random-note generator over a range</td>
-</tr>
-<tr>
-<td><strong>SampleHold</strong> / <strong>Slew</strong></td>
-<td>sample or smooth a scalar source — control sources</td>
-</tr>
-<tr>
-<td><strong>VelCurve</strong></td>
-<td>reshape velocity through a gamma curve</td>
+<td><strong>Merge</strong></td>
+<td>combine two note streams</td>
 </tr>
 <tr>
 <td><strong>RandOctave</strong></td>
 <td>randomly shift notes by ± octaves (probability)</td>
 </tr>
 <tr>
-<td><strong>Humanize</strong></td>
-<td>jitter timing and velocity for a played feel</td>
-</tr>
-<tr>
-<td><strong>SeqRatchet</strong></td>
-<td>split each note into N rapid retriggers</td>
-</tr>
-<tr>
-<td><strong>KeySwitch</strong></td>
-<td>keyboard split — one zone plays, the other holds back</td>
-</tr>
-<tr>
-<td><strong>Fold</strong></td>
-<td>octave-fold every note into a fixed window</td>
-</tr>
-<tr>
-<td><strong>NoteLength</strong></td>
-<td>force every note to a fixed gate length</td>
-</tr>
-<tr>
-<td><strong>Accent</strong></td>
-<td>boost the velocity of every Nth note (downbeat)</td>
-</tr>
-<tr>
-<td><strong>Invert</strong></td>
-<td>melodic inversion around a pivot</td>
-</tr>
-<tr>
-<td><strong>Unison</strong></td>
-<td>layer each note as N copies, optional MPE channel spread</td>
-</tr>
-<tr>
-<td><strong>Ramp</strong></td>
-<td>velocity crescendo / decrescendo over N notes</td>
+<td><strong>LFO / Env / SampleHold / Slew</strong></td>
+<td>scalar control sources for the mod matrix</td>
 </tr>
 </tbody>
 </table>
-<p>The <strong>Module Reference</strong> lists every block with its
-inputs and parameters, generated from the live registry so it never
-drifts.</p>
+<p>A family of <strong>cellular-automaton sequencers</strong> (Game of
+Life, Brian’s Brain, Langton’s Ant) generate evolving patterns for
+generative chains.</p>
+<h1 id="example-chains">Example chains</h1>
+<ul>
+<li><strong>Instant harmony:</strong> <code>Chord → Scale</code> — play
+single keys; Chord voices them, Scale locks every resulting note to your
+key so nothing is ever out.</li>
+<li><strong>Generative pluck:</strong>
+<code>Random → Arp → SeqEuclid</code> — a random note source arpeggiated
+and gated into a Euclidean rhythm for evolving sequences.</li>
+<li><strong>Humanised keys:</strong>
+<code>Chord → Strum → Humanize</code> — voiced chords, strummed, with
+subtle timing and velocity jitter for a played feel.</li>
+<li><strong>Expressive split:</strong>
+<code>KeySwitch → (Chord | Bass via Mono+Transpose)</code> — left hand
+bass, right hand voiced chords from one keyboard.</li>
+</ul>
 <h1 id="modulation">Modulation</h1>
 <p>A dynamic list of routes, each mapping a <strong>scalar source → any
 block parameter</strong> with a depth. Sources:</p>
@@ -285,10 +362,12 @@ remove).</li>
 <li><strong>Performance controllers</strong> — mod wheel, pitch bend,
 aftertouch, velocity, expression (CC11), sustain (CC64).</li>
 <li><strong>MPE</strong> — per-note bend, pressure and slide (CC74),
-read from the most recently active note.</li>
+read from the most recently active note’s channel, so an MPE controller
+animates the transforms expressively.</li>
 </ul>
 <p>The same sources are available on each block’s <strong>Mod</strong>
-input; depth is a live, lock-free tweak.</p>
+input; routing rebuilds the graph while depth is a live, lock-free
+tweak.</p>
 <h1 id="stereo">Stereo</h1>
 <p><strong>⊞ Stereo</strong> mirrors every block, cable and mod into an
 independent right-channel chain, kept in sync as you edit while knobs
@@ -327,6 +406,21 @@ Euclidean Pulse, Fifth Harmonizer, Arp Echo, Random Walk, Step Melody,
 Tone Cluster, Jazz Voicing, MPE Spread and more — spanning arps,
 harmony, rhythm, generative and FX chains. Your own patches save and
 load from the <strong>Presets</strong> tab.</p>
+<h1 id="glossary">Glossary</h1>
+<ul>
+<li><strong>Note stream</strong> — the flow of note events the plugin
+transforms before the instrument.</li>
+<li><strong>Block / module</strong> — one note-transform unit (note
+inputs, a Mod input, up to six params, one output).</li>
+<li><strong>Out A / Out B</strong> — the two outputs that merge to the
+MIDI out.</li>
+<li><strong>Scalar source</strong> — an
+LFO/Env/Random/controller/soft-key value driving the mod matrix.</li>
+<li><strong>MPE</strong> — per-note expression (bend, pressure, slide)
+usable as a modulation source.</li>
+<li><strong>EZ Wire</strong> — one-click auto-routing of MIDI In →
+blocks → Out.</li>
+</ul>
       </div>
     </main>
   </div>

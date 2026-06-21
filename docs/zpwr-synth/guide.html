@@ -63,14 +63,18 @@ build each voice from primitive blocks.</p>
       </div>
       <nav class="guide-toc"><ul>
 <li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#core-concepts" id="toc-core-concepts">Core
+concepts</a></li>
 <li><a href="#getting-started" id="toc-getting-started">Getting
 started</a></li>
-<li><a href="#the-voice-graph" id="toc-the-voice-graph">The voice
-graph</a></li>
+<li><a href="#building-a-voice" id="toc-building-a-voice">Building a
+voice</a></li>
 <li><a href="#node-types" id="toc-node-types">Node types</a></li>
 <li><a href="#the-interface" id="toc-the-interface">The
 interface</a></li>
 <li><a href="#modulation" id="toc-modulation">Modulation</a></li>
+<li><a href="#the-fx-bus-rack" id="toc-the-fx-bus-rack">The FX-bus
+rack</a></li>
 <li><a href="#gain-staging" id="toc-gain-staging">Gain staging</a></li>
 <li><a href="#stereo-stereo-lock" id="toc-stereo-stereo-lock">Stereo
 &amp; stereo lock</a></li>
@@ -78,6 +82,7 @@ interface</a></li>
 macros</a></li>
 <li><a href="#presets" id="toc-presets">Presets</a></li>
 <li><a href="#playing" id="toc-playing">Playing</a></li>
+<li><a href="#glossary" id="toc-glossary">Glossary</a></li>
 </ul></nav>
       <div class="guide-body">
 <h1 id="overview">Overview</h1>
@@ -90,6 +95,29 @@ any source to any parameter through the mod matrix, and run the whole
 thing into a master + 2-aux <strong>FX-bus rack</strong> carrying the
 full shared audio-effects pack. It runs as VST3, AU, CLAP and Standalone
 on macOS, Linux and Windows.</p>
+<h1 id="core-concepts">Core concepts</h1>
+<p><strong>The voice graph.</strong> You design one patch — a graph of
+nodes — and the engine instantiates it across a pool of voices. Each
+node has a type, inputs, up to eight parameters and one output.
+Generators read the played <strong>Note</strong>, <strong>Gate</strong>
+and <strong>Velocity</strong> directly, so the single patch definition
+plays polyphonically: press a chord and the same graph runs once per
+held note.</p>
+<p><strong>Outputs.</strong> The patch’s two outputs select the left and
+right sources that feed the layer. Anything in the graph can be the
+output — the raw oscillator, the filter, a VCA, a sum.</p>
+<p><strong>Signal vs control.</strong> As in zpwr-fx, cables carry both
+audio and control. An LFO or envelope is just a signal; patch it into a
+Filter’s cutoff mod, a VCA, or any parameter to modulate it.</p>
+<p><strong>Layers.</strong> A layer is an independent voice pool running
+its own copy of the patch. Stack layers to split/detune (two layers an
+octave apart), to blend timbres, or to build huge unisons, and balance
+them in the layered mixer feeding the FX-bus rack.</p>
+<p><strong>Unison.</strong> Separately from layers, every oscillator has
+its own <strong>Voices</strong> (1–11) and <strong>Detune</strong>
+controls — detuned copies summed and loudness-normalised within a single
+voice — for supersaw-style width without spending polyphony on
+layers.</p>
 <h1 id="getting-started">Getting started</h1>
 <ol type="1">
 <li>Open the plugin on an instrument track and play a note (the
@@ -98,29 +126,32 @@ a key once to focus, then type).</li>
 <li>Toggle <strong>⚡ EZ MODE</strong>. It lays down a complete playable
 voice — your generators feed a VCA opened by an amp envelope, into a
 filter swept by a second envelope, to the output — so any oscillator you
-add is summed straight into the sound.</li>
+add is summed straight into the sound. Start here, then customise.</li>
 <li>Press <strong>+ ADD BLOCK</strong> to add oscillators, filters and
-modulators, then drag output jacks onto input jacks to wire your own
+modulators, and drag output jacks onto input jacks to wire your own
 voice.</li>
-<li>Double-click a block for its detail panel — parameters, unison, and
-modulation routing.</li>
+<li><strong>Double-click</strong> a block for its detail panel —
+parameters, unison (Voices/Detune), and modulation routing.</li>
 </ol>
 <p><strong>INIT</strong> unplugs every cable and modulation route while
 keeping the blocks; <strong>🗑</strong> blanks the patch.</p>
-<h1 id="the-voice-graph">The voice graph</h1>
-<p>Every voice is a patch of <strong>nodes</strong>, each with a type,
-inputs, up to eight parameters and one output. Generators read the
-played <strong>Note</strong>, <strong>Gate</strong> and
-<strong>Velocity</strong> directly, so a single patch definition plays
-polyphonically across the voice pool. The two outputs select the
-left/right sources that feed the layer.</p>
-<p>Every oscillator (Osc, Wt, Supersaw, FM, Sub, Sync, Additive) has a
-<strong>Voices</strong> unison control (1–11) plus
-<strong>Detune</strong> in cents — detuned copies summed and
-loudness-normalised; <code>Voices = 1</code> is classic mono. A
-first-class <strong>Trigger</strong> source (a one-sample impulse on
-each note-on) sits alongside Note / Gate / Velocity for modular
-routing.</p>
+<h1 id="building-a-voice">Building a voice</h1>
+<p>A typical subtractive voice, by hand:</p>
+<ol type="1">
+<li>Add an <strong>Osc</strong> (or Supersaw / Wt / FM). It already
+follows the played note.</li>
+<li>Add an <strong>Env</strong> and a <strong>VCA</strong>; wire Osc →
+VCA In 1 and Env → VCA In 2, so the envelope opens the amplitude on each
+note. Make the VCA an output.</li>
+<li>Add a <strong>Filter</strong>; insert it between Osc and VCA. Add a
+second <strong>Env</strong> and route it to the Filter’s cutoff mod for
+a filter sweep on each note.</li>
+<li>Add an <strong>LFO</strong> and route it to pitch or cutoff for
+vibrato or movement.</li>
+</ol>
+<p>Swap the oscillator type at any time — the rest of the voice keeps
+working — to go from analog to wavetable, FM, additive, supersaw,
+vector, sync or physical-model character.</p>
 <h1 id="node-types">Node types</h1>
 <table>
 <colgroup>
@@ -283,6 +314,11 @@ routing.</p>
 </tr>
 </tbody>
 </table>
+<p>Every oscillator (Osc, Wt, Supersaw, FM, Sub, Sync, Additive) carries
+the <strong>Voices</strong>/<strong>Detune</strong> unison pair. A
+first-class <strong>Trigger</strong> source — a one-sample impulse on
+each note-on — sits alongside Note / Gate / Velocity for modular-style
+routing (e.g. trigger a sample-and-hold per note).</p>
 <h1 id="the-interface">The interface</h1>
 <ul>
 <li><strong>Patch</strong> — the node grid with drag-to-wire cables, the
@@ -299,22 +335,32 @@ the audio-engine settings.</li>
 </ul>
 <h1 id="modulation">Modulation</h1>
 <p>Modulation is the patching itself: any LFO or envelope node output,
-or any macro soft key, patched into a node input — or mod-routed to a
-parameter — is a modulation connection. The host-automatable parameters
-are the <strong>soft keys</strong> (an expandable pool, 16 active by
-default) plus master in / out / bypass; the patch itself is saved as
-plugin state.</p>
+any stepped/noise CV source, or any macro <strong>Soft Key</strong>,
+patched into a node input — or routed to a parameter as
+<code>base + source × depth</code> — is a modulation connection. The
+host-automatable parameters are the <strong>soft keys</strong> (an
+expandable pool, 16 active by default) plus master in / out / bypass;
+the patch itself is saved as plugin state. The <strong>Scaler</strong>
+node reshapes a control signal (scale / offset / curve) when you need to
+bend a modulation source before it hits a destination.</p>
+<h1 id="the-fx-bus-rack">The FX-bus rack</h1>
+<p>The summed output of all layers runs through a <strong>master + 2-aux
+FX-bus rack</strong> built from the same shared audio pack as zpwr-fx —
+so the full library of filters, delays, reverbs, dynamics, distortion
+and analog-modeled effects is available on the synth’s output, once,
+after the voices mix down. Send voices to the aux buses for shared
+reverb/delay, and process the master bus for glue.</p>
 <h1 id="gain-staging">Gain staging</h1>
 <p>Two per-block Settings (both <strong>on by default</strong>) keep the
 signal between blocks from clipping no matter how hot the cable gains
-are, inside every voice graph and the FX buses:</p>
+are, inside every voice graph and on the FX buses:</p>
 <ul>
 <li><strong>Auto Gain Stage</strong> rides levels with a fast-attack /
-slow-release follower toward the <strong>Auto-Gain Target</strong>
-ceiling.</li>
+slow-release peak follower pulling each block toward the
+<strong>Auto-Gain Target</strong> ceiling.</li>
 <li><strong>Soft Clip</strong> is the guarantee — an instant tanh bound
-at the same ceiling, catching transients the follower would miss,
-saturating gently rather than clipping.</li>
+at the same ceiling, catching the fast transients the follower would
+miss, saturating gently rather than clipping.</li>
 </ul>
 <p>Turn either off in Settings for raw gain; the master
 <strong>Brickwall Limiter</strong> is a separate final ceiling.</p>
@@ -342,15 +388,17 @@ macro parameters.</li>
 <li><strong>XY macro pads</strong> — each drives a pair of soft keys,
 with per-pad <strong>HOLD</strong> (leave the dot) /
 <strong>SPRING</strong> (snap back to centre).</li>
-<li><strong>Macro knobs</strong>, plus eight <strong>Snapshots</strong>
-of the whole macro surface (click empty to save, filled to recall,
-right-click to clear) and a <strong>🎲 Randomize</strong>.</li>
+<li><strong>Macro knobs</strong>, eight <strong>Snapshots</strong> of
+the whole macro surface (click empty to save, filled to recall,
+right-click to clear), and a <strong>🎲 Randomize</strong> of all
+macros.</li>
 <li><strong>Scale / key</strong> quantize and a <strong>Chord</strong>
 stacker (Oct / 5th / Maj / Min / Maj7 / Min7 / Sus4 / Power), an
 on-screen keyboard with pitch-bend and mod wheels, and the
 <strong>ARP</strong> controls — mode (Up / Down / Up-Down / Random /
 As-Played), rate (<code>1/4</code>…<code>1/16T</code>) and
-<strong>Latch</strong>.</li>
+<strong>Latch</strong> (keep arpeggiating held notes after the keys
+release).</li>
 <li><strong>MIDI In</strong> toggles — <strong>Program</strong> (respond
 to Program Change) and <strong>Bank</strong> (respond to Bank Select
 CC0/CC32), both on by default.</li>
@@ -376,16 +424,32 @@ filtered-noise sweeps, <code>1/16</code> gated-noise loops, two-octave
 siren wails and distorted hypnotic pulses (~160 BPM).</li>
 </ul>
 <p>Every preset carries facet tags (Type / Character / Style) so the
-browser’s facets are fully populated, and ships with named macro knobs
-plus mod-wheel / velocity routing so it loads playable. Your own patches
-save and load from the preset manager. Factory voices can also be
-exported as Native Kontrol Standard <code>.nksf</code> presets with a
-Komplete Kontrol audio preview for hardware browsing.</p>
+browser’s facets stay populated, and ships with named macro knobs plus
+mod-wheel / velocity routing so it loads playable. Your own patches save
+and load from the preset manager. Factory voices can also be exported as
+Native Kontrol Standard <code>.nksf</code> presets with a Komplete
+Kontrol audio preview for hardware browsing.</p>
 <h1 id="playing">Playing</h1>
 <p>The on-screen keyboard sits at the bottom of the editor; the computer
 keyboard’s home row (<code>A W S E D F T G Y H U J K …</code>) plays a
 chromatic octave around C4. Click a key once to give the keyboard focus,
-then type.</p>
+then type. Pitch-bend and mod wheels sit beside the keyboard, and the
+Perform tab’s arp, chord and scale controls shape what you play.</p>
+<h1 id="glossary">Glossary</h1>
+<ul>
+<li><strong>Voice</strong> — one instance of your patch graph, one per
+held note across the pool.</li>
+<li><strong>Layer</strong> — an independent voice pool running its own
+copy of the patch.</li>
+<li><strong>Unison (Voices/Detune)</strong> — detuned oscillator copies
+summed inside one voice.</li>
+<li><strong>Soft key / macro</strong> — a host-automatable knob, also
+patchable as a mod source.</li>
+<li><strong>FX-bus rack</strong> — the master + 2-aux effects rack on
+the summed output.</li>
+<li><strong>EZ Mode</strong> — a one-toggle playable voice you can then
+customise.</li>
+</ul>
       </div>
     </main>
   </div>
