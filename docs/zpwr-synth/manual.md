@@ -185,6 +185,67 @@ The on-screen keyboard sits at the bottom of the editor; the computer keyboard's
 keyboard focus, then type. Pitch-bend and mod wheels sit beside the keyboard, and the Perform tab's
 arp, chord and scale controls shape what you play.
 
+# Sound-design tutorials
+
+**A fat supersaw lead.** Add a **Supersaw**; raise its **Voices** to 7–11 and **Detune** for width.
+Add an **Env** + **VCA** for the amp shape, and a **Filter** opened by a second **Env** with a quick
+decay for a bright attack. Add a slow **LFO** to the Filter cutoff for movement, and a touch of
+**Glide** for portamento between notes. Stack a second **layer** an octave down for weight.
+
+**An FM bass.** Add an **FM** node; set a low **ratio** (1–2) and moderate **index**, with a short
+amp envelope. Route an **Env** to the FM index so the bite decays into a rounder body. Follow with a
+**DiodeLadder** filter for grit and a **Drive** for saturation.
+
+**A 303 acid line.** Add an **Osc** (saw) → **DiodeLadder** (high resonance) → amp **Env**. Route a
+fast **Env** to the ladder cutoff for the squelch, add **Glide** for slides, and push the ladder
+**drive**. Play with the **Accent**-style velocity routing to brightness for classic acid dynamics.
+
+**A wavetable pad.** Add a **Wt** oscillator; route a slow **LFO** to its **position** so the timbre
+evolves. Long amp **Env** attack/release, a gently swept **Filter**, unison **Voices** for thickness,
+and an aux send to reverb on the **FX-bus rack** for space.
+
+**A plucked string.** Add a **Karplus** node; set **damping** and **feedback** to taste, a percussive
+amp envelope, and a short delay. Velocity → brightness makes it dynamic.
+
+# Sound-design cookbook
+
+- **Movement** — slow LFO → wavetable position, filter cutoff, or oscillator detune.
+- **Punch** — fast envelope → filter cutoff with a short decay for a bright transient.
+- **Width** — raise oscillator **Voices**/**Detune**, or run **Stereo** with a small L/R offset.
+- **Octave stack** — a second **layer** transposed an octave for thickness without retuning the patch.
+- **Random per note** — **Trigger** source → **SampleHold** → pitch or cutoff for per-note variation.
+- **Sidechain pump** — an LFO synced to the beat → a VCA on the output for rhythmic ducking.
+- **Velocity feel** — velocity → filter cutoff and amp level so dynamics translate.
+
+# Tips & best practices
+
+- Start from **⚡ EZ MODE** (or a factory voice near your target) and modify, rather than building from
+  silence.
+- Use **unison Voices/Detune** for width inside one voice; use **layers** for parallel timbres or
+  octave stacks.
+- Keep **Auto Gain Stage** / **Soft Clip** on while patching; the FX-bus rack and hot cable gains can
+  otherwise overshoot.
+- Name your **soft-key macros** for the parameters you perform, so presets load playable and the
+  Perform pads make sense.
+- Audition with the **Perform** Morph/Orb to find variations of a patch quickly.
+
+# FAQ
+
+**No sound when I play.** Toggle **⚡ EZ MODE**, or check that an oscillator reaches the output through
+a VCA opened by an envelope (a closed VCA is silent).
+
+**My patch only plays one note.** Each held note runs its own voice automatically — if it sounds
+mono, you may have a **Mono**-style routing or a single shared envelope; otherwise just play a chord.
+
+**How do I add effects?** The **FX-bus rack** on the output carries the full audio pack; send voices
+to the aux buses or process the master bus.
+
+**Can I use hardware browsing?** Export factory voices as Native Kontrol Standard `.nksf` presets with
+previews for Komplete Kontrol.
+
+**Which formats / OSes?** VST3, AU, CLAP and Standalone on macOS, Linux and Windows (AU is macOS only;
+Windows ships VST3 + CLAP).
+
 # Glossary
 
 - **Voice** — one instance of your patch graph, one per held note across the pool.

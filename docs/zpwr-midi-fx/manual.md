@@ -165,6 +165,66 @@ A factory bank ships with the plugin — Chord Arp, Strummed Chords, Euclidean P
 Arp Echo, Random Walk, Step Melody, Tone Cluster, Jazz Voicing, MPE Spread and more — spanning arps,
 harmony, rhythm, generative and FX chains. Your own patches save and load from the **Presets** tab.
 
+# Tutorials
+
+**One-finger chord progressions.** Wire `Chord → Scale`. Set the Chord type (triad, 7th, etc.) and
+the Scale to your key. Now any single key you press is voiced into a chord and locked to the key, so a
+one-finger melody becomes an in-key progression. Add **Strum** after the Chord for a guitar-like roll.
+
+**A polymetric arp.** Wire `Arp → SeqEuclid`. Set the Arp mode and division for the note order, then
+let SeqEuclid gate the result on a Euclidean pulse/step pattern at a different length than your loop —
+the two cycles drift against each other for evolving, polymetric rhythms. Add **Echo** for trailing
+repeats.
+
+**Humanised live keys.** Wire `Chord → Humanize → VelCurve`. Voiced chords get subtle timing and
+velocity jitter (Humanize) and a velocity response curve shaped to your controller (VelCurve), so a
+stiff MIDI performance feels played.
+
+**A generative sequence.** Wire `Random → Scale → Arp`. Random generates notes over a range, Scale
+locks them to your key, and Arp orders them rhythmically — an endless in-key sequence. Modulate
+Random's range with an LFO from the mod matrix for slowly shifting registers.
+
+**Bass + chords split.** Wire `KeySwitch` to split the keyboard: the low zone through `Mono →
+Transpose` (down an octave) for a bass line, the high zone through `Chord` for voiced chords — both
+hands from one keyboard, into one instrument.
+
+# Recipes
+
+- **Strummed chords** — `Chord → Strum` (set direction and time spread).
+- **Octave doubling** — `Octave` adds up/down copies for thickness.
+- **Probability fills** — `Chance` before a sequencer drops random notes for variation.
+- **Ratchet rolls** — `SeqRatchet` splits notes into rapid retriggers on accents.
+- **Tempo-locked timing** — `Quantize` snaps loose playing to a grid; raise strength gradually.
+- **Drum triggering** — `FixedNote` forces every note to one pitch to trigger a drum sound.
+- **MPE expression** — route per-note pressure/slide (mod matrix) into Transpose or Velocity for
+  expressive, per-note control.
+
+# Tips & best practices
+
+- Order matters: put **Scale** *after* harmony modules so every generated note is locked to key.
+- Use **⚡ EZ WIRE** to chain quickly, then reorder by re-patching cables.
+- A cable **Level** of `0` mutes a connection without deleting it — handy for A/B-ing a module.
+- Assign performance moves (arp rate, chord type, transpose) to **soft keys** so they automate.
+- Watch for stuck notes only with extreme feedback in **Echo**; lower its feedback if repeats pile up
+  (note-offs are scheduled safely, but very long tails can overlap).
+
+# FAQ
+
+**No notes reach my instrument.** Press **⚡ EZ WIRE**, or check that a chain reaches **Out A** / **Out
+B** and that the plugin is before the instrument in the signal path.
+
+**My chords are out of key.** Add a **Scale** module at the end of the chain set to your key/scale.
+
+**How is the global arp different from the Arp module?** The Perform tab's global arp is a quick
+performance layer; the **Arp** module is a patchable block you can place anywhere in the graph and
+modulate, with its own latch.
+
+**Does it do MPE?** Yes — per-note bend, pressure and slide are available as modulation sources, and
+**Unison** can spread copies across MPE channels.
+
+**Which formats / OSes?** VST3, AU, CLAP and Standalone on macOS, Linux and Windows (AU is macOS only;
+Windows ships VST3 + CLAP). It registers as a MIDI-effect where the host supports it.
+
 # Glossary
 
 - **Note stream** — the flow of note events the plugin transforms before the instrument.

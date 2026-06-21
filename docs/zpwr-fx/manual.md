@@ -226,6 +226,116 @@ character) so the browser's filters stay populated, and recall by searching or f
 plugin state — the patch plus every parameter and soft-key value — round-trips through your host
 session, and an incoming Program Change can switch presets live.
 
+# The module library
+
+The block palette is the full shared audio pack — over a thousand module types. They fall into
+families you mix freely:
+
+- **Oscillators & sources** — analog, wavetable, FM, additive, supersaw, sync, vector and physical
+  models, plus Noise. As effects, use them as carriers for ring modulation, as test tones, or fed by
+  the input for vocoder-style work.
+- **Filters** — state-variable (LP/HP/BP/notch), Moog and diode ladders, formant and comb filters,
+  plus the modeled analog filters below. Each has a Mod input for sweeping the cutoff.
+- **Delays** — clean, damped-feedback, tape, ping-pong, multi-tap and granular delays; modulate the
+  time for chorus and flange.
+- **Reverbs** — rooms, halls, plates, springs and shimmer/feedback reverbs.
+- **Distortion & saturation** — soft drives, tube and diode clippers, wavefolders, bit/sample-rate
+  crushers and the modeled pedals below.
+- **Dynamics** — compressors, limiters, gates, transient shapers and the modeled studio units below.
+- **Modulation effects** — chorus, flanger, phaser, tremolo, ring modulator, auto-pan.
+- **Pitch & spectral** — pitch shift, frequency shift, harmonisers and spectral processors.
+- **Utilities** — mixers, gains, math, sample-and-hold, slew, logic, panners and routing helpers
+  that glue a patch together.
+
+The **Module Reference** (linked from the docs hub, and the catalogue at the back of this manual)
+lists every block with its inputs, parameters and a description.
+
+# Analog models
+
+A large set of the blocks are **component-level analog emulations** — faithful circuit topologies
+rather than IR or sample clones — so they respond to drive and dynamics like the originals. They are
+grouped by the gear they model:
+
+- **Filters** — Minimoog ladder, Jupiter-8, MS-20, Oberheim SEM, EMS VCS3, Wasp, TB-303.
+- **Compressors & limiters** — 1176, LA-2A, LA-3A, Fairchild, dbx 160, SSL bus, API 2500, Distressor,
+  Sta-Level.
+- **EQs** — Pultec, API 550, Neve 1073, SSL E/G, Manley, Helios, GML, plus preamp and tape stages.
+- **Pedals** — Tube Screamer, RAT, Big Muff, Klon, DS-1, MXR, Octavia, OCD, Metal Zone.
+- **Amps & cabs** — Fender, Marshall, Vox, Mesa voicings.
+- **Time & space** — EMT 140 plate, AKG BX20, RE-201 Space Echo, Binson Echorec, Memory Man, plus
+  enhancers, phaser/tremolo and chorus.
+
+Wire them like any block — feed the input, set the drive, and modulate the controls. Because they are
+real topologies, pushing the input harder pushes the model into its non-linear region the way the
+hardware would.
+
+# Tutorials
+
+**A dub delay throw.** Add a Delay and a Filter. Wire In L → Delay → Filter → Out, and also feed
+In L → Out directly so the dry signal passes. Set the Delay Time to a musical division and its
+Feedback fairly high; put the Filter after it as a band-pass so the repeats darken as they trail.
+Assign a **soft key** to the Delay's Feedback and another to its Mix, then automate them on the
+**Perform** tab to throw the delay in and out live.
+
+**A flanger from scratch.** Add a Delay with a very short Time and an LFO. Route the LFO into the
+Delay's Time mod with a small depth and a slow Rate. Mix the delayed signal back with the dry — the
+sweeping short delay is a flanger. Raise the Delay Feedback for resonance; speed the LFO for a chorus.
+
+**A wavefolder lead processor.** Add an Expr block with `out = sin(in * (1 + p0 * 8) * pi)`. Patch a
+soft key (or an envelope follower of the input) into p0 so the fold amount tracks dynamics. Follow it
+with a Filter to tame the harshness and a touch of Reverb.
+
+**Sidechain-style ducking.** Add an Envelope follower reading a control source (or the input), and a
+VCA on your main signal. Route the follower into the VCA so the main signal ducks when the source is
+loud — a built-in sidechain compressor you wired yourself.
+
+**Parallel grit.** Use two layers. Keep layer 1 clean. On layer 2 add a modeled pedal (RAT or Big
+Muff) and a Filter. Blend layer 2 under layer 1 with the layer faders for parallel distortion that
+keeps the body of the dry signal.
+
+# Modulation cookbook
+
+- **Vibrato** — LFO → an oscillator's pitch mod, small depth, ~5 Hz.
+- **Auto-wah** — Envelope follower of the input → Filter cutoff mod.
+- **Tremolo** — LFO → VCA, or LFO → a Gain block.
+- **Random sample-and-hold** — Noise → a Sample-and-Hold clocked by an LFO → any parameter, for
+  stepped randomness.
+- **Slow drift** — a very slow LFO (or smoothed Noise) at tiny depth on tuning or cutoff, for analog
+  movement.
+- **Velocity to brightness** — patch MIDI velocity → Filter cutoff mod, so harder notes open up.
+- **Mod-wheel macro** — assign the mod wheel to a soft key, then patch that soft key to several
+  parameters at once for an expressive performance macro.
+
+# Tips & best practices
+
+- Start with **⚡ EZ WIRE** to get sound, then rewire piece by piece.
+- Watch the **cable glow** — a dim cable into a block means it is being driven quietly; a blown-out
+  glow means you are slamming the next stage. Use cable levels to balance.
+- Leave **Auto Gain Stage** and **Soft Clip** on while building; turn them off only when you want raw,
+  intentional clipping.
+- Use **layers** for parallel processing instead of forcing everything into one chain.
+- Assign anything you will tweak live to a **soft key** so it records as automation and lives on the
+  **Perform** surfaces.
+- Build feedback carefully — start the feedback cable level low and raise it, since the one-sample
+  loop can run away.
+
+# FAQ
+
+**I get no sound.** Press **⚡ EZ WIRE**, or check that something is wired to the output and that a
+cable feeds it (the output jack must have an incoming connection).
+
+**A patch is clipping.** Make sure Auto Gain Stage / Soft Clip are on (Settings), lower the cable
+levels feeding hot stages, or pull the Master Out down. The master Brickwall Limiter is the last line.
+
+**Can I use it as an instrument?** Yes — add oscillators driven by MIDI note as a source and it
+behaves like a synth; or use zpwr-synth, which is this engine built for polyphony.
+
+**Where do my presets live?** Saved patches appear in the **Browse** tab with their tags; the whole
+patch and its parameters also save inside your host project.
+
+**Does it support my plugin format / OS?** It builds VST3, AU, CLAP and Standalone for macOS, Linux
+and Windows (AU is macOS only; Windows ships VST3 + CLAP).
+
 # Mouse & keyboard reference
 
 - **Drag output → input** — wire a cable.
