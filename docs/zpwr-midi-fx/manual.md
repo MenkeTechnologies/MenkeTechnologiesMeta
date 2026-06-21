@@ -124,6 +124,41 @@ every block with its inputs and parameters, generated from the live registry so 
 A family of **cellular-automaton sequencers** (Game of Life, Brian's Brain, Langton's Ant) evolve
 patterns from simple rules for generative, ever-changing chains.
 
+# Harmony & rhythm primer
+
+A little theory makes the harmony and rhythm modules far more powerful.
+
+**Chords and voicings.** A chord is a set of notes stacked over a root — a major triad is the root,
+its major third and its fifth. **Inversions** rotate which note is on the bottom (smoother voice
+leading between chords); **spread** opens the voicing across octaves (lush, less muddy); **octave
+doubling** reinforces the root. The `Chord` module does all of this from a single key, so you can
+play a progression with one finger and let the voicing do the musical work.
+
+**Scales and keys.** A scale is the set of pitches that "belong" in a key. The `Scale` module snaps
+every incoming note to the nearest scale tone, so a wrong note becomes a right one. Place it *after*
+your generators and harmonisers and nothing you produce can ever be out of key — which is why
+generative patches (`Random` → `Scale`) always sound musical.
+
+**Intervals and harmony.** `Harmonize` stacks fixed intervals (a fifth above, an octave below) for
+parallel harmony; `Invert` reflects a melody around a pivot note for a mirror line; `Transpose`
+shifts everything by semitones. Combine them for counterpoint from a single played line.
+
+**Arpeggios.** An arpeggio plays a chord's notes one at a time. The `Arp` module's **mode** sets the
+order (up, down, up-down, as-played, random, and more), the **division** sets the speed relative to
+the host tempo, the **gate** sets how long each note rings, and **octaves** extend the pattern across
+the keyboard. Hold a chord and the arp spells it out in time.
+
+**Euclidean rhythm.** A Euclidean pattern distributes a number of hits as evenly as possible across a
+number of steps — 3 hits in 8 steps gives the familiar `x..x..x.` tresillo. `SeqEuclid` gates your
+notes on such a pattern, and because you set hits and steps independently of your loop length, two
+Euclidean parts of different lengths drift in and out of phase for endlessly evolving polymetric
+rhythms.
+
+**Velocity and feel.** Real performances breathe. `Humanize` adds small random timing and velocity
+variations; `Accent` pushes the downbeat; `VelCurve` reshapes how hard you have to play for a given
+loudness; `Strum` spreads a chord's notes slightly in time like a guitar. A pinch of each turns a
+robotic sequence into something that feels played.
+
 # Example chains
 
 - **Instant harmony** — `Chord → Scale`: play single keys; Chord voices them and Scale locks every

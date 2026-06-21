@@ -327,6 +327,71 @@ The **Module Reference** (linked from the docs hub, and the full catalogue at th
 documents every block with its inputs, parameters and a description, generated from the live registry
 so it never drifts from the build.
 
+# Touring the module library
+
+This is a guided walk through the families, naming standout blocks so you know what to reach for.
+Every block here is real and documented in the catalogue at the back; this is the "what should I
+grab?" view.
+
+**Filters.** Beyond the plain `Filter` (a state-variable LP/HP/BP/notch) the library is deep:
+`Ladder` and `DiodeLadder` for Moog and 303 character, `MS20Filter`, `SteinerParker`,
+`OberheimSEM` and `WaspFilter` for famous analog voicings, `Formant` and `VocalFilter` for vowel
+sounds, `CombBank` and `FixedFilterBank` (a Moog 914) for fixed resonant banks, `GraphicEQ`, `EQ`
+and `ParaEQ` for surgical tone, `AutoWah` and `DJFilter` for performance sweeps, and a whole set of
+**resonators** (`BarReson`, `BellReson`, `GlassReson`, `DrumheadReson`, `HarpReson`) that ring a
+struck or noisy input into tuned, physical tones. Reach for a resonator when you want a delay or
+noise burst to *sing* at a pitch.
+
+**Delays.** `Delay` is the workhorse; `DubDelay` adds the filtered, saturating feedback of a tape
+echo, `PingPong` bounces L/R, `Multitap` and `Rainmaker` spray rhythmic taps, `GrainDelay` and
+`Morphagene` chop the buffer into grains, `Looper` and `Freeze` capture and hold, and `BBDDelay`
+models a bucket-brigade's gentle hiss and warble. The modulation effects live here too because they
+*are* short modulated delays: `Chorus`, `Ensemble`, `Flanger` and `PeakFlanger`. If you want
+movement, a delay is usually the root of it.
+
+**Reverbs.** `Reverb` and `Plate` for bread-and-butter space, `Spring` for drip and boing,
+`Shimmer` and `Crystals` for pitched, ascending tails, `Convolution` for sampled spaces, `ErbeVerb`
+and `Massive` for modeless, ambient washes, `GatedVerb` for the 80s chop, `ReverseVerb` for swells,
+and `Gravity` / `Aetherizer` for unreal, infinite atmospheres. Feed a little reverb back through a
+filter for self-oscillating drones.
+
+**Distortion & saturation.** `Drive` and `Fuzz` for the staples, `Bitcrush` and `Decimator` for
+digital grit, `Diode` and `Chebyshev` for specific harmonic curves, `Exciter` for sheen, `Lofi` and
+`Erosion` for degradation, `CabSim` / `AmpSim` for guitar tone, and `DrumBuss` for one-stop drum
+glue-and-grit. Pair any of them with a Filter before and after to shape what gets distorted and what
+survives.
+
+**Dynamics.** `Compressor`, `Limiter` and `Gate` cover the essentials; `OTT` is the famous multiband
+upward/downward squash, `MultiComp` and `MBDynamics` give per-band control, `Transient` shapes attack
+and sustain, `DeEsser` tames sibilance, `Maximizer` and `Squash` push loudness, `Ducker` / `Pump` do
+sidechain pumping, and `EnvFollow` turns any signal into a control source for your own dynamics tricks.
+
+**Modulation sources.** The `LFO` is the start, but the library runs deep into **chaos**: strange
+attractors like `Lorenz`, `Chua`, `Clifford`, `Aizawa` and `ChenLee` give organic, never-repeating
+modulation, and `Clock` / `ClockDiv` / `ClockMult` keep things in time. Patch a chaotic source at low
+depth into tuning or cutoff for life an LFO can't give.
+
+**Oscillators & generators.** Over three hundred of them — analog and wavetable cores, FM and
+additive voices, physical models (`Bowed`, `Blown`, `BowedString`), drums and percussion (`Bongo`,
+`Agogo`, `Anvil`, `Basimilus`), and sound-effect generators (`Applause`, `Birds`, `AirHorn`,
+`Alarm`). In an effect they are carriers for ring-mod, sub reinforcement, or test tones.
+
+**Stereo.** `MidSide` for M/S processing, `Haas` for width by tiny delay, `Imager` / `StereoWidth`
+for spread, `AutoPan` and `Rotate` for movement, `Binaural` and `Crossfeed` for headphone realism,
+and `MonoMaker` to keep the low end centred.
+
+**Pitch.** `PitchShift` and `Harmonizer` for intervals, `H910` and `MicroShift` for the classic
+doubling and detune, `Octaver` / `Octavox` for sub and stacked octaves, `FreqShift` for inharmonic
+metallic shifts, and `PitchCorrect` for tuning.
+
+**Spectral.** `SpecFreeze` to hold a spectrum, `SpecBlur` / `SpecMorph` for smeared evolving texture,
+`SpecGate` and `Soothe` for spectral cleanup, and `MatchEQ` to match one signal's tone to another.
+
+**Utilities.** The connective tissue: `Mixer`, `Gain`, `Constant`, math (`Clamp`, `Average`,
+`Compare`, `Counter`), `SampleHold` and `Slew` for shaping control signals, `ClockDiv` / `ClockMult`
+for timing, and `Analyzer` to see what's happening. You'll use these constantly to glue a patch
+together.
+
 # Analog models
 
 A large portion of the library is **component-level analog emulation** — modeled from the circuit
@@ -387,6 +452,66 @@ the grit adds harmonics and presence without losing the dry signal's body and tr
 - **Mod-wheel macro** — mod wheel → a soft key, then that soft key → several parameters at once.
 - **Cross-modulation** — an audio-rate oscillator → another oscillator's (or filter's) Mod input for
   metallic, FM-style timbres.
+
+# A short DSP primer
+
+If the blocks make more sense when you know what's happening inside, here is the quick theory — just
+enough to patch with intent.
+
+**Filters** remove or emphasise frequencies. A *low-pass* keeps lows and rolls off highs (darkening);
+a *high-pass* does the opposite (thinning); a *band-pass* keeps a slice; a *notch* removes one. The
+**cutoff** is where the rolloff begins and **resonance** is a boost right at the cutoff — push
+resonance high and a filter rings, even self-oscillates into a sine. A *comb* filter adds a signal to
+a short-delayed copy of itself, reinforcing some frequencies and cancelling others (the basis of
+flanging and tuned resonance). A *formant* filter parks several resonant peaks where a human voice's
+do, producing vowels.
+
+**Delays** store the signal and play it back later. A long delay is an echo; shorten it and add
+**feedback** (output fed back to input) and the repeats blur into resonance; shorten it to a few
+milliseconds and modulate the time and you get **flanging** (a sweeping comb) or **chorus** (a
+detuned thickening). All three are the same mechanism at different time scales.
+
+**Reverb** is what a thousand tiny delays sound like — the dense, decaying reflections of a space.
+**Size** sets how big the room feels, **decay** how long the tail rings, and **damping** how quickly
+the highs die away (a bright tiled room vs a soft carpeted one).
+
+**Distortion** reshapes the waveform, adding harmonics that weren't there. A gentle *soft clip*
+rounds the peaks (warmth); a *hard clip* squares them (aggression); a *wavefolder* reflects peaks
+back on themselves (bright, metallic, unpredictable); a *bit/sample-rate crusher* quantises the
+signal in level or time (digital grit). More drive means more harmonics.
+
+**Modulation** is a slow (or fast) signal changing a parameter over time. An **LFO** is a repeating
+shape (sine, triangle, square, ramp); an **envelope** is a one-shot contour triggered by an event;
+**noise** and **chaos** are unpredictable. Patch any of them to a parameter and that parameter moves.
+Move it fast enough (audio rate) and you cross from "modulation" into "synthesis" — FM, ring
+modulation, sidebands.
+
+**Dynamics** change level based on level. A **compressor** turns down what's too loud (evening out a
+performance or gluing a mix); a **gate** turns down what's too quiet (removing bleed); a **limiter**
+is a brick wall the signal can't cross; a **transient shaper** independently scales the attack and
+the sustain. An **envelope follower** measures a signal's loudness and hands it to you as a control
+source — the seed of every sidechain trick.
+
+# More techniques
+
+**Tape-style chorus.** A short `Delay` (10–25 ms) with its time gently swept by an `LFO`, mixed 50/50
+with the dry. Two such delays at different LFO phases, panned left and right, give a lush `Ensemble`.
+
+**Frozen pad from a transient.** Send a sound into `Freeze` (or `SpecFreeze`); capture a moment and
+hold it into an infinite bed, then filter and reverb it — an ambient pad grown from a single hit.
+
+**Rhythmic gate.** Patch a square `LFO` (or a `Clock`-derived signal) into a `VCA` on your full
+signal so it chops in time — the trance gate. Vary the LFO shape for different gate envelopes.
+
+**Resonant ping.** Patch a trigger or a noise burst into a high-resonance `BarReson` or `BellReson`,
+or a `Filter` with resonance near self-oscillation; each hit rings at the tuned pitch — instant
+tuned percussion you can play from MIDI.
+
+**Lo-fi tape bed.** Chain `Lofi` → `BBDDelay` → a gentle `Wow`/drift LFO on the delay time → a
+band-pass `Filter`. The result is a worn, warbling, band-limited texture under anything.
+
+**Spectral wash.** `SpecBlur` or `SpecMorph` on a sustained source smears it into an evolving cloud;
+follow with `Shimmer` for an ascending, pitched tail.
 
 # Tips & best practices
 

@@ -114,6 +114,50 @@ pair, so any oscillator can be a single voice or a detuned stack. A first-class 
 one-sample impulse on each note-on — sits alongside Note / Gate / Velocity, for per-note events like
 re-sampling a SampleHold or restarting an LFO.
 
+# Synthesis methods
+
+Because the oscillator is just a swappable node, this one synth covers every major synthesis method.
+Knowing what each does helps you pick the right core for a sound.
+
+**Subtractive** (`Osc` → `Filter`). Start with a harmonically-rich wave (saw or pulse) and carve
+frequencies away with a filter. This is the classic analog model — warm, immediate, and the basis of
+most basses, leads and pads. The saw is your everything-wave; the pulse with PWM is hollow and
+animated.
+
+**FM / phase modulation** (`FM`). One oscillator modulates another's phase, generating sidebands
+whose spacing depends on the **ratio** and whose density depends on the **index**. Low integer ratios
+give harmonic, tonal results (basses, e-pianos, bells); non-integer ratios go clangorous and
+metallic. Route an envelope to the index and the timbre evolves over the note — the signature FM
+move.
+
+**Additive** (`Additive`). Build a tone by summing sine harmonics directly, controlling the partial
+count and rolloff. Pure, organ-like and glassy; great for clean pads and bell tones where you want
+exactly the harmonics you ask for and nothing else.
+
+**Wavetable** (`Wt`). Sweep through a sequence of single-cycle waveforms with the **position**
+control. Modulate position with an LFO or envelope and the timbre morphs continuously — the source of
+modern evolving pads, growls and vocal-ish leads.
+
+**Vector** (`Vector`). Crossfade between four waveforms on an XY pad. Animate X and Y for
+four-corner morphing timbres in the Prophet-VS tradition.
+
+**Supersaw / unison.** `Supersaw` stacks seven detuned saws for instant trance width; the
+**Voices**/**Detune** unison controls on every oscillator do the same for any core. Width comes from
+many slightly-out-of-tune copies beating against each other.
+
+**Physical modelling** (`Karplus`, plus `Bowed`/`Blown` voices). Simulate a real resonator — a
+plucked string is a short feedback delay tuned to pitch, damped over time. Naturally dynamic and
+organic; play with damping and feedback for anything from a harp to a muted thud.
+
+**Sample & granular** (`Sample`, `Granular`). Play back recorded audio, or chop it into overlapping
+grains for clouds, time-stretching and texture.
+
+**Sync** (`Sync`). Hard-sync a slave oscillator to a master so it restarts each cycle, producing the
+bright, vocal, tearing sweep when you move the sync ratio — the classic aggressive lead.
+
+Mix methods freely: layer a subtractive `Osc` under an `FM` operator, or run a `Wt` through the same
+filter and envelope as an `Osc`. The voice structure doesn't care which core feeds it.
+
 # The interface
 
 - **Patch** — the node grid with drag-to-wire cables, the macro soft-key strip (`+` / `−` to change
