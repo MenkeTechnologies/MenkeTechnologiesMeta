@@ -15,7 +15,7 @@
 [![Tier 5](https://img.shields.io/badge/tier_5-2_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-2)
 [![Tier 6](https://img.shields.io/badge/tier_6-12_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-12)
 [![Rust](https://img.shields.io/badge/rust-2.29M_LOC-orange.svg)](#0x09-code-volume)
-[![Code](https://img.shields.io/badge/code-9.63M_lines-brightgreen.svg)](#0x09-code-volume)
+[![Code](https://img.shields.io/badge/code-7.82M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -517,27 +517,29 @@ git submodule update --depth 1                # shallow clone for the initialize
 
 ## [0x09] CODE VOLUME
 
-Measured with `tokei 14.0.0` across the full recursive working tree. **Code** is source lines only (blanks and comments excluded). `.stk` (stryke source) has no `tokei` lexer, so its code is counted separately as non-blank, non-`#`-comment lines — the same definition `tokei` uses. Build artifacts (`target/`, `node_modules/`, `.cargo/`), all `vendor/` trees (incl. the vendored fish source at `zshrs/vendor/fish/` and the upstream Python powerline under `powerliners/vendor/`), and the `MenkeTechnologiesPublications/src/{zshrs,strykelang,zpwr}` nested submodules (identical files already counted under their own top-level checkouts) are excluded so nothing is double-counted.
+Measured with `tokei 14.0.0` across the full recursive working tree. **Code** is source lines only (blanks and comments excluded). `.stk` (stryke source) has no `tokei` lexer, so its code is counted separately as non-blank, non-`#`-comment lines — the same definition `tokei` uses. Build artifacts (`target/`, `node_modules/`, `.cargo/`), all `vendor/` trees (incl. the vendored fish source at `zshrs/vendor/fish/` and the upstream Python powerline under `powerliners/vendor/`), and the `MenkeTechnologiesPublications/src/{zshrs,strykelang,zpwr}` nested submodules (identical files already counted under their own top-level checkouts), and the third-party audio-framework submodules `zpwr-fx/libs/JUCE` + `zpwr-fx/libs/clap-juce-extensions` (the JUCE and CLAP frameworks — not authored here) are excluded so nothing is double-counted or wrongly attributed.
 
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 2,292,754 | 6,113 |
-| JSON | 2,014,314 | 368 |
-| Perl | 1,903,442 | 19,616 |
-| C Header | 444,108 | 2,185 |
-| JavaScript | 415,525 | 2,642 |
-| Zsh | 280,215 | 1,301 |
-| Stryke (`.stk`) | 200,525 | 3,372 |
-| HTML | 196,419 | 995 |
-| TeX | 138,423 | 14 |
+| Rust | 2,300,625 | 6,146 |
+| Perl | 1,904,744 | 19,746 |
+| JSON | 1,793,472 | 340 |
+| JavaScript | 424,721 | 2,632 |
+| Zsh | 280,287 | 1,303 |
+| HTML | 204,997 | 989 |
+| Stryke (`.stk`) | 200,538 | 3,373 |
+| TeX | 137,960 | 11 |
 | Vim Script | 114,038 | 738 |
 | AWK | 82,368 | 2,191 |
-| CSS | 69,993 | 121 |
-| Shell | 60,972 | 1,811 |
-| Python | 33,363 | 370 |
+| CSS | 65,807 | 118 |
+| Shell | 62,473 | 1,879 |
+| C | 45,218 | 22 |
+| C Header | 36,625 | 88 |
+| Python | 32,130 | 517 |
 | SQL | 29,187 | 118 |
 | Kotlin | 23,672 | 173 |
-| **Total** | **9,625,473** | **45,404** |
+| C++ | 21,452 | 61 |
+| **Total** | **7,820,486** | **41,450** |
 
 The Perl mass is `strykelang/parity/cases` — 19,505 hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5. The JSON is fixtures, completion data, and bytecode/cache snapshots.
 
@@ -545,28 +547,28 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | Rust 742,297 | JavaScript 299,323 |
-| `zshrs` | Rust 432,116 | Zsh 50,324 |
-| `strykelang` | Rust 409,952 | Stryke 162,351 · Perl 1.9M |
-| `Audio-Haxor` | Rust 128,510 | JavaScript 64,161 |
-| `fusevm` | Rust 127,470 | — |
+| `traderview` | Rust 743,438 | JavaScript 309,101 |
+| `zshrs` | Rust 432,097 | Zsh 50,324 |
+| `strykelang` | Rust 410,069 | Stryke 162,370 · Perl 1.9M |
+| `Audio-Haxor` | Rust 128,559 | JavaScript 64,161 |
+| `fusevm` | Rust 127,910 | — |
 | `zpwr` | Zsh 74,539 | Shell 8,197 |
 | `powerliners` | Rust 62,996 | — |
-| `awkrs` | AWK 82,138 | Rust 47,700 |
+| `awkrs` | AWK 82,138 | Rust 47,916 |
 
 Numbers refresh as repos add commits — regenerate with `tokei` (plus the `.stk` awk pass) from a fresh recursive clone.
 
 ### Against a typical engineer-career
 
-Every line above is hand-authored. The standard software-engineering productivity figures (Brooks' *Mythical Man-Month*, COCOMO, Capers Jones) put *net maintained* output at roughly 20–100 lines/day sustained — call a 40-year career ~9,200 working days. The multiple below is `9,625,473 ÷ (rate × 9,200)`:
+Every line above is hand-authored. The standard software-engineering productivity figures (Brooks' *Mythical Man-Month*, COCOMO, Capers Jones) put *net maintained* output at roughly 20–100 lines/day sustained — call a 40-year career ~9,200 working days. The multiple below is `7,820,486 ÷ (rate × 9,200)`:
 
 | Net LOC/day baseline | Career total | This tree ÷ baseline |
 |---:|---:|---:|
-| 100/day (optimistic ceiling) | ~920,000 | **~10×** |
-| 50/day (mid estimate) | ~460,000 | ~21× |
-| 20/day (conservative) | ~184,000 | ~52× |
+| 100/day (optimistic ceiling) | ~920,000 | **~8.5×** |
+| 50/day (mid estimate) | ~460,000 | ~17× |
+| 20/day (conservative) | ~184,000 | ~42× |
 
-The defensible floor is **≥10 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption. The baseline is an industry estimate, not a measured value; the 9.6M is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
+The defensible floor is **≥8 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption. The baseline is an industry estimate, not a measured value; the 7.8M is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
 
 ---
 
