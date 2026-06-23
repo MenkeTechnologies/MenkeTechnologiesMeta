@@ -7,12 +7,12 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-91-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-92-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-14_core-cyan.svg)](#tier-1--core-14)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
-[![Tier 5](https://img.shields.io/badge/tier_5-4_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-3)
+[![Tier 5](https://img.shields.io/badge/tier_5-4_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-4)
 [![Tier 6](https://img.shields.io/badge/tier_6-13_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-12)
 [![Rust](https://img.shields.io/badge/rust-2.31M_LOC-orange.svg)](#0x09-code-volume)
 [![Code](https://img.shields.io/badge/code-8.00M_lines-brightgreen.svg)](#0x09-code-volume)
@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 91 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 92 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -38,7 +38,7 @@
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
-  - [Tier 5 — Editor / multiplexer plugins (4)](#tier-5--editor--multiplexer-plugins-3)
+  - [Tier 5 — Editor / multiplexer plugins (4)](#tier-5--editor--multiplexer-plugins-4)
   - [Tier 6 — Apps, extensions, web & web-APIs (13)](#tier-6--apps-extensions-web--web-apis-13)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
 - [\[0x03\] Common Operations](#0x03-common-operations)
