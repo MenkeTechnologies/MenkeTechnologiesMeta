@@ -8,7 +8,7 @@
 ```
 
 [![Submodules](https://img.shields.io/badge/submodules-100-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-16_core-cyan.svg)](#tier-1--core-16)
+[![Tier 1](https://img.shields.io/badge/tier_1-17_core-cyan.svg)](#tier-1--core-17)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
@@ -24,7 +24,7 @@
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -34,7 +34,7 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (16)](#tier-1--core-16)
+  - [Tier 1 — Core (17)](#tier-1--core-17)
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
@@ -83,7 +83,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 All 100 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (16)
+### Tier 1 — Core (17)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -244,6 +244,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 1 — Core | [`zpwr-daw`](https://github.com/MenkeTechnologies/zpwr-daw) | — | — | — |
 | 1 — Core | [`zpwr-crate`](https://github.com/MenkeTechnologies/zpwr-crate) | — | — | — |
 | 1 — Core | [`zpwr-embed-terminal`](https://github.com/MenkeTechnologies/zpwr-embed-terminal) | — | — | — |
+| 1 — Core | [`zpwr-algo-production`](https://github.com/MenkeTechnologies/zpwr-algo-production) | — | — | — |
 | 1 — Core | [`nmaprs`](https://github.com/MenkeTechnologies/nmaprs) | [![CI](https://github.com/MenkeTechnologies/nmaprs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/nmaprs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/nmaprs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/nmaprs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/nmaprs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/nmaprs/tags) |
 | 1 — Core | [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | [![CI](https://github.com/MenkeTechnologies/powerliners/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/powerliners/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/powerliners/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/powerliners/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/powerliners?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/powerliners/tags) |
 | 1 — Core | [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | [![CI](https://github.com/MenkeTechnologies/zpwr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwr/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zpwr?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zpwr/tags) |
@@ -517,7 +518,7 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 16 | ~805 MB |
+| Tier 1 — Core | 17 | ~805 MB |
 | Tier 2 — Stryke ecosystem | 32 | ~38 MB |
 | Tier 3 — zsh-more-completions | 1 | ~203 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
