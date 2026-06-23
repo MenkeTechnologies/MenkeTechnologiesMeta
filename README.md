@@ -7,7 +7,7 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-99-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-100-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-16_core-cyan.svg)](#tier-1--core-16)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 99 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 100 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 99 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 100 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,7 +81,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 99 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 100 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (16)
 
@@ -102,6 +102,7 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`zpwr-daw`](https://github.com/MenkeTechnologies/zpwr-daw) | **DAW arranger + the 4th patch-graph plugin** (standalone app, VST3/AU/CLAP, and embeddable library; formerly `zpwr-clip-engine`) — one generalized grid engine over notes / arrangement / automation / trigger domains, with Arrangement & Session views, a swung step clock, MIDI/JSON export, and a JUCE-free C++ core exposing a C ABI + Rust bindings. Every track is a patch graph of `zpwr-patch-core` blocks (178 note-stream modules + the shared audio pack). Powers the CLIP tab in the JUCE plugins and the timelines in `ztranslator` / `Audio-Haxor`. **Private** — docs vendored to meta. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-daw) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-daw/report)</sub> |
 | [`zpwr-crate`](https://github.com/MenkeTechnologies/zpwr-crate) | **Shared sample-library "crate" browser** (Rust) — one source of truth for the audio stack's filesystem + SQLite/FTS5 sample scanner and faceted crate-query layer (category/pack/manufacturer/BPM/key filters, regex search, facets, incremental rescans). Scanner + schema + query code lifted verbatim from the Audio-Haxor backend with the Tauri glue stripped. Builds `rlib` + `staticlib` + `cdylib`: consumed natively by `Audio-Haxor` and over a C ABI by `zpwr-daw`, so both run identical indexing/browsing against the same schema. **Private** — internal shared library, not published to crates.io. |
 | [`zpwr-embed-terminal`](https://github.com/MenkeTechnologies/zpwr-embed-terminal) | **Shared embedded PTY terminal** (Rust) — one PTY-backed login-shell terminal (`portable-pty` core + xterm.js front end) extracted from Audio-Haxor so a single source of truth backs every desktop app. Builds `rlib` + `staticlib` + `cdylib`: `Audio-Haxor` / `traderview` / `ztranslator` use it natively (forwarding `on_output`/`on_exit` to `app.emit`), `zpwr-daw` drives it over the C ABI (`include/zpwr_embed_terminal.h`) from JUCE/C++. **Private** — internal shared library, not published to crates.io. |
+| [`zpwr-algo-production`](https://github.com/MenkeTechnologies/zpwr-algo-production) | **Algorithmic music-production engine** (Rust) — one action generates a complete, professionally-arranged track: song structure + key/tempo, per-section MIDI, and an exported Ableton Live Set (`.als`), with genre engines (trance, …). Ported from the Audio-Haxor `src-tauri` generators with the library-scanner couplings abstracted behind a host-provided sample source. Powers `zpwr-daw`'s one-click production (INVENTIONS #5). **Private** — internal engine. |
 | [`nmaprs`](https://github.com/MenkeTechnologies/nmaprs) | Rust port of `nmap`. Full async TCP/UDP/SCTP/IP-protocol scans, idle/zombie scans, NSE-style script probes, ARP/ICMP/timestamp/mask host discovery, top-ports list embedded. &middot; <sub>[docs](https://menketechnologies.github.io/nmaprs/) · [report](https://menketechnologies.github.io/nmaprs/report.html)</sub> |
 | [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | **Rust CLI** — mature port of Python's [`powerline-status`](https://github.com/powerline/powerline) (v0.2.15, 3,000+ `#[test]` functions, 5-binary suite: `powerline` / `powerline-daemon` / `powerline-config` / `powerline-render` / `powerline-lint`, parity-tested against upstream Python). Drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. &middot; <sub>[docs](https://menketechnologies.github.io/powerliners/) · [report](https://menketechnologies.github.io/powerliners/report.html)</sub> |
 | [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | The terminal OS. 504 verbs, 190k LOC, zinit-based, stryke-powered. ⭐ 220 &middot; <sub>[docs](https://menketechnologies.github.io/zpwr/) · [report](https://menketechnologies.github.io/zpwr/report.html)</sub> |
@@ -522,7 +523,7 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
 | Tier 5 — Editor / multiplexer plugins | 5 | ~12 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 14 | ~1.06 GB |
-| **Total** | **99** | **~2.2 GB** |
+| **Total** | **100** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
