@@ -68,11 +68,21 @@ for p in "${paths[@]}"; do
         # Match if title contains either the literal name, the dash-
         # stripped form, the underscored form, or a ≥6-char prefix.
         sub_prefix6="${sub_lower:0:6}"
+        # Explicit brand alias for a repo renamed on GitHub whose submodule
+        # directory still lags behind. zpwr-clip-engine was renamed to zpwr-daw
+        # (the submodule url is already .../zpwr-daw.git); its docs are correctly
+        # branded "zpwr-daw" while the path is still zpwr-clip-engine, so the
+        # name heuristics above can't bridge the rename.
+        alias_brand=""
+        case "$sub_lower" in
+            zpwr-clip-engine) alias_brand="zpwr-daw" ;;
+        esac
         if [[ -n "$title" ]] \
            && [[ "$title_lower" != *"$sub_lower"* ]] \
            && [[ "$title_lower" != *"$sub_no_dash"* ]] \
            && [[ "$title_lower" != *"$sub_no_undr"* ]] \
-           && [[ "$title_lower" != *"$sub_prefix6"* ]]; then
+           && [[ "$title_lower" != *"$sub_prefix6"* ]] \
+           && { [[ -z "$alias_brand" ]] || [[ "$title_lower" != *"$alias_brand"* ]]; }; then
             echo "FAIL  $f: <title> '$title' missing submodule name '$sub' or alias"
             title_drift=$((title_drift + 1))
             ok=0
