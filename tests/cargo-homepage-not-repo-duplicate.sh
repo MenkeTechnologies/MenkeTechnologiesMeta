@@ -21,6 +21,18 @@
 # Allowlist: crates without docs/ legitimately keep homepage ==
 # repository (storageshower, api-rest-generator). The
 # duplicate is the correct state when no docs URL exists.
+#
+# Also exempt: PRIVATE repos — those whose docs are vendored into
+# THIS meta repo (docs/<repo>/index.html present). A private repo
+# can't serve a public menketechnologies.github.io/<repo>/ site, so
+# its docs live under the meta repo's Pages
+# (menketechnologies.github.io/MenkeTechnologiesMeta/<repo>/) and
+# homepage == repository (the GitHub URL) is the correct, honest
+# value — pointing homepage at menketechnologies.github.io/<repo>/
+# would be a dead 404. The "docs/ => own Pages" assumption only holds
+# for PUBLIC repos. (Note: `publish = false` is NOT the signal — many
+# public stryke-* packages are publish=false yet deploy their own
+# Pages; the vendored-docs presence is the precise private marker.)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root" || exit
@@ -56,6 +68,21 @@ for p in "${paths[@]}"; do
     # Only enforce when docs/ exists — otherwise the dupe is a
     # legitimate fallback (no docs URL available).
     [[ -f "$p/docs/index.html" ]] || continue
+
+    # Exempt PRIVATE repos — identified by their docs being vendored
+    # into THIS meta repo (docs/<repo>/index.html present). A private
+    # repo can't serve a public menketechnologies.github.io/<repo>/
+    # site, so its docs live under the meta repo's Pages instead; the
+    # repo URL is the correct homepage. Public repos (stryke-*, the CLI
+    # tools, zshrs…) deploy their OWN Pages and are NOT vendored here,
+    # so they stay enforced. `publish = false` is NOT the signal — many
+    # public stryke-* packages are publish=false yet have their own
+    # Pages. The vendored-docs presence is the precise private marker.
+    repo_name=$(basename "$(git config -f .gitmodules --get "submodule.$p.url" 2>/dev/null)" .git)
+    if [[ -n "$repo_name" && -f "docs/$repo_name/index.html" ]]; then
+        echo "SKIP  $cargo: private (docs vendored to meta docs/$repo_name/, no own Pages site)"
+        continue
+    fi
 
     homepage=""
     if grep -qE '^homepage\.workspace *= *true' "$cargo"; then
