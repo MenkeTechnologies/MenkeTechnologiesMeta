@@ -545,7 +545,7 @@ Measured with `tokei 14.0.0` across the full recursive working tree. **Code** is
 | Kotlin | 23,672 | 173 |
 | **Total** | **8,002,152** | **41,555** |
 
-The Perl mass is `strykelang/parity/cases` — 19,505 hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5. The JSON is fixtures, completion data, and bytecode/cache snapshots.
+The JSON mass is dominated by `traderview` frontend i18n — 27 locale files at ~1.58M lines — plus `zpwr-synth` factory-preset banks (~188k); the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — 19,505 hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
 
 Largest single repos by source (same exclusions; `.stk` counted as above):
 
