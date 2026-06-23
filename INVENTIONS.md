@@ -26,8 +26,9 @@ Net: no clean prior art for a **general-purpose full DAW arranger as a runtime p
 - **Bitwig Studio (The Grid)** — a modular **sound-design device** *inside* a conventional DAW; the DAW's tracks/mixer/routing are a **fixed** architecture, not a patch graph. Modular is a device, not the DAW.
 - **Reaktor / Max / Max for Live / VCV Rack** — fully modular **instruments/environments**, but **not DAWs** (no general-purpose arranger + mixer + project model).
 - **Usine Hollyhock** — a modular audio environment with sequencing, the closest near-miss; it is patch-based but presents as a modular host/performance tool rather than a general-purpose track-and-arrangement DAW. Recorded as a near-miss, not a confirmed dup.
+- **Reason (Reason Studios)** — the strongest near-miss: a full DAW with a **modular rack** (flip to the back, patch CV/audio cables between fixed devices). But it is **not fully modular** — devices are fixed-architecture units, the signal path/mixer isn't a free graph, and **many parameters have no CV input, so they can't be modulated/patched at all**. zpwr-daw's claim is the stronger one: **every** track/layer/bus is a patch graph and **every** block param is a graph node param, modulatable from the mod matrix — no fixed devices, no un-modulatable params. Reason is rack-modular; zpwr-daw is graph-modular end to end.
 
-Net: no clean prior art found for a **general-purpose DAW whose every track/layer, mixer bus, synth, and mod matrix is one user-patchable graph**. "None found", owned by MenkeTechnologies, not stamped absolute; and the modular audio engine is still being wired (caveat above).
+Net: no clean prior art found for a **general-purpose DAW whose every track/layer, mixer bus, synth, and mod matrix is one user-patchable graph (with no un-modulatable params)**. "None found", owned by MenkeTechnologies, not stamped absolute; and the modular audio engine is still being wired (caveat above).
 
 Other stack "first" claims (zshrs, stryke, etc.) live in their own repos; add them
 here only with the same claim / basis / caveat rigor — and check for prior art
