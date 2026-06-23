@@ -7,12 +7,12 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-92-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-93-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-14_core-cyan.svg)](#tier-1--core-14)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
-[![Tier 5](https://img.shields.io/badge/tier_5-4_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-4)
+[![Tier 5](https://img.shields.io/badge/tier_5-5_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-5)
 [![Tier 6](https://img.shields.io/badge/tier_6-13_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-12)
 [![Rust](https://img.shields.io/badge/rust-2.31M_LOC-orange.svg)](#0x09-code-volume)
 [![Code](https://img.shields.io/badge/code-8.00M_lines-brightgreen.svg)](#0x09-code-volume)
@@ -20,11 +20,11 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 92 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 93 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zpwr-clip-engine` (the FL-style clip/loop sequencer), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` (JUCE audio plugins) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zpwr-clip-engine` (the FL-style clip/loop sequencer), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` (JUCE audio plugins) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -38,7 +38,7 @@
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
-  - [Tier 5 — Editor / multiplexer plugins (4)](#tier-5--editor--multiplexer-plugins-4)
+  - [Tier 5 — Editor / multiplexer plugins (5)](#tier-5--editor--multiplexer-plugins-5)
   - [Tier 6 — Apps, extensions, web & web-APIs (13)](#tier-6--apps-extensions-web--web-apis-13)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
 - [\[0x03\] Common Operations](#0x03-common-operations)
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 92 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 93 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,7 +81,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 92 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 93 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (14)
 
@@ -184,7 +184,7 @@ The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh. T
 | [`revolver`](https://github.com/MenkeTechnologies/revolver) | Spinner / progress widget for zsh scripts. |
 | [`zunit`](https://github.com/MenkeTechnologies/zunit) | Powerful zsh unit-testing framework. |
 
-### Tier 5 — Editor / multiplexer plugins (4)
+### Tier 5 — Editor / multiplexer plugins (5)
 
 Plugins that target Vim/Neovim and tmux rather than zsh proper.
 
@@ -193,6 +193,7 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 | [`VimColorSchemes`](https://github.com/MenkeTechnologies/VimColorSchemes) | 732 hand-curated Vim colorschemes packaged as a single Pathogen / vim-plug / lazy.nvim bundle. The largest one-bundle scheme collection. |
 | [`vim-stryke`](https://github.com/MenkeTechnologies/vim-stryke) | Vim / Neovim support for the stryke language — `*.stk` + shebang filetype detection, a standalone stryke syntax grammar generated from the stryke binary's own reflection tables (all 10,450 builtins, 90 keywords, 39 parallel primitives, sigils / regex / thread macros), brace-aware indentation, ALE linting via `stryke --lint`, and LSP (vim-lsp / coc.nvim) via `stryke --lsp`. Pathogen / vim-plug / native-package install. &middot; <sub>[docs](https://menketechnologies.github.io/vim-stryke/) · [report](https://menketechnologies.github.io/vim-stryke/report.html)</sub> |
 | [`vscode-stryke`](https://github.com/MenkeTechnologies/vscode-stryke) | VS Code / VSCodium extension for the stryke language — `*.stk` filetype detection, a stryke-native TextMate grammar generated from the stryke binary's reflection tables (the complete builtin surface), and LSP via `stryke --lsp`. &middot; <sub>[docs](https://menketechnologies.github.io/vscode-stryke/) · [report](https://menketechnologies.github.io/vscode-stryke/report.html)</sub> |
+| [`emacs-stryke`](https://github.com/MenkeTechnologies/emacs-stryke) | Emacs support for the stryke language — a generated `stryke-stdlib.el` carrying the complete language surface (all 10,450 builtins + 39 parallel primitives) pulled from the stryke binary's own reflection tables and precomputed with `regexp-opt` tries so font-lock loads instantly and never drifts. Regenerate after a stryke upgrade via `scripts/gen-stdlib.sh`. &middot; <sub>[docs](https://menketechnologies.github.io/emacs-stryke/) · [report](https://menketechnologies.github.io/emacs-stryke/report.html)</sub> |
 | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
 ### Tier 6 — Apps, extensions, web & web-APIs (13)
@@ -301,6 +302,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 5 — Editor / multiplexer plugins | [`VimColorSchemes`](https://github.com/MenkeTechnologies/VimColorSchemes) | [![CI](https://github.com/MenkeTechnologies/VimColorSchemes/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/VimColorSchemes/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/VimColorSchemes?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/VimColorSchemes/tags) |
 | 5 — Editor / multiplexer plugins | [`vim-stryke`](https://github.com/MenkeTechnologies/vim-stryke) | [![CI](https://github.com/MenkeTechnologies/vim-stryke/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/vim-stryke/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/vim-stryke?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/vim-stryke/tags) |
 | 5 — Editor / multiplexer plugins | [`vscode-stryke`](https://github.com/MenkeTechnologies/vscode-stryke) | [![CI](https://github.com/MenkeTechnologies/vscode-stryke/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/vscode-stryke/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/vscode-stryke?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/vscode-stryke/tags) |
+| 5 — Editor / multiplexer plugins | [`emacs-stryke`](https://github.com/MenkeTechnologies/emacs-stryke) | [![CI](https://github.com/MenkeTechnologies/emacs-stryke/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/emacs-stryke/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/emacs-stryke?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/emacs-stryke/tags) |
 | 5 — Editor / multiplexer plugins | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | [![CI](https://github.com/MenkeTechnologies/tmux-fzf-url/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/tmux-fzf-url/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/tmux-fzf-url?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/tmux-fzf-url/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`zpwrchrome`](https://github.com/MenkeTechnologies/zpwrchrome) | [![CI](https://github.com/MenkeTechnologies/zpwrchrome/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwrchrome/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/zpwrchrome/actions/workflows/release-host.yml/badge.svg)](https://github.com/MenkeTechnologies/zpwrchrome/actions/workflows/release-host.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zpwrchrome?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zpwrchrome/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`storageshower`](https://github.com/MenkeTechnologies/storageshower) | [![CI](https://github.com/MenkeTechnologies/storageshower/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/storageshower/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/storageshower/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/storageshower/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/storageshower?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/storageshower/tags) |
@@ -506,9 +508,9 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 | Tier 2 — Stryke ecosystem | 32 | ~38 MB |
 | Tier 3 — zsh-more-completions | 1 | ~203 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
-| Tier 5 — Editor / multiplexer plugins | 4 | ~12 MB |
+| Tier 5 — Editor / multiplexer plugins | 5 | ~12 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 13 | ~1.06 GB |
-| **Total** | **92** | **~2.2 GB** |
+| **Total** | **93** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
