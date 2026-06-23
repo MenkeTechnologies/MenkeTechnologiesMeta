@@ -9,8 +9,19 @@ honest and falsifiable.
 
 | # | Claim | Basis | Caveat |
 | --- | --- | --- | --- |
-| 1 | **zpwr-daw — "a DAW within a DAW"**: a *complete* two-view DAW arranger (Arrangement **+** Session, clips, breakpoint automation, tempo/meter maps) that ships **standalone**, as a **VST3 plugin nested inside another DAW**, **and** embedded in any GUI app — audio or not (traderview → trades, ztranslator → translations, Audio-Haxor → stryke on clips). | Prior-art checked: Tracktion **Engine** is a *compile-time developer library*, not a loadable plugin; sequencer plugins (SEQUND, Stepic, B-Step, Playbeat) are *step sequencers*, not full DAWs. No prior art found for a **full DAW arranger as a nested plugin**, nor for one driving **non-audio** hosts off the same timeline. | Web search, not exhaustive. Audio playback path is written but **unverified** (pending a JUCE build); the editor/arranger/automation are verified. |
+| 1 | **zpwr-daw — a DAW arranger as a universal *non-audio* trigger surface**: the same clip + automation timeline drives non-audio hosts — **trades** (traderview), **translations** (ztranslator), **stryke code** on clips (Audio-Haxor) — embedded in arbitrary GUI apps, alongside the usual audio/MIDI. | "DAW within a DAW" (a full arrangement workstation that runs standalone + as a plugin) is **NOT novel** — see the retraction below. What I have **not** found prior art for is a DAW arranger whose clips/automation fire **non-audio** host actions (trades, translations, code) through a generic bind seam. | Web search is not exhaustive — "none found", not proven. Narrower than the retracted claim on purpose. |
 
-Other stack "first" claims (zshrs as a compiled shell, stryke's syntactic
-synthesis, etc.) are documented in their own repos; add them here only with the
-same claim / basis / caveat rigor.
+### Retracted — "world's first DAW within a DAW" ❌
+
+The original claim was wrong and is removed. **Native Instruments Maschine** (~2009)
+is a full groove/arrangement workstation — patterns, scenes, song mode, sampling,
+plugin hosting — that runs **standalone AND as a VST/AU plugin inside another DAW**.
+That is a DAW within a DAW, 15 years prior. **Komplete Kontrol** is adjacent (a
+plugin that hosts plugins + sequences inside a DAW). The earlier "no prior art
+found" was a search miss on my part; per the project's own *no-dups* bar, the
+"embeddable / nested DAW" framing is a dup and does not count. Only the **non-audio
+trigger-surface** angle (row 1) survives, and only as "none found", not proven.
+
+Other stack "first" claims (zshrs, stryke, etc.) live in their own repos; add them
+here only with the same claim / basis / caveat rigor — and check for Maschine-class
+prior art before stamping "first".
