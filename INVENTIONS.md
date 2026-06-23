@@ -9,19 +9,17 @@ honest and falsifiable.
 
 | # | Claim | Basis | Caveat |
 | --- | --- | --- | --- |
-| 1 | **zpwr-daw — a DAW arranger as a universal *non-audio* trigger surface**: the same clip + automation timeline drives non-audio hosts — **trades** (traderview), **translations** (ztranslator), **stryke code** on clips (Audio-Haxor) — embedded in arbitrary GUI apps, alongside the usual audio/MIDI. | "DAW within a DAW" (a full arrangement workstation that runs standalone + as a plugin) is **NOT novel** — see the retraction below. What I have **not** found prior art for is a DAW arranger whose clips/automation fire **non-audio** host actions (trades, translations, code) through a generic bind seam. | Web search is not exhaustive — "none found", not proven. Narrower than the retracted claim on purpose. |
+| 1 | **zpwr-daw — a general-purpose DAW arranger that runs as a plugin AND embeds in any GUI app**: a *complete* two-view arranger (Arrangement + Session, clips, breakpoint automation, tempo/meter maps) shipping standalone, as a VST3 inside another DAW, and embedded in arbitrary hosts — including **non-audio** ones (traderview → trades, ztranslator → translations, Audio-Haxor → stryke on clips) off the same clip/automation timeline. | Closest prior art, none a clean dup (see analysis). | "None found", not proven — a web search is not exhaustive. Audio render path written but **unverified** (pending a JUCE build); the editor/arranger/automation are verified. |
 
-### Retracted — "world's first DAW within a DAW" ❌
+### Prior-art analysis (why each near-miss isn't a dup)
 
-The original claim was wrong and is removed. **Native Instruments Maschine** (~2009)
-is a full groove/arrangement workstation — patterns, scenes, song mode, sampling,
-plugin hosting — that runs **standalone AND as a VST/AU plugin inside another DAW**.
-That is a DAW within a DAW, 15 years prior. **Komplete Kontrol** is adjacent (a
-plugin that hosts plugins + sequences inside a DAW). The earlier "no prior art
-found" was a search miss on my part; per the project's own *no-dups* bar, the
-"embeddable / nested DAW" framing is a dup and does not count. Only the **non-audio
-trigger-surface** angle (row 1) survives, and only as "none found", not proven.
+- **NI Maschine** — a hybrid **groovebox** tied to NI's hardware/ecosystem workflow. By NI's own words it *"has never been a full DAW"* (no complex automation/mixing, by design). The Maschine 3 software does run without a controller, but it's a groove workstation, **not a general-purpose DAW** — so it isn't a dup of a *full GP DAW* as a plugin.
+- **Komplete Kontrol** — a plugin **host** + preset browser + smart-play (scales / arp). **No step sequencing or arrangement at all** — definitively not a DAW.
+- **Tracktion Engine** — a **compile-time developer library** for building DAW apps, not a loadable plugin you embed at runtime.
+- **Sequencer plugins** (SEQUND, Stepic, B-Step, Playbeat) — **step sequencers**, not full DAWs.
+
+Net: no clean prior art for a **general-purpose full DAW arranger as a runtime plugin / embeddable component**, and none for one driving **non-audio** hosts off its timeline. Claimed as "none found", owned by MenkeTechnologies, not stamped as a proven absolute.
 
 Other stack "first" claims (zshrs, stryke, etc.) live in their own repos; add them
-here only with the same claim / basis / caveat rigor — and check for Maschine-class
-prior art before stamping "first".
+here only with the same claim / basis / caveat rigor — and check for prior art
+(Maschine/KK/Tracktion class) before stamping "first".
