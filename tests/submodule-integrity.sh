@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pins structural invariants on .gitmodules so the 92-submodule org-wide
+# Pins structural invariants on .gitmodules so the 96-submodule org-wide
 # graph can't quietly drift: every entry must (a) have a present path,
 # (b) point to a https github.com/MenkeTechnologies/<name>.git url,
 # (c) declare its branch field, (d) match path basename = repo name.
@@ -12,11 +12,11 @@ gm=".gitmodules"
 [[ -f "$gm" ]] || { echo "FAIL  no $gm"; exit 1; }
 
 n=$(grep -c "^\[submodule" "$gm")
-if [[ $n -ne 92 ]]; then
-    echo "FAIL  expected 92 submodule entries, got $n"
+if [[ $n -ne 96 ]]; then
+    echo "FAIL  expected 96 submodule entries, got $n"
     ok=0
 else
-    echo "PASS  .gitmodules has 92 submodule entries"
+    echo "PASS  .gitmodules has 96 submodule entries"
 fi
 
 # Parse paths and urls in order
@@ -67,7 +67,13 @@ for i in "${!paths[@]}"; do
     repo_from_url="${u##*/}"
     repo_from_url="${repo_from_url%.git}"
     path_base="${p##*/}"
-    if [[ "$repo_from_url" != "$path_base" ]]; then
+    # In-progress rename exception: zpwr-clip-engine was renamed to zpwr-daw on
+    # GitHub, so the url is the new .../zpwr-daw.git while the submodule directory
+    # still lags at zpwr-clip-engine. This is a deliberate, known transitional
+    # state — not a typo'd url. Drop this entry once the directory is renamed.
+    if [[ "$path_base" == "zpwr-clip-engine" && "$repo_from_url" == "zpwr-daw" ]]; then
+        :
+    elif [[ "$repo_from_url" != "$path_base" ]]; then
         echo "FAIL  url repo name != path basename: $p (url says $repo_from_url)"
         basename_mismatches=$((basename_mismatches + 1))
         ok=0
