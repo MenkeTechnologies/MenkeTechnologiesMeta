@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-daw documentation hub — a standalone DAW arranger engine: one generalized grid (notes / arranger / automation / triggers), a pure C++ ClipEngine with a swung audio-thread step clock, a C ABI for Rust hosts, and byte-identical C++/JS MIDI export.">
+  <title>zpwr-daw — Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <style>
+    .idx-main { max-width: 60rem; margin: 0 auto; padding: 1.6rem 1.2rem 3rem; }
+    .idx-header { border-bottom: 1px solid var(--border); padding: 1.4rem 1.2rem; }
+    .idx-header-inner { max-width: 60rem; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+    .idx-brand { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: var(--cyan); }
+    .idx-crumbs { margin-top: 0.4rem; font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 12px; color: var(--text-muted); }
+    .idx-crumbs a { color: var(--cyan); text-decoration: none; }
+    .idx-crumbs .sep { margin: 0 0.4rem; color: var(--text-muted); }
+    .idx-toolbar { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .idx-title { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 1px; color: var(--cyan); margin: 0.6rem 0 0.2rem; }
+    .idx-lede { font-size: 14px; line-height: 1.7; color: var(--text-dim); max-width: 42rem; margin: 0.4rem 0 1.6rem; }
+    .idx-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.7rem; }
+    .idx-card {
+      display: block; text-decoration: none; border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      border-radius: 2px; padding: 0.9rem 1rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+    }
+    .idx-card:hover { border-left-color: var(--accent-light); }
+    .idx-card h3 { margin: 0 0 0.3rem; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); }
+    .idx-card p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); font-family: 'Share Tech Mono', ui-monospace, monospace; }
+
+    .idx-sec { margin-top: 2.4rem; }
+    .idx-sec-h {
+      font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--cyan); margin: 0 0 0.7rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border);
+    }
+    .idx-sec-h .hex { color: var(--text-muted); margin-right: 0.5rem; font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    .idx-prose { font-size: 13px; line-height: 1.75; color: var(--text-dim); max-width: 46rem; }
+    .idx-prose p { margin: 0 0 0.8rem; }
+    .idx-prose strong { color: var(--text); font-weight: 600; }
+    .idx-fig { margin: 1.3rem 0 1.5rem; max-width: 52rem; }
+    .idx-fig img { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-left: 2px solid var(--cyan); border-radius: 3px; background: #0a0a14; }
+    .idx-fig figcaption { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-muted); margin-top: 0.45rem; line-height: 1.5; }
+    .idx-prose code, .idx-code-inline {
+      font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 12px; color: var(--cyan);
+      background: var(--cyan-dim); padding: 0.05rem 0.3rem; border-radius: 2px;
+    }
+    .idx-list { list-style: none; margin: 0.2rem 0 0.9rem; padding: 0; max-width: 46rem; }
+    .idx-list li {
+      font-size: 13px; line-height: 1.65; color: var(--text-dim); padding: 0.25rem 0 0.25rem 1.1rem; position: relative;
+    }
+    .idx-list li::before { content: "›"; position: absolute; left: 0; color: var(--cyan); }
+    .idx-list li strong { color: var(--text); font-weight: 600; }
+    .idx-list li code {
+      font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 12px; color: var(--cyan);
+      background: var(--cyan-dim); padding: 0.05rem 0.3rem; border-radius: 2px;
+    }
+    .idx-pre {
+      font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.6; color: var(--text);
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent); border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      border-radius: 2px; padding: 0.9rem 1rem; overflow-x: auto; margin: 0.3rem 0 1rem; max-width: 46rem; white-space: pre;
+    }
+    .idx-pre .c { color: var(--text-muted); }
+    .idx-table { width: 100%; max-width: 46rem; border-collapse: collapse; margin: 0.3rem 0 1rem; font-size: 12px; }
+    .idx-table th, .idx-table td {
+      text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border);
+      font-family: 'Share Tech Mono', ui-monospace, monospace; vertical-align: top;
+    }
+    .idx-table th { color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; font-size: 11px; }
+    .idx-table td { color: var(--text-dim); }
+    .idx-table td code { color: var(--cyan); }
+    .idx-tag {
+      display: inline-block; font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 1px;
+      color: var(--cyan); border: 1px solid var(--border); border-radius: 2px; padding: 0.1rem 0.5rem; margin: 0 0.4rem 0.4rem 0;
+    }
+    .idx-foot {
+      margin-top: 2.6rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-muted); line-height: 1.7;
+    }
+    .idx-foot a { color: var(--cyan); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="idx-header">
+      <div class="idx-header-inner">
+        <div>
+          <h1 class="idx-brand">// ZPWR-DAW — DOCS</h1>
+          <nav class="idx-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+        </div>
+        <div class="idx-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="idx-main">
+      <h2 class="idx-title">zpwr-daw</h2>
+      <p class="idx-lede">A full DAW arranger engine, extracted as a standalone library (formerly <code>zpwr-clip-engine</code>). One generalized canvas grid — one renderer, one interaction model, one value model — bound to a <code>domain</code> (notes / arranger / automation / triggers); a pure C++ <code>ClipEngine</code> with a swung audio-thread step clock; a C ABI so Rust hosts drive the same engine the JUCE plugins drive; and byte-identical C++/JS Type-0 MIDI export.</p>
+      <div class="idx-cards">
+        <a class="idx-card" href="report.html">
+          <h3>Engineering Report</h3>
+          <p>Code volume, subsystem breakdown, the grid engine, the C ABI, the audio-thread step clock, and the real test counts. (HTML)</p>
+        </a>
+        <a class="idx-card" href="arranger_port_report.html">
+          <h3>DAW Arranger Port Report</h3>
+          <p>63 in-scope arranger features across Ableton, FL, Logic, Cubase, Bitwig and Pro Tools, each mapped to its <code>file:line</code>. (HTML)</p>
+        </a>
+        <a class="idx-card" href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">
+          <h3>Source</h3>
+          <p>Build instructions, the grid engine, the pure C++ engine, the C ABI, and the Rust bindings.</p>
+        </a>
+      </div>
+
+      <!-- ============================== OVERVIEW ============================== -->
+      <section class="idx-sec" id="overview">
+        <h3 class="idx-sec-h"><span class="hex">0x00</span>Overview</h3>
+        <div class="idx-prose">
+          <p>zpwr-daw started as a per-layer piano-roll pattern sequencer and grew into a <strong>two-view DAW</strong>: an <strong>Arrangement</strong> timeline (tracks, clips, sections, tempo/meter maps, markers, breakpoint automation) and a <strong>Session</strong> clip launcher (scenes, follow actions), plus MIDI/JSON export and an in-progress JUCE audio-clip layer.</p>
+          <p>It is a <strong>reusable component with two halves</strong>: a host-agnostic web UI (the FL-Studio-style canvas grid) and a C++ engine (pattern model, transport, step clock glue) reached directly from C++ and over a <strong>C ABI (FFI)</strong> from Rust. The frontend never knows whether it runs inside JUCE or Tauri — it calls an injected <code>nf</code> transport object. Playback runs on a native audio-thread step clock when the host wires it (minimise-proof) and falls back to a JS timer otherwise.</p>
+        </div>
+        <ul class="idx-list">
+          <li><strong>One grid engine</strong> — one canvas renderer + one interaction model + a value model, bound to a <code>domain</code>; zero duplicated gesture code.</li>
+          <li><strong>N domains</strong> — notes (piano-roll), arranger (DAW arrangement), automation (ALS section-overrides), triggers (ztranslator).</li>
+          <li><strong>Two transport bridges</strong> — JUCE <code>WebBrowserComponent</code> native fns and Tauri <code>invoke</code>, behind one <code>nf</code> interface.</li>
+          <li><strong>Pure C++ <code>ClipEngine</code></strong> — JUCE-free pattern model + swung step clock + event queue.</li>
+          <li><strong>C ABI + Rust bindings</strong> — <code>extern "C"</code> over <code>ClipEngine</code>; Rust hosts drive the same engine the plugins do.</li>
+          <li><strong>MIDI export</strong> — byte-identical C++ and JS Type-0 Standard MIDI File writers.</li>
+        </ul>
+      </section>
+
+      <!-- ============================== GRID ENGINE ============================== -->
+      <section class="idx-sec" id="grid-engine">
+        <h3 class="idx-sec-h"><span class="hex">0x01</span>Generalized Grid Engine</h3>
+        <div class="idx-prose">
+          <p>The grid engine lives under <code>webui/grid/</code>: one renderer + one interaction model + one value model, bound to a <code>domain</code>. The domain supplies everything that differs (lanes, time-axis cells, value type, which gestures apply, serialize shape); the engine supplies everything shared (render loop, hit-test, all gestures, popover bulk-edit, persistence).</p>
+          <p>The merge detail that matters: <code>value.type</code> selects the edit-drag axis — <code>'length'</code> → horizontal right-edge note resize (notes), <code>'unit'</code> → vertical top-band value height (automation), <code>'bool'</code> → click toggle (triggers).</p>
+        </div>
+        <pre class="idx-pre">import { createGrid } from "./grid/index.js";
+import { createNotesDomain } from "./grid/domains/notes.js";
+import { createJuceBridge } from "./grid/transport/juce-bridge.js";
+
+const { nf } = createJuceBridge({ prefix: uiPrefix });   <span class="c">// or createTauriBridge()</span>
+const grid = createGrid({
+    canvas: document.getElementById("clip-grid"),
+    domain: createNotesDomain({ getSteps, getPerBeat, layer: 0 }),
+    store: localStorage,
+    storageKey: "zfx_clip_notes_L0",
+    onChange: (model) =&gt; nf("clipSeqPattern")(JSON.stringify(model.serialize())),
+});
+grid.setPlayhead(currentStep);   <span class="c">// drive the playhead column from the transport</span></pre>
+      </section>
+
+      <!-- ============================== GRID DOMAINS ============================== -->
+      <section class="idx-sec" id="grid-domains">
+        <h3 class="idx-sec-h"><span class="hex">0x02</span>Grid Domains</h3>
+        <div class="idx-prose">
+          <p>A <strong>domain</strong> supplies <code>lanes()</code>, <code>cells()</code> over the time axis, a <code>value</code> spec (<code>type</code>/<code>min</code>/<code>max</code>/<code>step</code>), <code>capabilities</code> (which gestures apply), and <code>serialize</code>/<code>deserialize</code>. The bindings under <code>webui/grid/domains/</code>:</p>
+        </div>
+        <table class="idx-table">
+          <thead><tr><th>Domain</th><th>Lanes × cells</th><th>Value → serialize shape</th></tr></thead>
+          <tbody>
+            <tr><td><code>notes.js</code></td><td>pitch lanes × step cells</td><td>note length → the CLIP piano-roll, <code>[{s,l,n,len,v}]</code> ClipSeq shape</td></tr>
+            <tr><td><code>arranger.js</code></td><td>tracks × bars</td><td>cells = clip ids → the DAW arrangement; double-click a clip drills into its notes</td></tr>
+            <tr><td><code>automation.js</code></td><td>macro lanes × 8-bar blocks</td><td>value 0..1 → the ALS section-overrides timeline, <code>{param:{bar:value}}</code> shape, resizable sections</td></tr>
+            <tr><td><code>triggers.js</code></td><td>action lanes × time slots</td><td>value = bool → ztranslator (provisional, pending the ztranslator contract)</td></tr>
+            <tr><td><code>autolanes.js</code></td><td>MPE/CC lanes</td><td>per-block automation (Pitch Bend / CC74 / Channel Pressure as their real MIDI messages)</td></tr>
+            <tr><td><code>launcher.js</code></td><td>scene grid</td><td>Session clip launcher (scenes, follow actions)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ============================== TRANSPORT BRIDGES ============================== -->
+      <section class="idx-sec" id="transport-bridges">
+        <h3 class="idx-sec-h"><span class="hex">0x03</span>Transport Bridges</h3>
+        <div class="idx-prose">
+          <p>The frontend isolates host calls behind <code>nf(name)(...args)</code>. Two adapters under <code>webui/grid/transport/</code> produce an <code>nf</code>, so the frontend never knows which host it runs in:</p>
+        </div>
+        <ul class="idx-list">
+          <li><strong><code>juce-bridge.js</code></strong> — <code>nf</code> resolves to <code>Juce.getNativeFunction(prefix + name)</code>, i.e. the existing <code>clipSeq*</code> native fns from <code>registerClipSeqFns</code>. No backend change for the JUCE plugins.</li>
+          <li><strong><code>tauri-bridge.js</code></strong> — <code>nf</code> resolves to a wrapper over Tauri <code>invoke('clip_seq_' + name, {...})</code>. The Rust command handler forwards to the C ABI.</li>
+        </ul>
+        <div class="idx-prose">
+          <p>Pattern/transport JSON is identical across both bridges (defined in <code>ClipSeq.h</code>). Playhead readback: JUCE polls <code>clipSeqStep</code> on rAF; Tauri polls <code>invoke('clip_seq_step')</code> or listens for a Rust-emitted event.</p>
+        </div>
+      </section>
+
+      <!-- ============================== SEQUENCER ============================== -->
+      <section class="idx-sec" id="sequencer">
+        <h3 class="idx-sec-h"><span class="hex">0x04</span>Slot Sequencer</h3>
+        <div class="idx-prose">
+          <p><code>webui/grid/sequencer.js</code> is a JS step clock that walks the time axis and fires every set cell per slot (swing-aware). It drives the triggers domain and is the JS-fallback clock for any host without a native engine. Native sequencer glue lives in <code>include/zpc/ClipSeq.h</code>: the <code>clipSeq*</code> host contract (<code>ClipSeqHooks</code>) plus a templated helper that registers the matching native functions on a JUCE <code>WebBrowserComponent</code> options builder.</p>
+        </div>
+        <pre class="idx-pre">#include &lt;zpc/ClipSeq.h&gt;
+
+zpc::ClipSeqHooks clip;
+clip.pattern   = [this] (const juce::String&amp; json) { <span class="c">/* parse + stage pattern */</span> };
+clip.transport = [this] (int steps, double bpm, double perBeat, float swing,
+                         int swingUnit, bool loop, bool perLayer, int target) { <span class="c">/* … */</span> };
+clip.play      = [this] (bool on) { <span class="c">/* start / stop the processBlock step clock */</span> };
+clip.step      = [this] { return currentStep; };
+
+rootObject-&gt;setProperty ("hasClipSeq", clip.wired());   <span class="c">// advertise availability to the page</span>
+options = zpc::registerClipSeqFns (std::move (options), clip, pfx);</pre>
+      </section>
+
+      <!-- ============================== C++ ENGINE ============================== -->
+      <section class="idx-sec" id="cpp-engine">
+        <h3 class="idx-sec-h"><span class="hex">0x05</span>C++ Engine (ClipEngine)</h3>
+        <div class="idx-prose">
+          <p><code>include/zpc/ClipEngine.h</code> is the pure C++ engine: a JUCE-free pattern model + swung step clock + event queue. Timing/length semantics are ported verbatim from the <code>clip.js</code> fallback sequencer, so the C++, the C ABI, and the JS clock all advance identically. It holds the pattern + transport, advances a step clock, exposes <code>currentStep()</code>, and queues per-step note on/off events — no <code>WebBrowserComponent</code> dependency.</p>
+          <p>The note-stream module pack (<code>include/zpc/midi/</code>, <code>src/midi/</code>) — Chord / Arp / Scale / Euclidean / Game-of-Life / Brian-Brain / Langton plus the chord &amp; scale engines — are <code>ModuleInfoT&lt;NoteStream&gt;</code> modules templated on the signal-agnostic graph core from <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">zpwr-patch-core</a> (vendored under <code>libs/zpwr-patch-core</code>; only <code>juce_core</code> beyond that).</p>
+        </div>
+      </section>
+
+      <!-- ============================== C ABI + RUST BINDINGS ============================== -->
+      <section class="idx-sec" id="c-abi">
+        <h3 class="idx-sec-h"><span class="hex">0x06</span>C ABI + Rust Bindings</h3>
+        <div class="idx-prose">
+          <p>The pure C++ <code>ClipEngine</code> is exposed to Rust over an <code>extern "C"</code> surface (<code>include/zpc/capi/clip_engine.h</code>, <code>src/capi/clip_engine.cpp</code>) so Audio-Haxor / ztranslator drive the same engine the JUCE plugins drive. The <code>-sys</code> crate compiles the JUCE-free <code>clip_engine.cpp</code> directly with <code>cc</code> — no CMake or JUCE needed for the Rust path. The safe wrapper crate sits on top.</p>
+        </div>
+        <pre class="idx-pre">use zpwr_clip_engine::ClipEngine;
+let mut e = ClipEngine::new();
+e.set_pattern(r#"[{"s":0,"l":0,"n":60,"len":2,"v":100}]"#);
+e.set_transport(4, 120.0, 4.0, 0.0, 1, <span class="c">/*loop*/</span> true, <span class="c">/*per_layer*/</span> false, <span class="c">/*target*/</span> 0);
+e.play(true);
+e.advance(0.125);                       <span class="c">// one step at 120 bpm / 1/16</span>
+for ev in e.poll_events() { <span class="c">/* route note on/off to the synth */</span> }</pre>
+        <div class="idx-prose">
+          <p>C/C++ consumers can instead link the CMake target <code>zpwr::clip_engine_capi</code> (static) or build <code>-DZPC_BUILD_CAPI_SHARED=ON</code> for a shared library.</p>
+        </div>
+      </section>
+
+      <!-- ============================== ARRANGEMENT & SESSION ============================== -->
+      <section class="idx-sec" id="arrangement-session">
+        <h3 class="idx-sec-h"><span class="hex">0x07</span>Arrangement &amp; Session</h3>
+        <div class="idx-prose">
+          <p>Two views over the same engine:</p>
+        </div>
+        <ul class="idx-list">
+          <li><strong>Arrangement</strong> — a timeline of tracks, clips, sections, tempo/meter maps, markers and breakpoint automation. The <code>arranger</code> domain renders tracks × bars with cells = clip ids; double-click a clip drills into its notes.</li>
+          <li><strong>Session</strong> — a clip launcher with scenes and follow actions (<code>launcher.js</code>).</li>
+        </ul>
+        <div class="idx-prose">
+          <p>The detailed per-feature coverage across Ableton Live, FL Studio, Logic, Cubase/Studio One, Bitwig and Pro Tools — every <strong>PORTED</strong> row cited to its <code>file:line</code> — is in the <a href="arranger_port_report.html">DAW Arranger Port Report</a>.</p>
+        </div>
+      </section>
+
+      <!-- ============================== EXPORT ============================== -->
+      <section class="idx-sec" id="export">
+        <h3 class="idx-sec-h"><span class="hex">0x08</span>MIDI / JSON Export</h3>
+        <div class="idx-prose">
+          <p>Any pattern renders to a Type-0 Standard MIDI File — the universal DAW interchange format — so the sequencer's output drops straight into Ableton, FL, Logic, Reaper, etc. One step = one grid cell; <code>perBeat</code> is steps-per-quarter (the <code>clip.js</code> note division); layer → MIDI channel; <code>repeats</code> renders the pattern back-to-back N times. The C++ (<code>include/zpc/MidiFile.h</code>) and JS (<code>webui/grid/export/midi.js</code>) writers emit <strong>byte-identical files</strong>, verified by round-trip parsing in the test suites.</p>
+        </div>
+        <pre class="idx-pre"><span class="c">// Rust / native</span>
+e.write_midi_file("clip.mid", <span class="c">/*repeats*/</span> 4)?;     <span class="c">// or e.render_midi(4) -&gt; Vec&lt;u8&gt;</span>
+
+<span class="c">// Web (grid frontend)</span>
+downloadMidi(patternToMidi(grid.serialize(), { bpm, perBeat, steps, repeats: 4 }), "clip.mid");
+
+<span class="c">// C ABI</span>
+zpc_clip_render_midi(engine, repeats, &amp;data, &amp;len);   <span class="c">// free with zpc_bytes_free</span></pre>
+      </section>
+
+      <!-- ============================== BUILD / LAYOUT ============================== -->
+      <section class="idx-sec" id="build-layout">
+        <h3 class="idx-sec-h"><span class="hex">0x09</span>Build / Layout</h3>
+        <div class="idx-prose">
+          <p>Point <code>ZPC_JUCE_DIR</code> at a JUCE checkout. Standalone builds compile the two graph-core translation units from the submodule directly, so no separate <code>zpwr_patch_core</code> lib is required; when embedded in a host that already defines <code>zpwr_patch_core</code>, this links that target instead.</p>
+        </div>
+        <pre class="idx-pre"><span class="c"># standalone test</span>
+cmake -S . -B build -DZPC_JUCE_DIR=/path/to/JUCE
+cmake --build build --target MidiModulesTest
+./build/MidiModulesTest_artefacts/*/MidiModulesTest
+
+<span class="c"># pure-logic grid tests (headless)</span>
+node --test webui/grid/tests/grid.test.mjs
+
+<span class="c"># Rust bindings</span>
+cargo test --manifest-path bindings/rust/zpwr-clip-engine/Cargo.toml</pre>
+        <table class="idx-table">
+          <thead><tr><th>Path</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td><code>webui/grid/</code></td><td>Generalized canvas grid engine (renderer + interaction model + value model)</td></tr>
+            <tr><td><code>webui/grid/domains/</code></td><td>Domain bindings — notes, arranger, automation, triggers, autolanes, launcher</td></tr>
+            <tr><td><code>webui/grid/transport/</code></td><td>JUCE and Tauri transport bridges (one <code>nf</code> interface)</td></tr>
+            <tr><td><code>webui/grid/sequencer.js</code></td><td>Swing-aware JS step clock; JS-fallback clock</td></tr>
+            <tr><td><code>webui/clip/</code></td><td>Legacy DOM piano-roll (<code>clip.js</code>); stays live until consumers cut over</td></tr>
+            <tr><td><code>include/zpc/ClipEngine.h</code></td><td>Pure C++ engine — pattern model + swung step clock + event queue</td></tr>
+            <tr><td><code>include/zpc/ClipSeq.h</code></td><td>Native sequencer glue — <code>ClipSeqHooks</code> + <code>registerClipSeqFns</code></td></tr>
+            <tr><td><code>include/zpc/MidiFile.h</code></td><td>Type-0 Standard MIDI File writer (C++)</td></tr>
+            <tr><td><code>include/zpc/capi/clip_engine.h</code></td><td>C ABI (<code>extern "C"</code>) over <code>ClipEngine</code></td></tr>
+            <tr><td><code>src/capi/clip_engine.cpp</code></td><td>C ABI implementation</td></tr>
+            <tr><td><code>include/zpc/midi/</code>, <code>src/midi/</code></td><td>Note-stream module pack (Chord / Arp / Scale / Euclidean / cellular automata)</td></tr>
+            <tr><td><code>bindings/rust/</code></td><td><code>zpwr-clip-engine-sys</code> (raw decls, builds the C ABI via <code>cc</code>) + <code>zpwr-clip-engine</code> (safe wrapper)</td></tr>
+            <tr><td><code>libs/zpwr-patch-core</code></td><td>Vendored signal-agnostic graph core submodule</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="idx-foot">
+        © MenkeTechnologies — the DAW arranger engine of the MenkeTechnologies audio stack, shared across
+        <a href="https://github.com/MenkeTechnologies/zpwr-synth" target="_blank" rel="noopener noreferrer">zpwr-synth</a> ·
+        <a href="https://github.com/MenkeTechnologies/zpwr-midi-fx" target="_blank" rel="noopener noreferrer">zpwr-midi-fx</a> ·
+        <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">zpwr-fx</a> · Audio-Haxor · ztranslator.
+        <br>References: <a href="report.html">Engineering Report</a> · <a href="arranger_port_report.html">DAW Arranger Port Report</a> ·
+        <a href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">Source</a>.
+      </div>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
