@@ -19,7 +19,11 @@
 #
 # Excludes vendored docs/ paths (powerliners/vendor/powerline/docs)
 # — those ship third-party docs that we don't own and don't
-# expose via GH Pages.
+# expose via GH Pages. Also excludes CMake build trees
+# (build*/, _deps/), the JUCE/CLAP framework submodules, nested
+# zpwr-* lib submodule copies (the real one is top-level), and
+# private internal libraries (zpwr-clip-engine — a grid-engine
+# library that ships HANDOFF.md, not a product GH-Pages site).
 #
 # Coverage at iter-61 add: 44/44 first-party docs/ directories
 # have index.html. Pure regression floor.
@@ -34,6 +38,10 @@ missing=0
 while IFS= read -r d; do
     case "$d" in
         *vendor*|*node_modules*|*target*) continue ;;
+        *build*|*/_deps/*) continue ;;
+        */libs/JUCE/*|*/libs/clap-juce-extensions/*) continue ;;
+        */libs/zpwr-*) continue ;;
+        */zpwr-clip-engine/*) continue ;;
     esac
     checked=$((checked + 1))
     if [[ ! -f "$d/index.html" ]]; then
