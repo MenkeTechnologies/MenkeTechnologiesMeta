@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 93 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 96 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,7 +81,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 93 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 96 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (14)
 
