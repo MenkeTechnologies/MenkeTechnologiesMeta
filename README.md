@@ -14,8 +14,8 @@
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-8_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-8)
 [![Tier 6](https://img.shields.io/badge/tier_6-14_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-14)
-[![Rust](https://img.shields.io/badge/rust-2.31M_LOC-orange.svg)](#0x09-code-volume)
-[![Code](https://img.shields.io/badge/code-8.00M_lines-brightgreen.svg)](#0x09-code-volume)
+[![Rust](https://img.shields.io/badge/rust-2.36M_LOC-orange.svg)](#0x09-code-volume)
+[![Code](https://img.shields.io/badge/code-8.14M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -545,25 +545,25 @@ Measured with `tokei 14.0.0` across the full recursive working tree. **Code** is
 
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 2,307,134 | 6,148 |
-| JSON | 1,954,338 | 342 |
+| Rust | 2,355,499 | 6,286 |
+| JSON | 1,964,774 | 365 |
 | Perl | 1,904,744 | 19,746 |
-| JavaScript | 427,057 | 2,664 |
+| JavaScript | 453,942 | 2,800 |
 | Zsh | 280,215 | 1,301 |
-| HTML | 212,091 | 995 |
-| Stryke (`.stk`) | 200,783 | 3,377 |
-| TeX | 137,960 | 11 |
-| Vim Script | 114,038 | 738 |
+| HTML | 217,676 | 1,025 |
+| Stryke (`.stk`) | 201,028 | 3,382 |
+| TeX | 138,233 | 13 |
+| Vim Script | 115,282 | 748 |
 | AWK | 82,368 | 2,191 |
-| CSS | 62,624 | 116 |
-| Shell | 62,582 | 1,881 |
+| CSS | 67,069 | 138 |
+| C Header | 66,561 | 183 |
+| Shell | 66,535 | 1,989 |
+| C++ | 60,881 | 106 |
 | C | 45,218 | 22 |
-| C Header | 38,766 | 107 |
-| Python | 32,368 | 517 |
+| Python | 33,291 | 521 |
 | SQL | 29,187 | 118 |
-| C++ | 26,282 | 71 |
 | Kotlin | 23,672 | 173 |
-| **Total** | **8,002,152** | **41,555** |
+| **Total** | **8,137,952** | **41,877** |
 
 The JSON mass is dominated by `traderview` frontend i18n — 27 locale files at ~1.58M lines — plus `zpwr-synth` factory-preset banks (~188k); the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — 19,505 hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
 
@@ -571,10 +571,10 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | Rust 743,206 | JavaScript 308,702 |
-| `zshrs` | Rust 436,709 | Zsh 50,324 |
-| `strykelang` | Rust 410,169 | Stryke 162,418 · Perl 1.9M |
-| `Audio-Haxor` | Rust 128,884 | JavaScript 65,227 |
+| `traderview` | Rust 751,329 | JavaScript 310,801 |
+| `zshrs` | Rust 436,672 | Zsh 50,324 |
+| `strykelang` | Rust 410,176 | Stryke 162,462 · Perl 1.9M |
+| `Audio-Haxor` | Rust 138,557 | JavaScript 68,248 |
 | `fusevm` | Rust 127,470 | — |
 | `zpwr` | Zsh 74,539 | Shell 8,197 |
 | `powerliners` | Rust 62,996 | — |
@@ -584,15 +584,15 @@ Numbers refresh as repos add commits — regenerate with `tokei` (plus the `.stk
 
 ### Against a typical engineer-career
 
-Every line above is hand-authored. The standard software-engineering productivity figures (Brooks' *Mythical Man-Month*, COCOMO, Capers Jones) put *net maintained* output at roughly 20–100 lines/day sustained — call a 40-year career ~9,200 working days. The multiple below is `8,002,152 ÷ (rate × 9,200)`:
+Every line above is hand-authored. The standard software-engineering productivity figures (Brooks' *Mythical Man-Month*, COCOMO, Capers Jones) put *net maintained* output at roughly 20–100 lines/day sustained — call a 40-year career ~9,200 working days. The multiple below is `8,137,952 ÷ (rate × 9,200)`:
 
 | Net LOC/day baseline | Career total | This tree ÷ baseline |
 |---:|---:|---:|
-| 100/day (optimistic ceiling) | ~920,000 | **~8.7×** |
-| 50/day (mid estimate) | ~460,000 | ~17× |
-| 20/day (conservative) | ~184,000 | ~43× |
+| 100/day (optimistic ceiling) | ~920,000 | **~8.8×** |
+| 50/day (mid estimate) | ~460,000 | ~18× |
+| 20/day (conservative) | ~184,000 | ~44× |
 
-The defensible floor is **≥8 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption. The baseline is an industry estimate, not a measured value; the 8.0M is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
+The defensible floor is **≥8 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption. The baseline is an industry estimate, not a measured value; the 8.1M is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
 
 ---
 
