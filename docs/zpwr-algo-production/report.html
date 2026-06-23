@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-algo-production engineering report — module breakdown, architecture, and port status of the Rust algorithmic music-production engine behind zpwr-daw's one-click production.">
+  <title>zpwr-algo-production — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <style>
+    .report-main { max-width: 78rem; padding: 1.5rem 1.5rem 4rem; margin: 0 auto; }
+    pre, code { font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    pre {
+      background: var(--bg); border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem; overflow-x: auto; font-size: 12px; color: var(--text);
+    }
+    table.report { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px; }
+    table.report th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; text-align: left;
+      padding: 6px 10px; border: 1px solid var(--border);
+    }
+    table.report td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text); vertical-align: top; }
+    table.report td code { background: var(--bg); color: var(--accent-light); padding: 0 4px; }
+    table.report .ok { color: #39ff14; font-weight: 700; }
+    table.report .pend { color: var(--accent); font-weight: 700; }
+    .report-section {
+      margin: 1.6rem 0; padding: 1rem 1.2rem 1.2rem; border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px;
+    }
+    .report-section h2 {
+      font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--cyan);
+      letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 0.6rem;
+    }
+    .report-section p, .report-section li { color: var(--text); font-size: 13px; line-height: 1.55; }
+    .report-header {
+      border-bottom: 1px solid var(--border); padding: 1.2rem 1.5rem;
+      background: linear-gradient(180deg, #070714 0%, #0d0d22 60%, var(--bg-secondary) 100%);
+    }
+    .report-header-inner { max-width: 78rem; margin: 0 auto; }
+    .report-brand {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.1rem, 2.4vw, 1.6rem); font-weight: 900;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), #fff, var(--accent), var(--cyan));
+      background-size: 300% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px var(--cyan-glow));
+      margin: 0 0 0.4rem;
+    }
+    .report-crumbs {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px; color: var(--text-dim); letter-spacing: 0.04em;
+    }
+    .report-crumbs a { color: var(--cyan); text-decoration: none; }
+    .report-crumbs .sep { color: var(--text-muted); margin: 0 6px; }
+    .report-crumbs .current { color: var(--accent); }
+    .report-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin: 0.6rem 0 0.4rem;
+    }
+    .report-title .step-hash { color: var(--cyan); margin-right: 0.4rem; }
+  </style>
+</head>
+<body class="crt">
+  <header class="report-header">
+    <div class="report-header-inner">
+      <h1 class="report-brand">// ZPWR-ALGO-PRODUCTION &mdash; ENGINEERING REPORT</h1>
+      <nav class="report-crumbs" aria-label="Breadcrumb">
+        <a href="index.html">Docs</a>
+        <span class="sep">/</span>
+        <span class="current">Engineering report</span>
+        <span class="sep">/</span>
+        <a href="https://github.com/MenkeTechnologies/zpwr-algo-production" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="report-main">
+    <h2 class="report-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+    <p>zpwr-algo-production is a Rust engine that turns <strong>one action into a finished, professionally-arranged track</strong>: song structure, key and tempo, per-section MIDI, and an exported Ableton Live Set (<code>.als</code>), with per-genre engines layered on top. It is the algorithmic-production core behind <code>zpwr-daw</code>'s one-click production (INVENTIONS #5), ported faithfully from the <code>Audio-Haxor</code> <code>src-tauri</code> generators with the library-scanner couplings abstracted behind a host-provided sample source. <strong>Private</strong> — internal engine, version v0.1.0.</p>
+
+    <section class="report-section">
+      <h2>~ SCALE &amp; POSITION</h2>
+      <table class="report">
+        <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
+        <tr><td>Role</td><td>Algorithmic music-production engine</td><td>Generation as the workflow, not an assist bolted onto a linear DAW</td></tr>
+        <tr><td>Language</td><td>Rust (library crate)</td><td><code>rlib</code>; consumed natively by Audio-Haxor and by <code>zpwr-daw</code></td></tr>
+        <tr><td>Output</td><td>Ableton <code>.als</code> + MIDI</td><td>Full project: structure, per-section notes, audio clips, automation</td></tr>
+        <tr><td>External deps</td><td>serde, rand, regex, symphonia</td><td>Audio analysis (<code>bpm</code>, <code>similarity</code>) is dependency-free</td></tr>
+        <tr><td>Sample source</td><td>Host-provided trait</td><td>Runs without the Audio-Haxor library scanner</td></tr>
+      </table>
+    </section>
+
+    <section class="report-section">
+      <h2># MODULE BREAKDOWN</h2>
+      <table class="report">
+        <tr><th>Module</th><th>Responsibility</th><th>Status</th></tr>
+        <tr><td><code>bpm</code></td><td>Tempo estimation from audio, dependency-free</td><td class="ok">LANDED</td></tr>
+        <tr><td><code>similarity</code></td><td>Audio fingerprint / similarity, dependency-free</td><td class="ok">LANDED</td></tr>
+        <tr><td><code>als_project</code></td><td>Song structure + theory: section lengths / starts, key compatibility, section overrides</td><td class="pend">PORTING</td></tr>
+        <tr><td><code>midi_generator</code></td><td>Per-section MIDI note-event generation</td><td class="pend">PORTING</td></tr>
+        <tr><td><code>als_generator</code></td><td>Writes a full <code>.als</code> (MIDI + audio clips, automation)</td><td class="pend">PORTING</td></tr>
+        <tr><td><code>trance_generator</code></td><td>Genre engine: trance-specific arrangement + MIDI</td><td class="pend">PORTING</td></tr>
+        <tr><td><code>track_generator</code></td><td>Orchestrator: picks key / tempo / samples, drives generation</td><td class="pend">PORTING</td></tr>
+        <tr><td><code>sample_source</code></td><td>Host-provided sample-source trait (decouples from the scanner)</td><td class="ok">LANDED</td></tr>
+        <tr><td><code>midi</code>, <code>sample_analysis</code>, <code>sample_filters</code></td><td>Support layer: MIDI parsing, sample analysis helpers, sample filtering</td><td class="pend">PORTING</td></tr>
+      </table>
+    </section>
+
+    <section class="report-section">
+      <h2>~ ARCHITECTURE</h2>
+      <p>The orchestrator (<code>track_generator</code>) selects key, tempo, and samples (the latter from the host-provided <code>sample_source</code>), then <code>als_project</code> lays out the arrangement (sections, key compatibility, overrides). <code>midi_generator</code> fills each section with notes; genre engines such as <code>trance_generator</code> apply genre-specific arrangement and MIDI. Finally <code>als_generator</code> writes a complete Ableton Live Set — MIDI and audio clips with automation — from XML/ALS templates bundled in the crate.</p>
+      <p>The key design decision is the <strong>sample-source trait</strong>: Audio-Haxor's original generators were coupled to its library scanner; here the host supplies samples and the engine supplies the music, so the same crate runs inside Audio-Haxor (native) and <code>zpwr-daw</code> alike.</p>
+    </section>
+
+    <section class="report-section">
+      <h2># PORT STATUS</h2>
+      <p>Incremental, faithful port from the Audio-Haxor <code>src-tauri</code> generators — each module is build-verified as it lands. The audio-analysis modules (<code>bpm</code>, <code>similarity</code>) and the <code>sample_source</code> decoupling are in; the generation modules are porting in with the support layer. See the <a href="index.html">documentation hub</a> for the overview.</p>
+    </section>
+  </main>
+</body>
+</html>
