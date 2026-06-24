@@ -14,7 +14,8 @@ _Last reconciled: 2026-06-24._
 | **zpwr-embed-terminal** | Embedded PTY terminal (webview) |
 | **zpwr-hooks-editor** | Monaco stryke hooks editor (webview) |
 | **zpwr-crate** | Sample-library scan + SQLite/FTS persistence + faceted browser (+ bpm/key/lufs/similarity/sample_analysis) |
-| **ztranslator** | Real-time MIDI/OSC/DMX/Link translation engine + view |
+| **ztranslator** | The standalone translation app + the shared `ztranslator_view.js` (the view embedded in other apps); engine now lives in `ztranslator-core` |
+| **ztranslator-core** | Embeddable pure-Rust MIDI/OSC/DMX/Link translation engine, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind the `ztranslator` app + what other apps embed |
 | **zpwr-file-browser** | Filesystem file manager (webui + Rust fs backend) |
 | **zpwr-i18n** | Localization runtime (JSON loader) |
 | **zpwr-algo-production** | One-click algorithmic track generation (.als / .zdp) |
@@ -68,7 +69,8 @@ _Last reconciled: 2026-06-24._
 
 ## Checklist
 
-- [ ] **register meta submodules**: add `zoffice-core`, `zemail-core`, `zoffice`, `zemail` to the meta `.gitmodules` (all four are git repos but currently untracked in meta). `zpdf` + `zpdf-core` are already registered submodules.
+- [ ] **register meta submodules**: add `zoffice-core`, `zemail-core`, `zoffice`, `zemail`, `ztranslator-core` to the meta `.gitmodules` (all git repos but currently untracked in meta). `zpdf` + `zpdf-core` are already registered submodules.
+- [ ] **ztranslator-core extraction**: move the engine (`ztranslator/src` lib `ztranslator-engine` + `capi`) into `ztranslator-core`; repoint the `ztranslator` app + its Tauri plugin + every embedding app (Audio-Haxor, traderview, zpwr-daw) onto `ztranslator-core` (README-only so far)
 - [x] **crate → traderview** — DONE (b7b6dbf7b6): submodule + 4 commands; sqlite conflict fixed via stack-wide rusqlite 0.32
 - [x] **crate → ztranslator** — DONE (9c66141429): submodule + 4 commands, cargo check green
 - [x] **file-browser → traderview** — DONE (4309cd1964 backend + df7d523217 UI): 33 fs_* cmds + vendored UI
@@ -96,10 +98,14 @@ _Last reconciled: 2026-06-24._
   with the non-audio JS backend kept only as the browser-dev fallback.
 - **zpwr-daw rename (done):** the daw repo is `zpwr-daw.git`; the meta tracks separate `zpwr-daw`
   (the app) and `zpwr-clip-engine` (the shared arranger) submodules.
-- **The `-core` embed pattern:** `zoffice-core` / `zemail-core` / `zpdf-core` follow the same model as
-  `zpwr-clip-engine`'s engine — a pure-Rust core that links natively into Rust/Tauri hosts and over a
-  C ABI elsewhere, so one office engine, one mail engine, and one PDF engine embed across the whole
-  GUI stack ("the PDF engine that drops into any window").
+- **The `-core` embed pattern:** `ztranslator-core` / `zoffice-core` / `zemail-core` / `zpdf-core` follow
+  the same model as `zpwr-clip-engine`'s engine — a pure-Rust core that links natively into Rust/Tauri
+  hosts and over a C ABI elsewhere, so one engine each embeds across the whole GUI stack.
+- **ztranslator-core (new, extracted):** the MIDI/OSC/DMX/Link engine is being split out of the
+  `ztranslator` app into `ztranslator-core.git` (README-only so far). The `ztranslator` repo keeps the
+  standalone app + the shared `ztranslator_view.js`; the engine + C ABI move to the core, so haxor/
+  traderview/daw embed `ztranslator-core` rather than the app repo. The "ztranslator" matrix column
+  already tracks apps embedding that engine (haxor/traderview/daw; ztranslator = view source).
 - **zpdf (further along):** from-scratch PDF editor (Tauri v2) porting the Adobe Acrobat Pro + macOS
   Preview feature set; `zpdf` + `zpdf-core` are already meta submodules and `zpdf` embeds `zpdf-core`
   (nested). Its embedding into the OTHER GUI apps + the standard component set inside it are still TODO.
