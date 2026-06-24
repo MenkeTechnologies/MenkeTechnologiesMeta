@@ -28,7 +28,7 @@ _Last reconciled: 2026-06-24._
 | App | clip-engine | patch-core | embed-terminal | hooks-editor | crate | ztranslator | file-browser | i18n | algo | office-core | mail-core | pdf-core |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — |
-| **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — |
+| **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — |
 | **ztranslator** | ✓ | — | ✓ | ✓ | ✓ | _(source)_ | ✓ | ✓ | — | — | — | — |
 | **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | — | — | — |
 | **zpwr-synth** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
@@ -37,7 +37,7 @@ _Last reconciled: 2026-06-24._
 | **zoffice** | — | — | — | — | — | — | — | — | — | _(source)_ | — | — |
 | **zemail** | — | — | — | — | — | — | — | — | — | — | _(source)_ | — |
 | **zpdf** | — | — | — | — | — | — | — | — | — | — | — | _(source)_ |
-| **# apps** | 7 | 4 | 4 | 4 | 4 | 3 | 3 | 2 | 1 | 0 | 0 | 0 |
+| **# apps** | 7 | 4 | 4 | 4 | 4 | 3 | 3 | 3 | 1 | 0 | 0 | 0 |
 
 ## Planned additions (the plan)
 
@@ -76,6 +76,7 @@ _Last reconciled: 2026-06-24._
 - [x] **file-browser → traderview** — DONE (4309cd1964 backend + df7d523217 UI): 33 fs_* cmds + vendored UI
 - [ ] **file-browser → zpwr-daw** (add submodule + UI tab + fs backend)
 - [x] **i18n → Audio-Haxor** — DONE (789857db28): shared zpwr-i18n, local i18n-ui.js dropped
+- [x] **i18n → traderview** — DONE (d5fca994b9): shared zpwr-i18n runtime + ESM shim (all GUI apps standardize on it, fix translations 1x)
 - [ ] **i18n → zpwr-daw** (add submodule + wire loader)
 - [ ] **algo-production → Audio-Haxor** (add submodule + PRODUCE tab)
 - [ ] **office-core → every GUI app** (add submodule + Rust dep / C ABI + an office view)
