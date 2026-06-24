@@ -26,9 +26,9 @@ _Last reconciled: 2026-06-24._
 
 | App | clip-engine | patch-core | embed-terminal | hooks-editor | crate | ztranslator | file-browser | i18n | algo | office-core | mail-core | pdf-core |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — |
-| **traderview** | ✓ | — | ✓ | ✓ | — | ✓ | — | — | — | — | — | — |
-| **ztranslator** | ✓ | — | ✓ | ✓ | — | _(source)_ | ✓ | ✓ | — | — | — | — |
+| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — |
+| **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — |
+| **ztranslator** | ✓ | — | ✓ | ✓ | ✓ | _(source)_ | ✓ | ✓ | — | — | — | — |
 | **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | — | — | — |
 | **zpwr-synth** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zpwr-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
@@ -36,7 +36,7 @@ _Last reconciled: 2026-06-24._
 | **zoffice** | — | — | — | — | — | — | — | — | — | _(source)_ | — | — |
 | **zemail** | — | — | — | — | — | — | — | — | — | — | _(source)_ | — |
 | **zpdf** | — | — | — | — | — | — | — | — | — | — | — | _(source)_ |
-| **# apps** | 7 | 4 | 4 | 4 | 2 | 3 | 2 | 1 | 1 | 0 | 0 | 0 |
+| **# apps** | 7 | 4 | 4 | 4 | 4 | 3 | 3 | 2 | 1 | 0 | 0 | 0 |
 
 ## Planned additions (the plan)
 
@@ -69,11 +69,11 @@ _Last reconciled: 2026-06-24._
 ## Checklist
 
 - [ ] **register meta submodules**: add `zoffice-core`, `zemail-core`, `zoffice`, `zemail` to the meta `.gitmodules` (all four are git repos but currently untracked in meta). `zpdf` + `zpdf-core` are already registered submodules.
-- [ ] **crate → traderview** (add submodule, wire browse backend)
-- [ ] **crate → ztranslator** (add submodule, wire browse backend)
-- [ ] **file-browser → traderview** (add submodule + UI tab + fs backend)
+- [x] **crate → traderview** — DONE (b7b6dbf7b6): submodule + 4 commands; sqlite conflict fixed via stack-wide rusqlite 0.32
+- [x] **crate → ztranslator** — DONE (9c66141429): submodule + 4 commands, cargo check green
+- [x] **file-browser → traderview** — DONE (4309cd1964 backend + df7d523217 UI): 33 fs_* cmds + vendored UI
 - [ ] **file-browser → zpwr-daw** (add submodule + UI tab + fs backend)
-- [ ] **i18n → Audio-Haxor** (add submodule + wire loader)
+- [x] **i18n → Audio-Haxor** — DONE (789857db28): shared zpwr-i18n, local i18n-ui.js dropped
 - [ ] **i18n → zpwr-daw** (add submodule + wire loader)
 - [ ] **algo-production → Audio-Haxor** (add submodule + PRODUCE tab)
 - [ ] **office-core → every GUI app** (add submodule + Rust dep / C ABI + an office view)
