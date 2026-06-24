@@ -7,24 +7,24 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-102-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-103-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-18_core-cyan.svg)](#tier-1--core-18)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-8_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-8)
-[![Tier 6](https://img.shields.io/badge/tier_6-15_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-15)
+[![Tier 6](https://img.shields.io/badge/tier_6-16_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-16)
 [![Rust](https://img.shields.io/badge/rust-2.36M_LOC-orange.svg)](#0x09-code-volume)
 [![Code](https://img.shields.io/badge/code-8.14M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 102 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 103 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-file-browser` (the shared multi-pane file browser — JS front end + Rust `fs` crate) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-i18n` (the shared portable i18n runtime) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `tmux-fzf-url`), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-file-browser` (the shared multi-pane file browser — JS front end + Rust `fs` crate) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-i18n` (the shared portable i18n runtime) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `tmux-fzf-url`), the cyberpunk editor theme (`zpwr-theme` — VS Code + JetBrains), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -39,7 +39,7 @@
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (8)](#tier-5--editor--multiplexer-plugins-8)
-  - [Tier 6 — Apps, extensions, web & web-APIs (15)](#tier-6--apps-extensions-web--web-apis-15)
+  - [Tier 6 — Apps, extensions, web & web-APIs (16)](#tier-6--apps-extensions-web--web-apis-16)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
 - [\[0x03\] Common Operations](#0x03-common-operations)
 - [\[0x04\] Helper Scripts](#0x04-helper-scripts)
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 102 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 103 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,7 +81,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 102 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 103 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (18)
 
@@ -203,7 +203,7 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 | [`emacs-zsh`](https://github.com/MenkeTechnologies/emacs-zsh) | `zshrs-mode` for Emacs — font-lock generated from `zshrs --dump-reflection` (137 builtins, 113 zshrs extensions via a dedicated `zshrs-extension-face`, 245 special vars), shell-block-aware indent, and LSP via `zshrs --lsp` (eglot + lsp-mode). Regenerate via `scripts/gen-stdlib.sh`. &middot; <sub>[docs](https://menketechnologies.github.io/emacs-zsh/) · [report](https://menketechnologies.github.io/emacs-zsh/report.html)</sub> |
 | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
-### Tier 6 — Apps, extensions, web & web-APIs (15)
+### Tier 6 — Apps, extensions, web & web-APIs (16)
 
 Browser extensions, supporting apps, audio plugins, public website, storefront, and web-API services. (Tauri v2 desktop GUI apps `traderview` and `Audio-Haxor` live in Tier 1; the `powerliners` CLI port lives in Tier 1 too.)
 
@@ -221,6 +221,7 @@ Browser extensions, supporting apps, audio plugins, public website, storefront, 
 | [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core) | **Signal-agnostic modular patch graph** (C++20, depends on `juce_core`). The shared cable-routing core behind the plugin stack — owns what's identical in every modular plugin (patch graph, soft knobs, shared WebEditor, patch versioning/migration) and knows nothing about audio or MIDI. Reused by `zpwr-fx`, `zpwr-synth`, and `zpwr-midi-fx`. **Private** — part of the paid audio stack. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-patch-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-patch-core/report)</sub> |
 | [`zpwr-hooks-editor`](https://github.com/MenkeTechnologies/zpwr-hooks-editor) | **Shared stryke Hooks code editor** (JS) — a Monaco editor (+ monaco-vim, monaco-emacs, and a thin stryke-LSP adapter) esbuild-bundled into vendored IIFE artifacts (`hooks-editor.bundle.{js,css}` + `hooks-editor.worker.js`). Extracted from Audio-Haxor so the editor is single-sourced instead of duplicated across apps. Build-on-each-consumer: the bundler reads `src/` from this repo but resolves `monaco-*` from the consuming app's `node_modules` and writes into its `frontend/lib/`. Consumed by all four apps — `Audio-Haxor`, `traderview`, `ztranslator` (Tauri, at `crates/`) and `zpwr-daw` (JUCE WebView, at `libs/`). **Private** — internal shared component. |
 | [`zpwr-i18n`](https://github.com/MenkeTechnologies/zpwr-i18n) | **Shared i18n runtime** (JS) — one portable internationalization runtime shared across all four GUI apps, extracted from Audio-Haxor. Host-agnostic: catalogs load from **JSON files** (not Audio-Haxor's SQLite/Tauri loader), so the same code runs in Tauri apps and JUCE WebViews. Flat `{ "namespace.key": "string with {vars}" }` catalogs, one JSON per locale, 27 supported UI locales; shared components (e.g. `zpwr-file-browser`) ship their own per-locale fragment that the host merges in via `extraBases`. API on `window` — `appFmt`/`toastFmt`/`t` (interpolate + missing-key fallback to the key), `applyUiI18n`, `loadLocale`, `bootI18n`, `mergeI18nCatalog`. **Private** — internal shared component. |
+| [`zpwr-theme`](https://github.com/MenkeTechnologies/zpwr-theme) | **Cyberpunk HUD color theme for VS Code + JetBrains** — the Strykelang HUD palette (deep-space ink `#05050a`, neon cyan `#05d9e8`, magenta scanlines `#d300c5`) shared with `zpwrchrome`, `zpwr`, and the docs design system, packaged for both editor families from one `PALETTE.md`. `vscode/` ships a `contributes.themes` extension with full workbench + token colors (stryke sigils / `~>` threading / parallel builtins get the magenta accent); `jetbrains/` ships a UI theme + matching editor color scheme with a dependency-free `zip`-only packager (no Gradle/SDK). Companion to `vscode-stryke`. |
 | [`app-store`](https://github.com/MenkeTechnologies/app-store) | **Static storefront** (HTML/CSS/JS) for the entire MenkeTechnologies catalog — 69 products across 6 categories: paid Tauri/JUCE apps & plugins (`Audio-Haxor`, `traderview`, `ztranslator`, `zpwr-daw`, `zpwr-synth`, `zpwr-fx`, `zpwr-midi-fx`, licensed **per major version**) plus every free/OSS repo (`zshrs`, `stryke`, the Rust CLI tools, the stryke package ecosystem, the zsh-plugin family) with GitHub download links (`releases/latest` or `/tags`). Shopify-style checkout, search + category filters, live catalog stats. Shares the strykelang-docs HUD design system; no build step; dependency-free `node:test` suite + CI. &middot; <sub>[store](https://menketechnologies.github.io/app-store/) · [docs](https://menketechnologies.github.io/app-store/docs/) · [report](https://menketechnologies.github.io/app-store/docs/report.html)</sub> |
 | [`zpwr-license`](https://github.com/MenkeTechnologies/zpwr-license) | **Offline-first software licensing** for the paid catalog (PRIVATE). Ed25519-signed license keys, an issuer CLI, and an optional self-hosted activation server. Verification runs offline in the binary (kills keygens, works air-gapped); **offline node-locking** binds a key to a machine with no server (anti-sharing); online activation adds live seats + revocation. Embedded **anti-tamper** layer (debugger / injection / self-binary-signature / key-substitution / clock-rollback checks) with obfuscated strings + symbols. Rust workspace (`license-core` + `license-cli` + `license-server`), no licensing SaaS. **Private** — anti-piracy infrastructure. |
 | [`MenkeTechnologiesPublications`](https://github.com/MenkeTechnologies/MenkeTechnologiesPublications) | **Paid publications** (PRIVATE). The companion books, reference manuals/PDFs, and the zpwr encyclopedia for `strykelang`, `zshrs`, and `zpwr`, plus their generation pipeline (pandoc + LaTeX). Self-contained: vendors the public source repos as `src/` submodules and builds each book from that source; the free public docs sites stay in each product's own repo. **Private** — paid product. |
@@ -332,6 +333,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-hooks-editor`](https://github.com/MenkeTechnologies/zpwr-hooks-editor) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-i18n`](https://github.com/MenkeTechnologies/zpwr-i18n) | — | — | — |
+| 6 — Apps, extensions, web & web-APIs | [`zpwr-theme`](https://github.com/MenkeTechnologies/zpwr-theme) | [![CI](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zpwr-theme?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zpwr-theme/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`app-store`](https://github.com/MenkeTechnologies/app-store) | [![CI](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/app-store?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/app-store/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-license`](https://github.com/MenkeTechnologies/zpwr-license) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`MenkeTechnologiesPublications`](https://github.com/MenkeTechnologies/MenkeTechnologiesPublications) | — | — | — |
