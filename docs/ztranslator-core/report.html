@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="ztranslator-core engineering report — version, crate layout, module map, dependency footprint, C-ABI surface, and test status for the embeddable pure-Rust event-translation engine behind ztranslator.">
+  <title>ztranslator-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZTRANSLATOR-CORE // ENGINEERING REPORT</h1>
+          <div class="docs-sub">// crate layout · module map · dependency footprint · C-ABI surface · test status</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="index.html">Home</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/ztranslator-core">Source</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <section class="hero-stats">
+        <div class="hero-stat"><span class="num">0.2.1</span><span class="lbl">engine version</span></div>
+        <div class="hero-stat"><span class="num">17</span><span class="lbl">engine source files</span></div>
+        <div class="hero-stat"><span class="num">8.2k</span><span class="lbl">lines of Rust (engine)</span></div>
+        <div class="hero-stat"><span class="num">65</span><span class="lbl">tests (33 integration · 32 inline)</span></div>
+        <div class="hero-stat"><span class="num">4</span><span class="lbl">C-ABI exports (37 dispatch cmds)</span></div>
+        <div class="hero-stat"><span class="num">23</span><span class="lbl">direct dependencies</span></div>
+      </section>
+      <p class="note">Numbers are derived from the repository at engine version <code>0.2.1</code> (edition 2021): the engine library crate counts <code>src/*.rs</code> only — the crate's <code>[lib] path = "src/lib.rs"</code> is the compiled source set. The C ABI lives in the sibling <code>capi/</code> crate. A non-MIT <code>UNLICENSED</code> license; <code>publish = false</code>.</p>
+
+      <h2 class="reg-h">Crate layout</h2>
+      <table>
+        <thead><tr><th>crate</th><th>name</th><th>crate-type</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td>engine</td><td>ztranslator-engine (lib <code>ztranslator</code>)</td><td>rlib (default)</td><td>the engine: model, sources, rules VM, BOME import/export, action executors</td></tr>
+          <tr><td>capi/</td><td>ztranslator-capi</td><td>rlib · staticlib · cdylib</td><td>C ABI over the engine for non-Tauri hosts (<code>zt_invoke</code> + event callback)</td></tr>
+          <tr><td>tauri/</td><td>tauri-plugin-ztranslator</td><td>(plugin crate)</td><td>Tauri-plugin bridge for webview hosts (Audio-Haxor, traderview)</td></tr>
+        </tbody>
+      </table>
+      <p class="note">The README's <code>rlib + staticlib + cdylib</code> badge describes the <code>ztranslator-capi</code> crate; the engine library crate itself declares no <code>crate-type</code> and so builds as the default <code>rlib</code>.</p>
+
+      <h2 class="reg-h">Module map (engine)</h2>
+      <table>
+        <thead><tr><th>module</th><th>responsibility</th></tr></thead>
+        <tbody>
+          <tr><td>model</td><td><code>Project &gt; Preset &gt; Translator</code> data model; <code>Incoming</code> (28 trigger variants) and <code>Outgoing</code> (41 action variants); MIDI / keystroke / mouse / timer / route specs; JSON <code>load_json</code> / <code>save_json</code></td></tr>
+          <tr><td>rules</td><td>signed-32-bit integer VM: <code>Operand</code>, <code>BinOp</code> (add sub mul div mod and or xor shl shr), <code>CmpOp</code>, <code>Rule</code> (Assign · Expr · Goto · Label · Log · SkipNext · ExitExecute · ExitIgnore · If · Comment); locals + globals; <code>parse_program</code> / <code>program_to_source</code></td></tr>
+          <tr><td>matcher</td><td>matches an incoming event against a translator's <code>Incoming</code> spec, binding captured values for the rules VM</td></tr>
+          <tr><td>engine</td><td><code>Engine</code> + worker thread: open inputs/outputs, virtual ports, router edges, start/stop, panic, test-fire; opens the non-MIDI trigger sources; emits <code>EngineEvent</code> to a sink</td></tr>
+          <tr><td>sources</td><td>non-MIDI trigger sources: OSC, Art-Net / sACN DMX, file watcher, serial, gamepad, HID, HTTP / WebSocket / MQTT / TCP, cron schedule, system events, audio level, Ableton Link</td></tr>
+          <tr><td>midi</td><td><code>MidiMessage</code> parsing / encoding</td></tr>
+          <tr><td>actions</td><td>outgoing action executors; <code>actions/macos.rs</code> holds the OS-control paths (keystroke, mouse, AppleScript) that no-op off macOS</td></tr>
+          <tr><td>bmtp</td><td>BOME <code>.bmtp</code> <code>import</code> / <code>import_str</code> / <code>export</code>; option + payload parsing (<code>parse_incoming</code> / <code>parse_outgoing</code>)</td></tr>
+          <tr><td>serial · keycodes · error · timers</td><td>serial-port plumbing; key-code tables; <code>Error</code> / <code>Result</code>; engine timers</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">C-ABI surface</h2>
+      <p class="note">The <code>ztranslator-capi</code> crate exports 4 <code>extern "C"</code> symbols; <code>zt_invoke</code> dispatches 37 distinct <code>ztr_*</code> commands.</p>
+      <pre class="code">void  zt_set_event_callback(void (*cb)(const char* event_json));
+char* zt_init(void);
+char* zt_invoke(const char* cmd, const char* args_json);
+void  zt_string_free(char* s);</pre>
+      <p class="note">Dispatch commands cover lifecycle (<code>ztr_engine_start</code> · <code>ztr_engine_stop</code> · <code>ztr_panic</code>), ports / routes (<code>ztr_list_ports</code> · <code>ztr_open_input</code> · <code>ztr_open_output</code> · <code>ztr_create_virtual_input</code> · <code>ztr_set_route</code>), projects &amp; rules (<code>ztr_set_project</code> · <code>ztr_get_project</code> · <code>ztr_parse_rules</code> · <code>ztr_format_rules</code> · <code>ztr_save_json</code> · <code>ztr_load_json</code>), and the non-MIDI sources (<code>ztr_open_osc_input</code> · <code>ztr_open_artnet_input</code> · <code>ztr_watch_path</code> · <code>ztr_open_serial_input</code> · <code>ztr_open_gamepad_input</code> · <code>ztr_open_http_input</code> · <code>ztr_open_ws_input</code> · <code>ztr_open_mqtt_input</code> · <code>ztr_open_hid_input</code> · <code>ztr_open_schedule</code> · <code>ztr_open_sysevent</code> · <code>ztr_open_sacn_input</code> · <code>ztr_open_tcp_input</code> · <code>ztr_open_audio_input</code> · <code>ztr_open_link_input</code> · <code>ztr_open_rtpmidi_input</code> · <code>ztr_open_cv_output</code> · <code>ztr_inject_sysevent</code> · <code>ztr_close_source</code>).</p>
+
+      <h2 class="reg-h">Dependency footprint</h2>
+      <p class="note">23 direct dependencies, all pure-Rust / foundational. Trigger and transport crates: <code>midir</code> (MIDI), <code>rosc</code> (OSC), <code>serialport</code>, <code>notify</code> (file watch), <code>gilrs</code> (gamepad), <code>hidapi</code> (USB-HID), <code>tiny_http</code> / <code>ureq</code> / <code>tungstenite</code> / <code>rumqttc</code> (HTTP / WebSocket / MQTT), <code>cron</code> + <code>chrono</code> (schedules), <code>if-addrs</code> + <code>socket2</code> (network / sACN), <code>rusty_link</code> (Ableton Link). Art-Net DMX is decoded inline from a plain UDP packet — no crate. Data layer: <code>serde</code> + <code>serde_json</code>, <code>thiserror</code>, <code>crossbeam-channel</code>. The OS-control executors and audio input are gated to <code>cfg(target_os = "macos")</code> (<code>core-graphics</code>, <code>core-foundation</code>, <code>foreign-types</code>, <code>cpal</code>) so the cross-platform build stays dependency-clean.</p>
+
+      <h2 class="reg-h">Verification</h2>
+      <p class="note">65 test functions: 33 integration tests across <code>tests/bmtp_import.rs</code>, <code>tests/engine_pipeline.rs</code>, and <code>tests/rules_vm.rs</code>, plus 32 inline <code>#[test]</code> functions in the engine source. The BOME importer is driven against real <code>.bmtp</code> fixtures (Note Transpose, Controller Value Scaling, Simple Arpeggiator, Conditional MIDI mapping, one-shot timer, and an Ableton project). The rules suite exercises the integer VM's arithmetic / bitwise ops, conditionals, jumps, and execute / ignore outcomes; the pipeline suite drives the engine end to end. The deterministic core builds and runs in a headless Linux CI; macOS-only OS-control paths no-op off macOS.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; ztranslator-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
