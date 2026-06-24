@@ -7,8 +7,8 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-113-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-24_core-cyan.svg)](#tier-1--core-24)
+[![Submodules](https://img.shields.io/badge/submodules-114-blue.svg)](#0x01-submodule-map)
+[![Tier 1](https://img.shields.io/badge/tier_1-25_core-cyan.svg)](#tier-1--core-25)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 113 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 114 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -34,7 +34,7 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (24)](#tier-1--core-24)
+  - [Tier 1 — Core (25)](#tier-1--core-25)
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 113 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 114 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,9 +81,9 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 113 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 114 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (24)
+### Tier 1 — Core (25)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -113,6 +113,7 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`zemail-core`](https://github.com/MenkeTechnologies/zemail-core) | **Embeddable mail engine** (pure Rust, no GUI deps) extracted from `zemail` so the same engine embeds across the GUI stack. **Private.** &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zemail-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zemail-core/report)</sub> |
 | [`zoffice`](https://github.com/MenkeTechnologies/zoffice) | **Office suite replacing Microsoft Office** (Rust, Tauri v2 desktop app) — documents, spreadsheets, presentations. Consumes `zoffice-core`. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice/report)</sub> |
 | [`zoffice-core`](https://github.com/MenkeTechnologies/zoffice-core) | **Embeddable office engine** (pure Rust, no GUI deps) — document / spreadsheet / presentation parse + edit, extracted from `zoffice`. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice-core/report)</sub> |
+| [`ztranslator-core`](https://github.com/MenkeTechnologies/ztranslator-core) | **Embeddable event-translation engine** (pure Rust, no GUI deps) — the real-time MIDI / OSC / DMX / file-watcher routing engine behind `ztranslator`; integer-VM rule matching, BOME `.bmtp` import/export, JSON projects. Builds `rlib` + `staticlib` + `cdylib` so the same routing engine embeds across the GUI stack. |
 
 ### Tier 2 — Stryke ecosystem + tap (32)
 
