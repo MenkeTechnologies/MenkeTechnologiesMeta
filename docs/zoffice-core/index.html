@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zoffice-core — the embeddable pure-Rust office engine behind zoffice. Document, spreadsheet, and presentation parse + edit for ODF and OOXML, with no GUI and no platform deps. Links natively into Rust/Tauri hosts and over a C ABI elsewhere.">
+  <title>zoffice-core — Embeddable Office Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+    .card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); padding: 14px 16px; }
+    .card h3 { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 13px; letter-spacing: 1px; margin: 0 0 6px; }
+    .card p { color: var(--text-dim); font-size: 12.5px; line-height: 1.6; margin: 0; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    table.apps { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; margin: 6px 0 4px; }
+    table.apps th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    table.apps td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    table.apps td:first-child { color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZOFFICE-CORE // EMBEDDABLE OFFICE ENGINE</h1>
+          <div class="docs-sub">// pure-Rust parse + edit for documents · spreadsheets · presentations — the core behind zoffice, embeddable in any host GUI</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="report.html">Engineering Report</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zoffice-core" target="_blank" rel="noopener noreferrer">Source</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="lede">zoffice-core is the embeddable engine behind <strong>zoffice</strong>, the cyberpunk desktop office suite. It owns the document models — Writer, Calc, Impress, Draw, Math, Base — and the open / read / save operations for ODF and OOXML packages, with no GUI and no platform dependencies, so the desktop app and every embed (traderview and the other MenkeTechnologies apps) share the exact same code. Every office format is an OPC/ODF ZIP of XML parts, so the whole reader surface rides two pure-Rust crates (<code>zip</code>, <code>quick-xml</code>): no LibreOffice/UNO runtime, no C++ FFI, no AGPL — clean to ship inside a paid, closed-source host.</p>
+
+      <p class="lede"><strong>Early-stage.</strong> The readers for the document, spreadsheet, presentation, drawing, and formula apps parse real ODF/OOXML packages today; editing, saving, formula evaluation, and the database backend are typed <code>NotImplemented</code> stubs that the engineering report tracks honestly. See the <a href="report.html">engineering report</a> for what exists now versus what is planned.</p>
+
+      <div class="card-grid">
+        <div class="card"><h3>Embeddable</h3><p>Links as an <code>rlib</code> into Rust/Tauri hosts and over a C ABI (<code>staticlib</code>/<code>cdylib</code>) elsewhere. One FFI call: a command name plus a JSON argument string returns a JSON string.</p></div>
+        <div class="card"><h3>Pure Rust</h3><p>Two crates for the package layer (<code>zip</code>, <code>quick-xml</code>) plus serde/thiserror. Durable, vendorable, no native toolchain, no copyleft, no UNO runtime.</p></div>
+        <div class="card"><h3>Honest Coverage</h3><p>A capability counts as done only when a real engine symbol exists; stubs return a typed error rather than panicking or silently succeeding. Status is derived from source, not asserted.</p></div>
+      </div>
+
+      <h2 class="reg-h">The six apps</h2>
+      <table class="apps">
+        <thead><tr><th>app</th><th>LibreOffice / Microsoft</th><th>ODF reads</th><th>OOXML reads</th></tr></thead>
+        <tbody>
+          <tr><td>writer</td><td>Writer / Word</td><td>.odt</td><td>.docx</td></tr>
+          <tr><td>calc</td><td>Calc / Excel</td><td>.ods</td><td>.xlsx</td></tr>
+          <tr><td>impress</td><td>Impress / PowerPoint</td><td>.odp</td><td>.pptx</td></tr>
+          <tr><td>draw</td><td>Draw / —</td><td>.odg</td><td>—</td></tr>
+          <tr><td>math</td><td>Math / —</td><td>.odf</td><td>—</td></tr>
+          <tr><td>base</td><td>Base / Access</td><td>.odb (stub)</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Quick start (Rust host)</h2>
+      <pre class="code">use zoffice_core::{Document, Engine};
+use serde_json::json;
+
+// Typed module API.
+let doc = Document::open('report.docx')?;
+println!('{} paragraphs, {} words', doc.paragraph_count(), doc.word_count());
+println!('{}', doc.plain_text());
+
+// Or the JSON dispatcher the FFI and Tauri hosts call.
+let engine = Engine::new();
+let out = engine.invoke('writer.text', &json!({ 'path': 'report.docx' }))?;</pre>
+
+      <h2 class="reg-h">From a C host</h2>
+      <pre class="code">/* one call across the C ABI: command + JSON args -> JSON string */
+char *out = zoffice_invoke('calc.cells', '{\"path\":\"budget.xlsx\"}');
+/* ... use out ... */
+zoffice_string_free(out);</pre>
+      <p class="lede">The C ABI is exposed in the <code>staticlib</code>/<code>cdylib</code> artifacts and absent from the Rust <code>rlib</code> public API. Any failure comes back as the engine's <code>{"error":{"tag":...,"message":...}}</code> envelope, so a C caller never inspects a separate status code.</p>
+
+      <h2 class="reg-h">Where it goes next</h2>
+      <p class="lede">See the <a href="report.html">engineering report</a> for the module map, dependency footprint, and test status, and the project repos: <a href="https://github.com/MenkeTechnologies/zoffice-core" target="_blank" rel="noopener noreferrer">zoffice-core</a> and the umbrella <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a>.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zoffice-core &middot; embeddable pure-Rust office engine</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,1257 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light">
+<meta name="description" content="zoffice — LibreOffice / Microsoft Office feature port report: 32 of 105 capabilities implemented in the zoffice-core engine.">
+<title>zoffice — LibreOffice/MS Office → zoffice-core Port Report (105 features)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../hud-static.css"><style>
+.docs-main { max-width: 82rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+.reality { border: 1px solid var(--accent); border-radius: 6px; background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 14px 18px; margin: 8px 0 18px; }
+.reality-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 13px; letter-spacing: 1px; margin: 0 0 8px; }
+.reality-d { color: var(--text); font-size: 13px; line-height: 1.7; } .reality-d b { color: var(--cyan); }
+.store-hero { margin: 14px 0 20px; }
+.hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+.hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+.hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+.bar-wrap { border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 12px 14px; margin: 0 0 18px; }
+.cat { display: grid; grid-template-columns: 200px 1fr 84px; align-items: center; gap: 10px; padding: 3px 0; }
+.cat-n { font-family: 'Share Tech Mono', monospace; color: var(--text); font-size: 12px; }
+.cat-bar { height: 11px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; display: flex; }
+.cat-bar .d { background: var(--green); height: 100%; } .cat-bar .s { background: #f0e14a; height: 100%; } .cat-bar .p { background: color-mix(in srgb, var(--accent) 45%, transparent); height: 100%; }
+.cat-pct { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 12px; text-align: right; }
+.reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 22px 0 10px; }
+.blk-controls { display: flex; align-items: center; gap: 10px; margin: 8px 0 12px; }
+.blk-search { flex: 1; padding: 9px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+.blk-count { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-primary); z-index: 2; cursor: pointer; user-select: none; white-space: nowrap; }
+th:hover { color: var(--accent); } th[data-sort]::after { content: attr(data-sort); color: var(--accent); margin-left: 5px; }
+td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.ft { color: var(--text); font-weight: 700; } .src { color: var(--text-dim); } .mod { color: var(--cyan); } .via { color: var(--text-dim); font-size: 11px; }
+.bdg { font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 2px 7px; border-radius: 3px; border: 1px solid; white-space: nowrap; }
+.bdg.done { color: var(--green); border-color: var(--green); }
+.bdg.stub { color: #f0e14a; border-color: #f0e14a; }
+.bdg.planned { color: var(--text-dim); border-color: var(--border); }
+.doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+@media print { .docs-header-actions, .crt-scanline, .crt-scanline-v { display: none !important; } }
+</style></head><body>
+<div class="app" id="docsApp">
+<div class="crt-scanline" id="crtH" aria-hidden="true"></div><div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+<header class="docs-header"><div class="docs-header-inner"><div class="docs-title-block">
+<h1>LIBREOFFICE / MS OFFICE // ZOFFICE-CORE PORT REPORT</h1>
+<div class="docs-sub">// every Writer/Calc/Impress/Draw/Math/Base capability mapped to the zoffice-core engine symbol that implements it — status derived from source, not declared.</div>
+<div class="docs-build-line">105 features &middot; 32 implemented (30%) &middot; 18 stubbed &middot; 55 planned &middot; generated 2026-06-24</div>
+</div><div class="docs-header-actions"><div class="docs-toolbar">
+<button class="btn btn-secondary" id="btnTheme" type="button">Light</button>
+<button class="btn btn-secondary active" id="btnCrt" type="button">CRT</button>
+<button class="btn btn-secondary active" id="btnNeon" type="button">Neon</button>
+<a class="btn btn-secondary" href="index.html">Home</a>
+</div></div></div></header><main class="docs-main">
+<script id="port-report-data" type="application/json">
+{
+  &quot;generated&quot;: &quot;2026-06-24&quot;,
+  &quot;stats&quot;: {
+    &quot;total&quot;: 105,
+    &quot;done&quot;: 32,
+    &quot;stub&quot;: 18,
+    &quot;planned&quot;: 55,
+    &quot;coverage_pct&quot;: 30.5
+  },
+  &quot;features&quot;: [
+    {
+      &quot;feature&quot;: &quot;Open .odt (ODF Text)&quot;,
+      &quot;source&quot;: &quot;Writer&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;read_odt&quot;,
+      &quot;note&quot;: &quot;content.xml text:p&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::read_odt&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open .docx (WordprocessingML)&quot;,
+      &quot;source&quot;: &quot;Word&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;read_docx&quot;,
+      &quot;note&quot;: &quot;word/document.xml w:p/w:t&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::read_docx&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open .ods (ODF Spreadsheet)&quot;,
+      &quot;source&quot;: &quot;Calc&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;read_ods&quot;,
+      &quot;note&quot;: &quot;content.xml table:table&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::read_ods&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open .xlsx (SpreadsheetML)&quot;,
+      &quot;source&quot;: &quot;Excel&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;read_xlsx&quot;,
+      &quot;note&quot;: &quot;sharedStrings + sheetN&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::read_xlsx&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open .odp (ODF Presentation)&quot;,
+      &quot;source&quot;: &quot;Impress&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;read_odp&quot;,
+      &quot;note&quot;: &quot;content.xml draw:page&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;impress::read_odp&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open .pptx (PresentationML)&quot;,
+      &quot;source&quot;: &quot;PowerPoint&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;read_pptx&quot;,
+      &quot;note&quot;: &quot;ppt/slides/slideN a:t&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;impress::read_pptx&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open .odg (ODF Graphics)&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;read_odg&quot;,
+      &quot;note&quot;: &quot;content.xml draw:page&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;draw::read_odg&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open .odf (ODF Formula)&quot;,
+      &quot;source&quot;: &quot;Math&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;math&quot;,
+      &quot;symbol&quot;: &quot;read_odf&quot;,
+      &quot;note&quot;: &quot;MathML + StarMath annotation&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;math::read_odf&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open .odb (ODF Database)&quot;,
+      &quot;source&quot;: &quot;Base&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;base&quot;,
+      &quot;symbol&quot;: &quot;open&quot;,
+      &quot;note&quot;: &quot;needs embedded SQL backend&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;base::open \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Auto-detect app by extension&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;app_for&quot;,
+      &quot;note&quot;: &quot;route a file to its app&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;lib::app_for&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Read OPC/ODF package part&quot;,
+      &quot;source&quot;: &quot;ODF,OOXML&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;read_part&quot;,
+      &quot;note&quot;: &quot;zip entry \u2192 UTF-8&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;format::read_part&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Enumerate package parts&quot;,
+      &quot;source&quot;: &quot;ODF,OOXML&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;list_parts&quot;,
+      &quot;note&quot;: &quot;slide/sheet enumeration&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;format::list_parts&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Save .docx&quot;,
+      &quot;source&quot;: &quot;Word&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;save_docx&quot;,
+      &quot;note&quot;: &quot;serializer&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;writer::save_docx \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Save .odt&quot;,
+      &quot;source&quot;: &quot;Writer&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;save_odt&quot;,
+      &quot;note&quot;: &quot;serializer&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;writer::save_odt \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Save .xlsx&quot;,
+      &quot;source&quot;: &quot;Excel&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;save_xlsx&quot;,
+      &quot;note&quot;: &quot;serializer&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;calc::save_xlsx \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Save .pptx&quot;,
+      &quot;source&quot;: &quot;PowerPoint&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;save_pptx&quot;,
+      &quot;note&quot;: &quot;serializer&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;impress::save_pptx \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Save .odg&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;save_odg&quot;,
+      &quot;note&quot;: &quot;serializer&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;draw::save_odg \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Export to PDF&quot;,
+      &quot;source&quot;: &quot;Writer,Calc,Impress&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;shared PDF backend (zpdf-core)&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Import legacy .doc (Word 97)&quot;,
+      &quot;source&quot;: &quot;Word&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;OLE2 binary&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Import legacy .xls (BIFF8)&quot;,
+      &quot;source&quot;: &quot;Excel&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;OLE2 binary&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Import legacy .ppt&quot;,
+      &quot;source&quot;: &quot;PowerPoint&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;OLE2 binary&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Import RTF&quot;,
+      &quot;source&quot;: &quot;Word&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Import/export CSV&quot;,
+      &quot;source&quot;: &quot;Calc&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Flat ODF (.fodt/.fods)&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;single-file XML, no zip&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Extract paragraph text&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;plain_text&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::plain_text&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Paragraph count&quot;,
+      &quot;source&quot;: &quot;Writer&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;paragraph_count&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::paragraph_count&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Word count&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;word_count&quot;,
+      &quot;note&quot;: &quot;status-bar word count&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::word_count&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Insert paragraph&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;insert_paragraph&quot;,
+      &quot;note&quot;: &quot;authoring&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;writer::insert_paragraph \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Edit paragraph text&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;edit_paragraph&quot;,
+      &quot;note&quot;: &quot;authoring&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;writer::edit_paragraph \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Character run formatting (bold/italic)&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;run model&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Paragraph styles&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;styles.xml&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Tables&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;table:table / w:tbl&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Lists &amp; numbering&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Headers &amp; footers&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Footnotes &amp; endnotes&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Comments / annotations&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Track changes&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;redline model&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Table of contents&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;field/index&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Find &amp; replace&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Mail merge&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Embedded images&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Hyperlinks &amp; bookmarks&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Spell check&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;dictionary backend&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Read sheet names&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;read_xlsx&quot;,
+      &quot;note&quot;: &quot;workbook.xml&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::read_xlsx&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Sheet count&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;sheet_count&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::sheet_count&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Populated cell count&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;cell_count&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::cell_count&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Resolve shared strings&quot;,
+      &quot;source&quot;: &quot;Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;read_xlsx&quot;,
+      &quot;note&quot;: &quot;t=\&quot;s\&quot; deref&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::read_xlsx&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;A1 cell references&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;read_ods&quot;,
+      &quot;note&quot;: &quot;computed for ODF&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::read_ods&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Set cell value&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;set_cell&quot;,
+      &quot;note&quot;: &quot;authoring&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;calc::set_cell \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Evaluate formula&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;evaluate&quot;,
+      &quot;note&quot;: &quot;formula engine&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;calc::evaluate \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Formula function library&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;SUM/VLOOKUP/etc&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Cell number formats&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;styles.xml&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Conditional formatting&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Charts&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;chart part&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Pivot tables&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Named ranges&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Data validation&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Sort &amp; filter&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Merged cells&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Frozen panes&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Read slides&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;read_pptx&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;impress::read_pptx&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Slide count&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;slide_count&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;impress::slide_count&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Extract slide text&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;plain_text&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;impress::plain_text&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Add slide&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;add_slide&quot;,
+      &quot;note&quot;: &quot;authoring&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;impress::add_slide \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Slide layouts &amp; masters&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;slideLayout/slideMaster&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Speaker notes&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;notesSlide&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Transitions&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Animations&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;timing tree&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Embedded media&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;audio/video&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Presenter / slideshow mode&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;host GUI&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Read drawing pages&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Draw&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;read_odg&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;draw::read_odg&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Page count&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Draw&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;page_count&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;draw::page_count&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Count shapes per page&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Draw&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;shape_count&quot;,
+      &quot;note&quot;: &quot;frame/rect/ellipse/\u2026&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;draw::shape_count&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Export page to SVG&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Draw&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;export_svg&quot;,
+      &quot;note&quot;: &quot;renderer&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;draw::export_svg \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Shape geometry model&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Draw&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;path/transform&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Connectors &amp; flowcharts&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Draw&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Layers&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Draw&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Bitmap fill / gradients&quot;,
+      &quot;source&quot;: &quot;Draw&quot;,
+      &quot;category&quot;: &quot;Draw&quot;,
+      &quot;module&quot;: &quot;draw&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Read MathML + StarMath&quot;,
+      &quot;source&quot;: &quot;Math&quot;,
+      &quot;category&quot;: &quot;Math&quot;,
+      &quot;module&quot;: &quot;math&quot;,
+      &quot;symbol&quot;: &quot;read_odf&quot;,
+      &quot;note&quot;: &quot;annotation StarMath 5.0&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;math::read_odf&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Render to StarMath source&quot;,
+      &quot;source&quot;: &quot;Math&quot;,
+      &quot;category&quot;: &quot;Math&quot;,
+      &quot;module&quot;: &quot;math&quot;,
+      &quot;symbol&quot;: &quot;to_starmath&quot;,
+      &quot;note&quot;: &quot;MathML\u2192StarMath&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;math::to_starmath \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Formula layout&quot;,
+      &quot;source&quot;: &quot;Math&quot;,
+      &quot;category&quot;: &quot;Math&quot;,
+      &quot;module&quot;: &quot;math&quot;,
+      &quot;symbol&quot;: &quot;layout&quot;,
+      &quot;note&quot;: &quot;bounding boxes&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;math::layout \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Formula editor UI&quot;,
+      &quot;source&quot;: &quot;Math&quot;,
+      &quot;category&quot;: &quot;Math&quot;,
+      &quot;module&quot;: &quot;math&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;host GUI&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Open database document&quot;,
+      &quot;source&quot;: &quot;Base&quot;,
+      &quot;category&quot;: &quot;Base&quot;,
+      &quot;module&quot;: &quot;base&quot;,
+      &quot;symbol&quot;: &quot;open&quot;,
+      &quot;note&quot;: &quot;embedded HSQLDB/Firebird&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;base::open \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;List tables&quot;,
+      &quot;source&quot;: &quot;Base&quot;,
+      &quot;category&quot;: &quot;Base&quot;,
+      &quot;module&quot;: &quot;base&quot;,
+      &quot;symbol&quot;: &quot;list_tables&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;base::list_tables \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Run SQL query&quot;,
+      &quot;source&quot;: &quot;Base&quot;,
+      &quot;category&quot;: &quot;Base&quot;,
+      &quot;module&quot;: &quot;base&quot;,
+      &quot;symbol&quot;: &quot;query&quot;,
+      &quot;note&quot;: &quot;SQL engine&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;base::query \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Forms &amp; reports&quot;,
+      &quot;source&quot;: &quot;Base&quot;,
+      &quot;category&quot;: &quot;Base&quot;,
+      &quot;module&quot;: &quot;base&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;External DB connectors&quot;,
+      &quot;source&quot;: &quot;Base&quot;,
+      &quot;category&quot;: &quot;Base&quot;,
+      &quot;module&quot;: &quot;base&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;JDBC/ODBC equivalents&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;JSON command dispatch&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;invoke&quot;,
+      &quot;note&quot;: &quot;FFI/Tauri boundary&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;lib::invoke&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Capability descriptor&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;info&quot;,
+      &quot;note&quot;: &quot;apps + formats&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;lib::info&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Typed error envelope&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;error&quot;,
+      &quot;symbol&quot;: &quot;to_envelope&quot;,
+      &quot;note&quot;: &quot;{error:{tag,message}}&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;error::to_envelope&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Stable machine error tags&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;error&quot;,
+      &quot;symbol&quot;: &quot;tag&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;stub&quot;,
+      &quot;via&quot;: &quot;error::tag \u2192 NotImplemented&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;C ABI invoke&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;ffi&quot;,
+      &quot;symbol&quot;: &quot;zoffice_invoke&quot;,
+      &quot;note&quot;: &quot;non-Rust hosts&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;ffi::zoffice_invoke&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;C ABI string free&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;ffi&quot;,
+      &quot;symbol&quot;: &quot;zoffice_string_free&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;ffi::zoffice_string_free&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Flatten inline runs to text&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;text_blocks&quot;,
+      &quot;note&quot;: &quot;shared XML walk&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;format::text_blocks&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Tauri command layer&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;wired in the app&#x27;s src-tauri&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Streaming/large-file mode&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;SAX over huge sheets&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Document diff&quot;,
+      &quot;source&quot;: &quot;zoffice&quot;,
+      &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Document properties / metadata&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;meta.xml / core.xml&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Digital signatures&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Document encryption&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Embedded fonts&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;format&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Basic / macro runtime&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;scripting&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Templates&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;.ott/.ots/.otp&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Print / page setup&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;host GUI&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Accessibility (tagged export)&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;planned&quot;,
+      &quot;via&quot;: &quot;no symbol yet&quot;
+    }
+  ]
+}
+</script>
+<section class="reality"><h3 class="reality-h">&#9888; What this report is</h3>
+<div class="reality-d">zoffice replaces the LibreOffice / Microsoft Office suite with a pure-Rust, embeddable, paid desktop product. This is a <b>function-presence</b> audit of the engine layer (<b>zoffice-core</b>), not the GUI. Status is <b>computed from source</b>, scoped to the named module: a feature is <b>DONE</b> only when its cited engine symbol exists in that module and is not a <code>NotImplemented</code> stub; <b>STUB</b> means the symbol exists but the body is not written yet; <b>PLANNED</b> means no symbol exists. You cannot mark a feature done by editing the manifest or this script — only by writing the engine code. Rendering, formula evaluation, and the database backend are deliberately staged after the durable document core.</div></section>
+<section class="store-hero"><div class="hero-stats">
+<div class="hero-stat"><span class="num">105</span><span class="lbl">features catalogued</span></div>
+<div class="hero-stat"><span class="num">32</span><span class="lbl">implemented (real)</span></div>
+<div class="hero-stat"><span class="num">18</span><span class="lbl">stubbed (symbol, no body)</span></div>
+<div class="hero-stat"><span class="num">55</span><span class="lbl">planned</span></div>
+<div class="hero-stat"><span class="num">30%</span><span class="lbl">engine coverage</span></div>
+<div class="hero-stat"><span class="num">9</span><span class="lbl">categories</span></div>
+</div></section>
+<h2 class="reg-h">By category</h2><div class="bar-wrap">
+<div class="cat"><span class="cat-n">Base</span><span class="cat-bar"><span class="d" style="width:0%"></span><span class="s" style="width:60%"></span><span class="p" style="width:40%"></span></span><span class="cat-pct">0/5</span></div>
+<div class="cat"><span class="cat-n">Calc</span><span class="cat-bar"><span class="d" style="width:29%"></span><span class="s" style="width:12%"></span><span class="p" style="width:59%"></span></span><span class="cat-pct">5/17</span></div>
+<div class="cat"><span class="cat-n">Core I/O</span><span class="cat-bar"><span class="d" style="width:46%"></span><span class="s" style="width:25%"></span><span class="p" style="width:29%"></span></span><span class="cat-pct">11/24</span></div>
+<div class="cat"><span class="cat-n">Cross-cutting</span><span class="cat-bar"><span class="d" style="width:0%"></span><span class="s" style="width:0%"></span><span class="p" style="width:100%"></span></span><span class="cat-pct">0/8</span></div>
+<div class="cat"><span class="cat-n">Draw</span><span class="cat-bar"><span class="d" style="width:38%"></span><span class="s" style="width:12%"></span><span class="p" style="width:50%"></span></span><span class="cat-pct">3/8</span></div>
+<div class="cat"><span class="cat-n">Engine &amp; Embedding</span><span class="cat-bar"><span class="d" style="width:60%"></span><span class="s" style="width:10%"></span><span class="p" style="width:30%"></span></span><span class="cat-pct">6/10</span></div>
+<div class="cat"><span class="cat-n">Impress</span><span class="cat-bar"><span class="d" style="width:30%"></span><span class="s" style="width:10%"></span><span class="p" style="width:60%"></span></span><span class="cat-pct">3/10</span></div>
+<div class="cat"><span class="cat-n">Math</span><span class="cat-bar"><span class="d" style="width:25%"></span><span class="s" style="width:50%"></span><span class="p" style="width:25%"></span></span><span class="cat-pct">1/4</span></div>
+<div class="cat"><span class="cat-n">Writer</span><span class="cat-bar"><span class="d" style="width:16%"></span><span class="s" style="width:11%"></span><span class="p" style="width:74%"></span></span><span class="cat-pct">3/19</span></div>
+</div>
+<h2 class="reg-h">Every feature</h2>
+<div class="blk-controls"><input id="q" class="blk-search" type="search" placeholder="// filter features: name, source, category, module, status (try 'done', 'stub', 'calc')..." autocomplete="off" spellcheck="false"><span class="blk-count" id="cnt"></span></div>
+<table id="tbl"><thead><tr><th>feature</th><th>source</th><th>category</th><th>engine module</th><th>status</th><th>resolves to</th></tr></thead><tbody>
+<tr data-h="open .odt (odf text) writer core i/o writer done"><td class="ft">Open .odt (ODF Text)</td><td class="src">Writer</td><td class="src">Core I/O</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::read_odt</td></tr>
+<tr data-h="open .docx (wordprocessingml) word core i/o writer done"><td class="ft">Open .docx (WordprocessingML)</td><td class="src">Word</td><td class="src">Core I/O</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::read_docx</td></tr>
+<tr data-h="open .ods (odf spreadsheet) calc core i/o calc done"><td class="ft">Open .ods (ODF Spreadsheet)</td><td class="src">Calc</td><td class="src">Core I/O</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::read_ods</td></tr>
+<tr data-h="open .xlsx (spreadsheetml) excel core i/o calc done"><td class="ft">Open .xlsx (SpreadsheetML)</td><td class="src">Excel</td><td class="src">Core I/O</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::read_xlsx</td></tr>
+<tr data-h="open .odp (odf presentation) impress core i/o impress done"><td class="ft">Open .odp (ODF Presentation)</td><td class="src">Impress</td><td class="src">Core I/O</td><td class="mod">impress</td><td><span class="bdg done">DONE</span></td><td class="via">impress::read_odp</td></tr>
+<tr data-h="open .pptx (presentationml) powerpoint core i/o impress done"><td class="ft">Open .pptx (PresentationML)</td><td class="src">PowerPoint</td><td class="src">Core I/O</td><td class="mod">impress</td><td><span class="bdg done">DONE</span></td><td class="via">impress::read_pptx</td></tr>
+<tr data-h="open .odg (odf graphics) draw core i/o draw done"><td class="ft">Open .odg (ODF Graphics)</td><td class="src">Draw</td><td class="src">Core I/O</td><td class="mod">draw</td><td><span class="bdg done">DONE</span></td><td class="via">draw::read_odg</td></tr>
+<tr data-h="open .odf (odf formula) math core i/o math done"><td class="ft">Open .odf (ODF Formula)</td><td class="src">Math</td><td class="src">Core I/O</td><td class="mod">math</td><td><span class="bdg done">DONE</span></td><td class="via">math::read_odf</td></tr>
+<tr data-h="open .odb (odf database) base core i/o base stub"><td class="ft">Open .odb (ODF Database)</td><td class="src">Base</td><td class="src">Core I/O</td><td class="mod">base</td><td><span class="bdg stub">STUB</span></td><td class="via">base::open → NotImplemented</td></tr>
+<tr data-h="auto-detect app by extension zoffice core i/o lib done"><td class="ft">Auto-detect app by extension</td><td class="src">zoffice</td><td class="src">Core I/O</td><td class="mod">lib</td><td><span class="bdg done">DONE</span></td><td class="via">lib::app_for</td></tr>
+<tr data-h="read opc/odf package part odf,ooxml core i/o format done"><td class="ft">Read OPC/ODF package part</td><td class="src">ODF,OOXML</td><td class="src">Core I/O</td><td class="mod">format</td><td><span class="bdg done">DONE</span></td><td class="via">format::read_part</td></tr>
+<tr data-h="enumerate package parts odf,ooxml core i/o format done"><td class="ft">Enumerate package parts</td><td class="src">ODF,OOXML</td><td class="src">Core I/O</td><td class="mod">format</td><td><span class="bdg done">DONE</span></td><td class="via">format::list_parts</td></tr>
+<tr data-h="save .docx word core i/o writer stub"><td class="ft">Save .docx</td><td class="src">Word</td><td class="src">Core I/O</td><td class="mod">writer</td><td><span class="bdg stub">STUB</span></td><td class="via">writer::save_docx → NotImplemented</td></tr>
+<tr data-h="save .odt writer core i/o writer stub"><td class="ft">Save .odt</td><td class="src">Writer</td><td class="src">Core I/O</td><td class="mod">writer</td><td><span class="bdg stub">STUB</span></td><td class="via">writer::save_odt → NotImplemented</td></tr>
+<tr data-h="save .xlsx excel core i/o calc stub"><td class="ft">Save .xlsx</td><td class="src">Excel</td><td class="src">Core I/O</td><td class="mod">calc</td><td><span class="bdg stub">STUB</span></td><td class="via">calc::save_xlsx → NotImplemented</td></tr>
+<tr data-h="save .pptx powerpoint core i/o impress stub"><td class="ft">Save .pptx</td><td class="src">PowerPoint</td><td class="src">Core I/O</td><td class="mod">impress</td><td><span class="bdg stub">STUB</span></td><td class="via">impress::save_pptx → NotImplemented</td></tr>
+<tr data-h="save .odg draw core i/o draw stub"><td class="ft">Save .odg</td><td class="src">Draw</td><td class="src">Core I/O</td><td class="mod">draw</td><td><span class="bdg stub">STUB</span></td><td class="via">draw::save_odg → NotImplemented</td></tr>
+<tr data-h="export to pdf writer,calc,impress core i/o lib planned"><td class="ft">Export to PDF</td><td class="src">Writer,Calc,Impress</td><td class="src">Core I/O</td><td class="mod">lib</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="import legacy .doc (word 97) word core i/o writer planned"><td class="ft">Import legacy .doc (Word 97)</td><td class="src">Word</td><td class="src">Core I/O</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="import legacy .xls (biff8) excel core i/o calc planned"><td class="ft">Import legacy .xls (BIFF8)</td><td class="src">Excel</td><td class="src">Core I/O</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="import legacy .ppt powerpoint core i/o impress planned"><td class="ft">Import legacy .ppt</td><td class="src">PowerPoint</td><td class="src">Core I/O</td><td class="mod">impress</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="import rtf word core i/o writer planned"><td class="ft">Import RTF</td><td class="src">Word</td><td class="src">Core I/O</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="import/export csv calc core i/o calc planned"><td class="ft">Import/export CSV</td><td class="src">Calc</td><td class="src">Core I/O</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="flat odf (.fodt/.fods) libreoffice core i/o format planned"><td class="ft">Flat ODF (.fodt/.fods)</td><td class="src">LibreOffice</td><td class="src">Core I/O</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="extract paragraph text writer,word writer writer done"><td class="ft">Extract paragraph text</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::plain_text</td></tr>
+<tr data-h="paragraph count writer writer writer done"><td class="ft">Paragraph count</td><td class="src">Writer</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::paragraph_count</td></tr>
+<tr data-h="word count writer,word writer writer done"><td class="ft">Word count</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::word_count</td></tr>
+<tr data-h="insert paragraph writer,word writer writer stub"><td class="ft">Insert paragraph</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg stub">STUB</span></td><td class="via">writer::insert_paragraph → NotImplemented</td></tr>
+<tr data-h="edit paragraph text writer,word writer writer stub"><td class="ft">Edit paragraph text</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg stub">STUB</span></td><td class="via">writer::edit_paragraph → NotImplemented</td></tr>
+<tr data-h="character run formatting (bold/italic) writer,word writer writer planned"><td class="ft">Character run formatting (bold/italic)</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="paragraph styles writer,word writer writer planned"><td class="ft">Paragraph styles</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="tables writer,word writer writer planned"><td class="ft">Tables</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="lists &amp; numbering writer,word writer writer planned"><td class="ft">Lists &amp; numbering</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="headers &amp; footers writer,word writer writer planned"><td class="ft">Headers &amp; footers</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="footnotes &amp; endnotes writer,word writer writer planned"><td class="ft">Footnotes &amp; endnotes</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="comments / annotations writer,word writer writer planned"><td class="ft">Comments / annotations</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="track changes writer,word writer writer planned"><td class="ft">Track changes</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="table of contents writer,word writer writer planned"><td class="ft">Table of contents</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="find &amp; replace writer,word writer writer planned"><td class="ft">Find &amp; replace</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="mail merge writer,word writer writer planned"><td class="ft">Mail merge</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="embedded images writer,word writer writer planned"><td class="ft">Embedded images</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="hyperlinks &amp; bookmarks writer,word writer writer planned"><td class="ft">Hyperlinks &amp; bookmarks</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="spell check writer,word writer writer planned"><td class="ft">Spell check</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="read sheet names calc,excel calc calc done"><td class="ft">Read sheet names</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::read_xlsx</td></tr>
+<tr data-h="sheet count calc,excel calc calc done"><td class="ft">Sheet count</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::sheet_count</td></tr>
+<tr data-h="populated cell count calc,excel calc calc done"><td class="ft">Populated cell count</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::cell_count</td></tr>
+<tr data-h="resolve shared strings excel calc calc done"><td class="ft">Resolve shared strings</td><td class="src">Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::read_xlsx</td></tr>
+<tr data-h="a1 cell references calc,excel calc calc done"><td class="ft">A1 cell references</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::read_ods</td></tr>
+<tr data-h="set cell value calc,excel calc calc stub"><td class="ft">Set cell value</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg stub">STUB</span></td><td class="via">calc::set_cell → NotImplemented</td></tr>
+<tr data-h="evaluate formula calc,excel calc calc stub"><td class="ft">Evaluate formula</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg stub">STUB</span></td><td class="via">calc::evaluate → NotImplemented</td></tr>
+<tr data-h="formula function library calc,excel calc calc planned"><td class="ft">Formula function library</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="cell number formats calc,excel calc calc planned"><td class="ft">Cell number formats</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="conditional formatting calc,excel calc calc planned"><td class="ft">Conditional formatting</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="charts calc,excel calc calc planned"><td class="ft">Charts</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="pivot tables calc,excel calc calc planned"><td class="ft">Pivot tables</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="named ranges calc,excel calc calc planned"><td class="ft">Named ranges</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="data validation calc,excel calc calc planned"><td class="ft">Data validation</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="sort &amp; filter calc,excel calc calc planned"><td class="ft">Sort &amp; filter</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="merged cells calc,excel calc calc planned"><td class="ft">Merged cells</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="frozen panes calc,excel calc calc planned"><td class="ft">Frozen panes</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="read slides impress,powerpoint impress impress done"><td class="ft">Read slides</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg done">DONE</span></td><td class="via">impress::read_pptx</td></tr>
+<tr data-h="slide count impress,powerpoint impress impress done"><td class="ft">Slide count</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg done">DONE</span></td><td class="via">impress::slide_count</td></tr>
+<tr data-h="extract slide text impress,powerpoint impress impress done"><td class="ft">Extract slide text</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg done">DONE</span></td><td class="via">impress::plain_text</td></tr>
+<tr data-h="add slide impress,powerpoint impress impress stub"><td class="ft">Add slide</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg stub">STUB</span></td><td class="via">impress::add_slide → NotImplemented</td></tr>
+<tr data-h="slide layouts &amp; masters impress,powerpoint impress impress planned"><td class="ft">Slide layouts &amp; masters</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="speaker notes impress,powerpoint impress impress planned"><td class="ft">Speaker notes</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="transitions impress,powerpoint impress impress planned"><td class="ft">Transitions</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="animations impress,powerpoint impress impress planned"><td class="ft">Animations</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="embedded media impress,powerpoint impress impress planned"><td class="ft">Embedded media</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="presenter / slideshow mode impress,powerpoint impress impress planned"><td class="ft">Presenter / slideshow mode</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="read drawing pages draw draw draw done"><td class="ft">Read drawing pages</td><td class="src">Draw</td><td class="src">Draw</td><td class="mod">draw</td><td><span class="bdg done">DONE</span></td><td class="via">draw::read_odg</td></tr>
+<tr data-h="page count draw draw draw done"><td class="ft">Page count</td><td class="src">Draw</td><td class="src">Draw</td><td class="mod">draw</td><td><span class="bdg done">DONE</span></td><td class="via">draw::page_count</td></tr>
+<tr data-h="count shapes per page draw draw draw done"><td class="ft">Count shapes per page</td><td class="src">Draw</td><td class="src">Draw</td><td class="mod">draw</td><td><span class="bdg done">DONE</span></td><td class="via">draw::shape_count</td></tr>
+<tr data-h="export page to svg draw draw draw stub"><td class="ft">Export page to SVG</td><td class="src">Draw</td><td class="src">Draw</td><td class="mod">draw</td><td><span class="bdg stub">STUB</span></td><td class="via">draw::export_svg → NotImplemented</td></tr>
+<tr data-h="shape geometry model draw draw draw planned"><td class="ft">Shape geometry model</td><td class="src">Draw</td><td class="src">Draw</td><td class="mod">draw</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="connectors &amp; flowcharts draw draw draw planned"><td class="ft">Connectors &amp; flowcharts</td><td class="src">Draw</td><td class="src">Draw</td><td class="mod">draw</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="layers draw draw draw planned"><td class="ft">Layers</td><td class="src">Draw</td><td class="src">Draw</td><td class="mod">draw</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="bitmap fill / gradients draw draw draw planned"><td class="ft">Bitmap fill / gradients</td><td class="src">Draw</td><td class="src">Draw</td><td class="mod">draw</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="read mathml + starmath math math math done"><td class="ft">Read MathML + StarMath</td><td class="src">Math</td><td class="src">Math</td><td class="mod">math</td><td><span class="bdg done">DONE</span></td><td class="via">math::read_odf</td></tr>
+<tr data-h="render to starmath source math math math stub"><td class="ft">Render to StarMath source</td><td class="src">Math</td><td class="src">Math</td><td class="mod">math</td><td><span class="bdg stub">STUB</span></td><td class="via">math::to_starmath → NotImplemented</td></tr>
+<tr data-h="formula layout math math math stub"><td class="ft">Formula layout</td><td class="src">Math</td><td class="src">Math</td><td class="mod">math</td><td><span class="bdg stub">STUB</span></td><td class="via">math::layout → NotImplemented</td></tr>
+<tr data-h="formula editor ui math math math planned"><td class="ft">Formula editor UI</td><td class="src">Math</td><td class="src">Math</td><td class="mod">math</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="open database document base base base stub"><td class="ft">Open database document</td><td class="src">Base</td><td class="src">Base</td><td class="mod">base</td><td><span class="bdg stub">STUB</span></td><td class="via">base::open → NotImplemented</td></tr>
+<tr data-h="list tables base base base stub"><td class="ft">List tables</td><td class="src">Base</td><td class="src">Base</td><td class="mod">base</td><td><span class="bdg stub">STUB</span></td><td class="via">base::list_tables → NotImplemented</td></tr>
+<tr data-h="run sql query base base base stub"><td class="ft">Run SQL query</td><td class="src">Base</td><td class="src">Base</td><td class="mod">base</td><td><span class="bdg stub">STUB</span></td><td class="via">base::query → NotImplemented</td></tr>
+<tr data-h="forms &amp; reports base base base planned"><td class="ft">Forms &amp; reports</td><td class="src">Base</td><td class="src">Base</td><td class="mod">base</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="external db connectors base base base planned"><td class="ft">External DB connectors</td><td class="src">Base</td><td class="src">Base</td><td class="mod">base</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="json command dispatch zoffice engine &amp; embedding lib done"><td class="ft">JSON command dispatch</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">lib</td><td><span class="bdg done">DONE</span></td><td class="via">lib::invoke</td></tr>
+<tr data-h="capability descriptor zoffice engine &amp; embedding lib done"><td class="ft">Capability descriptor</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">lib</td><td><span class="bdg done">DONE</span></td><td class="via">lib::info</td></tr>
+<tr data-h="typed error envelope zoffice engine &amp; embedding error done"><td class="ft">Typed error envelope</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">error</td><td><span class="bdg done">DONE</span></td><td class="via">error::to_envelope</td></tr>
+<tr data-h="stable machine error tags zoffice engine &amp; embedding error stub"><td class="ft">Stable machine error tags</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">error</td><td><span class="bdg stub">STUB</span></td><td class="via">error::tag → NotImplemented</td></tr>
+<tr data-h="c abi invoke zoffice engine &amp; embedding ffi done"><td class="ft">C ABI invoke</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">ffi</td><td><span class="bdg done">DONE</span></td><td class="via">ffi::zoffice_invoke</td></tr>
+<tr data-h="c abi string free zoffice engine &amp; embedding ffi done"><td class="ft">C ABI string free</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">ffi</td><td><span class="bdg done">DONE</span></td><td class="via">ffi::zoffice_string_free</td></tr>
+<tr data-h="flatten inline runs to text zoffice engine &amp; embedding format done"><td class="ft">Flatten inline runs to text</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">format</td><td><span class="bdg done">DONE</span></td><td class="via">format::text_blocks</td></tr>
+<tr data-h="tauri command layer zoffice engine &amp; embedding lib planned"><td class="ft">Tauri command layer</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">lib</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="streaming/large-file mode zoffice engine &amp; embedding format planned"><td class="ft">Streaming/large-file mode</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="document diff zoffice engine &amp; embedding lib planned"><td class="ft">Document diff</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">lib</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="document properties / metadata libreoffice cross-cutting format planned"><td class="ft">Document properties / metadata</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="digital signatures libreoffice cross-cutting format planned"><td class="ft">Digital signatures</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="document encryption libreoffice cross-cutting format planned"><td class="ft">Document encryption</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="embedded fonts libreoffice cross-cutting format planned"><td class="ft">Embedded fonts</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="basic / macro runtime libreoffice cross-cutting lib planned"><td class="ft">Basic / macro runtime</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">lib</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="templates libreoffice cross-cutting lib planned"><td class="ft">Templates</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">lib</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="print / page setup libreoffice cross-cutting lib planned"><td class="ft">Print / page setup</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">lib</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="accessibility (tagged export) libreoffice cross-cutting lib planned"><td class="ft">Accessibility (tagged export)</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">lib</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+</tbody></table>
+<footer class="doc-footer">MenkeTechnologies &middot; zoffice-core &middot; status derived from src/ — feature cannot be marked done without a real engine symbol</footer>
+</main></div><script src="../hud-theme.js"></script><script>
+var q=document.getElementById('q'),cnt=document.getElementById('cnt'),tbl=document.getElementById('tbl'),tb=tbl.tBodies[0],
+    rows=[].slice.call(tb.rows),ths=tbl.tHead.rows[0].cells,sortCol=-1,asc=true;
+function upd(){var t=q.value.trim().toLowerCase(),n=0;rows.forEach(function(r){var s=(!t||r.getAttribute('data-h').indexOf(t)>=0);r.style.display=s?'':'none';if(s)n++;});cnt.textContent=n+' / '+rows.length+' shown';}
+q.addEventListener('input',upd);
+for(var i=0;i<ths.length;i++){(function(ci){ths[ci].addEventListener('click',function(){
+  asc=(sortCol===ci)?!asc:true;sortCol=ci;
+  rows.sort(function(a,b){var x=a.cells[ci].textContent.trim().toLowerCase(),y=b.cells[ci].textContent.trim().toLowerCase();return (x<y?-1:x>y?1:0)*(asc?1:-1);});
+  var fr=document.createDocumentFragment();rows.forEach(function(r){fr.appendChild(r);});tb.appendChild(fr);
+  for(var k=0;k<ths.length;k++)ths[k].removeAttribute('data-sort');ths[ci].setAttribute('data-sort',asc?'▲':'▼');});})(i);}
+upd();
+</script></body></html>

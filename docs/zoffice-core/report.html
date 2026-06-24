@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zoffice-core engineering report — module map, dependency footprint, and test status for the embeddable pure-Rust office engine behind zoffice. Honest early-stage coverage: readers exist, editing and save are typed stubs.">
+  <title>zoffice-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZOFFICE-CORE // ENGINEERING REPORT</h1>
+          <div class="docs-sub">// module map · dependency footprint · test status</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="index.html">Home</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zoffice-core" target="_blank" rel="noopener noreferrer">Source</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <section class="hero-stats">
+        <div class="hero-stat"><span class="num">6</span><span class="lbl">office apps modeled</span></div>
+        <div class="hero-stat"><span class="num">8</span><span class="lbl">engine modules</span></div>
+        <div class="hero-stat"><span class="num">8</span><span class="lbl">integration tests</span></div>
+        <div class="hero-stat"><span class="num">0</span><span class="lbl">C++ / AGPL / UNO deps</span></div>
+      </section>
+      <p class="note"><strong>Early-stage, stated honestly.</strong> zoffice-core reads ODF and OOXML packages today; editing, saving, formula evaluation, presentation authoring, and the Base database backend are typed <code>Error::NotImplemented</code> stubs. The module map below marks exactly what is implemented now versus planned. Status is derived from the actual <code>fn</code> symbols in <code>src/</code> — a capability is done only once its body exists, and the test suite pins that every unimplemented capability returns a typed error rather than panicking or silently succeeding.</p>
+
+      <h2 class="reg-h">Module map</h2>
+      <table>
+        <thead><tr><th>module</th><th>implemented now</th><th>planned / stubbed</th></tr></thead>
+        <tbody>
+          <tr><td>writer</td><td>open .odt / .docx · paragraphs · plain_text · word_count</td><td>edit · save_docx / save_odt · styles</td></tr>
+          <tr><td>calc</td><td>open .ods / .xlsx · sheets · rows · cells · shared-string + ref resolution</td><td>evaluate (formulas) · save_xlsx · edit cells</td></tr>
+          <tr><td>impress</td><td>open .odp / .pptx · slides · per-slide text · plain_text</td><td>add_slide · edit · save</td></tr>
+          <tr><td>draw</td><td>open .odg · pages · shape counts</td><td>shape model · edit · save</td></tr>
+          <tr><td>math</td><td>open .odf · MathML + StarMath annotation extraction</td><td>to_starmath · layout</td></tr>
+          <tr><td>base</td><td>—</td><td>open .odb · list_tables · query (needs embedded SQL backend)</td></tr>
+          <tr><td>format</td><td>read_part · list_parts · text_blocks · ext (shared ZIP/XML substrate)</td><td>—</td></tr>
+          <tr><td>error</td><td>typed errors · JSON envelope · missing_arg helper</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <p class="note">The <code>lib</code> root adds the <code>Engine</code> JSON dispatcher (<code>info</code>, <code>open</code> auto-detect, and the per-app <code>&lt;app&gt;.open</code> / <code>.text</code> / <code>calc.cells</code> commands) plus <code>App</code> / <code>app_for</code> extension routing; <code>ffi</code> exposes the C ABI (<code>zoffice_invoke</code> / <code>zoffice_string_free</code>) in the staticlib/cdylib artifacts.</p>
+
+      <h2 class="reg-h">Dependency footprint</h2>
+      <table>
+        <thead><tr><th>crate</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td>zip</td><td>OPC/ODF package container (deflate, no system deps)</td></tr>
+          <tr><td>quick-xml</td><td>streaming XML reader over the package parts</td></tr>
+          <tr><td>serde · serde_json</td><td>model serialization + the JSON command boundary</td></tr>
+          <tr><td>thiserror</td><td>typed error enum</td></tr>
+          <tr><td>dirs</td><td>platform paths</td></tr>
+        </tbody>
+      </table>
+      <p class="note">No LibreOffice/UNO runtime, no C++ FFI, no copyleft. Crate types: <code>rlib</code> for native Rust/Tauri hosts; <code>staticlib</code> + <code>cdylib</code> for the C ABI. Two crates carry the whole reader/writer surface because every office document is a ZIP of XML parts.</p>
+
+      <h2 class="reg-h">Verification</h2>
+      <p class="note">The test suite builds minimal valid office packages in memory (ODF or OOXML — both are just ZIP-of-XML), writes each to a temp file, and drives the public API: docx and odt paragraph extraction, xlsx shared-string + cell-reference resolution, ods cell parsing with computed refs, pptx multi-slide text, odg page/shape counting, the <code>Engine</code> JSON dispatcher plus its <code>info</code> descriptor, and a guard that every unimplemented capability (<code>evaluate</code>, <code>save_xlsx</code>, <code>save_docx</code>, <code>add_slide</code>, <code>base.open</code>, unknown commands) returns a typed error. No external fixtures; runs identically in a headless Linux CI.</p>
+      <pre class="code">cargo test
+cargo build   # rlib + staticlib + cdylib</pre>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zoffice-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
