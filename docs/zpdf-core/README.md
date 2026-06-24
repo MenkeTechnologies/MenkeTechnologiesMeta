@@ -96,15 +96,12 @@ crate, mirroring how `zpwr-clip-engine` mounts its sequencer into each app.
 
 ## [0x04] PORT REPORT
 
-Coverage of the Adobe-Acrobat / Apple-Preview surface is audited honestly:
-`scripts/feature_map.json` lists every target capability, and
-`scripts/gen_port_report.py` **derives** each feature's status from `src/` — a
-feature is `DONE` only when its cited symbol exists and is not a `NotImplemented`
-stub. Status cannot be faked in the manifest; only by writing engine code.
-
-```sh
-python3 scripts/gen_port_report.py   # → docs/port_report.html
-```
+Coverage of the Adobe-Acrobat / Apple-Preview surface lives in the **[zpdf](https://github.com/MenkeTechnologies/zpdf)**
+app repo (the GUI is the product surface). Its generator scans this engine's `src/`
+and **derives** each feature's status from source — a feature is `DONE` only when its
+cited symbol exists here and is not a `NotImplemented` stub, so the number cannot be
+faked in a manifest, only by writing engine code. See the
+[feature port report](https://menketechnologies.github.io/zpdf/zpdf_port_report.html).
 
 ## [0x05] BUILD & TEST
 
