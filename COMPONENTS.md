@@ -79,6 +79,9 @@ _Last reconciled: 2026-06-24._
 - [ ] **office-core → every GUI app** (add submodule + Rust dep / C ABI + an office view)
 - [ ] **mail-core → every GUI app** (add submodule + Rust dep / C ABI + a mail view)
 - [ ] **pdf-core → every GUI app** (add submodule + Rust dep / C ABI + a PDF view)
+- [ ] **office-core → traderview** (add submodule + Rust dep / C ABI + an office view)
+- [ ] **mail-core → traderview** (add submodule + Rust dep / C ABI + a mail view)
+- [ ] **pdf-core → traderview** (add submodule + Rust dep / C ABI + a PDF view)
 - [ ] **zoffice / zemail / zpdf** (embed the standard component set + each other's `-core`; zoffice/zemail still scaffolds, zpdf is further along)
 
 ## Notes
