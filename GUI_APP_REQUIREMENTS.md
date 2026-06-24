@@ -2,8 +2,8 @@
 
 The shared baseline every MenkeTechnologies desktop GUI app must meet. The goal is a
 single recognizable product family: open any app and the command palette, terminal,
-hooks editor, filtering, tables, arrangement grid, and chrome behave identically.
-Divergence is a bug.
+hooks editor, filtering, tables, arrangement grid, file browser, and chrome behave
+identically. Divergence is a bug.
 
 This is a **conformance spec**, not a suggestion. Each requirement names the **canonical
 shared source** an app must consume — never a per-app reimplementation. Per the house
@@ -41,6 +41,7 @@ per app. `zpwr-embed-terminal/webui/terminal.js` is the reference pattern.
 | Fuzzy filter (fzf) | `zpwr-patch-core` `fzf` matcher (`fzfMatch`) | one matcher, reused by every filter + the palette |
 | Shared theme/styles | `zpwr-patch-core/webui/css/cyberpunk.css` (design tokens) | the cyberpunk shell + token variables |
 | Arrangement grid | `zpwr-clip-engine/webui/grid` (`createGrid`, `grid-core.js` + `domains/*.js`) | one renderer/model/interactions, N host-supplied domains |
+| File browser | `Audio-Haxor/frontend/js/file-browser.js` → promote to a shared submodule | multi-pane browser over a host-provided fs backend (shim) |
 
 ## Requirements
 
@@ -120,6 +121,23 @@ is driven entirely by a **domain** (`webui/grid/domains/*.js`). A domain supplie
   timeline; **ztranslator** → translations; **Audio-Haxor** → stryke on clips; synth/fx/midi-fx
   → the clip/automation lane for the plugin.
 
+### R10 — File browser (ported from Audio-Haxor)
+Every app embeds the Audio-Haxor **multi-pane file browser** — the same resizable panes,
+hidden-file toggle, rename/copy/move, keyboard navigation, and per-pane path persistence.
+It is the family's file surface (open/import/export, project/sample/asset browsing).
+
+- The browser is **promoted to a shared module** (mirror `zpwr-embed-terminal`): one source,
+  vendored into every app — never re-forked. Today it lives only in
+  `Audio-Haxor/frontend/js/file-browser.js`; it must move to a shared submodule.
+- Filesystem access goes through a **host-provided backend behind a transport shim**, the
+  same way the terminal abstracts its PTY. The host supplies the fs ops
+  (`listDirectory`, `renameFile`, copy/move/delete, …); Tauri routes them to `invoke`,
+  JUCE to a native function. The shared module never calls a host-specific API directly.
+- State persists via `window.prefs` (the R3 contract): pane count, paths, active pane,
+  per-pane flex widths.
+- Panes and columns are **resizable** and filtering is **fuzzy** — reuse R7 (fzf) and R8
+  (resizable/sortable) rather than the browser's own one-off implementations.
+
 ## Host substrate notes
 
 ### Tauri apps
@@ -160,7 +178,7 @@ is driven entirely by a **domain** (`webui/grid/domains/*.js`). A domain supplie
 
 ## Conformance checklist
 
-Per app, all nine must be true:
+Per app, all ten must be true:
 
 - [ ] R1 Command palette (Cmd+K), palette matcher = shared fzf
 - [ ] R2 Stryke Hooks editor (shared `zpwr-hooks-editor`)
@@ -171,6 +189,7 @@ Per app, all nine must be true:
 - [ ] R7 All filters fuzzy (fzf) with matched-char highlight
 - [ ] R8 All tables sortable + resizable columns (shared table component)
 - [ ] R9 Arrangement grid embedded (shared `zpwr-clip-engine` `createGrid` + app domain)
+- [ ] R10 File browser embedded (shared module ported from Audio-Haxor, fs backend via shim)
 
 ### Known conformance gaps (close these)
 
@@ -184,3 +203,8 @@ Per app, all nine must be true:
 - **Tables and fuzzy filters are reused ad hoc**, not yet through one shared component each.
   Promote the fzf matcher and a table component to shared modules and route every instance
   through them.
+- **File browser exists only in Audio-Haxor** (`frontend/js/file-browser.js`) and calls
+  Tauri `vstUpdater` fs commands directly. Promote it to a shared submodule behind a
+  backend shim (Tauri `invoke` / JUCE native fn), then embed it in the other six apps.
+- **Arrangement grid is embedded only in zpwr-daw.** The other six apps need a domain +
+  `createGrid` embed (R9).
