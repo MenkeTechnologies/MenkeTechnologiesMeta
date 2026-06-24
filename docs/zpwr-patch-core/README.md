@@ -16,7 +16,7 @@
 
 > *"Knows nothing about audio or MIDI."*
 
-The signal-agnostic **modular patch graph** behind the MenkeTechnologies plugin stack — the cable routing system shared by **zpwr-fx**, **zpwr-synth**, and **zpwr-midi-fx**. Created by MenkeTechnologies.
+The signal-agnostic **modular patch graph** behind the MenkeTechnologies plugin stack — the cable routing system shared by **zpwr-fx**, **zpwr-synth**, **zpwr-midi-fx**, and **zpwr-daw**. Created by MenkeTechnologies.
 
 ### [`zpwr-fx`](https://github.com/MenkeTechnologies/zpwr-fx) · [`zpwr-synth`](https://github.com/MenkeTechnologies/zpwr-synth) · [`zpwr-midi-fx`](https://github.com/MenkeTechnologies/zpwr-midi-fx)
 

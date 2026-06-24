@@ -202,7 +202,7 @@ build/gen_reference docs/reference.html
 scripts/reference_pdf.sh
 ```
 
-The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared by all three plugins; per-module docs come from each block's `description`/`category` metadata.
+The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared by all four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw); per-module docs come from each block's `description`/`category` metadata.
 
 ---
 
