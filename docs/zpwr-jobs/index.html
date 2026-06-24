@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-jobs — a stryke job-application management pipeline. Manages resumes, cover letters, and job postings; renders tailored cover letters to docx + pdf via stryke-office, no LibreOffice required.">
+  <title>zpwr-jobs — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 30%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .tree { font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text-dim); line-height: 1.55; }
+    .tree b { color: var(--cyan); font-weight: 400; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-JOBS &mdash; JOB-APPLICATION MANAGEMENT PIPELINE // RESUMES + COVER LETTERS + POSTINGS</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke project &middot; <code>s run</code> &rarr; <code>main.stk</code> (AI-draft + render) &middot; renders via <code>use Office</code> &middot; native (no LibreOffice/soffice/python)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZPWR-JOBS</h2>
+      <p class="tutorial-subtitle"><strong>A private job-application management pipeline built on stryke.</strong> One repo holds every application: the resume, each company's posting, the tailored cover-letter prose, and the rendered <code>docx</code> + <code>pdf</code> deliverables. Drop a posting and run <code>s run</code> &mdash; it AI-drafts the letter (stryke's <code>ai</code> builtin), renders both formats via <code>stryke-office</code>, and opens the result. Letters can also be hand-written; the render path is pure native Rust &mdash; no LibreOffice, no <code>soffice</code>, no python.</p>
+
+      <section class="tutorial-section">
+        <h2>What it manages</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Identity</td><td><code>config.toml</code> at the repo root &mdash; <code>username</code> (the output-filename token) plus the letterhead: <code>name</code>, two contact lines, and the accent color.</td></tr>
+            <tr><td>Resume</td><td><code>resume.txt</code> at the repo root &mdash; the single source of candidate facts and the visual style every letter matches (serif throughout, cyan <code>#26ADE4</code> section bars).</td></tr>
+            <tr><td>Job postings</td><td>one per application at <code>jobs/&lt;JOB&gt;/job_desc.txt</code> &mdash; the raw posting, kept for reference and as the tailoring source.</td></tr>
+            <tr><td>Cover letters</td><td>tailored prose at <code>jobs/&lt;JOB&gt;/letter.txt</code>; rendered to <code>jobs/&lt;JOB&gt;/&lt;Company&gt;_JacobMenke.docx</code> and <code>.pdf</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre class="tree">zpwr-jobs/
+  <b>stryke.toml</b>                    # stryke project manifest ([package], [bin], [scripts])
+  <b>config.toml</b>                    # username + letterhead (identity)
+  <b>resume.txt</b>                     # candidate facts + style reference
+  <b>main.stk</b>                       # `s run` entry — scan jobs, AI-draft, render, open
+  <b>cover_letter_pipeline.stk</b>      # the renderer (stryke + stryke-office)
+  <b>draft_letter.stk</b>              # AI letter drafter (the `ai` builtin)
+  lib/<b>CoverLetter.stk</b>            # pure text + parse helpers (unit-tested)
+  t/                             # unit tests — `s test` (stryke only, runs in CI)
+  docs/                          # this HUD documentation
+  jobs/
+    &lt;JOB&gt;/
+      <b>job_desc.txt</b>             # the raw posting  (input)
+      <b>letter.txt</b>               # tailored letter (input, or AI-drafted)
+      &lt;Company&gt;_&lt;user&gt;.docx       # rendered deliverable (output)
+      &lt;Company&gt;_&lt;user&gt;.pdf        # rendered deliverable (output)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Architecture</h2>
+        <p>The renderer is one stryke script: four file inputs collapse into a single block model, which <code>stryke-office</code> emits as both formats; a one-page guard gates every write. The render path is pure native Rust &mdash; no <code>soffice</code>, no python, no network. Drafting <code>letter.txt</code> with the <code>ai</code> builtin is a separate, optional upstream step (<code>draft_letter.stk</code>); <code>main.stk</code> orchestrates draft + render for <code>s run</code> (see <em>Run it</em>).</p>
+        <div class="arch" role="img" aria-label="Data-flow: config.toml, resume.txt, letter.txt and job_desc.txt feed cover_letter_pipeline.stk (getopts plus toml_decode, parse plus mustache, content guards, block model); stryke-office renders that model to docx via doc_write and pdf via pdf_build behind a one-page guard, producing Company_user.docx and .pdf.">
+
+          <div class="arch-stage">
+            <span class="arch-label">inputs</span>
+            <div class="arch-row">
+              <div class="arch-node n-in"><b>config.toml</b><span>identity + settings</span></div>
+              <div class="arch-node n-in"><b>resume.txt</b><span>facts + style</span></div>
+              <div class="arch-node n-in"><b>letter.txt</b><span>tailored prose</span></div>
+              <div class="arch-node n-in n-ref"><b>job_desc.txt</b><span>posting (reference)</span></div>
+            </div>
+          </div>
+
+          <div class="arch-arrow" aria-hidden="true">&#9660;</div>
+
+          <div class="arch-stage">
+            <span class="arch-label">pipeline &mdash; <code>cover_letter_pipeline.stk</code></span>
+            <div class="arch-row arch-steps">
+              <div class="arch-node n-pipe"><b>getopts + toml_decode</b><span>CLI &gt; toml &gt; default</span></div>
+              <div class="arch-step-arrow" aria-hidden="true">&rarr;</div>
+              <div class="arch-node n-pipe"><b>parse + mustache</b><span>headers + body &rarr; {{fill}}</span></div>
+              <div class="arch-step-arrow" aria-hidden="true">&rarr;</div>
+              <div class="arch-node n-pipe"><b>content guards</b><span>min/max words, paras</span></div>
+              <div class="arch-step-arrow" aria-hidden="true">&rarr;</div>
+              <div class="arch-node n-pipe"><b>block model</b><span>one structured model</span></div>
+            </div>
+          </div>
+
+          <div class="arch-arrow" aria-hidden="true">&#9660;</div>
+
+          <div class="arch-stage">
+            <span class="arch-label">render &mdash; stryke-office (native Rust)</span>
+            <div class="arch-row">
+              <div class="arch-node n-render"><b>Office::doc_write</b><span>Cambria, shaded bars &rarr; docx</span></div>
+              <div class="arch-node n-render"><b>Office::pdf_build</b><span>Times, absolute layout &rarr; pdf</span></div>
+            </div>
+            <div class="arch-gate">one-page guard &mdash; aborts the write (emits nothing) if content overflows the page</div>
+          </div>
+
+          <div class="arch-arrow" aria-hidden="true">&#9660;</div>
+
+          <div class="arch-stage">
+            <span class="arch-label">outputs &mdash; <code>jobs/&lt;JOB&gt;/</code></span>
+            <div class="arch-row">
+              <div class="arch-node n-out"><b>&lt;Company&gt;_&lt;user&gt;.docx</b></div>
+              <div class="arch-node n-out"><b>&lt;Company&gt;_&lt;user&gt;.pdf</b></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Run it</h2>
+        <p>The whole workflow: drop a posting in as <code>jobs/&lt;JOB&gt;/job_desc.txt</code>, then run <code>s run</code>. Bare <code>s run</code> scans every job and brings it up to date &mdash; <em>letter missing</em> &rarr; AI-draft then render; <em>pdf missing or older than the letter</em> &rarr; render; otherwise skip &mdash; then opens what it rendered (or, when nothing needed work, the most recently modified letter by mtime). It is idempotent.</p>
+<pre># 1) create jobs/&lt;JOB&gt;/job_desc.txt   2) run:
+s run                         # process all jobs; open results (newest by mtime)
+s run main.stk &lt;JOB&gt;          # one job; opens it even if already up to date
+
+# individual steps (stryke.toml [scripts] aliases; trailing args forwarded):
+s run gen   &lt;JOB&gt;             # render an existing letter.txt only (no AI)
+s run draft &lt;JOB&gt;             # AI-draft letter.txt only (no render)
+s run apply &lt;JOB&gt;             # AI-draft AND render one job
+s run gen reuters -f docx -p a4   # flags pass straight through
+s test                        # run the unit tests in t/</pre>
+        <p>The renderer requires <a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> installed (<code>s pkg install -g github.com/MenkeTechnologies/stryke-office</code>). AI drafting uses stryke's <code>ai</code> builtin (Anthropic) and needs <code>ANTHROPIC_API_KEY</code>; <code>apply</code> redrafts shorter (up to 3&times;) if a draft overflows one page. The <code>s test</code> suite needs only stryke (no stryke-office, no rendering), so it runs in headless CI.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Settings &amp; CLI</h2>
+        <p>Behavior is set in <code>config.toml</code> (parsed by stryke's native <code>toml_decode</code> &mdash; keep comments on their own lines, since a trailing <code>#&nbsp;&hellip;</code> is kept as part of the value) and overridable per run on the CLI via stryke's <code>getopts</code> builtin (CLI wins). Flags may go before or after <code>&lt;JOB&gt;</code> (short or long); long names match config keys (dashes &rarr; underscores). To place a flag <em>first</em>, prefix the args with <code>--</code> (e.g. <code>… -- -f docx reuters</code>) so stryke passes them through instead of reading the leading dash as one of its own switches. <code>open_after</code> is a negatable boolean: <code>--open-after</code> / <code>-o</code> / <code>--no-open-after</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>[generator] verbosity <code>-v</code></td><td><code>quiet</code> | <code>normal</code> | <code>verbose</code></td></tr>
+            <tr><td>[generator] formats <code>-f</code></td><td>which outputs to emit, e.g. <code>docx,pdf</code> or <code>docx</code></td></tr>
+            <tr><td>[generator] page <code>-p</code></td><td><code>letter</code> | <code>a4</code></td></tr>
+            <tr><td>[generator] open_after <code>-o</code></td><td>open the result when done (macOS <code>open</code>)</td></tr>
+            <tr><td>[letter] max_paragraphs <code>-P</code></td><td>cap body paragraphs (content length; <code>0</code> = no cap)</td></tr>
+            <tr><td>[letter] max_words <code>-w</code></td><td>cap total body words (<code>0</code> = no cap; over-limit aborts)</td></tr>
+            <tr><td>[letter] body_size <code>-b</code></td><td>body font size in points</td></tr>
+            <tr><td>[letter] head_size <code>-H</code></td><td>letterhead/date/recipient/salutation/closing/name size (pt)</td></tr>
+            <tr><td>[letter] line_height <code>-L</code></td><td>pdf line-height multiplier (&times; font size); lower to fit a long letter on one page</td></tr>
+            <tr><td>[letter] margin <code>-m</code></td><td>page margin in inches (pdf)</td></tr>
+            <tr><td>[letter] subject_prefix <code>-s</code></td><td>text before the Subject in the bar (default <code>Re: </code>)</td></tr>
+            <tr><td>[letter] closing <code>-c</code></td><td>sign-off line above the name (default <code>Sincerely,</code>)</td></tr>
+            <tr><td>[letter] salutation <code>-l</code></td><td>default greeting when <code>letter.txt</code> omits it</td></tr>
+            <tr><td>[identity] accent <code>-A</code> / ink <code>-k</code></td><td>bar fill color / body + letterhead text color</td></tr>
+            <tr><td>[identity] body_font <code>-B</code> / pdf_font <code>-d</code></td><td>docx serif font / pdf base-14 serif font</td></tr>
+          </tbody>
+        </table>
+<pre>stryke cover_letter_pipeline.stk reuters --formats docx --page a4 \
+  --max-paragraphs 4 --body-size 12 --verbosity verbose --open-after
+stryke cover_letter_pipeline.stk reuters -f docx -p a4 -P 4 -b 12 -v verbose -o
+stryke cover_letter_pipeline.stk -- -f docx -P 4 reuters   # flags before JOB</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>letter.txt format</h2>
+        <p><code>Key: value</code> headers, then a blank line, then body paragraphs separated by blank lines. Each paragraph becomes one justified block in the letter.</p>
+<pre>Date: {{date}}
+Recipient1: Hiring Team
+Recipient2: Mariana Minerals  &mdash;  Ann Arbor, MI
+Subject: Senior Full Stack Software Engineer
+Company: Mariana
+
+I am applying for the {{role}} role at Mariana Minerals &hellip;
+
+Second body paragraph &hellip;</pre>
+        <p>Any field &mdash; header value or body paragraph &mdash; may use <strong>mustache <code>{{placeholders}}</code></strong>, filled by stryke's stdlib <code>template()</code> from a shared map: every header (lowercased), <code>role</code> (alias for <code>subject</code>), and <code>username</code>/<code>name</code>/<code>address</code>/<code>phone</code>/<code>email</code>/<code>website</code>/<code>github</code>/<code>contact1</code>/<code>contact2</code>/<code>accent</code> from <code>config.toml</code> (<code>contact1</code>/<code>contact2</code> are the assembled letterhead lines).</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Date</td><td>letter date line; <code>{{date}}</code> or omitted &rarr; today's date (<code>Month D, YYYY</code>)</td></tr>
+            <tr><td>Recipient1 / Recipient2</td><td>recipient block (line 1 rendered bold)</td></tr>
+            <tr><td>Subject</td><td>cyan subject bar text, rendered as <code>Re: &lt;Subject&gt;</code></td></tr>
+            <tr><td>Company</td><td>filename token &mdash; non-alphanumerics stripped &rarr; <code>&lt;Company&gt;_JacobMenke.{docx,pdf}</code></td></tr>
+            <tr><td>Salutation</td><td>greeting line; defaults to <code>Dear Hiring Team,</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>How it renders</h2>
+        <p>The script builds a structured block model once and emits two formats from it via <code>stryke-office</code>:</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>docx</td><td><code>Office::doc_write</code> &mdash; rich runs (Cambria serif throughout), section bars as a single-cell shaded table (<code>bg =&gt; "#26ADE4"</code>, white bold run), justified body, US-Letter page.</td></tr>
+            <tr><td>pdf</td><td><code>Office::pdf_build</code> &mdash; absolute layout: cyan <code>rect</code> bars with overlaid white text, base-14 Times body, greedy word-wrap, ASCII-folded typographic characters (bullets &rarr; <code>|</code>, em dash &rarr; <code>-</code>).</td></tr>
+          </tbody>
+        </table>
+        <p>Both come straight from native Rust inside <code>stryke-office</code> &mdash; there is no <code>soffice</code> conversion step and no python.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Add a new application</h2>
+        <ol>
+          <li>Create <code>jobs/&lt;JOB&gt;/</code> and drop the posting in as <code>job_desc.txt</code>.</li>
+          <li>Run <code>s run</code>. It AI-drafts the missing <code>letter.txt</code> (Principal/Staff voice, real resume facts only), renders the <code>docx</code> + <code>pdf</code>, and opens the pdf. <em>Done.</em></li>
+          <li>Review the draft. To revise, edit <code>letter.txt</code> and <code>s run</code> again to re-render &mdash; or hand-write <code>letter.txt</code> before the first <code>s run</code> to skip AI drafting entirely.</li>
+        </ol>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Built on</h2>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a> &mdash; the stryke language and runtime.</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; native-Rust office document I/O (docx + pdf rendering).</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
