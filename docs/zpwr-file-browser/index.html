@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-file-browser — the shared multi-pane file browser for the MenkeTechnologies GUI stack. A host-agnostic vanilla-JS front end plus a pure-Rust filesystem crate of 33 fs_* functions, mounted by Audio-Haxor, traderview, ztranslator (Tauri) and zpwr-daw (JUCE).">
+  <title>zpwr-file-browser — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-FILE-BROWSER &mdash; SHARED MULTI-PANE FILE BROWSER</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-file-browser" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">shared GUI component &middot; host-agnostic vanilla-JS front end &middot; pure-Rust <code>fs_*</code> crate (33 functions) &middot; 34 <code>#[tauri::command]</code> wrappers behind the <code>tauri</code> feature &middot; one source of truth for all four apps</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpwr-file-browser" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZPWR-FILE-BROWSER</h2>
+      <p class="tutorial-subtitle"><strong>One browser, every app, host-provided filesystem.</strong> The shared multi-pane <strong>file browser</strong> behind the MenkeTechnologies GUI stack, extracted from Audio-Haxor so it backs every app from a single source of truth. The front end is <strong>host-agnostic</strong> &mdash; each host supplies the filesystem backend (the <code>window.vstUpdater</code> fs-command contract) and a few UI utilities. Same panes, sorting, resizable columns, fuzzy filter, color labels, tree sidebar, context menu and previews everywhere. The optional Rust crate ships those filesystem operations as pure functions, faithfully ported from the Audio-Haxor backend.</p>
+
+      <section class="tutorial-section">
+        <h2>Four hosts, one component</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Audio-Haxor &middot; traderview &middot; ztranslator (Tauri / Rust)</td><td>enable the crate's <code>tauri</code> feature and register <code>zpwr_file_browser::commands::fs_*</code> in <code>tauri::generate_handler![&hellip;]</code>, or implement the fs commands directly as <code>#[tauri::command]</code>s on the host IPC object</td></tr>
+            <tr><td>zpwr-daw (JUCE / C++)</td><td>implement the fs commands as WebView native functions, or link a shared Rust backend over a C ABI (mirroring <code>zpwr-embed-terminal</code>)</td></tr>
+          </tbody>
+        </table>
+        <p>The front end calls the same invoke names everywhere; only the host-side backend differs.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Rust core (<code>crate/</code>)</h2>
+        <p><code>crate/</code> (package <code>zpwr-file-browser</code>) holds the filesystem logic faithfully ported from Audio-Haxor: 33 pure <code>pub async fn</code> filesystem functions with no Tauri types, so the crate is usable in any context. Enable the <code>tauri</code> cargo feature to also compile <code>zpwr_file_browser::commands</code> &mdash; 34 thin <code>#[tauri::command]</code> wrappers (one per pure fn, plus <code>fb_watcher_set</code>), each named with the exact invoke name the front end calls. The feature is additive: a plain <code>cargo build</code> (no features) keeps the crate Tauri-free.</p>
+<pre>zpwr-file-browser = { path = "&hellip;/zpwr-file-browser/crate", features = ["tauri"] }</pre>
+<pre>.manage(zpwr_file_browser::commands::watcher_state())
+.invoke_handler(tauri::generate_handler![
+    zpwr_file_browser::commands::fs_list_dir,
+    zpwr_file_browser::commands::fs_copy_path,
+    zpwr_file_browser::commands::fb_watcher_set,
+    // &hellip; all the rest
+])</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Directory watcher</h2>
+        <p>The crate also bundles the File Browser directory watcher, faithfully ported from Audio-Haxor's <code>fb_watcher.rs</code>: <code>zpwr_file_browser::fb_watcher::WatcherSession</code> is a framework-agnostic, <code>notify</code>-based, non-recursive, 300&nbsp;ms-debounced single-directory watcher. <code>session.watch(dir, on_change)</code> canonicalizes <code>dir</code>, starts the watch, fires <code>on_change(canonical)</code> on each debounced change, and returns the canonical path; <code>session.stop()</code> tears down. Under the <code>tauri</code> feature, <code>commands::fb_watcher_set</code> wires that callback to <code>AppHandle::emit("file-browser-change", { "dir": canonical })</code> &mdash; the exact event and payload the front end consumes; construct the managed state with <code>commands::watcher_state()</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Front end features</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Panes &amp; columns</td><td>multi-pane layout; sortable + resizable columns; per-pane flex widths; tree sidebar</td></tr>
+            <tr><td>Filter</td><td>fzf-style fuzzy filter with matched-char highlight (via the host's shared <code>fzfMatch</code>)</td></tr>
+            <tr><td>Organize</td><td>color labels, context menu, base CRUD (create / rename / copy / trash / delete), duplicate, alias</td></tr>
+            <tr><td>Preview</td><td>text / hex / image quicklook + preview pane; git status badges</td></tr>
+            <tr><td>Compare &amp; search</td><td>dedup, directory compare, unified diff, recursive grep</td></tr>
+            <tr><td>Metadata</td><td>hash, extended attributes, disk usage, folder size, chmod, symlink retarget</td></tr>
+            <tr><td>Archive &amp; open</td><td>compress / extract (.zip, .tar, .tar.gz, .tgz, .7z), open in default app / editor / terminal</td></tr>
+            <tr><td>Live</td><td>fs-change watch &mdash; the directory reloads on debounced changes</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Backend contract (each host implements)</h2>
+        <p>The front end calls these on the host IPC object (<code>window.vstUpdater.*</code>). A host using a different IPC object can alias it: <code>window.vstUpdater = myBackend</code>. Every method returns a Promise. A host that does not support an optional capability should resolve to an empty/neutral value (not throw) so the row or preview degrades gracefully.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>listDirectory(path, showHidden)</code> &middot; <code>fsListSubdirs(path)</code></td><td>list entries; child dirs for the tree sidebar</td></tr>
+            <tr><td><code>getHomeDir()</code> &middot; <code>fsGetInfo(path)</code></td><td>initial path; stat / details</td></tr>
+            <tr><td><code>fsCreateDir</code> &middot; <code>fsCreateFile</code> &middot; <code>fsTouch</code></td><td>create</td></tr>
+            <tr><td><code>renameFile</code> &middot; <code>fsCopyPath</code></td><td>rename / copy</td></tr>
+            <tr><td><code>moveToTrash</code> &middot; <code>deleteFile</code></td><td>delete</td></tr>
+            <tr><td><code>fsChmod</code> &middot; <code>fsSymlinkRetarget</code></td><td>perms / symlink</td></tr>
+            <tr><td><code>fsFolderSize</code> &middot; <code>fsDiskUsage</code></td><td>sizes</td></tr>
+            <tr><td><code>fsReadHead</code> &middot; <code>fsReadHeadBytes</code> &middot; <code>fsReadFileBase</code> &middot; <code>fsReadFileBytes</code></td><td>read previews</td></tr>
+            <tr><td><code>fsGrep</code> &middot; <code>fsFindDuplicates</code> &middot; <code>fsCompareDirs</code> &middot; <code>fsDiff</code></td><td>search / compare</td></tr>
+            <tr><td><code>fsHash</code> &middot; <code>fsXattrs</code> &middot; <code>fsGitStatus</code></td><td>metadata</td></tr>
+            <tr><td><code>fsCompress</code> &middot; <code>fsExtract</code></td><td>archive</td></tr>
+            <tr><td><code>openFileDefault</code> &middot; <code>fsOpenTerminal</code></td><td>open</td></tr>
+            <tr><td><code>fbWatcherSet(paths)</code></td><td>live fs-change watch</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Host UI utilities (globals the front end expects)</h2>
+        <p>The front end uses these as globals; the host must define them (most apps already have them):</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>prefs</code></td><td>shared prefs store (<code>getItem</code>/<code>setItem</code>); persists pane count, paths, active pane, per-pane flex widths, column widths, sort state (same contract as the embedded terminal)</td></tr>
+            <tr><td><code>fzfMatch(query, text)</code></td><td>shared fuzzy matcher; powers the filter's matched-char highlight</td></tr>
+            <tr><td><code>escapeHtml</code> &middot; <code>t</code> / <code>toastFmt</code> (i18n) &middot; <code>showToast</code> &middot; <code>shortcutTip</code></td><td>small UI helpers</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Mounting</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>1</td><td>Include <code>file-browser.css</code> (link or inline) and the <code>#tabFiles</code> markup from <code>file-browser.html</code> in the host's tab system</td></tr>
+            <tr><td>2</td><td>Load <code>webui/file-browser.js</code> as a classic script after the host utilities + IPC object exist</td></tr>
+            <tr><td>3</td><td>Expose the fs commands on <code>window.vstUpdater</code> (or alias your backend to it)</td></tr>
+          </tbody>
+        </table>
+        <p>Tauri hosts sync these assets into their served <code>frontend/</code> via a copy script (<code>copy-file-browser.mjs</code>, mirroring <code>copy-embed-terminal.mjs</code>); JUCE hosts embed them via <code>juce_add_binary_data</code> and serve by basename.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>webui/file-browser.js</code></td><td>the browser front end (base CRUD + generic file-manager only); loaded as a classic script</td></tr>
+            <tr><td><code>webui/file-browser.css</code></td><td>the <code>.fb-*</code> / <code>fileBrowser</code> / <code>.file-*</code> rule set (extracted)</td></tr>
+            <tr><td><code>webui/file-browser.html</code></td><td>the file-browser tab pane markup (<code>#tabFiles</code>); the host mounts it where its tab system expects the <code>files</code> pane</td></tr>
+            <tr><td><code>crate/src/lib.rs</code></td><td>the 33 pure <code>fs_*</code> functions + return types + <code>format_size</code></td></tr>
+            <tr><td><code>crate/src/commands.rs</code></td><td>the 34 thin <code>#[tauri::command]</code> wrappers (<code>tauri</code> feature only)</td></tr>
+            <tr><td><code>crate/src/fb_watcher.rs</code></td><td>the framework-agnostic <code>WatcherSession</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The GUI stack</h2>
+        <p>zpwr-file-browser is a shared component of the MenkeTechnologies GUI applications. Browse the rest via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/Audio-Haxor" target="_blank" rel="noopener noreferrer">Audio-Haxor</a> &mdash; Tauri v2 desktop app; the file browser was extracted from here</li>
+          <li><a href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">traderview</a> &mdash; Tauri v2 market / charting app</li>
+          <li><a href="https://github.com/MenkeTechnologies/ztranslator" target="_blank" rel="noopener noreferrer">ztranslator</a> &mdash; Tauri v2 translation / protocol-bridge app</li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">zpwr-daw</a> &mdash; JUCE / C++ DAW arranger (WebView host)</li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-embed-terminal" target="_blank" rel="noopener noreferrer">zpwr-embed-terminal</a> &mdash; the sibling shared embedded-terminal component</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

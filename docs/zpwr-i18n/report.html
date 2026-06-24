@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-i18n — engineering report. Shared portable vanilla-JS i18n runtime for the MenkeTechnologies GUI stack. API surface, loader architecture, locale set, markup contract, fallback behavior, CI gates.">
+  <title>zpwr-i18n — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-I18N &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-i18n" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Shared front-end component &middot; vanilla JS, zero dependencies &middot; JSON catalogs, 27 locales &middot; hosts: Tauri + JUCE WebViews
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>zpwr-i18n</strong> is the shared internationalization runtime of the MenkeTechnologies GUI stack &mdash; one portable, host-agnostic vanilla-JS file. The <code>appFmt</code> formatter and the <code>applyUiI18n</code> DOM appliers were lifted verbatim from the Audio-Haxor front end (<code>ipc.js</code> + <code>i18n-ui.js</code>); the only change is the <strong>loader</strong>, which fetches plain JSON catalogs instead of Audio-Haxor's SQLite-backed Tauri command.</p>
+      <p class="tutorial-subtitle">Because the loader is just <code>fetch</code> + <code>Object.assign</code>, the same runtime works in Tauri apps (Audio-Haxor, traderview, ztranslator) and JUCE WebViews (synth, fx, midi-fx, daw). It has no build step and no dependencies &mdash; it attaches its API to <code>window</code> and never throws on a missing catalog: <code>appFmt</code> falls back to the key so an untranslated UI still reads.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val cyan">1</div><div class="stat-label">Source file</div></div>
+        <div class="stat-card"><div class="stat-val green">153</div><div class="stat-label">Lines (i18n.js)</div></div>
+        <div class="stat-card"><div class="stat-val">12</div><div class="stat-label">window API symbols</div></div>
+        <div class="stat-card"><div class="stat-val cyan">27</div><div class="stat-label">Supported locales</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">data-i18n attributes</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Host runtimes</div></div>
+        <div class="stat-card"><div class="stat-val cyan">0</div><div class="stat-label">Dependencies</div></div>
+        <div class="stat-card"><div class="stat-val">shared</div><div class="stat-label">Tier</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">One file, two layers: a verbatim format/apply layer from Audio-Haxor, plus a portable JSON loader. State lives in <code>window.__appStr</code> (aliased <code>window.__toastStr</code> for legacy call sites). Everything else attaches to <code>window</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>Format</td><td><code>appFmt(key, vars)</code> reads <code>__appStr[key]</code> and interpolates <code>{name}</code> via a single <code>String.replace</code>; missing/empty returns the key. Exposed as <code>appFmt</code>, <code>toastFmt</code>, and <code>t</code></td></tr>
+          <tr><td>Apply</td><td><code>applyUiI18n()</code> walks <code>[data-i18n]</code> / <code>[data-i18n-title]</code> / <code>[data-i18n-placeholder]</code> (+ <code>-regex</code>) elements; placeholder values decode <code>&amp;#10;</code>/<code>&amp;#13;</code> to newlines</td></tr>
+          <tr><td>Load</td><td><code>loadLocale</code> calls <code>fetchCatalog</code> (<code>fetch</code>, <code>cache: 'no-store'</code>) for the app catalog, merges each <code>extraBases</code> fragment on top with <code>Object.assign</code>, replaces <code>__appStr</code>, persists, then applies. <code>fetchCatalog</code> returns <code>{}</code> on any error &mdash; never throws</td></tr>
+          <tr><td>Detect</td><td><code>detectLocale</code>: saved choice &rarr; exact <code>navigator.languages</code> match &rarr; language-only match &rarr; <code>en</code>. <code>normalizeUiLocale</code> validates against the frozen <code>SUPPORTED_UI_LOCALES</code></td></tr>
+          <tr><td>Persist</td><td><code>persistLocale</code> / <code>savedLocale</code> use the shared <code>window.prefs</code> store when present, else <code>localStorage</code>, under key <code>uiLocale</code></td></tr>
+          <tr><td>Boot</td><td><code>bootI18n(locale?)</code> = <code>loadLocale(locale || detectLocale())</code>; called once after the DOM exists</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>WINDOW API SURFACE</h2>
+      <p>12 public symbols on <code>window</code> (plus internal state <code>__appStr</code> / <code>__toastStr</code> and optional config <code>__i18nBase</code> / <code>__i18nExtraBases</code>). No exports, no modules &mdash; a classic <code>&lt;script&gt;</code> that populates globals.</p>
+      <table class="arch-table">
+        <thead><tr><th>Symbol</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>appFmt</code> / <code>toastFmt</code> / <code>t</code></td><td>look up + interpolate a key; three aliases of the same function</td></tr>
+          <tr><td><code>applyUiI18n</code></td><td>apply the catalog to all <code>data-i18n*</code> elements</td></tr>
+          <tr><td><code>applyI18nPlaceholders</code></td><td>apply only the placeholder pass (regex-toggle aware)</td></tr>
+          <tr><td><code>loadLocale</code></td><td>fetch + merge + apply + persist a locale</td></tr>
+          <tr><td><code>bootI18n</code></td><td>boot convenience: detect then load</td></tr>
+          <tr><td><code>mergeI18nCatalog</code></td><td>merge a shared-component fragment on top of <code>__appStr</code></td></tr>
+          <tr><td><code>detectLocale</code> / <code>savedLocale</code></td><td>best initial locale; the persisted choice</td></tr>
+          <tr><td><code>normalizeUiLocale</code></td><td>validate a code against the supported set (else <code>null</code>)</td></tr>
+          <tr><td><code>SUPPORTED_UI_LOCALES</code></td><td>frozen array of the 27 shipped locale codes</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>LOCALES &amp; CATALOGS</h2>
+      <p>The runtime ships <strong>27</strong> supported locale codes in the frozen <code>SUPPORTED_UI_LOCALES</code> array: <code>cs da de el en es es-419 fi fr hi hu id it ja ko nb nl pl pt pt-BR ro ru sv tr uk vi zh</code>. Catalogs are flat <code>{ "namespace.key": "string with {vars}" }</code>, one JSON per locale at <code>&lt;base&gt;&lt;locale&gt;.json</code> (default base <code>i18n/</code>). Hyphenated codes map to underscores in the filename via <code>localeFile</code> (<code>es-419</code> &rarr; <code>es_419.json</code>, <code>pt-BR</code> &rarr; <code>pt_BR.json</code>). The locale JSON files are shipped by each host application (and by shared components such as <code>zpwr-file-browser</code>, merged via <code>extraBases</code>) &mdash; this repo carries the runtime, not the catalogs.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>MARKUP CONTRACT</h2>
+      <table class="arch-table">
+        <thead><tr><th>Attribute</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>data-i18n</code></td><td>sets <code>textContent</code></td></tr>
+          <tr><td><code>data-i18n-title</code></td><td>sets the <code>title</code> attribute</td></tr>
+          <tr><td><code>data-i18n-placeholder</code></td><td>sets an input <code>placeholder</code> (decodes <code>&amp;#10;</code>/<code>&amp;#13;</code>)</td></tr>
+          <tr><td><code>data-i18n-placeholder-regex</code></td><td>alternate placeholder when the enclosing <code>.search-box</code> has an active <code>.btn-regex</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>CI GATES</h2>
+      <p>zpwr-i18n is a non-Rust shared component, so it skips the Cargo polish gates. The umbrella <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> repo pins its docs through the house docs-conformance suite:</p>
+      <table class="arch-table">
+        <thead><tr><th>Gate</th><th>Pins</th></tr></thead>
+        <tbody>
+          <tr><td>HTML structure</td><td><code>&lt;!DOCTYPE html&gt;</code>, <code>charset</code>, <code>html lang="en"</code>, viewport + description meta, at least one <code>&lt;h1&gt;</code></td></tr>
+          <tr><td>Link hygiene</td><td>all external <code>href</code>/<code>src</code> are <code>https://</code>; no placeholder hrefs; <code>target="_blank"</code> carries <code>rel="noopener noreferrer"</code></td></tr>
+          <tr><td>No inline JS</td><td>no inline event handlers; behavior lives in <code>hud-theme.js</code></td></tr>
+          <tr><td>Brand consistency</td><td><code>&lt;title&gt;</code> mentions <code>zpwr-i18n</code>; breadcrumb GitHub URLs point at the owning repo</td></tr>
+          <tr><td>Cross-links</td><td><code>index.html</code> and <code>report.html</code> link each other; referenced CSS/JS exist in <code>docs/</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Runtime</td><td>vanilla JS (no build step, no bundler)</td></tr>
+          <tr><td>Source</td><td><code>webui/i18n.js</code> &mdash; one file, 153 lines, zero dependencies</td></tr>
+          <tr><td>API</td><td>12 public symbols on <code>window</code></td></tr>
+          <tr><td>Locales</td><td>27 (<code>SUPPORTED_UI_LOCALES</code>)</td></tr>
+          <tr><td>Hosts</td><td>Tauri WebViews + JUCE WebViews</td></tr>
+          <tr><td>Origin</td><td>extracted verbatim from the Audio-Haxor front end; JSON loader swapped in</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/zpwr-i18n" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/zpwr-i18n</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

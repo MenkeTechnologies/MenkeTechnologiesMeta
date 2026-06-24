@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-embed-terminal — the shared embedded PTY terminal core for the MenkeTechnologies app stack. A framework-agnostic portable-pty login-shell session plus xterm.js front end, linked natively (rlib) by the Tauri apps and over a C ABI (staticlib/cdylib) by zpwr-daw.">
+  <title>zpwr-embed-terminal — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-EMBED-TERMINAL &mdash; SHARED EMBEDDED PTY TERMINAL</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-embed-terminal" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">private internal library &middot; rlib + staticlib + cdylib &middot; 6 <code>zet_*</code> C ABI exports &middot; native rlib for the Tauri apps &middot; C ABI for zpwr-daw &middot; one PTY login-shell core</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpwr-embed-terminal" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZPWR-EMBED-TERMINAL</h2>
+      <p class="tutorial-subtitle"><strong>One terminal, every app, Rust core + C ABI.</strong> The shared embedded <strong>PTY terminal</strong> behind the MenkeTechnologies app stack &mdash; one PTY-backed login-shell session (xterm.js front end) extracted <strong>verbatim</strong> from the Audio-Haxor backend (<code>src-tauri/src/terminal.rs</code>) with the Tauri <code>app.emit(...)</code> calls replaced by host-supplied <code>on_output</code> / <code>on_exit</code> callbacks. Every app runs byte-for-byte identical PTY spawning, reading and resizing against the same core.</p>
+
+      <section class="tutorial-section">
+        <h2>Two link models, four apps</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Audio-Haxor / traderview / ztranslator (Tauri / Rust)</td><td>link it natively as an <code>rlib</code>, wrap a <code>TerminalSession</code> in a <code>tauri::State</code>, and forward <code>on_output</code> &rarr; <code>app.emit("terminal-output", ...)</code></td></tr>
+            <tr><td>zpwr-daw (JUCE / C++)</td><td>link <code>libzpwr_embed_terminal.a</code> (or the cdylib) over the C ABI in <code>include/zpwr_embed_terminal.h</code> and drive the WebView over JUCE native functions</td></tr>
+          </tbody>
+        </table>
+        <p>A session owns one PTY master + child shell. Re-spawning kills the previous one. No Tauri or JUCE types appear in <code>src/lib.rs</code> &mdash; the core is framework-agnostic.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Spawn &middot; Stream &middot; Resize</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Spawn</td><td><code>spawn(rows, cols, on_output, on_exit)</code> opens a PTY via <code>portable-pty</code> (<code>native_pty_system()</code>), launches <code>$SHELL -l</code> (login shell, defaults to <code>/bin/zsh</code>), inherits <code>HOME</code> and sets <code>cwd</code> to it, exports <code>TERM=xterm-256color</code>, and stores the child PID</td></tr>
+            <tr><td>Stream</td><td>a named <code>terminal-reader</code> background thread reads 4&nbsp;KiB chunks; it tracks the last valid UTF-8 boundary and carries an incomplete multi-byte tail to the next read instead of emitting <code>U+FFFD</code>; each chunk is handed to <code>on_output</code>; on EOF it fires <code>on_exit</code></td></tr>
+            <tr><td>Resize</td><td><code>resize(rows, cols)</code> notifies the PTY master of the new viewport; <code>write(data)</code> sends raw keystrokes to the PTY writer; <code>kill()</code> drops the writer/master and <code>SIGKILL</code>s the child on Unix</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Native (Rust) usage</h2>
+        <p>The Tauri apps link the <code>rlib</code> and call the API directly. <code>spawn</code> drives the PTY + reader thread; the host forwards the callbacks to its event bus.</p>
+<pre>use zpwr_embed_terminal::TerminalSession;
+
+let session = TerminalSession::new();
+session.spawn(
+    24, 80,
+    move |chunk: &amp;str| {
+        // forward to the front end, e.g. app.emit("terminal-output", chunk)
+    },
+    move || {
+        // shell exited, e.g. app.emit("terminal-exit", ())
+    },
+)?;
+
+session.write("ls -la\r")?;
+session.resize(40, 120)?;
+session.kill();</pre>
+        <p><code>spawn</code> tears down any existing session before opening the new PTY, so a re-spawn is always clean.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>C ABI usage (zpwr-daw)</h2>
+        <p>zpwr-daw links <code>libzpwr_embed_terminal.a</code> (or the cdylib) and includes <code>include/zpwr_embed_terminal.h</code> &mdash; hand-written, no cbindgen. PTY output is delivered to a C callback from the reader thread.</p>
+<pre>#include "zpwr_embed_terminal.h"
+
+static void on_output(const char *text, void *user) {
+    /* marshal to the UI thread, then feed xterm.js — text valid for this call only */
+}
+static void on_exit(void *user) { /* shell exited */ }
+
+TerminalHandle *h = zet_new();
+zet_spawn(h, 24, 80, on_output, on_exit, /*user*/ NULL);
+
+zet_write(h, "ls -la\r");
+zet_resize(h, 40, 120);
+
+zet_kill(h);   /* handle stays valid, can be re-spawned */
+zet_free(h);</pre>
+        <p>The <code>text</code> passed to the output callback is a NUL-terminated C string valid <strong>only</strong> for the duration of the call &mdash; copy it if you need it later. Callbacks fire on the reader thread, not the caller's thread, so marshal to your UI thread before touching the WebView.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>C ABI surface</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>zet_new</code> / <code>zet_free</code></td><td>create an opaque <code>TerminalHandle</code>; release it (kills the session first)</td></tr>
+            <tr><td><code>zet_spawn</code></td><td>spawn the login shell; <code>OutputCb</code> + <code>ExitCb</code> + a verbatim <code>user</code> pointer; returns 0 / -1</td></tr>
+            <tr><td><code>zet_write</code></td><td>write NUL-terminated UTF-8 keystrokes to the PTY; returns 0 / -1</td></tr>
+            <tr><td><code>zet_resize</code></td><td>resize the PTY viewport; returns 0 / -1</td></tr>
+            <tr><td><code>zet_kill</code></td><td>kill the session; the handle stays valid and can be re-spawned; returns 0</td></tr>
+          </tbody>
+        </table>
+        <p>Six <code>extern "C"</code> exports plus two callback typedefs (<code>ZetOutputCb</code> / <code>ZetExitCb</code>). The <code>*mut c_void</code> user pointer is shuttled across the reader thread as a <code>usize</code> and never dereferenced by Rust.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The xterm.js front end</h2>
+        <p><code>webui/terminal.js</code> is the shared front end. It auto-detects its transport at runtime and abstracts the IPC, so the same file backs every host:</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Tauri transport</td><td>when <code>window.__TAURI__</code> is present, calls map to <code>invoke('terminal_spawn'|'terminal_write'|'terminal_resize'|'terminal_kill')</code> and events to <code>listen('terminal-output'|'terminal-exit')</code></td></tr>
+            <tr><td>JUCE transport</td><td>when <code>window.Juce.getNativeFunction</code> is present, the same commands resolve to JUCE native functions and backend events</td></tr>
+            <tr><td>prefs fallback</td><td><code>termPrefs</code> uses the host's global <code>window.prefs</code> if present, else a <code>localStorage</code> shim</td></tr>
+            <tr><td>toggle</td><td><code>Ctrl+`</code> (Backquote) <strong>or</strong> <code>Cmd/Ctrl+T</code> toggles the embedded terminal popup (<code>toggleTerminalPopup</code>)</td></tr>
+          </tbody>
+        </table>
+        <p>The host provides a <code>#terminalPane &gt; #terminalContainer</code> mount point. <code>webui/xterm.js</code> and <code>webui/xterm.css</code> are vendored xterm.js.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Backend contract (each host implements)</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Commands</td><td><code>terminal_spawn(rows, cols)</code> &middot; <code>terminal_write(data)</code> &middot; <code>terminal_resize(rows, cols)</code> &middot; <code>terminal_kill()</code></td></tr>
+            <tr><td>Events</td><td><code>terminal-output(string)</code> &middot; <code>terminal-exit()</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Build &amp; test</h2>
+<pre>cargo build          # produces rlib + staticlib + cdylib
+cargo test           # headless; spawns a PTY, runs a command, streams output
+cargo fmt --all --check
+cargo clippy --all-targets -- -D warnings</pre>
+        <p>Builds on macOS aarch64 and Linux x86_64. <code>portable-pty</code> abstracts the PTY across macOS/Linux/Windows; the <code>kill()</code> <code>SIGKILL</code> path is gated on <code>#[cfg(unix)]</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Source layout</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>src/lib.rs</code></td><td>framework-agnostic <code>TerminalSession</code> (<code>new</code> / <code>spawn</code> / <code>write</code> / <code>resize</code> / <code>kill</code>); reader thread + UTF-8 boundary carry</td></tr>
+            <tr><td><code>src/ffi.rs</code></td><td>the C ABI (<code>zet_*</code> exports + <code>OutputCb</code> / <code>ExitCb</code>)</td></tr>
+            <tr><td><code>include/zpwr_embed_terminal.h</code></td><td>hand-written C header (no cbindgen)</td></tr>
+            <tr><td><code>webui/terminal.js</code> / <code>webui/terminal.css</code></td><td>the xterm.js front end + its styling (transport auto-detect)</td></tr>
+            <tr><td><code>webui/xterm.js</code> / <code>webui/xterm.css</code></td><td>vendored xterm.js</td></tr>
+            <tr><td><code>tests/integration.rs</code></td><td>headless PTY integration tests</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The MenkeTechnologies stack</h2>
+        <p>zpwr-embed-terminal is a shared component of the MenkeTechnologies app stack. Browse the rest via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/Audio-Haxor" target="_blank" rel="noopener noreferrer">Audio-Haxor</a> &mdash; Tauri v2 desktop app; links zpwr-embed-terminal as an rlib</li>
+          <li><a href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">traderview</a> &mdash; Tauri v2 desktop app; links the rlib</li>
+          <li><a href="https://github.com/MenkeTechnologies/ztranslator" target="_blank" rel="noopener noreferrer">ztranslator</a> &mdash; Tauri v2 desktop app; links the rlib</li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">zpwr-daw</a> &mdash; DAW arranger; links the C ABI</li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-crate" target="_blank" rel="noopener noreferrer">zpwr-crate</a> &mdash; shared sample-library crate browser</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-file-browser — engineering report. Shared multi-pane file browser for the MenkeTechnologies GUI stack: host-agnostic vanilla-JS front end and a pure-Rust filesystem crate. Architecture, fs_* surface, dependencies, watcher, CI gates.">
+  <title>zpwr-file-browser — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-FILE-BROWSER &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-file-browser" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Shared GUI component &middot; host-agnostic vanilla-JS front end &middot; pure-Rust <code>fs_*</code> crate &middot; one source of truth for Audio-Haxor, traderview, ztranslator, zpwr-daw
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>zpwr-file-browser</strong> is the shared multi-pane <strong>file browser</strong> of the MenkeTechnologies GUI stack &mdash; a host-agnostic vanilla-JS front end plus a pure-Rust filesystem crate, both extracted from Audio-Haxor so every app browses files from one source of truth. The front end is loaded as a classic script and calls a fixed set of invoke names on the host IPC object (<code>window.vstUpdater</code>); each host supplies the filesystem backend.</p>
+      <p class="tutorial-subtitle">The Rust crate ships those backend operations as 33 pure <code>pub async fn</code> functions (faithfully ported, no Tauri types), so it builds Tauri-free by default. Enabling the <code>tauri</code> cargo feature additively compiles 34 thin <code>#[tauri::command]</code> wrappers &mdash; one per pure fn, plus the <code>fb_watcher_set</code> watcher command &mdash; each named with the exact invoke name the front end expects.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">v0.1.0</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val cyan">33</div><div class="stat-label">Pure fs_* fns</div></div>
+        <div class="stat-card"><div class="stat-val green">34</div><div class="stat-label">Tauri commands</div></div>
+        <div class="stat-card"><div class="stat-val cyan">3</div><div class="stat-label">Rust src files</div></div>
+        <div class="stat-card"><div class="stat-val green">2,003</div><div class="stat-label">Rust src lines</div></div>
+        <div class="stat-card"><div class="stat-val">15</div><div class="stat-label">Direct deps</div></div>
+        <div class="stat-card"><div class="stat-val cyan">5,359</div><div class="stat-label">Front-end JS lines</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Host apps</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">One front end, one backend contract. The vanilla-JS browser is host-agnostic; the Rust crate provides the filesystem operations either natively (pure fns) or via the <code>tauri</code>-feature command wrappers. The directory watcher core is framework-agnostic and always compiled.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>Front end</td><td><code>webui/file-browser.js</code> (5,359 lines) + <code>file-browser.css</code> + the <code>#tabFiles</code> markup; multi-pane, sortable + resizable columns, fzf filter with matched-char highlight, color labels, tree sidebar, context menu, text/hex/image quicklook + preview pane, git status</td></tr>
+          <tr><td>Backend contract</td><td>the front end calls fixed invoke names on <code>window.vstUpdater.*</code>; each method returns a Promise; unsupported optional capabilities resolve to a neutral value (never throw) so rows/previews degrade gracefully</td></tr>
+          <tr><td>Pure Rust core</td><td><code>crate/src/lib.rs</code> &mdash; 33 <code>pub async fn</code> filesystem functions returning <code>Result&lt;T, String&gt;</code>, no Tauri types; ported verbatim from Audio-Haxor's command bodies with the Tauri layer stripped</td></tr>
+          <tr><td>Tauri command layer</td><td><code>crate/src/commands.rs</code> &mdash; 34 thin <code>#[tauri::command]</code> wrappers (each awaits its pure counterpart), compiled only under the additive <code>tauri</code> feature; param names mirror the pure fns so Tauri's camelCase&rarr;snake_case arg mapping resolves</td></tr>
+          <tr><td>Watcher</td><td><code>crate/src/fb_watcher.rs</code> &mdash; framework-agnostic <code>WatcherSession</code>; <code>notify</code>-based, non-recursive, 300&nbsp;ms-debounced single-directory watch; canonicalizes the path and hands it back; always compiled (no Tauri/JUCE types)</td></tr>
+          <tr><td>Build</td><td>Cargo <code>crate-type = ["rlib"]</code>, <code>publish = false</code>; <code>cargo build</code> (no features) stays Tauri-free; <code>--features tauri</code> adds the command layer</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FILESYSTEM SURFACE</h2>
+      <p>33 pure functions in <code>lib.rs</code>, mirrored by 34 command wrappers in <code>commands.rs</code> (the extra wrapper is <code>fb_watcher_set</code>). Grouped by role:</p>
+      <table class="arch-table">
+        <thead><tr><th>Group</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>List / inspect</td><td><code>fs_list_dir</code> &middot; <code>fs_list_subdirs</code> &middot; <code>fs_get_info</code> &middot; <code>fs_folder_size</code> &middot; <code>fs_disk_usage</code> &middot; <code>fs_xattrs</code> &middot; <code>fs_git_status</code></td></tr>
+          <tr><td>Create / modify</td><td><code>fs_create_dir</code> &middot; <code>fs_create_file</code> &middot; <code>fs_touch</code> &middot; <code>fs_copy_path</code> &middot; <code>fs_duplicate</code> &middot; <code>fs_make_alias</code> &middot; <code>fs_chmod</code> &middot; <code>fs_symlink_retarget</code> &middot; <code>rename_file</code></td></tr>
+          <tr><td>Delete</td><td><code>delete_file</code> &middot; <code>move_to_trash</code> &middot; <code>fs_secure_delete</code></td></tr>
+          <tr><td>Read / preview</td><td><code>fs_read_head</code> &middot; <code>fs_read_head_bytes</code> &middot; <code>fs_read_file_base64</code> &middot; <code>fs_read_file_bytes</code></td></tr>
+          <tr><td>Search / compare</td><td><code>fs_grep</code> &middot; <code>fs_find_duplicates</code> &middot; <code>fs_compare_dirs</code> &middot; <code>fs_diff</code> &middot; <code>fs_hash</code></td></tr>
+          <tr><td>Archive</td><td><code>fs_compress</code> (zip) &middot; <code>fs_extract</code> (.zip / .tar / .tar.gz / .tgz / .7z)</td></tr>
+          <tr><td>Open / run</td><td><code>fs_open_in_editor</code> &middot; <code>fs_open_terminal</code> &middot; <code>fs_run_program</code></td></tr>
+          <tr><td>Watch (command-only)</td><td><code>fb_watcher_set</code> &mdash; wraps <code>fb_watcher::WatcherSession</code>; emits <code>file-browser-change</code> with <code>{ "dir": canonical }</code></td></tr>
+        </tbody>
+      </table>
+      <p>Return types serialize as camelCase JSON via serde: <code>FsInfo</code>, <code>FsHashResult</code>, <code>GrepMatch</code>, <code>DiskUsage</code>, <code>DirCompareResult</code>, <code>DiffOp</code>, <code>DuplicateGroup</code>, <code>XattrEntry</code>, <code>FolderWalkResult</code>. Unix-only operations (<code>fs_chmod</code>, <code>fs_xattrs</code>, <code>fs_symlink_retarget</code>, <code>fs_run_program</code>) compile a <code>cfg(not(unix))</code> fallback that returns an error or empty result.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>DIRECTORY WATCHER</h2>
+      <p><code>WatcherSession</code> is a single-directory, non-recursive, <code>notify</code>-based watcher with a 300&nbsp;ms debounce (bursty operations collapse into one reload). <code>watch(dir, on_change)</code> stops any prior watch, canonicalizes <code>dir</code>, starts watching, and fires the injected <code>on_change(canonical)</code> callback on each debounced change; <code>stop()</code> drops the watcher (idempotent). The core pulls in no Tauri or JUCE types &mdash; the framework wiring lives in the <code>tauri</code>-feature <code>fb_watcher_set</code> command, which emits <code>AppHandle::emit("file-browser-change", { "dir": canonical })</code> &mdash; the exact event and payload the front end consumes.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>DEPENDENCIES</h2>
+      <p>15 direct dependencies in <code>[dependencies]</code>, plus <code>xattr</code> under the <code>cfg(unix)</code> target. <code>tauri</code> is optional (pulled in only by the <code>tauri</code> feature).</p>
+      <table class="arch-table">
+        <thead><tr><th>Dependency</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>serde</code> / <code>serde_json</code></td><td>return-type serialization (camelCase JSON; <code>preserve_order</code>)</td></tr>
+          <tr><td><code>chrono</code></td><td>mtime / ctime formatting in directory listings</td></tr>
+          <tr><td><code>sha2</code></td><td>SHA-256 for <code>fs_hash</code>, dedup and dir-compare fingerprints</td></tr>
+          <tr><td><code>base64</code></td><td>base64 file reads for image quicklook (<code>fs_read_file_base64</code>)</td></tr>
+          <tr><td><code>similar</code></td><td>Myers / Patience text diff for <code>fs_diff</code></td></tr>
+          <tr><td><code>zip</code> / <code>tar</code> / <code>flate2</code> / <code>sevenz-rust2</code></td><td>archive read + write (.zip, .tar, .tar.gz/.tgz, .7z)</td></tr>
+          <tr><td><code>filetime</code></td><td>cross-platform atime/mtime set for <code>fs_touch</code></td></tr>
+          <tr><td><code>sysinfo</code></td><td>disk total/free for <code>fs_disk_usage</code></td></tr>
+          <tr><td><code>trash</code></td><td>OS trash (recoverable delete) for <code>move_to_trash</code></td></tr>
+          <tr><td><code>notify</code></td><td>filesystem watcher backend (FSEvents / inotify, poll fallback)</td></tr>
+          <tr><td><code>xattr</code> (unix)</td><td>extended attributes for <code>fs_xattrs</code></td></tr>
+          <tr><td><code>tauri</code> (optional)</td><td>command layer &mdash; only compiled under the <code>tauri</code> feature</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>CI GATES</h2>
+      <table class="arch-table">
+        <thead><tr><th>Gate</th><th>Command</th></tr></thead>
+        <tbody>
+          <tr><td>fmt</td><td><code>cargo fmt --all --check</code></td></tr>
+          <tr><td>clippy</td><td><code>cargo clippy --all-targets -- -D warnings</code></td></tr>
+          <tr><td>doc</td><td><code>RUSTDOCFLAGS=-D warnings cargo doc --no-deps</code></td></tr>
+          <tr><td>test</td><td><code>cargo test --verbose</code> (headless; the watcher tests scan temp dirs)</td></tr>
+        </tbody>
+      </table>
+      <p>The umbrella <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> repo additionally pins this component's metadata across its gate suite &mdash; LICENSE present + canonical MIT text, <code>authors</code> field, and the house docs gates that this report and the docs page satisfy.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Version</td><td>0.1.0</td></tr>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Crate type</td><td><code>rlib</code> (<code>publish = false</code>); <code>tauri</code> feature additive</td></tr>
+          <tr><td>Rust source</td><td>3 files, 2,003 lines (<code>lib.rs</code>, <code>commands.rs</code>, <code>fb_watcher.rs</code>)</td></tr>
+          <tr><td>Front end</td><td><code>file-browser.js</code> (5,359), <code>file-browser.css</code> (1,876), <code>file-browser.html</code> (168)</td></tr>
+          <tr><td>Hosts</td><td><a href="https://github.com/MenkeTechnologies/Audio-Haxor">Audio-Haxor</a>, <a href="https://github.com/MenkeTechnologies/traderview">traderview</a>, <a href="https://github.com/MenkeTechnologies/ztranslator">ztranslator</a> (Tauri), <a href="https://github.com/MenkeTechnologies/zpwr-daw">zpwr-daw</a> (JUCE)</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/zpwr-file-browser">github.com/MenkeTechnologies/zpwr-file-browser</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

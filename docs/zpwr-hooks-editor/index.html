@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-hooks-editor — the shared stryke Hooks code editor for the MenkeTechnologies app stack. A Monaco editor with monaco-vim, monaco-emacs and a thin stryke-LSP adapter, esbuild-bundled into vendored IIFE artifacts and built per consuming app (Audio-Haxor, traderview, ztranslator, zpwr-daw).">
+  <title>zpwr-hooks-editor — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-HOOKS-EDITOR &mdash; SHARED STRYKE HOOKS CODE EDITOR</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-hooks-editor" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">private frontend submodule &middot; Monaco + monaco-vim + monaco-emacs + thin stryke-LSP adapter &middot; esbuild IIFE bundle &middot; build-on-each-consumer &middot; one <code>window.HooksEditor</code> facade</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpwr-hooks-editor" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZPWR-HOOKS-EDITOR</h2>
+      <p class="tutorial-subtitle"><strong>One editor, built per app, single-sourced.</strong> The shared <strong>stryke Hooks code editor</strong> behind the MenkeTechnologies app stack &mdash; a <a href="https://github.com/microsoft/monaco-editor" target="_blank" rel="noopener noreferrer">Monaco</a> editor wired with <code>monaco-vim</code>, <code>monaco-emacs</code> and a thin stryke-LSP adapter, bundled with esbuild into vendored IIFE artifacts. Extracted from Audio-Haxor so the editor is no longer duplicated across apps; the source lives here in <code>src/</code> and each app builds it with its own <code>monaco-*</code> dependencies.</p>
+
+      <section class="tutorial-section">
+        <h2>Four consumers, one source</h2>
+        <p>All four apps load the same editor source. The three Tauri apps serve <code>frontend/</code> statically and vendor this repo at <code>crates/zpwr-hooks-editor</code>; zpwr-daw is JUCE and loads the bundle in its WebView, vendoring at <code>libs/zpwr-hooks-editor</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Audio-Haxor (Tauri)</td><td>serves <code>frontend/</code>; vendors at <code>crates/zpwr-hooks-editor</code></td></tr>
+            <tr><td>traderview (Tauri)</td><td>serves <code>frontend/</code>; vendors at <code>crates/zpwr-hooks-editor</code></td></tr>
+            <tr><td>ztranslator (Tauri)</td><td>serves <code>frontend/</code>; vendors at <code>crates/zpwr-hooks-editor</code></td></tr>
+            <tr><td>zpwr-daw (JUCE)</td><td>loads the bundle in its WebView; vendors at <code>libs/zpwr-hooks-editor</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What it is</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Editor</td><td>Monaco's <code>edcore.main</code> bundle &mdash; all editor contributions (suggest, hover, find, folding, multi-cursor, minimap, command palette) but <strong>no</strong> bundled languages</td></tr>
+            <tr><td>stryke language</td><td>stryke is a Perl-5 superset, so it reuses Monaco's Perl Monarch grammar (<code>basic-languages/perl</code>) for tokenization + the bracket/comment language config, registered under the <code>stryke</code> language id</td></tr>
+            <tr><td>Modal editing</td><td>Default / Vim / Emacs via <code>monaco-vim</code> and <code>monaco-emacs</code>, switchable at runtime through <code>setMode</code>; the vim status/command line renders into a caller-supplied element</td></tr>
+            <tr><td>Language intelligence</td><td>completion / hover / diagnostics / definitions / references / rename / signature help / document symbols / code actions / semantic tokens come from the stryke language server (<code>stryke --lsp</code>) over a caller-supplied transport &mdash; the editor speaks LSP JSON-RPC directly via a thin adapter, not monaco-languageclient</td></tr>
+            <tr><td>Theme</td><td><code>stryke-cyberpunk</code> &mdash; neon on near-black, matching the apps' aesthetic, with the suggest/hover widgets styled explicitly</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Load order (consuming app)</h2>
+        <p>The consumer's <code>index.html</code> loads the CSS link + the JS bundle; the editor exposes a single global facade, <code>window.HooksEditor</code>. The Monaco base worker is fetched at runtime via <code>MonacoEnvironment.getWorker</code> (no TS/JSON/CSS language workers &mdash; all language intelligence comes from the stryke LSP).</p>
+<pre>&lt;link rel='stylesheet' href='lib/hooks-editor.bundle.css'&gt;
+&lt;script src='lib/hooks-editor.bundle.js'&gt;&lt;/script&gt;
+&lt;!-- lib/hooks-editor.worker.js is fetched at runtime, not script-tagged --&gt;</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Mounting an editor</h2>
+        <p><code>HooksEditor.create(parent, opts)</code> mounts an editor into <code>parent</code> and returns a handle. With <code>uri</code> set and an LSP transport wired (see below), language features come online once the stryke handshake completes; without a <code>uri</code> the LSP layer stays off and it is a plain stryke-highlighted editor.</p>
+<pre>const handle = window.HooksEditor.create(parentEl, {
+  uri: 'file:///project/hook.stk',  // identifies the doc to the LSP (omit to disable LSP)
+  doc: '# my stryke hook\n',         // initial text
+  onChange: (text) =&gt; save(text),    // fires on every edit with full text
+  mode: 'vim',                       // 'default' | 'vim' | 'emacs'
+  statusBar: vimStatusEl,            // optional element for the vim status/command line
+});
+
+handle.getValue();        // current text
+handle.setValue(text);    // replace text
+handle.focus();
+handle.setMode('emacs');  // switch modal mode at runtime
+handle.destroy();         // dispose editor, model, markers, LSP didClose</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Wiring the stryke LSP transport</h2>
+        <p>The editor speaks LSP JSON-RPC but does not own the transport. The host (e.g. Rust) connects <code>stryke --lsp</code>, adds Content-Length framing on the server's stdin, and bridges messages. The app calls <code>initClient</code> with a <code>send</code> function and feeds inbound server messages back via <code>receive</code>.</p>
+<pre>window.HooksEditor.initClient({
+  send: (message) =&gt; host.sendToServer(message),   // client → server (raw JSON-RPC)
+});
+host.onServerMessage((msg) =&gt; window.HooksEditor.receive(msg)); // server → client
+
+window.HooksEditor.clientReady();   // transport connected?
+await window.HooksEditor.whenReady(); // true once the stryke initialize handshake completed</pre>
+        <p><code>whenReady()</code> resolves <code>true</code> only after the server answered <code>initialize</code> &mdash; suitable for a status indicator, unlike a transport "connected" flag. Call it after <code>initClient</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2><code>window.HooksEditor</code> facade</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>initClient(transport)</code></td><td>register Monaco providers, then start the LSP client over <code>transport.send</code></td></tr>
+            <tr><td><code>receive(message)</code></td><td>feed one raw JSON-RPC message from the server to the client</td></tr>
+            <tr><td><code>clientReady()</code></td><td>transport connected (a <code>send</code> function is installed)</td></tr>
+            <tr><td><code>whenReady()</code></td><td>promise resolving <code>true</code> once the stryke <code>initialize</code> handshake completed</td></tr>
+            <tr><td><code>create(parent, opts)</code></td><td>mount an editor; returns a handle with <code>getValue</code> / <code>setValue</code> / <code>focus</code> / <code>setMode</code> / <code>destroy</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Build (build-on-each-consumer)</h2>
+        <p>The editor source lives here in <code>src/</code>, but the bundle is built inside the consuming app so esbuild resolves <em>that app's</em> <code>monaco-*</code> deps and writes into its <code>frontend/lib/</code>. Each consumer keeps <code>esbuild</code> + the pinned <code>monaco-editor</code> / <code>monaco-vim</code> / <code>monaco-emacs</code> in devDependencies and invokes the bundler from its project root (e.g. via <code>tauri.conf.json</code> <code>beforeDevCommand</code>):</p>
+<pre>node crates/zpwr-hooks-editor/scripts/build-hooks-editor.mjs</pre>
+        <p>The output dir defaults to <code>&lt;cwd&gt;/frontend/lib</code>; override with the <code>HOOKS_EDITOR_OUT</code> env var. The generated bundles are build artifacts (gitignore them in the consumer). The bundler emits IIFE, minified, ES2020, with Monaco's codicon <code>.ttf</code> inlined as a data URL so the single <code>.css</code> artifact is self-contained.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Bundler resolve fixes</h2>
+        <p><code>scripts/build-hooks-editor.mjs</code> carries esbuild resolve overrides because the default browser/CommonJS resolution pulls in AMD <code>define()</code> builds that throw in the WebView and silently degrade the editor to a textarea:</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>monaco-vim</code></td><td>forced to its ESM build (<code>dist/index.mjs</code>); the <code>browser</code> condition's UMD bundle carries an AMD <code>define()</code> from the embedded CodeMirror vim keymap</td></tr>
+            <tr><td><code>monaco-editor</code></td><td>bare imports pinned to <code>esm/vs/editor/edcore.main.js</code> &mdash; the same lean ESM instance the entry uses, instead of the AMD min build <code>monaco-emacs</code>' <code>require()</code> would pull</td></tr>
+            <tr><td><code>monaco-editor/esm/*</code></td><td>deep subpaths without a file extension get <code>.js</code> appended and resolve to the package dir directly (the package <code>exports</code> map only resolves extensioned paths)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Source layout</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>src/hooks-editor-entry.mjs</code></td><td>the editor entry &mdash; Monaco instance, stryke language registration, cyberpunk theme, vim/emacs keymaps, LSP&#8596;Monaco provider/marker mapping, the <code>window.HooksEditor</code> facade</td></tr>
+            <tr><td><code>src/lsp-client-core.mjs</code></td><td>thin stryke-LSP JSON-RPC client (<code>createLspCore</code>): <code>init</code> / <code>notify</code> / <code>request</code> / <code>receive</code> / <code>connected</code> / <code>isInitialized</code> / <code>onDiagnostics</code> / <code>ready</code></td></tr>
+            <tr><td><code>src/hooks-editor-worker-entry.mjs</code></td><td>Monaco base editor web-worker entry (no language workers)</td></tr>
+            <tr><td><code>scripts/build-hooks-editor.mjs</code></td><td>esbuild bundler &mdash; reads <code>src/</code> from this repo, writes the bundle into the consuming app</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The app stack</h2>
+        <p>zpwr-hooks-editor is the shared editor component across the MenkeTechnologies apps. Browse the rest via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/Audio-Haxor" target="_blank" rel="noopener noreferrer">Audio-Haxor</a> &mdash; Tauri v2 desktop app; original home of the editor</li>
+          <li><a href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">traderview</a> &mdash; Tauri trading/market app</li>
+          <li><a href="https://github.com/MenkeTechnologies/ztranslator" target="_blank" rel="noopener noreferrer">ztranslator</a> &mdash; Tauri MIDI/OSC/DMX/Link translation app</li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">zpwr-daw</a> &mdash; JUCE DAW; loads the bundle in its WebView</li>
+          <li><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a> &mdash; the stryke language + <code>stryke --lsp</code> server the editor talks to</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
