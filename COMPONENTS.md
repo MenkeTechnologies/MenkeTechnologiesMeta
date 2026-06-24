@@ -82,6 +82,9 @@ _Last reconciled: 2026-06-24._
 - [ ] **office-core → traderview** (add submodule + Rust dep / C ABI + an office view)
 - [ ] **mail-core → traderview** (add submodule + Rust dep / C ABI + a mail view)
 - [ ] **pdf-core → traderview** (add submodule + Rust dep / C ABI + a PDF view)
+- [ ] **pdf-core → zpwr-daw** (PDF tab/view + path-aware `openPdf`; embed engine)
+- [ ] **pdf-core → Audio-Haxor** (PDF overlay + path-aware `openPdf`; embed engine)
+- [ ] **crate → embedded zpdf**: in apps with both the crate/content browser AND a PDF view (Audio-Haxor, zpwr-daw), opening a `.pdf` from the crate routes to the embedded `openPdf(path)` view instead of the external/default opener (PDF views are placeholders until `zpdf-core` is wired)
 - [ ] **zoffice / zemail / zpdf** (embed the standard component set + each other's `-core`; zoffice/zemail still scaffolds, zpdf is further along)
 
 ## Notes
