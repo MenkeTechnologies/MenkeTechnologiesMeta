@@ -7,8 +7,8 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-107-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-18_core-cyan.svg)](#tier-1--core-18)
+[![Submodules](https://img.shields.io/badge/submodules-113-blue.svg)](#0x01-submodule-map)
+[![Tier 1](https://img.shields.io/badge/tier_1-24_core-cyan.svg)](#tier-1--core-24)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 107 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 113 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -34,7 +34,7 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (18)](#tier-1--core-18)
+  - [Tier 1 — Core (24)](#tier-1--core-24)
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 107 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 113 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,9 +81,9 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 107 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 113 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (18)
+### Tier 1 — Core (24)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -107,6 +107,12 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`nmaprs`](https://github.com/MenkeTechnologies/nmaprs) | Rust port of `nmap`. Full async TCP/UDP/SCTP/IP-protocol scans, idle/zombie scans, NSE-style script probes, ARP/ICMP/timestamp/mask host discovery, top-ports list embedded. &middot; <sub>[docs](https://menketechnologies.github.io/nmaprs/) · [report](https://menketechnologies.github.io/nmaprs/report.html)</sub> |
 | [`powerliners`](https://github.com/MenkeTechnologies/powerliners) | **Rust CLI** — mature port of Python's [`powerline-status`](https://github.com/powerline/powerline) (v0.2.15, 3,000+ `#[test]` functions, 5-binary suite: `powerline` / `powerline-daemon` / `powerline-config` / `powerline-render` / `powerline-lint`, parity-tested against upstream Python). Drop-in for tmux / zsh / bash / vim with sub-millisecond render replacing the ~100 ms python startup tax. &middot; <sub>[docs](https://menketechnologies.github.io/powerliners/) · [report](https://menketechnologies.github.io/powerliners/report.html)</sub> |
 | [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | The terminal OS. 504 verbs, 190k LOC, zinit-based, stryke-powered. ⭐ 220 &middot; <sub>[docs](https://menketechnologies.github.io/zpwr/) · [report](https://menketechnologies.github.io/zpwr/report.html)</sub> |
+| [`zpdf`](https://github.com/MenkeTechnologies/zpdf) | **PDF editor replacing Adobe Acrobat + Preview** (Rust, Tauri v2 desktop app) — full document editing, annotation/markup, AcroForms, digital & certificate signatures, OCR, redaction, page management, convert/export. Consumes `zpdf-core`. **Paid product** — in the app-store. |
+| [`zpdf-core`](https://github.com/MenkeTechnologies/zpdf-core) | **Embeddable PDF engine** (pure Rust, no GUI deps) — parse / render / edit / annotate / sign / page-ops behind `zpdf`; builds `rlib` + `staticlib` + `cdylib` so it embeds into `traderview` and the other GUI apps (same pattern as `zpwr-embed-terminal`). Ships a source-derived feature port report. **Private.** |
+| [`zemail`](https://github.com/MenkeTechnologies/zemail) | **Email client** (Rust, Tauri v2 desktop app) — a fast, owned desktop mail app behind a cyberpunk HUD. Consumes `zemail-core`. **Paid product** — in the app-store. |
+| [`zemail-core`](https://github.com/MenkeTechnologies/zemail-core) | **Embeddable mail engine** (pure Rust, no GUI deps) extracted from `zemail` so the same engine embeds across the GUI stack. **Private.** |
+| [`zoffice`](https://github.com/MenkeTechnologies/zoffice) | **Office suite replacing Microsoft Office** (Rust, Tauri v2 desktop app) — documents, spreadsheets, presentations. Consumes `zoffice-core`. **Paid product** — in the app-store. |
+| [`zoffice-core`](https://github.com/MenkeTechnologies/zoffice-core) | **Embeddable office engine** (pure Rust, no GUI deps) — document / spreadsheet / presentation parse + edit, extracted from `zoffice`. |
 
 ### Tier 2 — Stryke ecosystem + tap (32)
 
