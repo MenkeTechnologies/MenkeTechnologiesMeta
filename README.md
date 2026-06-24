@@ -7,12 +7,12 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-104-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-107-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-18_core-cyan.svg)](#tier-1--core-18)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
-[![Tier 5](https://img.shields.io/badge/tier_5-8_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-8)
+[![Tier 5](https://img.shields.io/badge/tier_5-11_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-11)
 [![Tier 6](https://img.shields.io/badge/tier_6-17_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-17)
 [![Rust](https://img.shields.io/badge/rust-2.36M_LOC-orange.svg)](#0x09-code-volume)
 [![Code](https://img.shields.io/badge/code-8.14M_lines-brightgreen.svg)](#0x09-code-volume)
@@ -20,11 +20,11 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 104 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 107 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-file-browser` (the shared multi-pane file browser — JS front end + Rust `fs` crate) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-i18n` (the shared portable i18n runtime) + `zpwr-clip-engine` (the shared JS arranger/sequencer frontend extracted from `zpwr-daw`) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `tmux-fzf-url`), the cyberpunk editor theme (`zpwr-theme` — VS Code + JetBrains), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-file-browser` (the shared multi-pane file browser — JS front end + Rust `fs` crate) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-i18n` (the shared portable i18n runtime) + `zpwr-clip-engine` (the shared JS arranger/sequencer frontend extracted from `zpwr-daw`) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `vscode-awk`, `vim-awk`, `emacs-awk`, `tmux-fzf-url`), the cyberpunk editor theme (`zpwr-theme` — VS Code + JetBrains), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -38,7 +38,7 @@
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
-  - [Tier 5 — Editor / multiplexer plugins (8)](#tier-5--editor--multiplexer-plugins-8)
+  - [Tier 5 — Editor / multiplexer plugins (11)](#tier-5--editor--multiplexer-plugins-11)
   - [Tier 6 — Apps, extensions, web & web-APIs (16)](#tier-6--apps-extensions-web--web-apis-16)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
 - [\[0x03\] Common Operations](#0x03-common-operations)
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 104 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 107 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,7 +81,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 104 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 107 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (18)
 
@@ -94,7 +94,7 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`fusevm`](https://github.com/MenkeTechnologies/fusevm) | Language-agnostic bytecode VM with fused superinstructions and 3-tier Cranelift JIT. The execution engine behind strykelang, zshrs, awkrs. &middot; <sub>[docs](https://menketechnologies.github.io/fusevm/) · [report](https://menketechnologies.github.io/fusevm/report.html)</sub> |
 | [`lsofrs`](https://github.com/MenkeTechnologies/lsofrs) | Rust rewrite of `lsof` — 5–21× faster, **7-tab TUI** (ratatui), 31 cyberpunk themes. &middot; <sub>[docs](https://menketechnologies.github.io/lsofrs/) · [report](https://menketechnologies.github.io/lsofrs/report.html)</sub> |
 | [`temprs`](https://github.com/MenkeTechnologies/temprs) | Temporary file stack manager. Atomic `flock`-protected master record, dual indexing (position or `@name`). &middot; <sub>[docs](https://menketechnologies.github.io/temprs/) · [report](https://menketechnologies.github.io/temprs/report.html)</sub> |
-| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | AWK in Rust. Bytecode VM + Cranelift JIT + persistent rkyv bytecode cache + parallel records. &middot; <sub>[docs](https://menketechnologies.github.io/awkrs/) · [report](https://menketechnologies.github.io/awkrs/report.html)</sub> |
+| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | AWK in Rust. Bytecode VM + Cranelift JIT + persistent rkyv bytecode cache + parallel records. LSP + DAP servers (`awkrs --lsp` / `--dap`) in progress; editor plugins `vscode-awk` / `vim-awk` / `emacs-awk`. &middot; <sub>[docs](https://menketechnologies.github.io/awkrs/) · [report](https://menketechnologies.github.io/awkrs/report.html)</sub> |
 | [`iftoprs`](https://github.com/MenkeTechnologies/iftoprs) | Real-time bandwidth monitor. **TUI** built on ratatui, 31 themes, process attribution via `lsof`, NDJSON streaming. &middot; <sub>[docs](https://menketechnologies.github.io/iftoprs/) · [report](https://menketechnologies.github.io/iftoprs/report.html)</sub> |
 | [`ztranslator`](https://github.com/MenkeTechnologies/ztranslator) | **Real-time event-translation desktop app** in pure Rust — also embeddable as the routing engine inside other apps. Watches MIDI input ports (`midir`), OSC, DMX, and the file system for triggers, matches each event against per-translator rules on a signed-32-bit integer VM (faithful BOME rules: arithmetic + bitwise, `IF/THEN`, `Goto`/`Skip`, 10 locals + globals, wrap-on-overflow), and fires an outgoing action — MIDI / OSC / DMX out, keystroke / mouse / AppleScript (macOS `CGEvent`), timer, or host-defined custom command. Built-in auto-update. Imports and exports BOME MIDI Translator Pro `.bmtp` projects (lossless, unsigned export round-trips through import) and stores native projects as JSON. Ships its own GUI; the same engine drops into a host GUI/CLI app. **Paid product** — docs vendored locally. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/ztranslator) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/ztranslator/report)</sub> |
 | [`Audio-Haxor`](https://github.com/MenkeTechnologies/Audio-Haxor) | **Tauri v2 desktop GUI app** + JUCE engine. VST2/VST3/AU/CLAP scanner, sample vault, DAW project index, KVR version checker. **Paid product** — docs vendored locally. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/Audio-Haxor) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/Audio-Haxor/report)</sub> |
@@ -188,7 +188,7 @@ The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh. T
 | [`revolver`](https://github.com/MenkeTechnologies/revolver) | Spinner / progress widget for zsh scripts. |
 | [`zunit`](https://github.com/MenkeTechnologies/zunit) | Powerful zsh unit-testing framework. |
 
-### Tier 5 — Editor / multiplexer plugins (8)
+### Tier 5 — Editor / multiplexer plugins (11)
 
 Plugins that target Vim/Neovim and tmux rather than zsh proper.
 
@@ -201,6 +201,9 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 | [`vim-zsh`](https://github.com/MenkeTechnologies/vim-zsh) | Vim / Neovim support for the [`zshrs`](https://github.com/MenkeTechnologies/zshrs) shell — `*.zsh` / dotfile / shebang filetype detection (`filetype=zshrs`), a standalone grammar generated from `zshrs --dump-reflection` (137 builtins, 113 zshrs extensions on their own highlight group, 245 special vars, control + decl keywords), shell-block-aware indent, ALE via `zshrs -n`, and LSP (vim-lsp / coc.nvim) via `zshrs --lsp`. &middot; <sub>[docs](https://menketechnologies.github.io/vim-zsh/) · [report](https://menketechnologies.github.io/vim-zsh/report.html)</sub> |
 | [`vscode-zsh`](https://github.com/MenkeTechnologies/vscode-zsh) | VS Code / VSCodium support for `zshrs` — a `source.zshrs` TextMate grammar generated from `zshrs --dump-reflection` (137 builtins, 113 zshrs extensions on their own scope, 245 special vars), `*.zsh` / dotfile / shebang detection, and LSP via `zshrs --lsp`. &middot; <sub>[docs](https://menketechnologies.github.io/vscode-zsh/) · [report](https://menketechnologies.github.io/vscode-zsh/report.html)</sub> |
 | [`emacs-zsh`](https://github.com/MenkeTechnologies/emacs-zsh) | `zshrs-mode` for Emacs — font-lock generated from `zshrs --dump-reflection` (137 builtins, 113 zshrs extensions via a dedicated `zshrs-extension-face`, 245 special vars), shell-block-aware indent, and LSP via `zshrs --lsp` (eglot + lsp-mode). Regenerate via `scripts/gen-stdlib.sh`. &middot; <sub>[docs](https://menketechnologies.github.io/emacs-zsh/) · [report](https://menketechnologies.github.io/emacs-zsh/report.html)</sub> |
+| [`vscode-awk`](https://github.com/MenkeTechnologies/vscode-awk) | VS Code / VSCodium extension for AWK (`awkrs`) — `*.awk` filetype detection, a hand-written `source.awk` TextMate grammar (`BEGIN`/`END`, control keywords, built-in vars + functions, field refs, `/regex/` literals), an `awk.run` command, LSP via `awkrs --lsp`, and DAP debugging via `awkrs --dap`. &middot; <sub>[docs](https://menketechnologies.github.io/vscode-awk/) · [report](https://menketechnologies.github.io/vscode-awk/report.html)</sub> |
+| [`vim-awk`](https://github.com/MenkeTechnologies/vim-awk) | Vim / Neovim support for AWK (`awkrs`) — `*.awk` filetype detection, syntax + brace-aware indent, run / `:make` via `awkrs`, and LSP via `awkrs --lsp`. &middot; <sub>[docs](https://menketechnologies.github.io/vim-awk/) · [report](https://menketechnologies.github.io/vim-awk/report.html)</sub> |
+| [`emacs-awk`](https://github.com/MenkeTechnologies/emacs-awk) | `awkrs-mode` for Emacs — font-lock for AWK (keywords, built-in vars/functions, field refs, `/regex/`), indent, run via `awkrs`, eldoc + completion from a built-in-function stdlib, and LSP via `awkrs --lsp` (eglot + lsp-mode). &middot; <sub>[docs](https://menketechnologies.github.io/emacs-awk/) · [report](https://menketechnologies.github.io/emacs-awk/report.html)</sub> |
 | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
 ### Tier 6 — Apps, extensions, web & web-APIs (17)
