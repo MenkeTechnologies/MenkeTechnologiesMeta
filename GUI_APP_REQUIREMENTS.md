@@ -2,7 +2,8 @@
 
 The shared baseline every MenkeTechnologies desktop GUI app must meet. The goal is a
 single recognizable product family: open any app and the command palette, terminal,
-hooks editor, filtering, tables, and chrome behave identically. Divergence is a bug.
+hooks editor, filtering, tables, arrangement grid, and chrome behave identically.
+Divergence is a bug.
 
 This is a **conformance spec**, not a suggestion. Each requirement names the **canonical
 shared source** an app must consume — never a per-app reimplementation. Per the house
@@ -39,6 +40,7 @@ per app. `zpwr-embed-terminal/webui/terminal.js` is the reference pattern.
 | Command palette | `zpwr-patch-core/webui/command-palette.js` | imported by the shell `index.html` |
 | Fuzzy filter (fzf) | `zpwr-patch-core` `fzf` matcher (`fzfMatch`) | one matcher, reused by every filter + the palette |
 | Shared theme/styles | `zpwr-patch-core/webui/css/cyberpunk.css` (design tokens) | the cyberpunk shell + token variables |
+| Arrangement grid | `zpwr-clip-engine/webui/grid` (`createGrid`, `grid-core.js` + `domains/*.js`) | one renderer/model/interactions, N host-supplied domains |
 
 ## Requirements
 
@@ -94,6 +96,30 @@ Every data table in every app:
 
 Both behaviors come from one shared table component; tables are never hand-rolled per view.
 
+### R9 — DAW arrangement grid (one engine, per-app purpose)
+Every app embeds the shared **`zpwr-clip-engine` arrangement grid** — the same canvas
+renderer, model, and interaction layer the DAW uses — repurposed for the app's own content.
+This is the family's timeline substrate: a bar/time axis, lanes, draggable/resizable regions,
+breakpoint automation, playhead, and loop region, usable for *any* time- or sequence-ordered
+data, not only audio.
+
+The grid is content-agnostic by design: `createGrid({ canvas, domain, store, storageKey,
+onChange, popover })` wires one model + one renderer + one interaction model onto a canvas and
+is driven entirely by a **domain** (`webui/grid/domains/*.js`). A domain supplies
+`lanes()`, `timeAxis()`, `value`, `capabilities`, and labels — everything content-specific.
+"One renderer, one interaction model, **N domains**, host-injected transport."
+
+- An app **MUST** reuse `createGrid` + the shared renderer/model/interactions — never fork the
+  grid. Repurposing = writing (or reusing) a **domain**, plus a `store` and an `onChange` that
+  persists/pushes to the app's own backend.
+- Shipping domains: `notes` (piano roll), `arranger` (clip arrangement), `launcher` (session
+  clips), `autolanes` / `automation` (breakpoint lanes), `triggers`. New purposes add a new
+  domain file, not a new grid.
+- Intended per-app purposes (INVENTIONS #1 — a general-purpose arranger embedded in any host,
+  including non-audio): **zpwr-daw** → notes/clips/arrangement; **traderview** → trades on the
+  timeline; **ztranslator** → translations; **Audio-Haxor** → stryke on clips; synth/fx/midi-fx
+  → the clip/automation lane for the plugin.
+
 ## Host substrate notes
 
 ### Tauri apps
@@ -134,7 +160,7 @@ Both behaviors come from one shared table component; tables are never hand-rolle
 
 ## Conformance checklist
 
-Per app, all eight must be true:
+Per app, all nine must be true:
 
 - [ ] R1 Command palette (Cmd+K), palette matcher = shared fzf
 - [ ] R2 Stryke Hooks editor (shared `zpwr-hooks-editor`)
@@ -144,6 +170,7 @@ Per app, all eight must be true:
 - [ ] R6 Logo top-left (shared header)
 - [ ] R7 All filters fuzzy (fzf) with matched-char highlight
 - [ ] R8 All tables sortable + resizable columns (shared table component)
+- [ ] R9 Arrangement grid embedded (shared `zpwr-clip-engine` `createGrid` + app domain)
 
 ### Known conformance gaps (close these)
 
