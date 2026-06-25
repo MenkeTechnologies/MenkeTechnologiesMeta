@@ -73,7 +73,7 @@ except toml.TOMLDecodeError as e:
         ok=0
         continue
     }
-done < <(find . -path './.git' -prune -o -type f -name 'Cargo.toml' -not -path '*/target/*' -not -path '*/vendor/*' -print 2>/dev/null)
+done < <(find . -path './.git' -prune -o -type f -name 'Cargo.toml' -not -path '*/target/*' -not -path '*/vendor/*' -not -path '*/runtime/grammars/sources/*' -not -path '*/libs/JUCE/*' -not -path '*/node_modules/*' -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked Cargo.toml files checked, $broken with TOML parse errors"

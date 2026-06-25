@@ -56,7 +56,11 @@ total = 0
 problems = []
 
 for r, _, files in os.walk(ROOT):
-    if '.git' in r or 'target' in r or 'vendor' in r:
+    # Skip vendored upstream trees (Helix tree-sitter grammar sources,
+    # JUCE, node_modules) — those ship third-party Cargo.toml we don't own.
+    if ('.git' in r or 'target' in r or 'vendor' in r
+            or 'runtime/grammars/sources' in r or 'libs/JUCE' in r
+            or 'node_modules' in r):
         continue
     if 'Cargo.toml' not in files:
         continue
