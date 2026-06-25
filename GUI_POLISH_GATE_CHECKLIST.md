@@ -18,13 +18,36 @@ Concrete tasks to drive all **14 Desktop Apps** to **PASS** on
 ## Status matrix (2026-06-25)
 
 Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) +
-`package.json` (scripts). Legend: **✓** present · **✗** absent · **~** present but
-*not via the shared source* (counts as FAIL) · **?** not yet audited (resolve in Phase F).
+`package.json` (scripts).
 
-Columns map to the gates: R1 palette · R2 hooks · R3 term · R4 shared styles/tokens ·
-**set**tings panel · **clr** colorschemes · R5 **dash**board+tabs · R6 **hdr** logo/header ·
-R7 **fzf** · R8 **tbl** sortable/resizable · R9 **grd** clip-engine grid · R10 **fb** file
-browser · G3 **i18n** · G4 **scr** (extended scripts) · own **-core**.
+**Cell legend** — what a value means:
+
+| Value | Meaning |
+| :--: | --- |
+| **✓** | present (via the canonical shared source) |
+| **✗** | absent |
+| **~** | present but **not** via the shared source — still a **FAIL** (e.g. a per-app fork or a substring filter) |
+| **?** | not yet audited — resolve in Phase F; **not** counted as PASS |
+
+**Column legend** — what each column is, and which gate it serves:
+
+| Col | Dimension | Canonical source | Gate |
+| --- | --- | --- | :--: |
+| **pal** | Command palette (Cmd/Ctrl+K) | shared `command-palette.js` | R1 |
+| **hk** | Stryke hooks editor (Monaco) | `zpwr-hooks-editor` | R2 |
+| **tm** | Embedded PTY terminal (xterm) | `zpwr-embed-terminal` | R3 |
+| **sty** | Shared cyberpunk styles / design tokens | `cyberpunk.css` tokens | R4 |
+| **set** | Searchable settings panel | haxor `settings.js` + `settings-search.js` | G1 |
+| **clr** | Colorscheme / theme switcher | haxor theme switch + R4 tokens | R4 / G1 |
+| **dsh** | Tile dashboard + tab bar | shared tile/tab components | R5 |
+| **hdr** | Logo top-left + shared header strip | shared header | R6 |
+| **fzf** | Fuzzy filters w/ matched-char highlight | shared `fzfMatch` | R7 |
+| **tbl** | Sortable + resizable tables | shared table component | R8 |
+| **grd** | Arrangement grid (`createGrid` + a domain) | `zpwr-clip-engine` | R9 |
+| **fb** | Multi-pane file browser | `zpwr-file-browser` | R10 |
+| **i18n** | Localized: 27 locales + 18 proof tests | `zpwr-i18n` | G3 |
+| **scr** | Extended pnpm scripts (`test`/`doc`/`ship-check`/`deploy`/`i18n:*`) | haxor `package.json` | G4 |
+| **-core** | Own `-core` engine embedded (native + C ABI) | the app's `-core` | G2 |
 
 | App | pal | hk | tm | sty | set | clr | dsh | hdr | fzf | tbl | grd | fb | i18n | scr | -core |
 | --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:| --- |
