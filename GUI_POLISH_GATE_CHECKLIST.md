@@ -53,7 +53,7 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 | Audio-Haxor | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | (app) |
 | traderview | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | — |
 | ztranslator | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | `ztranslator-core` |
-| zpwr-daw | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | `zpwr-clip-engine` |
+| zpwr-daw | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ † | `zpwr-clip-engine` |
 | zpdf | ✓ | ✗ | ✓ | ? | ✗ | ? | ? | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ | `zpdf-core` |
 | zemail | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zemail-core` |
 | zoffice | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zoffice-core` |
@@ -68,10 +68,14 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 **Reads from the matrix:**
 - **Command palette (R1)** present in only **5/14** (haxor, traderview, ztranslator, zpwr-daw, zpdf).
 - **Settings panel** in only **4/14**; **fzf filters (R7)** in **5/14**; **sortable/resizable tables (R8)** in **5/14**.
-- **Extended scripts (G4)** — **haxor + ztranslator** have the full set; traderview partial;
-  **11 apps have none**. (The `dev`/`build`/`nuke`/`clean`/`bust`/`rebuild` basics ARE ported
-  across all 14; `scr` tracks only the `test`/`doc`/`ship-check`/`deploy`/`i18n:*` families.)
-  ztranslator's `i18n:*` is deferred until it has its own `app_i18n_*` catalogs.
+- **Extended scripts (G4)** — **haxor + ztranslator + zpwr-daw** have the relevant set;
+  traderview partial; **10 apps have none**. (The `dev`/`build`/`nuke`/`clean`/`bust`/`rebuild`
+  basics ARE ported across all 14; `scr` tracks the `test`/`doc`/`ship-check`/`deploy`/`i18n:*`
+  families.) **†** zpwr-daw is JUCE, so its `scr` is the JUCE-relevant subset — `test` (ctest +
+  JS), `test:js`, `ship-check`, `deploy`; `tauri:build:ci`, `cargo doc`, and `i18n:*` are **N/A**
+  (no Tauri/Cargo/catalogs). ztranslator's `i18n:*` is likewise deferred until it has catalogs.
+- **zpwr-daw's only remaining gap is `fb`** (file browser, R10) — a JUCE embed (BinaryData +
+  native fs backend + UI tab), which is build-gated C++ work, not yet done.
 - **hooks-editor** missing in **10**, **file-browser** in **11**, **terminal**/**i18n** in **3**.
 - **Worst-off (nothing shared, `~`/`✗` across): `zcite`, `zterm`, `zcontainer`.** zcontainer has a
   cyberpunk look + logo but hand-rolled (not the shared tokens/header), and substring search (not fzf).
