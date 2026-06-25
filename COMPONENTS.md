@@ -18,6 +18,7 @@ _Last reconciled: 2026-06-24._
 | **ztranslator-core** | Embeddable pure-Rust MIDI/OSC/DMX/Link translation engine, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind the `ztranslator` app + what other apps embed |
 | **zpwr-file-browser** | Filesystem file manager (webui + Rust fs backend) |
 | **zpwr-i18n** | Localization runtime (JSON loader) |
+| **zgui-core** | Shared cyberpunk GUI toolkit (webui) — canonical shell/settings/dialog/table/command-palette/fzf/colorscheme/notification chrome on `window.ZGui`; extracted from Audio-Haxor, zreq, `zpwr-patch-core` |
 | **zpwr-algo-production** | One-click algorithmic track generation (.als / .zdp) |
 | **zoffice-core** | Embeddable pure-Rust office engine — document/spreadsheet/presentation parse+edit, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind `zoffice` |
 | **zemail-core** | Embeddable pure-Rust mail engine, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind `zemail` |
@@ -116,3 +117,8 @@ _Last reconciled: 2026-06-24._
   exist. zoffice/zemail/zpdf are paid products.
 - **Not consumed by any GUI app:** `zpwr-theme`, `zpwr-jobs`, `zpwr-license` (tooling/editor).
 - **patch-core** is JUCE-plugin-only (daw + synth/fx/midi-fx); the Tauri apps don't use it.
+- **zgui-core (new, extracted):** the shared `window.ZGui` chrome toolkit (shell/settings/dialog/table/
+  command-palette/fzf/colorscheme/notification) pulled out of Audio-Haxor / zreq / `zpwr-patch-core` so
+  the GUI apps stop re-implementing divergent copies. Consumed like `zpwr-i18n` (copy `webui/*` into each
+  app's `frontend/` at build time). Per-app consumption not yet added to the matrix above — needs a
+  reconciliation pass against each app's `.gitmodules`.
