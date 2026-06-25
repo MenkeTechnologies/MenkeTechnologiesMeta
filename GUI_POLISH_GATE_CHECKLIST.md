@@ -78,9 +78,14 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
   Tauri-only (no C ABI, no JUCE transport shim), so `fb`=✗ for all four JUCE apps is blocked on
   the same promotion. **Step 1 done** (`zpwr-file-browser` `830d43b9`): a `capi`-gated C ABI
   (`fb_invoke`/`fb_string_free`, all 33 `fs_*` ops, smoke-tested, staticlib exports verified).
-  Remaining: **Step 2** add a `window.Juce` transport shim to `file-browser.js`; **Step 3** wire
-  `zpwr-daw` (build the staticlib, link, register `fb_invoke`, BinaryData the webui, FILES tab) —
-  both build-gated on a JUCE/CMake machine.
+  **Step 2 done** (`542244d9`): `webui/file-browser-juce-shim.js` — a host-side `window.vstUpdater`
+  for JUCE (all 30 backend methods → `fb_invoke` + `fb_home_dir`/`fb_open_default`), full coverage
+  verified, file-browser.js untouched. **Step 3 (zpwr-daw wiring) build-gated + needs one
+  adaptation**: file-browser.js self-inits on `DOMContentLoaded`, but the JUCE shell mounts tabs
+  lazily via dynamic `import()` after that fires — so the shared module needs an explicit init
+  entry point first. Then: submodule, CMake (staticlib `--features capi` + BinaryData + link),
+  PluginEditor `fb_invoke`/`fb_home_dir`/`fb_open_default` natives, FILES tab in the shared
+  `index.html`. All require a JUCE/CMake build to verify.
 - **hooks-editor** missing in **10**, **file-browser** in **11**, **terminal**/**i18n** in **3**.
 - **Worst-off (nothing shared, `~`/`✗` across): `zcite`, `zterm`, `zcontainer`.** zcontainer has a
   cyberpunk look + logo but hand-rolled (not the shared tokens/header), and substring search (not fzf).
