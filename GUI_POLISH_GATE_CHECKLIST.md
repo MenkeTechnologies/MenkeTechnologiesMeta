@@ -39,7 +39,6 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 | **sty** | Shared cyberpunk styles / design tokens | `cyberpunk.css` tokens | R4 |
 | **set** | Searchable settings panel | haxor `settings.js` + `settings-search.js` | G1 |
 | **clr** | Colorscheme / theme switcher | haxor theme switch + R4 tokens | R4 / G1 |
-| **dsh** | Tile dashboard + tab bar | shared tile/tab components | R5 |
 | **hdr** | Logo top-left + shared header strip | shared header | R6 |
 | **fzf** | Fuzzy filters w/ matched-char highlight | shared `fzfMatch` | R7 |
 | **tbl** | Sortable + resizable tables | shared table component | R8 |
@@ -49,22 +48,22 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 | **scr** | Extended pnpm scripts (`test`/`doc`/`ship-check`/`deploy`/`i18n:*`) | haxor `package.json` | G4 |
 | **-core** | Own `-core` engine embedded (native + C ABI) | the app's `-core` | G2 |
 
-| App | pal | hk | tm | sty | set | clr | dsh | hdr | fzf | tbl | grd | fb | i18n | scr | -core |
-| --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:| --- |
-| Audio-Haxor | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | (app) |
-| traderview | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | — |
-| ztranslator | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | `ztranslator-core` |
-| zpwr-daw | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | `zpwr-clip-engine` |
-| zpdf | ✓ | ✗ | ✓ | ? | ✗ | ? | ✓ | ? | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ | `zpdf-core` |
-| zemail | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zemail-core` |
-| zoffice | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zoffice-core` |
-| zreq | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zreq-core` |
-| ztunnel | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `ztunnel-core` |
-| zgo | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zgo-core` |
-| zftp | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | (app) |
-| zcite | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | `zcite-core` |
-| zterm | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | (app) |
-| zcontainer | ✗ | ✗ | ✗ | ~ | ✗ | ✗ | ✗ | ~ | ✗ | ✗ | ✗ | ✗ | ✗ | ~ | `zcontainer-core` |
+| App | pal | hk | tm | sty | set | clr | hdr | fzf | tbl | grd | fb | i18n | scr | -core |
+| --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:| --- |
+| Audio-Haxor | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | (app) |
+| traderview | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | — |
+| ztranslator | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | `ztranslator-core` |
+| zpwr-daw | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | `zpwr-clip-engine` |
+| zpdf | ✓ | ✗ | ✓ | ? | ✗ | ? | ? | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ | `zpdf-core` |
+| zemail | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zemail-core` |
+| zoffice | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zoffice-core` |
+| zreq | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zreq-core` |
+| ztunnel | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `ztunnel-core` |
+| zgo | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zgo-core` |
+| zftp | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | (app) |
+| zcite | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | `zcite-core` |
+| zterm | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | (app) |
+| zcontainer | ✗ | ✗ | ✗ | ~ | ✗ | ✗ | ~ | ✗ | ✗ | ✗ | ✗ | ✗ | ~ | `zcontainer-core` |
 
 **Reads from the matrix:**
 - **Command palette (R1)** present in only **5/14** (haxor, traderview, ztranslator, zpwr-daw, zpdf).
