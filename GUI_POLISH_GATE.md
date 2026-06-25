@@ -29,7 +29,7 @@ Every capability that exists in Audio-Haxor must exist in the app **if it is rel
 
 | Surface | Canonical source | R# |
 | --- | --- | --- |
-| Command palette (Cmd/Ctrl+K), fzf-matched | `zpwr-patch-core` palette + fzf | R1 / R7 |
+| Command palette — **Cmd/Ctrl+K**, fzf-matched (app-owned, see below) | end-app shell | R1 / R7 |
 | Stryke Hooks editor (Monaco) | `zpwr-hooks-editor` | R2 |
 | Embedded PTY terminal (Ctrl+\` / Cmd+T) | `zpwr-embed-terminal` | R3 |
 | Cyberpunk tokens (`Orbitron` + `Share Tech Mono`, glass surfaces) | `zpwr-patch-core/.../cyberpunk.css` | R4 |
@@ -38,10 +38,28 @@ Every capability that exists in Audio-Haxor must exist in the app **if it is rel
 | Fuzzy filters with matched-char highlight | shared fzf matcher | R7 |
 | Sortable + resizable tables | shared table component | R8 |
 | Multi-pane file browser | shared file-browser module | R10 |
-| Searchable settings panel | haxor `settings.js` + `settings-search.js` | — |
+| Settings panel — **Cmd/Ctrl+,**, searchable (app-owned, see below) | end-app shell | — |
 | Colorscheme / theme switcher (cyberpunk variants) | haxor `settings.js` theme switch + R4 tokens | R4 |
 | Context menu, keyboard navigation, help overlay (`?`), drag-reorder, batch-select, multi-filter, history, favorites | haxor `frontend/js/*` → promote to shared | — |
 | Full i18n (see G3) | `zpwr-i18n` | — |
+
+#### Command palette & settings are END-APP surfaces (never in a core/embed)
+
+A load-bearing architecture rule, not a style note:
+
+- **The command palette and the settings panel live in the end GUI app (the shell).** They are
+  **NEVER** built into an embed module or a `-core` engine. A core's job is its domain
+  (containers, fs, midi, …) — it has no palette and no settings UI of its own.
+- **Cores and embeds may only OFFER items**, never render the surface: an embed *contributes*
+  command entries and settings entries to the host (a contribution API — e.g. the engine
+  returns its commands/settings descriptors, or registers them through a host hook). **The end
+  app decides** whether to surface each contributed item. Offering ≠ showing.
+- **Shortcuts are mandatory in every app:** **Cmd/Ctrl+K** opens the command palette,
+  **Cmd/Ctrl+,** opens settings. Bound by the app shell, reachable from anywhere in the app.
+- Practically: `zcontainer-core`, `zpwr-file-browser`, `zpwr-embed-terminal`, etc. must **not**
+  ship a palette or a settings window. If a core wants its action in the palette, it exposes a
+  descriptor list; the `zcontainer` / `Audio-Haxor` / … shell binds the shortcut, renders the
+  surface, and includes (or omits) the core's offered items.
 
 **Domain-relevant (port only where the content fits):**
 

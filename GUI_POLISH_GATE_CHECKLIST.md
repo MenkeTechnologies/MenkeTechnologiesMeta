@@ -33,11 +33,11 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 
 | Col | Dimension | Canonical source | Gate |
 | --- | --- | --- | :--: |
-| **pal** | Command palette (Cmd/Ctrl+K) | shared `command-palette.js` | R1 |
+| **pal** | Command palette — **Cmd/Ctrl+K** (app-owned; cores only offer items) | end-app shell | R1 |
 | **hk** | Stryke hooks editor (Monaco) | `zpwr-hooks-editor` | R2 |
 | **tm** | Embedded PTY terminal (xterm) | `zpwr-embed-terminal` | R3 |
 | **sty** | Shared cyberpunk styles / design tokens | `cyberpunk.css` tokens | R4 |
-| **set** | Searchable settings panel | haxor `settings.js` + `settings-search.js` | G1 |
+| **set** | Settings panel — **Cmd/Ctrl+,** (app-owned; cores only offer items) | end-app shell | G1 |
 | **clr** | Colorscheme / theme switcher | haxor theme switch + R4 tokens | R4 / G1 |
 | **hdr** | Logo top-left + shared header strip | shared header | R6 |
 | **fzf** | Fuzzy filters w/ matched-char highlight | shared `fzfMatch` | R7 |
@@ -137,13 +137,16 @@ when the app has it as a real, working embed (not just a `.gitmodules` line).
 ### B5 — Command palette + fzf filters + shared table (R1/R7/R8) — after Phase A
 - [ ] All 14 route filters through the shared fzf matcher (no `includes()` substring filter).
 - [ ] All 14 tables use the shared sortable/resizable component.
-- [ ] All 14 open a Cmd/Ctrl+K palette listing every command.
+- [ ] All 14 bind **Cmd/Ctrl+K** to open the **app-owned** command palette listing every
+  command (incl. any items contributed by embeds/cores — the app decides which to surface).
+  The palette is NEVER in a core/embed (see the gate's "END-APP surfaces" rule).
 
 ### B6 — Tile dashboard + tab bar + top-left logo header (R5/R6)
 - [ ] All 14 land on a tile dashboard with a tab bar and the shared header (logo top-left).
 
-### B7 — Settings panel (haxor `settings.js` + `settings-search.js`) — present in only 4
-A searchable settings panel (the shared component, not a per-app fork). Missing in 10:
+### B7 — Settings panel (**Cmd/Ctrl+,**) — present in only 4
+A searchable, **app-owned** settings panel bound to **Cmd/Ctrl+,** (NEVER in a core/embed;
+cores only offer settings items — see the gate's "END-APP surfaces" rule). Missing in 10:
 - [ ] zpdf  - [ ] zemail  - [ ] zoffice  - [ ] zreq  - [ ] ztunnel  - [ ] zgo
 - [ ] zftp  - [ ] zcite  - [ ] zterm  - [ ] zcontainer
 
