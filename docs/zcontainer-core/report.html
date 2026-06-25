@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zcontainer-core engineering report — the surface matrix, the Docker and Kubernetes command tables, and the build model for the embeddable pure-Rust container / Kubernetes engine behind zcontainer.">
+  <title>zcontainer-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZCONTAINER-CORE // ENGINEERING REPORT</h1>
+          <div class="docs-sub">// surface matrix · Docker + Kubernetes commands · build model</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="index.html">Home</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zcontainer" target="_blank" rel="noopener noreferrer">App</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="note">zcontainer-core is early-stage and in active development. This page lists the command surface as it stands. All commands take a JSON argument object and return a JSON result, or a <code>{"error":{"tag":"…","message":"…"}}</code> envelope. A <code>namespace</code> of <code>""</code> or <code>"all"</code> lists cluster-wide.</p>
+
+      <h2 class="reg-h">Surfaces</h2>
+      <table>
+        <thead><tr><th>surface</th><th>how</th></tr></thead>
+        <tbody>
+          <tr><td>Rust</td><td>depend on the <code>rlib</code>; call <code>Engine::invoke(cmd, args)</code> + <code>subscribe</code> / <code>unsubscribe</code> / <code>stream_send</code></td></tr>
+          <tr><td>Tauri v2</td><td>enable the <code>tauri</code> feature; wire the invoke / subscribe / unsubscribe / stream_send plugin commands + <code>setup</code>; mount the GUI from <code>webui/</code></td></tr>
+          <tr><td>C ABI</td><td>link the <code>staticlib</code> / <code>cdylib</code>; call <code>zcontainer_invoke</code> / <code>zcontainer_subscribe</code> / … (see <code>include/zcontainer_core.h</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Docker (Engine API via bollard — no docker CLI)</h2>
+      <table>
+        <thead><tr><th>command</th><th>returns</th></tr></thead>
+        <tbody>
+          <tr><td><code>capabilities</code> / <code>docker.ping</code></td><td><code>{docker,kube,version}</code> / <code>{ok}</code></td></tr>
+          <tr><td><code>docker.containers.list</code> / <code>images.list</code> / <code>volumes.list</code> / <code>networks.list</code></td><td><code>[…Info]</code></td></tr>
+          <tr><td><code>docker.stats</code></td><td><code>[ContainerStats]</code> (live CPU%/memory, two-sample)</td></tr>
+          <tr><td><code>docker.container.start</code> / <code>.stop</code> / <code>.restart</code> / <code>.remove</code> / <code>.inspect</code> / <code>.logs</code></td><td><code>{ok}</code> / inspect doc / <code>{logs}</code></td></tr>
+          <tr><td><code>docker.image.remove</code> / <code>.inspect</code></td><td><code>{ok,deleted}</code> / inspect doc</td></tr>
+          <tr><td><code>docker.volume.create</code> / <code>.remove</code></td><td><code>{ok,name}</code> / <code>{ok}</code></td></tr>
+          <tr><td><code>docker.network.remove</code> / <code>.inspect</code></td><td><code>{ok}</code> / inspect doc</td></tr>
+          <tr><td><code>docker.system.df</code> / <code>.prune</code></td><td>disk-usage doc / reclaimed counts</td></tr>
+          <tr><td><code>docker.compose.list</code> / <code>.start</code> / <code>.stop</code> / <code>.restart</code> / <code>.down</code></td><td><code>[ComposeStack]</code> / <code>{ok,affected}</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Kubernetes (apiserver via kube-rs — no kubectl / helm CLI)</h2>
+      <table>
+        <thead><tr><th>command</th><th>returns</th></tr></thead>
+        <tbody>
+          <tr><td><code>k8s.contexts.list</code></td><td><code>[KubeContext]</code> (from kubeconfig, no apiserver call)</td></tr>
+          <tr><td><code>k8s.namespaces.list</code></td><td><code>[NamespaceInfo]</code></td></tr>
+          <tr><td><code>k8s.pods.list</code> / <code>deployments</code> / <code>statefulsets</code> / <code>daemonsets</code> / <code>replicasets</code> / <code>jobs</code> / <code>cronjobs</code> / <code>services.list</code></td><td><code>[…Info]</code></td></tr>
+          <tr><td><code>k8s.nodes.list</code> / <code>crds.list</code></td><td><code>[NodeInfo]</code> / <code>[CrdInfo]</code></td></tr>
+          <tr><td><code>k8s.helm.releases.list</code></td><td><code>[HelmRelease]</code> (decoded from <code>helm.sh/release.v1</code> secrets)</td></tr>
+          <tr><td><code>k8s.resource.get</code></td><td><code>{yaml}</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Build model</h2>
+      <p class="note">The crate builds as <code>rlib</code> + <code>staticlib</code> + <code>cdylib</code>. The Docker and Kubernetes clients are async; the engine owns a Tokio runtime and bridges each request/response command to a synchronous result, while streaming commands (log-follow, exec, image-pull progress, port-forward) run on background tasks and push frames to the host event sink.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zcontainer-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

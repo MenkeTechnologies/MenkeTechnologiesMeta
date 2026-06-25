@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zcite engineering report — the app/engine split, the zcite-core Zotero port coverage (95.0% weighted), and the build model for the from-scratch Rust reference manager.">
+  <title>zcite — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZCITE // ENGINEERING REPORT</h1>
+          <div class="docs-sub">// app/engine split · Zotero port coverage · build model</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="index.html">Home</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zcite" target="_blank" rel="noopener noreferrer">Source</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="note">zcite is early-stage and in active development. The engine (<code>zcite-core</code>) is fully functional and tested standalone today; the Tauri app shell mounts its <code>webui/</code> GUI. Coverage below is hand-assessed conservatively and audited against the real Zotero source — it is a measured snapshot, not a marketing claim. <code>full</code> counts only when behaviour AND the GUI match Zotero; <code>partial</code> when the engine works but the editor/UI is incomplete.</p>
+
+      <h2 class="reg-h">Two-layer split</h2>
+      <table>
+        <thead><tr><th>layer</th><th>path</th><th>responsibility</th></tr></thead>
+        <tbody>
+          <tr><td>desktop app</td><td>app/ (this repo)</td><td>Tauri v2 shell that mounts the engine + GUI; <code>frontend/</code> webview assets</td></tr>
+          <tr><td>engine</td><td>crates/zcite-core</td><td>embeddable pure-Rust engine (rlib · staticlib · cdylib + mountable webui), ported feature-by-feature from Zotero</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Zotero port coverage (zcite-core)</h2>
+      <table>
+        <thead><tr><th>bucket</th><th>count</th></tr></thead>
+        <tbody>
+          <tr><td>🟢 full</td><td>54</td></tr>
+          <tr><td>🟡 partial</td><td>6</td></tr>
+          <tr><td>🔴 missing</td><td>0</td></tr>
+          <tr><td>⚪ out-of-scope</td><td>4</td></tr>
+          <tr><td>total features</td><td>60</td></tr>
+          <tr><td><strong>weighted coverage</strong></td><td><strong>95.0%</strong> (full=1, partial=0.5 over 60)</td></tr>
+        </tbody>
+      </table>
+      <p class="note">The full feature-by-feature breakdown lives in <code>crates/zcite-core/PORT_REPORT.md</code> in the source tree.</p>
+
+      <h2 class="reg-h">What the engine does</h2>
+      <table>
+        <thead><tr><th>area</th><th>detail</th></tr></thead>
+        <tbody>
+          <tr><td>Library</td><td>all 37 Zotero reference types (base-field renames resolved), standalone + child notes, nested collections, colored tags, related items, trash + restore, group libraries</td></tr>
+          <tr><td>Acquire</td><td>DOI (CrossRef) · ISBN (Open Library) · PMID (NCBI) · arXiv; retrieve-metadata-from-PDF; import BibTeX / RIS / CSL-JSON / EndNote XML / MODS / MARCXML / Zotero RDF; Zotero account pull (Web API) + WebDAV attachment sync</td></tr>
+          <tr><td>Cite</td><td>APA, MLA, Chicago (author-date + notes-bibliography), IEEE — or any loaded <code>.csl</code> via the built-in CSL processor; BibTeX cite-key generation</td></tr>
+          <tr><td>Find</td><td>quick search across every field (incl. indexed text/HTML/PDF attachments), condition-based saved searches, duplicate detection + merge</td></tr>
+          <tr><td>Export</td><td>BibTeX, RIS, CSL-JSON, EndNote XML, MODS, MARCXML, Zotero RDF — by selection, collection, or whole library</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Build model</h2>
+      <p class="note">The engine builds as <code>rlib</code> + <code>staticlib</code> + <code>cdylib</code> (<code>cargo build</code> in <code>crates/zcite-core</code>) with a unit + integration test suite, including a <code>--no-default-features</code> pure-core build for headless CI. The same engine embeds inside the other MenkeTechnologies GUI apps.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zcite &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
