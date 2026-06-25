@@ -47,7 +47,7 @@ while IFS= read -r doc; do
         files_with_issues+=("$doc")
         ok=0
     fi
-done < <(find . -path './.git' -prune -o -path './MenkeTechnologiesPublications' -prune -o -type f -path '*/docs/*.html' -print 2>/dev/null)
+done < <(find . -path './.git' -prune -o -path './MenkeTechnologiesPublications' -prune -o -path '*/node_modules' -prune -o -path '*/runtime/grammars/sources' -prune -o -path '*/libs/JUCE' -prune -o -path '*/frontend/vendor' -prune -o -type f -path '*/docs/*.html' -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked docs/*.html files checked, $flagged bare target=\"_blank\" tags across ${#files_with_issues[@]} file(s)"

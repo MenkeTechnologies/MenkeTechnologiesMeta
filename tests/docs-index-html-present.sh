@@ -43,6 +43,15 @@ while IFS= read -r d; do
         */libs/zpwr-*) continue ;;
         */zpwr-clip-engine/*) continue ;;
     esac
+    # Skip docs/ dirs that aren't GH-Pages HTML sites at all: no *.html
+    # files AND no HUD chrome (hud-static.css). Pure-markdown / dev-doc
+    # folders (e.g. a fork's docs/architecture.md, docs/features.md) have
+    # no homepage to 404 and were never meant to publish. A dir with HUD
+    # chrome but no index.html is still flagged — that's a real "forgot
+    # the homepage" bug.
+    if [[ -z "$(find "$d" -maxdepth 1 -name '*.html' -print -quit 2>/dev/null)" && ! -f "$d/hud-static.css" ]]; then
+        continue
+    fi
     checked=$((checked + 1))
     if [[ ! -f "$d/index.html" ]]; then
         echo "FAIL  $d: missing index.html (GH Pages homepage will 404)"
@@ -51,7 +60,7 @@ while IFS= read -r d; do
     else
         echo "PASS  $d/index.html"
     fi
-done < <(find . -path './.git' -prune -o -path './MenkeTechnologiesPublications' -prune -o -type d -name docs -print 2>/dev/null)
+done < <(find . -path './.git' -prune -o -path './MenkeTechnologiesPublications' -prune -o -path '*/node_modules' -prune -o -path '*/runtime/grammars/sources' -prune -o -path '*/libs/JUCE' -prune -o -path '*/frontend/vendor' -prune -o -type d -name docs -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked first-party docs/ directories checked, $missing without index.html"

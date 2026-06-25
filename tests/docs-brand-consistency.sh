@@ -77,6 +77,14 @@ for p in "${paths[@]}"; do
         case "$sub_lower" in
             zpwr-clip-engine) alias_brand="zpwr-daw" ;;
         esac
+        # An `X-core` engine repo legitimately brands its docs — especially
+        # the generated port report — with the APP name it powers (zgo-core's
+        # report is about zgo). Accept the de-suffixed app name as an alias.
+        # Narrow: only the OWN app name; a wrong-sibling link (zgo-core titled
+        # "zftp") still fails because that's a different app name.
+        if [[ -z "$alias_brand" && "$sub_lower" == *-core ]]; then
+            alias_brand="${sub_lower%-core}"
+        fi
         if [[ -n "$title" ]] \
            && [[ "$title_lower" != *"$sub_lower"* ]] \
            && [[ "$title_lower" != *"$sub_no_dash"* ]] \
