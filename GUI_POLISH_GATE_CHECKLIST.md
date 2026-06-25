@@ -52,7 +52,7 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 | --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:| --- |
 | Audio-Haxor | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | (app) |
 | traderview | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | — |
-| ztranslator | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | `ztranslator-core` |
+| ztranslator | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | `ztranslator-core` |
 | zpwr-daw | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | `zpwr-clip-engine` |
 | zpdf | ✓ | ✗ | ✓ | ? | ✗ | ? | ? | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ | `zpdf-core` |
 | zemail | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zemail-core` |
@@ -68,9 +68,10 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 **Reads from the matrix:**
 - **Command palette (R1)** present in only **5/14** (haxor, traderview, ztranslator, zpwr-daw, zpdf).
 - **Settings panel** in only **4/14**; **fzf filters (R7)** in **5/14**; **sortable/resizable tables (R8)** in **5/14**.
-- **Extended scripts (G4)** — only haxor has the full set; traderview partial; **12 apps have none**.
-  (The `dev`/`build`/`nuke`/`clean`/`bust`/`rebuild` basics ARE ported across all 14; `scr`
-  tracks only the `test`/`doc`/`ship-check`/`deploy`/`i18n:*` families that are still missing.)
+- **Extended scripts (G4)** — **haxor + ztranslator** have the full set; traderview partial;
+  **11 apps have none**. (The `dev`/`build`/`nuke`/`clean`/`bust`/`rebuild` basics ARE ported
+  across all 14; `scr` tracks only the `test`/`doc`/`ship-check`/`deploy`/`i18n:*` families.)
+  ztranslator's `i18n:*` is deferred until it has its own `app_i18n_*` catalogs.
 - **hooks-editor** missing in **10**, **file-browser** in **11**, **terminal**/**i18n** in **3**.
 - **Worst-off (nothing shared, `~`/`✗` across): `zcite`, `zterm`, `zcontainer`.** zcontainer has a
   cyberpunk look + logo but hand-rolled (not the shared tokens/header), and substring search (not fzf).
