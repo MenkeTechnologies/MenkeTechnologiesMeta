@@ -10,6 +10,10 @@ shared source** an app must consume — never a per-app reimplementation. Per th
 rule: find the first implementation, reuse it; if a shared module does not exist yet,
 create it in a submodule and route every app through it.
 
+> The pass/fail **acceptance test** over this spec (plus haxor parity, `-core`/embed
+> completeness, and full i18n) is [`GUI_POLISH_GATE.md`](GUI_POLISH_GATE.md). An app is not
+> "done" until it is green there.
+
 ## App roster
 
 | App | Host substrate | Repo |
