@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zreq-core engineering report — module map, command surface, FFI exports, dependency footprint and test status for the embeddable pure-Rust API-client engine. In active development; figures derived from the crate source.">
+  <title>zreq-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZREQ-CORE // ENGINEERING REPORT</h1>
+          <div class="docs-sub">// module map · command surface · FFI exports · test status</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="index.html">Home</a>
+            <a class="btn btn-secondary" href="zreq_port_report.html">Port Report</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zreq-core" target="_blank" rel="noopener noreferrer">Source</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <section class="hero-stats">
+        <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version</span></div>
+        <div class="hero-stat"><span class="num">3</span><span class="lbl">crate-types (rlib · staticlib · cdylib)</span></div>
+        <div class="hero-stat"><span class="num">46</span><span class="lbl">engine commands</span></div>
+        <div class="hero-stat"><span class="num">4</span><span class="lbl">C-ABI exports</span></div>
+        <div class="hero-stat"><span class="num">92.2%</span><span class="lbl">Postman port coverage</span></div>
+      </section>
+      <p class="note">zreq-core is in active development. The figures on this page are derived from the crate source as it stands today (<code>Cargo.toml</code>, <code>src/lib.rs</code>, <code>src/ffi.rs</code>, <code>PORT_REPORT.md</code>): version, crate-types, the dotted commands matched in <code>Engine::invoke</code>, the exported C symbols, and the hand-assessed Postman coverage. The "planned" column lists work that is not yet implemented — it is a roadmap, not a claim of coverage.</p>
+
+      <h2 class="reg-h">Module map</h2>
+      <table>
+        <thead><tr><th>module</th><th>role today</th><th>planned</th></tr></thead>
+        <tbody>
+          <tr><td>lib (Engine)</td><td>one dotted command surface via <code>Engine::invoke</code>; event sink; id allocation; workspace + history persistence</td><td>more dispatch coverage as modules grow</td></tr>
+          <tr><td>model</td><td>workspace · collection · folder · request · environment · variable · auth · body · cookie types</td><td>path-variable rows, richer secret handling</td></tr>
+          <tr><td>http</td><td><code>prepare</code> (vars + path vars + query + auth + body → wire form) always on; <code>send</code> over reqwest blocking behind <code>net</code>, with per-request timeout</td><td>interactive mid-flight cancel, streaming responses</td></tr>
+          <tr><td>auth</td><td>basic · bearer · api-key · oauth2 (attach + client_credentials/password/refresh token fetch); signed digest (RFC 2617) · oauth1 (RFC 5849) · awsv4 · hawk; inheritance walk in lib</td><td>ntlm (connection-bound handshake), oauth2 auth-code redirect (host)</td></tr>
+          <tr><td>crypto</td><td>dependency-free MD5 · SHA-1 · SHA-256 · HMAC, pinned to RFC/FIPS test vectors, for the auth signers</td><td>nothing — frozen primitives</td></tr>
+          <tr><td>vars</td><td><code>{{var}}</code> substitution with collection &gt; env &gt; global precedence; dynamic <code>{{$guid}}</code>/<code>{{$timestamp}}</code>/… generators; data-row overlay for the runner</td><td>secret masking surface</td></tr>
+          <tr><td>store / history</td><td>named multi-workspace JSON persistence (<code>dirs</code> paths) with per-workspace history; capped newest-first request log that captures the full request for one-click replay</td><td>indexing, search</td></tr>
+          <tr><td>settings</td><td>Postman Settings (<code>settings.get/update/reset/path</code>): TLS verification, redirects, default timeout, max response size, proxy &mdash; drive every send; theme/appearance persisted</td><td>per-host client certificates</td></tr>
+          <tr><td>codegen</td><td>snippet generation: curl · raw http · fetch · python requests · httpie · Go · Java · C# · PHP · Ruby · Node</td><td>more niche targets</td></tr>
+          <tr><td>import</td><td>curl · Postman Collection v2.1 · OpenAPI 3 (paths + params + body + $ref resolution + schema examples) · HAR 1.2 import; full Postman v2.1 export (body/auth/scripts)</td><td>OpenAPI securitySchemes→auth</td></tr>
+          <tr><td>runner</td><td>collection runner (<code>runner.run</code>): depth-first request plan with resolved auth + CSV/JSON data-file iterations</td><td>parallel iterations, request delays</td></tr>
+          <tr><td>ws (feature)</td><td>WebSocket send-and-collect (<code>ws.exchange</code>) over <code>tungstenite</code> (sync, native-tls for wss)</td><td>persistent interactive streaming (host)</td></tr>
+          <tr><td>grpc (feature)</td><td>unary gRPC (<code>grpc.call</code>) via gRPC-Web framing over reqwest; runtime <code>.proto</code> compile (<code>protox</code>) + dynamic JSON&lt;-&gt;protobuf (<code>prost-reflect</code>)</td><td>streaming RPCs (host)</td></tr>
+          <tr><td>script</td><td>native <code>pm.*</code> subset: assertions (status · code · responseTime · body-include · header) + <code>pm.*.set()</code> variable writes</td><td>nothing — no JS sandbox by design (durable-deps rule)</td></tr>
+          <tr><td>ffi</td><td>C ABI: <code>zrq_init</code> · <code>zrq_invoke</code> · <code>zrq_set_event_callback</code> · <code>zrq_string_free</code></td><td>richer event payloads</td></tr>
+          <tr><td>tauri_plugin (feature <code>tauri</code>)</td><td>Tauri v2 command (<code>zrq_invoke</code>) + <code>setup</code>; events on <code>zrq-event</code></td><td>mountable webui packaging</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Build surfaces</h2>
+      <p class="note">The crate declares <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>. The <code>rlib</code> links natively into Rust/Tauri hosts; the <code>staticlib</code>/<code>cdylib</code> expose the C ABI for non-Rust hosts (header <code>include/zreq_core.h</code>, hand-written, no cbindgen). The default <code>net</code> feature pulls in <code>reqwest</code> (blocking + native-tls); building <code>--no-default-features</code> yields a pure core with zero TLS/network deps that compiles in headless CI — request preparation and code generation still work without it. The optional <code>tauri</code> feature adds the Tauri v2 command layer.</p>
+
+      <h2 class="reg-h">Verification</h2>
+      <p class="note">The crate carries in-source unit and integration tests across the engine and its modules: the command surface (version reporting, collection/request CRUD, auth inheritance, an import-curl flow, unknown-command error tagging), plus module-level tests in <code>vars</code> (precedence, unknown-left-verbatim, dynamic guid shape), <code>http</code> (query merge + content-type), <code>script</code> (status / body-include / header assertions), <code>import</code> and <code>store</code>. Tests for the pure core run without network access and pass identically in a headless Linux CI; the <code>http::send</code> transport is feature-gated so the default test path needs no live server. The test scripting layer is an honest <strong>subset</strong> — it recognizes the common <code>pm.*</code> idioms and reports unrecognized assertions as skipped rather than silently passing.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zreq-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

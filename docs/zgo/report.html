@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zgo — engineering report. A from-scratch Alfred-class launcher in Rust (Tauri v2 desktop app) over the embeddable pure-Rust zgo-core engine: workflows, Script Filter feedback, fuzzy matching, variable expansion, clipboard history, snippets.">
+  <title>zgo &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+    .docs-build-line { margin:0.35rem 0 0;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;max-width:44rem;opacity:0.75; }
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem; }
+    .hub-scheme-strip-inner { max-width:76rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent); }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch}.hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZGO — ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zgo" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">zgo · Tauri v2 launcher · Alfred port · pure-Rust zgo-core engine</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zgo" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
+      <p class="tutorial-subtitle">zgo is a from-scratch Alfred-class launcher in Rust — a Tauri v2 desktop app over the embeddable pure-Rust <code>zgo-core</code> engine. This report summarizes the architecture and the engine split.</p>
+
+      <section class="tutorial-section">
+        <h2>Architecture</h2>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Two-part split</h4><p>The <code>zgo</code> Tauri v2 app (HUD front end, global hotkey, window) over the <code>zgo-core</code> engine (workflows, matcher, feedback, expansion, clipboard, snippets).</p></div>
+          <div class="feature-card"><h4>Embeddable core</h4><p><code>zgo-core</code> builds <code>rlib</code> + <code>staticlib</code> + <code>cdylib</code>, so the launcher engine mounts into the other MenkeTechnologies GUI apps over a C ABI.</p></div>
+          <div class="feature-card"><h4>Workflow model</h4><p>Objects + connections, with Script Filter feedback in both JSON and the legacy XML form for compatibility with existing workflow definitions.</p></div>
+          <div class="feature-card"><h4>Launch surface</h4><p>Fuzzy matching, variable / token expansion, web searches, clipboard history, and snippet auto-expansion.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Links</h2>
+        <ul>
+          <li><strong>Docs</strong> — <a href="index.html">index.html</a></li>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/zgo">github.com/MenkeTechnologies/zgo</a></li>
+          <li><strong>Engine</strong> — <a href="https://github.com/MenkeTechnologies/zgo-core">github.com/MenkeTechnologies/zgo-core</a></li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

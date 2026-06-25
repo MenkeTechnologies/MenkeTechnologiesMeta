@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="ztunnel-core engineering report — module map, command surface, FFI exports, dependency footprint and test status for the embeddable Rust VPN engine. Early-stage and in active development.">
+  <title>ztunnel-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZTUNNEL-CORE // ENGINEERING REPORT</h1>
+          <div class="docs-sub">// module map · command surface · FFI exports · test status</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="index.html">Home</a>
+            <a class="btn btn-secondary" href="ztunnel_port_report.html">Tunnelblick Port</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/ztunnel-core" target="_blank" rel="noopener noreferrer">Source</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <section class="hero-stats">
+        <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version (early-stage)</span></div>
+        <div class="hero-stat"><span class="num">3</span><span class="lbl">crate-types (rlib · staticlib · cdylib)</span></div>
+        <div class="hero-stat"><span class="num">19</span><span class="lbl">engine commands</span></div>
+        <div class="hero-stat"><span class="num">4</span><span class="lbl">C-ABI exports</span></div>
+      </section>
+      <p class="note">ztunnel-core is early-stage and in active development. The figures on this page are derived from the crate source as it stands today (<code>Cargo.toml</code>, <code>src/lib.rs</code>, <code>src/ffi.rs</code>): version, crate-types, the dotted commands matched in <code>Engine::invoke</code>, and the exported C symbols. The "planned" column lists work that is not yet implemented — it is a roadmap, not a claim of coverage.</p>
+
+      <h2 class="reg-h">Module map</h2>
+      <table>
+        <thead><tr><th>module</th><th>role today</th><th>planned</th></tr></thead>
+        <tbody>
+          <tr><td>lib (Engine)</td><td>one dotted command surface via <code>Engine::invoke</code>; event sink; connect/disconnect orchestration</td><td>backend process supervision, auto-reconnect loop</td></tr>
+          <tr><td>model</td><td>config · backend · connection · status · stats · log · settings types</td><td>per-config advanced OpenVPN options matrix</td></tr>
+          <tr><td>config</td><td>parse + import OpenVPN <code>.ovpn</code>, Tunnelblick <code>.tblk</code> bundles, WireGuard <code>.conf</code>; backend auto-detect</td><td>inline-file extraction from <code>.tblk</code>, config validation lints</td></tr>
+          <tr><td>manager</td><td>per-config lifecycle state machine; logs; throughput sampling</td><td>multi-connection policies, on-demand triggers</td></tr>
+          <tr><td>openvpn</td><td>argv construction + management-interface protocol parser (STATE · BYTECOUNT · PASSWORD · LOG)</td><td>process spawn + socket I/O (net), interactive auth</td></tr>
+          <tr><td>wireguard</td><td>typed <code>.conf</code> parse with 32-byte key validation</td><td>userspace Noise data path + UDP socket</td></tr>
+          <tr><td>platform (macos · linux)</td><td>typed <code>NetOp</code> set; privilege detection</td><td>utun/tun creation, routing, DNS via privileged helper</td></tr>
+          <tr><td>privileged</td><td>ordered bring-up <code>PrivilegePlan</code> from a config</td><td>SMAppService (macOS) / polkit (Linux) helper execution</td></tr>
+          <tr><td>creds</td><td><code>CredStore</code> trait + session-only in-memory store (no plaintext on disk)</td><td>macOS Keychain / Linux Secret Service backend</td></tr>
+          <tr><td>log · stats</td><td>bounded per-connection log buffer; throughput rate sampler</td><td>log export, historical stats</td></tr>
+          <tr><td>store</td><td>profile (configs + settings) JSON load/save</td><td>config versioning / migration</td></tr>
+          <tr><td>ffi</td><td>C ABI: <code>ztn_init</code> · <code>ztn_invoke</code> · <code>ztn_set_event_callback</code> · <code>ztn_string_free</code></td><td>richer event payloads</td></tr>
+          <tr><td>tauri_plugin (feature <code>tauri</code>)</td><td>Tauri v2 plugin glue + mountable webui</td><td>per-window capability scoping</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Build surfaces</h2>
+      <p class="note">The crate declares <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>. The <code>rlib</code> links natively into Rust/Tauri hosts; the <code>staticlib</code>/<code>cdylib</code> expose the C ABI for non-Rust hosts. The default <code>net</code> feature gates the OS-level transport (OpenVPN management socket, WireGuard UDP), all std-only today; building <code>--no-default-features</code> yields a pure config/model/manager core that compiles in headless CI. The optional <code>tauri</code> feature adds the GUI plugin layer.</p>
+
+      <h2 class="reg-h">Verification</h2>
+      <p class="note">The crate carries 40 in-source unit tests across the engine and its modules: the command surface (version/platform reporting, config add/list/get/remove, a connect-without-privilege honest-error path, log accumulation, bad-WireGuard rejection, unknown-command tagging), plus module-level tests in <code>config</code>, <code>wireguard</code>, <code>openvpn</code> (management-line parsing + argv), <code>manager</code> (state transitions), <code>privileged</code> (plan building), <code>stats</code>, <code>store</code>, <code>log</code> and <code>util</code>. Tests run without root or network access and pass identically in headless Linux CI; the privileged bring-up returns an honest <code>needs_privilege</code> error rather than a faked tunnel.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; ztunnel-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
