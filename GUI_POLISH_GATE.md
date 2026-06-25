@@ -38,6 +38,8 @@ Every capability that exists in Audio-Haxor must exist in the app **if it is rel
 | Fuzzy filters with matched-char highlight | shared fzf matcher | R7 |
 | Sortable + resizable tables | shared table component | R8 |
 | Multi-pane file browser | shared file-browser module | R10 |
+| Searchable settings panel | haxor `settings.js` + `settings-search.js` | — |
+| Colorscheme / theme switcher (cyberpunk variants) | haxor `settings.js` theme switch + R4 tokens | R4 |
 | Context menu, keyboard navigation, help overlay (`?`), drag-reorder, batch-select, multi-filter, history, favorites | haxor `frontend/js/*` → promote to shared | — |
 | Full i18n (see G3) | `zpwr-i18n` | — |
 

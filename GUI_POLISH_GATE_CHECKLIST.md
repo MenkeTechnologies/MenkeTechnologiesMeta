@@ -15,27 +15,45 @@ Concrete tasks to drive all **14 Desktop Apps** to **PASS** on
 
 ---
 
-## Status snapshot (from each app's `.gitmodules`, 2026-06-25)
+## Status matrix (2026-06-25)
 
-| App | term | hooks | file-br | i18n | clip | own `-core` |
-| --- | :--: | :--: | :--: | :--: | :--: | --- |
-| Audio-Haxor | ✓ | ✓ | ✓ | ✓ | ✓ | — (app set) |
-| traderview | ✓ | ✓ | ✓ | ✓ | ✓ | — |
-| ztranslator | ✓ | ✓ | ✓ | ✓ | ✓ | `ztranslator-core` (extracting) |
-| zpwr-daw | ✓ | ✓ | ✗ | ✓ | ✓ | `zpwr-clip-engine` |
-| zpdf | ✓ | ✗ | ✗ | ✓ | ✗ | `zpdf-core` |
-| zemail | ✓ | ✗ | ✗ | ✓ | ✗ | `zemail-core` |
-| zoffice | ✓ | ✗ | ✗ | ✓ | ✗ | `zoffice-core` |
-| zreq | ✓ | ✗ | ✗ | ✓ | ✗ | `zreq-core` |
-| ztunnel | ✓ | ✗ | ✗ | ✓ | ✗ | `ztunnel-core` |
-| zgo | ✓ | ✗ | ✗ | ✓ | ✗ | `zgo-core` |
-| zftp | ✓ | ✗ | ✗ | ✓ | ✗ | (app) |
-| zcite | ✗ | ✗ | ✗ | ✗ | ✗ | `zcite-core` |
-| zterm | ✗ | ✗ | ✗ | ✗ | ✗ | (app) |
-| zcontainer | ✗ | ✗ | ✗ | ✗ | ✗ | `zcontainer-core` |
+Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) +
+`package.json` (scripts). Legend: **✓** present · **✗** absent · **~** present but
+*not via the shared source* (counts as FAIL) · **?** not yet audited (resolve in Phase F).
 
-**Worst-off (nothing shared embedded): `zcite`, `zterm`, `zcontainer`.**
-**Universal gaps: hooks-editor (10 apps), file-browser (11 apps).**
+Columns map to the gates: R1 palette · R2 hooks · R3 term · R4 shared styles/tokens ·
+**set**tings panel · **clr** colorschemes · R5 **dash**board+tabs · R6 **hdr** logo/header ·
+R7 **fzf** · R8 **tbl** sortable/resizable · R9 **grd** clip-engine grid · R10 **fb** file
+browser · G3 **i18n** · G4 **scr** (extended scripts) · own **-core**.
+
+| App | pal | hk | tm | sty | set | clr | dsh | hdr | fzf | tbl | grd | fb | i18n | scr | -core |
+| --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:| --- |
+| Audio-Haxor | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | (app) |
+| traderview | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | — |
+| ztranslator | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | `ztranslator-core` |
+| zpwr-daw | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | `zpwr-clip-engine` |
+| zpdf | ✓ | ✗ | ✓ | ? | ✗ | ? | ✓ | ? | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ | `zpdf-core` |
+| zemail | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zemail-core` |
+| zoffice | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zoffice-core` |
+| zreq | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zreq-core` |
+| ztunnel | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `ztunnel-core` |
+| zgo | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zgo-core` |
+| zftp | ✗ | ✗ | ✓ | ? | ✗ | ? | ✗ | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | (app) |
+| zcite | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | `zcite-core` |
+| zterm | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | (app) |
+| zcontainer | ✗ | ✗ | ✗ | ~ | ✗ | ✗ | ✗ | ~ | ✗ | ✗ | ✗ | ✗ | ✗ | ~ | `zcontainer-core` |
+
+**Reads from the matrix:**
+- **Command palette (R1)** present in only **5/14** (haxor, traderview, ztranslator, zpwr-daw, zpdf).
+- **Settings panel** in only **4/14**; **fzf filters (R7)** in **5/14**; **sortable/resizable tables (R8)** in **5/14**.
+- **Extended scripts (G4)** — only haxor has the full set; traderview partial; **12 apps have none**.
+  (The `dev`/`build`/`nuke`/`clean`/`bust`/`rebuild` basics ARE ported across all 14; `scr`
+  tracks only the `test`/`doc`/`ship-check`/`deploy`/`i18n:*` families that are still missing.)
+- **hooks-editor** missing in **10**, **file-browser** in **11**, **terminal**/**i18n** in **3**.
+- **Worst-off (nothing shared, `~`/`✗` across): `zcite`, `zterm`, `zcontainer`.** zcontainer has a
+  cyberpunk look + logo but hand-rolled (not the shared tokens/header), and substring search (not fzf).
+- **`?` columns** (R4 shared-token sourcing, R6 shared header, colorschemes on the newer apps) need a
+  per-app audit — see Phase F. They are not counted as PASS until ticked.
 
 ---
 
@@ -86,6 +104,17 @@ when the app has it as a real, working embed (not just a `.gitmodules` line).
 
 ### B6 — Tile dashboard + tab bar + top-left logo header (R5/R6)
 - [ ] All 14 land on a tile dashboard with a tab bar and the shared header (logo top-left).
+
+### B7 — Settings panel (haxor `settings.js` + `settings-search.js`) — present in only 4
+A searchable settings panel (the shared component, not a per-app fork). Missing in 10:
+- [ ] zpdf  - [ ] zemail  - [ ] zoffice  - [ ] zreq  - [ ] ztunnel  - [ ] zgo
+- [ ] zftp  - [ ] zcite  - [ ] zterm  - [ ] zcontainer
+
+### B8 — Colorschemes / theme switching (haxor `settings.js` theme switcher)
+The family colorscheme picker (cyberpunk variants), wired through the shared tokens (A4) so a
+theme change restyles every shared surface at once. Missing/unaudited in 10:
+- [ ] zpdf  - [ ] zemail  - [ ] zoffice  - [ ] zreq  - [ ] ztunnel  - [ ] zgo
+- [ ] zftp  - [ ] zcite  - [ ] zterm  - [ ] zcontainer
 
 ---
 
