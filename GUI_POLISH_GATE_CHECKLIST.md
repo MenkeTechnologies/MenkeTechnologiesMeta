@@ -74,8 +74,13 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
   families.) **†** zpwr-daw is JUCE, so its `scr` is the JUCE-relevant subset — `test` (ctest +
   JS), `test:js`, `ship-check`, `deploy`; `tauri:build:ci`, `cargo doc`, and `i18n:*` are **N/A**
   (no Tauri/Cargo/catalogs). ztranslator's `i18n:*` is likewise deferred until it has catalogs.
-- **zpwr-daw's only remaining gap is `fb`** (file browser, R10) — a JUCE embed (BinaryData +
-  native fs backend + UI tab), which is build-gated C++ work, not yet done.
+- **zpwr-daw's only remaining gap is `fb`** (file browser, R10). The file-browser was
+  Tauri-only (no C ABI, no JUCE transport shim), so `fb`=✗ for all four JUCE apps is blocked on
+  the same promotion. **Step 1 done** (`zpwr-file-browser` `830d43b9`): a `capi`-gated C ABI
+  (`fb_invoke`/`fb_string_free`, all 33 `fs_*` ops, smoke-tested, staticlib exports verified).
+  Remaining: **Step 2** add a `window.Juce` transport shim to `file-browser.js`; **Step 3** wire
+  `zpwr-daw` (build the staticlib, link, register `fb_invoke`, BinaryData the webui, FILES tab) —
+  both build-gated on a JUCE/CMake machine.
 - **hooks-editor** missing in **10**, **file-browser** in **11**, **terminal**/**i18n** in **3**.
 - **Worst-off (nothing shared, `~`/`✗` across): `zcite`, `zterm`, `zcontainer`.** zcontainer has a
   cyberpunk look + logo but hand-rolled (not the shared tokens/header), and substring search (not fzf).
