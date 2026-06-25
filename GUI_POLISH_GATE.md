@@ -172,7 +172,8 @@ Anything less is **FAIL**, recorded with the specific missing items. "Mostly the
 ## Per-app gate ledger
 
 Verdict per app. `✓` pillar green, `partial` some items, `✗` not started, `N/A` not relevant.
-`COMPONENTS.md` holds the authoritative embed matrix; this is the polish roll-up.
+`COMPONENTS.md` holds the authoritative embed matrix; this is the polish roll-up. The
+task-by-task work list to close every gap is [`GUI_POLISH_GATE_CHECKLIST.md`](GUI_POLISH_GATE_CHECKLIST.md).
 
 | App | G1 haxor parity | G2 core/embeds | G3 i18n (27 locales) | G4 pnpm scripts | Verdict |
 | --- | --- | --- | --- | --- | --- |
