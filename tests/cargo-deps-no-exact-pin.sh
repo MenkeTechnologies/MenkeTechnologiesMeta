@@ -34,6 +34,14 @@
 # (`~`) prefixes are accepted as the canonical semver patterns.
 # Bare `"1.2.3"` is implicitly caret (`^1.2.3`).
 #
+# EXEMPTION — pre-release pins (`=X.Y.Z-rc.N`, `-pre`, `-alpha`,
+# `-beta`): Cargo's caret/tilde compatibility does NOT span
+# pre-release versions (`^0.3.0-rc.4` will not resolve `rc.5`),
+# and pre-release crates routinely break between pre-releases, so
+# an exact `=` pin is the ONLY correct specifier. These are NOT
+# flagged. Stable-version exact pins still are. (zemail-core pins
+# the RustCrypto CMS/x509/RSA pre-release stack this way.)
+#
 # 43 dep tables scanned, 0 exact pins at iter-110 add — pure
 # regression floor against accidental exact-pin introduction.
 set -uo pipefail
@@ -79,15 +87,24 @@ while i < len(sections):
             s = ln.strip()
             if not s or s.startswith('#'):
                 continue
+            # Pre-release pins (=X.Y.Z-rc/-pre/-alpha/-beta...) are EXEMPT:
+            # Cargo's caret/tilde semver matching does not span pre-releases
+            # (`^0.3.0-rc.4` will NOT resolve `0.3.0-rc.5`), and pre-release
+            # crates routinely ship breaking changes between pre-releases, so
+            # an exact `=` pin is the ONLY correct specifier. Stable-version
+            # exact pins are still flagged.
+            prerelease = lambda v: re.match(r'=\d+\.\d+\.\d+-', v) is not None
             # Short form: name = "=1.2.3"
             m1 = re.match(r'^([a-zA-Z0-9_-]+)\s*=\s*"(=[^"]+)"', s)
             if m1:
-                bad.append(f"{h} {m1.group(1)} = \"{m1.group(2)}\"")
+                if not prerelease(m1.group(2)):
+                    bad.append(f"{h} {m1.group(1)} = \"{m1.group(2)}\"")
                 continue
             # Table form: name = { version = "=1.2.3", ... }
             m2 = re.match(r'^([a-zA-Z0-9_-]+)\s*=\s*\{.*version\s*=\s*"(=[^"]+)"', s)
             if m2:
-                bad.append(f"{h} {m2.group(1)} table version=\"{m2.group(2)}\"")
+                if not prerelease(m2.group(2)):
+                    bad.append(f"{h} {m2.group(1)} table version=\"{m2.group(2)}\"")
     i += 2
 print("OK" if not bad else "BAD:" + ";".join(bad))
 PY
