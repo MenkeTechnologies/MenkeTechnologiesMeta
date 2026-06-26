@@ -79,6 +79,23 @@ writes global state.
 
 ## 4. Placement & serving
 
+### Same layout for JUCE and Tauri (by design)
+
+**The directory layout is identical for a JUCE app and a Tauri app — only the shell host differs.**
+Both serve the same `frontend/`, embed zgui at the same `frontend/lib/zgui-core`, and put Rust embeds
+in the same `crates/`. One layout → one gate, one set of scripts, one muscle memory.
+
+| | Tauri | JUCE |
+| --- | --- | --- |
+| Loads `frontend/index.html` | `frontendDist: "…/frontend"` (Rust WebView) | `WebBrowserComponent` pointed at `…/frontend` |
+| zgui-core | `frontend/lib/zgui-core` | `frontend/lib/zgui-core` |
+| Rust embeds / cores | `crates/<name>` | `crates/<name>` |
+| Served UI root | `frontend/` | `frontend/` |
+
+The shell technology is the *only* variable; every path above is the same in both.
+
+### Where zgui-core lives
+
 `zgui-core` (the widget library) is embedded **once in each repo that owns a served frontend**, always
 at the **same path**:
 
