@@ -13,9 +13,11 @@ where `zgui-core` lives, and how the **app-level GUI surface is blocked inside c
    `:root`, global `⌘K`/shortcut keymaps, the `data-zgui-baseline` stamp.
 
 A GUI app is increasingly **a host that embeds other cores' UIs** — Audio-Haxor embeds ztranslator,
-zpdf could embed in traderview, etc. If every embedded core mounts its own chrome, a host with 5
-embeds gets **5 settings panels, 5 splashes, 5 colorscheme pickers, 5 competing ⌘K bindings**. That is
-the bug this design prevents.
+zpdf could embed in traderview, etc. A core having its own settings or palette is fine — *if* they're
+opened by buttons. The bug is when an embedded core seizes a **document‑global** singleton: a host with
+5 embeds gets **5 competing `⌘K` bindings, 5 global keymaps fighting over the same keys, 5 full‑screen
+splashes, 5 cores re‑theming `:root`**. There is one keyboard and one document; only the host may bind
+them. That is what this design prevents.
 
 ## 2. Model — three layers
 
@@ -27,43 +29,53 @@ the bug this design prevents.
 
 The governing rule:
 
-> **A core renders a *view*, not a *shell*.** A core's embeddable form uses ZGui **widgets** and must
-> never touch the **app‑shell surface**. The chrome is mounted exactly once, by the top‑level app.
+> **A core may have its own settings, command palette, and app features — but they are opened by
+> BUTTONS in the core's pane, never by a global keyboard shortcut.** There is one keyboard and the
+> host owns the global keymap (`⌘K` and friends); a core that *binds* a global key fights the host for
+> it. Buttons don't collide. So the one hard prohibition on a core is **installing a global key
+> binding** (or any other document‑global singleton — `:root` theme, full‑screen overlay). Everything
+> a core's UI does is **button‑invoked and pane‑scoped.**
 
-A core may still be a full app **when run standalone** — its standalone `index.html` mounts `appShell`
-around its view. That standalone shell is simply **not pulled in** when the core is embedded.
+A core run **standalone** is the host — its own `index.html` mounts the full shell with `⌘K` and global
+keys. That global wiring is simply not active when the core is embedded; the same settings/palette are
+then reached by the core's buttons instead.
 
-## 3. The app-shell surface (forbidden in core views)
+## 3. The one rule: buttons, not global keys
 
-These APIs are **app‑level**. They are legal only in a top‑level/standalone entry, never in an
-embeddable view module:
+**Forbidden in a core (installs a document‑global singleton):**
 
 ```
-ZGui.appShell
-ZGui.baseline.*            (markAll / mark / require)
-ZGui.splash.*             (show / hide / setVersion)
-ZGui.crt(…)  ZGui.neonGlow.*               // full-document overlays
-ZGui.palette.bindHotkey                     // global ⌘K
-ZGui.shortcuts.init                         // global keymap
-ZGui.colorscheme.buildSwitcher | buildEditor | buildPresetChips | setLight | load | apply | applyVars
+ZGui.appShell                               // auto-binds ⌘K + global keymap — host-only
+ZGui.palette.bindHotkey                     // seizes the global ⌘K
+ZGui.shortcuts.init                         // installs the global keymap
+ZGui.colorscheme.apply | applyVars | setLight | load    // writes the :root theme (re-themes the whole host)
+ZGui.splash.* · ZGui.crt(…) · ZGui.neonGlow.*           // position:fixed full-document overlays
+ZGui.baseline.*                             // the top-level baseline stamp
 ```
 
-Everything else in `ZGui` — every widget — is allowed anywhere. A view **inherits** the host's theme
-tokens; it never sets them.
+**Allowed in a core — its own features, opened by a button (pane‑scoped):**
 
-**Why these specifically interfere with the host** (not stylistic — they actively collide):
+```
+const bar = ZGui.buttonBar(coreEl);
+bar.add("⚙", "Settings", () => mySettingsPanel.open());      // the core's OWN settings, button-opened
+bar.add("⌘", "Commands", () => myPalette.open());            // the core's OWN palette, button-opened, NO hotkey
+ZGui.palette.create({ items, scope: coreEl })                // a palette instance scoped to the pane (not the singleton ⌘K)
+ZGui.colorscheme.scope(coreEl, vars)                         // theme tokens scoped to the core's container, not :root
+// + every widget (modal, table, viewer, charts, …) — always allowed
+```
 
-- **Command palette** (`palette.bindHotkey`) binds a *global* `⌘K` on `document`. A core that binds it
-  fights the host for the same key — two palettes open, or the core's shadows the host's.
-- **Settings / colorscheme picker** (`appShell` settings, `colorscheme.buildSwitcher`, `setLight`,
-  `apply`) writes the active theme onto `:root` and opens a full‑window panel. A core doing this
-  re‑themes or covers the **whole host**, not just its pane.
-- **Splash / CRT / neon** are `position:fixed` full‑document overlays — a core mounting them blanks or
-  streaks the entire host window.
-- **Shortcuts** (`shortcuts.init`) installs a global keymap that overrides the host's.
+So the distinction is **how it's invoked**, not whether it exists: a core gets a full palette and full
+settings, reached through **its own buttons**, scoped to its pane. The host keeps the single global
+`⌘K`/keymap/`:root` theme/overlay layer — no conflict, because the core never binds a global key or
+writes global state.
 
-In every case the core reaches **outside its pane** into document‑global state the host owns. That is
-the definition of the app‑shell surface, and why a core may not touch it.
+**Why the forbidden calls collide:**
+
+- **`palette.bindHotkey` / `shortcuts.init`** — one keyboard, one `document`. Two global keymaps means
+  the core's keys fight the host's. → give the core a **button** that opens its palette instead.
+- **`colorscheme.apply` / `setLight`** — writes the theme onto `:root`, re‑theming the **whole host**.
+  → scope tokens to the core's container.
+- **`splash` / `crt` / `neonGlow`** — `position:fixed` full‑document overlays that blank the whole host.
 
 ## 4. Placement & serving
 
@@ -96,27 +108,32 @@ N embeds → N `frontend/lib/zgui-core` submodule pointers to the same repo. Tha
 The alternative (one shared copy, embeds assume a global) **breaks standalone builds** of every core,
 which contradicts the requirement that an embedded core carry all its widgets.
 
-## 5. Enforcement — blocking app-level GUI in cores
+## 5. Enforcement — no global key binding / global state in cores
 
-Two layers, defense in depth.
+The thing being blocked is narrow: a core seizing a **document‑global singleton** (the keymap, `⌘K`,
+`:root` theme, a full‑screen overlay). A core's own button‑opened, pane‑scoped settings/palette are
+fine. Two layers, defense in depth.
 
 ### 5a. Runtime guards (in `zgui-core`)
 
 - **`appShell` is single‑instance.** It records a flag on `document.documentElement`; a **second**
   `ZGui.appShell(...)` throws `appShell already mounted — only the top-level app mounts the shell`.
-  This alone kills the "5 settings panels" failure: the host mounts the shell; any embedded core that
-  tries to mount another one throws immediately (surfaced by the gate's headless render).
+  This kills the "5 settings panels / 5 ⌘K bindings" failure: the host mounts the shell; an embedded
+  core that tries to mount another throws (surfaced by the gate's headless render).
 - **`ZGui.embed.view(fn)`** — the host mounts an embedded view through this wrapper. For the duration
-  of `fn`, the entire app‑shell surface (§3) is swapped to **throwing stubs**, so a view that reaches
-  for `appShell`/`splash`/`colorscheme.buildSwitcher`/… throws at init. Embeds are thus *provably*
-  chrome‑free at runtime.
+  of `fn`, the **global‑install surface (§3)** is swapped to throwing stubs, so a view that calls
+  `palette.bindHotkey` / `shortcuts.init` / `colorscheme.apply` / `splash` / `crt` throws at init. The
+  pane‑scoped / button APIs (`buttonBar`, `palette.create({scope})`, `colorscheme.scope`) are **not**
+  stubbed — a core keeps its own button‑opened settings and palette.
 
 ### 5b. Static gate check (in `baseline-gate.mjs`)
 
 - A core declares its embeddable view entry/entries in `package.json`:
   `"zguiView": ["frontend/translator-view.js", …]`.
-- The gate parses each declared view module **and its relative imports** and **fails** if any
-  references an app‑shell API from §3. Output names the file + the offending call.
+- The gate parses each declared view module **and its relative imports** and **fails** only on a
+  **global‑install** call from §3 (`appShell`, `palette.bindHotkey`, `shortcuts.init`,
+  `colorscheme.apply|applyVars|setLight|load`, `splash.*`, `crt`, `neonGlow`, `baseline.*`). Calls to
+  the scoped/button APIs pass. Output names the file + the offending call.
 - The gate continues to assert, on the **top‑level/standalone** `index.html`: `appShell` + `splash`
   actually ran (stamp + filter + `.zg-crt-h` + `.zg-splash-spent`), exactly as today.
 
@@ -125,7 +142,7 @@ Two layers, defense in depth.
 | Check | Target | Asserts |
 | --- | --- | --- |
 | Baseline | standalone `index.html` (rendered) | `appShell` + `splash` ran; the live chrome exists |
-| View purity | declared `zguiView` modules | **no** app‑shell surface referenced |
+| No global grab | declared `zguiView` modules | no **global‑install** call (keymap/`⌘K`/`:root`/overlay); button + scoped APIs OK |
 | Placement | the repo's `.gitmodules` | `zgui-core` at `frontend/lib/zgui-core`; Rust cores at `crates/` |
 
 ## 6. Standard layout
