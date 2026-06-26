@@ -3,7 +3,7 @@
 Which shared submodules each GUI app consumes, plus the planned additions to fill the
 gaps. Source of truth is each app's `.gitmodules`; this table is the human-readable map.
 
-_Last reconciled: 2026-06-24._
+_Last reconciled: 2026-06-25._
 
 ## Components
 
@@ -19,6 +19,7 @@ _Last reconciled: 2026-06-24._
 | **zpwr-file-browser** | Filesystem file manager (webui + Rust fs backend) |
 | **zpwr-i18n** | Localization runtime (JSON loader) |
 | **zgui-core** | Shared cyberpunk GUI toolkit (webui) — canonical shell/settings/dialog/table/command-palette/fzf/colorscheme/notification chrome on `window.ZGui`; extracted from Audio-Haxor, zreq, `zpwr-patch-core` |
+| **zdsp-core** | Shared real-time audio DSP engine (C++, header-only, JUCE-based) — the audio-stack analog of `zgui-core`: canonical core DSP units on `zdsp::core` (first is `zdsp::OlaTimeStretch` + `zdsp::SpeedMode`); extracted from the Audio-Haxor audio-engine, vendored by Audio-Haxor / `zpwr-patch-core` / the plugin apps |
 | **zpwr-algo-production** | One-click algorithmic track generation (.als / .zdp) |
 | **zoffice-core** | Embeddable pure-Rust office engine — document/spreadsheet/presentation parse+edit, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind `zoffice` |
 | **zemail-core** | Embeddable pure-Rust mail engine, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind `zemail` |
@@ -122,3 +123,13 @@ _Last reconciled: 2026-06-24._
   the GUI apps stop re-implementing divergent copies. Consumed like `zpwr-i18n` (copy `webui/*` into each
   app's `frontend/` at build time). Per-app consumption not yet added to the matrix above — needs a
   reconciliation pass against each app's `.gitmodules`.
+- **zdsp-core (new, extracted):** the audio-stack analog of `zgui-core` — a shared real-time audio DSP
+  engine (C++, header-only, JUCE-based) so the audio apps stop re-deriving the same DSP units. First
+  unit is `zdsp::OlaTimeStretch` (Hann-windowed overlap-add time-stretch — change playback speed without
+  altering pitch, 75% overlap, stereo) + `zdsp::SpeedMode` (Resample / TimeStretch), lifted from the
+  Audio-Haxor audio-engine. Consumers `add_subdirectory(zdsp-core)` and link `zdsp::core` (JUCE must
+  already be present — the lib does not fetch it). Vendored by Audio-Haxor, `zpwr-patch-core`, and the
+  plugin apps (`zpwr-daw` / `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx`). Roadmap: migrate the remaining
+  reusable units still inline in `Engine.cpp` (`ToneAudioSource`, `LockFreeStreamSource`,
+  `DspStereoFileSource`, stereo analysis metrics) out into this core. Not a GUI-app webui component, so
+  it's outside the consumption matrix above.

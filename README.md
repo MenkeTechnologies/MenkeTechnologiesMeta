@@ -7,20 +7,20 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-130-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-36_core-cyan.svg)](#tier-1--core-36)
+[![Submodules](https://img.shields.io/badge/submodules-131-blue.svg)](#0x01-submodule-map)
+[![Tier 1](https://img.shields.io/badge/tier_1-40_core-cyan.svg)](#tier-1--core-40)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-11_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-11)
-[![Tier 6](https://img.shields.io/badge/tier_6-17_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-17)
+[![Tier 6](https://img.shields.io/badge/tier_6-19_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-19)
 [![Rust](https://img.shields.io/badge/rust-2.36M_LOC-orange.svg)](#0x09-code-volume)
 [![Code](https://img.shields.io/badge/code-8.14M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 130 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 131 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -34,12 +34,12 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (36)](#tier-1--core-36)
+  - [Tier 1 — Core (40)](#tier-1--core-40)
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (11)](#tier-5--editor--multiplexer-plugins-11)
-  - [Tier 6 — Apps, extensions, web & web-APIs (16)](#tier-6--apps-extensions-web--web-apis-16)
+  - [Tier 6 — Apps, extensions, web & web-APIs (19)](#tier-6--apps-extensions-web--web-apis-19)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
 - [\[0x03\] Common Operations](#0x03-common-operations)
 - [\[0x04\] Helper Scripts](#0x04-helper-scripts)
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 130 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 131 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,7 +81,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 130 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 131 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (40)
 
@@ -228,7 +228,7 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 | [`emacs-awk`](https://github.com/MenkeTechnologies/emacs-awk) | `awkrs-mode` for Emacs — font-lock for AWK (keywords, built-in vars/functions, field refs, `/regex/`), indent, run via `awkrs`, eldoc + completion from a built-in-function stdlib, and LSP via `awkrs --lsp` (eglot + lsp-mode). &middot; <sub>[docs](https://menketechnologies.github.io/emacs-awk/) · [report](https://menketechnologies.github.io/emacs-awk/report.html)</sub> |
 | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
-### Tier 6 — Apps, extensions, web & web-APIs (18)
+### Tier 6 — Apps, extensions, web & web-APIs (19)
 
 Browser extensions, supporting apps, audio plugins, public website, storefront, and web-API services. (Tauri v2 desktop GUI apps `traderview` and `Audio-Haxor` live in Tier 1; the `powerliners` CLI port lives in Tier 1 too.)
 
@@ -248,6 +248,7 @@ Browser extensions, supporting apps, audio plugins, public website, storefront, 
 | [`zpwr-i18n`](https://github.com/MenkeTechnologies/zpwr-i18n) | **Shared i18n runtime** (JS) — one portable internationalization runtime shared across all four GUI apps, extracted from Audio-Haxor. Host-agnostic: catalogs load from **JSON files** (not Audio-Haxor's SQLite/Tauri loader), so the same code runs in Tauri apps and JUCE WebViews. Flat `{ "namespace.key": "string with {vars}" }` catalogs, one JSON per locale, 27 supported UI locales; shared components (e.g. `zpwr-file-browser`) ship their own per-locale fragment that the host merges in via `extraBases`. API on `window` — `appFmt`/`toastFmt`/`t` (interpolate + missing-key fallback to the key), `applyUiI18n`, `loadLocale`, `bootI18n`, `mergeI18nCatalog`. **Private** — internal shared component. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-i18n) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-i18n/report)</sub> |
 | [`zpwr-clip-engine`](https://github.com/MenkeTechnologies/zpwr-clip-engine) | **Shared DAW arranger/sequencer frontend** (JS) — the canvas clip-grid + swappable *domains* (arranger, piano-roll, session launcher, automation lanes) plus the clip palette, MIDI export, and project/bank serialization, extracted from `zpwr-daw` so every GUI app embeds one arranger through a single `initClipSeq({ nf, getCAT })` entry point. `zpwr-daw` (JUCE/C++) supplies a native audio backend; the synth / fx / midi-fx apps use the bundled non-audio JS backend (`window.makeBasicClipBackend()`). **Private** — internal shared component. |
 | [`zgui-core`](https://github.com/MenkeTechnologies/zgui-core) | **Shared cyberpunk GUI toolkit** (JS) — one canonical implementation of the shell, settings, dialog, table, command-palette, fzf matcher, colorscheme builder and notification chrome (namespace `window.ZGui`) so the GUI apps (`Audio-Haxor`, `traderview`, `ztranslator`, `zpdf`, `zemail`, `zoffice`, `zreq`, `ztunnel`, `zgo`, …) stop drifting their own divergent copies. Host-agnostic webui modules extracted from the apps themselves (Audio-Haxor, zreq, `zpwr-patch-core`); consume like `zpwr-i18n` / `zpwr-file-browser` — add as a submodule and copy `webui/*` into `frontend/` at build time. **Private** — internal shared component. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zgui-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zgui-core/report)</sub> |
+| [`zdsp-core`](https://github.com/MenkeTechnologies/zdsp-core) | **Shared real-time audio DSP engine** (C++, header-only, JUCE-based) — the audio-stack analog of `zgui-core`: one implementation of the core DSP units vendored by every audio app instead of each re-deriving its own. First unit is `zdsp::OlaTimeStretch` (Hann-windowed overlap-add time-stretch — change playback speed without altering pitch, 75% overlap, stereo) plus `zdsp::SpeedMode` (Resample = pitch-follows-rate / TimeStretch = preserve-pitch), extracted from the Audio-Haxor audio-engine. Consumers `add_subdirectory(zdsp-core)` and link `zdsp::core`; JUCE (`juce_audio_basics` + `juce_core`) must already be present — the library does not fetch JUCE itself. Consumed by `Audio-Haxor`, `zpwr-patch-core`, and the plugin apps (`zpwr-daw` / `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx`). **Private** — internal shared component (part of the paid audio stack). &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zdsp-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zdsp-core/report)</sub> |
 | [`zpwr-theme`](https://github.com/MenkeTechnologies/zpwr-theme) | **Cyberpunk HUD color theme for VS Code + JetBrains** — the Strykelang HUD palette (deep-space ink `#05050a`, neon cyan `#05d9e8`, magenta scanlines `#d300c5`) shared with `zpwrchrome`, `zpwr`, and the docs design system, packaged for both editor families from one `PALETTE.md`. `vscode/` ships a `contributes.themes` extension with full workbench + token colors (stryke sigils / `~>` threading / parallel builtins get the magenta accent); `jetbrains/` ships a UI theme + matching editor color scheme with a dependency-free `zip`-only packager (no Gradle/SDK). Companion to `vscode-stryke`. |
 | [`app-store`](https://github.com/MenkeTechnologies/app-store) | **Static storefront** (HTML/CSS/JS) for the entire MenkeTechnologies catalog — 104 products across 8 categories: paid desktop apps & plugins (`zpdf`, `zemail`, `zoffice`, `zcite`, `zreq`, `ztunnel`, `zgo`, `zftp`, `zcontainer`, `zterm`, `Audio-Haxor`, `traderview`, `ztranslator`, `zpwr-daw`, `zpwr-synth`, `zpwr-fx`, `zpwr-midi-fx`, licensed **per major version**) plus every free/OSS repo (`zshrs`, `stryke`, `zemacs`, the Rust CLI tools, the stryke package ecosystem, the zsh-plugin family) with GitHub download links (`releases/latest` or `/tags`). Shopify-style checkout, search + category filters, live catalog stats. Shares the strykelang-docs HUD design system; no build step; dependency-free `node:test` suite + CI. &middot; <sub>[store](https://menketechnologies.github.io/app-store/) · [docs](https://menketechnologies.github.io/app-store/docs/) · [report](https://menketechnologies.github.io/app-store/docs/report.html)</sub> |
 | [`zpwr-license`](https://github.com/MenkeTechnologies/zpwr-license) | **Offline-first software licensing** for the paid catalog (PRIVATE). Ed25519-signed license keys, an issuer CLI, and an optional self-hosted activation server. Verification runs offline in the binary (kills keygens, works air-gapped); **offline node-locking** binds a key to a machine with no server (anti-sharing); online activation adds live seats + revocation. Embedded **anti-tamper** layer (debugger / injection / self-binary-signature / key-substitution / clock-rollback checks) with obfuscated strings + symbols. Rust workspace (`license-core` + `license-cli` + `license-server`), no licensing SaaS. **Private** — anti-piracy infrastructure. |
@@ -360,7 +361,9 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-hooks-editor`](https://github.com/MenkeTechnologies/zpwr-hooks-editor) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-i18n`](https://github.com/MenkeTechnologies/zpwr-i18n) | — | — | — |
+| 6 — Apps, extensions, web & web-APIs | [`zpwr-clip-engine`](https://github.com/MenkeTechnologies/zpwr-clip-engine) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zgui-core`](https://github.com/MenkeTechnologies/zgui-core) | — | — | — |
+| 6 — Apps, extensions, web & web-APIs | [`zdsp-core`](https://github.com/MenkeTechnologies/zdsp-core) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-theme`](https://github.com/MenkeTechnologies/zpwr-theme) | [![CI](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zpwr-theme?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zpwr-theme/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`app-store`](https://github.com/MenkeTechnologies/app-store) | [![CI](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/app-store?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/app-store/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-license`](https://github.com/MenkeTechnologies/zpwr-license) | — | — | — |
