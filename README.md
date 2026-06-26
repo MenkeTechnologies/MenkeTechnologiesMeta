@@ -7,7 +7,7 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-131-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-132-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-40_core-cyan.svg)](#tier-1--core-40)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 131 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 132 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -34,7 +34,7 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (40)](#tier-1--core-40)
+  - [Tier 1 — Core (41)](#tier-1--core-41)
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 131 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 132 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,9 +81,9 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 131 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 132 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (40)
+### Tier 1 — Core (41)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -126,7 +126,8 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`zftp-core`](https://github.com/MenkeTechnologies/zftp-core) | **Embeddable file-transfer engine** (pure Rust, no GUI deps) behind `zftp` — bookmark model, protocol/URL parsing, `.duck` import, session-lifecycle manager, download/upload/sync transfer queue, per-session logs + throughput, a remote-filesystem transport boundary, credentials. Builds `rlib` + `staticlib` + `cdylib` so the same transfer engine embeds across the GUI stack. **Private.** &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zftp-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zftp-core/report)</sub> |
 | [`zcontainer`](https://github.com/MenkeTechnologies/zcontainer) | **Container & Kubernetes GUI replacing Docker Desktop + Lens** (Rust, Tauri v2 desktop app) — Docker containers/images/volumes/networks + Compose stacks; multi-cluster Kubernetes (pods, workloads, services, CRDs, Helm releases); live log streaming, in-pod exec, port-forwarding, YAML editing. Consumes `zcontainer-core`. The first compiled-native desktop GUI for both — every other tool is Electron (Lens/FreeLens/Headlamp) or a TUI (k9s). **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zcontainer) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zcontainer/report)</sub> |
 | [`zcontainer-core`](https://github.com/MenkeTechnologies/zcontainer-core) | **Embeddable container/k8s engine** (pure Rust, no GUI deps) behind `zcontainer` — Docker + Kubernetes resource CRUD, watch streams, logs, exec, port-forward, Compose, Helm. Builds `rlib` + `staticlib` + `cdylib` so the same engine embeds across the GUI stack. **Private.** &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zcontainer-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zcontainer-core/report)</sub> |
-| [`zterm`](https://github.com/MenkeTechnologies/zterm) | **GPU-accelerated terminal emulator** (Rust, OpenGL) — forked from the Alacritty rendering core and built out; BSD/Linux/macOS/Windows, sensible defaults, extensive TOML config, high-throughput VTE performance. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zterm) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zterm/report)</sub> |
+| [`zterm`](https://github.com/MenkeTechnologies/zterm) | **GPU-accelerated terminal emulator** (Rust, OpenGL) — forked from the Alacritty rendering core and built out; BSD/Linux/macOS/Windows, sensible defaults, extensive TOML config, high-throughput VTE performance. Native tmux control via the wire protocol (no subprocess), cross-pane search, broadcast, unified exposé, and tmux-resurrect-style session save/restore from the command palette. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zterm) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zterm/report)</sub> |
+| [`ztmux-core`](https://github.com/MenkeTechnologies/ztmux-core) | **Embeddable native tmux client engine** (Rust, no GUI deps) extracted from `zterm` — speaks tmux's imsg wire protocol straight to the server socket (no `tmux` subprocess): `transport` (raw imsg client), `proc` (per-pane full command line via libproc / `/proc`), `ops` (session tree / cross-pane search / broadcast / send-keys / sync / focus → JSON), and `snapshot` (dir-parameterized resurrect-style session save/restore). Other GUI apps add the submodule + a path dep to get full tmux control. **Private.** &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/ztmux-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/ztmux-core/report)</sub> |
 | [`zemacs`](https://github.com/MenkeTechnologies/zemacs) | **Rust Emacs port** (early) — a Helix fork providing a Vim-style modal editor core in Rust, built out toward full Spacemacs functionality. **Free / OSS** (MPL-2.0) — in the app-store. |
 | [`zemacs-gui`](https://github.com/MenkeTechnologies/zemacs-gui) | **Native desktop GUI for `zemacs`** — wraps the zemacs modal-editing core in a windowed front-end (GUI tabs, menus, font rendering, mouse, native open/save dialogs), the way MacVim wraps Vim. **Free / OSS** (MPL-2.0) — in the app-store. |
 
@@ -555,13 +556,13 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 17 | ~805 MB |
+| Tier 1 — Core | 41 | ~805 MB |
 | Tier 2 — Stryke ecosystem | 32 | ~38 MB |
 | Tier 3 — zsh-more-completions | 1 | ~203 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
-| Tier 5 — Editor / multiplexer plugins | 5 | ~12 MB |
-| Tier 6 — Apps, extensions, web & web-APIs | 14 | ~1.06 GB |
-| **Total** | **100** | **~2.2 GB** |
+| Tier 5 — Editor / multiplexer plugins | 11 | ~12 MB |
+| Tier 6 — Apps, extensions, web & web-APIs | 19 | ~1.06 GB |
+| **Total** | **132** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
