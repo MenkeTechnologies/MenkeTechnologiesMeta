@@ -422,7 +422,7 @@ Prefix `+` means the working tree diverges from the pinned SHA; `-` means the su
 
 ## [0x04] HELPER SCRIPTS
 
-The `bin/` directory ships a few wrappers for common operations. All are POSIX shell with no dependencies beyond `git`, except `gen-ci-board` (bash + authenticated `gh`).
+The `bin/` directory ships a few wrappers for common operations. Most are POSIX shell with no dependencies beyond `git`; `gen-ci-board` needs bash + authenticated `gh`, and the icon generators need `rsvg-convert` (librsvg), the Tauri CLI, and macOS `sips`/`iconutil`.
 
 | Script | What it does |
 |---|---|
@@ -432,6 +432,8 @@ The `bin/` directory ships a few wrappers for common operations. All are POSIX s
 | [`bin/sync-pointers`](bin/sync-pointers) | After running pull-all, stage + commit all submodule pointer bumps in one commit. |
 | [`bin/release-all`](bin/release-all) | Coordinated `Cargo.toml` bump + commit + tag + push across every submodule that backs a homebrew formula. |
 | [`bin/gen-ci-board`](bin/gen-ci-board) | Regenerate the [\[0x02\] CI Status Board](#0x02-ci-status-board) from the submodule map + live workflow lists (`--in-place` splices README.md). |
+| [`bin/gen-app-icon.sh`](bin/gen-app-icon.sh) | Render one GUI app icon from the shared cyberpunk brand template (chamfered neon frame + width-pinned glyph/wordmark, vendored Orbitron). Args: accent, glyph, wordmark, out.png. |
+| [`bin/gen-all-icons.sh`](bin/gen-all-icons.sh) | Regenerate every GUI app's icon set from that one template (Tauri via `tauri icon`, JUCE via `iconutil`), so all apps share `zterm`'s geometry and differ only by accent/glyph. |
 
 ```bash
 # pull everything
