@@ -11,51 +11,55 @@ Every GUI app is two repos:
 
 | Repo | Role | License |
 | --- | --- | --- |
-| `<app>` | Tauri **shell** — window, menus, Tauri commands that forward to the engine, and the frontend. Holds no domain logic. | per product |
+| `<app>` | Tauri (or JUCE) **shell** — window, menus, commands that forward to the engine, and the frontend. Holds no domain logic. | per product |
 | `<app>-core` | The **engine** — all logic, state, and the data the UI renders. Ships its own `webui/` when the UI is engine‑hosted. A git submodule of `<app>`. | per product |
 
-## 2. Every embed lives in `crates/<repo>`
+## 2. Where every submodule goes — two tiers
 
-**All embedded submodules — the engine core and every shared library — sit at `crates/<name>`,
-relative to the repo that embeds them.** One location, no exceptions. `vendor/`, `settings/`,
-`frontend/lib/`, `libs/`, `audio-engine/libs/` are all non‑conforming.
+Placement is decided by what consumes the submodule:
+
+### Tier 1 — direct‑served JS UI libs → `<frontend-root>/lib/<name>`
+
+`zgui-core` and the other directly‑served webui libraries live in a **`lib/` directory inside the
+served frontend root**, so the browser loads them in place by relative URL — no copy, no stale
+snapshot. The shell serves `frontendDist` (Tauri) or embeds the frontend (JUCE/`include_dir!`); the
+lib must be reachable from there. **`zgui-core` is `<frontend-root>/lib/zgui-core` in every app,
+including JUCE apps.** `vendor/`, `settings/zgui-core`, `crates/zgui-core` are all non‑conforming.
+
+The `<frontend-root>` is wherever the app's `index.html` lives — and it varies:
+
+| Frontend shape | `<frontend-root>` | zgui lands at |
+| --- | --- | --- |
+| Tauri, app‑hosted UI | `frontend/` | `frontend/lib/zgui-core` |
+| Engine‑hosted UI | `<app>-core/webui/` | `<app>-core/webui/lib/zgui-core` |
+| zterm (in‑process settings) | `settings/frontend/` | `settings/frontend/lib/zgui-core` |
+
+### Tier 2 — Rust engine cores & Rust‑only embeds → `crates/<name>`
+
+The engine core and any Rust‑consumed submodule live at `crates/<name>` (e.g. `crates/<app>-core`,
+`crates/ztmux-core`, `crates/zdsp-core`). These are compiled in, never served to the browser.
 
 ```
-<app>/                              # the Tauri shell repo
-├─ app/src-tauri/                   # Tauri Rust: commands forward to the engine, no logic
-├─ crates/                          # EVERY submodule embed goes here
-│  ├─ <app>-core/                   #   engine (logic; may host webui/)
-│  ├─ zgui-core/                    #   component library + the appShell baseline
-│  ├─ zpwr-i18n/                    #   translations
-│  ├─ zpwr-file-browser/            #   file‑browser embed
-│  ├─ zpwr-embed-terminal/          #   terminal embed
-│  ├─ zpwr-hooks-editor/            #   hooks‑editor embed
-│  └─ zpwr-clip-engine/             #   clipboard‑grid embed
-├─ frontend/                        # the app's own UI (index.html + app.js)
-│  ├─ index.html                    #   loads ../crates/zgui-core/webui/all.css + scripts
-│  └─ app.js                        #   mounts ZGui.appShell(...)
+<app>/
+├─ app/src-tauri/                   # Tauri Rust shell (or JUCE host)
+├─ crates/                          # TIER 2: Rust cores / embeds
+│  ├─ <app>-core/
+│  └─ ztmux-core/  zdsp-core/  …
+├─ frontend/                        # the served UI
+│  ├─ index.html                    #   loads lib/zgui-core/webui/all.css + scripts
+│  ├─ app.js                        #   mounts ZGui.appShell(...)
+│  └─ lib/                          # TIER 1: direct-served JS UI libs (served in place)
+│     ├─ zgui-core/
+│     └─ zpwr-i18n/  zpwr-clip-engine/  …
 ├─ scripts/
-└─ docs/                            # GitHub Pages (globally gitignored → force‑add)
+└─ docs/                            # GitHub Pages (gitignored → force-add)
 ```
-
-**Engine‑hosted UI (3‑level apps).** When the frontend lives in the engine (`<app>-core/webui/`, e.g.
-zpdf, zcontainer), the shared libs the webui consumes are embedded in **the core's** `crates/` —
-`<app>-core/crates/zgui-core` — because a repo can only reference its own submodules. The rule is the
-same at every level: a repo's embeds go in *its* `crates/`.
-
-### Placement rule (gated)
-
-- Every entry in a repo's `.gitmodules` has a path of the form `crates/<name>`. Nothing else.
-- This is checked by `baseline-gate.mjs` (directory mode) against each repo's own `.gitmodules` —
-  nested cores/libs are separate repos, gated by their own runs.
 
 ### No copy — serve in place
 
-Frontends load shared libs **directly from `crates/`** (`<script src="../crates/zgui-core/webui/…">`,
-`<link href="../crates/zgui-core/webui/all.css">`). Build/copy scripts must **never** copy a shared
-submodule into a generated dir — that is the stale‑vendored‑library bug that broke zterm's settings
-and zcontainer's palette. A copy step may emit only the **app's own** webui; shared libs stay
-submodule‑served and update by bumping the pointer.
+Tier‑1 libs are loaded **directly from `lib/`** (`<script src="lib/zgui-core/webui/…">`). A build/copy
+step must **never** copy a shared submodule into a generated dir — that is the stale‑vendored‑library
+bug that broke zterm's settings and zcontainer's palette. Update by bumping the submodule pointer.
 
 ## 3. Required baseline — mount `ZGui.appShell`
 
@@ -93,12 +97,11 @@ const shell = ZGui.appShell(document.getElementById("app"), {
 | Open log file / log dir / data dir | host callbacks, rendered in settings ⚙ |
 
 On mount it stamps `document.documentElement.dataset.zguiBaseline`. Apps needing a bespoke settings
-panel pass `settings: fn` (or extend the default via `settingsExtra: fn(bodyEl)`), but every required
-item above must stay reachable.
+panel pass `settings: fn` (or `settingsExtra: fn(bodyEl)`), but every required item must stay reachable.
 
 ## 4. CI gate — `baseline-gate.mjs`
 
-`crates/zgui-core/scripts/baseline-gate.mjs` has two checks. Wire both into the app's CI.
+`frontend/lib/zgui-core/scripts/baseline-gate.mjs` has two checks. Wire both into the app's CI.
 
 **Baseline (renders the frontend):** headless Chrome renders the built `index.html` and inspects the
 **resulting DOM** — never source text, so a stamp cannot be faked by typing it into static HTML. Passes
@@ -107,33 +110,30 @@ only when `ZGui.appShell` + `ZGui.splash` actually ran, producing the runtime ar
 and the `.zg-splash-spent` splash sentinel.
 
 ```
-node crates/zgui-core/scripts/baseline-gate.mjs frontend/index.html
+node frontend/lib/zgui-core/scripts/baseline-gate.mjs frontend/index.html
 ```
 
-**Placement (reads `.gitmodules`):** pass a directory to assert every embed is under `crates/`.
+**Placement (reads `.gitmodules`):** pass a directory to assert tier‑1 (`zgui-core` at
+`<frontend-root>/lib/zgui-core`) and tier‑2 (`*-core` at `crates/`).
 
 ```
-node crates/zgui-core/scripts/baseline-gate.mjs .
+node frontend/lib/zgui-core/scripts/baseline-gate.mjs .
 ```
-
-A file target runs both (baseline on the render + placement on its owning repo). Exit 1 = the app is
-missing the baseline or mis‑places an embed.
 
 ## Current divergence
 
-What this standard ends. `zgui-core` is embedded at a different path in every app, and no app yet uses
-`crates/`:
+What this standard ends. `zgui-core` target is `<frontend-root>/lib/zgui-core`:
 
-| App | `zgui-core` is at | Target |
+| App | `zgui-core` is at | Conforms? |
 | --- | --- | --- |
-| Audio‑Haxor | `frontend/lib/zgui-core` | `crates/zgui-core` |
-| zterm | `settings/zgui-core` | `crates/zgui-core` |
-| zpdf | `zpdf-core/webui/vendor/zgui-core` | `zpdf-core/crates/zgui-core` |
-| zcontainer | `zcontainer-core/webui/vendor/zgui-core` | `zcontainer-core/crates/zgui-core` |
-| zgo | `zgo-core/webui/vendor/zgui-core` | `zgo-core/crates/zgui-core` |
-| zemail | `frontend/vendor/zgui-core` | `crates/zgui-core` |
-| ztranslator | `frontend/vendor/zgui-core` | `crates/zgui-core` |
-| zreq, ztunnel, zoffice, zftp, zemacs‑gui, zpwr‑daw, zcite | not wired | add `crates/zgui-core` + mount `appShell` |
+| Audio‑Haxor | `frontend/lib/zgui-core` | ✅ |
+| zgo | `frontend/lib/zgui-core` | ✅ |
+| zterm | `crates/zgui-core` | ❌ → `settings/frontend/lib/zgui-core` |
+| zpdf | `zpdf-core/webui/vendor/zgui-core` | ❌ → `zpdf-core/webui/lib/zgui-core` |
+| zcontainer | `zcontainer-core/webui/vendor/zgui-core` | ❌ → `zcontainer-core/webui/lib/zgui-core` |
+| zemail | `frontend/vendor/zgui-core` | ❌ → `frontend/lib/zgui-core` |
+| ztranslator | `frontend/vendor/zgui-core` | ❌ → `frontend/lib/zgui-core` |
+| zreq, ztunnel, zoffice, zftp, zemacs‑gui, zpwr‑daw, zcite | not wired | add `frontend/lib/zgui-core` + mount `appShell` |
 
-Migrate each: `git mv <oldpath> crates/<name>` (or `git submodule` re‑add), fix the `.gitmodules` path
-and the `<script>`/`<link>` URLs, run the gate, then bump pointers (`<core>` → `<app>` → meta).
+Migrate each: `git mv <oldpath> <frontend-root>/lib/zgui-core`, fix the `<script>`/`<link>` URLs (or the
+`include_dir!` path), run the gate, then bump pointers (`<core>` → `<app>` → meta).
