@@ -448,7 +448,7 @@ Prefix `+` means the working tree diverges from the pinned SHA; `-` means the su
 
 ## [0x04] HELPER SCRIPTS
 
-The `bin/` directory ships a few wrappers for common operations. Most are POSIX shell with no dependencies beyond `git`; `gen-ci-board` needs bash + authenticated `gh`, and the icon generators need `rsvg-convert` (librsvg), the Tauri CLI, and macOS `sips`/`iconutil`.
+The `bin/` directory ships a few wrappers for common operations. Most are POSIX shell with no dependencies beyond `git`; `gen-ci-board` needs bash + authenticated `gh`, `gen-code-volume` needs `stryke` + `tokei`, and the icon generators need `rsvg-convert` (librsvg), the Tauri CLI, and macOS `sips`/`iconutil`.
 
 | Script | What it does |
 |---|---|
@@ -458,6 +458,7 @@ The `bin/` directory ships a few wrappers for common operations. Most are POSIX 
 | [`bin/sync-pointers`](bin/sync-pointers) | After running pull-all, stage + commit all submodule pointer bumps in one commit. |
 | [`bin/release-all`](bin/release-all) | Coordinated `Cargo.toml` bump + commit + tag + push across every submodule that backs a homebrew formula. |
 | [`bin/gen-ci-board`](bin/gen-ci-board) | Regenerate the [\[0x02\] CI Status Board](#0x02-ci-status-board) from the submodule map + live workflow lists (`--in-place` splices README.md). |
+| [`bin/gen-code-volume`](bin/gen-code-volume) | Regenerate the [\[0x09\] Code Volume](#0x09-code-volume) tables (stryke) — `tokei` de-duplicated by git: nested submodule mountpoints counted once at their top-level checkout (`--in-place` splices README.md). |
 | [`bin/gen-app-icon.sh`](bin/gen-app-icon.sh) | Render one GUI app icon from the shared cyberpunk brand template (chamfered neon frame + width-pinned glyph/wordmark, vendored Orbitron). Args: accent, glyph, wordmark, out.png. |
 | [`bin/gen-all-icons.sh`](bin/gen-all-icons.sh) | Regenerate every GUI app's icon set from that one template (Tauri via `tauri icon`, JUCE via `iconutil`), so all apps share `zterm`'s geometry and differ only by accent/glyph. |
 
@@ -607,58 +608,71 @@ git submodule update --depth 1                # shallow clone for the initialize
 
 ## [0x09] CODE VOLUME
 
-Measured with `tokei 14.0.0` across the full recursive working tree. **Code** is source lines only (blanks and comments excluded). `.stk` (stryke source) has no `tokei` lexer, so its code is counted separately as non-blank, non-`#`-comment lines — the same definition `tokei` uses. Build artifacts (`target/`, `node_modules/`, `.cargo/`), all `vendor/` trees (incl. the vendored fish source at `zshrs/vendor/fish/` and the upstream Python powerline under `powerliners/vendor/`), and the `MenkeTechnologiesPublications/src/{zshrs,strykelang,zpwr}` nested submodules (identical files already counted under their own top-level checkouts), the third-party audio-framework submodules `zpwr-fx/libs/JUCE` + `zpwr-fx/libs/clap-juce-extensions` (the JUCE and CLAP frameworks — not authored here), and the nested plugin-library submodules `*/libs/zpwr-patch-core` + `*/libs/zpwr-daw` (the JUCE plugins vendor each other under `libs/`; identical files already counted under their own top-level checkouts) are excluded so nothing is double-counted or wrongly attributed.
+Measured with `tokei` across the full recursive working tree, **de-duplicated by git**. The same engines are vendored inside many apps (under `libs/`, `lib/`, `crates/`, `vendor/`, …) as nested submodules; every nested submodule mountpoint is excluded so each engine is counted exactly once at its own top-level checkout, never where it is re-mounted. Third-party submodules (`JUCE`, `clap-juce-extensions`, upstream `powerline`) and the vendored `fish` source are excluded — not authored here. Build artifacts (`target/`, `node_modules/`, `build/`) are skipped via `.gitignore`. **Code** is source lines only (blanks + comments excluded); `.stk` (stryke source) has no `tokei` lexer, so it is counted separately as non-blank, non-`#`-comment lines — the same definition `tokei` uses. Regenerate with `bin/gen-code-volume --in-place`.
 
+<!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 2,355,499 | 6,286 |
-| JSON | 1,964,774 | 365 |
-| Perl | 1,904,744 | 19,746 |
-| JavaScript | 453,942 | 2,800 |
-| Zsh | 280,215 | 1,301 |
-| HTML | 217,676 | 1,025 |
-| Stryke (`.stk`) | 201,028 | 3,382 |
-| TeX | 138,233 | 13 |
-| Vim Script | 115,282 | 748 |
+| Rust | 2,548,851 | 6,889 |
+| JSON | 2,180,548 | 655 |
+| Perl | 1,904,852 | 19,751 |
+| JavaScript | 497,819 | 3,315 |
+| Zsh | 280,247 | 1,302 |
+| HTML | 249,604 | 1,110 |
+| Stryke (`.stk`) | 201,131 | 3,384 |
+| TeX | 162,651 | 23 |
+| C Header | 159,673 | 262 |
+| CSS | 119,184 | 538 |
+| Vim Script | 115,568 | 755 |
 | AWK | 82,368 | 2,191 |
-| CSS | 67,069 | 138 |
-| C Header | 66,561 | 183 |
-| Shell | 66,535 | 1,989 |
-| C++ | 60,881 | 106 |
-| C | 45,218 | 22 |
-| Python | 33,291 | 521 |
-| SQL | 29,187 | 118 |
-| Kotlin | 23,672 | 173 |
-| **Total** | **8,137,952** | **41,877** |
+| C | 75,012 | 40 |
+| Shell | 73,994 | 2,194 |
+| C++ | 60,310 | 113 |
+| Scheme | 37,786 | 1,155 |
+| Python | 37,061 | 552 |
+| TOML | 34,458 | 551 |
+| SQL | 29,188 | 119 |
+| Kotlin | 23,716 | 177 |
+| *Other (85 languages)* | 50,845 | 686 |
+| **Total** | **8,924,866** | **46,395** |
+<!-- END gen-code-volume:languages -->
 
-The JSON mass is dominated by `traderview` frontend i18n — 27 locale files at ~1.58M lines — plus `zpwr-synth` factory-preset banks (~188k); the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — 19,505 hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
+The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
 
 Largest single repos by source (same exclusions; `.stk` counted as above):
 
+<!-- BEGIN gen-code-volume:repos -->
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | Rust 751,329 | JavaScript 310,801 |
-| `zshrs` | Rust 436,672 | Zsh 50,324 |
-| `strykelang` | Rust 410,176 | Stryke 162,462 · Perl 1.9M |
-| `Audio-Haxor` | Rust 138,557 | JavaScript 68,248 |
-| `fusevm` | Rust 127,470 | — |
-| `zpwr` | Zsh 74,539 | Shell 8,197 |
-| `powerliners` | Rust 62,996 | — |
-| `awkrs` | AWK 82,138 | Rust 47,700 |
+| `traderview` | JSON 1,581,560 | Rust 743,151 |
+| `strykelang` | Perl 1,902,103 | Rust 414,107 |
+| `zshrs` | Rust 438,964 | Zsh 50,324 |
+| `Audio-Haxor` | Rust 118,888 | JSON 102,167 |
+| `zpwr-clip-engine` | JSON 138,887 | C Header 86,479 |
+| `MenkeTechnologiesPublications` | TeX 161,505 | HTML 103,985 |
+| `zpwr-synth` | JSON 187,687 | C++ 11,053 |
+| `zemacs` | Rust 83,641 | JSON 46,003 |
+| `zpwr-patch-core` | JSON 68,959 | C Header 63,374 |
+| `awkrs` | AWK 82,138 | Rust 50,964 |
+<!-- END gen-code-volume:repos -->
 
-Numbers refresh as repos add commits — regenerate with `tokei` (plus the `.stk` awk pass) from a fresh recursive clone.
+Numbers refresh as repos add commits — regenerate with `bin/gen-code-volume --in-place`.
 
 ### Against a typical engineer-career
 
-Every line above is hand-authored. The standard software-engineering productivity figures (Brooks' *Mythical Man-Month*, COCOMO, Capers Jones) put *net maintained* output at roughly 20–100 lines/day sustained — call a 40-year career ~9,200 working days. The multiple below is `8,137,952 ÷ (rate × 9,200)`:
+Every line above is hand-authored. The standard software-engineering productivity figures (Brooks' *Mythical Man-Month*, COCOMO, Capers Jones) put *net maintained* output at roughly 20–100 lines/day sustained — call a 40-year career ~9,200 working days. The multiple below is `Total ÷ (rate × 9,200)` against the measured Total above:
 
+<!-- BEGIN gen-code-volume:careers -->
 | Net LOC/day baseline | Career total | This tree ÷ baseline |
 |---:|---:|---:|
-| 100/day (optimistic ceiling) | ~920,000 | **~8.8×** |
-| 50/day (mid estimate) | ~460,000 | ~18× |
-| 20/day (conservative) | ~184,000 | ~44× |
+| 100/day (optimistic ceiling) | ~920,000 | **~9.7×** |
+| 50/day (mid estimate) | ~460,000 | **~19×** |
+| 20/day (conservative) | ~184,000 | **~49×** |
 
-The defensible floor is **≥8 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption. The baseline is an industry estimate, not a measured value; the 8.1M is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
+The defensible floor is **≥9 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
+<!-- END gen-code-volume:careers -->
+
+The baseline is an industry estimate, not a measured value; the Total is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
 
 ---
 
