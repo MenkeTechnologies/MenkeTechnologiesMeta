@@ -79,8 +79,8 @@ while IFS= read -r wf; do
     checked=$((checked + 1))
 
     # Look for any release-creating pattern
-    if ! grep -qE 'gh release create|softprops/action-gh-release@|actions/create-release@|ncipollo/release-action@' "$wf"; then
-        echo "FAIL  $wf: named release.yml but doesn't call gh release create / softprops/action-gh-release / actions/create-release / ncipollo/release-action — wrong filename, half-finished, or broken pipeline"
+    if ! grep -qE 'gh release create|softprops/action-gh-release@|actions/create-release@|ncipollo/release-action@|svenstaro/upload-release-action@' "$wf"; then
+        echo "FAIL  $wf: named release.yml but doesn't call gh release create / softprops/action-gh-release / actions/create-release / ncipollo/release-action / svenstaro/upload-release-action — wrong filename, half-finished, or broken pipeline"
         missing=$((missing + 1))
         ok=0
     fi
