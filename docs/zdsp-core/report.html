@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zdsp-core engineering report — the DSP unit map, extraction provenance, and consumption model for the shared real-time audio DSP engine (zdsp::core) behind the MenkeTechnologies audio stack.">
+  <meta name="description" content="zdsp-core engineering report — the 7-unit DSP map, extraction provenance, and consumption model for the shared real-time audio DSP engine (zdsp::core) behind the MenkeTechnologies audio stack. Paid product — proprietary.">
   <title>zdsp-core — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,34 +41,28 @@
       </div>
     </header>
     <main class="docs-main">
-      <p class="note">zdsp-core is a header-only C++ shared component — JUCE-based DSP headers, no separate library artifact and no build step of its own. It is consumed by <code>add_subdirectory(zdsp-core)</code> + linking the <code>zdsp::core</code> interface target; JUCE (<code>juce_audio_basics</code> + <code>juce_core</code>) must already be present in the consuming project. This page describes the unit surface, where each unit came from, and the migration roadmap. Every unit is the generic kernel of something the Audio-Haxor audio-engine had already shipped inline.</p>
+      <p class="note">zdsp-core is a header-only C++ shared component — JUCE-based DSP headers, no separate library artifact and no build step of its own. It is consumed by <code>add_subdirectory(zdsp-core)</code> + linking the <code>zdsp::core</code> interface target; JUCE (<code>juce_audio_basics</code> + <code>juce_core</code>) must already be present in the consuming project. This page describes the unit surface, where each unit came from, and how apps consume it. Every unit is the generic kernel of something the Audio-Haxor audio-engine had already shipped inline. Paid product — proprietary (<code>UNLICENSED</code>), part of the paid audio stack.</p>
 
       <h2 class="reg-h">DSP units</h2>
       <table>
         <thead><tr><th>header</th><th>type</th><th>what</th></tr></thead>
         <tbody>
-          <tr><td><code>zdsp/ola_time_stretch.h</code></td><td><code>zdsp::OlaTimeStretch</code></td><td>OLA time stretcher — change playback speed without altering pitch. Hann-windowed overlap-add, 75% overlap (synthesis hop = window/4); analysis hop = <code>synthHop &times; speed</code>. Stereo. <code>prepare()</code> &rarr; <code>process(src, speed, buffer)</code> &rarr; <code>reset()</code>, <code>speed &isin; [0.25, 4.0]</code>.</td></tr>
-          <tr><td><code>zdsp/ola_time_stretch.h</code></td><td><code>zdsp::SpeedMode</code></td><td>Speed-mode enum — <code>Resample</code> (pitch follows rate) vs <code>TimeStretch</code> (preserve pitch). Consumers switch on it to decide whether to route through the stretcher.</td></tr>
+          <tr><td><code>zdsp/ola_time_stretch.h</code></td><td><code>zdsp::OlaTimeStretch</code> + <code>SpeedMode</code></td><td>OLA time stretcher — change playback speed without altering pitch. Hann-windowed overlap-add, 75% overlap (synthesis hop = window/4); analysis hop = <code>synthHop &times; speed</code>. Stereo. <code>prepare()</code> &rarr; <code>process(src, speed, buffer)</code> &rarr; <code>reset()</code>, <code>speed &isin; [0.25, 4.0]</code>. <code>SpeedMode</code> = <code>Resample</code> (pitch follows rate) vs <code>TimeStretch</code> (preserve pitch).</td></tr>
+          <tr><td><code>zdsp/channel_strip.h</code></td><td><code>zdsp::DspAtomics</code> + <code>applyDspFrame</code></td><td>Lock-free channel strip — 3-band IIR EQ (low-shelf 200&nbsp;Hz / mid-peak 1&nbsp;kHz / high-shelf 8&nbsp;kHz) + gain + pan, optional mono fold. Params held in RT-safe <code>DspAtomics</code> (float-as-uint32 atomics); <code>applyDspFrame</code> processes one stereo frame against caller-owned IIR filter state.</td></tr>
+          <tr><td><code>zdsp/tone_audio_source.h</code></td><td><code>zdsp::ToneAudioSource</code></td><td>Sine test-tone generator <code>juce::AudioSource</code> (configurable <code>toneHz</code>/<code>toneGain</code>), silence when off, with optional spectrum/scope taps.</td></tr>
+          <tr><td><code>zdsp/input_peak_callback.h</code></td><td><code>zdsp::InputPeakCallback</code></td><td>Input peak meter <code>juce::AudioIODeviceCallback</code> — abs-max per block with exponential release (<code>decay</code>); read <code>peak</code> (0..1).</td></tr>
+          <tr><td><code>zdsp/spectrogram_analysis.h</code></td><td><code>zdsp::computeSpectrogramGrid</code></td><td>Offline spectrogram analysis — mono samples &rarr; <code>heightPx &times; widthPx</code> dBFS grid (&minus;100..0), Hann-windowed STFT, log&rarr;linear binning. The DSP half of <code>ZGui.viz</code> spectrogram/waterfall (this computes, those draw). Plus <code>magnitudeToDb</code>.</td></tr>
+          <tr><td><code>zdsp/lock_free_stream_source.h</code></td><td><code>zdsp::LockFreeStreamSource</code></td><td>RT-safe streaming source + stream&rarr;RAM hot-swap — moves file I/O to a background <code>TimeSliceThread</code>, hands the audio thread a power-of-two ring buffer (spinlock counters, no CoreAudio-blocking CriticalSection). <code>requestReaderSwap</code> routes a RAM-backed reader glitch-free mid-playback; models a "virtual EOF" so loop-off plays out to the iteration boundary.</td></tr>
+          <tr><td><code>zdsp/dsp_stereo_file_source.h</code></td><td><code>zdsp::DspStereoFileSource</code> (+ <code>InsertChain</code>)</td><td>The playback orchestrator — a transport-ready stereo file source composing all of the above: tape-speed (<code>ResamplingAudioSource</code>) <em>or</em> <code>OlaTimeStretch</code>, optionally fed by <code>LockFreeStreamSource</code>; per-sample <code>applyDspFrame</code> channel strip, optional <code>InsertChain</code> plugin rack (the app implements it), mono fold, seek-fade, reverse-RAM path, peak/spectrum/scope taps.</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Extraction provenance</h2>
+      <p class="note">All seven units are verbatim ports out of the Audio-Haxor audio-engine's <code>Engine.cpp</code> — engine constants became configurable members, <code>appLogLine</code> became an optional <code>logLine</code>, and the in-app plugin chain became the <code>InsertChain</code> interface. The full DSP stack <em>and</em> the playback pipeline now live here; what stays in each consuming app is only the file-format wiring, IPC/transport plumbing, plugin scanning, and the <code>InsertChain</code> implementation.</p>
       <table>
         <thead><tr><th>unit</th><th>extracted from</th></tr></thead>
         <tbody>
-          <tr><td><code>OlaTimeStretch</code>, <code>SpeedMode</code></td><td>Audio-Haxor audio-engine (<code>Engine.cpp</code>)</td></tr>
-        </tbody>
-      </table>
-
-      <h2 class="reg-h">Migration roadmap</h2>
-      <p class="note">Further reusable DSP units still inline in the Audio-Haxor engine's <code>Engine.cpp</code>, to migrate out into this shared core:</p>
-      <table>
-        <thead><tr><th>unit</th><th>what</th></tr></thead>
-        <tbody>
-          <tr><td><code>ToneAudioSource</code></td><td>test-tone generator <code>juce::AudioSource</code></td></tr>
-          <tr><td><code>LockFreeStreamSource</code></td><td>lock-free ring-buffered file streaming source (RT-safe)</td></tr>
-          <tr><td><code>DspStereoFileSource</code></td><td>tape-style speed (<code>juce::ResamplingAudioSource</code>) + OLA stretch file source</td></tr>
-          <tr><td>stereo analysis metrics</td><td>Pearson correlation, stereo width, crest, RMS/peak dBFS — shared with the frontend <code>ZGui.viz</code> analysis math</td></tr>
+          <tr><td>all 7 units (OLA stretch, channel strip, tone, peak meter, spectrogram, lock-free streaming, <code>DspStereoFileSource</code> orchestrator)</td><td>Audio-Haxor audio-engine (<code>Engine.cpp</code>)</td></tr>
         </tbody>
       </table>
 
