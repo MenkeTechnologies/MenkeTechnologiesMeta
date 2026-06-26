@@ -108,6 +108,18 @@ for p in "${paths[@]}"; do
         continue
     fi
 
+    # Free forks inherit the upstream project's OSI license and CANNOT
+    # relicense to MIT (e.g. zemacs forks Helix → MPL-2.0). When Cargo.toml
+    # declares a recognized non-MIT OSI license, the repo is intentionally
+    # not-MIT and the MIT-uniformity check does not apply; the LICENSE file
+    # is still required to exist (license-file-present.sh).
+    if grep -qhE '^license[[:space:]]*=[[:space:]]*"(MPL-2\.0|Apache-2\.0|GPL-[23]\.0[^"]*|LGPL-[^"]*|BSD-[23]-Clause)"' \
+        "$p/Cargo.toml" "$p/src-tauri/Cargo.toml" 2>/dev/null; then
+        decl=$(grep -hoE '^license[[:space:]]*=[[:space:]]*"[^"]+"' "$p/Cargo.toml" "$p/src-tauri/Cargo.toml" 2>/dev/null | head -1)
+        echo "SKIP  $p: $decl — free fork, inherited non-MIT OSI license"
+        continue
+    fi
+
     if [[ ! -f "$p/LICENSE" ]]; then
         # Dual-license repos (nmaprs) ship LICENSE-MIT / LICENSE-APACHE
         # instead of a single LICENSE — accept either as canonical.
