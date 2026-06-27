@@ -7,7 +7,7 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-133-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-134-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-41_core-cyan.svg)](#tier-1--core-41)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 133 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 134 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -61,7 +61,7 @@ git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnol
 cd MenkeTechnologiesMeta
 ```
 
-The `--recurse-submodules` flag fetches all 133 submodules in parallel during the initial clone.
+The `--recurse-submodules` flag fetches all 134 submodules in parallel during the initial clone.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -81,7 +81,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 133 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 134 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (41)
 
@@ -114,6 +114,7 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 | [`zemail-core`](https://github.com/MenkeTechnologies/zemail-core) | **Embeddable mail engine** (pure Rust, no GUI deps) extracted from `zemail` so the same engine embeds across the GUI stack. **Private.** &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zemail-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zemail-core/report)</sub> |
 | [`zoffice`](https://github.com/MenkeTechnologies/zoffice) | **Office suite replacing Microsoft Office** (Rust, Tauri v2 desktop app) — documents, spreadsheets, presentations. Consumes `zoffice-core`. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice/report)</sub> |
 | [`zphoto`](https://github.com/MenkeTechnologies/zphoto) | **Photo suite replacing GIMP and Photostop** (Rust, Tauri v2 desktop app) — images. Consumes `zphoto-core`. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zphoto) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zphoto/report)</sub> |
+| [`zphoto-core`](https://github.com/MenkeTechnologies/zphoto-core) | **Embeddable photo engine** (pure Rust, no GUI deps) — images parse + edit, extracted from `zphoto`. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zphoto-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zphoto-core/report)</sub> |
 | [`zoffice-core`](https://github.com/MenkeTechnologies/zoffice-core) | **Embeddable office engine** (pure Rust, no GUI deps) — document / spreadsheet / presentation parse + edit, extracted from `zoffice`. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice-core/report)</sub> |
 | [`ztranslator-core`](https://github.com/MenkeTechnologies/ztranslator-core) | **Embeddable event-translation engine** (pure Rust, no GUI deps) — the real-time MIDI / OSC / DMX / file-watcher routing engine behind `ztranslator`; integer-VM rule matching, BOME `.bmtp` import/export, JSON projects. Builds `rlib` + `staticlib` + `cdylib` so the same routing engine embeds across the GUI stack. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/ztranslator-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/ztranslator-core/report)</sub> |
 | [`zcite`](https://github.com/MenkeTechnologies/zcite) | **Reference manager replacing Zotero** (Rust, Tauri v2 desktop app) — library, collections, tags & saved searches, citations/bibliographies (APA/MLA/Chicago/IEEE), BibTeX/RIS/CSL-JSON import-export, DOI/ISBN/PMID lookup, duplicate detection. Bundles its embeddable pure-Rust `zcite-core` engine (`rlib` + `staticlib` + `cdylib`) so the same reference engine embeds across the GUI stack. A Zotero port plus added features. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zcite) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zcite/report)</sub> |
@@ -592,7 +593,7 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
 | Tier 5 — Editor / multiplexer plugins | 11 | ~12 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 19 | ~1.06 GB |
-| **Total** | **133** | **~2.2 GB** |
+| **Total** | **134** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
