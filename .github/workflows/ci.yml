@@ -91,7 +91,21 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: sudo apt-get update && sudo apt-get install -y shellcheck
-      - run: shellcheck bin/*
+      - name: shellcheck only POSIX/bash scripts in bin/
+        run: |
+          set -euo pipefail
+          # bin/ also holds stryke scripts (e.g. gen-code-volume) whose
+          # `#!/usr/bin/env stryke` shebang shellcheck can't parse. Select by
+          # shebang so only sh/bash/dash/ksh scripts are linted.
+          scripts=()
+          for f in bin/*; do
+            [ -f "$f" ] || continue
+            if head -1 "$f" | grep -qE 'env (sh|bash|dash|ksh)|/(sh|bash|dash|ksh)$'; then
+              scripts+=("$f")
+            fi
+          done
+          printf 'shellchecking: %s\n' "${scripts[*]}"
+          shellcheck "${scripts[@]}"
 
   bin-scripts-smoke:
     name: bin/ scripts smoke
