@@ -8,7 +8,7 @@
 ```
 
 [![Submodules](https://img.shields.io/badge/submodules-132-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-40_core-cyan.svg)](#tier-1--core-40)
+[![Tier 1](https://img.shields.io/badge/tier_1-41_core-cyan.svg)](#tier-1--core-41)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
