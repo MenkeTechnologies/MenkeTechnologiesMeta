@@ -38,6 +38,7 @@ MANIFEST=(
   "zreq|tauri|#ffea00|REQ|ZREQ|zreq/app/src-tauri/icons"
   "ztranslator|tauri|#1de9b6|TR|ZTRANSLATOR|ztranslator/app/src-tauri/icons"
   "ztunnel|tauri|#7c4dff|TUN|ZTUNNEL|ztunnel/app/src-tauri/icons"
+  "zemacs-gui|tauri|#aa00ff|ZE|ZEMACS|zemacs-gui/app/src-tauri/icons"
   "zpwr-synth|juce|#ff56e2|SYN|ZPWR-SYNTH|zpwr-synth/resources"
   "zpwr-fx|juce|#0bc6db|FX|ZPWR-FX|zpwr-fx/resources"
   "zpwr-midi-fx|juce|#b388ff|MFX|ZPWR-MIDI-FX|zpwr-midi-fx/resources"
