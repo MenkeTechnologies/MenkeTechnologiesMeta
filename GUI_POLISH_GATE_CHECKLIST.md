@@ -57,11 +57,11 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 | zpdf | ✓ | ✗ | ✓ | ? | ✗ | ? | ? | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ | `zpdf-core` |
 | zemail | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zemail-core` |
 | zoffice | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zoffice-core` |
-| zreq | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zreq-core` |
+| zreq | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | N/A | ✓ | ~ | ✗ | `zreq-core` |
 | ztunnel | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `ztunnel-core` |
 | zgo | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | `zgo-core` |
 | zftp | ✗ | ✗ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | (app) |
-| zcite | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | `zcite-core` |
+| zcite | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | N/A | ✓ | ~ | ~ | `zcite-core` |
 | zterm | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | (app) |
 | zcontainer | ✗ | ✗ | ✗ | ~ | ✗ | ✗ | ~ | ✗ | ✗ | ✗ | ✗ | ✗ | ~ | `zcontainer-core` |
 
@@ -86,8 +86,13 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
   entry point first. Then: submodule, CMake (staticlib `--features capi` + BinaryData + link),
   PluginEditor `fb_invoke`/`fb_home_dir`/`fb_open_default` natives, FILES tab in the shared
   `index.html`. All require a JUCE/CMake build to verify.
-- **hooks-editor** missing in **10**, **file-browser** in **11**, **terminal**/**i18n** in **3**.
-- **Worst-off (nothing shared, `~`/`✗` across): `zcite`, `zterm`, `zcontainer`.** zcontainer has a
+- **hooks-editor** missing in **8**, **file-browser** in **9**, **terminal**/**i18n** in **3**
+  (after `zcite`/`zreq` adopted the standard embed set).
+- **`zcite` and `zreq` are now R1–R10 green** (R9 = N/A, no timeline content): every view surface
+  runs on `zgui-core` widgets and they embed terminal/hooks/file-browser/i18n. Remaining for PASS:
+  the 18 i18n proof tests (`i18n` = `~`), the extended pnpm script surface (`scr`), and the
+  `zoffice`/`zemail`/`zpdf` `-core` views.
+- **Worst-off (nothing shared, `~`/`✗` across): `zterm`, `zcontainer`.** zcontainer has a
   cyberpunk look + logo but hand-rolled (not the shared tokens/header), and substring search (not fzf).
 - **`?` columns** (R4 shared-token sourcing, R6 shared header, colorschemes on the newer apps) need a
   per-app audit — see Phase F. They are not counted as PASS until ticked.
@@ -223,8 +228,8 @@ when its F-checklist is fully ticked and G1–G4 are green.
 ## Suggested execution order
 
 1. **Phase A** (shared sources) — unblocks everything; one-time.
-2. **B1 + B4 + D2** for `zcite`/`zterm`/`zcontainer` — the three worst-off apps reach the same
-   floor as the rest (terminal + i18n).
+2. **B1 + B4 + D2** for `zterm`/`zcontainer` — bring the remaining worst-off apps up to the same
+   floor as the rest (terminal + i18n). (`zcite`/`zreq` already cleared this floor.)
 3. **B2 (hooks) + B3 (file-browser)** fan-out — the two biggest universal gaps.
 4. **Phase E** (scripts) — cheap, mechanical, parallelizable across all 14.
 5. **Phase C** (`-core` views) — heaviest; gated on each `-core` maturing.
