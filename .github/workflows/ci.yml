@@ -3150,3 +3150,40 @@ jobs:
             fi
           fi
           exit $fail
+
+      - name: docs/ tier cards (index.html + report.html) match README tier headers
+        run: |
+          set -euo pipefail
+          # Every per-tier count on the GH Pages site must match the
+          # CI-gated README "### Tier N — Label (N)" headers. Covers ALL
+          # six tier cards in docs/index.html (<span class="n">N</span>Tier T)
+          # AND the tier table rows in docs/report.html
+          # (<td>Tier T — …</td><td>N</td>). The stat-card gate above only
+          # pinned Tier 4; this closes the gap that let Tier 1 (40 vs 45)
+          # and Tier 5 (11 vs 14) drift silently as submodules were added /
+          # renamed. README headers are the source of truth (gated three
+          # ways by the per-tier-row check above).
+          fail=0
+          for t in 1 2 3 4 5 6; do
+            rdme=$(grep -nE "^### Tier $t " README.md | head -1 | grep -oE '\([0-9]+\)' | tr -d '()')
+            if [ -z "$rdme" ]; then
+              echo "::error::README Tier $t header has no (N) count"
+              fail=1
+              continue
+            fi
+            if [ -f docs/index.html ]; then
+              idx=$(grep -oE "\"n\">[0-9]+</span>Tier $t " docs/index.html | grep -oE '[0-9]+' | head -1)
+              if [ -n "$idx" ] && [ "$idx" != "$rdme" ]; then
+                echo "::error::docs/index.html Tier $t card says $idx but README header has ($rdme)"
+                fail=1
+              fi
+            fi
+            if [ -f docs/report.html ]; then
+              rpt=$(grep -oE "Tier $t — [^<]*</td><td>[0-9]+" docs/report.html | grep -oE '[0-9]+$' | head -1)
+              if [ -n "$rpt" ] && [ "$rpt" != "$rdme" ]; then
+                echo "::error::docs/report.html Tier $t row says $rpt but README header has ($rdme)"
+                fail=1
+              fi
+            fi
+          done
+          exit $fail
