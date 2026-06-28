@@ -69,28 +69,35 @@ allowed=0
 # permanent design choices, not "we'll fix it later" gaps. CI passes for
 # allowed repos; the test still reports which gate was opt-outed so a
 # regression in a non-opt-outed gate is still caught.
-is_allowed() {
+# Per-gate opt-out: gate_opt_out <repo> <gate> returns 0 if <repo> is allowed
+# to skip <gate>. Opt-outs are permanent, documented design choices — never
+# "we'll fix it later" gaps. A repo still FAILs on any gate it does NOT opt out
+# of, so granular opt-outs keep the maximum surface enforced.
+gate_opt_out() {
+    # Whole-repo opt-outs (every gate excused).
     case "$1" in
         strykelang|zshrs|fusevm)
-            # ci.yml header in each explicitly marks fmt/clippy advisory
-            # (massive codebases where mass-fmt churn would obscure the
-            # actual diff signal; clippy false-positives at scale would
-            # require per-warn allowlists that are themselves brittle).
-            # `test` + `doc` gates still required and enforced.
+            # Massive codebases: mass-fmt churn would obscure the diff signal
+            # and clippy false-positives at scale need brittle per-warn lists.
             return 0
             ;;
         Audio-Haxor|traderview)
-            # Tauri v2 apps — the canonical build is `pnpm tauri:build:ci`
-            # which wraps cargo with frontend bundling. fmt/clippy/doc on
-            # the src-tauri/ subset would be a nice-to-have, but the
-            # current pnpm flow is the source-of-truth release path; the
-            # cargo subset is a means, not the gate.
+            # Tauri v2 apps — canonical build is `pnpm tauri:build:ci` (cargo
+            # wrapped with frontend bundling); the cargo subset is a means, not
+            # the gate.
             return 0
             ;;
         api-rest-generator)
-            # Mid-transition from Kotlin to Rust — Rust code is still
-            # the secondary path. Treat as opt-out until the transition
-            # completes.
+            # Mid-transition from Kotlin to Rust; Rust path still secondary.
+            return 0
+            ;;
+    esac
+    # Single-gate opt-outs.
+    case "$1:$2" in
+        vimlrs:doc)
+            # Faithful-to-C ported doc comments carry [bracket] snippets that
+            # trip rustdoc's intra-doc-link lint, so doc stays advisory (no
+            # `-D warnings`); fmt + clippy + test are still enforced.
             return 0
             ;;
     esac
@@ -111,15 +118,16 @@ for p in "${paths[@]}"; do
 
     checked=$((checked + 1))
     miss=""
-    has_fmt    "$ci" || miss="$miss fmt"
-    has_clippy "$ci" || miss="$miss clippy"
-    has_doc    "$ci" || miss="$miss doc"
-    has_test   "$ci" || miss="$miss test"
+    excused=""
+    for g in fmt clippy doc test; do
+        "has_$g" "$ci" && continue
+        if gate_opt_out "$p" "$g"; then excused="$excused $g"; else miss="$miss $g"; fi
+    done
 
-    if [[ -z "$miss" ]]; then
+    if [[ -z "$miss" && -z "$excused" ]]; then
         echo "PASS  $p: ci.yml has fmt + clippy + doc + test gates"
-    elif is_allowed "$p"; then
-        echo "ALLOWED  $p: ci.yml missing gate(s):$miss — intentional opt-out per allowlist"
+    elif [[ -z "$miss" ]]; then
+        echo "ALLOWED  $p: ci.yml enforces required gates (documented opt-out:$excused)"
         allowed=$((allowed + 1))
     else
         echo "FAIL  $p: ci.yml missing gate(s):$miss"
