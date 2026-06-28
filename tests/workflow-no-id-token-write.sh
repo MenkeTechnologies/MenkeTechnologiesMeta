@@ -64,6 +64,11 @@ declare -A OIDC_ALLOWLIST=(
     # binaries via actions/attest-build-provenance, which mints an OIDC token
     # to call GitHub's first-party attestations API — no cloud-cred exchange.
     [./zemacs/.github/workflows/release.yml]="build-provenance attestation via actions/attest-build-provenance (first-party GitHub attestations API; signs release binaries)"
+    # app-store ships GitHub's stock "Deploy Jekyll with GitHub Pages" workflow,
+    # which (like our own pages.yml) declares id-token:write so actions/deploy-pages
+    # can mint an OIDC token for the github-pages environment — first-party action,
+    # no cloud-cred exchange.
+    [./app-store/.github/workflows/jekyll-gh-pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party Jekyll Pages workflow; deploys the app-store site)"
 )
 
 checked=0
