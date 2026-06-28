@@ -626,28 +626,28 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 2,548,851 | 6,889 |
-| JSON | 2,180,548 | 655 |
+| Rust | 2,610,972 | 7,026 |
+| JSON | 2,585,995 | 954 |
 | Perl | 1,904,852 | 19,751 |
-| JavaScript | 497,819 | 3,315 |
-| Zsh | 280,247 | 1,302 |
-| HTML | 249,604 | 1,110 |
-| Stryke (`.stk`) | 201,131 | 3,384 |
-| TeX | 162,651 | 23 |
-| C Header | 159,673 | 262 |
-| CSS | 119,184 | 538 |
-| Vim Script | 115,568 | 755 |
+| JavaScript | 659,398 | 5,305 |
+| C Header | 358,563 | 474 |
+| Zsh | 280,264 | 1,303 |
+| HTML | 263,948 | 1,154 |
+| CSS | 215,806 | 1,911 |
+| Stryke (`.stk`) | 201,089 | 3,382 |
+| TeX | 163,464 | 27 |
+| Vim Script | 118,381 | 821 |
+| C++ | 114,946 | 174 |
 | AWK | 82,368 | 2,191 |
+| Shell | 76,661 | 2,267 |
 | C | 75,012 | 40 |
-| Shell | 73,994 | 2,194 |
-| C++ | 60,310 | 113 |
+| Python | 45,326 | 609 |
 | Scheme | 37,786 | 1,155 |
-| Python | 37,061 | 552 |
-| TOML | 34,458 | 551 |
+| TOML | 35,512 | 534 |
+| Kotlin | 29,813 | 271 |
 | SQL | 29,188 | 119 |
-| Kotlin | 23,716 | 177 |
-| *Other (85 languages)* | 50,845 | 686 |
-| **Total** | **8,924,866** | **46,395** |
+| *Other (85 languages)* | 49,742 | 728 |
+| **Total** | **9,939,086** | **50,914** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -658,15 +658,15 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 | Repo | Primary | Secondary |
 |---|---:|---:|
 | `traderview` | JSON 1,581,560 | Rust 743,151 |
-| `strykelang` | Perl 1,902,103 | Rust 414,107 |
-| `zshrs` | Rust 438,964 | Zsh 50,324 |
+| `strykelang` | Perl 1,902,103 | Rust 414,998 |
+| `zshrs` | Rust 438,969 | Zsh 50,324 |
+| `zpwr-synth` | JSON 325,606 | C Header 102,640 |
+| `zpwr-midi-fx` | JSON 137,950 | C Header 119,687 |
 | `Audio-Haxor` | Rust 118,888 | JSON 102,167 |
-| `zpwr-clip-engine` | JSON 138,887 | C Header 86,479 |
 | `MenkeTechnologiesPublications` | TeX 161,505 | HTML 103,985 |
-| `zpwr-synth` | JSON 187,687 | C++ 11,053 |
-| `zemacs` | Rust 83,641 | JSON 46,003 |
-| `zpwr-patch-core` | JSON 68,959 | C Header 63,374 |
-| `awkrs` | AWK 82,138 | Rust 50,964 |
+| `zemacs` | Rust 92,164 | JSON 57,045 |
+| `zpwr-fx` | JSON 68,974 | C Header 63,565 |
+| `zpwr-patch-core` | JSON 68,960 | C Header 63,376 |
 <!-- END gen-code-volume:repos -->
 
 Numbers refresh as repos add commits — regenerate with `bin/gen-code-volume --in-place`.
@@ -678,11 +678,11 @@ Every line above is hand-authored. The standard software-engineering productivit
 <!-- BEGIN gen-code-volume:careers -->
 | Net LOC/day baseline | Career total | This tree ÷ baseline |
 |---:|---:|---:|
-| 100/day (optimistic ceiling) | ~920,000 | **~9.7×** |
-| 50/day (mid estimate) | ~460,000 | **~19×** |
-| 20/day (conservative) | ~184,000 | **~49×** |
+| 100/day (optimistic ceiling) | ~920,000 | **~11×** |
+| 50/day (mid estimate) | ~460,000 | **~22×** |
+| 20/day (conservative) | ~184,000 | **~54×** |
 
-The defensible floor is **≥9 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
+The defensible floor is **≥10 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
 <!-- END gen-code-volume:careers -->
 
 The baseline is an industry estimate, not a measured value; the Total is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
