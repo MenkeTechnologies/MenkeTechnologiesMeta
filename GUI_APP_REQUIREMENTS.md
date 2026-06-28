@@ -21,6 +21,17 @@ create it in a submodule and route every app through it.
 | Audio-Haxor | Tauri v2 (static `frontend/`) | `Audio-Haxor` |
 | traderview | Tauri v2 (static `frontend/` → `frontend-dist/`) | `traderview` |
 | ztranslator | Tauri v2 (static `frontend/`) | `ztranslator` |
+| zoffice | Tauri v2 (static `frontend/`) | `zoffice` |
+| zpdf | Tauri v2 (static `frontend/`) | `zpdf` |
+| zphoto | Tauri v2 (static `frontend/`) | `zphoto` |
+| ztunnel | Tauri v2 (static `frontend/`) | `ztunnel` |
+| zftp | Tauri v2 (static `frontend/`) | `zftp` |
+| zcite | Tauri v2 (static `frontend/`) | `zcite` |
+| zemail | Tauri v2 (static `frontend/`) | `zemail` |
+| zemacs-gui | Tauri v2 (static `frontend/`) | `zemacs-gui` |
+| zgo | Tauri v2 (`app/` workspace) | `zgo` |
+| zcontainer | Tauri v2 (`app/` workspace) | `zcontainer` |
+| zreq | Tauri v2 (`app/` workspace) | `zreq` |
 | zpwr-daw | JUCE `WebBrowserComponent` (BinaryData) | `zpwr-daw` (vendored at `zpwr-clip-engine`) |
 | zpwr-synth | JUCE `WebBrowserComponent` (BinaryData) | `zpwr-synth` |
 | zpwr-fx | JUCE `WebBrowserComponent` (BinaryData) | `zpwr-fx` |

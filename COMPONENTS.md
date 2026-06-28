@@ -90,7 +90,7 @@ _Last reconciled: 2026-06-25._
 - [ ] **pdf-core → zpwr-daw** (PDF tab/view + path-aware `openPdf`; embed engine)
 - [ ] **pdf-core → Audio-Haxor** (PDF overlay + path-aware `openPdf`; embed engine)
 - [ ] **crate → embedded zpdf**: in apps with both the crate/content browser AND a PDF view (Audio-Haxor, zpwr-daw), opening a `.pdf` from the crate routes to the embedded `openPdf(path)` view instead of the external/default opener (PDF views are placeholders until `zpdf-core` is wired)
-- [ ] **zoffice / zemail / zpdf** (embed the standard component set + each other's `-core`; zoffice/zemail still scaffolds, zpdf is further along)
+- [ ] **zoffice / zemail / zpdf** (embed the standard component set + each other's `-core`; zoffice/zemail have app shells but haven't embedded the set yet, zpdf is further along)
 
 ## Notes
 
@@ -112,10 +112,11 @@ _Last reconciled: 2026-06-25._
 - **zpdf (further along):** from-scratch PDF editor (Tauri v2) porting the Adobe Acrobat Pro + macOS
   Preview feature set; `zpdf` + `zpdf-core` are already meta submodules and `zpdf` embeds `zpdf-core`
   (nested). Its embedding into the OTHER GUI apps + the standard component set inside it are still TODO.
-- **zoffice / zemail (new, scaffolds):** GUI apps (Tauri v2, cyberpunk HUD) — `zoffice` replaces MS
-  Office (documents/spreadsheets/presentations), `zemail` is a desktop mail client. Both are
-  README-only so far; engines `zoffice-core` (has `include`/`src`/`tests`) / `zemail-core` (minimal)
-  exist. zoffice/zemail/zpdf are paid products.
+- **zoffice / zemail (early apps):** GUI apps (Tauri v2, cyberpunk HUD) — `zoffice` replaces MS
+  Office (documents/spreadsheets/presentations), `zemail` is a desktop mail client. Both now ship a
+  Tauri app shell (`frontend/` + `src-tauri`) and a `pnpm t` suite driving their engines
+  `zoffice-core` (has `include`/`src`/`tests`) / `zemail-core`; still adopting the full shared
+  component set. zoffice/zemail/zpdf are paid products.
 - **Not consumed by any GUI app:** `zpwr-theme`, `zpwr-jobs`, `zpwr-license` (tooling/editor).
 - **patch-core** is JUCE-plugin-only (daw + synth/fx/midi-fx); the Tauri apps don't use it.
 - **zgui-core (new, extracted):** the shared `window.ZGui` chrome toolkit (shell/settings/dialog/table/
