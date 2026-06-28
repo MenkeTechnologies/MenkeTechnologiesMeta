@@ -3,7 +3,7 @@
 Which shared submodules each GUI app consumes, plus the planned additions to fill the
 gaps. Source of truth is each app's `.gitmodules`; this table is the human-readable map.
 
-_Last reconciled: 2026-06-25._
+_Last reconciled: 2026-06-28._
 
 ## Components
 
@@ -24,6 +24,8 @@ _Last reconciled: 2026-06-25._
 | **zoffice-core** | Embeddable pure-Rust office engine — document/spreadsheet/presentation parse+edit, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind `zoffice` |
 | **zemail-core** | Embeddable pure-Rust mail engine, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind `zemail` |
 | **zpdf-core** | Embeddable pure-Rust PDF engine — parse/edit/annotate/sign/embed, no GUI deps; native + C ABI. Engine behind `zpdf` |
+| **zphoto-core** | Embeddable pure-Rust raster-imaging engine — layers/selections/filters/export, no GUI deps; native + C ABI. Engine behind `zphoto` |
+| **ztmux-core** | Embeddable pure-Rust terminal/tmux engine (PTY + tmux wire-protocol control), no GUI deps. Engine behind `zterminal` |
 
 ## Current state
 
@@ -41,7 +43,9 @@ _Last reconciled: 2026-06-25._
 | **zpdf** | — | — | — | — | — | — | — | — | — | — | — | _(source)_ |
 | **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **# apps** | 8 | 4 | 6 | 6 | 4 | 3 | 5 | 5 | 1 | 0 | 0 | 0 |
+| **zphoto** | — | — | — | — | — | — | — | ✓ | — | — | — | — |
+| **zterminal** | — | — | — | — | — | — | — | — | — | — | — | — |
+| **# apps** | 8 | 4 | 6 | 6 | 4 | 3 | 5 | 6 | 1 | 0 | 0 | 0 |
 
 ## Planned additions (the plan)
 
@@ -72,6 +76,8 @@ _Last reconciled: 2026-06-25._
 | **zpdf** | ➕ | — | ➕ | ➕ | — | ➕ | ➕ | ➕ | — | ➕ | ➕ | _(source)_ |
 | **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ➕ | ➕ | ➕ |
 | **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ➕ | ➕ | ➕ |
+| **zphoto** | — | — | ➕ | ➕ | — | — | ➕ | ✓ | — | ➕ | ➕ | ➕ |
+| **zterminal** | — | — | — | ➕ | — | — | ➕ | ➕ | — | ➕ | ➕ | ➕ |
 
 ## Checklist
 
@@ -95,6 +101,7 @@ _Last reconciled: 2026-06-25._
 - [ ] **pdf-core → Audio-Haxor** (PDF overlay + path-aware `openPdf`; embed engine)
 - [ ] **crate → embedded zpdf**: in apps with both the crate/content browser AND a PDF view (Audio-Haxor, zpwr-daw), opening a `.pdf` from the crate routes to the embedded `openPdf(path)` view instead of the external/default opener (PDF views are placeholders until `zpdf-core` is wired)
 - [ ] **zoffice / zemail / zpdf** (embed the standard component set + each other's `-core`; zoffice/zemail have app shells but haven't embedded the set yet, zpdf is further along)
+- [ ] **zphoto / zterminal** (new GUI apps; both consume `zgui-core` + their own `-core` engine, zphoto also `zpwr-i18n`. Still need the standard shared set — embed-terminal/hooks-editor/file-browser/i18n, minus embed-terminal for zterminal which is itself a terminal — plus the office/mail/pdf cores)
 
 ## Notes
 
@@ -121,6 +128,13 @@ _Last reconciled: 2026-06-25._
   Tauri app shell (`frontend/` + `src-tauri`) and a `pnpm t` suite driving their engines
   `zoffice-core` (has `include`/`src`/`tests`) / `zemail-core`; still adopting the full shared
   component set. zoffice/zemail/zpdf are paid products.
+- **zphoto / zterminal (new apps):** GUI apps (Tauri v2, cyberpunk HUD, `zgui-core`). `zphoto` is a
+  from-scratch raster editor replacing GIMP/Photoshop — it vendors `gimp`, embeds its own
+  `zphoto-core` engine, and consumes `zpwr-i18n`; still adopting the rest of the standard set.
+  `zterminal` is a GPU-accelerated terminal emulator embedding `ztmux-core` (PTY + tmux wire-protocol
+  control); the standard `embed-terminal` component is n/a since it is itself the terminal. Both are
+  **paid products** in the app-store. `zphoto-core` / `ztmux-core` follow the same `-core` embed model
+  as `zpdf-core` but are not yet consumed across other apps, so they have no matrix column of their own.
 - **Not consumed by any GUI app:** `zpwr-theme`, `zpwr-jobs`, `zpwr-license` (tooling/editor).
 - **patch-core** is JUCE-plugin-only (daw + synth/fx/midi-fx); the Tauri apps don't use it.
 - **zgui-core (new, extracted):** the shared `window.ZGui` chrome toolkit (shell/settings/dialog/table/

@@ -8,7 +8,7 @@
 ```
 
 [![Submodules](https://img.shields.io/badge/submodules-138-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-41_core-cyan.svg)](#tier-1--core-41)
+[![Tier 1](https://img.shields.io/badge/tier_1-44_core-cyan.svg)](#tier-1--core-44)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
@@ -290,6 +290,8 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 1 — Core | [`zpwr`](https://github.com/MenkeTechnologies/zpwr) | [![CI](https://github.com/MenkeTechnologies/zpwr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwr/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zpwr?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zpwr/tags) |
 | 1 — Core | [`zpdf`](https://github.com/MenkeTechnologies/zpdf) | — | — | — |
 | 1 — Core | [`zpdf-core`](https://github.com/MenkeTechnologies/zpdf-core) | — | — | — |
+| 1 — Core | [`zphoto`](https://github.com/MenkeTechnologies/zphoto) | — | — | — |
+| 1 — Core | [`zphoto-core`](https://github.com/MenkeTechnologies/zphoto-core) | — | — | — |
 | 1 — Core | [`zemail`](https://github.com/MenkeTechnologies/zemail) | — | — | — |
 | 1 — Core | [`zemail-core`](https://github.com/MenkeTechnologies/zemail-core) | — | — | — |
 | 1 — Core | [`zoffice`](https://github.com/MenkeTechnologies/zoffice) | — | — | — |
@@ -308,6 +310,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 1 — Core | [`zcontainer-core`](https://github.com/MenkeTechnologies/zcontainer-core) | — | — | — |
 | 1 — Core | [`zterminal`](https://github.com/MenkeTechnologies/zterminal) | — | — | — |
 | 1 — Core | [`ztmux-core`](https://github.com/MenkeTechnologies/ztmux-core) | — | — | — |
+| 1 — Core | [`zcolorizer`](https://github.com/MenkeTechnologies/zcolorizer) | — | — | — |
 | 1 — Core | [`zemacs`](https://github.com/MenkeTechnologies/zemacs) | [![CI](https://github.com/MenkeTechnologies/zemacs/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zemacs/actions/workflows/build.yml) [![cachix](https://github.com/MenkeTechnologies/zemacs/actions/workflows/cachix.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zemacs/actions/workflows/cachix.yml) [![gh-pages](https://github.com/MenkeTechnologies/zemacs/actions/workflows/gh-pages.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zemacs/actions/workflows/gh-pages.yml) | [![Release](https://github.com/MenkeTechnologies/zemacs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zemacs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zemacs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zemacs/tags) |
 | 1 — Core | [`zemacs-gui`](https://github.com/MenkeTechnologies/zemacs-gui) | — | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zemacs-gui?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zemacs-gui/tags) |
 | 2 — Stryke ecosystem + tap | [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | [![CI](https://github.com/MenkeTechnologies/homebrew-menketech/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/homebrew-menketech/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/homebrew-menketech?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/homebrew-menketech/tags) |
