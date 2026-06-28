@@ -215,11 +215,14 @@ Per app, all ten must be true:
 - **Styles are split by substrate.** JUCE apps share `cyberpunk.css`; the Tauri apps
   (Audio-Haxor, traderview, ztranslator) carry their own stylesheets. Extract the shared
   design tokens so both substrates read the same theme source.
-- **Tables and fuzzy filters are reused ad hoc**, not yet through one shared component each.
-  Promote the fzf matcher and a table component to shared modules and route every instance
-  through them.
-- **File browser exists only in Audio-Haxor** (`frontend/js/file-browser.js`) and calls
-  Tauri `vstUpdater` fs commands directly. Promote it to a shared submodule behind a
-  backend shim (Tauri `invoke` / JUCE native fn), then embed it in the other six apps.
+- **Tables and fuzzy filters: shared modules now exist; finish routing every app through them.**
+  `zgui-core` ships the canonical `ZGui.fzf` matcher, `ZGui.table`/`ZGui.dataTable`, and a
+  multi-instance `ZGui.tabs` (per-strip `panels`/`activeKey`/`fireOnRestore`). `zcite` and
+  `zreq` route every table/filter/tab through them; the remaining apps still carry ad-hoc
+  instances and must converge on the shared widgets.
+- **File browser is promoted** to the shared `zpwr-file-browser` submodule (webui + Rust
+  `fs_*` backend behind the `window.vstUpdater` shim) and embedded in Audio-Haxor, traderview,
+  ztranslator, `zcite`, and `zreq`. Remaining embeds: `zpwr-daw` and the `zoffice`/`zemail`/`zpdf`
+  set.
 - **Arrangement grid is embedded only in zpwr-daw.** The other six apps need a domain +
   `createGrid` embed (R9).

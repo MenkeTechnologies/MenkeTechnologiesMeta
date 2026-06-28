@@ -202,6 +202,27 @@ task-by-task work list to close every gap is [`GUI_POLISH_GATE_CHECKLIST.md`](GU
 | **ztranslator** | partial | partial | ✓ | partial | FAIL |
 | **zpwr-daw** | partial | partial | ✗ | partial | FAIL |
 | **zcontainer** | ✗ | partial (`zcontainer-core` only) | ✗ | partial (dev/build/clean/bust/rebuild/nuke only) | FAIL |
+| **zcite** | partial (R1–R10 ✓; R9 N/A — no timeline) | partial (terminal/hooks/file-browser/i18n ✓; office/mail/pdf-core pending) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/test/doc/ship-check/deploy/nuke/build:hooks-editor) | FAIL |
+| **zreq** | partial (R1–R10 ✓; R9 N/A — no timeline) | partial (terminal/hooks/file-browser/i18n ✓; office/mail/pdf-core pending) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/nuke/build:hooks-editor) | FAIL |
+
+### zcite / zreq — newly onboarded (R1–R10 green)
+
+Both apps now mount the `ZGui.appShell` baseline and route **every** view surface through
+`zgui-core` widgets — tables (`ZGui.dataTable`/`table`), fuzzy filters (`ZGui.fzf` +
+matched-char highlight), modals (`ZGui.modal`), toasts (`ZGui.toast`), tab strips
+(`ZGui.tabs`, now multi-instance), the collection tree (`ZGui.tree`), and a tile dashboard
+(`ZGui.tiles`). They embed the shared PTY terminal, the Monaco hooks editor, and the
+multi-pane file browser (with a real Rust `fs_*` backend). R9 (arrangement grid) is **N/A** —
+neither a reference manager nor an HTTP client has timeline content.
+
+To reach **PASS** each still owes the gate:
+- **G2**: add `zoffice-core` / `zemail-core` / `zpdf-core` with real views (the paid
+  cross-cutting engine set).
+- **G3**: port the 18 i18n proof tests and make them green; the 935-key catalog is complete
+  across all 27 locales but non-English values are English stubs pending machine translation.
+- **G4**: fill out the haxor `package.json` script surface + matching `scripts/*.sh`
+  (`tauri:build:ci`, `clean`/`bust`/`rebuild`, `test`/`test:js`/`test:rust`,
+  `doc`/`doc:open`/`doc:sync`, `i18n:sort`/`i18n:sort:check`/`i18n:audit` in node).
 
 ### zcontainer — what it owes the gate
 
