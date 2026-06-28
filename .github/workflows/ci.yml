@@ -168,6 +168,42 @@ jobs:
           submodules: true
           # Needed to clone the 5 private submodules (paid apps/plugins).
           token: ${{ secrets.SUBMODULE_PAT }}
+      - name: docs rust-crates count matches actual top-level Cargo.toml count
+        # The README-link-sanity job ALSO has a rust-crates stat-card check,
+        # but it checks out WITHOUT submodules so actual_rust=0 and it
+        # self-skips — which is why docs/index.html drifted 50 vs the real
+        # 62 unnoticed. THIS job has submodules: true, so the count is real.
+        # Gate the docs/index.html stat-card AND every "N Rust crates" prose
+        # mention in docs/report.html against the actual top-level Cargo.toml
+        # count (the same definition both docs claim to use).
+        run: |
+          set -euo pipefail
+          fail=0
+          actual=0
+          while read -r p; do
+            [ -f "$p/Cargo.toml" ] && actual=$((actual + 1))
+          done < <(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+          echo "actual top-level Cargo.toml count = $actual"
+          if [ "$actual" -eq 0 ]; then
+            echo "::error::0 Cargo.toml found — submodules failed to check out, cannot verify rust-crates count"
+            exit 1
+          fi
+          if [ -f docs/index.html ]; then
+            idx=$(grep -oE '"n">[0-9]+</div><div class="l">rust crates' docs/index.html | grep -oE '[0-9]+' | head -1)
+            if [ -n "$idx" ] && [ "$idx" != "$actual" ]; then
+              echo "::error::docs/index.html rust-crates stat-card says $idx but actual top-level Cargo.toml count is $actual"
+              fail=1
+            fi
+          fi
+          if [ -f docs/report.html ]; then
+            while read -r n; do
+              if [ "$n" != "$actual" ]; then
+                echo "::error::docs/report.html claims '$n Rust crates' but actual top-level Cargo.toml count is $actual"
+                fail=1
+              fi
+            done < <(grep -oE '[0-9]+ Rust crates' docs/report.html | grep -oE '[0-9]+')
+          fi
+          exit $fail
       - name: Per-submodule docs/*.html highest version >= Cargo.toml version
         # Catches the failure mode seen 2026-05-30 with powerliners:
         # Cargo.toml was at "0.2.1" while docs/report.html still claimed
@@ -3186,4 +3222,36 @@ jobs:
               fi
             fi
           done
+          exit $fail
+
+      - name: README banner tagline + [0x08] Disk Footprint repo-counts match .gitmodules + tier headers
+        run: |
+          set -euo pipefail
+          # Two more ungated count vectors that drifted (138 vs 139):
+          #  - the ASCII-banner tagline "[META REPO // N SUBMODULES // …]"
+          #  - the [0x08] Disk Footprint table's Repos column (per tier) +
+          #    its Total row. The Repos column MUST equal each tier's gated
+          #    "### Tier N — Label (M)" header; the Total MUST equal the
+          #    .gitmodules submodule count. Sizes (~MB/GB) are approximate
+          #    and intentionally not gated.
+          fail=0
+          actual=$(git config -f .gitmodules --get-regexp '^submodule\..*\.path$' | wc -l | tr -d ' ')
+          banner=$(grep -oE '// [0-9]+ SUBMODULES' README.md | head -1 | grep -oE '[0-9]+')
+          if [ -n "$banner" ] && [ "$banner" != "$actual" ]; then
+            echo "::error::README banner tagline says $banner SUBMODULES but .gitmodules has $actual"
+            fail=1
+          fi
+          for t in 1 2 3 4 5 6; do
+            hdr=$(grep -nE "^### Tier $t " README.md | head -1 | grep -oE '\([0-9]+\)' | tr -d '()')
+            fp=$(grep -oE "^\| Tier $t — [^|]*\| [0-9]+" README.md | head -1 | grep -oE '[0-9]+$')
+            if [ -n "$fp" ] && [ -n "$hdr" ] && [ "$fp" != "$hdr" ]; then
+              echo "::error::Disk Footprint Tier $t repo-count $fp != README tier header ($hdr)"
+              fail=1
+            fi
+          done
+          fptotal=$(grep -oE '\*\*Total\*\* \| \*\*[0-9]+\*\* \| \*\*~' README.md | head -1 | grep -oE '[0-9]+')
+          if [ -n "$fptotal" ] && [ "$fptotal" != "$actual" ]; then
+            echo "::error::Disk Footprint Total $fptotal != .gitmodules count $actual"
+            fail=1
+          fi
           exit $fail
