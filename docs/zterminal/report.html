@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zterminal — Engineering report. GPU-accelerated cross-platform terminal emulator in Rust: ~44k source lines across 5 workspace crates, OpenGL ES 2.0 glyph-atlas renderer, xterm-compatible VT engine, native tiling splits, inline graphics (Kitty / Sixel / iTerm2), and first-class tmux over the native wire protocol.">
+  <title>zterminal &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+    .feature-card li code { font-size:10px; }
+
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;position:relative; }
+    .hub-scheme-strip-inner { max-width:76rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent); }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch;} .hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZTERMINAL &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zterminal" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            GPU-accelerated cross-platform terminal in Rust &middot; OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas renderer &middot; xterm-compatible VT engine &middot; native tiling splits &middot; inline graphics (Kitty / Sixel / iTerm2) &middot; first-class tmux over the native wire protocol
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 1: EXECUTIVE SUMMARY            -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">zterminal is a fast, GPU-accelerated terminal emulator written in Rust, organized as a 5-crate workspace. A terminal engine (<code>zterminal_core</code>) owns the xterm-compatible VT parser, the grid and scrollback, inline-graphics state, and PTY I/O; the application shell (<code>zterminal</code>) owns the OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas renderer, window/display driver, the native binary-split pane tree, input and keybindings, and a configuration model bridged to an in-process WebView control panel. tmux integration rides on a dedicated wire-protocol client (<code>ztmux-core</code>) that speaks imsg framing directly to the server socket &mdash; no <code>tmux</code> subprocess. Configuration is deserialized through a custom derive crate (<code>zterminal_config_derive</code>). <strong>~44k Rust source lines across 100 files + ~3.4k lines of control-panel JavaScript + 297 test functions</strong>, in a vendored, self-contained build with no external runtime dependencies, targeting Linux, BSD, macOS, and Windows.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">44,128</div><div class="stat-label">Rust Source Lines</div></div>
+        <div class="stat-card"><div class="stat-val">33,672</div><div class="stat-label">Code Lines (tokei)</div></div>
+        <div class="stat-card"><div class="stat-val">100</div><div class="stat-label">Rust Files</div></div>
+        <div class="stat-card"><div class="stat-val">5</div><div class="stat-label">Workspace Crates</div></div>
+        <div class="stat-card"><div class="stat-val green">297</div><div class="stat-label">Test Functions</div></div>
+        <div class="stat-card"><div class="stat-val accent">3,355</div><div class="stat-label">Control-Panel JS Lines</div></div>
+        <div class="stat-card"><div class="stat-val">56</div><div class="stat-label">Direct Dependencies</div></div>
+        <div class="stat-card"><div class="stat-val">531</div><div class="stat-label">Crates In Tree</div></div>
+        <div class="stat-card"><div class="stat-val accent">3</div><div class="stat-label">Inline-Image Protocols</div></div>
+      </div>
+
+      <div style="margin:1.2rem 0;">
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Crate Distribution &mdash; 44,128 Rust lines</p>
+        <div class="bar-wrap" style="height:26px;">
+          <div class="bar-fill cyan" style="width:62.5%;"></div>
+          <span class="bar-pct" style="font-size:12px;">27,599 zterminal / 14,096 zterminal_core / 1,824 ztmux-core / 609 config &middot; 62.5% app shell</span>
+        </div>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;"><code>zterminal</code> (61 files) — renderer, display, input, splits, config, platform. <code>zterminal_core</code> (30 files) — VT engine, grid, graphics, PTY, vi mode, selection. <code>crates/ztmux-core</code> (5 files) — tmux wire protocol. <code>zterminal_config</code> + <code>zterminal_config_derive</code> (7 files) — config deserialization.</p>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 2: SUBSYSTEM BREAKDOWN          -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">#</span>SUBSYSTEM BREAKDOWN</h2>
+      <p class="tutorial-subtitle">Source partitioned by role across the workspace, measured in total source lines. The application shell&rsquo;s event loop and configuration surface lead, followed closely by the VT engine, the GPU renderer, and the display/windowing driver. Percentages are of the 44,128-line Rust slice.</p>
+
+      <table class="file-table">
+        <thead><tr><th>Subsystem</th><th>Key paths</th><th class="num">Lines</th><th class="num">%</th><th style="min-width:120px;">Share</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--accent);">Config &amp; settings</td><td><code>config/, settings.rs, migrate/</code></td><td class="num">6,602</td><td class="num">15.0%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:15.0%"></div></div></td><td>Config schema (colors, window, opacity, background image), keybinding table, settings model + persistence, and migration of older configs. Bridged to the WebView control panel.</td></tr>
+          <tr><td style="color:var(--accent);">Event loop &amp; app core</td><td><code>event.rs, window_context.rs, pane.rs, main.rs, daemon.rs</code></td><td class="num">6,372</td><td class="num">14.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:14.4%"></div></div></td><td>Central event dispatch (window / keyboard / mouse / IPC), per-window context (tabs, panes, focus, MRU), the native binary-split pane tree, app entry, and the background daemon.</td></tr>
+          <tr><td style="color:var(--accent);">Terminal / VT engine</td><td><code>core/term/</code></td><td class="num">5,169</td><td class="num">11.7%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:11.7%"></div></div></td><td>The xterm-compatible VT parser and terminal state machine: escape / CSI / OSC handling, modes, cursor, charsets, tab stops, and in-scrollback regex search.</td></tr>
+          <tr><td style="color:var(--accent);">Display &amp; windowing</td><td><code>display/</code></td><td class="num">4,896</td><td class="num">11.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:11.1%"></div></div></td><td>Per-window draw orchestration, damage tracking, cursor and overlays, hint / hyperlink overlay, OS window creation and management.</td></tr>
+          <tr><td style="color:var(--accent);">GPU renderer</td><td><code>renderer/</code></td><td class="num">4,672</td><td class="num">10.6%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.6%"></div></div></td><td>OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas renderer: text shaping into a texture atlas, GLES2 draw path, and an embedded fallback glyph font so the build is self-contained.</td></tr>
+          <tr><td style="color:var(--accent);">Grid &amp; scrollback</td><td><code>core/grid/</code></td><td class="num">2,519</td><td class="num">5.7%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:5.7%"></div></div></td><td>Cell storage, rows, resize / reflow, and the scrollback ring-buffer storage.</td></tr>
+          <tr><td style="color:var(--accent);">Input &amp; keybindings</td><td><code>input/</code></td><td class="num">2,330</td><td class="num">5.3%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:5.3%"></div></div></td><td>Key / mouse → action mapping, modifier handling, keysym → escape-sequence encoding, bracketed paste.</td></tr>
+          <tr><td style="color:var(--accent);">Inline graphics</td><td><code>core/graphics/</code></td><td class="num">2,070</td><td class="num">4.7%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:4.7%"></div></div></td><td>Image-placement state and GPU upload queue for inline graphics, plus the scanner that extracts Kitty (APC), Sixel (DCS), and iTerm2 (OSC) image sequences ahead of the escape parser.</td></tr>
+          <tr><td style="color:var(--accent);">tmux wire protocol</td><td><code>crates/ztmux-core/</code></td><td class="num">1,824</td><td class="num">4.1%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:4.1%"></div></div></td><td>First-class tmux client over the server&rsquo;s Unix socket (imsg framing, protocol v8): command encode / decode, transport, and session snapshot &mdash; no <code>tmux</code> subprocess.</td></tr>
+          <tr><td style="color:var(--accent);">Utilities</td><td><code>cli.rs, message_bar.rs, logging.rs, string.rs, clipboard.rs</code></td><td class="num">1,754</td><td class="num">4.0%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:4.0%"></div></div></td><td>CLI argument parsing, the on-screen message bar, structured logging, string helpers, and clipboard integration.</td></tr>
+          <tr><td style="color:var(--accent);">PTY / TTY</td><td><code>core/tty/</code></td><td class="num">1,601</td><td class="num">3.6%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:3.6%"></div></div></td><td>Pseudo-terminal spawn and I/O: child process, resize, and the read/write loop feeding the VT engine.</td></tr>
+          <tr><td style="color:var(--accent);">Core event loop &amp; index</td><td><code>core/event_loop.rs, index.rs, sync.rs</code></td><td class="num">1,157</td><td class="num">2.6%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2.6%"></div></div></td><td>The terminal engine&rsquo;s event loop, grid coordinate / index types, and synchronization primitives shared with the shell.</td></tr>
+          <tr><td style="color:var(--accent);">vi mode</td><td><code>core/vi_mode.rs</code></td><td class="num">893</td><td class="num">2.0%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2.0%"></div></div></td><td>vi-style cursor motions, selections, and operators over the grid and scrollback.</td></tr>
+          <tr><td style="color:var(--accent);">Selection</td><td><code>core/selection.rs</code></td><td class="num">687</td><td class="num">1.6%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1.6%"></div></div></td><td>Selection model (block / semantic / line) and clipboard text extraction.</td></tr>
+          <tr><td style="color:var(--accent);">Config derive macros</td><td><code>zterminal_config*/</code></td><td class="num">609</td><td class="num">1.4%</td><td><div class="bar-wrap"><div class="bar-fill yellow" style="width:1.4%"></div></div></td><td>Procedural-macro config deserialization (struct / enum) and <code>serde</code> replace support, plus the thin config crate entry.</td></tr>
+          <tr><td style="color:var(--accent);">macOS platform</td><td><code>macos/</code></td><td class="num">574</td><td class="num">1.3%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1.3%"></div></div></td><td>macOS-specific glue: native menu, global hotkey (Quake dropdown), and app integration.</td></tr>
+          <tr><td style="color:var(--accent);">Polling</td><td><code>polling/</code></td><td class="num">399</td><td class="num">0.9%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:0.9%"></div></div></td><td>Periodic polling for telemetry / tmux refresh feeding the dashboard.</td></tr>
+        </tbody>
+        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">44,128</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 3: TOP 20 FILES                 -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">$</span>TOP 20 FILES BY SIZE</h2>
+      <p class="tutorial-subtitle">The 20 largest source files account for 58.5% of the Rust slice. The event loop and the terminal-state core are by far the largest single files &mdash; the two hubs that everything else hangs off.</p>
+
+      <table class="file-table">
+        <thead><tr><th>File</th><th class="num">Lines</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>zterminal/src/event.rs</td><td class="num">3,833</td><td>Central event loop: window / keyboard / mouse / IPC event dispatch and the application state machine</td></tr>
+          <tr><td>zterminal_core/src/term/mod.rs</td><td class="num">3,534</td><td>Terminal state: the VT / xterm parser core, grid mutation, modes, cursor, charsets</td></tr>
+          <tr><td>zterminal/src/display/mod.rs</td><td class="num">1,934</td><td>Display driver: per-window draw orchestration, damage, cursor, overlays</td></tr>
+          <tr><td>zterminal/src/settings.rs</td><td class="num">1,763</td><td>Settings model and persistence, bridged to the WebView control panel</td></tr>
+          <tr><td>zterminal/src/input/mod.rs</td><td class="num">1,612</td><td>Input handling: key / mouse → action mapping, modifiers, bracketed paste</td></tr>
+          <tr><td>zterminal/src/config/bindings.rs</td><td class="num">1,547</td><td>Keybinding table, default chords, and the rebindable action registry</td></tr>
+          <tr><td>zterminal_core/src/term/search.rs</td><td class="num">1,251</td><td>In-scrollback regex search engine</td></tr>
+          <tr><td>zterminal/src/window_context.rs</td><td class="num">1,044</td><td>Per-window context: tabs, panes, focus, MRU quick-switch</td></tr>
+          <tr><td>zterminal/src/renderer/text/builtin_font.rs</td><td class="num">1,032</td><td>Embedded fallback glyph font &mdash; keeps the renderer self-contained with no external font dependency</td></tr>
+          <tr><td>crates/ztmux-core/src/ops.rs</td><td class="num">913</td><td>tmux wire operations: encode / decode commands over the server socket</td></tr>
+          <tr><td>zterminal/src/pane.rs</td><td class="num">893</td><td>Native split tree: pane geometry, split / focus / resize / zoom</td></tr>
+          <tr><td>zterminal_core/src/vi_mode.rs</td><td class="num">893</td><td>vi-mode cursor motions, selections, and operators</td></tr>
+          <tr><td>zterminal/src/config/ui_config.rs</td><td class="num">790</td><td>UI config schema: colors, window geometry, opacity, background image</td></tr>
+          <tr><td>zterminal_core/src/grid/storage.rs</td><td class="num">769</td><td>Scrollback ring-buffer storage</td></tr>
+          <tr><td>zterminal/src/input/keyboard.rs</td><td class="num">718</td><td>Keyboard layout / keysym → escape-sequence encoding</td></tr>
+          <tr><td>zterminal/src/display/hint.rs</td><td class="num">703</td><td>Hint overlay: URL and path hints over the grid</td></tr>
+          <tr><td>zterminal_core/src/selection.rs</td><td class="num">687</td><td>Selection model (block / semantic / line) and clipboard text extraction</td></tr>
+          <tr><td>zterminal_core/src/grid/mod.rs</td><td class="num">678</td><td>Grid: cell storage, rows, resize / reflow</td></tr>
+          <tr><td>zterminal_core/src/graphics/mod.rs</td><td class="num">637</td><td>Inline-graphics state: image placements and the GPU upload queue</td></tr>
+          <tr><td>zterminal/src/display/window.rs</td><td class="num">574</td><td>OS window creation and management</td></tr>
+        </tbody>
+        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOP 20 SUBTOTAL</td><td class="num">25,805</td><td>58.5% of the 44,128-line Rust slice</td></tr></tfoot>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 4: DATA-FLOW PIPELINE           -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">@</span>DATA-FLOW PIPELINE</h2>
+      <p class="tutorial-subtitle">Bytes flow from the child PTY through the VT engine into the grid, then onto the GPU. An image scanner sits <em>ahead</em> of the escape parser so Kitty / Sixel / iTerm2 sequences are peeled off and uploaded as textures while ordinary text and control sequences pass through untouched. tmux traffic takes a parallel path over the wire-protocol client.</p>
+
+      <pre style="margin:0.5rem 0;padding:1rem;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-dim);font-size:11px;line-height:1.7;overflow-x:auto;">
+  child process (shell, vim, htop, …)
+       │  PTY
+       ▼
+  ┌──────────────┐     ┌──────────────────┐     ┌──────────────┐
+  │  core/tty/   │────▶│ graphics/scanner │────▶│  core/term/  │
+  │  (1,601)     │     │  (peel Kitty /   │     │  (5,169)     │
+  │  PTY read/   │     │   Sixel / iTerm2 │     │  VT / xterm  │
+  │  write loop  │     │   image seqs)    │     │  parser      │
+  └──────────────┘     └────────┬─────────┘     └──────┬───────┘
+                                │                       │
+                       image bytes                cell writes
+                                │                       │
+                                ▼                       ▼
+                       ┌──────────────┐         ┌──────────────┐
+                       │ core/graphics│         │  core/grid/  │
+                       │  (2,070)     │         │  (2,519)     │
+                       │  placements  │         │  cells +     │
+                       │  + GPU queue │         │  scrollback  │
+                       └──────┬───────┘         └──────┬───────┘
+                              │                        │
+                              └───────────┬────────────┘
+                                          ▼
+                              ┌───────────────────────┐
+                              │   renderer/ (4,672)   │
+                              │  GLES2 glyph atlas +  │
+                              │  image texture blits  │
+                              └───────────┬───────────┘
+                                          ▼
+                              ┌───────────────────────┐
+                              │   display/ (4,896)    │
+                              │  per-window draw,     │
+                              │  panes, overlays      │
+                              └───────────────────────┘
+
+  tmux:  crates/ztmux-core (1,824)  ──imsg / socket──▶  server  (no subprocess)
+  input: input/ (2,330)  ──key/mouse → action──▶  event.rs (3,833)  ──▶  term / display</pre>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 5: SUBSYSTEM HIGHLIGHTS         -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>SUBSYSTEM HIGHLIGHTS</h2>
+      <p class="tutorial-subtitle">What each major subsystem ships. Three of these &mdash; live tmux config, profile-switchable tmux state, and the in-app telemetry dashboard &mdash; are terminal-emulator firsts; see <a href="index.html#inventions">Inventions</a>.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>GPU renderer</h4>
+          <p>OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas renderer. Text is shaped into a texture atlas and blitted per cell; inline images upload as GPU textures and blit over the cells they occupy. Ships an <strong>embedded fallback font</strong> (<code>builtin_font.rs</code>) so the binary is self-contained.</p>
+        </div>
+        <div class="feature-card">
+          <h4>VT engine</h4>
+          <p>Full xterm-compatible VT parsing in <code>core/term/</code> — vim, tmux, htop, and ncurses apps run correctly. 24-bit truecolor, scrollback, in-scrollback regex search, and a complete vi mode with motions, selections, and operators.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Native tiling splits</h4>
+          <p>An i3-style binary split tree in <code>pane.rs</code> — one independent shell + PTY per pane, GL-scissored into the window, no tmux required. Splits nest arbitrarily; each pane renders in its own sub-viewport. Layouts save / restore the split tree, cwd, and command.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Inline graphics</h4>
+          <p>All three terminal image protocols — <strong>Kitty</strong> (transmit / display / animation / Unicode placeholders), <strong>Sixel</strong>, and <strong>iTerm2</strong>. A scanner peels image sequences ahead of the escape parser; <code>ESC Ptmux;…</code>-wrapped sequences are unwrapped and decoded, so images survive tmux redraws.</p>
+        </div>
+        <div class="feature-card">
+          <h4>First-class tmux</h4>
+          <p><code>ztmux-core</code> speaks tmux&rsquo;s client/server wire protocol directly to the Unix socket (imsg framing, protocol v8) — no subprocess. Drives the live tmux tab, Sessions save/restore, cross-pane search, broadcast, and live editing of server options / buffers / keybindings.</p>
+        </div>
+        <div class="feature-card">
+          <h4>In-process control panel</h4>
+          <p>~3.4k lines of JavaScript (consuming the shared <code>zgui-core</code> component library) render Settings, Dashboard, tmux, Keybindings, Logs, and About tabs in an embedded WebView, plus the command palette, Exposé, sessions, and broadcast overlays. All state lives under <code>~/.zterminal</code>.</p>
+        </div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 6: MEASUREMENT NOTES            -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>MEASUREMENT NOTES</h2>
+      <p class="tutorial-subtitle">How the numbers were counted, so they can be reproduced.</p>
+      <ul style="font-size:12px;color:var(--text-dim);line-height:1.7;">
+        <li><strong>Rust source lines (44,128) &amp; files (100)</strong> — <code>wc -l</code> over every <code>*.rs</code> under the five workspace crates&rsquo; <code>src/</code> trees (<code>zterminal</code>, <code>zterminal_core</code>, <code>zterminal_config</code>, <code>zterminal_config_derive</code>, <code>crates/ztmux-core</code>), excluding <code>target/</code> and the <code>zgui-core</code> submodule.</li>
+        <li><strong>Code lines (33,672)</strong> — <code>tokei</code>, Rust only, excluding comments and blank lines.</li>
+        <li><strong>Test functions (297)</strong> — count of <code>#[test]</code> / <code>#[tokio::test]</code> attributes across the same trees.</li>
+        <li><strong>Control-panel JS (3,355)</strong> — <code>wc -l</code> over <code>settings/</code> + <code>frontend/</code> JavaScript, excluding the vendored <code>zgui-core</code> component library.</li>
+        <li><strong>Dependencies</strong> — 56 direct dependencies declared in <code>zterminal/Cargo.toml</code>; 531 total crates resolved in <code>Cargo.lock</code> (full transitive tree).</li>
+        <li><strong>Subsystem percentages</strong> — each subsystem&rsquo;s total source lines as a fraction of 44,128; rows sum to 100%.</li>
+      </ul>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Links</h2>
+        <ul>
+          <li><strong>Docs</strong> — <a href="index.html">zterminal documentation</a></li>
+          <li><strong>Inventions</strong> — <a href="index.html#inventions">terminal-emulator firsts</a></li>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/zterminal">GitHub repo</a></li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

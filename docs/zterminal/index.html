@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zterminal — a fast, GPU-accelerated, cross-platform terminal emulator. OpenGL ES glyph-atlas renderer, full xterm VT parsing, native tiling splits, inline graphics (Kitty / Sixel / iTerm2), and first-class tmux over the native wire protocol with live config, profiles, and a telemetry dashboard.">
+  <title>zterminal — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* Shortcut / reference tables */
+    .ref-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0 0.2rem;
+      font-size: 12.5px;
+    }
+    .ref-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .ref-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .ref-table td code { color: var(--accent-light); background: var(--bg); }
+    .ref-table td.keys { white-space: nowrap; }
+
+    /* Firsts / invention cards */
+    .first-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--accent);
+      padding: 0.85rem 1rem;
+      margin: 0.7rem 0;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .first-card h3 {
+      margin: 0 0 0.4rem;
+      color: var(--accent-light);
+    }
+    .first-card .badge {
+      display: inline-block;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--bg-primary);
+      background: var(--accent);
+      padding: 2px 7px;
+      border-radius: 2px;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Feature index-card grid */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+    }
+    .cat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .cat-card h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 0 0 0.35rem;
+    }
+    .cat-card p {
+      margin: 0;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZTERMINAL — GPU-ACCELERATED TERMINAL EMULATOR</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="#inventions">Inventions</a>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zterminal" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">zterminal v0.28.0 · Linux · BSD · macOS · Windows · OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas renderer · xterm-compatible VT · native tiling splits · inline graphics (Kitty / Sixel / iTerm2) · first-class tmux over the native wire protocol</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zterminal" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zterminal/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZTERMINAL — A FAST, MODERN TERMINAL</h2>
+      <p class="tutorial-subtitle"><strong>A fast, GPU-accelerated, cross-platform terminal emulator</strong> and part of the MenkeTechnologies stack. OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas rendering, full xterm-compatible VT parsing (vim, tmux, htop, ncurses), 24-bit truecolor, scrollback, vi mode, search, and hints — in a vendored, self-contained build with no external runtime dependencies. Runs on <strong>Linux, BSD, macOS, and Windows</strong>.</p>
+
+      <section class="tutorial-section">
+        <h2>Quickstart</h2>
+        <p>Build from source, then run the binary:</p>
+<pre># debug build
+cargo build
+# → target/debug/zterminal
+
+# release build
+cargo build --release</pre>
+        <h3>macOS installer (<code>.pkg</code>)</h3>
+        <p><code>make pkg</code> builds a single installer that drops <code>Zterminal.app</code> into <code>/Applications</code> and the <code>zterminal-icat</code> helper into <code>/usr/local/bin</code>:</p>
+<pre>make pkg          # → target/release/osx/Zterminal-&lt;version&gt;.pkg
+
+# install
+sudo installer -pkg target/release/osx/Zterminal-&lt;version&gt;.pkg -target /</pre>
+        <p>It builds a release binary, assembles + ad-hoc-signs the app bundle (stamping the version from <code>zterminal/Cargo.toml</code>), and packages both targets. The package is unsigned (no Developer ID), so first launch needs a right-click&nbsp;→&nbsp;Open. <code>make app</code> / <code>make dmg</code> build just the app bundle / disk image.</p>
+        <p>Full install + usage live in the <a href="https://github.com/MenkeTechnologies/zterminal#readme">README</a> and <code>man 5 zterminal</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Features</h2>
+        <div class="cat-grid">
+          <div class="cat-card">
+            <h4>GPU renderer</h4>
+            <p>OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas renderer — text and inline images uploaded as GPU textures and blitted per cell.</p>
+          </div>
+          <div class="cat-card">
+            <h4>xterm VT parsing</h4>
+            <p>Full xterm-compatible VT parsing — vim, tmux, htop, and ncurses apps run correctly.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Truecolor &amp; more</h4>
+            <p>24-bit truecolor, scrollback, vi mode, search, and link/path hints.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Native tiling splits</h4>
+            <p>i3-style binary split tree, one shell + PTY per pane, GL-scissored — no tmux required.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Inline graphics</h4>
+            <p>Kitty graphics protocol, Sixel, and iTerm2 inline images — drawn on the GPU, scrolling with the buffer.</p>
+          </div>
+          <div class="cat-card">
+            <h4>First-class tmux</h4>
+            <p>Speaks tmux's wire protocol directly to the server socket — live config, profiles, sessions, broadcast, and search.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Self-contained build</h4>
+            <p>Vendored, no external runtime dependencies. Linux, BSD, macOS, and Windows.</p>
+          </div>
+          <div class="cat-card">
+            <h4>In-process GUI suite</h4>
+            <p>Control panel + dashboard rendered in an embedded WebView; all state under <code>~/.zterminal</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-section" id="inventions">
+        <h2>Inventions</h2>
+        <p>Firsts that zterminal introduces to the terminal-emulator space. Each is, to our knowledge, novel — no shipping terminal emulator did it before.</p>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator to modify tmux settings live</h3>
+          <p>zterminal speaks tmux's <strong>native wire protocol</strong> directly to the server socket (<code>crates/ztmux-core</code>) — it is a first-class tmux client, with no <code>tmux</code> subprocess and nothing typed into the shell line. On top of that it ships live editors for the running server:</p>
+          <ul>
+            <li><strong>tmux server options</strong> — read every <code>show-options</code> scope (server / session / window) and edit any of them in place (<code>set-option</code>), applied instantly.</li>
+            <li><strong>tmux paste buffers</strong> — list, view, edit, create, paste, and delete buffers.</li>
+            <li><strong>tmux key bindings</strong> — list every binding across the key tables and rebind / unbind them live (<code>bind-key</code> / <code>unbind-key</code>), with the command re-tokenized for the wire.</li>
+          </ul>
+          <p>No other terminal emulator edits a live tmux server's options, buffers, and keybindings from its own UI.</p>
+        </div>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator to store tmux state in switchable profiles</h3>
+          <p>zterminal's <strong>profiles</strong> are named snapshots of the <em>entire</em> configuration that you switch between in one click — and they capture far more than the terminal config:</p>
+          <ul>
+            <li>the full terminal config (<code>zterminal.toml</code>),</li>
+            <li>the GUI look (color scheme, light/dark, custom scheme, effects),</li>
+            <li>and the <strong>tmux server state</strong> — options, buffers, and key bindings.</li>
+          </ul>
+          <p>Switching a profile restores the whole set, including reconfiguring the live tmux server over the wire. No emulator has profile-switchable tmux configuration.</p>
+        </div>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator with a custom, live telemetry dashboard</h3>
+          <p>zterminal ships an in-app <strong>dashboard</strong> — a live, polling telemetry surface built from a real component library (<code>zgui-core</code>): PTY throughput, render timing, scrollback, the full tmux summary (clients, sessions, windows, panes, server identity), and system metrics, rendered with gauges, sparklines, donuts, meters, tables, and stat strips. It doubles as a showcase of the component library. No terminal emulator ships a custom dashboard of this kind.</p>
+        </div>
+      </section>
+
+      <section class="tutorial-section" id="shortcuts">
+        <h2>Control panel &amp; shortcuts</h2>
+        <p>zterminal hosts an in-process GUI suite (rendered in an embedded WebView) for configuration and inspection. All of its state and logs live under <code>~/.zterminal</code>. The control panel has Settings, Dashboard, tmux, Keybindings, Logs, and About tabs.</p>
+        <table class="ref-table">
+          <thead>
+            <tr><th>Shortcut</th><th>Opens</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="keys"><code>⌘,</code></td><td>Control panel — Settings tab</td></tr>
+            <tr><td class="keys"><code>⌃⌘D</code></td><td>Control panel — Dashboard tab (telemetry / sessions / system)</td></tr>
+            <tr><td class="keys"><code>⌘K</code></td><td>Command palette — searchable window/tab/terminal/panel/pane actions</td></tr>
+            <tr><td class="keys"><code>⌘R</code></td><td>Shell-history palette — fuzzy-search history, insert the pick at the prompt</td></tr>
+            <tr><td class="keys"><code>⌘E</code></td><td>Switch to the most-recently-used other tab (MRU quick-switch)</td></tr>
+            <tr><td class="keys"><code>⌃⌘E</code></td><td>Exposé — tile grid of every zterminal window <strong>and</strong> tmux pane; click to focus</td></tr>
+            <tr><td class="keys"><code>⌃⌘P</code></td><td>Search all tmux panes — grep every pane's scrollback, jump to a match</td></tr>
+            <tr><td class="keys"><code>⌃⌘B</code></td><td>Broadcast — send-keys to a selected set of tmux panes / toggle synchronize-panes</td></tr>
+            <tr><td class="keys"><code>⌃⌘S</code></td><td>Sessions — save / restore the full tmux layout (replaces tmux-resurrect)</td></tr>
+            <tr><td class="keys"><code>⌃⌘`</code></td><td>Quake dropdown — global hotkey, a terminal that slides down from the top</td></tr>
+          </tbody>
+        </table>
+        <p>The command palette reaches every panel tab plus the terminal actions, and is searchable, so the action list stays out of the way. Every action is also a rebindable keyboard shortcut (see the Keybindings tab).</p>
+
+        <h3>Splits (native tiling)</h3>
+        <p>zterminal tiles <strong>natively</strong> — its own i3-style binary split tree, one independent shell + PTY per pane, GL-scissored into the window (no tmux required). Any pane splits in either direction, nests arbitrarily, and each pane renders in its own sub-viewport.</p>
+        <table class="ref-table">
+          <thead>
+            <tr><th>Shortcut</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="keys"><code>⌘D</code> / <code>⌘⇧D</code></td><td>Split the focused pane vertically / horizontally</td></tr>
+            <tr><td class="keys"><code>⌘]</code> / <code>⌘[</code></td><td>Focus the next / previous pane</td></tr>
+            <tr><td class="keys"><code>⌥⌘←↑↓→</code></td><td>Focus the pane in that direction (spatial)</td></tr>
+            <tr><td class="keys"><code>⌃⌘←↑↓→</code></td><td>Move (swap) the focused pane in that direction</td></tr>
+            <tr><td class="keys"><code>⌘⇧←↑↓→</code></td><td>Resize the focused pane along its split</td></tr>
+            <tr><td class="keys"><code>⌘⇧↩</code></td><td>Zoom the focused pane to fill the window (toggle)</td></tr>
+            <tr><td class="keys"><code>⌘⇧W</code></td><td>Close the focused pane</td></tr>
+            <tr><td class="keys"><code>⌘⇧L</code></td><td>Layouts — save / restore the window's split layout</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Layouts</strong> (<code>⌘⇧L</code>) save and restore a window's native split tree. Save captures the split geometry plus each pane's working directory and foreground command to <code>~/.zterminal/layouts/&lt;name&gt;.json</code>; restore rebuilds the splits, respawns every pane in its directory and replants the saved command at the prompt (it is <em>not</em> run — you review and press Enter). Live process state isn't restored — panes return in the right layout/cwd as fresh shells. This is the native counterpart to the tmux <strong>Sessions</strong> save/restore.</p>
+        <p>All split, history, MRU, and layout actions are in the command palette too, so a key binding is never required — by design, no zterminal binding masks a shell or tmux key on any OS (macOS uses <code>⌘</code>; Linux/Windows use <code>⌃⇧</code> or palette-only).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Inline graphics</h2>
+        <p>zterminal renders <strong>images inline</strong> in the grid via the GPU, supporting all three common terminal image protocols:</p>
+        <ul>
+          <li><strong><a href="https://sw.kovidgoyal.net/kitty/graphics-protocol/" target="_blank" rel="noopener noreferrer">Kitty graphics protocol</a></strong> — transmit (<code>a=t</code>), transmit-and-display (<code>a=T</code>), put-by-id (<code>a=p</code>), support query (<code>a=q</code>, so capable tools auto-detect zterminal), and delete (<code>a=d</code>); RGB / RGBA / PNG (<code>f=24/32/100</code>); direct and file (<code>t=f</code>) transmission; zlib compression (<code>o=z</code>); chunked payloads; stacking order (<code>z=</code>); <strong>Unicode placeholders</strong> (<code>U=1</code>) for grid-anchored placement; and <strong>animation</strong> (<code>a=f</code> frames + <code>a=a</code> play/stop/loop control), played back on a timer.</li>
+          <li><strong>Sixel</strong> — <code>ESC P … q … ST</code>, with RGB and HLS color registers, run-length, and raster attributes.</li>
+          <li><strong>iTerm2 inline images</strong> — OSC <code>1337;File=…</code> (<code>imgcat</code>), any format the decoder handles (PNG / JPEG / GIF).</li>
+        </ul>
+        <p>Images are uploaded as GPU textures and blitted over the cells they occupy; they scroll with the buffer, clip at pane edges, draw behind (<code>z &lt; 0</code>) or over the text, and are freed when they scroll out of the scrollback. A scanner sits ahead of the escape-sequence parser to extract image sequences (Kitty APC, Sixel DCS, iTerm2 OSC) — ordinary text and control sequences are untouched. Sequences <strong>wrapped by tmux</strong> (<code>ESC Ptmux;…</code>, with <code>set -g allow-passthrough on</code>) are unwrapped and decoded, and Kitty's Unicode-placeholder placement also works through tmux.</p>
+
+        <h3>Background image</h3>
+        <p>zterminal can draw an image behind the cells (a terminal / desktop background), set in config rather than via an escape sequence — so it works everywhere, including inside tmux:</p>
+<pre>[window]
+opacity = 0.85                            <span class="comment"># &lt; 1 so the image shows through cells</span>
+background_image = "~/Pictures/wall.png"
+background_image_opacity = 1.0            <span class="comment"># 0.0–1.0</span></pre>
+        <p>The image is uploaded once as a GPU texture and drawn each frame (cover: fills the window preserving aspect, cropping overflow), behind any cell whose background is the default color — lower <code>opacity</code> to reveal more of it. Reloads live when the path changes; PNG / JPEG / GIF.</p>
+
+        <h3>Displaying an image</h3>
+<pre>extra/zterminal-icat picture.png  <span class="comment"># bundled, zero deps (base64 + sips on macOS)</span>
+kitten icat picture.png           <span class="comment"># kitty</span>
+timg picture.png                  <span class="comment"># brew install timg</span>
+chafa picture.png                 <span class="comment"># brew install chafa  (kitty/sixel/iterm2)</span>
+img2sixel picture.png             <span class="comment"># libsixel</span>
+imgcat picture.png                <span class="comment"># iTerm2's imgcat</span></pre>
+        <p>The bundled <code>extra/zterminal-icat</code> needs no extra tools — it emits the Kitty protocol from any image with just <code>base64</code> (and <code>sips</code>, on macOS, to convert non-PNG input). It works inside tmux with no setup: it enables <code>allow-passthrough</code> itself and places the image via Kitty Unicode placeholders, so the picture survives tmux redraws.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>tmux integration</h2>
+        <p>zterminal speaks tmux's client/server <strong>wire protocol</strong> directly to the server's Unix socket (imsg framing, protocol version 8) — no <code>tmux</code> subprocess. The target server is resolved from <code>$TMUX</code> or the default socket.</p>
+        <p>The <strong>tmux tab</strong> is a live manager: the full session&nbsp;→&nbsp;window&nbsp;→&nbsp;pane tree, each pane with a <code>capture-pane</code> text preview. Click a pane to switch the attached client to it; toolbar and per-session buttons create/split/zoom/rotate/kill windows, panes, and sessions. It refreshes while the tab is open.</p>
+        <ul>
+          <li><strong>Sessions</strong> (<code>⌃⌘S</code>) — save and restore the full tmux layout, a native replacement for tmux-resurrect/continuum. Save snapshots every session&nbsp;→&nbsp;window&nbsp;→&nbsp;pane (with exact <code>window_layout</code>, cwd, command) to <code>~/.zterminal/snapshots/</code>; restore rebuilds it over the wire protocol, including the exact split geometry and active window/pane, and can start a server if none is running. Opt-in <em>relaunch</em> re-runs each pane's full command line with arguments; <strong>Save pane contents</strong> replays each pane's scrollback. A <code>tmux_restore_processes</code> pref gives the resurrect-style whitelist. Mark a snapshot <strong>Set startup</strong> to auto-restore on launch.</li>
+          <li><strong>Broadcast</strong> (<code>⌃⌘B</code>) — sends keystrokes to a chosen <em>set</em> of panes at once, across any windows/sessions, which native tmux can't do (synchronize-panes is whole-window). Per-window synchronize-panes can also be toggled from the same overlay.</li>
+          <li><strong>Cross-pane search</strong> (<code>⌃⌘P</code>) — fuzzy-matches (shared <code>ZGui.fzf</code>) the recent scrollback of <em>every</em> tmux pane at once: type a query, see panes ranked by fzf score with matched characters highlighted, and press Enter (or click) to jump to that pane.</li>
+        </ul>
+        <p>The <strong>command palette</strong> includes <code>tmux:</code> actions — new window, split horizontal/vertical, next/previous window/session, zoom/rotate/break pane, next layout, choose-tree switcher, new/kill session, detach. The <strong>Dashboard</strong> shows the server's sessions (name, window count, attached state).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Configuration</h2>
+        <p>zterminal does not create a config file for you. It looks for one in the following locations (first match wins):</p>
+        <ol>
+          <li><code>$XDG_CONFIG_HOME/MenkeTechnologies/zterminal.toml</code></li>
+          <li><code>$XDG_CONFIG_HOME/zterminal.toml</code></li>
+          <li><code>$HOME/.config/MenkeTechnologies/zterminal.toml</code></li>
+          <li><code>$HOME/.zterminal.toml</code></li>
+          <li><code>/etc/MenkeTechnologies/zterminal.toml</code></li>
+        </ol>
+        <p>On Windows: <code>%APPDATA%\zterminal\zterminal.toml</code>. Configuration is documented in <code>man 5 zterminal</code>.</p>
+        <h3>terminfo</h3>
+        <p>zterminal sets <code>TERM</code> to <code>zterminal</code> when that terminfo entry is installed, otherwise it falls back to <code>xterm-256color</code>. The terminfo source ships in <a href="https://github.com/MenkeTechnologies/zterminal/blob/main/extra/zterminal.info"><code>extra/zterminal.info</code></a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Repository &amp; links</h2>
+        <ul>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/zterminal">GitHub repo</a></li>
+          <li><strong>Issues</strong> — <a href="https://github.com/MenkeTechnologies/zterminal/issues">issue tracker</a></li>
+          <li><strong>README</strong> — <a href="https://github.com/MenkeTechnologies/zterminal#readme">README on GitHub</a> (features, control panel, splits, inline graphics, tmux, build, configuration).</li>
+          <li><strong>Inventions</strong> — <a href="https://github.com/MenkeTechnologies/zterminal/blob/main/docs/INVENTIONS.md"><code>docs/INVENTIONS.md</code></a></li>
+          <li><strong>Manual</strong> — <code>man 1 zterminal</code> and <code>man 5 zterminal</code> (configuration).</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
