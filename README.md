@@ -95,11 +95,11 @@ Five languages share one self-authored execution engine — the [`fusevm`](https
 |---|---|:---:|:---:|:---:|:---:|:---:|:---:|
 | [`strykelang`](https://github.com/MenkeTechnologies/strykelang) | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ |
 | [`zshrs`](https://github.com/MenkeTechnologies/zshrs) | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ | ✅ |
-| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | 🚧 |
-| [`vimlrs`](https://github.com/MenkeTechnologies/vimlrs) | `vimlrs` | ✅ | ✅ | ✅ `_vimlrs` | ✅ | ✅ | 🚧 |
-| [`elisprs`](https://github.com/MenkeTechnologies/elisprs) | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | 🚧 |
+| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | ✅ |
+| [`vimlrs`](https://github.com/MenkeTechnologies/vimlrs) | `vimlrs` | ✅ | ✅ | ✅ `_vimlrs` | ✅ | ✅ | ✅ |
+| [`elisprs`](https://github.com/MenkeTechnologies/elisprs) | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | ✅ |
 
-<sub>✅ full parity across the five core toolchain dimensions. `reference.html` (🚧) is being generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written. `strykelang` and `zshrs` ship it today; `awkrs` / `vimlrs` / `elisprs` are in progress.</sub>
+<sub>✅ full parity across the five core toolchain dimensions. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written.
 
 | Project | What it is |
 |---|---|
