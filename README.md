@@ -54,14 +54,13 @@
 
 ## [0x00] QUICK START
 
-**Fresh host — clone everything in one shot:**
+**Fresh host — clone everything and put every submodule on `main`, one copy-paste:**
 
 ```bash
-git clone --recurse-submodules https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git
-cd MenkeTechnologiesMeta
+git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git && cd MenkeTechnologiesMeta && git submodule foreach --recursive 'git checkout main 2>/dev/null || true'
 ```
 
-The `--recurse-submodules` flag fetches all 139 submodules in parallel during the initial clone.
+`--recurse-submodules` fetches all 139 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -75,7 +74,7 @@ git submodule update --init --recursive
 git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git
 ```
 
-`-j 8` clones up to 8 submodules concurrently. Bump higher on fast networks.
+`-j 8` clones up to 8 submodules concurrently. Bump higher on fast networks. Re-run the `git submodule foreach ... git checkout main` step after any `git submodule update` that re-detaches HEAD.
 
 ---
 
