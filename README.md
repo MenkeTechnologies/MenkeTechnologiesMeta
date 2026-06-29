@@ -91,15 +91,15 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 
 Five languages share one self-authored execution engine — the [`fusevm`](https://github.com/MenkeTechnologies/fusevm) bytecode VM with its 3-tier Cranelift JIT — each lowering its own frontend (lex → parse → AST → `fusevm` bytecode) onto the same VM rather than carrying a bespoke runtime. Every one ships the full toolchain: a standalone CLI binary, an LSP server (`--lsp`) and DAP debug adapter (`--dap`) on stdio for editors, a zsh completion in `completions/`, `man/man1/<name>.1` + `<name>all.1` man pages, and an HTML docs/report site.
 
-| Frontend | CLI | LSP `--lsp` | DAP `--dap` | zsh completion | man pages | HTML docs |
-|---|---|:---:|:---:|:---:|:---:|:---:|
-| [`strykelang`](https://github.com/MenkeTechnologies/strykelang) | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ |
-| [`zshrs`](https://github.com/MenkeTechnologies/zshrs) | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ |
-| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ |
-| [`vimlrs`](https://github.com/MenkeTechnologies/vimlrs) | `vimlrs` | ✅ | ✅ | ✅ `_vimlrs` | ✅ | ✅ |
-| [`elisprs`](https://github.com/MenkeTechnologies/elisprs) | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ |
+| Frontend | CLI | LSP `--lsp` | DAP `--dap` | zsh completion | man pages | HTML docs | `reference.html` |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| [`strykelang`](https://github.com/MenkeTechnologies/strykelang) | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ |
+| [`zshrs`](https://github.com/MenkeTechnologies/zshrs) | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ | ✅ |
+| [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | 🚧 |
+| [`vimlrs`](https://github.com/MenkeTechnologies/vimlrs) | `vimlrs` | ✅ | ✅ | ✅ `_vimlrs` | ✅ | ✅ | 🚧 |
+| [`elisprs`](https://github.com/MenkeTechnologies/elisprs) | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | 🚧 |
 
-<sub>Full parity across all five toolchain dimensions. Next alignment item (docs depth, not in the matrix): a `reference.html` page — currently shipped by `strykelang` and `zshrs`, pending for `awkrs` / `vimlrs` / `elisprs`.</sub>
+<sub>✅ full parity across the five core toolchain dimensions. `reference.html` (🚧) is being generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written. `strykelang` and `zshrs` ship it today; `awkrs` / `vimlrs` / `elisprs` are in progress.</sub>
 
 | Project | What it is |
 |---|---|
