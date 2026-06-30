@@ -74,7 +74,17 @@ jobs:
           urls=$(git config -f .gitmodules --get-regexp '^submodule\..*\.url$' | awk '{print $2}')
           failures=""
           for u in $urls; do
-            if ! git ls-remote --quiet "$u" HEAD >/dev/null 2>&1; then
+            # Retry to absorb transient GitHub network blips; only a URL that
+            # fails all attempts is treated as genuinely unreachable.
+            ok=""
+            for attempt in 1 2 3 4 5; do
+              if git ls-remote --quiet "$u" HEAD >/dev/null 2>&1; then
+                ok=1
+                break
+              fi
+              sleep $(( attempt * 3 ))
+            done
+            if [ -z "$ok" ]; then
               failures="$failures $u"
             fi
           done
