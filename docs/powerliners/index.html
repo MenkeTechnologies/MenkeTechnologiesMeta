@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="powerliners — Rust port of powerline-status. Drop-in for tmux, zsh, bash, vim, ipython. Single static binary, sub-millisecond render replacing python startup tax.">
+  <title>powerliners — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <style>
+    .tutorial-main { max-width: 68rem; padding: 1.5rem 1.5rem 4rem; margin: 0 auto; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.85;
+    }
+    .tutorial-section {
+      margin: 1.6rem 0;
+      padding: 1rem 1.2rem 1.2rem;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .tutorial-section h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      color: var(--cyan);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin: 0 0 0.6rem;
+    }
+    .tutorial-section p, .tutorial-section li {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    pre, code { font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    pre {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      overflow-x: auto;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      gap: 0.7rem;
+      margin: 0.7rem 0;
+    }
+    .feature-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--accent);
+      padding: 0.7rem 0.9rem;
+      background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
+      border-radius: 2px;
+    }
+    .feature-card h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 0.35rem;
+    }
+    .feature-card p { margin: 0; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+    .tutorial-header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 1.5rem;
+      background: linear-gradient(180deg, #070714 0%, #0d0d22 60%, var(--bg-secondary) 100%);
+    }
+    .tutorial-header-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .tutorial-brand {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+      font-weight: 900;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), #fff, var(--accent), var(--cyan));
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px var(--cyan-glow));
+      margin: 0 0 0.4rem;
+    }
+    .tutorial-crumbs {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+    }
+    .tutorial-crumbs a { color: var(--cyan); text-decoration: none; }
+    .tutorial-crumbs a:hover { color: var(--accent-light); text-shadow: 0 0 8px var(--cyan-glow); }
+    .tutorial-crumbs .sep { color: var(--text-muted); margin: 0 6px; }
+    .tutorial-crumbs .current { color: var(--accent); }
+    .tutorial-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0.6rem 0 0.4rem;
+    }
+    .tutorial-title .step-hash { color: var(--cyan); margin-right: 0.4rem; }
+    .tutorial-subtitle { color: var(--text); font-size: 13px; max-width: 60rem; }
+    .stat-row {
+      display: flex; gap: 14px; flex-wrap: wrap; margin: 1rem 0;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--cyan);
+      border-radius: 2px;
+      padding: 10px 16px;
+      box-shadow: 0 0 12px var(--cyan-dim);
+      min-width: 8rem;
+    }
+    .stat-card .n {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--cyan);
+      letter-spacing: 1.5px;
+    }
+    .stat-card .l {
+      font-size: 9.5px; letter-spacing: 1.5px;
+      color: var(--text-muted); text-transform: uppercase; margin-top: 2px;
+    }
+    .audit-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11.5px;
+      margin: 0.4rem 0 0.2rem;
+    }
+    .audit-tbl thead th {
+      text-align: left;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--bg-card) 60%, transparent);
+    }
+    .audit-tbl tbody td {
+      padding: 0.32rem 0.6rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      color: var(--text);
+      vertical-align: middle;
+    }
+    .audit-tbl tbody tr:hover td {
+      background: color-mix(in srgb, var(--cyan-dim) 50%, transparent);
+    }
+    .audit-tbl td.nf-cell {
+      font-size: 16px;
+      color: var(--accent-light);
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+    .audit-tbl code { font-size: 11px; }
+  </style>
+</head>
+<body class="crt">
+  <header class="tutorial-header">
+    <div class="tutorial-header-inner">
+      <div>
+        <h1 class="tutorial-brand">// POWERLINERS — RUST POWERLINE</h1>
+        <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+          <span class="current">Docs</span>
+          <span class="sep">/</span>
+          <a href="report.html">Engineering report</a>
+          <span class="sep">/</span>
+          <a href="https://github.com/MenkeTechnologies/powerliners" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <span class="sep">/</span>
+          <a href="https://github.com/powerline/powerline" target="_blank" rel="noopener noreferrer">Upstream</a>
+        </nav>
+        <p class="docs-build-line">powerliners — 134/137 DONE Rust port of <code>powerline-status</code> · single static binary · sub-millisecond render · drop-in for tmux / zsh / bash / vim / ipython · 624 upstream Python fn names allowlist enforced by audit test · 462 parity tests against live upstream · 11 real port bugs surfaced + fixed</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="tutorial-main">
+    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>POWERLINERS — RUST POWERLINE</h2>
+    <p class="tutorial-subtitle">A Rust port of Python's <a href="https://github.com/powerline/powerline">powerline-status</a> — the canonical statusline / prompt renderer used by tmux, zsh, bash, vim, ipython. The Python implementation pays a ~100 ms interpreter-startup tax on every render; powerliners is a single static binary with sub-millisecond startup.</p>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="n">134/137</div><div class="l">files at DONE tier</div></div>
+      <div class="stat-card"><div class="n">2,473</div><div class="l">lib tests passing</div></div>
+      <div class="stat-card"><div class="n">462</div><div class="l">parity tests vs upstream</div></div>
+      <div class="stat-card"><div class="n">11</div><div class="l">port bugs surfaced + fixed</div></div>
+      <div class="stat-card"><div class="n">624</div><div class="l">upstream py fns</div></div>
+      <div class="stat-card"><div class="n">0</div><div class="l">python runtime deps</div></div>
+      <div class="stat-card"><div class="n">v0.2.15</div><div class="l">current tag</div></div>
+    </div>
+
+    <section class="tutorial-section">
+      <h2>Why a port?</h2>
+      <ul>
+        <li>Python interpreter startup adds ~100 ms per render — on every keystroke that triggers a zsh `precmd` redraw, every tmux statusline tick, every shell continuation line.</li>
+        <li>At zpwr scale (256-thread workstation, 100+ zsh-in-tmux sessions), powerline-status compounds into seconds of cumulative latency per minute.</li>
+        <li>Rust gives a static binary, microsecond startup, zero runtime deps, cross-arch builds, and predictable memory.</li>
+        <li>The upstream theme grammar (JSON files in <code>powerline/config/</code>) is preserved verbatim — users keep their themes unchanged.</li>
+      </ul>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Targets</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>tmux</h4>
+          <p>statusline + window-list + continuation lines</p>
+        </div>
+        <div class="feature-card">
+          <h4>zsh</h4>
+          <p>PS1 / RPROMPT segments, precmd integration</p>
+        </div>
+        <div class="feature-card">
+          <h4>bash</h4>
+          <p>PS1 / PROMPT_COMMAND segments</p>
+        </div>
+        <div class="feature-card">
+          <h4>vim</h4>
+          <p>statusline + tabline (without `+python3` dependency)</p>
+        </div>
+        <div class="feature-card">
+          <h4>ipython</h4>
+          <p>REPL prompt (via shell hook, not embedded)</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Port discipline</h2>
+      <p>Every fn name landed in <code>src/ported/</code> must exist in upstream powerline Python source. Enforced by <code>tests/ported_fn_names_match_py.rs</code> against <code>docs/powerline_py_functions.txt</code> (currently 624 names extracted from <a href="https://github.com/powerline/powerline">github.com/powerline/powerline</a>). Maintainer-approved Rust-only exemptions live in <code>tests/data/fake_fn_allowlist.txt</code>.</p>
+      <pre># regenerate the upstream allowlist
+./scripts/regen_py_functions.sh
+
+# audit will fail with a list of any invented fn names
+cargo test --test ported_fn_names_match_py</pre>
+      <p>This pattern mirrors the zshrs <code>ported_fn_names_match_c.rs</code> enforcement — the audit test is load-bearing and must not be weakened.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Status</h2>
+      <p>Port is structurally complete at the function level. <strong>134 of 137 upstream Python files</strong> are at DONE tier per the citation-density classifier (<code>scripts/gen_port_checklist.py</code>); the 3 remaining NEAR files are <strong>Python lipstick</strong> — zero-fn class shells (<code>renderers/shell/readline.py</code> and <code>renderers/shell/zsh.py</code> each hold two escape-marker string constants and a class alias; <code>bindings/i3/powerline-i3.py</code>'s single <code>render</code> fn is already 100% ported per <code>docs/port_report.html</code>). No behavioral surface left to port — the classifier's <code>py_fn_total == 0</code> denominator just can't promote 0/0 → DONE. The Rust port spans ~66,043 LOC across <code>src/ported/</code> with <strong>2,473 lib tests</strong> + <strong>2 audit tests</strong> + <strong>462 parity tests</strong> passing. Parity tests pipe identical inputs through the upstream Python interpreter (via the vendored <code>powerline-status</code>) and the Rust port, asserting byte/value-identical results — <strong>11 real port bugs</strong> were surfaced by this harness and fixed in-tree (ThreadedSegment.daemon, Spec.did_type, encoding locale lookup, _clear_special_values UB, Spec.ident regex, Spec.context_message recursion, Spec.tuple bounds, Spec.unknown_msg/_spec dispatch, NON_PRINTABLE_RE inversion, Spec.printable/unsigned). Every <code>fn</code> name under <code>src/ported/</code> traces to one of 624 upstream Python fn names (or to <code>tests/data/fake_fn_allowlist.txt</code> for maintainer-approved exemptions); every ported body carries <code>// py:NNN</code> line-citations against upstream <code>powerline/</code>. End-to-end statusline rendering against a real <code>.json</code> theme tree runs through the <code>Powerline</code> orchestrator chain (Powerline class + Theme + Renderer base + segment dispatcher) in both <code>powerline-render</code> and <code>powerline-daemon</code> via the shared <code>render_runtime::render_once</code> entry — byte-identical output with upstream <code>python3 powerline-render</code> is asserted across 45 daemon-parity fixtures (<code>tests/daemon_parity.rs</code>) on top of the 462 unit-parity tests. Watch <a href="https://github.com/MenkeTechnologies/powerliners/tags">tags</a> for milestone bumps.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Install</h2>
+      <pre># source + build
+git clone https://github.com/MenkeTechnologies/powerliners.git
+cd powerliners
+cargo build
+ls target/debug/powerliners target/debug/powerline-{render,lint,config,daemon}</pre>
+      <p>Five binaries land in <code>target/debug/</code>: <code>powerliners</code> (demo CLI for ported leaf utilities), <code>powerline-render</code>, <code>powerline-lint</code>, <code>powerline-config</code>, and <code>powerline-daemon</code>. The daemon lifecycle (UNIX socket bind, daemonize, pidfile lock, accept loop, EOF shutdown) is fully functional and the render path is wired end-to-end through <code>render_runtime::render_once</code> — same code path as <code>powerline-render</code>, with per-ext <code>Configs</code> caching and <code>is_stale()</code> mtime-reload (<code>py:851-866</code>). <code>powerline-render</code> / <code>powerline-config</code> shim through the ported <code>scripts/</code> module mains and drive real theme JSON tree resolution; <code>powerline-lint</code> still has the markedjson loader + Spec checks behind the argparse, with the full orchestrator-integrated lint pipeline as the remaining substrate.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>CLI reference</h2>
+      <p>The suite ships five binaries. <code>powerline</code> is the hot-path client; the rest are management / fallback tools. All are 1:1 ports of the upstream <code>scripts/</code> and <code>client/</code> entry points.</p>
+      <table class="audit-tbl" style="margin-top:0.6rem;">
+        <thead><tr><th>binary</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td><code>powerline</code></td><td>Native Rust client (port of <code>client/powerline.c</code>). Packs <code>argv</code> + cwd + env into the wire request, sends it to the daemon over a Unix socket, copies the reply to stdout. On connect-fail it <code>execvp</code>s <code>powerline-render</code> as a daemon-less fallback.</td></tr>
+          <tr><td><code>powerline-daemon</code></td><td>Long-lived render server. Binds the per-UID socket, daemonizes, holds a pidfile lock, runs the accept loop, and renders each request through <code>render_runtime::render_once</code> against the cached theme tree.</td></tr>
+          <tr><td><code>powerline-render</code></td><td>One-shot direct render through the same orchestrator path as the daemon. Used by shell hooks when no daemon is running and as the client's fallback exec.</td></tr>
+          <tr><td><code>powerline-config</code></td><td>tmux / shell / vim integration helper — emits setup, deduces the <code>$POWERLINE_COMMAND</code> binding, extracts the bundled vim plugin.</td></tr>
+          <tr><td><code>powerline-lint</code></td><td>Config linter — markedjson loader + Spec checks behind an argparse front end.</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">powerline &lt;EXT&gt; — extensions</h3>
+      <p>The first positional after the optional <code>--socket PATH</code> selects the extension to render. Stock extensions (from <code>man powerline</code>):</p>
+      <table class="audit-tbl">
+        <thead><tr><th>EXT</th><th>renders</th></tr></thead>
+        <tbody>
+          <tr><td><code>tmux</code></td><td>tmux statusline segments</td></tr>
+          <tr><td><code>shell</code></td><td>shell prompt — next positional is <code>left</code> / <code>right</code> / <code>continuation</code></td></tr>
+          <tr><td><code>vim</code></td><td>vim statusline / tabline</td></tr>
+          <tr><td><code>ipython</code></td><td>IPython prompt / continuation</td></tr>
+          <tr><td><code>wm</code></td><td>i3 / awesome / qtile widget binding</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">render-request flags</h3>
+      <p>Everything after <code>&lt;EXT&gt;</code> is forwarded to the daemon and parsed by <code>parse_client_argv</code> (<code>src/ported/scripts/powerline_daemon.rs</code>). Each long flag has the upstream short alias:</p>
+      <table class="audit-tbl">
+        <thead><tr><th>flag</th><th>meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>-w</code> / <code>--width</code></td><td>statusline width hint (columns)</td></tr>
+          <tr><td><code>-r</code> / <code>--renderer-module</code></td><td>override the renderer module</td></tr>
+          <tr><td><code>-c</code> / <code>--config-override</code></td><td>per-request config override (repeatable)</td></tr>
+          <tr><td><code>-t</code> / <code>--theme-override</code></td><td>per-request theme override (repeatable)</td></tr>
+          <tr><td><code>-R</code> / <code>--renderer-arg</code></td><td>renderer arg <code>key=value</code> (repeatable)</td></tr>
+          <tr><td><code>-p</code> / <code>--config-path</code></td><td>extra config-path root (repeatable)</td></tr>
+          <tr><td><code>-m</code> / <code>--mode</code></td><td>current mode — shorthand for <code>-R mode=VALUE</code>, drives <code>mode_translations</code></td></tr>
+          <tr><td><code>--last-exit-code</code></td><td>last command exit code (<code>int_or_sig</code>) — for the <code>last_status</code> segment</td></tr>
+          <tr><td><code>--last-pipe-status</code></td><td>space-separated pipe exit codes — for <code>last_pipe_status</code></td></tr>
+          <tr><td><code>--jobnum</code></td><td>background-job count — for the <code>jobnum</code> segment</td></tr>
+          <tr><td><code>--socket</code></td><td>socket path (must precede <code>&lt;EXT&gt;</code> on the client)</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">powerline-daemon — process flags</h3>
+      <table class="audit-tbl">
+        <thead><tr><th>flag</th><th>effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>-q</code> / <code>--quiet</code></td><td>double-fork + detach silently (the canonical login-time start)</td></tr>
+          <tr><td><code>-f</code> / <code>--foreground</code></td><td>stay in the foreground (don't daemonize)</td></tr>
+          <tr><td><code>-s</code> / <code>--socket</code> <code>PATH</code></td><td>bind a custom socket path instead of the per-UID default</td></tr>
+          <tr><td><code>-k</code> / <code>--kill</code></td><td>kill the running daemon for this UID</td></tr>
+          <tr><td><code>-r</code> / <code>--replace</code></td><td>replace an already-running daemon</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">powerline-config — subcommands</h3>
+      <table class="audit-tbl">
+        <thead><tr><th>invocation</th><th>does</th></tr></thead>
+        <tbody>
+          <tr><td><code>powerline-config tmux setup</code></td><td>emit the tmux integration (sources the version-matched <code>powerline-base.conf</code> variant from the per-user cache)</td></tr>
+          <tr><td><code>powerline-config shell command</code></td><td>print the deduced <code>$POWERLINE_COMMAND</code> binary, or exit 1 if none</td></tr>
+          <tr><td><code>powerline-config shell uses COMPONENT [-s SHELL]</code></td><td>exit 0/1 depending on whether a component (e.g. <code>tmux</code>, <code>prompt</code>) is enabled for the shell — checks <code>POWERLINE_NO_*</code> env gates</td></tr>
+          <tr><td><code>powerline-config vim source-path</code></td><td>extract the bundled <code>powerline.vim</code> plugin and print its cache path (non-port convenience action)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Environment variables</h2>
+      <table class="audit-tbl" style="margin-top:0.4rem;">
+        <thead><tr><th>variable</th><th>effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>POWERLINE_COMMAND</code></td><td>The command shell integrations invoke to render. Set to <code>powerline</code> (this binary); existing setups that hardcode the upstream Python shim keep working because the wire format is identical.</td></tr>
+          <tr><td><code>POWERLINE_CONFIG_PATHS</code></td><td>Colon-separated config-root search list (<code>config.json</code> + themes / colorschemes / segments JSON). Mirrors upstream search order.</td></tr>
+          <tr><td><code>POWERLINE_CONFIG_OVERRIDES</code></td><td>Theme-override <code>key=value</code> pairs applied per extension.</td></tr>
+          <tr><td><code>POWERLINERS_ICONS</code></td><td>Icon tier: unset/default &rarr; Nerd Font glyphs, <code>=unicode</code> &rarr; text-presentation Unicode fallback, <code>=ascii</code> &rarr; label-style ASCII. Read once per process (see <code>src/extensions/icons.rs</code>).</td></tr>
+          <tr><td><code>$XDG_CACHE_HOME</code></td><td>Root for the extracted tmux conf (<code>powerliners/tmux/</code>) and vim plugin (<code>powerliners/vim/</code>); default <code>~/.cache</code>.</td></tr>
+          <tr><td><code>$FUSEVM_JIT_CACHE</code> · <code>${ZSHRS,STRYKE,AWKRS}_RKYV_CACHE</code> / <code>_HOME</code> · <code>$XDG_DATA_HOME</code></td><td>Override roots for the four cache-size segments — see the resolution chain in <strong>Bundled segments</strong> below.</td></tr>
+          <tr><td><code>$KUBECONFIG</code> · <code>$AWS_PROFILE</code> / <code>$AWS_REGION</code> / <code>$AWS_DEFAULT_REGION</code> · <code>$CLOUDSDK_*</code></td><td>Honored by the <code>kubecontext</code>, <code>aws.context</code>, and <code>gcp.context</code> segments respectively.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.6rem;">Per-UID socket path: <code>/tmp/powerline-ipc-$UID</code> on macOS / BSD, abstract <code>\0powerline-ipc-$UID</code> on Linux (no filesystem path — invisible to <code>ls</code> / <code>fuser</code>). Pidfile lock at <code>/tmp/powerline-ipc-$UID.pid</code>.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Shell &amp; tmux integration</h2>
+      <p>The wire format is byte-compatible with upstream's C client, so existing <code>.tmux.conf</code> / <code>.zshrc</code> invocations work unchanged once <code>$POWERLINE_COMMAND</code> resolves to this <code>powerline</code> binary.</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">tmux (~/.tmux.conf)</h3>
+      <pre>set -g status-interval 2
+set -g status-left  "#(powerline tmux left)"
+set -g status-right "#(powerline tmux right)"
+
+# or the install-method-agnostic helper:
+run-shell "powerline-config tmux setup"
+run-shell -b "powerline-daemon -q &amp;>/dev/null || exit 0"</pre>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">zsh (~/.zshrc)</h3>
+      <pre>powerline-daemon -q   # start once at login
+function powerline_precmd() {
+    PS1="$(powerline shell left --last-exit-code=$? --jobnum=$(jobs -p | wc -l))"
+}
+precmd_functions+=(powerline_precmd)</pre>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">verify against a config root</h3>
+      <p>Point the daemon at a copy of your real config and confirm the rendered tmux markup matches upstream before swapping anything:</p>
+      <pre># spawn on a throwaway socket
+POWERLINE_CONFIG_PATHS=~/.config/powerline \
+  ./target/release/powerline-daemon --foreground --socket /tmp/powerliners-probe &amp;
+
+# render the right side via the wire protocol
+powerline --socket /tmp/powerliners-probe tmux right
+
+# compare against upstream Python (powerline-status installed)
+powerline-render tmux right -p ~/.config/powerline</pre>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Custom segments</h2>
+      <p>Upstream Python lets you drop a <code>.py</code> file in <code>~/.config/powerline/segments/</code> and reference it by dotted path; <code>__import__</code> makes it callable. The Rust binary has no dynamic import, so the dispatch layer in <code>src/extensions/exec_segment.rs</code> provides two equivalent surfaces that fall through to a subprocess.</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Pattern A — explicit <code>exec</code> adapter</h3>
+      <p>Reference the built-in <code>exec</code> adapter directly in theme JSON when you want the script path, args, and format string spelled out inline:</p>
+      <pre>{
+  "function": "exec",
+  "args": {
+    "command": "/usr/local/bin/cpu_temp.sh",
+    "args": ["--unit", "C"],
+    "format": "%s°C",
+    "highlight_groups": ["cpu_load"]
+  }
+}</pre>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Pattern B — dotted-path filesystem dispatch</h3>
+      <p>Reference your segment by dotted path and drop the script under <code>&lt;config_path&gt;/segments/</code>. The daemon resolves <code>myseg.cpu_temp</code> &rarr; <code>&lt;config_path&gt;/segments/myseg/cpu_temp.{sh,py,rb,pl,lua,js,executable}</code> (first hit wins; order in <code>src/extensions/exec_segment.rs::SCRIPT_EXTENSIONS</code>):</p>
+      <pre>{ "function": "myseg.cpu_temp" }</pre>
+      <pre>mkdir -p ~/.config/powerline/segments/myseg
+cat > ~/.config/powerline/segments/myseg/cpu_temp.sh &lt;&lt;'EOF'
+#!/bin/sh
+echo "$(osx-cpu-temp | sed 's/°C//')"
+EOF
+chmod +x ~/.config/powerline/segments/myseg/cpu_temp.sh</pre>
+      <p>Dotted-path resolution honors the full config-path cascade (<code>POWERLINE_CONFIG_PATHS</code>, <code>--config-path</code>, <code>~/.config/</code>).</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Output protocol</h3>
+      <p>Both patterns parse the script's stdout on the first non-whitespace byte:</p>
+      <table class="audit-tbl">
+        <thead><tr><th>stdout starts with</th><th>treated as</th><th>wrapped how</th></tr></thead>
+        <tbody>
+          <tr><td><code>[</code> (valid JSON array)</td><td>verbatim segment list</td><td>used directly — full control over <code>highlight_groups</code>, <code>gradient_level</code>, <code>divider_highlight_group</code>, multi-chunk output</td></tr>
+          <tr><td>anything else</td><td>plain text</td><td><code>[{"contents": &lt;trimmed-stdout&gt;, "highlight_groups": [...]}]</code> — <code>format</code> template applies (<code>%s</code> &rarr; contents, <code>%%</code> &rarr; literal <code>%</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Highlight-group caveat (Rust-port divergence)</h3>
+      <p>The current Rust <code>gen_segment_getter</code> (<code>src/ported/segment.rs</code>) uses the segment's <code>function_name</code> as the only highlight group for <code>"type": "function"</code> segments — it <strong>ignores</strong> the theme's <code>"highlight_groups"</code> override (upstream Python respects it). Practical fix: name your colorscheme group to match the function name (<code>"exec"</code> for Pattern A, <code>"cpu_temp"</code> for Pattern B), or emit explicit <code>highlight_groups</code> inline via a JSON-array stdout.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Migration &amp; rollback</h2>
+      <p>Drop-in replacement for the Python <code>powerline-daemon</code> — same wire format, same <code>EOF\0\0</code> shutdown sentinel, same socket path. The C client shipped with <code>powerline-status</code> talks to this daemon unchanged.</p>
+      <table class="audit-tbl" style="margin-top:0.4rem;">
+        <thead><tr><th>step</th><th>command</th></tr></thead>
+        <tbody>
+          <tr><td>1. stop the Python daemon</td><td><code>powerline-daemon -k</code></td></tr>
+          <tr><td>2. put the Rust binary ahead in <code>$PATH</code></td><td><code>ln -sf "$(pwd)/target/release/powerline-daemon" /usr/local/bin/powerline-daemon</code></td></tr>
+          <tr><td>3. restart tmux</td><td><code>tmux kill-server &amp;&amp; tmux new-session</code></td></tr>
+          <tr><td>4. confirm resolution</td><td><code>ls -la $(which powerline-daemon)</code> &mdash; must report the symlink</td></tr>
+          <tr><td>rollback</td><td><code>powerline-daemon -k; rm /usr/local/bin/powerline-daemon; powerline-daemon -q</code></td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.6rem;">The Python C client at <code>~/.local/bin/powerline</code> does not need replacing — it speaks the same wire protocol to whichever daemon owns the socket. No config, <code>.tmux.conf</code>, or shell-rc edits.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Vim setup</h2>
+      <p>Vim statusline + tabline rendering ships in the same <code>powerline</code> binary — no <code>+python3</code> requirement, no <code>pip install powerline-status</code>. The bundled <code>powerline.vim</code> plugin is embedded via <code>include_str!</code> and extracted to <code>~/.cache/powerliners/vim/powerline.vim</code> on first source. Works on vim 7.4+, vim 9, and neovim (vim8-compatible syntax only — no <code>vim9script</code> lock-in).</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Step 1 &mdash; source the plugin from .vimrc</h3>
+      <p>One-line install — extracts and sources the plugin on every launch:</p>
+      <pre>if executable('powerline-config')
+  execute 'source' trim(system('powerline-config vim source-path'))
+endif</pre>
+      <p><code>powerline-config vim source-path</code> extracts the bundled plugin and prints its path; the <code>:execute 'source' &hellip;</code> then sources it. Caches in <code>$XDG_CACHE_HOME/powerliners/vim/</code> (default <code>~/.cache/powerliners/vim/</code>) so subsequent launches re-source from disk.</p>
+      <p>Or the manual two-step (pin the path, skip the per-launch fork):</p>
+      <pre># one-time extraction
+$ powerline-config vim source-path
+/Users/&lt;you&gt;/.cache/powerliners/vim/powerline.vim
+
+" .vimrc
+set runtimepath+=~/.cache/powerliners/vim
+source ~/.cache/powerliners/vim/powerline.vim</pre>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Step 2 &mdash; pre-start the daemon</h3>
+      <p>The plugin shells out via <code>system('powerline vim left &hellip;')</code> on every statusline refresh. With the daemon running that's a microsecond Unix-socket round-trip; without it every refresh fork-execs <code>powerline-render</code> (~30 ms cold per call). Start the daemon once at shell login (<code>.zshrc</code> / <code>.bash_profile</code>):</p>
+      <pre>powerline-daemon -q</pre>
+      <p>The <code>-q</code> flag double-forks and detaches; vim sees the socket immediately. No per-vim daemon — one process per UID handles tmux, shell prompts, and every running vim simultaneously.</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Step 3 &mdash; verify</h3>
+      <p>Open a fresh vim session and check:</p>
+      <pre>:echo &amp;statusline
+" expected: a %#Pl_…# markup string ending in segment chunks
+
+:PowerlinersRefresh
+" manually re-runs the refresh; useful for debugging
+
+:messages
+" no errors; if 'powerline: write() to daemon failed' shows up,
+" the daemon isn't reachable — re-run `powerline-daemon -q`</pre>
+      <p>The plugin sets <code>laststatus=2</code> automatically so the statusline shows even in single-window sessions.</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">What the plugin wires up</h3>
+      <p>Triggered autocmds (<code>augroup powerliners</code>):</p>
+      <table class="audit-tbl" style="margin-top:0.4rem;">
+        <thead><tr><th>event</th><th>fires when</th></tr></thead>
+        <tbody>
+          <tr><td><code>VimEnter</code></td><td>initial render on launch</td></tr>
+          <tr><td><code>WinEnter</code> / <code>BufWinEnter</code> / <code>BufEnter</code> / <code>TabEnter</code></td><td>refresh on window / buffer / tab context switch</td></tr>
+          <tr><td><code>ModeChanged</code> (vim &ge; 8.2.2871)</td><td>mode transitions (normal &rarr; insert &hellip;)</td></tr>
+          <tr><td><code>CursorMoved</code> / <code>CursorMovedI</code> (legacy fallback)</td><td>every cursor move on ancient vim — upgrade if possible</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.6rem;">Per-request keys sent to the renderer (matches upstream's <code>powerline.bindings.vim</code> so theme JSON written for Python upstream renders identically): <code>mode</code> (<code>mode(1)</code>), <code>bufnr</code> (<code>bufnr('%')</code>), <code>winnr</code> (<code>winnr()</code>), <code>buf_name</code> (<code>expand('%:p')</code>, omitted when empty).</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Override the binary name</h3>
+      <p>If you've installed under a non-default name or want to test a build from <code>target/release/</code>, set the global before sourcing:</p>
+      <pre>let g:powerliners_binary = expand('~/code/powerliners/target/release/powerline')
+if executable(g:powerliners_binary)
+  execute 'source' trim(system(g:powerliners_binary . '-config vim source-path'))
+endif</pre>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Customize the theme</h3>
+      <p>The vim statusline pulls from <code>~/.config/powerline/themes/vim/default.json</code> plus <code>~/.config/powerline/colorschemes/vim/default.json</code>. Bundled defaults live under <code>src/ported/config_files/themes/vim/</code> and <code>src/ported/config_files/colorschemes/vim/</code>; copy any of them into <code>~/.config/powerline/</code> and edit. Same JSON shape as upstream — segments listed under <code>segments.left</code> / <code>segments.right</code>, inheritance via <code>extends</code>, per-mode highlight overrides via <code>mode_translations</code>.</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Troubleshooting</h3>
+      <table class="audit-tbl">
+        <thead><tr><th>symptom</th><th>cause / fix</th></tr></thead>
+        <tbody>
+          <tr><td>empty statusline</td><td><code>set laststatus=2</code> got stomped by something else in <code>.vimrc</code>; re-set after sourcing the plugin</td></tr>
+          <tr><td>garbled escape codes</td><td>terminal doesn't support truecolor; renderer falls back to cterm but vim must run in a 256-color tty (<code>$TERM=xterm-256color</code>)</td></tr>
+          <tr><td>colors don't match terminal</td><td>colorscheme JSON missing your custom palette — copy <code>colorschemes/vim/default.json</code> into <code>~/.config/powerline/colorschemes/vim/</code></td></tr>
+          <tr><td><code>powerline: write() to daemon failed</code></td><td>daemon isn't running; <code>powerline-daemon -q</code></td></tr>
+          <tr><td>refresh stutters / flickers</td><td>the legacy <code>CursorMoved</code> fallback is firing on every keystroke (vim &lt; 8.2.2871); upgrade vim</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="tutorial-section">
+      <h2>Bundled segments</h2>
+      <p><code>src/extensions/</code> ships net-new segments above upstream powerline-status, dispatched as standard built-ins via the daemon's <code>ADAPTERS</code> table. All accept a <code>format</code> theme arg and ship NF-default icons with Unicode + ASCII fallbacks (controlled by <code>POWERLINERS_ICONS</code>).</p>
+      <table class="audit-tbl" style="margin-top:0.8rem;">
+        <thead><tr><th>segment</th><th>summary</th></tr></thead>
+        <tbody>
+          <tr><td><code>powerliners.gpu.gpu_usage_percent</code></td><td>Vendor-dispatched GPU compute % (nvidia-smi → rocm-smi → intel_gpu_top → ioreg fallback).</td></tr>
+          <tr><td><code>powerliners.gpu.gpu_vram</code></td><td>GPU VRAM <code>USED/TOTAL</code> via the same dispatch chain.</td></tr>
+          <tr><td><code>powerliners.disk.disk_usage</code></td><td>Filesystem <code>USED/TOTAL</code> for any mount.</td></tr>
+          <tr><td><code>powerliners.disk.disk_usage_percent</code></td><td>Filesystem percent-used.</td></tr>
+          <tr><td><code>powerliners.disk.disk_io</code></td><td>Live read/write throughput for any device (<code>device</code> arg, default <code>auto</code>). Format uses positional <code>%s</code> substitution — first <code>%s</code> &rarr; read rate, second <code>%s</code> &rarr; write rate (default <code>&lt;disk&gt; &lt;io&gt; R %s W %s</code>). Args: <code>short</code> (default true), <code>recv_max</code>/<code>sent_max</code> (gradient ceilings, default 100&nbsp;MiB/s).</td></tr>
+          <tr><td><code>powerliners.thermal.thermal</code></td><td>CPU/GPU temp + fan RPM. <code>/sys/class/hwmon</code> on Linux, <code>powermetrics</code>/<code>istats</code> on macOS.</td></tr>
+          <tr><td><code>powerliners.vcs.git_status</code></td><td>Single-probe git status — branch, ahead/behind, dirty/staged/untracked, stash count, action (rebase/merge/cherry-pick), tag at HEAD. github-remote detection prepends the octocat glyph.</td></tr>
+          <tr><td><code>powerliners.docker.containers</code></td><td>Container counts via <code>docker ps</code>. Tokens: <code>{running}</code> / <code>{total}</code> / <code>{images}</code> / <code>{stopped}</code>. Falls through silently when the daemon is unreachable.</td></tr>
+          <tr><td><code>powerliners.k8s.kubecontext</code></td><td>Current kubectl context + active namespace. Honors <code>$KUBECONFIG</code> cascade; <code>hide_default</code> arg suppresses the namespace fragment when it equals the configured default.</td></tr>
+          <tr><td><code>powerliners.proc.process_count</code></td><td>POSIX process tally via <code>ps -eo stat=</code>. Tokens: <code>{total}</code>/<code>{running}</code>/<code>{sleeping}</code>/<code>{zombie}</code>/<code>{dwait}</code>/<code>{stopped}</code>. <code>warn_zombie</code> flips the highlight group when defunct processes are present.</td></tr>
+          <tr><td><code>powerliners.github.ci_status</code></td><td>Current branch's HEAD check-runs via <code>gh api repos/:o/:r/commits/:sha/check-runs</code>, disk-cached by SHA (default <code>ttl_secs</code>=30). Tokens: <code>{icon}</code>/<code>{state}</code>/<code>{passed}</code>/<code>{failed}</code>/<code>{running}</code>/<code>{total}</code>. State-picked highlight group plus <code>information:regular</code> neutral fallback so the chunk renders in any colorscheme.</td></tr>
+          <tr><td><code>powerliners.aws.context</code></td><td>Active AWS profile + region. Pure-fs probe of <code>$AWS_PROFILE</code>/<code>$AWS_REGION</code>/<code>$AWS_DEFAULT_REGION</code> then <code>~/.aws/config</code> (handles the <code>[profile NAME]</code> quirk). Tokens: <code>{icon}</code>/<code>{profile}</code>/<code>{region}</code>. <code>hide_default_profile</code> strips the profile fragment when it equals <code>default</code>.</td></tr>
+          <tr><td><code>powerliners.gcp.context</code></td><td>Active gcloud configuration's project + account. Pure-fs probe of <code>~/.config/gcloud/active_config</code> + <code>configurations/config_&lt;NAME&gt;</code>. Env overrides <code>$CLOUDSDK_ACTIVE_CONFIG_NAME</code> / <code>$CLOUDSDK_CORE_PROJECT</code> / <code>$CLOUDSDK_CORE_ACCOUNT</code> win.</td></tr>
+          <tr><td><code>powerliners.fusevm.jit_cache</code></td><td>fusevm Cranelift JIT cache stats — recursively walks <code>$FUSEVM_JIT_CACHE</code> / <code>$XDG_CACHE_HOME/fusevm-jit</code> / <code>~/.cache/fusevm-jit</code>. Tokens: <code>{icon}</code>/<code>{count}</code>/<code>{entries}</code>/<code>{harddisk}</code>/<code>{size}</code> (<code>du -sh</code>-style block allocation)/<code>{bytes}</code> (raw disk bytes)/<code>{logical_size}</code>/<code>{logical_bytes}</code> (stat-style content sum).</td></tr>
+          <tr><td><code>powerliners.zshrs.rkyv_cache</code></td><td>Single-file stat of the zshrs authoritative rkyv archive at <code>$ZSHRS_RKYV_CACHE</code> / <code>$ZSHRS_HOME/scripts.rkyv</code> / <code>$XDG_DATA_HOME/zshrs/scripts.rkyv</code> / <code>~/.zshrs/scripts.rkyv</code>. Same <code>{size}</code> / <code>{bytes}</code> / <code>{logical_*}</code> token surface as <code>fusevm.jit_cache</code>.</td></tr>
+          <tr><td><code>powerliners.stryke.rkyv_cache</code></td><td>Single-file stat of <code>~/.stryke/scripts.rkyv</code> (stryke's bytecode store, Cranelift-JIT'd via the shared fusevm runtime).</td></tr>
+          <tr><td><code>powerliners.awkrs.rkyv_cache</code></td><td>Single-file stat of <code>~/.awkrs/scripts.rkyv</code>.</td></tr>
+          <tr><td><code>powerliners.zshrs.version</code></td><td>Latest installed zshrs version (parsed from <code>&lt;bin&gt; --version</code>). In-process TTL cache (default 300 s, configurable via <code>ttl_secs</code>) so the daemon doesn't fork on every prompt tick. Tokens: <code>{icon}</code>/<code>{version}</code>. Returns <code>None</code> when the binary isn't on PATH.</td></tr>
+          <tr><td><code>powerliners.stryke.version</code></td><td>Same as <code>zshrs.version</code> for the <code>stryke</code> binary — handles the <code>This is stryke vX.Y.Z — ...</code> prefix shape via the shared <code>extract_version</code> SemVer scanner.</td></tr>
+          <tr><td><code>powerliners.awkrs.version</code></td><td>Same shared helper, default binary <code>awkrs</code>.</td></tr>
+          <tr><td><code>powerliners.exec.exec</code></td><td>User-defined exec adapter — spawn an arbitrary script, parse stdout, render with a user-supplied format. Resolves via bare <code>"function": "exec"</code> as well as the dotted path.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.8rem;">All segments live under <code>src/extensions/&lt;module&gt;.rs</code> and register through the daemon's <code>ADAPTERS</code> table in <code>src/bin/shared/render_runtime.rs</code> — see the audit section below for the live icon → segment cross-reference.</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.4rem 0 0.4rem;">Cache-size segments — shared resolution chain &amp; token surface</h3>
+      <p>The four cache-size segments — <code>powerliners.fusevm.jit_cache</code>, <code>powerliners.zshrs.rkyv_cache</code>, <code>powerliners.stryke.rkyv_cache</code>, <code>powerliners.awkrs.rkyv_cache</code> — share a deliberately uniform contract so the same theme JSON works across all four. Each segment is a pure filesystem probe; no subprocess, no daemon RPC.</p>
+      <p style="margin-top:0.6rem;"><strong>Resolution chain</strong> (4-level fallback, first hit wins). For <code>&lt;NAME&gt; ∈ {ZSHRS, STRYKE, AWKRS}</code> the rkyv segments resolve <code>path</code> as:</p>
+      <ol style="margin:0.3rem 0 0.6rem 1.5rem;">
+        <li><code>$&lt;NAME&gt;_RKYV_CACHE</code> — explicit override, used verbatim</li>
+        <li><code>$&lt;NAME&gt;_HOME/scripts.rkyv</code></li>
+        <li><code>$XDG_DATA_HOME/&lt;name&gt;/scripts.rkyv</code> — used only when the file exists; otherwise falls through</li>
+        <li><code>~/.&lt;name&gt;/scripts.rkyv</code> — final fallback</li>
+      </ol>
+      <p style="margin-top:0.4rem;">The <code>fusevm.jit_cache</code> sibling uses the directly-analogous 3-level chain (<code>$FUSEVM_JIT_CACHE</code> → <code>$XDG_CACHE_HOME/fusevm-jit</code> → <code>~/.cache/fusevm-jit</code>) but recursively walks a cache <em>directory</em> rather than stat-ing a single archive, and also exposes an <code>{entries}</code> token for the recursive file count. Symlinks count as a single entry and are never followed — avoids infinite loops across re-symlinked cache dirs. The precedence chains are unit-tested via a pure-functional <code>default_path_with(get_env, path_exists)</code> seam in <code>src/extensions/{zshrs,stryke,awkrs}_rkyv.rs</code> and a matching <code>default_root_with(get_env)</code> seam in <code>src/extensions/fusevm_jit.rs</code> — every precedence level pinned without mutating the process env.</p>
+      <p style="margin-top:0.6rem;"><strong>Format tokens</strong> (identical across all four segments):</p>
+      <table class="audit-tbl" style="margin-top:0.4rem;">
+        <thead><tr><th>token</th><th>meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>{icon}</code></td><td>Segment glyph — substituted downstream by the render runtime, not by the segment module itself. The Nerd Font / Unicode / ASCII tier is selected by <code>POWERLINERS_ICONS</code>.</td></tr>
+          <tr><td><code>{size}</code></td><td>On-disk allocation, human-formatted (B/K/M/G/T/P, 1024-base, precision tiers <code>&lt;10</code>→2dp / <code>&lt;100</code>→1dp / else→0dp). Matches <code>du -sh</code>.</td></tr>
+          <tr><td><code>{bytes}</code></td><td>On-disk allocation as a raw integer (block count × 512 on Unix; <code>stat .st_blocks</code>).</td></tr>
+          <tr><td><code>{logical_size}</code></td><td>File content size from <code>stat .st_size</code>, human-formatted.</td></tr>
+          <tr><td><code>{logical_bytes}</code></td><td>File content size as a raw integer.</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.6rem;"><strong>Missing-archive behavior.</strong> When the target file doesn't exist (the runtime never ran on this machine, or the archive hasn't been written yet), the segment returns <code>None</code> by default and renders no chunk. Setting <code>"show_when_empty": true</code> in the segment args makes it render with zeroed stats (<code>0B</code>/<code>0</code>) so the chunk stays present as a UI affordance.</p>
+      <p style="margin-top:0.4rem;"><strong>Highlight-group chain.</strong> Every cache-size segment ships a 3-level highlight chain — <code>&lt;segment&gt;_rkyv_cache</code> → <code>&lt;segment&gt;</code> → <code>information:regular</code>. The trailing <code>information:regular</code> is a neutral fallback so the chunk renders in any colorscheme even when the segment-specific groups are absent (see <code>fusevm_jit::jit_cache()</code> for the rationale that motivated this convention).</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>Glyph rendering</h2>
+      <p>Every glyph below is a real Nerd Font codepoint loaded into this page via the <code>@font-face</code> block in <code>docs/hud-static.css</code>. The font is the official <a href="https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/NerdFontsSymbolsOnly"><code>SymbolsNerdFont</code></a> subset (~270 KB) served from jsdelivr CDN, with a <code>unicode-range</code> directive gating the load to PUA ranges only (<code>U+E000-F8FF</code> + <code>U+F0000-FFFFD</code>):</p>
+      <pre>@font-face {
+  font-family: 'SymbolsNerdFont';
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@master/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFont-Regular.ttf') format('truetype');
+  unicode-range: U+E000-F8FF, U+F0000-FFFFD;
+}</pre>
+      <p>Body text and code blocks continue to render in Share Tech Mono / Orbitron — only PUA codepoints resolve through the NF subset, so the font swap has no layout impact. The same chain operates at runtime via <code>POWERLINERS_ICONS</code>: unset/default → NF glyph, <code>=unicode</code> → text-presentation Unicode fallback (e.g. ✓ ✗ 🐳 ⎈ ⛁), <code>=ascii</code> → label-style ASCII (e.g. <code>OK</code> <code>FAIL</code> <code>D:</code> <code>k8s:</code> <code>D:</code>).</p>
+    </section>
+
+    <section class="tutorial-section icon-audit">
+      <h2>Icon audit</h2>
+      <p>Every Nerd Font codepoint shipped by <code>src/extensions/icons.rs</code> is listed here with its canonical upstream identity (verified against <a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_all.sh"><code>ryanoasis/nerd-fonts</code> master</a>, NF 3.4.0 default load order, legacy <code>i_material.sh</code> excluded). Each glyph below renders live via the <code>SymbolsNerdFont</code> @font-face declaration in <code>hud-static.css</code> — if a shipped glyph fails to match its claimed identity, it would be immediately visible in this table.</p>
+      <p style="margin-top:0.6rem;">Three-tier fallback chain: <strong>Nerd Font</strong> (default) → <strong>Unicode</strong> (<code>POWERLINERS_ICONS=unicode</code>, text-presentation only) → <strong>ASCII</strong> (<code>POWERLINERS_ICONS=ascii</code>, label-style for non-UTF8 terminals).</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">A. Icon getters (33)</h3>
+      <table class="audit-tbl">
+        <thead><tr><th>fn</th><th>codepoint</th><th>NF name</th><th>source</th><th class="nf-cell">NF</th><th>Unicode</th><th>ASCII</th><th>used by segment</th></tr></thead>
+        <tbody>
+          <tr><td><code>icons::disk()</code></td><td><code>U+F0A0</code></td><td><code>i_fa_hard_drive</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_fa.sh"><code>i_fa.sh</code></a></td><td class="nf-cell"></td><td>⛁</td><td><code>D:</code></td><td><code>disk_io, disk_usage, disk_usage_percent</code></td></tr>
+          <tr><td><code>icons::cpu()</code></td><td><code>U+F4BC</code></td><td><code>i_oct_cpu</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_oct.sh"><code>i_oct.sh</code></a></td><td class="nf-cell"></td><td>⚙</td><td><code>CPU:</code></td><td><code>ad_cpu_load_percent, thermal</code></td></tr>
+          <tr><td><code>icons::gpu()</code></td><td><code>U+F2DB</code></td><td><code>i_fa_microchip</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_fa.sh"><code>i_fa.sh</code></a></td><td class="nf-cell"></td><td>⎚</td><td><code>GPU:</code></td><td><code>gpu_usage_percent, gpu_vram, thermal</code></td></tr>
+          <tr><td><code>icons::memory()</code></td><td><code>U+EFC5</code></td><td><code>i_fa_memory</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_fa.sh"><code>i_fa.sh</code></a></td><td class="nf-cell"></td><td>▤</td><td><code>MEM:</code></td><td><code>ad_mem_usage_percent, gpu_vram, mem_usage</code></td></tr>
+          <tr><td><code>icons::thermometer()</code></td><td><code>U+F2C8</code></td><td><code>i_fa_temperature_three_quarters</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_fa.sh"><code>i_fa.sh</code></a></td><td class="nf-cell"></td><td>🌡</td><td><code>T:</code></td><td><code>— unused</code></td></tr>
+          <tr><td><code>icons::branch()</code></td><td><code>U+E0A0</code></td><td><code>i_pl_branch</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_ple.sh"><code>i_ple.sh</code></a></td><td class="nf-cell"></td><td>⎇</td><td><code>b:</code></td><td><code>git_status</code></td></tr>
+          <tr><td><code>icons::github()</code></td><td><code>U+F09B</code></td><td><code>i_fa_github</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_fa.sh"><code>i_fa.sh</code></a></td><td class="nf-cell"></td><td>🐙</td><td><code>gh:</code></td><td><code>ci_status, git_status</code></td></tr>
+          <tr><td><code>icons::tag()</code></td><td><code>U+F02B</code></td><td><code>i_fa_tag</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_fa.sh"><code>i_fa.sh</code></a></td><td class="nf-cell"></td><td>⚑</td><td><code>tag:</code></td><td><code>git_status</code></td></tr>
+          <tr><td><code>icons::docker()</code></td><td><code>U+F0868</code></td><td><code>i_md_docker</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰡨</td><td>🐳</td><td><code>D:</code></td><td><code>containers</code></td></tr>
+          <tr><td><code>icons::kubernetes()</code></td><td><code>U+F10FE</code></td><td><code>i_md_kubernetes</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󱃾</td><td>⎈</td><td><code>k8s:</code></td><td><code>kubecontext</code></td></tr>
+          <tr><td><code>icons::process()</code></td><td><code>U+F0493</code></td><td><code>i_md_cog</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰒓</td><td>⚙</td><td><code>P:</code></td><td><code>process_count</code></td></tr>
+          <tr><td><code>icons::aws()</code></td><td><code>U+F0E0F</code></td><td><code>i_md_aws</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰸏</td><td>aws</td><td><code>aws</code></td><td><code>context</code></td></tr>
+          <tr><td><code>icons::gcp()</code></td><td><code>U+F11F6</code></td><td><code>i_md_google_cloud</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󱇶</td><td>gcp</td><td><code>gcp</code></td><td><code>context</code></td></tr>
+          <tr><td><code>icons::ci_ok()</code></td><td><code>U+F49E</code></td><td><code>i_oct_check_circle</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_oct.sh"><code>i_oct.sh</code></a></td><td class="nf-cell"></td><td>✅</td><td><code>OK</code></td><td><code>ci_status</code></td></tr>
+          <tr><td><code>icons::ci_fail()</code></td><td><code>U+F52F</code></td><td><code>i_oct_x_circle</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_oct.sh"><code>i_oct.sh</code></a></td><td class="nf-cell"></td><td>❌</td><td><code>FAIL</code></td><td><code>ci_status</code></td></tr>
+          <tr><td><code>icons::ci_run()</code></td><td><code>U+F46A</code></td><td><code>i_oct_sync</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_oct.sh"><code>i_oct.sh</code></a></td><td class="nf-cell"></td><td>🔄</td><td><code>RUN</code></td><td><code>ci_status</code></td></tr>
+          <tr><td><code>icons::count()</code></td><td><code>U+F0222</code></td><td><code>i_md_file_multiple</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰈢</td><td>▤</td><td><code>n=</code></td><td><code>jit_cache</code></td></tr>
+          <tr><td><code>icons::harddisk()</code></td><td><code>U+F02CA</code></td><td><code>i_md_harddisk</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰋊</td><td>⛁</td><td><code>d=</code></td><td><code>jit_cache</code></td></tr>
+          <tr><td><code>icons::swap()</code></td><td><code>U+F04E1</code></td><td><code>i_md_swap_horizontal</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰓡</td><td>⇄</td><td><code>SWAP:</code></td><td><code>ad_mem_swap_percentage, mem_swap</code></td></tr>
+          <tr><td><code>icons::io()</code></td><td><code>U+F0E79</code></td><td><code>i_md_arrow_up_down</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰹹</td><td>⇅</td><td><code>IO:</code></td><td><code>disk_io</code></td></tr>
+          <tr><td><code>icons::fusevm()</code></td><td><code>U+F01FA</code></td><td><code>i_md_engine</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰇺</td><td>⚙</td><td><code>jit:</code></td><td><code>jit_cache</code></td></tr>
+          <tr><td><code>icons::zshrs()</code></td><td><code>U+F07B7</code></td><td><code>i_md_console_line</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_md.sh"><code>i_md.sh</code></a></td><td class="nf-cell">󰞷</td><td>❯</td><td><code>zshrs:</code></td><td><code>rkyv_cache</code></td></tr>
+          <tr><td><code>icons::stryke()</code></td><td><code>U+E769</code></td><td><code>i_dev_perl</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_dev.sh"><code>i_dev.sh</code></a></td><td class="nf-cell"></td><td>λ</td><td><code>stryke:</code></td><td><code>rkyv_cache</code></td></tr>
+          <tr><td><code>icons::awkrs()</code></td><td><code>U+E741</code></td><td><code>i_dev_awk</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_dev.sh"><code>i_dev.sh</code></a></td><td class="nf-cell"></td><td>$0</td><td><code>awkrs:</code></td><td><code>rkyv_cache</code></td></tr>
+          <tr><td><code>icons::weather_sunny()</code></td><td><code>U+E30D</code></td><td><code>i_weather_day_sunny</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>☀</td><td><code>SUN</code></td><td><code>weather</code></td></tr>
+          <tr><td><code>icons::weather_night()</code></td><td><code>U+E32B</code></td><td><code>i_weather_night_clear</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>☾</td><td><code>NIGHT</code></td><td><code>weather</code></td></tr>
+          <tr><td><code>icons::weather_rainy()</code></td><td><code>U+E318</code></td><td><code>i_weather_rain</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>☔</td><td><code>RAIN</code></td><td><code>weather</code></td></tr>
+          <tr><td><code>icons::weather_cloudy()</code></td><td><code>U+E312</code></td><td><code>i_weather_cloudy</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>☁</td><td><code>CLOUDS</code></td><td><code>weather</code></td></tr>
+          <tr><td><code>icons::weather_snowy()</code></td><td><code>U+E31A</code></td><td><code>i_weather_snow</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>❄</td><td><code>SNOW</code></td><td><code>weather</code></td></tr>
+          <tr><td><code>icons::weather_stormy()</code></td><td><code>U+E31D</code></td><td><code>i_weather_thunderstorm</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>⛈</td><td><code>STORM</code></td><td><code>weather</code></td></tr>
+          <tr><td><code>icons::weather_foggy()</code></td><td><code>U+E313</code></td><td><code>i_weather_fog</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>🌫</td><td><code>FOG</code></td><td><code>weather</code></td></tr>
+          <tr><td><code>icons::weather_windy()</code></td><td><code>U+E31F</code></td><td><code>i_weather_strong_wind</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>🌬</td><td><code>WIND</code></td><td><code>weather</code></td></tr>
+          <tr><td><code>icons::weather_unknown()</code></td><td><code>U+E374</code></td><td><code>i_weather_na</code></td><td><a href="https://github.com/ryanoasis/nerd-fonts/blob/master/bin/scripts/lib/i_weather.sh"><code>i_weather.sh</code></a></td><td class="nf-cell"></td><td>?</td><td><code>?</code></td><td><code>weather</code></td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.6rem; font-size:11px; color:var(--text-dim);">The nine <code>weather_*</code> getters are keyed by upstream condition name and consumed by the <code>weather</code> adapter (<code>ad_weather</code> in <code>src/bin/shared/render_runtime.rs</code>) — it pre-seeds <code>day</code>/<code>sunny</code>/<code>night</code>/<code>rainy</code>/<code>cloudy</code>/<code>snowy</code>/<code>stormy</code>/<code>foggy</code>/<code>windy</code>/<code>unknown</code> defaults from the active icon tier before applying any theme <code>icons</code> override. <code>icons::thermometer()</code> remains the only getter with no live consumer (<code>— unused</code> above).</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.6rem 0 0.4rem;">B. Segment defaults (24)</h3>
+      <p style="margin:0 0 0.5rem;">Default format strings shipped by each <code>powerliners.*</code> / <code>powerlinemem.*</code> adapter when the theme JSON omits <code>format</code>. Live NF render uses the same glyphs as Table A.</p>
+      <table class="audit-tbl">
+        <thead><tr><th>segment name</th><th class="nf-cell">icons used</th><th class="nf-cell">live NF render</th></tr></thead>
+        <tbody>
+          <tr><td><code>powerliners.gpu.gpu_usage_percent</code></td><td class="nf-cell"></td><td class="nf-cell"> 47%</td></tr>
+          <tr><td><code>powerliners.gpu.gpu_vram</code></td><td class="nf-cell"> </td><td class="nf-cell"> 8.2G/12G</td></tr>
+          <tr><td><code>powerliners.disk.disk_usage</code></td><td class="nf-cell"></td><td class="nf-cell"> 142G/512G</td></tr>
+          <tr><td><code>powerliners.disk.disk_usage_percent</code></td><td class="nf-cell"></td><td class="nf-cell"> 28%</td></tr>
+          <tr><td><code>powerliners.disk.disk_io</code></td><td class="nf-cell"> 󰹹</td><td class="nf-cell"> 󰹹 R 23M W 5M</td></tr>
+          <tr><td><code>powerliners.thermal.thermal</code></td><td class="nf-cell"></td><td class="nf-cell"> 67°C 1240RPM</td></tr>
+          <tr><td><code>powerliners.vcs.git_status</code></td><td class="nf-cell"> </td><td class="nf-cell">  main ⇡2</td></tr>
+          <tr><td><code>powerliners.docker.containers</code></td><td class="nf-cell">󰡨</td><td class="nf-cell">󰡨 4/7</td></tr>
+          <tr><td><code>powerliners.k8s.kubecontext</code></td><td class="nf-cell">󱃾</td><td class="nf-cell">󱃾 prod:default</td></tr>
+          <tr><td><code>powerliners.proc.process_count</code></td><td class="nf-cell">󰒓</td><td class="nf-cell">󰒓 348</td></tr>
+          <tr><td><code>powerliners.github.ci_status</code></td><td class="nf-cell"> </td><td class="nf-cell">  5/5</td></tr>
+          <tr><td><code>powerliners.aws.context</code></td><td class="nf-cell">󰸏</td><td class="nf-cell">󰸏 prod@us-east-1</td></tr>
+          <tr><td><code>powerliners.gcp.context</code></td><td class="nf-cell">󱇶</td><td class="nf-cell">󱇶 my-proj:me@e.com</td></tr>
+          <tr><td><code>powerliners.fusevm.jit_cache</code></td><td class="nf-cell">󰇺 󰈢 󰋊</td><td class="nf-cell">󰇺 󰈢 207 󰋊 828K</td></tr>
+          <tr><td><code>powerliners.zshrs.rkyv_cache</code></td><td class="nf-cell">󰞷</td><td class="nf-cell">󰞷 4.00K</td></tr>
+          <tr><td><code>powerliners.stryke.rkyv_cache</code></td><td class="nf-cell"></td><td class="nf-cell"> 34.9M</td></tr>
+          <tr><td><code>powerliners.awkrs.rkyv_cache</code></td><td class="nf-cell"></td><td class="nf-cell"> 8.00K</td></tr>
+          <tr><td><code>powerliners.zshrs.version</code></td><td class="nf-cell">󰞷</td><td class="nf-cell">󰞷 0.11.26</td></tr>
+          <tr><td><code>powerliners.stryke.version</code></td><td class="nf-cell"></td><td class="nf-cell"> 0.16.8</td></tr>
+          <tr><td><code>powerliners.awkrs.version</code></td><td class="nf-cell"></td><td class="nf-cell"> 0.4.13</td></tr>
+          <tr><td><code>powerlinemem.mem_usage.mem_usage</code></td><td class="nf-cell"></td><td class="nf-cell"> 12G/32G</td></tr>
+          <tr><td><code>powerlinemem.mem_usage.mem_usage_percent</code></td><td class="nf-cell"></td><td class="nf-cell"> 47%</td></tr>
+          <tr><td><code>powerlinemem.mem_usage.mem_swap</code></td><td class="nf-cell">󰓡</td><td class="nf-cell">󰓡 1.2G/4G</td></tr>
+          <tr><td><code>powerlinemem.mem_usage.mem_swap_percent</code></td><td class="nf-cell">󰓡</td><td class="nf-cell">󰓡 30%</td></tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top:1rem; font-size:11px; color:var(--text-dim);">Anti-fakery rationale: a future maintainer who swaps a glyph (intentionally or by typo) without updating both the code AND this audit table will produce visibly wrong rendering on this page — the symptom is observable, not hidden behind a Rust unit test. The <strong>used-by-segment</strong> column on Table A is computed from the real adapter code in <code>src/bin/shared/render_runtime.rs</code> at build time (each <code>fn ad_X</code> body is scanned for <code>icons::Y()</code> calls and cross-referenced against the ADAPTERS dispatch table); a getter listed as <code>— unused</code> is dead code awaiting either a consumer or removal. The <code>i_material.sh</code> legacy MDI set is intentionally excluded from verification since NF 3.4.0 does not load it by default; codepoints that collide between <code>i_oct.sh</code> and legacy <code>i_material.sh</code> (e.g. <code>U+F52F</code>) resolve via the Octicons subset in any standard Nerd Font install.</p>
+    </section>
+
+  </main>
+</body>
+</html>

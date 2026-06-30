@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="powerliners — engineering report. Rust port of Python's powerline-status. Scope, architecture, port discipline, performance targets.">
+  <title>powerliners — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <style>
+    .tutorial-main { max-width: 68rem; padding: 1.5rem 1.5rem 4rem; margin: 0 auto; }
+    pre, code { font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    pre {
+      background: var(--bg); border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem; overflow-x: auto; font-size: 12px; color: var(--text);
+    }
+    table.report-table {
+      width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px;
+    }
+    table.report-table th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; text-align: left;
+      padding: 6px 10px; border: 1px solid var(--border);
+    }
+    table.report-table td {
+      padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top;
+    }
+    table.report-table td code { color: var(--accent-light); background: var(--bg); }
+    .tutorial-section {
+      margin: 1.6rem 0; padding: 1rem 1.2rem 1.2rem; border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px;
+    }
+    .tutorial-section h2 {
+      font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--cyan);
+      letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 0.6rem;
+    }
+    .tutorial-section p, .tutorial-section li { color: var(--text); font-size: 13px; line-height: 1.55; }
+    .tutorial-header {
+      border-bottom: 1px solid var(--border); padding: 1.2rem 1.5rem;
+      background: linear-gradient(180deg, #070714 0%, #0d0d22 60%, var(--bg-secondary) 100%);
+    }
+    .tutorial-header-inner { max-width: 68rem; margin: 0 auto; }
+    .tutorial-brand {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.1rem, 2.4vw, 1.6rem); font-weight: 900;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), #fff, var(--accent), var(--cyan));
+      background-size: 300% 100%; -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 12px var(--cyan-glow));
+      margin: 0 0 0.4rem;
+    }
+    .tutorial-crumbs {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px; color: var(--text-dim); letter-spacing: 0.04em;
+    }
+    .tutorial-crumbs a { color: var(--cyan); text-decoration: none; }
+    .tutorial-crumbs .sep { color: var(--text-muted); margin: 0 6px; }
+    .tutorial-crumbs .current { color: var(--accent); }
+    .tutorial-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin: 0.6rem 0 0.4rem;
+    }
+    .tutorial-title .step-hash { color: var(--cyan); margin-right: 0.4rem; }
+  </style>
+</head>
+<body class="crt">
+  <header class="tutorial-header">
+    <div class="tutorial-header-inner">
+      <h1 class="tutorial-brand">// POWERLINERS &mdash; ENGINEERING REPORT</h1>
+      <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+        <a href="index.html">Docs</a>
+        <span class="sep">/</span>
+        <span class="current">Engineering report</span>
+        <span class="sep">/</span>
+        <a href="https://github.com/MenkeTechnologies/powerliners" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="tutorial-main">
+    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+    <p>powerliners is a structurally complete (134/137 upstream py files at DONE tier; the 3 holdouts are Python lipstick — zero-fn class shells whose constants the Rust port already carries) Rust port of Python's <a href="https://github.com/powerline/powerline">powerline-status</a>. The target is a single static binary that drops into the same hook points (tmux statusline, zsh PS1, vim statusline, ipython prompt) with sub-millisecond render — replacing the ~100 ms python-interpreter startup tax that compounds across every render in interactive shells.</p>
+
+    <section class="tutorial-section">
+      <h2>~ SCALE &amp; POSITION</h2>
+      <table class="report-table">
+        <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
+        <tr><td>Rust LOC (src/ported)</td><td>~66,043</td><td>137-file 1:1 mirror of upstream powerline/</td></tr>
+        <tr><td>Upstream py fn allowlist</td><td>624</td><td><code>docs/powerline_py_functions.txt</code> (regen via <code>scripts/regen_py_functions.sh</code>)</td></tr>
+        <tr><td>Audit tests</td><td>2</td><td><code>allowlist_files_are_well_formed</code> + <code>every_ported_fn_name_exists_in_python_allowlist</code></td></tr>
+        <tr><td>Lib tests</td><td>2,473</td><td>port body + parity assertions across the ported surface; <code>src/extensions/</code> covers cache-size segments, vcs, thermal, gpu, k8s, github_ci, aws/gcp context, etc.</td></tr>
+        <tr><td>Parity tests</td><td>462</td><td>byte/value identical between Rust port and live upstream Python interpreter</td></tr>
+        <tr><td>Port bugs fixed</td><td>11</td><td>surfaced by the parity harness — see git log for the full list</td></tr>
+        <tr><td>Tier progress</td><td>134 / 137 DONE</td><td>3 holdouts are Python lipstick (<code>readline.py</code> / <code>zsh.py</code> = zero-fn class shells with escape-marker constants; <code>powerline-i3.py</code> = 100% ported, classifier just can't promote 0/0 → DONE)</td></tr>
+        <tr><td>Target render budget</td><td>&lt; 1 ms</td><td>vs ~100 ms upstream py-startup</td></tr>
+        <tr><td>Runtime deps</td><td>0</td><td>single static binary; no python, no glibc-only features</td></tr>
+        <tr><td>Current tag</td><td><code>v0.2.15</code></td><td>function-level port complete; orchestrator wired through <code>render_runtime::render_once</code> in both <code>powerline-render</code> and <code>powerline-daemon</code>; byte-identical with upstream Python across 45 daemon-parity + 462 unit-parity fixtures</td></tr>
+      </table>
+    </section>
+
+    <section class="tutorial-section">
+      <h2># SUBSYSTEM BREAKDOWN</h2>
+      <table class="report-table">
+        <tr><th>Subsystem</th><th>Module</th><th>Role</th></tr>
+        <tr><td>Path utilities</td><td><code>src/ported/lib/path.rs</code></td><td>cross-platform os.path equivalents</td></tr>
+        <tr><td>Bindings — ipython</td><td><code>src/ported/bindings/ipython/</code></td><td>4 version flavours: pre_0_11, post_0_11, since_5, since_7</td></tr>
+        <tr><td>Bindings — config</td><td><code>src/ported/bindings/config.rs</code></td><td>shared config loader</td></tr>
+        <tr><td>Daemon lifecycle</td><td><code>src/ported/scripts/powerline_daemon.rs</code> + <code>src/bin/powerline-daemon.rs</code></td><td>UNIX socket bind + daemonize + pidfile lock + accept loop</td></tr>
+        <tr><td>Parity harness</td><td><code>tests/parity_against_upstream.rs</code></td><td>462 tests piping the same input through upstream Python and Rust</td></tr>
+        <tr><td>Audit harness</td><td><code>tests/ported_fn_names_match_py.rs</code></td><td>enforces fn name parity with upstream py</td></tr>
+        <tr><td>Allowlist</td><td><code>docs/powerline_py_functions.txt</code></td><td>624 upstream py fns (regenerable)</td></tr>
+        <tr><td>Exemptions</td><td><code>tests/data/fake_fn_allowlist.txt</code></td><td>maintainer-approved Rust-only fns</td></tr>
+      </table>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>$ BINARIES &amp; CLI SURFACE</h2>
+      <p>Five binaries ship from this crate — one hot-path client, four management / fallback tools. Each is a 1:1 port of an upstream <code>scripts/</code> or <code>client/</code> entry point.</p>
+      <table class="report-table">
+        <tr><th>Binary</th><th>Mirrors</th><th>Role</th></tr>
+        <tr><td><code>powerline</code></td><td><code>client/powerline.c</code></td><td>Wire client — packs <code>argv</code> + cwd + env, sends over the per-UID Unix socket, copies the reply to stdout; <code>execvp</code>s <code>powerline-render</code> on connect-fail.</td></tr>
+        <tr><td><code>powerline-daemon</code></td><td><code>scripts/powerline-daemon</code></td><td>Socket bind + daemonize + pidfile lock + accept loop + <code>EOF\0\0</code> shutdown + render via <code>render_runtime::render_once</code>.</td></tr>
+        <tr><td><code>powerline-render</code></td><td><code>scripts/powerline-render</code></td><td>One-shot direct render through the same orchestrator path (daemon-less fallback).</td></tr>
+        <tr><td><code>powerline-config</code></td><td><code>scripts/powerline-config</code></td><td>tmux / shell known-function dispatch + <code>vim source-path</code> plugin extraction.</td></tr>
+        <tr><td><code>powerline-lint</code></td><td><code>scripts/powerline-lint</code></td><td>argparse + markedjson loader + Spec checks pipeline.</td></tr>
+      </table>
+      <p style="margin-top:0.6rem;">Render-request flags parsed by <code>parse_client_argv</code>: <code>-w/--width</code>, <code>-r/--renderer-module</code>, <code>-c/--config-override</code>, <code>-t/--theme-override</code>, <code>-R/--renderer-arg</code>, <code>-p/--config-path</code>, <code>-m/--mode</code>, <code>--last-exit-code</code>, <code>--last-pipe-status</code>, <code>--jobnum</code>, <code>--socket</code>. Daemon process flags (<code>parse_daemon_argv</code>): <code>-q/--quiet</code>, <code>-f/--foreground</code>, <code>-s/--socket</code>, <code>-k/--kill</code>, <code>-r/--replace</code>. Full per-flag reference + integration snippets live in <a href="index.html">the docs page</a>.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>= WIRE PROTOCOL</h2>
+      <p>The client / daemon split is byte-compatible with upstream's <code>client/powerline.c</code>, so a Python-installed <code>powerline</code> binary talks to this daemon unchanged and vice-versa.</p>
+      <ul>
+        <li><strong>Request frame.</strong> <code>hex(argc)\0 arg\0 arg\0 … cwd\0 KEY=VAL\0 …\0\0</code> — argument count, NUL-separated argv, the current working directory, then the inherited environment, terminated by a double-NUL.</li>
+        <li><strong>Shutdown sentinel.</strong> <code>EOF\0\0</code> (<code>const EOF: &amp;[u8] = b"EOF\0\0"</code>, <code>src/ported/scripts/powerline_daemon.rs</code>) — on receipt the daemon exits 0.</li>
+        <li><strong>Socket path.</strong> <code>/tmp/powerline-ipc-$UID</code> (macOS / BSD filesystem socket) or abstract <code>\0powerline-ipc-$UID</code> (Linux). Pidfile lock at <code>/tmp/powerline-ipc-$UID.pid</code>.</li>
+        <li><strong>Fallback.</strong> On connect-fail the client <code>execvp</code>s <code>powerline-render</code> with the same argv — never a hard error if the daemon is down.</li>
+      </ul>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>% ENVIRONMENT</h2>
+      <table class="report-table">
+        <tr><th>Variable</th><th>Effect</th></tr>
+        <tr><td><code>POWERLINE_COMMAND</code></td><td>Command shell integrations invoke to render (set to <code>powerline</code>).</td></tr>
+        <tr><td><code>POWERLINE_CONFIG_PATHS</code></td><td>Colon-separated config-root search list; mirrors upstream order.</td></tr>
+        <tr><td><code>POWERLINE_CONFIG_OVERRIDES</code></td><td>Theme-override <code>key=value</code> pairs per extension.</td></tr>
+        <tr><td><code>POWERLINERS_ICONS</code></td><td>Icon tier: default Nerd Font / <code>=unicode</code> / <code>=ascii</code> (read once per process).</td></tr>
+        <tr><td><code>$XDG_CACHE_HOME</code></td><td>Extracted tmux conf + vim plugin root (<code>powerliners/{tmux,vim}/</code>).</td></tr>
+        <tr><td><code>$FUSEVM_JIT_CACHE</code> · <code>${NAME}_RKYV_CACHE/_HOME</code> · <code>$XDG_DATA_HOME</code></td><td>Cache-size segment override roots.</td></tr>
+      </table>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>+ ARCHITECTURE</h2>
+      <p>End-to-end data flow from a shell / editor / multiplexer hook down to the rendered statusline bytes. Every layer below is wired and exercised by the lib + parity test suites; the only run-time variability is which segment modules a given <code>theme.json</code> references.</p>
+      <pre>┌───────────────────────────────────────────────────────────────────┐
+│  HOOK SURFACE                                                     │
+│  tmux statusline │ zsh PROMPT │ bash PS1 │ vim &amp;statusline        │
+│  ipython prompt  │ i3bar      │ wm / awesome │ shell continuation │
+└─────────────────────────────────┬─────────────────────────────────┘
+                                  │ exec `powerline &lt;ext&gt; &lt;side&gt; -r k=v…`
+                                  ▼
+┌───────────────────────────────────────────────────────────────────┐
+│  WIRE LAYER  ─  src/bin/powerline.rs (thin C-style client)        │
+│                                                                   │
+│  pack argv + cwd + env  →  `hex(argc)\0 a\0 b\0 … cwd\0 …\0\0`    │
+│                                                                   │
+│   ├─ connect /tmp/powerline-ipc-$UID        (macOS / BSD)         │
+│   ├─ connect \0powerline-ipc-$UID           (Linux abstract)      │
+│   └─ on connect-fail → execvp("powerline-render", argv)           │
+└─────────────────────────────────┬─────────────────────────────────┘
+                                  │ unix socket request
+                                  ▼
+┌───────────────────────────────────────────────────────────────────┐
+│  DAEMON main_loop  ─  src/bin/powerline-daemon.rs                 │
+│                                                                   │
+│  accept()  →  parse_client_argv  →  Args { ext, side, … }         │
+│                                                                   │
+│  Configs cache  (keyed by ext: tmux / vim / shell / ipython)      │
+│   ├─ Theme tree  +  Colorscheme cascade                           │
+│   ├─ Renderer state (TmuxRenderer | VimRenderer | …)              │
+│   └─ ADAPTERS dispatch table (built-in segments)                  │
+│                                                                   │
+│  render_runtime::render_once(args, environ, cwd, configs, R)      │
+└─────────────────────────────────┬─────────────────────────────────┘
+                                  │ segment fn calls
+                                  ▼
+┌───────────────────────────────────────────────────────────────────┐
+│  SEGMENT LAYER                                                    │
+│                                                                   │
+│  src/extensions/  ─  net-new live-data segments                   │
+│   ├─ gpu / thermal / disk / mem / proc / docker / k8s             │
+│   ├─ github_ci / aws_ctx / gcp_ctx / git_status                   │
+│   └─ cache-size: fusevm_jit / {zshrs,stryke,awkrs}_rkyv           │
+│                                                                   │
+│  src/ported/segments/  ─  1:1 mirror of upstream                  │
+│   ├─ common / shell / tmux / vim / i3 / ipython                   │
+│   └─ plugins: nerdtree / syntastic / ale / coc / tagbar / …       │
+│                                                                   │
+│  each returns Vec&lt;{contents, highlight_groups, divider_*}&gt;        │
+└─────────────────────────────────┬─────────────────────────────────┘
+                                  │ segment chunks
+                                  ▼
+┌───────────────────────────────────────────────────────────────────┐
+│  RENDERER  ─  src/ported/renderers/                               │
+│                                                                   │
+│  TmuxRenderer    →  #[fg=#RRGGBB,bg=…] markup + hard/soft         │
+│                     dividers, empty-side handling                 │
+│  VimRenderer     →  :hi Pl_&lt;cf&gt;_&lt;gf&gt;_&lt;cb&gt;_&lt;gb&gt;_&lt;a&gt; …              │
+│                     + %#Pl_…# inline references                   │
+│  ShellRenderer   →  zsh / bash ANSI escape sequences              │
+│  IpyRenderer     →  IPython prompt markup                         │
+└─────────────────────────────────┬─────────────────────────────────┘
+                                  │ bytes
+                                  ▼
+                  ┌────────────────────────────────┐
+                  │  stdout  /  socket reply       │
+                  │  (statusline  /  prompt body)  │
+                  └────────────────────────────────┘</pre>
+      <p>Configs persist for the lifetime of the daemon process — bound at first request for a given <code>ext</code>, reused on every subsequent render. Theme + colorscheme JSON parses once; <code>VimRenderer</code>'s <code>(fg, bg, attrs) → hl_group</code> cache compounds across renders so repeated <code>:hi GroupName …</code> declarations are emitted only on first encounter (subsequent vim renders ship just <code>%#GroupName#</code> references). The C-client / daemon split + <code>execvp</code> fallback are byte-compatible with upstream's <code>client/powerline.c</code>, so an existing Python-installed <code>powerline</code> binary talks to this daemon unchanged.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>@ EXECUTION PIPELINE (target)</h2>
+      <pre>argv  ───►  CLI parse  ───►  segment renderer  ───►  encoded statusline
+                  │                  │                       │
+                  ▼                  ▼                       ▼
+            config.json        per-segment fn          tmux/zsh/vim escape sequences
+            (powerline-       (host context, time,     (truecolor + box-drawing chars)
+            compatible)         git, kube, …)          on stdout</pre>
+      <p>Render path is allocation-light: segments stream into a fixed-capacity output buffer, no intermediate <code>Vec&lt;Segment&gt;</code> when the configuration is static. Hot path uses zero-copy slicing over the config JSON arena.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>! PORT DISCIPLINE</h2>
+      <p>The two audit tests are load-bearing: removing or weakening them is treated as audit-tool tampering per the project's global rules (see <a href="https://github.com/MenkeTechnologies/powerliners/blob/main/tests/ported_fn_names_match_py.rs">tests/ported_fn_names_match_py.rs</a>).</p>
+      <ul>
+        <li><strong>Naming.</strong> Every <code>fn</code> defined under <code>src/ported/</code> must have a name that exists in <code>docs/powerline_py_functions.txt</code>, in <code>tests/data/fake_fn_allowlist.txt</code>, or in the small trait-impl exemption set (<code>new</code>, <code>fmt</code>, <code>clone</code>, …).</li>
+        <li><strong>Layout.</strong> Directory structure mirrors upstream — <code>powerline/lib/path.py</code> → <code>src/ported/lib/path.rs</code>, <code>powerline/bindings/ipython/since_7.py</code> → <code>src/ported/bindings/ipython/since_7.rs</code>.</li>
+        <li><strong>Citation.</strong> Each ported fn carries a <code>// py:LINE-LINE</code> comment pointing back to the original Python source range, so reviewers can verify line-by-line.</li>
+      </ul>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>* TESTS &amp; PARITY</h2>
+      <pre>$ cargo test --locked --no-fail-fast
+test result: ok. 2473 passed; 0 failed   # lib::tests
+test result: ok.    2 passed; 0 failed   # tests/ported_fn_names_match_py.rs (drift gate)
+test result: ok.  462 passed; 0 failed   # tests/parity_against_upstream.rs</pre>
+      <p>The parity harness invokes the upstream Python interpreter (via the vendored <code>powerline-status</code> at <code>vendor/powerline/</code>) and compares its return values against the Rust port for the same inputs. 11 real port bugs were surfaced this way and fixed: <code>ThreadedSegment.daemon</code> class-attr override, <code>Spec.did_type</code> gating logic, encoding-locale env-var lookup, <code>_clear_special_values</code> use-after-free (BTreeMap rebalance invalidated saved raw pointers), <code>Spec.ident</code> regex (rejected colon-form identifiers like <code>solarized:term</code>), <code>Spec.context_message</code> child-recursion, <code>Spec.tuple</code> length bounds (lower bound silently dropped), <code>Spec.unknown_msg</code> arg-drop, <code>Spec.unknown_spec</code> dispatch-tuple loss, <code>NON_PRINTABLE_RE</code> regex-class inversion, and <code>Spec.printable</code>/<code>unsigned</code> chained constraints.</p>
+      <p>Beyond the port body, <code>src/extensions/</code> ships net-new segments with dedicated module-local coverage. The cache-size family (<code>fusevm_jit</code>, <code>zshrs_rkyv</code>, <code>stryke_rkyv</code>, <code>awkrs_rkyv</code>) and the <code>git_status</code> / <code>thermal</code> segments extract pure-functional seams (<code>default_path_with(get_env, path_exists)</code>, <code>default_root_with(get_env)</code>, <code>parse_porcelain_v2</code>, <code>render_git_chunk</code>, <code>format_thermal</code>, <code>thermal_gradient</code>, <code>parse_ioreg_centi_celsius</code>) so the env-precedence chains, porcelain-v2 line semantics, p10k counter ordering, RPM-tail collapse, gradient clamps, and ioreg centi-°C parsing can be pinned by deterministic unit tests with no env-var mutation and no thread-safety hazard.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>~ CRANELIFT JIT (future)</h2>
+      <p>Out of scope for the initial port. powerline-status is render-bound, not compute-bound — Cranelift gives no win until segment computation surface includes user-extensible scripting. Re-evaluate after the static segment pipeline ships and benchmark numbers show where the actual hot loop is.</p>
+    </section>
+
+    <section class="tutorial-section">
+      <h2>. NEXT MILESTONES</h2>
+      <ol>
+        <li><strong>Benchmark harness.</strong> Stand up <code>benches/</code> with a Criterion target that renders the user's daily-driver tmux config 10,000× and reports wall-clock vs upstream <code>powerline-status</code>, end-to-end through the daemon socket. Target: &lt;1 ms per render (vs ~100 ms python-interpreter startup tax). Publish results to <code>docs/bench.html</code> on each release tag.</li>
+        <li><strong>Parity-fixture expansion.</strong> Grow <code>tests/parity_against_upstream.rs</code> past the current 462 tests toward one fixture per upstream Python source file with function bodies — backfill the segments and renderer-internals files that don't yet have dedicated byte-identical assertions. The 11 port bugs surfaced so far suggest the asymptote isn't reached.</li>
+      </ol>
+      <p style="margin-top:0.8rem;">(The earlier "orchestrator integration" / "default.json byte-identical comparison" milestones shipped in 0.2.x — <code>powerline-render</code> and <code>powerline-daemon</code> both run the full orchestrator chain via <code>render_runtime::render_once</code>, and <code>tests/daemon_parity.rs</code> already asserts byte-identical output between the Rust daemon and upstream <code>python3 vendor/powerline/scripts/powerline-render</code> across 45 fixtures.)</p>
+    </section>
+  </main>
+</body>
+</html>

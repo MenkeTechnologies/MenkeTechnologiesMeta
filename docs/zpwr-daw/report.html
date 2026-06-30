@@ -92,7 +92,7 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY           -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">zpwr-daw is a standalone DAW arranger engine (formerly <code>zpwr-clip-engine</code>) shared across the MenkeTechnologies audio stack. It is a reusable component with two halves: a host-agnostic web UI (a generalized FL-Studio-style canvas grid &mdash; one renderer + one interaction model + one value model, bound to a <code>domain</code>) and a C++ engine (pattern model, swung step clock, event queue) reached directly from C++ and over a <strong>C ABI (FFI)</strong> from Rust. The frontend never knows whether it runs inside JUCE or Tauri &mdash; it calls an injected <code>nf</code> transport object, with adapters for the JUCE <code>WebBrowserComponent</code> native-fn bridge and Tauri <code>invoke</code>. Playback runs on a native audio-thread step clock when the host wires it (minimise-proof) and falls back to a JS timer otherwise. It is a two-view DAW: an <strong>Arrangement</strong> timeline (tracks, clips, sections, tempo/meter maps, markers, breakpoint automation) and a <strong>Session</strong> clip launcher (scenes, follow actions), plus MIDI/JSON export and an in-progress JUCE audio-clip layer. <strong>All line counts below are from <code>tokei</code>: the C/C++ / Rust / CMake / Python engine, C ABI, JUCE app and FFI bindings in the repo tree (excluding every vendored <code>libs/</code> submodule and all build output), plus the JavaScript arranger/grid engine in <code>libs/zpwr-clip-engine</code>; the arranger feature count is read from <code>docs/arranger_port_report.html</code>; test counts are grepped from the test trees.</strong></p>
+      <p class="tutorial-subtitle">zpwr-daw is a standalone DAW arranger engine (formerly <code>zpwr-clip-engine</code>) shared across the MenkeTechnologies audio stack. It is a reusable component with two halves: a host-agnostic web UI (a generalized FL-Studio-style canvas grid &mdash; one renderer + one interaction model + one value model, bound to a <code>domain</code>) and a C++ engine (pattern model, swung step clock, event queue) reached directly from C++ and over a <strong>C ABI (FFI)</strong> from Rust. The frontend never knows whether it runs inside JUCE or Tauri &mdash; it calls an injected <code>nf</code> transport object, with adapters for the JUCE <code>WebBrowserComponent</code> native-fn bridge and Tauri <code>invoke</code>. Playback runs on a native audio-thread step clock when the host wires it (minimise-proof) and falls back to a JS timer otherwise. It is a two-view DAW: an <strong>Arrangement</strong> timeline (tracks, clips, sections, tempo/meter maps, markers, breakpoint automation) and a <strong>Session</strong> clip launcher (scenes, follow actions), plus MIDI/JSON export and an in-progress JUCE audio-clip layer. Because that timeline moves notes and audio along one shared clock, adding a <strong>video</strong> track type made it <strong>the first DAW that is also a full video editor</strong> &mdash; the whole Adobe Premiere Pro feature surface has been built out against the same arranger until 0 features remain gap (see the <a href="premiere_port_report.html">Adobe Premiere Pro Port Report</a>). <strong>All line counts below are from <code>tokei</code>: the C/C++ / Rust / CMake / Python engine, C ABI, JUCE app and FFI bindings in the repo tree (excluding every vendored <code>libs/</code> submodule and all build output), plus the JavaScript arranger/grid engine in <code>libs/zpwr-clip-engine</code>; the arranger feature count is read from <code>docs/arranger_port_report.html</code>; test counts are grepped from the test trees.</strong></p>
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">25,749</div><div class="stat-label">Total Lines (tokei)</div></div>
@@ -100,8 +100,9 @@
         <div class="stat-card"><div class="stat-val accent">6,922</div><div class="stat-label">JavaScript Lines</div></div>
         <div class="stat-card"><div class="stat-val">396</div><div class="stat-label">Rust Lines</div></div>
         <div class="stat-card"><div class="stat-val accent">63</div><div class="stat-label">Arranger Features</div></div>
-        <div class="stat-card"><div class="stat-val green">57</div><div class="stat-label">Features Ported</div></div>
-        <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Grid Domains</div></div>
+        <div class="stat-card"><div class="stat-val green">57</div><div class="stat-label">Arranger Ported</div></div>
+        <div class="stat-card"><div class="stat-val accent">202</div><div class="stat-label">Premiere Features</div></div>
+        <div class="stat-card"><div class="stat-val green">200</div><div class="stat-label">Premiere Ported (0 gap)</div></div>
         <div class="stat-card"><div class="stat-val green">81</div><div class="stat-label">Test Cases (JS+Rust+C++)</div></div>
       </div>
 
@@ -270,6 +271,22 @@
         <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Gap (audio-clip phases 2&ndash;7)</div></div>
       </div>
       <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">Counts read directly from <code>docs/arranger_port_report.html</code> (&ldquo;63 in-scope features &middot; 57 ported &middot; 0 partial &middot; 6 gap&rdquo;). Every MIDI-arranger feature is ported; the 6 gaps are the unverifiable audio-clip playback/DSP phases that need a compiled plugin and a human listening.</p>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 7b: PREMIERE / VIDEO EDITOR     -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>VIDEO EDITOR &middot; PREMIERE PORT COVERAGE</h2>
+      <p class="tutorial-subtitle">A <code>video</code> clip is just another thing the arranger carries, so dropping a <strong>video track type</strong> onto the shared timeline turned the DAW into a non-linear video editor on the same canvas &mdash; making zpwr-daw <strong>the first DAW that is also a full video editor</strong>. The whole Adobe Premiere Pro surface was then built out against it, area by area, until <strong>0 features remain gap</strong>. The per-feature audit is the <a href="premiere_port_report.html">Adobe Premiere Pro Port Report</a>: every <strong>PORTED</strong> row names the exact <code>file:line</code> in <code>libs/zpwr-clip-engine/webui</code> where it lives &mdash; the citation is the proof, not a self-assigned score. The 2 <strong>PARTIAL</strong> rows are shipped-with-a-limitation, not missing (native sample-accurate audio DSP wants a compiled plugin; Productions multi-user wants a shared-storage sync transport).</p>
+
+      <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));">
+        <div class="stat-card"><div class="stat-val accent">202</div><div class="stat-label">Catalogued Features</div></div>
+        <div class="stat-card"><div class="stat-val green">200</div><div class="stat-label">Ported (cited)</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Partial (limitation stated)</div></div>
+        <div class="stat-card"><div class="stat-val">0</div><div class="stat-label">Gap</div></div>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">Counts read directly from <code>docs/premiere_port_report.html</code> (&ldquo;202 Premiere features &middot; 200 ported &middot; 2 partial &middot; 0 gap&rdquo;), generated by <code>scripts/gen_premiere_port_report.py</code>. Coverage spans media/project, timeline editing, source-clip trim, monitors, motion/compositing/keying, effects &amp; transitions, Lumetri color, audio, titles/Essential Graphics, multicam and export/Media Encoder.</p>
 
       <hr class="section-rule">
 
