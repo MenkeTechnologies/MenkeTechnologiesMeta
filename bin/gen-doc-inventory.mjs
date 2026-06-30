@@ -6,7 +6,7 @@
 // the live GitHub Pages deployment. Derived at run time. From repo root:
 //   node bin/gen-doc-inventory.mjs
 import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname, normalize } from 'node:path';
 const DOCS = 'docs', SELF = 'inventory.html';
 const BASE = 'https://menketechnologies.github.io/MenkeTechnologiesMeta/';
 function walk(dir){const o=[];for(const e of readdirSync(dir)){const p=join(dir,e);if(statSync(p).isDirectory())o.push(...walk(p));else if(e.endsWith('.html'))o.push(p);}return o;}
@@ -26,13 +26,18 @@ function analyze(rel){
   const tutHeader = /class="tutorial-header"/.test(h);
   const tutCss = /tutorial\.css/.test(h) || /\.tutorial-header/.test(h);
   const headerNav = /<a [^>]*href=/.test(hdr);
+  // every relative href/src to a local .html/.css/.js must resolve (no 404s / missing links)
+  const refs = [...new Set([...h.matchAll(/(?:href|src)="([^"#]+\.(?:html|css|js))"/g)].map(m => m[1]))]
+    .filter(x => !/^(https?:|\/\/|data:|mailto:)/.test(x));
+  const broken = refs.filter(r => { try { statSync(join(DOCS, normalize(join(dirname(rel), r)))); return false; } catch { return true; } });
   const issues = [];
   if (!hudStatic) issues.push('no hud-static.css');
   if (!hudTheme) issues.push('no hud-theme.js (no color schemes)');
   if (!hasHeader) issues.push('no header');
   else if (tutHeader && !tutCss) issues.push('unstyled header (no tutorial.css)');
   if (hasHeader && !headerNav) issues.push('header has no nav links (dead-end)');
-  return { rel, title, hudStatic, hudTheme, hasHeader, headerNav, ok: issues.length === 0, issues };
+  if (broken.length) issues.push('missing links: ' + broken.join(', '));
+  return { rel, title, hudStatic, hudTheme, hasHeader, headerNav, links: refs.length, broken: broken.length, ok: issues.length === 0, issues };
 }
 const meta = hud.map(analyze), fakes = meta.filter(m => !m.ok);
 const groups = {};
@@ -45,7 +50,7 @@ const sections = names.map(g => {
   const api = apiByGroup[g], apiHref = apiIndexByGroup[g];
   const items = pages.map(m => {
     const badge = m.ok ? '<span class="badge badge-ok">OK</span>' : `<span class="badge badge-bad" title="${esc(m.issues.join('; '))}">FAKE</span>`;
-    const flags = `<span class="flags">CSS ${m.hudStatic?yes:no} JS ${m.hudTheme?yes:no} HDR ${m.hasHeader?yes:no} NAV ${m.headerNav?yes:no}</span>`;
+    const flags = `<span class="flags">CSS ${m.hudStatic?yes:no} JS ${m.hudTheme?yes:no} HDR ${m.hasHeader?yes:no} NAV ${m.headerNav?yes:no} LINKS ${m.broken===0?yes:no}</span>`;
     const note = m.ok ? '' : `<span class="issue">${esc(m.issues.join(' · '))}</span>`;
     return `        <li>${badge} <a href="${esc(deployed(m.rel))}"${ext}>${esc(m.title)}</a> ${flags}<span class="inv-path">${esc(m.rel)}</span>${note}</li>`;
   }).join('\n');
@@ -54,7 +59,7 @@ const sections = names.map(g => {
 }).join('\n');
 const auditBlock = fakes.length
   ? `      <section class="inv-audit inv-audit-bad">\n    <h2 class="inv-group-title">⚠ Fake / unsynced doc pages <span class="inv-count">${fakes.length}</span></h2>\n    <ul class="inv-list">\n${fakes.map(m=>`        <li><span class="badge badge-bad">FAKE</span> <a href="${esc(deployed(m.rel))}"${ext}>${esc(m.rel)}</a> <span class="issue">${esc(m.issues.join(' · '))}</span></li>`).join('\n')}\n    </ul>\n  </section>`
-  : `      <section class="inv-audit inv-audit-ok">\n    <h2 class="inv-group-title">✓ Chrome sync: all ${meta.length} pages wired to shared hud-static.css + hud-theme.js + styled header + nav links</h2>\n  </section>`;
+  : `      <section class="inv-audit inv-audit-ok">\n    <h2 class="inv-group-title">✓ Chrome sync: all ${meta.length} pages wired to shared hud-static.css + hud-theme.js + styled header + nav links + zero broken links</h2>\n  </section>`;
 const nav = (label, rel) => `          <a href="${esc(deployed(rel))}"${ext}>${label}</a>`;
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -125,7 +130,7 @@ ${nav('Invention ledger','inventions.html')}
     </div>
   </header>
   <main class="tutorial-main">
-    <p class="inv-summary">// ${meta.length} pages · ${meta.filter(m=>m.ok).length} synced · ${fakes.length} fake · ${totalApi} API — CSS=hud-static.css · JS=hud-theme.js (8 schemes) · HDR=styled header · NAV=header nav links · every link live</p>
+    <p class="inv-summary">// ${meta.length} pages · ${meta.filter(m=>m.ok).length} synced · ${fakes.length} fake · ${totalApi} API — CSS=hud-static.css · JS=hud-theme.js (8 schemes) · HDR=styled header · NAV=header nav links · LINKS=no broken links · every link live</p>
 ${auditBlock}
     <div class="inv-grid">
 ${sections}
