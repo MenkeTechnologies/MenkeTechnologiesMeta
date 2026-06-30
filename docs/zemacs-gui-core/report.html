@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zemacs-gui-core engineering report — webui layout, the GUI action map, the PTY-bridge protocol, the zgui-core widget inventory, and test status for the embeddable GUI surface behind zemacs-gui.">
+  <title>zemacs-gui-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    table.reg { width: 100%; border-collapse: collapse; margin: 8px 0 18px; font-size: 12.5px; }
+    table.reg th, table.reg td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; vertical-align: top; }
+    table.reg th { font-family: 'Orbitron', sans-serif; color: var(--cyan); letter-spacing: 0.5px; }
+    table.reg td { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZEMACS-GUI-CORE // ENGINEERING REPORT</h1>
+          <div class="docs-sub">// webui layout · action map · PTY-bridge protocol · widget inventory · test status</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="index.html">Home</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zemacs-gui-core">Source</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="lede">zemacs-gui-core ships the embeddable webview GUI surface for <strong>zemacs-gui</strong>: the MacVim-style menu/dialog/shortcut layer that drives the <code>zemacs</code> CLI editor (a Helix fork) through its embedded PTY. It is webui-only — no Rust crate, no IPC of its own — so the standalone app and any embedding host serve identical assets.</p>
+
+      <h2 class="reg-h">webui layout</h2>
+      <table class="reg">
+        <tr><th>File</th><th>Role</th></tr>
+        <tr><td>webui/menu.js</td><td><code>window.ZemacsMenu</code> — <code>mount(shell)</code> builds the menu bar + ⌘-shortcuts + dialogs + drag-drop; <code>settingsExtra(panel)</code> adds the editor language picker + toggles to the host's settings panel.</td></tr>
+        <tr><td>webui/zemacs.css</td><td>Styles for the menu surface (layout only; colours/fonts come from zgui-core tokens).</td></tr>
+        <tr><td>webui/menu.test.cjs</td><td>Headless <code>node --test</code> of the menu→PTY bridge (loads menu.js in a VM context; no DOM).</td></tr>
+      </table>
+
+      <h2 class="reg-h">Action map → PTY</h2>
+      <p class="lede">Every menu item, ⌘-shortcut and dialog action is bridged to the editor by writing bytes into the PTY. Esc is sent on its own and the rest follows after a short delay (longer than the editor's esc-disambiguation window), so the editor treats Esc as a discrete keypress rather than parsing <code>ESC&lt;byte&gt;</code> as <code>Alt+&lt;byte&gt;</code>.</p>
+      <pre class="code">// run an ex-command from any mode: Esc -> :cmd -> Enter
+afterEsc(":w\r");        // Save
+afterEsc(":q\r");        // Quit
+ptyWrite("\x13");        // raw control byte for a keymap-bound action</pre>
+
+      <h2 class="reg-h">zgui-core widget inventory</h2>
+      <table class="reg">
+        <tr><th>Surface</th><th>Widget</th></tr>
+        <tr><td>Menu bar / context menu</td><td><code>ZGui.menubar</code> + <code>ZGui.contextMenu</code></td></tr>
+        <tr><td>Open / Save-As / Help</td><td><code>ZGui.modal</code> + <code>ZGui.tree</code> (file browser) / <code>ZGui.modal.prompt</code></td></tr>
+        <tr><td>Drag-and-drop files</td><td><code>ZGui.fileDrag.initDrop</code></td></tr>
+      </table>
+
+      <h2 class="reg-h">Verification</h2>
+      <p class="lede"><code>node --test webui/menu.test.cjs</code> exercises the menu→PTY bridge headlessly (19 tests). It is wired into zemacs-gui's <code>test:js</code> / <code>scripts/test.sh</code> so the single source is tested in place.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zemacs-gui-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

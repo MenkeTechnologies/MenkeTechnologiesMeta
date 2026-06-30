@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zphoto — Adobe Photoshop + Illustrator port report. One Rust engine (zphoto-core): ~367 raster commands (Photoshop/GIMP port, 8/16/32-bit) + 32 vector commands (Illustrator port) sharing the raster layer stack. 438 tests.">
+  <title>zphoto &mdash; Photoshop + Illustrator Port Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace;color:var(--cyan); }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .st-ok { color:#39ff14;font-weight:700; } .st-wip { color:#ffb800;font-weight:700; } .st-todo { color:var(--text-muted);font-weight:700; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card.todo { border-left-color:var(--text-muted); }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card.todo h4 { color:var(--text-muted); }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPHOTO &mdash; PHOTOSHOP + ILLUSTRATOR PORT REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Port Report</span>
+            <span class="sep">/</span>
+            <a href="PORT_CHECKLIST.md">Photoshop Checklist</a>
+            <span class="sep">/</span>
+            <a href="VECTOR_CHECKLIST.md">Illustrator Checklist</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zphoto" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            One Rust engine (<code>zphoto-core</code>) &middot; raster editor (Photoshop/GIMP port) + vector mode (Illustrator port) &middot; vectors render into the same raster layer stack &middot; source-derived at <code>ed64c3919e</code>
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 1: EXECUTIVE SUMMARY            -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">zphoto is a single Rust engine that ports two Adobe products into one command surface. The <strong>raster</strong> side is a Photoshop / GIMP port &mdash; layers, masks, blend modes, smart objects, ~367 commands across 17 groups, with an 8/16/32-bit (f32 working-space) pixel pipeline. The <strong>vector</strong> side is an Adobe Illustrator port &mdash; Bézier paths, gradients, patterns, Pathfinder, type, masks and SVG round-trip, exposed through 32 <code>vec.*</code> commands &mdash; that rasterizes <em>into the raster layer stack</em>, so layer opacity, blend modes, masks, filters and PSD save all apply to vector artwork for free. Every number below is grepped from source, not estimated.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">~367</div><div class="stat-label">Raster Commands</div></div>
+        <div class="stat-card"><div class="stat-val accent">32</div><div class="stat-label">Vector Commands</div></div>
+        <div class="stat-card"><div class="stat-val green">438</div><div class="stat-label">Tests Passing</div></div>
+        <div class="stat-card"><div class="stat-val">8 / 16 / 32</div><div class="stat-label">Bit Depth (f32 core)</div></div>
+        <div class="stat-card"><div class="stat-val">295</div><div class="stat-label">Photoshop Features ✅</div></div>
+        <div class="stat-card"><div class="stat-val accent">46</div><div class="stat-label">Illustrator Features ✅</div></div>
+        <div class="stat-card"><div class="stat-val">3,730</div><div class="stat-label">Vector Engine LOC</div></div>
+        <div class="stat-card"><div class="stat-val">17</div><div class="stat-label">Raster Command Groups</div></div>
+      </div>
+
+      <div style="margin:1.2rem 0;">
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Photoshop port &mdash; PORT_CHECKLIST.md (302 features)</p>
+        <div class="bar-wrap" style="height:24px;">
+          <div class="bar-fill green" style="width:97.7%;"></div>
+          <span class="bar-pct" style="font-size:12px;">295 ✅ &middot; 3 🚧 &middot; 4 ⬜ &mdash; 97.7%</span>
+        </div>
+      </div>
+      <div style="margin:1.2rem 0;">
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Illustrator port &mdash; VECTOR_CHECKLIST.md (66 features)</p>
+        <div class="bar-wrap" style="height:24px;">
+          <div class="bar-fill cyan" style="width:77.3%;"></div>
+          <span class="bar-pct" style="font-size:12px;">46 ✅ &middot; 5 🚧 &middot; 15 ⬜ &mdash; 69.7% done / 77.3% incl. partial</span>
+        </div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 2: RASTER (PHOTOSHOP)           -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">01</span>RASTER ENGINE &mdash; PHOTOSHOP / GIMP PORT</h2>
+      <p class="tutorial-subtitle">Unique <code>group.verb</code> dispatch arms grepped from <code>zphoto-core/src/lib.rs</code>. The feature matrix in <code>PORT_CHECKLIST.md</code> stands at 295 ✅ / 3 🚧 / 4 ⬜.</p>
+      <table class="file-table">
+        <thead><tr><th>Group</th><th class="num">Cmds</th><th>Area</th></tr></thead>
+        <tbody>
+          <tr><td>filter.*</td><td class="num">120</td><td>Blur / sharpen / noise / distort / stylize neighbourhood filters</td></tr>
+          <tr><td>layer.*</td><td class="num">64</td><td>Layers, masks, blend modes, smart objects, groups, layer styles</td></tr>
+          <tr><td>op.*</td><td class="num">59</td><td>Point ops &mdash; curves, levels, hue/sat, exposure, adjustments</td></tr>
+          <tr><td>image.*</td><td class="num">31</td><td>New/open/save, mode &amp; bit-depth convert, resize, crop, transform</td></tr>
+          <tr><td>select.*</td><td class="num">26</td><td>Marquee, lasso, magic wand, refine, feather, grow/shrink</td></tr>
+          <tr><td>paint.*</td><td class="num">20</td><td>Brush, pencil, eraser, clone, smudge, dodge/burn, gradient</td></tr>
+          <tr><td>fill.*</td><td class="num">10</td><td>Bucket, pattern, gradient, content-aware, fill layers</td></tr>
+          <tr><td>action.*</td><td class="num">7</td><td>Actions panel &mdash; record / replay macros</td></tr>
+          <tr><td>path.*</td><td class="num">5</td><td>Pen paths, path &harr; selection, stroke path</td></tr>
+          <tr><td>channel / comp / brush / sampler / note / edit / pattern / project</td><td class="num">29</td><td>Spot channels, layer comps, brush presets, colour samplers, notes, fade, define pattern, native save/load</td></tr>
+          <tr class="total-row"><td>17 groups</td><td class="num">~367</td><td>Raster command surface (excludes the 32 <code>vec.*</code> below)</td></tr>
+        </tbody>
+      </table>
+      <p class="tutorial-subtitle" style="margin-top:0.6rem;">Precision: pixels carry an 8/16/32-bit depth over an f32 working space; <code>image.convert</code> changes depth; 16-bit PSD encode/decode round-trips. <span class="st-wip">Remaining</span>: a few advanced filters / niche adjustments (🚧/⬜); 32-bit PSD currently folds to 16-bit on save; native-project pixels persist at 8-bit (depth tag preserved).</p>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 3: VECTOR (ILLUSTRATOR)         -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">02</span>VECTOR ENGINE &mdash; ILLUSTRATOR PORT</h2>
+      <p class="tutorial-subtitle">32 <code>vec.*</code> commands &middot; <code>src/vector.rs</code> 3,730 LOC &middot; f64 geometry, anti-aliased rasterizer (4&times; vertical SSAA + analytic horizontal span coverage), non-zero &amp; even-odd fill rules.</p>
+      <table class="file-table">
+        <thead><tr><th>Area</th><th class="num">Status</th><th>What's implemented</th></tr></thead>
+        <tbody>
+          <tr><td>Document / artboards</td><td class="num st-ok">✅</td><td>New, layers, <strong>multiple artboards</strong> + per-artboard render (<code>vec.artboard.add</code>)</td></tr>
+          <tr><td>Drawing</td><td class="num st-ok">✅</td><td>Rect/round-rect, ellipse, polygon, star, line, pen (Bézier), pencil, compound paths</td></tr>
+          <tr><td>Fill</td><td class="num st-ok">✅</td><td>Solid, non-zero/even-odd, <strong>linear/radial gradients</strong>, <strong>pattern swatches</strong></td></tr>
+          <tr><td>Stroke</td><td class="num st-ok">✅</td><td>Width/colour, caps, dashes, gradient stroke, <strong>arrowheads</strong> &middot; miter/bevel join round-approx (🚧)</td></tr>
+          <tr><td>Transform / arrange</td><td class="num st-ok">✅</td><td>Move/scale/rotate/shear/matrix, <strong>reflect</strong>, group/ungroup, z-order, <strong>align/distribute</strong></td></tr>
+          <tr><td>Pathfinder</td><td class="num st-ok">✅</td><td>Unite / Intersect / Minus / Exclude, <strong>Outline Stroke</strong>, <strong>Offset Path</strong></td></tr>
+          <tr><td>Type</td><td class="num st-ok">✅</td><td>Point type, type-on-path, <strong>Create Outlines</strong> &middot; area type ⬜, rotation/shear 🚧</td></tr>
+          <tr><td>Masks / blend</td><td class="num st-ok">✅</td><td><strong>Clipping mask</strong>, <strong>opacity mask</strong>, <strong>45 per-object blend modes</strong></td></tr>
+          <tr><td>File I/O</td><td class="num st-ok">✅</td><td><strong>SVG import + export (full round-trip)</strong>, raster export, <strong>Image Trace</strong></td></tr>
+          <tr class="total-row"><td>66 features</td><td class="num">46 ✅</td><td>5 🚧 in progress &middot; 15 ⬜ remaining</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 4: REMAINING                    -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">03</span>REMAINING &mdash; ILLUSTRATOR ROADMAP</h2>
+      <p class="tutorial-subtitle">The ⬜ / 🚧 items left in <code>VECTOR_CHECKLIST.md</code>.</p>
+      <div class="feature-grid">
+        <div class="feature-card todo"><h4>AI / PDF Import</h4><p>Open <code>.ai</code> (a PDF container) by parsing content-stream path/fill ops via the <code>zpdf-core</code> engine. The headline remaining "open files" path.</p></div>
+        <div class="feature-card todo"><h4>Gradient Mesh</h4><p>Per-vertex coloured mesh fills &mdash; the one gradient mode beyond linear/radial.</p></div>
+        <div class="feature-card todo"><h4>Symbols / Instances</h4><p>Define a reusable symbol once, place many live-linked instances.</p></div>
+        <div class="feature-card todo"><h4>Variable-Width Strokes</h4><p>Width-tool profiles that taper along the path.</p></div>
+        <div class="feature-card todo"><h4>Pathfinder Divide / Trim</h4><p>Split overlapping shapes into all constituent regions (beyond the four shape-mode booleans).</p></div>
+        <div class="feature-card todo"><h4>Area Type</h4><p>Text that wraps inside a shape (point type + type-on-path already ship).</p></div>
+        <div class="feature-card todo"><h4>PDF / EPS Export</h4><p>Vector export beyond SVG.</p></div>
+        <div class="feature-card todo"><h4>Effects via Rasterize</h4><p>Drop shadow / warp / distort by routing rasterized vector output through the raster <code>filter.*</code> surface.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 5: DESIGN                       -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">?</span>KEY DESIGN DECISIONS</h2>
+      <p class="tutorial-subtitle">Why the two ports share one engine.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Vectors Render Into Raster Layers</h4><p><code>vec.render</code> rasterizes each vector layer into a raster <code>Layer</code>, so the existing compositor &mdash; opacity, 45 blend modes, masks, filters, PSD/project save &mdash; applies to vector artwork with zero new code.</p></div>
+        <div class="feature-card"><h4>One Command Surface</h4><p>Both engines dispatch through <code>Engine::invoke(cmd, args)</code>. Raster is <code>image.* / layer.* / op.* / filter.* / …</code>; vector is <code>vec.*</code>. Hosts (Tauri, JUCE WebView, headless tests) talk to one transport.</p></div>
+        <div class="feature-card"><h4>f64 Geometry, f32 Pixels</h4><p>Vector geometry is resolution-independent <code>f64</code>; the raster pipeline computes in an <code>f32</code> working space and quantizes to the document's 8/16/32-bit grid per command.</p></div>
+        <div class="feature-card"><h4>Region-Trace Operators</h4><p>Pathfinder, Offset Path, Outline Stroke, Create Outlines and Image Trace all reuse one mask &rarr; boundary-trace pipeline &mdash; exact for axis-aligned shapes, supersampled for curves.</p></div>
+        <div class="feature-card"><h4>SVG as Interchange</h4><p>SVG export and import round-trip paths, shapes, gradients and text. AI files (PDF containers) route through <code>zpdf-core</code>.</p></div>
+        <div class="feature-card"><h4>Reused Glyph Rasterizer</h4><p>Vector type renders through the same bundled-font <code>text</code> module the raster engine uses &mdash; no duplicate glyph code, and Create Outlines just traces its output.</p></div>
+      </div>
+
+    </main>
+
+    <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      ZPHOTO PORT REPORT &middot; ~367 RASTER COMMANDS &middot; 32 VECTOR COMMANDS &middot; 8/16/32-BIT &middot; 295 PHOTOSHOP &middot; 46 ILLUSTRATOR FEATURES &middot; 438 TESTS &middot; SOURCE-DERIVED @ ed64c3919e &middot; MENKETECHNOLOGIES
+    </footer>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const btnTheme = document.getElementById('btnTheme');
+    const btnCrt = document.getElementById('btnCrt');
+    const btnNeon = document.getElementById('btnNeon');
+    const crtH = document.getElementById('crtH');
+    const crtV = document.getElementById('crtV');
+    btnTheme?.addEventListener('click', () => {
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+    btnCrt?.addEventListener('click', () => {
+      btnCrt.classList.toggle('active');
+      const on = btnCrt.classList.contains('active');
+      if (crtH) crtH.style.display = on ? '' : 'none';
+      if (crtV) crtV.style.display = on ? '' : 'none';
+    });
+    btnNeon?.addEventListener('click', () => {
+      btnNeon.classList.toggle('active');
+      document.querySelector('.app')?.classList.toggle('neon-off');
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => { requestAnimationFrame(() => { bar.style.width = w; }); });
+      });
+    });
+  </script>
+</body>
+</html>

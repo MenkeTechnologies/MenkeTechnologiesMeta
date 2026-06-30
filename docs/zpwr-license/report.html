@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-license engineering report — Ed25519 type-tagged signed envelopes, the two-key activation design, offline-first verification, and the honest limits of client-side licensing.">
+  <title>zpwr-license — Engineering report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl th, .example-tbl td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; text-align: left; }
+    .example-tbl th { color: var(--cyan); font-family: 'Orbitron', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .example-tbl td:first-child { white-space: nowrap; color: var(--accent); font-family: 'Share Tech Mono', ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <div class="tutorial-wrap">
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <h1 class="tutorial-brand">// ZPWR-LICENSE &mdash; ENGINEERING REPORT</h1>
+        <nav class="tutorial-nav">
+          <a href="index.html">Documentation</a>
+          <a href="https://github.com/MenkeTechnologies/zpwr-license" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <section>
+        <h2>Signed envelopes</h2>
+        <p>
+          Every token is a typed, Ed25519-signed envelope:
+          <code>&lt;typ&gt;.&lt;base64url(payload)&gt;.&lt;base64url(signature)&gt;</code>.
+          The signature is computed over <code>"&lt;typ&gt;.&lt;payload&gt;"</code>,
+          so the type tag is part of the signed bytes. A <code>license</code>
+          token therefore cannot be replayed where an <code>entitlement</code> is
+          expected even though both verify under related keys — type confusion is
+          rejected by construction, and pinned by a unit test.
+        </p>
+      </section>
+
+      <section>
+        <h2>Why keygens are impossible (and cracks are not)</h2>
+        <p>
+          Verification uses an asymmetric public key embedded in the product. A
+          keygen would need the private key, which never leaves the issuer
+          machine — there is no symmetric secret in the binary to recover, so no
+          valid generator can exist. That is a cryptographic guarantee. Patching
+          the binary to bypass verification is a different attack the crypto
+          cannot address: whoever controls the binary can NOP the check. The
+          report does not pretend otherwise. The mitigation is to make the
+          valuable payload live server-side, delivered on activation, so a
+          patched client runs hollow.
+        </p>
+      </section>
+
+      <section>
+        <h2>Two-key activation</h2>
+        <p>
+          The issuer key signs licenses and stays offline. The activation server
+          holds a separate entitlement signing key and the license public key.
+          On <code>POST /activate</code> it verifies the license with the public
+          key, enforces revocation and the seat count, binds the machine
+          fingerprint, and returns a short-lived entitlement signed with the
+          entitlement key. A full server compromise leaks only that key — capable
+          of minting expiring, machine-bound entitlements, never licenses. The
+          flow is pinned end to end by an integration test.
+        </p>
+      </section>
+
+      <section>
+        <h2>Offline-first runtime</h2>
+        <p>
+          The client verifies the cached entitlement offline on every launch and
+          honors a grace window past expiry, so a server outage degrades
+          gracefully instead of locking out paying customers. Revocation rides a
+          signed CRL that can be served as a static file — no live server
+          required. The whole system runs at <code>$0</code> in pure-offline mode
+          (issuer keys + static CRL); the activation server is an opt-in layer
+          that adds seat-locking and kill-switch without changing the token
+          format.
+        </p>
+      </section>
+
+      <section>
+        <h2>Envelope construction in detail</h2>
+        <p>
+          Signing serializes the payload to JSON, base64url-encodes it (no
+          padding), and forms <code>signed = "&lt;typ&gt;.&lt;payload_b64&gt;"</code>.
+          Ed25519 signs the UTF-8 bytes of <code>signed</code>; the signature is
+          base64url-encoded and appended:
+          <code>&lt;typ&gt;.&lt;payload_b64&gt;.&lt;sig_b64&gt;</code>. Verification
+          splits on <code>.</code> into exactly three parts, rejects a
+          <code>typ</code> mismatch <em>before</em> touching crypto, decodes the
+          64-byte signature, re-derives <code>signed</code>, and runs
+          <code>VerifyingKey::verify</code> over it. Only after the signature
+          passes is the payload base64-decoded and deserialized — so malformed or
+          forged input never reaches the JSON parser as trusted data.
+        </p>
+      </section>
+
+      <section>
+        <h2>Type tags and the five token kinds</h2>
+        <p>
+          Each token carries one of five reserved <code>typ</code> tags —
+          <code>license</code>, <code>entitlement</code>, <code>crl</code>,
+          <code>unblock</code>, <code>manifest</code> — and the tag is part of the
+          signed message. This blocks cross-type replay for every pair, not just
+          license/entitlement: an <code>unblock</code> token, for instance, cannot
+          be presented where a <code>license</code> is expected even under the same
+          key, and the unit tests pin both the type-confusion rejection and the
+          unblock-is-issuer-signed property.
+        </p>
+        <table class="example-tbl">
+          <tr><th>Type</th><th>Signer</th><th>Lifetime</th><th>Distribution</th></tr>
+          <tr><td>license</td><td>issuer (offline private key)</td><td>perpetual or <code>expires</code></td><td>emailed to the buyer</td></tr>
+          <tr><td>entitlement</td><td>activation server (entitlement key)</td><td>short (TTL, default 30d) + grace window</td><td>returned on activation, cached</td></tr>
+          <tr><td>crl</td><td>issuer</td><td>re-signed on each change</td><td>static file</td></tr>
+          <tr><td>unblock</td><td>issuer</td><td>one-shot</td><td>emailed for false-positive recovery</td></tr>
+          <tr><td>manifest</td><td>issuer</td><td>newest wins (anti-replay)</td><td>static file</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>Offline node-locking &amp; fingerprints</h2>
+        <p>
+          The fingerprint stored in a license is
+          <code>base64url(SHA-256(salt ":" raw_id))</code>, salted by the product
+          name. The raw hardware id therefore never travels in the license and is
+          not recoverable from it; the same raw id under a different product salt
+          produces a different hash, so a fingerprint from one product cannot be
+          reused against another. The raw id itself is the real hardware identity
+          per platform — macOS <code>IOPlatformUUID</code> read via direct
+          IOKit/CoreFoundation FFI (no <code>ioreg</code> subprocess that could be
+          shadowed on <code>PATH</code>), Windows <code>MachineGuid</code> from the
+          registry, Linux <code>/etc/machine-id</code> — falling back to the
+          hostname only if the platform source is unavailable.
+        </p>
+      </section>
+
+      <section>
+        <h2>Anti-tamper as a cost layer</h2>
+        <p>
+          The report does not overstate this. Every anti-tamper check runs inside
+          the binary and is therefore patchable. The design choices that make it
+          a meaningful cost rather than theater: environmental signals
+          (<code>debugger_present</code>, <code>injection_detected</code>,
+          <code>env_suspicious</code>, <code>timing_anomaly</code>) are combined,
+          not decisive; the telltale string literals are XOR-obfuscated and the
+          C-ABI symbols are renamed (<code>zpwr_rt_*</code>) so static triage does
+          not flag the layer; and the strongest primitives turn detection into
+          <em>corruption</em> instead of a catchable failure. <code>binding_seed</code>
+          derives a value from the token's signature that only a valid license
+          reproduces; <code>guarded_seed</code> returns a deterministically-wrong
+          value under analysis. Woven into real computation, NOP-ing a boolean
+          gate is no longer enough — the attacker must forge an Ed25519 signature.
+          <code>tamper_tripwire</code> escalates to a durable, hashed,
+          multi-location blacklist, lifted only by a vendor-signed
+          <code>unblock</code>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Activation, seats, and floating licenses</h2>
+        <p>
+          On <code>POST /activate</code> the server verifies the license with the
+          public key, rejects expired or revoked licenses, then enforces seats by
+          mapping one license id to a bounded set of machine fingerprints (a new
+          fingerprint past the <code>seats</code> limit is refused). It returns an
+          entitlement signed with the separate entitlement key. The seat store is
+          a JSON file persisted on each change. The free-tier Cloudflare Worker
+          extends this with floating/concurrent licensing: <code>/checkout</code>
+          grabs a seat as a KV lease with a TTL, <code>/heartbeat</code> renews
+          it, <code>/checkin</code> releases it, and a crashed client's seat frees
+          automatically when its lease expires — so "N users at once" works
+          without zombie seats and without leaving the free tier.
+        </p>
+      </section>
+
+      <section>
+        <h2>Test coverage that pins the design</h2>
+        <p>
+          The invariants above are not aspirational; they are asserted by the unit
+          and integration tests in the workspace. Among them: license sign/verify
+          roundtrip, tampered-payload rejection, wrong-key rejection, type-confusion
+          rejection, key encode/decode roundtrip, salted-fingerprint determinism
+          and non-recoverability, node-lock binding to the right machine, signed
+          metadata claims roundtrip, keyring rotation (old + new keys both verify,
+          a stranger's does not), expiry/validity windows, the entitlement grace
+          window, CRL revocation + signing, the issuer-signed/typed unblock token,
+          dotted-version comparison, and manifest force-upgrade + anti-replay
+          freshness. The anti-tamper module separately pins the clock-rollback
+          check, deterministic token-specific binding seeds, the recheck cadence,
+          the hashed persistent blacklist (record / idempotency / clear), the
+          key-substitution self-test, and the self-signature roundtrip + tamper
+          detection.
+        </p>
+      </section>
+
+      <section>
+        <h2>Dependencies</h2>
+        <p>
+          A small, vendorable, durable set — no licensing SaaS client, and the
+          embedded core has no async runtime:
+        </p>
+        <table class="example-tbl">
+          <tr><th>Crate</th><th>Used for</th></tr>
+          <tr><td>ed25519-dalek</td><td>Ed25519 sign / verify (re-exported so downstream crates don't pin their own version).</td></tr>
+          <tr><td>getrandom</td><td>Key material + random license ids from the OS CSPRNG.</td></tr>
+          <tr><td>sha2</td><td>SHA-256 for fingerprints, binary self-hash, and blacklist hashing.</td></tr>
+          <tr><td>serde / serde_json</td><td>Token payload (de)serialization.</td></tr>
+          <tr><td>base64</td><td>base64url (no-pad) envelope + key encoding.</td></tr>
+          <tr><td>gethostname</td><td>Machine-id fallback when the platform hardware id is unavailable.</td></tr>
+          <tr><td>libc (macOS/Linux) · winreg (Windows)</td><td>Hardware id + anti-debug primitives (sysctl, ptrace, registry).</td></tr>
+          <tr><td>ureq (feature <code>online</code>)</td><td>Blocking pull of a signed CRL / manifest from a static host.</td></tr>
+          <tr><td>tiny_http · parking_lot</td><td>Synchronous activation server + seat-store locking (no tokio).</td></tr>
+        </table>
+        <p>See the <a href="index.html">documentation</a> for the full CLI, server, and embedding reference.</p>
+      </section>
+    </main>
+
+    <footer class="tutorial-footer">
+      <p>MIT &middot; MenkeTechnologies</p>
+    </footer>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

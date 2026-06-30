@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-license — offline-first software licensing. Ed25519-signed license keys, an issuer CLI, and an optional self-hosted activation server. Verification runs offline in the binary; no licensing SaaS, no mandatory phone-home.">
+  <title>zpwr-license — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl th, .example-tbl td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; text-align: left; }
+    .example-tbl th { color: var(--cyan); font-family: 'Orbitron', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .example-tbl td:first-child { white-space: nowrap; color: var(--accent); font-family: 'Share Tech Mono', ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <div class="tutorial-wrap">
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <h1 class="tutorial-brand">// ZPWR-LICENSE &mdash; OFFLINE-FIRST SOFTWARE LICENSING</h1>
+        <nav class="tutorial-nav">
+          <a href="report.html">Engineering report</a>
+          <a href="https://github.com/MenkeTechnologies/zpwr-license" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://menketechnologies.github.io/app-store/" target="_blank" rel="noopener noreferrer">app-store</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <section>
+        <h2>What it is</h2>
+        <p>
+          <code>zpwr-license</code> is self-hosted, vendor-agnostic licensing for
+          paid native apps and plugins. Ed25519-signed license keys are verified
+          <strong>offline inside the binary</strong>; an issuer CLI mints and
+          manages them; an optional activation server node-locks keys to machines
+          and enforces seats. No third-party licensing SaaS, no mandatory
+          phone-home, and it runs at <code>$0</code> in pure-offline mode.
+        </p>
+        <p>
+          The positioning is <strong>offline-first</strong>, not "biggest feature
+          list." The SaaS incumbents are online-first, so the wedge here is a
+          fully self-hosted, embeddable, zero-runtime-dependency licenser:
+          arbitrary signed claims/metadata, key rotation, per-product /
+          per-major-version keys, and both Rust and C/C++ embedding. The honest
+          limits below are part of the design, not hidden by it.
+        </p>
+        <ul>
+          <li>Version <code>0.1.0</code> · MIT · workspace of three Rust crates.</li>
+          <li>Crypto: Ed25519 (<code>ed25519-dalek</code>), SHA-256 fingerprints, base64url envelopes.</li>
+          <li>Offline core has no async runtime and no network; the online layer is opt-in behind a feature flag.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Threat model (honest)</h2>
+        <table class="example-tbl">
+          <tr><th>Threat</th><th>Stopped?</th><th>By what</th></tr>
+          <tr><td>Keygen</td><td>Yes, cryptographically</td><td>Ed25519 signatures. The binary embeds only the public key; forging a token needs the private key, which never ships. No symmetric secret to extract, so no valid generator can exist.</td></tr>
+          <tr><td>Key sharing</td><td>Yes, even offline</td><td>A license can be node-locked to a machine fingerprint at issue time (no server), or the activation server can bind + seat-limit it online.</td></tr>
+          <tr><td>Binary crack</td><td>No — not on client-side native code</td><td>Whoever controls the binary can NOP any check. Defeated only by server-gated value (content not in the binary) plus OS code-signing / notarization. The anti-tamper layer raises cost; it is not a guarantee.</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>Components</h2>
+        <table class="example-tbl">
+          <tr><th>Crate</th><th>Artifacts</th><th>Role</th></tr>
+          <tr><td>license-core</td><td>rlib + cdylib + staticlib</td><td>Ed25519 sign/verify of typed tokens, key codec, node-lock, anti-tamper, optional online pull client. Usable from Rust and from C/C++ via <code>include/zpwr_license.h</code> / <code>.hpp</code>. Offline, no async, unit-tested.</td></tr>
+          <tr><td>license-cli</td><td><code>zpwr-license</code></td><td>Issuer CLI — keygen, issue, verify, revoke, manifest, blacklist/unblock, anti-tamper helpers. Holds the private key; runs offline.</td></tr>
+          <tr><td>license-server</td><td><code>zpwr-license-server</code></td><td>Activation — node-lock, seat enforcement, signed entitlements, CRL. Synchronous <code>tiny_http</code>, no tokio.</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>Token model</h2>
+        <p>
+          A token is <code>&lt;typ&gt;.&lt;base64url(payload)&gt;.&lt;base64url(signature)&gt;</code>;
+          the signature covers <code>"&lt;typ&gt;.&lt;payload&gt;"</code>, so the
+          type tag is part of the signed bytes and a <code>license</code> can
+          never be replayed where an <code>entitlement</code> is expected. There
+          are five signed token types:
+        </p>
+        <table class="example-tbl">
+          <tr><th>typ</th><th>Issued by</th><th>Payload</th></tr>
+          <tr><td>license</td><td>issuer (offline)</td><td>id, product, major, customer, issued, optional expires/features/seats/fingerprint, arbitrary metadata. Verified inside the product binary.</td></tr>
+          <tr><td>entitlement</td><td>server</td><td>license_id, product, major, machine fingerprint, features, issued, expires. Machine-bound and short-lived (default 30 days); the client caches it, verifies offline each launch, and honors a grace window past expiry.</td></tr>
+          <tr><td>crl</td><td>issuer</td><td>issued, revoked[] — a signed revocation list publishable as a static file.</td></tr>
+          <tr><td>unblock</td><td>issuer</td><td>license_id, issued — the vendor's authorization to clear a tamper blacklist. Only a vendor-signed unblock can lift a blacklist.</td></tr>
+          <tr><td>manifest</td><td>issuer</td><td>issued, optional min_version, revoked[], disabled_features[], message — the <code>$0</code> remote-control channel.</td></tr>
+        </table>
+        <p>
+          <strong>Two-key design:</strong> the issuer key signs licenses and
+          stays offline; the server holds a separate entitlement key plus the
+          license public key. A server breach leaks only the entitlement key —
+          which mints short-lived, machine-bound entitlements, never licenses.
+        </p>
+      </section>
+
+      <section>
+        <h2>Mint a license (offline, no server)</h2>
+        <pre><code>cargo build --release
+
+./target/release/zpwr-license keygen --out issuer
+./target/release/zpwr-license issue \
+  --product audio-haxor --major 2 \
+  --customer buyer@example.com \
+  --features pro,vst3 --seats 3 \
+  --key issuer.key
+
+./target/release/zpwr-license verify --token "&lt;token&gt;" --pubkey issuer.pub</code></pre>
+        <p>That alone kills keygens and works air-gapped. The activation server is opt-in.</p>
+      </section>
+
+      <section>
+        <h2>Issuer CLI reference</h2>
+        <p>
+          <code>zpwr-license &lt;command&gt;</code>. The signing (private) key never
+          leaves the machine the CLI runs on. Every command runs offline; the
+          <code>fetch-*</code> commands pull a signed file over HTTP and verify
+          the signature before trusting a byte.
+        </p>
+        <table class="example-tbl">
+          <tr><th>Command</th><th>Key flags</th><th>Does</th></tr>
+          <tr><td>keygen</td><td><code>--out</code> (default <code>zpwr-license</code>)</td><td>Generate an Ed25519 keypair → <code>&lt;name&gt;.key</code> (private, <code>0600</code> on Unix) + <code>&lt;name&gt;.pub</code> (embed in products).</td></tr>
+          <tr><td>pubkey</td><td><code>--key</code></td><td>Derive and print the public key from a private key file.</td></tr>
+          <tr><td>issue</td><td><code>--product --major --customer [--expires-days --features --seats --id --fingerprint --meta KEY=VALUE] --key</code></td><td>Mint a signed license token to stdout. <code>--meta</code> is repeatable for arbitrary signed claims; <code>--fingerprint</code> node-locks the license offline.</td></tr>
+          <tr><td>verify</td><td><code>--token --pubkey [--fingerprint]</code></td><td>Verify a license, print its JSON, exit non-zero on failure. With <code>--fingerprint</code>, also enforce the node-lock against that raw machine id.</td></tr>
+          <tr><td>machine-id</td><td>—</td><td>Print this machine's raw hardware id for offline node-locking.</td></tr>
+          <tr><td>sign-binary</td><td><code>--file --key</code></td><td>Sign a release binary's SHA-256 so the product can self-verify integrity (<code>antitamper::verify_self</code>). Prints the base64url signature to embed.</td></tr>
+          <tr><td>tamper-scan</td><td>—</td><td>Run the local anti-tamper scan and print the JSON report.</td></tr>
+          <tr><td>blacklist</td><td><code>--id</code></td><td>Permanently blacklist a license id on this machine (tamper response).</td></tr>
+          <tr><td>blacklisted</td><td><code>--id</code></td><td>Check whether a license id is blacklisted on this machine; exits 0 if blacklisted, 1 if clean.</td></tr>
+          <tr><td>unblock</td><td><code>--id --key</code></td><td>Mint a signed unblock token (issuer side) to email a customer for false-positive recovery.</td></tr>
+          <tr><td>clear</td><td><code>--token --pubkey</code></td><td>Apply a signed unblock token on this machine: verify it and clear that id from the local blacklist.</td></tr>
+          <tr><td>fetch-crl</td><td><code>--url --pubkey</code></td><td>Pull + verify a signed CRL from a free static host and print the revoked ids.</td></tr>
+          <tr><td>manifest</td><td><code>[--min-version --revoke --disable --message --out] --key</code></td><td>Build + sign the <code>$0</code> remote-control manifest (default out <code>manifest.sig</code>).</td></tr>
+          <tr><td>fetch-manifest</td><td><code>--url --pubkey [--current-version]</code></td><td>Pull + verify a signed manifest; with <code>--current-version</code>, report whether an upgrade is forced.</td></tr>
+          <tr><td>revoke</td><td><code>[--store --add --out] --key</code></td><td>Add ids to the revocation list and emit a freshly signed CRL token. Plaintext <code>--store</code> (default <code>crl.json</code>) is the editable source of truth; signed <code>--out</code> (default <code>crl.sig</code>) is what you publish.</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>Offline node-locking</h2>
+        <p>
+          Bind a key to a machine with <strong>no server</strong> — the classic
+          machine-id → keyfile activation:
+        </p>
+        <ol>
+          <li>The customer runs <code>zpwr-license machine-id</code> (or your app shows it) and sends you the value.</li>
+          <li>You mint a license locked to it: <code>issue --fingerprint &lt;machine-id&gt;</code>.</li>
+          <li>The binary verifies the signature <em>and</em> that the bound fingerprint matches the current machine (<code>verify_license_locked</code> / <code>zpwr_license_verify_license_locked</code>).</li>
+        </ol>
+        <p>
+          The machine id is the real hardware identity — macOS
+          <code>IOPlatformUUID</code> (direct IOKit FFI, no <code>ioreg</code>
+          subprocess to shadow), Windows <code>MachineGuid</code>, Linux
+          <code>/etc/machine-id</code> — not a mutable hostname. It is stored
+          <strong>hashed</strong> (salted SHA-256, salt = product name), so the
+          customer's raw id never travels in cleartext or is recoverable from the
+          license.
+        </p>
+      </section>
+
+      <section>
+        <h2>Tamper detection (cost layer)</h2>
+        <p>
+          A cost layer, embedded via <code>license-core::antitamper</code>. Every
+          check runs inside the binary, so a determined attacker can patch any
+          single one out. Use many, from several code paths, and fail late and
+          subtly. This raises the cost and filters casual piracy; it is not a
+          guarantee. The hard defense remains server-gated value.
+        </p>
+        <table class="example-tbl">
+          <tr><th>Check</th><th>Detects</th></tr>
+          <tr><td>debugger_present()</td><td>An attached debugger (Linux <code>TracerPid</code>, macOS <code>P_TRACED</code> via sysctl).</td></tr>
+          <tr><td>injection_detected()</td><td><code>LD_PRELOAD</code> / <code>LD_AUDIT</code> / <code>DYLD_INSERT_LIBRARIES</code> library injection.</td></tr>
+          <tr><td>env_suspicious()</td><td>Loader/allocator debug env (<code>LD_DEBUG</code>, <code>DYLD_PRINT_*</code>, <code>MallocStackLogging</code>, …).</td></tr>
+          <tr><td>timing_anomaly()</td><td>A tight loop running far too slow — single-stepping.</td></tr>
+          <tr><td>verify_self(sig, vk)</td><td>On-disk patching of the shipped binary (Ed25519 over its hash; sign with <code>sign-binary</code>).</td></tr>
+          <tr><td>self_test(vk, token)</td><td>Public-key substitution — a baked-in known-good token stops verifying if the embedded key was swapped.</td></tr>
+          <tr><td>clock_rolled_back(last, now)</td><td>A clock rollback used to revive an expired entitlement.</td></tr>
+          <tr><td>arm_anti_debug()</td><td>Actively blocks debugger attach (macOS <code>PT_DENY_ATTACH</code>, Linux <code>PTRACE_TRACEME</code>). Call once, early.</td></tr>
+          <tr><td>binding_seed(token)</td><td>Woven check — a value only a valid license reproduces. Weave it into real computation so NOP-ing the gate isn't enough.</td></tr>
+          <tr><td>guarded_seed(token)</td><td>Tamper-coupled woven check — returns a <em>wrong</em> value under debugger/injection, so analysis silently corrupts results instead of raising a catchable failure.</td></tr>
+          <tr><td>should_recheck(last, now, interval)</td><td>Whether a periodic re-verification is due, so there is no single launch-time gate to neutralize.</td></tr>
+          <tr><td>tamper_tripwire(id)</td><td>Detect-and-brick — on any tamper signal, blacklists the license id permanently (hashed, to several durable locations) and returns true.</td></tr>
+          <tr><td>scan()</td><td>Runs the environmental checks and returns a <code>TamperReport</code>.</td></tr>
+        </table>
+        <p>
+          <strong>Obfuscation:</strong> the telltale string literals are
+          XOR-encoded and decoded at runtime, so <code>strings</code> on the
+          stripped release binary shows nothing that flags a license check. The
+          C-ABI exports are named innocuously — <code>zpwr_rt_state</code>
+          (debugger), <code>zpwr_rt_metrics</code> (scan),
+          <code>zpwr_rt_check</code> (key-substitution self-test) — so
+          <code>nm</code> doesn't advertise the anti-tamper layer either. This is
+          source-level obfuscation: it defeats casual static triage, not a
+          disassembler that reads the syscalls.
+        </p>
+        <p>
+          <strong>False-positive risk is real:</strong> a legitimate debugger
+          session can brick the license via <code>tamper_tripwire</code>, so
+          reserve it for high-value products and ship a support unblock path
+          (<code>unblock</code> → <code>clear</code>).
+        </p>
+      </section>
+
+      <section>
+        <h2>Activation server</h2>
+        <p>
+          <code>zpwr-license-server</code> is the opt-in stateful layer. It holds
+          the license <strong>public</strong> key and a separate entitlement
+          <strong>signing</strong> key — never the license private key — so a full
+          server compromise leaks only short-lived, machine-bound entitlements.
+        </p>
+        <pre><code>./target/release/zpwr-license keygen --out entitlement
+
+ZPWR_LICENSE_LICENSE_PUBKEY="$(cat issuer.pub)" \
+ZPWR_LICENSE_ENTITLEMENT_KEY="$(cat entitlement.key)" \
+./target/release/zpwr-license-server          # 127.0.0.1:8787
+
+curl -X POST localhost:8787/activate \
+  -d '{"token":"&lt;license token&gt;","fingerprint":"&lt;machine hash&gt;"}'
+# -&gt; { "entitlement": "&lt;entitlement token&gt;", "expires": &lt;unix&gt; }</code></pre>
+        <table class="example-tbl">
+          <tr><th>Endpoint</th><th>Does</th></tr>
+          <tr><td>GET /health</td><td><code>{"status":"ok"}</code></td></tr>
+          <tr><td>GET /crl</td><td>Serve the configured CRL (<code>issued</code> + <code>revoked</code>); 404 if none configured.</td></tr>
+          <tr><td>POST /activate</td><td>Verify the license, enforce expiry + revocation + the seat count, bind the fingerprint, return a signed entitlement.</td></tr>
+          <tr><td>POST /validate</td><td>Verify an entitlement and report revocation status.</td></tr>
+        </table>
+        <table class="example-tbl">
+          <tr><th>Env var</th><th>Default</th><th>Meaning</th></tr>
+          <tr><td>ZPWR_LICENSE_ADDR</td><td><code>127.0.0.1:8787</code></td><td>Listen address.</td></tr>
+          <tr><td>ZPWR_LICENSE_LICENSE_PUBKEY</td><td>required</td><td>base64url license public key.</td></tr>
+          <tr><td>ZPWR_LICENSE_ENTITLEMENT_KEY</td><td>required</td><td>base64url entitlement signing key.</td></tr>
+          <tr><td>ZPWR_LICENSE_SEATS_FILE</td><td><code>seats.json</code></td><td>Seat-store path.</td></tr>
+          <tr><td>ZPWR_LICENSE_CRL</td><td>—</td><td>Path to a signed CRL token (verified with the license pubkey).</td></tr>
+          <tr><td>ZPWR_LICENSE_TTL_DAYS</td><td><code>30</code></td><td>Entitlement lifetime.</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>Integrating a product</h2>
+        <p>
+          The core builds as an <strong>rlib</strong> (Rust), a
+          <strong>staticlib</strong> (<code>libzpwr_license.a</code>) and a
+          <strong>cdylib</strong> (<code>libzpwr_license.{dylib,so}</code>), so it
+          drops into both stacks.
+        </p>
+        <h3>Rust apps (Tauri backends)</h3>
+        <pre><code>use zpwr_license::{decode_verifying_key, verify_license_locked, machine_id, antitamper};
+
+const PUBKEY: &amp;str = "…base64url public key…"; // baked in, not secret
+
+let vk = decode_verifying_key(PUBKEY).unwrap();
+match verify_license_locked(&amp;token, &amp;vk, &amp;machine_id()) {
+    Ok(lic) =&gt; unlock(&amp;lic.features),
+    Err(_)  =&gt; run_free_tier(),
+}
+if antitamper::scan().any() { /* fail late + subtly */ }</code></pre>
+        <p>
+          Full example:
+          <a href="https://github.com/MenkeTechnologies/zpwr-license/blob/main/crates/license-core/examples/app_gate.rs" target="_blank" rel="noopener noreferrer"><code>crates/license-core/examples/app_gate.rs</code></a>.
+          Use <code>verify_license_any</code> / <code>verify_license_any_locked</code>
+          with a keyring of public keys to support <strong>key rotation</strong> —
+          the first key that validates wins, so old licenses keep verifying after
+          you issue under a new key.
+        </p>
+        <h3>C++ plugins (JUCE)</h3>
+        <pre><code>#include "zpwr_license.hpp"
+static const char* kPubKey = "…base64url public key…";   // baked in, not secret
+
+if (!zpwr::license::ok(token, kPubKey, zpwr::license::machine_id()))
+    runFreeTier();                                        // node-locked, offline
+if (zpwr::license::tamper::debugger()) { /* fail late */ }</code></pre>
+        <pre><code>target_include_directories(MyPlugin PRIVATE ${ZPWR}/include)
+target_link_libraries(MyPlugin PRIVATE ${ZPWR}/target/release/libzpwr_license.a)
+# macOS: also -framework IOKit -framework CoreFoundation -framework Security
+# Linux: pthread dl m</code></pre>
+        <p>
+          The raw C ABI (<code>include/zpwr_license.h</code>) exposes
+          <code>zpwr_license_ok</code>,
+          <code>zpwr_license_verify_license[_locked]</code>,
+          <code>zpwr_license_machine_id</code>,
+          <code>zpwr_license_verify_manifest</code>,
+          <code>zpwr_license_unblock</code>,
+          <code>zpwr_license_free_cstring</code>, and the innocuously named
+          anti-tamper calls <code>zpwr_rt_state</code> / <code>zpwr_rt_metrics</code>
+          / <code>zpwr_rt_check</code> / <code>zpwr_rt_arm</code> /
+          <code>zpwr_rt_seed</code> / <code>zpwr_rt_gseed</code> /
+          <code>zpwr_rt_tripwire</code> / <code>zpwr_rt_blacklisted</code>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Online layer at <code>$0</code> (no paid hosting)</h2>
+        <p>
+          Global revocation/blacklist without paying for a server. The online
+          layer (Cargo feature <code>online</code>, blocking <code>ureq</code>)
+          is pull-based from a free static host — the file is Ed25519-signed, so
+          the host is untrusted.
+        </p>
+        <pre><code>zpwr-license revoke --add lic-bad --key issuer.key --out crl.sig
+# commit crl.sig to a public repo / gist -&gt; served free by GitHub raw,
+# jsDelivr, Cloudflare Pages, Netlify, an S3 bucket, …</code></pre>
+        <pre><code>use zpwr_license::online::is_revoked_online;
+// fail-open (keep working) on fetch error: pass `false`
+if is_revoked_online(CRL_URL, &amp;lic.id, &amp;vk, false) { run_free_tier(); }</code></pre>
+        <p>
+          <strong>Signed manifest — <code>$0</code> remote control.</strong> One
+          signed file is a vendor control channel. <code>min_version</code> is a
+          force-upgrade kill-switch (<code>Manifest::requires_upgrade</code>): bump
+          it and every older copy — including cracked releases — must refuse to
+          run. Plus <code>revoked</code>, <code>disabled_features</code>, and a
+          broadcast <code>message</code>, all in one pull.
+          <strong>Anti-replay</strong>: clients keep the newest <code>issued</code>
+          and reject a stale manifest (<code>fetch_manifest_fresh</code>), so a
+          hostile host can't replay a pre-revocation copy.
+        </p>
+        <p>
+          Only <strong>live seat-counting</strong> genuinely needs a stateful
+          endpoint — and that ships too, on the free tier:
+          <a href="https://github.com/MenkeTechnologies/zpwr-license/tree/main/serverless/cloudflare" target="_blank" rel="noopener noreferrer"><code>serverless/cloudflare/</code></a>
+          is a Cloudflare Workers activation function (100k req/day free + free KV),
+          wire-compatible with the Rust core (WebCrypto Ed25519). It serves
+          <code>/health</code>, <code>/activate</code>, <code>/validate</code>,
+          <code>/checkout</code>, <code>/heartbeat</code>, <code>/checkin</code>,
+          <code>/blacklist</code>, and <code>/unblock</code> — the
+          <code>/checkout</code> / <code>/heartbeat</code> / <code>/checkin</code>
+          trio implements floating/concurrent licensing via TTL leases (a crashed
+          client's seat frees when its lease expires).
+        </p>
+      </section>
+
+      <section>
+        <h2>Build &amp; test</h2>
+        <p>
+          The repo is private and does not run GitHub Actions; CI is local only.
+          <code>scripts/ci.sh</code> is the source of truth — run it before every
+          push.
+        </p>
+        <pre><code>make ci        # fmt + clippy(-D warnings) + check + test + doc + build
+make build     # cargo build
+make test      # cargo test --workspace
+make clippy    # cargo clippy --all-targets -- -D warnings</code></pre>
+      </section>
+
+      <section>
+        <h2>Status &amp; honest limits</h2>
+        <p>Generic and shipping today: arbitrary signed claims (metadata), key rotation via keyring, multi-product / multi-key / per-major-version, offline node-locking to the real hardware id, CRL, Rust + C/C++ embedding, obfuscated anti-tamper with active anti-debug and woven-check seeds, free-tier floating-license activation.</p>
+        <p>Roadmap (not yet built): a trial model, more SDKs over the C ABI (C#/.NET, Python, Node, Swift), token-format versioning + migration, and a semver/release/support commitment before another company depends on it.</p>
+        <p>Honest limits: true floating/concurrent licensing needs the online server — offline can't count across machines. Client-side checks are patchable; server-gated value is the only hard stop. Offline-first, not uncrackable.</p>
+      </section>
+
+      <section>
+        <h2>Catalog</h2>
+        <p>Licenses the paid <a href="https://menketechnologies.github.io/app-store/" target="_blank" rel="noopener noreferrer">app-store</a> catalog — per product, per major version:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/Audio-Haxor" target="_blank" rel="noopener noreferrer">Audio-Haxor</a></li>
+          <li><a href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">traderview</a></li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-synth" target="_blank" rel="noopener noreferrer">zpwr-synth</a></li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">zpwr-fx</a></li>
+          <li><a href="https://github.com/MenkeTechnologies/zpwr-midi-fx" target="_blank" rel="noopener noreferrer">zpwr-midi-fx</a></li>
+        </ul>
+        <p>See the <a href="report.html">engineering report</a> for the cryptographic design rationale.</p>
+      </section>
+    </main>
+
+    <footer class="tutorial-footer">
+      <p>MIT &middot; MenkeTechnologies</p>
+    </footer>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
