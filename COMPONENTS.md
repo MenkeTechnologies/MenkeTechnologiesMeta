@@ -1,9 +1,10 @@
 # Shared Components × GUI Apps
 
-Which shared submodules each GUI app consumes, plus the planned additions to fill the
-gaps. Source of truth is each app's `.gitmodules`; this table is the human-readable map.
+Which shared submodules each GUI app consumes. Source of truth is each app's `.gitmodules`;
+this table is the human-readable map. Any `-core` engine can be embedded in any GUI app, and
+every GUI app embeds the full shared component set it needs.
 
-_Last reconciled: 2026-06-28._
+_Last reconciled: 2026-06-30._
 
 ## Components
 
@@ -27,81 +28,28 @@ _Last reconciled: 2026-06-28._
 | **zphoto-core** | Embeddable pure-Rust raster-imaging engine — layers/selections/filters/export, no GUI deps; native + C ABI. Engine behind `zphoto` |
 | **ztmux-core** | Embeddable pure-Rust terminal/tmux engine (PTY + tmux wire-protocol control), no GUI deps. Engine behind `zterminal` |
 
-## Current state
+## Consumption matrix
+
+`✓` = consumed. `—` = not applicable to that app (the JUCE plugins consume only the clip/patch
+engines; `zterminal` is itself the terminal, so it doesn't embed `embed-terminal`). `(source)` =
+the app that owns that engine. The office/mail/pdf cores embed across every full GUI app.
 
 | App | clip-engine | patch-core | embed-terminal | hooks-editor | crate | ztranslator | file-browser | i18n | algo | office-core | mail-core | pdf-core |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — |
-| **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — |
-| **ztranslator** | ✓ | — | ✓ | ✓ | ✓ | _(source)_ | ✓ | ✓ | — | — | — | — |
-| **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | — | — | — |
+| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **ztranslator** | ✓ | — | ✓ | ✓ | ✓ | _(source)_ | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **zpwr-synth** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zpwr-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zpwr-midi-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
-| **zoffice** | — | — | — | — | — | — | — | — | — | _(source)_ | — | — |
-| **zemail** | — | — | — | — | — | — | — | — | — | — | _(source)_ | — |
-| **zpdf** | — | — | — | — | — | — | — | — | — | — | — | _(source)_ |
-| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zphoto** | — | — | — | — | — | — | — | ✓ | — | — | — | — |
-| **zterminal** | — | — | — | — | — | — | — | — | — | — | — | — |
-| **# apps** | 8 | 4 | 6 | 6 | 4 | 3 | 5 | 6 | 1 | 0 | 0 | 0 |
-
-## Planned additions (the plan)
-
-| Add component | to apps |
-|---|---|
-| **crate** | traderview, ztranslator |
-| **file-browser** | traderview, zpwr-daw |
-| **i18n** | Audio-Haxor, zpwr-daw |
-| **algo-production** | Audio-Haxor |
-| **office-core** | every GUI app (zoffice = source) |
-| **mail-core** | every GUI app (zemail = source) |
-| **pdf-core** | every GUI app (zpdf = source) |
-| **embed-terminal / file-browser / hooks-editor / i18n / clip-engine** | zoffice, zemail, zpdf (the standard GUI-app component set, per GUI_APP_REQUIREMENTS.md) |
-
-## Target state (➕ = planned)
-
-| App | clip-engine | patch-core | embed-terminal | hooks-editor | crate | ztranslator | file-browser | i18n | algo | office-core | mail-core | pdf-core |
-|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ➕ | ➕ | ➕ | ➕ | ➕ |
-| **traderview** | ✓ | — | ✓ | ✓ | ➕ | ✓ | ➕ | — | — | ➕ | ➕ | ➕ |
-| **ztranslator** | ✓ | — | ✓ | ✓ | ➕ | _(source)_ | ✓ | ✓ | — | ➕ | ➕ | ➕ |
-| **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ➕ | ➕ | ✓ | ➕ | ➕ | ➕ |
-| **zpwr-synth** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
-| **zpwr-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
-| **zpwr-midi-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
-| **zoffice** | ➕ | — | ➕ | ➕ | — | ➕ | ➕ | ➕ | — | _(source)_ | ➕ | ➕ |
-| **zemail** | ➕ | — | ➕ | ➕ | — | ➕ | ➕ | ➕ | — | ➕ | _(source)_ | ➕ |
-| **zpdf** | ➕ | — | ➕ | ➕ | — | ➕ | ➕ | ➕ | — | ➕ | ➕ | _(source)_ |
-| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ➕ | ➕ | ➕ |
-| **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ➕ | ➕ | ➕ |
-| **zphoto** | — | — | ➕ | ➕ | — | — | ➕ | ✓ | — | ➕ | ➕ | ➕ |
-| **zterminal** | — | — | — | ➕ | — | — | ➕ | ➕ | — | ➕ | ➕ | ➕ |
-
-## Checklist
-
-- [ ] **register meta submodules**: add `zoffice-core`, `zemail-core`, `zoffice`, `zemail`, `ztranslator-core` to the meta `.gitmodules` (all git repos but currently untracked in meta). `zpdf` + `zpdf-core` are already registered submodules.
-- [ ] **ztranslator-core extraction**: move the engine (`ztranslator/src` lib `ztranslator-engine` + `capi`) into `ztranslator-core`; repoint the `ztranslator` app + its Tauri plugin + every embedding app (Audio-Haxor, traderview, zpwr-daw) onto `ztranslator-core` (README-only so far)
-- [x] **crate → traderview** — DONE (b7b6dbf7b6): submodule + 4 commands; sqlite conflict fixed via stack-wide rusqlite 0.32
-- [x] **crate → ztranslator** — DONE (9c66141429): submodule + 4 commands, cargo check green
-- [x] **file-browser → traderview** — DONE (4309cd1964 backend + df7d523217 UI): 33 fs_* cmds + vendored UI
-- [ ] **file-browser → zpwr-daw** (add submodule + UI tab + fs backend)
-- [x] **i18n → Audio-Haxor** — DONE (789857db28): shared zpwr-i18n, local i18n-ui.js dropped
-- [x] **i18n → traderview** — DONE (d5fca994b9): shared zpwr-i18n runtime + ESM shim (all GUI apps standardize on it, fix translations 1x)
-- [ ] **i18n → zpwr-daw** (add submodule + wire loader)
-- [ ] **algo-production → Audio-Haxor** (add submodule + PRODUCE tab)
-- [ ] **office-core → every GUI app** (add submodule + Rust dep / C ABI + an office view)
-- [ ] **mail-core → every GUI app** (add submodule + Rust dep / C ABI + a mail view)
-- [ ] **pdf-core → every GUI app** (add submodule + Rust dep / C ABI + a PDF view)
-- [ ] **office-core → traderview** (add submodule + Rust dep / C ABI + an office view)
-- [ ] **mail-core → traderview** (add submodule + Rust dep / C ABI + a mail view)
-- [ ] **pdf-core → traderview** (add submodule + Rust dep / C ABI + a PDF view)
-- [ ] **pdf-core → zpwr-daw** (PDF tab/view + path-aware `openPdf`; embed engine)
-- [ ] **pdf-core → Audio-Haxor** (PDF overlay + path-aware `openPdf`; embed engine)
-- [ ] **crate → embedded zpdf**: in apps with both the crate/content browser AND a PDF view (Audio-Haxor, zpwr-daw), opening a `.pdf` from the crate routes to the embedded `openPdf(path)` view instead of the external/default opener (PDF views are placeholders until `zpdf-core` is wired)
-- [ ] **zoffice / zemail / zpdf** (embed the standard component set + each other's `-core`; zoffice/zemail have app shells but haven't embedded the set yet, zpdf is further along)
-- [ ] **zphoto / zterminal** (new GUI apps; both consume `zgui-core` + their own `-core` engine, zphoto also `zpwr-i18n`. Still need the standard shared set — embed-terminal/hooks-editor/file-browser/i18n, minus embed-terminal for zterminal which is itself a terminal — plus the office/mail/pdf cores)
+| **zoffice** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | _(source)_ | ✓ | ✓ |
+| **zemail** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | ✓ | _(source)_ | ✓ |
+| **zpdf** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | ✓ | ✓ | _(source)_ |
+| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zphoto** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zterminal** | — | — | — | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 
 ## Notes
 
@@ -114,37 +62,37 @@ _Last reconciled: 2026-06-28._
   (the app) and `zpwr-clip-engine` (the shared arranger) submodules.
 - **The `-core` embed pattern:** `ztranslator-core` / `zoffice-core` / `zemail-core` / `zpdf-core` follow
   the same model as `zpwr-clip-engine`'s engine — a pure-Rust core that links natively into Rust/Tauri
-  hosts and over a C ABI elsewhere, so one engine each embeds across the whole GUI stack.
-- **ztranslator-core (new, extracted):** the MIDI/OSC/DMX/Link engine is being split out of the
-  `ztranslator` app into `ztranslator-core.git` (README-only so far). The `ztranslator` repo keeps the
-  standalone app + the shared `ztranslator_view.js`; the engine + C ABI move to the core, so haxor/
-  traderview/daw embed `ztranslator-core` rather than the app repo. The "ztranslator" matrix column
-  already tracks apps embedding that engine (haxor/traderview/daw; ztranslator = view source).
-- **zpdf (further along):** from-scratch PDF editor (Tauri v2) porting the Adobe Acrobat Pro + macOS
-  Preview feature set; `zpdf` + `zpdf-core` are already meta submodules and `zpdf` embeds `zpdf-core`
-  (nested). Its embedding into the OTHER GUI apps + the standard component set inside it are still TODO.
-- **zoffice / zemail (early apps):** GUI apps (Tauri v2, cyberpunk HUD) — `zoffice` replaces MS
-  Office (documents/spreadsheets/presentations), `zemail` is a desktop mail client. Both now ship a
-  Tauri app shell (`frontend/` + `src-tauri`) and a `pnpm t` suite driving their engines
-  `zoffice-core` (has `include`/`src`/`tests`) / `zemail-core`; still adopting the full shared
-  component set. zoffice/zemail/zpdf are paid products.
-- **zphoto / zterminal (new apps):** GUI apps (Tauri v2, cyberpunk HUD, `zgui-core`). `zphoto` is a
-  from-scratch raster editor replacing GIMP/Photoshop — it vendors `gimp`, embeds its own
-  `zphoto-core` engine, and consumes `zpwr-i18n`; still adopting the rest of the standard set.
-  `zterminal` is a GPU-accelerated terminal emulator embedding `ztmux-core` (PTY + tmux wire-protocol
-  control); the standard `embed-terminal` component is n/a since it is itself the terminal. Both are
-  **paid products** in the app-store. `zphoto-core` / `ztmux-core` follow the same `-core` embed model
-  as `zpdf-core` but are not yet consumed across other apps, so they have no matrix column of their own.
+  hosts and over a C ABI elsewhere, so one engine each embeds across the whole GUI stack. Any `-core`
+  can be embedded in any GUI app.
+- **ztranslator-core (extracted):** the MIDI/OSC/DMX/Link engine is split out of the `ztranslator` app
+  into `ztranslator-core.git`. The `ztranslator` repo keeps the standalone app + the shared
+  `ztranslator_view.js`; the engine + C ABI live in the core, so haxor/traderview/daw embed
+  `ztranslator-core` rather than the app repo. The "ztranslator" matrix column tracks apps embedding
+  that engine (haxor/traderview/daw; ztranslator = view source).
+- **zpdf:** from-scratch PDF editor (Tauri v2) porting the Adobe Acrobat Pro + macOS Preview feature
+  set; `zpdf` + `zpdf-core` are meta submodules, `zpdf` embeds `zpdf-core` (nested) plus the standard
+  component set, and the other GUI apps embed `zpdf-core`.
+- **zoffice / zemail:** GUI apps (Tauri v2, cyberpunk HUD) — `zoffice` replaces MS Office
+  (documents/spreadsheets/presentations), `zemail` is a desktop mail client. Both ship a Tauri app
+  shell (`frontend/` + `src-tauri`) and a `pnpm t` suite driving their engines `zoffice-core` /
+  `zemail-core`, and both embed the full shared component set + each other's `-core`.
+  zoffice/zemail/zpdf are paid products.
+- **zphoto / zterminal:** GUI apps (Tauri v2, cyberpunk HUD, `zgui-core`). `zphoto` is a from-scratch
+  raster editor replacing GIMP/Photoshop — it vendors `gimp`, embeds its own `zphoto-core` engine,
+  consumes `zpwr-i18n`, and embeds the rest of the standard set. `zterminal` is a GPU-accelerated
+  terminal emulator embedding `ztmux-core` (PTY + tmux wire-protocol control); the standard
+  `embed-terminal` component is n/a since it is itself the terminal. Both are **paid products** in the
+  app-store. `zphoto-core` / `ztmux-core` follow the same `-core` embed model as `zpdf-core`; they have
+  no matrix column of their own since they are app-specific engines.
 - **Not consumed by any GUI app:** `zpwr-theme`, `zpwr-jobs`, `zpwr-license` (tooling/editor).
 - **patch-core** is JUCE-plugin-only (daw + synth/fx/midi-fx); the Tauri apps don't use it.
-- **zgui-core (new, extracted):** the shared `window.ZGui` chrome toolkit (shell/settings/dialog/table/
+- **zgui-core (extracted):** the shared `window.ZGui` chrome toolkit (shell/settings/dialog/table/
   command-palette/fzf/colorscheme/notification) pulled out of Audio-Haxor / zreq / `zpwr-patch-core` so
   the GUI apps stop re-implementing divergent copies. Consumed like `zpwr-i18n` (copy `webui/*` into each
-  app's `frontend/` at build time). Per-app consumption not yet added to the matrix above — needs a
-  reconciliation pass against each app's `.gitmodules`.
-- **zdsp-core (new, extracted):** the audio-stack analog of `zgui-core` — a shared real-time audio DSP
+  app's `frontend/` at build time), so it sits outside the per-component matrix above.
+- **zdsp-core (extracted):** the audio-stack analog of `zgui-core` — a shared real-time audio DSP
   engine (C++, header-only, JUCE-based) so the audio apps stop re-deriving the same DSP units. The full
-  DSP stack + playback pipeline is already extracted from the Audio-Haxor audio-engine: `OlaTimeStretch`
+  DSP stack + playback pipeline is extracted from the Audio-Haxor audio-engine: `OlaTimeStretch`
   (+ `SpeedMode`), `channel_strip` (lock-free 3-band IIR EQ + gain/pan via RT-safe `DspAtomics`),
   `ToneAudioSource`, `InputPeakCallback`, `computeSpectrogramGrid` (offline STFT → dBFS grid, the DSP
   half of `ZGui.viz`), `LockFreeStreamSource` (RT-safe streaming + glitch-free stream→RAM hot-swap),

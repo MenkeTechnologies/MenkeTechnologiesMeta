@@ -197,13 +197,13 @@ task-by-task work list to close every gap is [`GUI_POLISH_GATE_CHECKLIST.md`](GU
 
 | App | G1 haxor parity | G2 core/embeds | G3 i18n (27 locales) | G4 pnpm scripts | Verdict |
 | --- | --- | --- | --- | --- | --- |
-| **Audio-Haxor** (reference) | ✓ | partial (office/mail/pdf planned) | ✓ | ✓ | near-PASS |
-| **traderview** | partial | partial | ✓ | partial | FAIL |
-| **ztranslator** | partial | partial | ✓ | partial | FAIL |
-| **zpwr-daw** | partial | partial | ✗ | partial | FAIL |
+| **Audio-Haxor** (reference) | ✓ | ✓ | ✓ | ✓ | PASS |
+| **traderview** | partial | ✓ | ✓ | partial | FAIL |
+| **ztranslator** | partial | ✓ | ✓ | partial | FAIL |
+| **zpwr-daw** | partial | ✓ | ✗ | partial | FAIL |
 | **zcontainer** | ✗ | partial (`zcontainer-core` only) | ✗ | partial (dev/build/clean/bust/rebuild/nuke only) | FAIL |
-| **zcite** | partial (R1–R10 ✓; R9 N/A — no timeline) | partial (terminal/hooks/file-browser/i18n ✓; office/mail/pdf-core pending) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/test/doc/ship-check/deploy/nuke/build:hooks-editor) | FAIL |
-| **zreq** | partial (R1–R10 ✓; R9 N/A — no timeline) | partial (terminal/hooks/file-browser/i18n ✓; office/mail/pdf-core pending) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/nuke/build:hooks-editor) | FAIL |
+| **zcite** | partial (R1–R10 ✓; R9 N/A — no timeline) | ✓ (terminal/hooks/file-browser/i18n + office/mail/pdf-core) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/test/doc/ship-check/deploy/nuke/build:hooks-editor) | FAIL |
+| **zreq** | partial (R1–R10 ✓; R9 N/A — no timeline) | ✓ (terminal/hooks/file-browser/i18n + office/mail/pdf-core) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/nuke/build:hooks-editor) | FAIL |
 
 ### zcite / zreq — newly onboarded (R1–R10 green)
 

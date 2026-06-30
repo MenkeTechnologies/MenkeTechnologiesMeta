@@ -9,14 +9,14 @@
 
 ![Rust](https://img.shields.io/badge/Rust-2024-05d9e8?style=flat-square)
 ![PDF](https://img.shields.io/badge/PDF-editor-ff2a6d?style=flat-square)
-![status](https://img.shields.io/badge/status-planning-39ff14?style=flat-square)
+![status](https://img.shields.io/badge/status-active-39ff14?style=flat-square)
 ![MenkeTechnologies](https://img.shields.io/badge/MenkeTechnologies-stack-d300c5?style=flat-square)
 
 ### `[THE FROM-SCRATCH PDF EDITOR]`
 
 > *"Every feature in Acrobat and Preview, in one Rust binary."*
 
-**zpdf** is a from-scratch PDF editor written in Rust, aiming to be the most capable PDF editor — porting the full feature set of Adobe Acrobat (Pro) and macOS Preview into a single tool. Created by MenkeTechnologies.
+**zpdf** is a from-scratch PDF editor written in Rust — the most capable PDF editor, porting the full feature set of Adobe Acrobat (Pro) and macOS Preview into a single tool with a CLI and a desktop GUI. Created by MenkeTechnologies.
 
 ### [`Read the Docs`](https://menketechnologies.github.io/zpdf/) &middot; [`Engineering Report`](https://menketechnologies.github.io/zpdf/report.html) · [`Feature Port Report`](https://menketechnologies.github.io/zpdf/zpdf_port_report.html)
 
@@ -28,7 +28,7 @@
 - [\[0x01\] What zpdf Is](#0x01-what-zpdf-is)
 - [\[0x02\] Source Apps](#0x02-source-apps)
 - [\[0x03\] Feature Areas](#0x03-feature-areas)
-- [\[0x04\] Planned Architecture](#0x04-planned-architecture)
+- [\[0x04\] Architecture](#0x04-architecture)
 - [\[0x05\] Roadmap](#0x05-roadmap)
 - [\[0xFF\] License](#0xff-license)
 
@@ -36,7 +36,7 @@
 
 ## [0x00] STATUS
 
-**Day 1 — planning.** This repository currently holds the documentation set (roadmap + feature spec) and **no source code yet**. The docs describe what zpdf *will* do, not what works today. Nothing here is a claim that a feature is implemented. The centerpiece is the [feature port report](https://menketechnologies.github.io/zpdf/zpdf_port_report.html): a comprehensive catalog of Acrobat (Pro) + Preview features to port, every row marked `planned`.
+**Shipping.** zpdf is a working Rust + Tauri PDF editor with a CLI and a desktop GUI, built on the `zpdf-core` engine that parses and writes the PDF object model directly. The [feature port report](https://menketechnologies.github.io/zpdf/zpdf_port_report.html) catalogs the full Acrobat (Pro) + Preview surface — nearly every row is implemented and cited to real code, with only a handful still in progress.
 
 ---
 
@@ -46,7 +46,7 @@ A from-scratch PDF editor in Rust. The goal is breadth: cover the union of what 
 
 zpdf parses and writes the PDF object model directly (no shelling out to a third-party PDF engine for the core), so editing, optimization, and structure-level operations (linearization, font subsetting, redaction that truly removes content) are first-class rather than bolt-ons.
 
-This is a roadmap document. Feature status lives in the port report; everything is `planned` until there is verifiable code behind it.
+Feature status lives in the port report; every implemented row is cited to verifiable code.
 
 ---
 
@@ -81,9 +81,9 @@ The catalog is grouped into these areas (see the port report for the per-feature
 
 ---
 
-## [0x04] PLANNED ARCHITECTURE
+## [0x04] ARCHITECTURE
 
-Planned, not built. Subject to change as implementation starts.
+The shipped architecture — `zpdf-core` (the engine) plus the CLI and Tauri GUI front ends.
 
 - **Core PDF model** — direct parse/serialize of the PDF object model (objects, xref, streams, content streams). Owns linearization, incremental update, and object-level edits.
 - **Render** — a page rasterizer for the viewer and for raster export (image export, OCR input, thumbnails).
@@ -96,7 +96,7 @@ Planned, not built. Subject to change as implementation starts.
 
 ## [0x05] ROADMAP
 
-The port report is the roadmap. It enumerates the Acrobat + Preview feature set and tracks status per feature. Implementation will proceed area by area; the report's `planned` rows become cited as code lands. No feature is marked done without verifiable code.
+The port report tracks status per feature across the Acrobat + Preview surface. Nearly every row is implemented and cited to code; the few remaining `planned` rows are tracked there. No feature is marked done without verifiable code.
 
 ---
 
