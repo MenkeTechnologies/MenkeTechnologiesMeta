@@ -48,7 +48,7 @@
       <section class="hero-stats">
         <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version (early-stage)</span></div>
         <div class="hero-stat"><span class="num">3</span><span class="lbl">crate-types (rlib · staticlib · cdylib)</span></div>
-        <div class="hero-stat"><span class="num">26</span><span class="lbl">engine commands</span></div>
+        <div class="hero-stat"><span class="num">103</span><span class="lbl">engine commands</span></div>
         <div class="hero-stat"><span class="num">4</span><span class="lbl">C-ABI exports</span></div>
       </section>
       <p class="note">zemail-core is early-stage and in active development. The figures on this page are derived from the crate source as it stands today (<code>Cargo.toml</code>, <code>src/lib.rs</code>, <code>src/ffi.rs</code>): version, crate-types, the dotted commands matched in <code>Engine::invoke</code>, and the exported C symbols. The "planned" column lists work that is not yet implemented — it is a roadmap, not a claim of coverage.</p>
@@ -62,9 +62,18 @@
           <tr><td>store</td><td>profile load/save; import eml · mbox · maildir</td><td>persistent message store, indexing</td></tr>
           <tr><td>mime</td><td>RFC 5322 / MIME parsing via <code>mail-parser</code></td><td>compose · attachment encoding</td></tr>
           <tr><td>search</td><td>in-memory query over messages</td><td>full-text index, saved searches</td></tr>
+          <tr><td>gloda</td><td>global relevance-ranked search over an inverted TF-IDF index of the whole store (Thunderbird Gloda analogue); dependency-free</td><td>persistent index, phrase queries</td></tr>
           <tr><td>filters</td><td>conditions + actions (mark · star · label · move · delete)</td><td>scheduled runs, more conditions</td></tr>
+          <tr><td>junk</td><td>adaptive junk filter — multinomial naive-Bayes over message tokens; trained counts persist in the profile</td><td>header features, per-account models</td></tr>
+          <tr><td>mailapps</td><td>cross-app pure logic: categorize · unsubscribe extraction and the stateful surface for snooze · send-later · mute · VIP · pin · scheduled send · self-destruct · Screener · templates · follow-up (Gmail, Apple Mail, Outlook, ProtonMail, Hey, Spark/Superhuman, RFC 8058)</td><td>richer rules, server-side sync</td></tr>
+          <tr><td>calendar</td><td>iCalendar (RFC 5545) meeting-invite parsing + <code>METHOD:REPLY</code> RSVP generation (Thunderbird/Lightning, Outlook, Apple Mail); pure string handling</td><td>recurrence rules, free/busy</td></tr>
           <tr><td>addressbook</td><td>vCard import/export; contacts</td><td>groups, autocomplete, dedupe</td></tr>
+          <tr><td>carddav (feature <code>carddav</code>)</td><td>CardDAV address-book pull/push of vCards over WebDAV (<code>ureq</code> native-tls + <code>quick_xml</code>), reusing the addressbook parser</td><td>incremental sync, ctag/etag</td></tr>
           <tr><td>net (feature <code>net</code>)</td><td>IMAP sync · SMTP send over one native-tls stack</td><td>incremental sync, OAuth, idle</td></tr>
+          <tr><td>openpgp (feature <code>openpgp</code>)</td><td>OpenPGP crypto via rPGP (pure-Rust): keygen, detached sign/verify, encrypt/decrypt over ASCII armor</td><td>key discovery, subkey management</td></tr>
+          <tr><td>smime (feature <code>smime</code>)</td><td>S/MIME crypto — CMS (RFC 5652) over X.509 + RSA via RustCrypto: gen cert, sign/verify, encrypt/decrypt (PEM / base64 DER)</td><td>cert chain validation, AES-GCM</td></tr>
+          <tr><td>error</td><td>engine <code>Result</code> + <code>Error</code> with stable machine tags for a <code>{error:{tag,message}}</code> FFI envelope</td><td>more granular tags</td></tr>
+          <tr><td>util</td><td>dependency-free helpers — a standard Base64 (RFC 4648) codec for the JSON/FFI boundary</td><td>—</td></tr>
           <tr><td>ffi</td><td>C ABI: <code>zml_init</code> · <code>zml_invoke</code> · <code>zml_set_event_callback</code> · <code>zml_string_free</code></td><td>header generation, richer event payloads</td></tr>
           <tr><td>tauri_plugin (feature <code>tauri</code>)</td><td>Tauri v2 plugin glue for GUI hosts</td><td>mountable webui component</td></tr>
         </tbody>
@@ -74,7 +83,7 @@
       <p class="note">The crate declares <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>. The <code>rlib</code> links natively into Rust/Tauri hosts; the <code>staticlib</code>/<code>cdylib</code> expose the C ABI for non-Rust hosts. The default <code>net</code> feature pulls in <code>imap</code>, <code>native-tls</code> and <code>lettre</code>; building <code>--no-default-features</code> yields a pure core with zero TLS/network deps that compiles in headless CI. The optional <code>tauri</code> feature adds the GUI plugin layer.</p>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="note">The crate carries 22 in-source unit tests across the engine and its modules: the command surface (version reporting, default-folder seeding, account add/list/remove, an import-then-filter flow, unknown-command error tagging), plus module-level tests in <code>store</code>, <code>mime</code>, <code>search</code>, <code>filters</code>, <code>addressbook</code> and <code>util</code>. Tests for the pure core run without network access and are intended to pass identically in a headless Linux CI; the <code>net</code> module's transport is feature-gated so the default test path needs no live mail server.</p>
+      <p class="note">The crate carries 35 in-source unit tests across the engine and its modules: the command surface (version reporting, default-folder seeding, account add/list/remove, an import-then-filter flow, unknown-command error tagging), plus module-level tests in <code>store</code>, <code>mime</code>, <code>search</code>, <code>filters</code>, <code>addressbook</code>, <code>util</code>, <code>gloda</code>, <code>junk</code>, <code>carddav</code>, <code>openpgp</code>, <code>smime</code> and <code>mailapps</code>. Tests for the pure core run without network access and are intended to pass identically in a headless Linux CI; the <code>net</code> module's transport is feature-gated so the default test path needs no live mail server.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zemail-core &middot; engineering report</footer>
     </main>

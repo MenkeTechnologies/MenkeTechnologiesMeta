@@ -84,13 +84,15 @@
 
       <h2 class="reg-h">Architecture</h2>
       <p class="lede">The app layer is thin; the work lives in <code>zphoto-core</code>. A reference shape, using the engine's in-memory API:</p>
-      <pre class="code">use zphoto_core::Document;
+      <pre class="code">use zphoto_core::Engine;
+use serde_json::json;
 
-let mut doc = Document::open('in.png')?;
-doc.add_layer('overlay')?;
-doc.apply('gaussian_blur', &amp;[('radius', 4.0)])?;
-doc.adjust('levels', &amp;[('black', 12.0), ('white', 240.0)])?;
-doc.save('out.png')?;</pre>
+let engine = Engine::new();
+
+engine.invoke("layer.add", &amp;json!({ "name": "overlay" }))?;
+engine.invoke("filter.gaussian_blur", &amp;json!({ "radius": 4.0 }))?;
+engine.invoke("adjust.levels", &amp;json!({ "black": 12, "white": 240 }))?;
+let png = engine.invoke("io.export", &amp;json!({ "format": "png" }))?;</pre>
       <div class="card-grid">
         <div class="card"><h3>codec</h3><p>Decode / encode raster formats into and out of the in-memory document model.</p></div>
         <div class="card"><h3>filter / fill / paint</h3><p>The raster command surface — filters, adjustments, fills, and brush/paint operations over 8/16/32-bit pixels.</p></div>

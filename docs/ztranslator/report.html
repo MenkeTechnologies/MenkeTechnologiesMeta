@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="ztranslator — Engineering report. Embeddable real-time MIDI translation engine in pure Rust: 4,168 source lines (3,381 code) across 18 files, worker-thread engine, signed-32-bit rules VM, BOME .bmtp import + export, 15 outgoing-action variants (keystroke / mouse / AppleScript / MIDI route / port / project / serial / custom), 22 tests.">
+  <meta name="description" content="ztranslator — Engineering report. Embeddable real-time MIDI translation engine in pure Rust: 9,925 source lines (8,484 code) across 20 files, worker-thread engine, signed-32-bit rules VM, BOME .bmtp import + export, 26 incoming trigger types + 39 outgoing-action variants (MIDI / OSC / DMX / sACN / RTP-MIDI / Ableton Link / MTC / MMC / audio / CV / keystroke / mouse / AppleScript / serial / custom), 65 tests.">
   <title>ztranslator &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -82,26 +82,26 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY           -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">ztranslator is a self-contained, real-time MIDI translation engine written in pure Rust, meant to be embedded inside a host GUI/CLI application. It listens on MIDI input ports (via <code>midir</code>), matches each incoming message against per-translator triggers, runs a rules script on a small signed-32-bit integer VM, and fires an outgoing action &mdash; one of 15 <code>Outgoing</code> variants spanning MIDI out, keystroke / mouse / AppleScript synthesis (macOS), MIDI route / port / project control, launch-file, serial, timer, preset control, a host-defined custom command, and a stryke-script hook. It imports BOME MIDI Translator Pro <code>.bmtp</code> projects (INI container + <code>MID3</code>/<code>KAM3</code> XML payloads + <code>Options</code> rules blob) and exports native projects back to unsigned <code>.bmtp</code> (round-tripping through import), with <code>serde</code> JSON as the native store. The crate carries no UI of its own: the host wires the engine's <code>EngineEvent</code> stream to its interface and routes <code>Outgoing::Custom</code> back through a handler. <strong>4,168 source lines (3,381 code) across 18 Rust files, a worker-thread engine, a faithful BOME rules VM, and lossless <code>.bmtp</code> import + export &mdash; the routing core behind a MIDI-controlled desktop application.</strong></p>
+      <p class="tutorial-subtitle">ztranslator is a self-contained, real-time MIDI translation engine written in pure Rust, meant to be embedded inside a host GUI/CLI application. It listens on MIDI input ports (via <code>midir</code>), matches each incoming message against per-translator triggers, runs a rules script on a small signed-32-bit integer VM, and fires an outgoing action &mdash; one of 39 <code>Outgoing</code> variants spanning MIDI out (incl. 14-bit / NRPN), keystroke / mouse / AppleScript synthesis (macOS), MIDI route / port / project control, MIDI clock + MTC generators, MMC transport, OSC, Art-Net + sACN DMX, HTTP / WebSocket / MQTT / raw TCP, RTP-MIDI, Ableton Link, CV / gate, gamepad rumble, serial, file write, notify / speak / clipboard, timer, preset control, a host-defined custom command, and a stryke-script hook. Beyond MIDI it accepts 26 incoming trigger types (OSC, DMX, sACN, serial, gamepad, HID, MIDI clock, MTC, MMC, Ableton Link, audio amplitude/onset/pitch, CV/gate, cron schedule, system events, HTTP, TCP, WebSocket, MQTT, RTP-MIDI). It imports BOME MIDI Translator Pro <code>.bmtp</code> projects (INI container + <code>MID3</code>/<code>KAM3</code> XML payloads + <code>Options</code> rules blob) and exports native projects back to unsigned <code>.bmtp</code> (round-tripping through import), with <code>serde</code> JSON as the native store. The crate carries no UI of its own: the host wires the engine's <code>EngineEvent</code> stream to its interface and routes <code>Outgoing::Custom</code> back through a handler. <strong>9,925 source lines (8,484 code) across 20 Rust files, a worker-thread engine, a faithful BOME rules VM, lossless <code>.bmtp</code> import + export, and a broad protocol I/O layer &mdash; the routing core behind a MIDI-controlled desktop application.</strong></p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">4,168</div><div class="stat-label">Source Lines</div></div>
-        <div class="stat-card"><div class="stat-val">3,381</div><div class="stat-label">Code Lines</div></div>
-        <div class="stat-card"><div class="stat-val accent">18</div><div class="stat-label">Rust Files</div></div>
-        <div class="stat-card"><div class="stat-val green">22</div><div class="stat-label">Test Functions</div></div>
+        <div class="stat-card"><div class="stat-val">9,925</div><div class="stat-label">Source Lines</div></div>
+        <div class="stat-card"><div class="stat-val">8,484</div><div class="stat-label">Code Lines</div></div>
+        <div class="stat-card"><div class="stat-val accent">20</div><div class="stat-label">Rust Files</div></div>
+        <div class="stat-card"><div class="stat-val green">65</div><div class="stat-label">Test Functions</div></div>
         <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Integration Test Modules</div></div>
-        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Direct Dependencies</div></div>
-        <div class="stat-card"><div class="stat-val accent">15</div><div class="stat-label">Outgoing Variants</div></div>
-        <div class="stat-card"><div class="stat-val">7</div><div class="stat-label">Incoming Triggers</div></div>
+        <div class="stat-card"><div class="stat-val">23</div><div class="stat-label">Direct Dependencies</div></div>
+        <div class="stat-card"><div class="stat-val accent">39</div><div class="stat-label">Outgoing Variants</div></div>
+        <div class="stat-card"><div class="stat-val">26</div><div class="stat-label">Incoming Triggers</div></div>
       </div>
 
       <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 4,168 lines</p>
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 9,925 lines</p>
         <div class="bar-wrap" style="height:26px;">
-          <div class="bar-fill cyan" style="width:90.3%;"></div>
-          <span class="bar-pct" style="font-size:12px;">3,763 library / 405 tests &middot; 90.3% library</span>
+          <div class="bar-fill cyan" style="width:92.7%;"></div>
+          <span class="bar-pct" style="font-size:12px;">9,198 library / 727 tests &middot; 92.7% library</span>
         </div>
-        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Library: 15 files under <code>src/</code> (engine, rules VM, model, bmtp import/export, actions, midi, error). Tests: 3 integration modules under <code>tests/</code> (<code>bmtp_import.rs</code>, <code>engine_pipeline.rs</code>, <code>rules_vm.rs</code>). Line counts are physical <code>wc -l</code>; code-only (tokei, blanks + comments excluded) is 3,381.</p>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Library: 17 files under <code>src/</code> (engine, rules VM, model, bmtp import/export, actions, protocol sources, midi, error). Tests: 3 integration modules under <code>tests/</code> (<code>bmtp_import.rs</code>, <code>engine_pipeline.rs</code>, <code>rules_vm.rs</code>). Line counts are physical <code>wc -l</code>; code-only (tokei, blanks + comments excluded) is 8,484.</p>
       </div>
 
       <hr class="section-rule">
@@ -110,22 +110,23 @@
       <!-- SECTION 2: SUBSYSTEM BREAKDOWN          -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">#</span>SUBSYSTEM BREAKDOWN</h2>
-      <p class="tutorial-subtitle">Source partitioned by role. The engine (worker thread + dispatch + timers) is the largest slice at 26.1%; <code>.bmtp</code> import + export is second at 23.3% because BOME's binary container format needs dedicated INI / XML / options parsers on the way in and an unsigned re-serializer on the way out. The rules VM is a self-contained 600-line interpreter.</p>
+      <p class="tutorial-subtitle">Source partitioned by role. The engine (worker thread + dispatch + protocol sources + generators + timers) is the largest slice at 42.1%; <code>.bmtp</code> import + export is second at 15.5% because BOME's binary container format needs dedicated INI / XML / options parsers on the way in and an unsigned re-serializer on the way out. The data model is 13.3% as the trigger/action set expanded to 26 incoming + 39 outgoing variants. The rules VM is a self-contained 723-line interpreter.</p>
 
       <table class="file-table">
         <thead><tr><th>Subsystem</th><th>Key Files</th><th class="num">Lines</th><th class="num">%</th><th style="min-width:120px;">Share</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td style="color:var(--accent);">Engine</td><td><code>engine/mod, engine/timers</code></td><td class="num">1,086</td><td class="num">26.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:26.1%"></div></div></td><td>Worker-thread engine: opens MIDI input ports (<code>midir</code>), runs the dispatch loop, owns active presets (including always-active presets), emits <code>EngineEvent</code>s to the host sink, routes <code>Outgoing::Custom</code> to the host handler, applies outgoing delay, and schedules timer triggers</td></tr>
-          <tr><td style="color:var(--accent);">.bmtp Import / Export</td><td><code>bmtp/mod, bmtp/options, bmtp/payload, bmtp/export</code></td><td class="num">971</td><td class="num">23.3%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:23.3%"></div></div></td><td>BOME MIDI Translator Pro project I/O: INI container, <code>MID3</code>/<code>KAM3</code> XML payloads, timer/<code>EnDi</code> payloads, and the <code>Options</code> rules blob on import; unsigned <code>.bmtp</code> re-serialization on export (round-trips through import). RSA signature ignored; undecoded encodings (<code>MID1</code>, <code>KAM1</code>, mouse, serial, launch) preserved verbatim for lossless round-trip</td></tr>
-          <tr><td style="color:var(--accent);">Rules VM</td><td><code>rules</code></td><td class="num">600</td><td class="num">14.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:14.4%"></div></div></td><td>Faithful BOME rules implementation on a signed-32-bit integer VM: assignment, arithmetic (<code>+ - * / %</code>) + bitwise (<code>&amp; | ^ &gt;&gt; &lt;&lt;</code>), <code>IF/THEN</code> with 6 comparators, <code>Goto</code>/<code>Label</code>, <code>Skip Next [n]</code>, <code>Log</code>, exit-and-execute/ignore. 10 locals + two-character globals; wrap-on-overflow; div/mod by zero = 0</td></tr>
-          <tr><td style="color:var(--accent);">Data Model</td><td><code>model</code></td><td class="num">433</td><td class="num">10.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.4%"></div></div></td><td><code>Project → Preset → Translator</code>, each translator carrying an Incoming trigger (7 variants: MIDI / keystroke / timer / preset / enable-disable / raw / none), a Rules list, and one of 15 Outgoing variants. <code>serde</code>-serializable; native projects via <code>Project::load_json</code> / <code>save_json</code></td></tr>
-          <tr><td style="color:var(--accent);">Actions</td><td><code>actions/mod, actions/macos, keycodes</code></td><td class="num">423</td><td class="num">10.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.1%"></div></div></td><td>Outgoing OS-control actions: keystroke / mouse (incl. wheel) synthesis and AppleScript (with global injection) / launch via macOS <code>CGEvent</code>; keystroke-name &rarr; platform keycode table. macOS-only &mdash; <code>Error::Unsupported</code> elsewhere; requires Accessibility grant (<code>accessibility_trusted()</code>) or returns <code>Error::NeedsAccessibility</code></td></tr>
-          <tr><td style="color:var(--accent);">Matcher</td><td><code>matcher</code></td><td class="num">97</td><td class="num">2.3%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2.3%"></div></div></td><td>Per-translator incoming-trigger matching against live MIDI messages: note / CC / pitch-bend / channel selectivity, value capture into rules-VM inputs</td></tr>
-          <tr><td style="color:var(--accent);">MIDI I/O</td><td><code>midi</code></td><td class="num">88</td><td class="num">2.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2.1%"></div></div></td><td>MIDI message types and <code>midir</code> input/output port plumbing &mdash; cross-platform, builds on macOS / Linux / Windows</td></tr>
-          <tr><td style="color:var(--accent);">Error / Entry</td><td><code>error, lib</code></td><td class="num">65</td><td class="num">1.6%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1.6%"></div></div></td><td>Crate <code>Error</code> type (<code>Unsupported</code>, <code>NeedsAccessibility</code>, parse / IO variants via <code>thiserror</code>) and the public <code>lib.rs</code> surface re-exports</td></tr>
-          <tr><td style="color:var(--green);">Tests</td><td><code>tests/bmtp_import, tests/engine_pipeline, tests/rules_vm</code></td><td class="num">405</td><td class="num">9.7%</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:9.7%"></div></div></td><td>22 <code>#[test]</code> functions across 3 integration modules (plus a <code>tests/fixtures</code> corpus): <code>.bmtp</code> import fidelity + export round-trip, end-to-end engine dispatch pipeline, and rules-VM semantics (arithmetic / bitwise / conditionals / control flow / overflow / div-by-zero)</td></tr>
+          <tr><td style="color:var(--accent);">Engine</td><td><code>engine/mod, engine/timers</code></td><td class="num">4,180</td><td class="num">42.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:42.1%"></div></div></td><td>Worker-thread engine: opens MIDI input ports (<code>midir</code>), runs the dispatch loop, hosts every non-MIDI trigger source (OSC / Art-Net / sACN / serial / gamepad / HID / HTTP / WebSocket / MQTT / TCP / audio / CV / Ableton Link / RTP-MIDI) and the MIDI clock + MTC generators, emits <code>EngineEvent</code>s, routes <code>Outgoing::Custom</code> to the host, applies outgoing delay, and schedules timers</td></tr>
+          <tr><td style="color:var(--accent);">.bmtp Import / Export</td><td><code>bmtp/mod, bmtp/options, bmtp/payload, bmtp/export</code></td><td class="num">1,540</td><td class="num">15.5%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:15.5%"></div></div></td><td>BOME MIDI Translator Pro project I/O: INI container, <code>MID3</code>/<code>KAM3</code> XML payloads, timer/<code>EnDi</code> payloads, and the <code>Options</code> rules blob on import; unsigned <code>.bmtp</code> re-serialization on export (round-trips through import). RSA signature ignored; undecoded encodings preserved verbatim for lossless round-trip</td></tr>
+          <tr><td style="color:var(--accent);">Data Model</td><td><code>model</code></td><td class="num">1,323</td><td class="num">13.3%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:13.3%"></div></div></td><td><code>Project → Preset → Translator</code>, each translator carrying one of 26 Incoming triggers and one of 39 Outgoing variants. <code>serde</code>-serializable (snake_case tagged enums); native projects via <code>Project::load_json</code> / <code>save_json</code></td></tr>
+          <tr><td style="color:var(--accent);">Rules VM</td><td><code>rules</code></td><td class="num">723</td><td class="num">7.3%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:7.3%"></div></div></td><td>Faithful BOME rules implementation on a signed-32-bit integer VM: assignment, arithmetic (<code>+ - * / %</code>) + bitwise (<code>&amp; | ^ &gt;&gt; &lt;&lt;</code>), <code>IF/THEN</code> with 6 comparators, <code>Goto</code>/<code>Label</code>, <code>Skip Next [n]</code>, <code>Log</code>, exit-and-execute/ignore. 10 locals + two-character globals; wrap-on-overflow; div/mod by zero = 0</td></tr>
+          <tr><td style="color:var(--accent);">Actions</td><td><code>actions/mod, actions/macos, keycodes</code></td><td class="num">716</td><td class="num">7.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:7.2%"></div></div></td><td>Outgoing OS-control actions: keystroke / mouse (incl. wheel) synthesis and AppleScript / launch via macOS <code>CGEvent</code>, plus <code>say</code> / <code>afplay</code> / <code>pbcopy</code> (speak / play-sound / clipboard); keystroke-name &rarr; platform keycode table. macOS-only &mdash; <code>Error::Unsupported</code> elsewhere</td></tr>
+          <tr><td style="color:var(--accent);">Protocol Sources</td><td><code>sources, serial</code></td><td class="num">396</td><td class="num">4.0%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:4.0%"></div></div></td><td>Pure (de)coders for the non-MIDI protocols: OSC (<code>rosc</code>), Art-Net + sACN/E1.31 DMX, AppleMIDI/RTP-MIDI exchange + clock-sync + data packets, and serial hex/text framing &mdash; all unit-tested independent of the live sockets</td></tr>
+          <tr><td style="color:var(--accent);">MIDI I/O</td><td><code>midi</code></td><td class="num">131</td><td class="num">1.3%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1.3%"></div></div></td><td>MIDI message types and <code>midir</code> input/output port plumbing &mdash; cross-platform, builds on macOS / Linux / Windows</td></tr>
+          <tr><td style="color:var(--accent);">Matcher</td><td><code>matcher</code></td><td class="num">122</td><td class="num">1.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1.2%"></div></div></td><td>Per-translator incoming-trigger matching against live MIDI messages: note / CC / pitch-bend / channel selectivity, value capture into rules-VM inputs</td></tr>
+          <tr><td style="color:var(--accent);">Error / Entry</td><td><code>error, lib</code></td><td class="num">67</td><td class="num">0.7%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:0.7%"></div></div></td><td>Crate <code>Error</code> type (<code>Unsupported</code>, <code>NeedsAccessibility</code>, parse / IO variants via <code>thiserror</code>) and the public <code>lib.rs</code> surface re-exports</td></tr>
+          <tr><td style="color:var(--green);">Tests</td><td><code>tests/bmtp_import, tests/engine_pipeline, tests/rules_vm</code></td><td class="num">727</td><td class="num">7.3%</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:7.3%"></div></div></td><td>Integration modules (plus a <code>tests/fixtures</code> corpus) covering <code>.bmtp</code> import fidelity + export round-trip, end-to-end engine dispatch, and rules-VM semantics; the unit tests in-crate cover the protocol codecs, MTC/MMC, and trigger/action serde round-trips (65 <code>#[test]</code> functions in all)</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">4,168</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
+        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">9,925</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
       </table>
 
       <hr class="section-rule">
@@ -134,31 +135,33 @@
       <!-- SECTION 3: FILES BY SIZE                 -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">$</span>FILES BY SIZE</h2>
-      <p class="tutorial-subtitle">All 18 Rust source files, largest first. The engine and rules VM dominate; the four <code>bmtp/</code> files together (971 lines) are the cost of natively reading and re-writing BOME's binary project container.</p>
+      <p class="tutorial-subtitle">All 20 Rust source files, largest first. The engine dominates; the four <code>bmtp/</code> files together (1,540 lines) are the cost of natively reading and re-writing BOME's binary project container.</p>
 
       <table class="file-table">
         <thead><tr><th>File</th><th class="num">Lines</th><th>Role</th></tr></thead>
         <tbody>
-          <tr><td>src/engine/mod.rs</td><td class="num">996</td><td>Worker-thread engine, dispatch loop, port management, event sink, custom-handler routing, outgoing delay</td></tr>
-          <tr><td>src/rules.rs</td><td class="num">600</td><td>Rules compiler + signed-32-bit integer VM</td></tr>
-          <tr><td>src/model.rs</td><td class="num">433</td><td><code>Project / Preset / Translator</code> model, 15 Outgoing + 7 Incoming variants, <code>serde</code> JSON load/save</td></tr>
-          <tr><td>src/bmtp/payload.rs</td><td class="num">331</td><td><code>MID3</code>/<code>KAM3</code> XML + timer payload decoding</td></tr>
-          <tr><td>src/bmtp/mod.rs</td><td class="num">225</td><td><code>.bmtp</code> INI container parse, <code>bmtp::import</code> entry point</td></tr>
-          <tr><td>src/bmtp/options.rs</td><td class="num">224</td><td><code>Options</code> rules-blob parser</td></tr>
-          <tr><td>src/bmtp/export.rs</td><td class="num">191</td><td>Unsigned <code>.bmtp</code> re-serializer &mdash; <code>Project</code> &rarr; <code>.bmtp</code>, round-trips through import</td></tr>
-          <tr><td>src/actions/macos.rs</td><td class="num">190</td><td>macOS <code>CGEvent</code> keystroke / mouse (incl. wheel) / AppleScript synthesis, Accessibility check</td></tr>
-          <tr><td>tests/bmtp_import.rs</td><td class="num">150</td><td><code>.bmtp</code> import-fidelity + export round-trip integration tests</td></tr>
-          <tr><td>tests/engine_pipeline.rs</td><td class="num">145</td><td>End-to-end engine dispatch integration tests</td></tr>
-          <tr><td>src/keycodes.rs</td><td class="num">120</td><td>Keystroke-name &rarr; platform keycode table</td></tr>
-          <tr><td>src/actions/mod.rs</td><td class="num">113</td><td>Action executor trait, platform dispatch, <code>Unsupported</code>/<code>NeedsAccessibility</code> gating</td></tr>
+          <tr><td>src/engine/mod.rs</td><td class="num">4,083</td><td>Worker-thread engine, dispatch loop, every non-MIDI trigger source, MIDI clock + MTC generators, port management, event sink, outgoing delay</td></tr>
+          <tr><td>src/model.rs</td><td class="num">1,323</td><td><code>Project / Preset / Translator</code> model, 39 Outgoing + 26 Incoming variants, <code>serde</code> JSON load/save</td></tr>
+          <tr><td>src/rules.rs</td><td class="num">723</td><td>Rules compiler + signed-32-bit integer VM</td></tr>
+          <tr><td>src/bmtp/payload.rs</td><td class="num">716</td><td><code>MID3</code>/<code>KAM3</code> XML + timer payload decoding</td></tr>
+          <tr><td>tests/bmtp_import.rs</td><td class="num">356</td><td><code>.bmtp</code> import-fidelity + export round-trip integration tests</td></tr>
+          <tr><td>src/sources.rs</td><td class="num">337</td><td>OSC / Art-Net / sACN / RTP-MIDI packet (de)coders</td></tr>
+          <tr><td>src/bmtp/mod.rs</td><td class="num">304</td><td><code>.bmtp</code> INI container parse, <code>bmtp::import</code> entry point</td></tr>
+          <tr><td>src/keycodes.rs</td><td class="num">264</td><td>Keystroke-name &rarr; platform keycode table</td></tr>
+          <tr><td>tests/engine_pipeline.rs</td><td class="num">261</td><td>End-to-end engine dispatch integration tests</td></tr>
+          <tr><td>src/actions/macos.rs</td><td class="num">261</td><td>macOS <code>CGEvent</code> keystroke / mouse (incl. wheel) / AppleScript synthesis, Accessibility check</td></tr>
+          <tr><td>src/bmtp/options.rs</td><td class="num">260</td><td><code>Options</code> rules-blob parser</td></tr>
+          <tr><td>src/bmtp/export.rs</td><td class="num">260</td><td>Unsigned <code>.bmtp</code> re-serializer &mdash; <code>Project</code> &rarr; <code>.bmtp</code>, round-trips through import</td></tr>
+          <tr><td>src/actions/mod.rs</td><td class="num">191</td><td>Action dispatch + macOS say / afplay / pbcopy; <code>Unsupported</code>/<code>NeedsAccessibility</code> gating</td></tr>
+          <tr><td>src/midi.rs</td><td class="num">131</td><td>MIDI message types + <code>midir</code> port plumbing</td></tr>
+          <tr><td>src/matcher.rs</td><td class="num">122</td><td>Per-translator incoming-trigger matching</td></tr>
           <tr><td>tests/rules_vm.rs</td><td class="num">110</td><td>Rules-VM semantics integration tests</td></tr>
-          <tr><td>src/matcher.rs</td><td class="num">97</td><td>Per-translator incoming-trigger matching</td></tr>
-          <tr><td>src/engine/timers.rs</td><td class="num">90</td><td>Timer trigger scheduler</td></tr>
-          <tr><td>src/midi.rs</td><td class="num">88</td><td>MIDI message types + <code>midir</code> port plumbing</td></tr>
+          <tr><td>src/engine/timers.rs</td><td class="num">97</td><td>Timer trigger scheduler</td></tr>
+          <tr><td>src/serial.rs</td><td class="num">59</td><td>Serial send + hex/text data framing</td></tr>
           <tr><td>src/error.rs</td><td class="num">37</td><td>Crate <code>Error</code> enum (<code>thiserror</code>)</td></tr>
-          <tr><td>src/lib.rs</td><td class="num">28</td><td>Public crate surface re-exports</td></tr>
+          <tr><td>src/lib.rs</td><td class="num">30</td><td>Public crate surface re-exports</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">4,168</td><td>18 files</td></tr></tfoot>
+        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">9,925</td><td>20 files</td></tr></tfoot>
       </table>
 
       <hr class="section-rule">
@@ -225,7 +228,7 @@
         </div>
         <div class="feature-card">
           <h4>Incoming Triggers</h4>
-          <p>A translator's Incoming trigger is one of 7 variants &mdash; MIDI message, keystroke, timer, preset activation, enable/disable, raw passthrough, or none. The matcher captures message bytes into VM inputs so rules can branch on note / CC / channel / value.</p>
+          <p>A translator's Incoming trigger is one of 26 variants &mdash; MIDI message / 14-bit, keystroke, timer, preset, enable/disable, OSC, Art-Net + sACN DMX, file watch, serial, gamepad, HID, MIDI clock, MTC, MMC, Ableton Link, audio, CV/gate, cron schedule, system event, HTTP, TCP, WebSocket, MQTT, or RTP-MIDI. The matcher captures message bytes into VM inputs so rules can branch on note / CC / channel / value.</p>
         </div>
       </div>
 
@@ -235,7 +238,7 @@
       <!-- SECTION 6: DEPENDENCIES                  -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">+</span>DEPENDENCIES</h2>
-      <p class="tutorial-subtitle">Eight direct dependencies &mdash; five cross-platform, three macOS-only. No async runtime: the engine runs on a single dedicated worker thread and talks to the host over <code>crossbeam-channel</code>.</p>
+      <p class="tutorial-subtitle">23 direct dependencies &mdash; 19 cross-platform, 4 macOS-only. No async runtime: the engine runs on a single dedicated worker thread and talks to the host over <code>crossbeam-channel</code>.</p>
 
       <table class="file-table">
         <thead><tr><th>Crate</th><th>Role</th><th>Scope</th></tr></thead>
@@ -245,9 +248,24 @@
           <tr><td>serde_json</td><td>Native project storage (JSON)</td><td>all platforms</td></tr>
           <tr><td>thiserror</td><td>Crate <code>Error</code> enum derivation</td><td>all platforms</td></tr>
           <tr><td>crossbeam-channel</td><td>Engine &harr; host event / command channels</td><td>all platforms</td></tr>
+          <tr><td>serialport</td><td>Serial port I/O &mdash; incoming + outgoing serial triggers/actions</td><td>all platforms</td></tr>
+          <tr><td>rosc</td><td>OSC message (de)coding for OSC triggers and actions</td><td>all platforms</td></tr>
+          <tr><td>notify</td><td>Filesystem-watch triggers</td><td>all platforms</td></tr>
+          <tr><td>gilrs</td><td>Gamepad / controller input (axes + buttons &rarr; triggers)</td><td>all platforms</td></tr>
+          <tr><td>tiny_http</td><td>Tiny HTTP server for incoming HTTP triggers</td><td>all platforms</td></tr>
+          <tr><td>ureq</td><td>Blocking HTTP client for outgoing GET/POST actions</td><td>all platforms</td></tr>
+          <tr><td>tungstenite</td><td>WebSocket client/server (incoming + outgoing)</td><td>all platforms</td></tr>
+          <tr><td>rumqttc</td><td>MQTT client (incoming + outgoing messages)</td><td>all platforms</td></tr>
+          <tr><td>hidapi</td><td>Generic USB-HID input (Stream Deck / custom controllers)</td><td>all platforms</td></tr>
+          <tr><td>cron</td><td>Cron-expression parsing for time-of-day triggers</td><td>all platforms</td></tr>
+          <tr><td>chrono</td><td>Local-time computation for cron schedules</td><td>all platforms</td></tr>
+          <tr><td>if-addrs</td><td>Enumerate active network interfaces (system-event triggers)</td><td>all platforms</td></tr>
+          <tr><td>socket2</td><td>Multicast socket options (SO_REUSEADDR/PORT) for sACN input</td><td>all platforms</td></tr>
+          <tr><td>rusty_link</td><td>Ableton Link tempo / beat sync (beat triggers, transport out)</td><td>all platforms</td></tr>
           <tr><td>core-graphics</td><td>macOS <code>CGEvent</code> keystroke / mouse synthesis</td><td>macOS</td></tr>
           <tr><td>core-foundation</td><td>macOS AppleScript / Accessibility plumbing</td><td>macOS</td></tr>
           <tr><td>foreign-types</td><td>macOS Core Foundation / Core Graphics FFI wrappers</td><td>macOS</td></tr>
+          <tr><td>cpal</td><td>macOS CoreAudio audio-reactive input (peak level &rarr; trigger)</td><td>macOS</td></tr>
         </tbody>
       </table>
 

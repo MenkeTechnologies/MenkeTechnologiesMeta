@@ -4,86 +4,198 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zcite engineering report — the app/engine split, the zcite-core Zotero port coverage (95.0% weighted), and the build model for the from-scratch Rust reference manager.">
-  <title>zcite — Engineering Report</title>
+  <meta name="description" content="zcite engineering report — module map, dependency footprint and test status for the zcite-core reference-manager engine.">
+  <title>zcite &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../hud-static.css">
   <link rel="stylesheet" href="../tutorial.css">
   <style>
-    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
-    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
-    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
-    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
-    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
-    td:first-child { color: var(--text); }
-    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
-    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .mapping-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .mapping-card { border:1px solid var(--border);border-left:3px solid var(--magenta);background:var(--bg-card);padding:0.6rem 0.9rem;border-radius:2px; }
+    .mapping-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--magenta);margin:0 0 0.3rem; }
+    .mapping-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.5; }
+    .mapping-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+    .feature-card li code { font-size:10px; }
   </style>
 </head>
 <body>
-  <div class="app" id="docsApp">
+  <div class="app tutorial-app" id="reportApp">
     <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
     <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
-    <header class="docs-header">
-      <div class="docs-header-inner">
-        <div class="docs-title-block">
-          <h1>ZCITE // ENGINEERING REPORT</h1>
-          <div class="docs-sub">// app/engine split · Zotero port coverage · build model</div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZCITE &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zcite/zcite_port_report.html">Port Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zcite" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            module map &middot; dependency footprint &middot; test status for the zcite-core reference-manager engine
+          </p>
         </div>
-        <div class="docs-header-actions">
-          <div class="docs-toolbar">
-            <a class="btn btn-secondary" href="index.html">Home</a>
-            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zcite" target="_blank" rel="noopener noreferrer">Source</a>
-          </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
         </div>
       </div>
     </header>
-    <main class="docs-main">
-      <p class="note">zcite is early-stage and in active development. The engine (<code>zcite-core</code>) is fully functional and tested standalone today; the Tauri app shell mounts its <code>webui/</code> GUI. Coverage below is hand-assessed conservatively and audited against the real Zotero source — it is a measured snapshot, not a marketing claim. <code>full</code> counts only when behaviour AND the GUI match Zotero; <code>partial</code> when the engine works but the editor/UI is incomplete.</p>
+    <main class="tutorial-main">
 
-      <h2 class="reg-h">Two-layer split</h2>
-      <table>
-        <thead><tr><th>layer</th><th>path</th><th>responsibility</th></tr></thead>
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">This report describes <code>zcite-core</code>, the embeddable reference-manager engine inside the zcite app &mdash; a pure-Rust crate (<code>crates/zcite-core</code>) that drives the whole library behind one JSON command surface (<code>Engine::invoke(cmd, args)</code>, ~84 commands). The pure core compiles with zero TLS or socket dependencies; networked metadata lookup (<code>net</code>) and PDF text extraction (<code>pdf</code>) are default-on Cargo features, and a Tauri v2 host layer is gated behind <code>tauri</code>. The crate builds three artifacts &mdash; <code>rlib</code> for native Tauri hosts, plus <code>staticlib</code>/<code>cdylib</code> with a C ABI (<code>include/zcite_core.h</code>) for non-Rust hosts.</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">19</div><div class="stat-label">Source Modules</div></div>
+        <div class="stat-card"><div class="stat-val accent">~8.4k</div><div class="stat-label">Lines of Rust</div></div>
+        <div class="stat-card"><div class="stat-val green">94</div><div class="stat-label">Tests</div></div>
+        <div class="stat-card"><div class="stat-val">5</div><div class="stat-label">Core Dependencies</div></div>
+        <div class="stat-card"><div class="stat-val">~84</div><div class="stat-label">Engine Commands</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Build Artifacts</div></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>MODULE MAP</h2>
+      <p class="tutorial-subtitle">Nineteen source modules make up the engine, each with a single responsibility &mdash; from the <code>Engine</code> dispatcher and persisted data model through citation formatting, import/export, identifier lookup and the FFI/Tauri host layers.</p>
+      <table class="file-table">
+        <thead><tr><th>Module</th><th>Responsibility</th></tr></thead>
         <tbody>
-          <tr><td>desktop app</td><td>app/ (this repo)</td><td>Tauri v2 shell that mounts the engine + GUI; <code>frontend/</code> webview assets</td></tr>
-          <tr><td>engine</td><td>crates/zcite-core</td><td>embeddable pure-Rust engine (rlib · staticlib · cdylib + mountable webui), ported feature-by-feature from Zotero</td></tr>
+          <tr><td>lib.rs</td><td>The <code>Engine</code> and its <code>invoke</code> dispatcher &mdash; the single JSON command surface (~84 commands) over the whole library.</td></tr>
+          <tr><td>model.rs</td><td>The persisted library data model: typed <code>Item</code>s, the <code>Collection</code> tree, colored tags, related items and saved searches.</td></tr>
+          <tr><td>schema.rs</td><td>The Zotero item-type schema &mdash; reference types (book, journalArticle, thesis, &hellip;), the fields each declares and base-field renames.</td></tr>
+          <tr><td>store.rs</td><td>On-disk persistence &mdash; the whole library round-trips through one versioned pretty-JSON file with an upgrade path.</td></tr>
+          <tr><td>search.rs</td><td>Library search &mdash; quick all-field text filter and condition-based saved searches sharing one matcher.</td></tr>
+          <tr><td>bib.rs</td><td>Built-in citation &amp; bibliography formatting (APA / MLA / Chicago / IEEE) plus BibTeX cite-key generation.</td></tr>
+          <tr><td>csl.rs</td><td>A CSL 1.0.2 subset processor &mdash; load an arbitrary <code>.csl</code> stylesheet and render references through it, citeproc-style.</td></tr>
+          <tr><td>import.rs</td><td>Bibliographic import &mdash; BibTeX, RIS and CSL-JSON parsers mapping foreign records onto the item model.</td></tr>
+          <tr><td>export.rs</td><td>Bibliographic export &mdash; items rendered out to BibTeX, RIS and CSL-JSON.</td></tr>
+          <tr><td>xml_formats.rs</td><td>XML interchange (via quick-xml) &mdash; EndNote XML, MODS, MARCXML and Zotero RDF import/export.</td></tr>
+          <tr><td>identifier.rs</td><td>Identifier detection and metadata lookup &mdash; DOI (CrossRef), ISBN (Open Library) and PMID (NCBI).</td></tr>
+          <tr><td>pdf.rs</td><td>PDF text extraction for full-text indexing plus DOI/arXiv/ISBN recognition for "retrieve metadata for PDF".</td></tr>
+          <tr><td>duplicates.rs</td><td>Duplicate-item detection by shared DOI/ISBN or matching title+creator signals, for merge.</td></tr>
+          <tr><td>zotero.rs</td><td>Zotero Web API (v3) sync client &mdash; pull a user or group library as CSL-JSON via an API key.</td></tr>
+          <tr><td>webdav.rs</td><td>WebDAV transport &mdash; Zotero-style attachment-file sync: verify, upload, download and delete files.</td></tr>
+          <tr><td>ffi.rs</td><td>The C ABI for non-Rust hosts &mdash; a process-global engine behind a mutex, driven by <code>zct_invoke</code>.</td></tr>
+          <tr><td>tauri_plugin.rs</td><td>Tauri v2 integration &mdash; exposes the engine as ordinary app commands so any host embeds it.</td></tr>
+          <tr><td>util.rs</td><td>Dependency-free helpers &mdash; an RFC 4648 Base64 codec for ferrying attachment bytes across the JSON/FFI boundary, and small utilities.</td></tr>
+          <tr><td>error.rs</td><td>The engine <code>Error</code>/<code>Result</code> type, carrying a stable machine tag for FFI/Tauri serialization.</td></tr>
         </tbody>
       </table>
 
-      <h2 class="reg-h">Zotero port coverage (zcite-core)</h2>
-      <table>
-        <thead><tr><th>bucket</th><th>count</th></tr></thead>
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DEPENDENCY FOOTPRINT</h2>
+      <p class="tutorial-subtitle">Five foundational, vendorable dependencies; networking and PDF deps are optional features so the pure core builds in headless CI with no TLS or socket stack.</p>
+      <table class="file-table">
+        <thead><tr><th>Crate</th><th>Role</th><th>License</th></tr></thead>
         <tbody>
-          <tr><td>🟢 full</td><td>54</td></tr>
-          <tr><td>🟡 partial</td><td>6</td></tr>
-          <tr><td>🔴 missing</td><td>0</td></tr>
-          <tr><td>⚪ out-of-scope</td><td>4</td></tr>
-          <tr><td>total features</td><td>60</td></tr>
-          <tr><td><strong>weighted coverage</strong></td><td><strong>95.0%</strong> (full=1, partial=0.5 over 60)</td></tr>
+          <tr><td>serde</td><td>Derive-based serialization of the library model.</td><td>MIT / Apache-2.0</td></tr>
+          <tr><td>serde_json</td><td>The JSON command surface and on-disk store format.</td><td>MIT / Apache-2.0</td></tr>
+          <tr><td>thiserror</td><td>The engine error type.</td><td>MIT / Apache-2.0</td></tr>
+          <tr><td>dirs</td><td>Platform data/config directory resolution.</td><td>MIT / Apache-2.0</td></tr>
+          <tr><td>quick-xml</td><td>Pull parser for EndNote XML / MODS / MARCXML / Zotero RDF.</td><td>MIT</td></tr>
+          <tr><td>reqwest <code>net</code></td><td>Blocking HTTP + native-tls for DOI/ISBN/PMID and Zotero/WebDAV sync.</td><td>MIT / Apache-2.0</td></tr>
+          <tr><td>lopdf <code>pdf</code></td><td>Pure-Rust PDF text extraction and build (no native libs).</td><td>MIT</td></tr>
+          <tr><td>tauri <code>tauri</code></td><td>Tauri v2 host integration for the desktop app.</td><td>MIT / Apache-2.0</td></tr>
         </tbody>
       </table>
-      <p class="note">The full feature-by-feature breakdown lives in <code>crates/zcite-core/PORT_REPORT.md</code> in the source tree.</p>
+      <div class="feature-grid" style="margin-top:1.2rem;">
+        <div class="feature-card"><h4>Pure Core</h4><p>The five base crates carry no TLS or socket stack, so <code>zcite-core</code> compiles headless in CI with default features stripped.</p></div>
+        <div class="feature-card"><h4>Optional net</h4><p>The default-on <code>net</code> feature pulls in <code>reqwest</code> for DOI/ISBN/PMID lookup and Zotero/WebDAV sync.</p></div>
+        <div class="feature-card"><h4>Optional pdf</h4><p>The default-on <code>pdf</code> feature uses pure-Rust <code>lopdf</code> for text extraction &mdash; no native PDF libraries required.</p></div>
+        <div class="feature-card"><h4>Tauri host</h4><p>The <code>tauri</code> feature gates the Tauri v2 integration so non-desktop hosts never compile it.</p></div>
+      </div>
 
-      <h2 class="reg-h">What the engine does</h2>
-      <table>
-        <thead><tr><th>area</th><th>detail</th></tr></thead>
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">The suite carries <strong>94</strong> tests in total &mdash; <strong>78</strong> unit tests living alongside the modules (<code>#[test]</code> / <code>#[tokio::test]</code> across schema, store, search, bib, csl, import, export, xml_formats, identifier, pdf, duplicates, zotero, webdav and util) plus <strong>16</strong> integration tests in <code>tests/integration.rs</code> that exercise the public <code>Engine::invoke</code> command surface end to end. Tests use no external fixtures &mdash; lopdf both builds and reads back the PDFs the pdf tests need &mdash; so the suite runs headless. Coverage against the full Zotero feature surface is hand-assessed conservatively in <code>scripts/port_features.tsv</code> and grep-verified against the real source; see the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zcite/zcite_port_report.html">port report</a> for the per-feature breakdown.</p>
+      <table class="file-table">
+        <thead><tr><th>Suite</th><th>Location</th><th class="num">Tests</th><th>Coverage</th></tr></thead>
         <tbody>
-          <tr><td>Library</td><td>all 37 Zotero reference types (base-field renames resolved), standalone + child notes, nested collections, colored tags, related items, trash + restore, group libraries</td></tr>
-          <tr><td>Acquire</td><td>DOI (CrossRef) · ISBN (Open Library) · PMID (NCBI) · arXiv; retrieve-metadata-from-PDF; import BibTeX / RIS / CSL-JSON / EndNote XML / MODS / MARCXML / Zotero RDF; Zotero account pull (Web API) + WebDAV attachment sync</td></tr>
-          <tr><td>Cite</td><td>APA, MLA, Chicago (author-date + notes-bibliography), IEEE — or any loaded <code>.csl</code> via the built-in CSL processor; BibTeX cite-key generation</td></tr>
-          <tr><td>Find</td><td>quick search across every field (incl. indexed text/HTML/PDF attachments), condition-based saved searches, duplicate detection + merge</td></tr>
-          <tr><td>Export</td><td>BibTeX, RIS, CSL-JSON, EndNote XML, MODS, MARCXML, Zotero RDF — by selection, collection, or whole library</td></tr>
+          <tr><td>Unit tests</td><td><code>#[test]</code> / <code>#[tokio::test]</code> alongside modules</td><td class="num">78</td><td>schema, store, search, bib, csl, import, export, xml_formats, identifier, pdf, duplicates, zotero, webdav, util</td></tr>
+          <tr><td>Integration tests</td><td><code>tests/integration.rs</code></td><td class="num">16</td><td>public <code>Engine::invoke</code> command surface, end to end</td></tr>
+          <tr class="total-row"><td>Total</td><td>headless, no external fixtures</td><td class="num">94</td><td>lopdf builds and reads back the PDFs the pdf tests need</td></tr>
         </tbody>
       </table>
 
-      <h2 class="reg-h">Build model</h2>
-      <p class="note">The engine builds as <code>rlib</code> + <code>staticlib</code> + <code>cdylib</code> (<code>cargo build</code> in <code>crates/zcite-core</code>) with a unit + integration test suite, including a <code>--no-default-features</code> pure-core build for headless CI. The same engine embeds inside the other MenkeTechnologies GUI apps.</p>
-
-      <footer class="doc-footer">MenkeTechnologies &middot; zcite &middot; engineering report</footer>
     </main>
+    <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      ZCITE &middot; ENGINEERING REPORT &middot; MENKETECHNOLOGIES
+    </footer>
   </div>
-  <script src="../hud-theme.js"></script>
+
+  <script>
+    const html = document.documentElement;
+    const btnTheme = document.getElementById('btnTheme');
+    const btnCrt = document.getElementById('btnCrt');
+    const btnNeon = document.getElementById('btnNeon');
+    const crtH = document.getElementById('crtH');
+    const crtV = document.getElementById('crtV');
+    btnTheme?.addEventListener('click', () => {
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+    btnCrt?.addEventListener('click', () => {
+      btnCrt.classList.toggle('active');
+      const on = btnCrt.classList.contains('active');
+      if (crtH) crtH.style.display = on ? '' : 'none';
+      if (crtV) crtV.style.display = on ? '' : 'none';
+    });
+    btnNeon?.addEventListener('click', () => {
+      btnNeon.classList.toggle('active');
+      document.querySelector('.app')?.classList.toggle('neon-off');
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => { requestAnimationFrame(() => { bar.style.width = w; }); });
+      });
+    });
+  </script>
 </body>
 </html>

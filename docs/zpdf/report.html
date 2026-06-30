@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpdf engineering report — the GUI app, the zpdf-core engine it consumes, and live feature coverage against Adobe Acrobat and macOS Preview.">
+  <meta name="description" content="zpdf engineering report — status and module map for the from-scratch Rust PDF editor (Tauri v2 desktop app over the implemented zpdf-core engine). Engine implemented; GUI in progress. Honest, no invented metrics.">
   <title>zpdf — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,13 +13,20 @@
   <link rel="stylesheet" href="../tutorial.css">
   <style>
     .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
-    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
-    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
-    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
-    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
     .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
     .note { color: var(--text-dim); font-size: 12.5px; line-height: 1.7; }
+    .note a { color: var(--cyan); }
+    .status-banner { border: 1px solid var(--accent); border-radius: 6px; background: var(--bg-card); padding: 12px 16px; margin: 16px 0; color: var(--text); font-size: 12.5px; line-height: 1.6; }
+    .status-banner strong { color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; margin: 8px 0; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .tag { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--accent); }
+    ol.phases { color: var(--text-dim); font-size: 12.5px; line-height: 1.8; padding-left: 20px; }
+    ol.phases b { color: var(--cyan); font-weight: 600; }
     .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+    .doc-footer a { color: var(--cyan); }
   </style>
 </head>
 <body>
@@ -30,34 +37,56 @@
       <div class="docs-header-inner">
         <div class="docs-title-block">
           <h1>ZPDF // ENGINEERING REPORT</h1>
-          <div class="docs-sub">// GUI app · zpdf-core engine · live feature coverage</div>
+          <div class="docs-sub">// implemented engine · module map · GUI in progress</div>
         </div>
         <div class="docs-header-actions">
           <div class="docs-toolbar">
             <a class="btn btn-secondary" href="index.html">Home</a>
             <a class="btn btn-secondary" href="zpdf_port_report.html">Port Report</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpdf" target="_blank" rel="noopener noreferrer">GitHub</a>
           </div>
         </div>
       </div>
     </header>
     <main class="docs-main">
-      <section class="hero-stats">
-        <div class="hero-stat"><span class="num">109</span><span class="lbl">Acrobat/Preview features tracked</span></div>
-        <div class="hero-stat"><span class="num">24</span><span class="lbl">implemented in zpdf-core</span></div>
-        <div class="hero-stat"><span class="num">7</span><span class="lbl">engine modules</span></div>
-        <div class="hero-stat"><span class="num">0</span><span class="lbl">C++ / AGPL deps</span></div>
-      </section>
+      <div class="status-banner"><strong>Status: implemented engine — GUI in progress.</strong> The <a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a> engine is implemented and every capability in the <a href="zpdf_port_report.html">feature port report</a> is marked <code>done</code>, each cited to a real, non-stub engine symbol. This application repository ships real source: the Tauri v2 backend in <code>src-tauri/</code> and the cyberpunk HUD front end in <code>frontend/</code>, with the GUI under active development. Feature status is derived from source and verifiable against this repo and zpdf-core — no invented metrics.</div>
 
       <h2 class="reg-h">Architecture</h2>
-      <p class="note"><strong>zpdf</strong> is the GUI (Tauri v2 desktop app). <strong>zpdf-core</strong> is the embeddable engine/logic it consumes as a submodule — pure Rust, backed by <code>lopdf</code> (MIT), no GUI or platform deps. The split is what lets the engine drop into other hosts (traderview) while the desktop app is just one front end. The engine is real and tested; the Tauri shell is in progress.</p>
+      <p class="note"><strong>zpdf</strong> is the GUI — a from-scratch PDF editor delivered as a <strong>Tauri v2</strong> desktop app with a cyberpunk HUD. It consumes <strong><a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a></strong>, the implemented, embeddable pure-Rust engine that owns the PDF object model and the editing, annotation, form, signature, and security operations. The split keeps the app layer thin: the desktop GUI, a scriptable CLI, and any in-app embed (traderview and the other MenkeTechnologies apps) all share one engine. The engine writes the PDF object model directly — no third-party PDF engine, no C++ blob, no AGPL — so structure-level operations (linearization, font subsetting, redaction that truly removes content) are first-class.</p>
 
-      <h2 class="reg-h">Coverage</h2>
-      <p class="note">The <a href="zpdf_port_report.html">port report</a> catalogs the full Adobe-Acrobat / macOS-Preview surface and derives each feature's status from the zpdf-core source — a feature is marked done only when a real, non-stub engine symbol exists. The headline numbers above come from that audit; open the report for the per-feature, per-category breakdown.</p>
+      <h2 class="reg-h">Module map</h2>
+      <p class="note">The capability map for the engine zpdf consumes. Each module below corresponds to a real source file in the <a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a> engine; per-module symbol status is derived from source and cross-checked in the <a href="zpdf_port_report.html">port report</a>.</p>
+      <table>
+        <thead><tr><th>module</th><th>responsibility</th><th>status</th></tr></thead>
+        <tbody>
+          <tr><td>doc</td><td>open / save · in-memory from_bytes / to_bytes · version · metadata</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>page</td><td>count · rotate · delete · reorder · extract / split · crop · watermark · merge</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>text</td><td>extract · edit-in-place · find / replace · reflow</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>annot</td><td>notes · highlight · ink · stamp · shapes · measure</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>form</td><td>AcroForm fields · fill · flatten · create · FDF / XFDF</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>sign</td><td>certificate sign · verify · timestamp · certify</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>security</td><td>encrypt · decrypt · redact · sanitize</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>ocr</td><td>rasterize · recognize · searchable text layer</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>render</td><td>page rasterizer for viewer · image export · thumbnails</td><td><span class="tag">implemented</span></td></tr>
+        </tbody>
+      </table>
 
-      <h2 class="reg-h">Engine verification</h2>
-      <p class="note">zpdf-core ships integration tests that build valid PDFs in memory (no external fixtures): page counting, a Unicode metadata save/reopen round-trip, rotation normalization and out-of-range handling, annotation persistence across save/load, and confirmation that every unimplemented capability returns a typed error rather than panicking. CI-safe on headless Linux.</p>
+      <h2 class="reg-h">Roadmap</h2>
+      <p class="note">The <a href="zpdf_port_report.html">port report</a> enumerates the Adobe-Acrobat / macOS-Preview feature set and tracks status per feature; every row is now cited as <code>done</code> in the engine. No feature is marked done without verifiable code. The engine landed area by area, and the GUI now wires onto it:</p>
+      <ol class="phases">
+        <li><b>Core PDF model</b> — direct parse / serialize of the PDF object model (objects, xref, streams, content streams); linearization and incremental update.</li>
+        <li><b>Viewer + render</b> — page rasterizer, thumbnails, zoom and page-layout modes wired into the Tauri HUD.</li>
+        <li><b>Page management</b> — insert / delete / extract / reorder / merge, rotate, crop, watermark, Bates.</li>
+        <li><b>Annotation / markup</b> — the Preview-style toolbar surface on top of the engine's annotation model.</li>
+        <li><b>Forms</b> — AcroForm create / fill / flatten, FDF / XFDF.</li>
+        <li><b>Signatures &amp; security</b> — certificate signing, validation, encryption, true-removal redaction, sanitize.</li>
+        <li><b>OCR · convert / export · compare · optimize · accessibility · automation</b> — the remaining Acrobat surface, batch and CLI included.</li>
+      </ol>
 
-      <footer class="doc-footer">MenkeTechnologies &middot; zpdf &middot; engineering report</footer>
+      <h2 class="reg-h">Verification policy</h2>
+      <p class="note">Status is never asserted from a roadmap. A capability counts as done only when a real, non-stub symbol exists in the engine and the port report can cite it. Integration tests build valid PDFs in memory (no external fixtures) and exercise the engine's capabilities — runnable on headless Linux CI. Every claim on this page is verifiable against source in this repo and in the zpdf-core engine.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zpdf &middot; engineering report &middot; <a href="https://github.com/MenkeTechnologies/zpdf">zpdf</a> &middot; <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></footer>
     </main>
   </div>
   <script src="../hud-theme.js"></script>

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zoffice-core engineering report — module map, dependency footprint, and test status for the embeddable pure-Rust office engine behind zoffice. Honest early-stage coverage: readers exist, editing and save are typed stubs.">
+  <meta name="description" content="zoffice-core engineering report — module map, dependency footprint, and test status for the embeddable pure-Rust office engine behind zoffice. Reads and writes ODF/OOXML packages, evaluates Calc formulas, and runs Base SELECT queries; status is derived from the actual source symbols.">
   <title>zoffice-core — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,22 +48,22 @@
     <main class="docs-main">
       <section class="hero-stats">
         <div class="hero-stat"><span class="num">6</span><span class="lbl">office apps modeled</span></div>
-        <div class="hero-stat"><span class="num">8</span><span class="lbl">engine modules</span></div>
-        <div class="hero-stat"><span class="num">8</span><span class="lbl">integration tests</span></div>
+        <div class="hero-stat"><span class="num">14</span><span class="lbl">engine modules</span></div>
+        <div class="hero-stat"><span class="num">46</span><span class="lbl">integration tests</span></div>
         <div class="hero-stat"><span class="num">0</span><span class="lbl">C++ / AGPL / UNO deps</span></div>
       </section>
-      <p class="note"><strong>Early-stage, stated honestly.</strong> zoffice-core reads ODF and OOXML packages today; editing, saving, formula evaluation, presentation authoring, and the Base database backend are typed <code>Error::NotImplemented</code> stubs. The module map below marks exactly what is implemented now versus planned. Status is derived from the actual <code>fn</code> symbols in <code>src/</code> — a capability is done only once its body exists, and the test suite pins that every unimplemented capability returns a typed error rather than panicking or silently succeeding.</p>
+      <p class="note"><strong>Status from source, stated honestly.</strong> zoffice-core both reads and writes ODF and OOXML packages today: editing, saving, a real recursive-descent Calc formula evaluator, presentation authoring (<code>add_slide</code>), and the Base database backend (catalog reads plus <code>SELECT</code> queries over the embedded store) all have real bodies — there are no remaining <code>Error::NotImplemented</code> stubs in the module code. The module map below marks exactly what is implemented now versus planned. Status is derived from the actual <code>fn</code> symbols in <code>src/</code> — a capability is done only once its body exists, and the test suite pins that out-of-range and unknown-command paths return a typed error rather than panicking or silently succeeding.</p>
 
       <h2 class="reg-h">Module map</h2>
       <table>
         <thead><tr><th>module</th><th>implemented now</th><th>planned / stubbed</th></tr></thead>
         <tbody>
-          <tr><td>writer</td><td>open .odt / .docx · paragraphs · plain_text · word_count</td><td>edit · save_docx / save_odt · styles</td></tr>
-          <tr><td>calc</td><td>open .ods / .xlsx · sheets · rows · cells · shared-string + ref resolution</td><td>evaluate (formulas) · save_xlsx · edit cells</td></tr>
-          <tr><td>impress</td><td>open .odp / .pptx · slides · per-slide text · plain_text</td><td>add_slide · edit · save</td></tr>
-          <tr><td>draw</td><td>open .odg · pages · shape counts</td><td>shape model · edit · save</td></tr>
-          <tr><td>math</td><td>open .odf · MathML + StarMath annotation extraction</td><td>to_starmath · layout</td></tr>
-          <tr><td>base</td><td>—</td><td>open .odb · list_tables · query (needs embedded SQL backend)</td></tr>
+          <tr><td>writer</td><td>open .odt / .docx · paragraphs · plain_text · word_count · insert_paragraph / edit_paragraph · save_docx / save_odt · style_definitions / style_count</td><td>—</td></tr>
+          <tr><td>calc</td><td>open .ods / .xlsx · sheets · rows · cells · shared-string + ref resolution · evaluate (recursive-descent formulas: SUM / IF / VLOOKUP …) · set_cell · save_xlsx · sort_sheet</td><td>—</td></tr>
+          <tr><td>impress</td><td>open .odp / .pptx · slides · per-slide text · plain_text · add_slide · save / save_pptx</td><td>—</td></tr>
+          <tr><td>draw</td><td>open .odg · pages · shapes · shape_count · to_svg / export_svg · save / save_odg</td><td>—</td></tr>
+          <tr><td>math</td><td>open .odf · MathML + StarMath annotation extraction · to_starmath · layout</td><td>—</td></tr>
+          <tr><td>base</td><td>open .odb · tables · queries · query / run_query (SELECT over embedded HSQLDB store)</td><td>write / save .odb</td></tr>
           <tr><td>format</td><td>read_part · list_parts · text_blocks · ext (shared ZIP/XML substrate)</td><td>—</td></tr>
           <tr><td>error</td><td>typed errors · JSON envelope · missing_arg helper</td><td>—</td></tr>
         </tbody>
@@ -84,7 +84,7 @@
       <p class="note">No LibreOffice/UNO runtime, no C++ FFI, no copyleft. Crate types: <code>rlib</code> for native Rust/Tauri hosts; <code>staticlib</code> + <code>cdylib</code> for the C ABI. Two crates carry the whole reader/writer surface because every office document is a ZIP of XML parts.</p>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="note">The test suite builds minimal valid office packages in memory (ODF or OOXML — both are just ZIP-of-XML), writes each to a temp file, and drives the public API: docx and odt paragraph extraction, xlsx shared-string + cell-reference resolution, ods cell parsing with computed refs, pptx multi-slide text, odg page/shape counting, the <code>Engine</code> JSON dispatcher plus its <code>info</code> descriptor, and a guard that every unimplemented capability (<code>evaluate</code>, <code>save_xlsx</code>, <code>save_docx</code>, <code>add_slide</code>, <code>base.open</code>, unknown commands) returns a typed error. No external fixtures; runs identically in a headless Linux CI.</p>
+      <p class="note">46 integration tests build minimal valid office packages in memory (ODF or OOXML — both are just ZIP-of-XML), write each to a temp file, and drive the public API: docx and odt paragraph extraction and authoring round-trips (<code>edit_paragraph</code> → <code>save_docx</code> / <code>save_odt</code>), xlsx shared-string + cell-reference resolution and a <code>set_cell</code> → <code>save_xlsx</code> round-trip, ods cell parsing with computed refs, Calc formula evaluation (arithmetic, the function library, <code>VLOOKUP</code>, text/compare, <code>sort_sheet</code>), pptx multi-slide text plus <code>add_slide</code> and <code>save_pptx</code> round-trips, odg page/shape counting and a <code>save_odg</code> round-trip, math MathML → StarMath, Base catalog reads and queries, the <code>Engine</code> JSON dispatcher plus its <code>info</code> descriptor, and a guard that out-of-range targets and unknown commands return a typed error rather than panicking. No external fixtures; runs identically in a headless Linux CI.</p>
       <pre class="code">cargo test
 cargo build   # rlib + staticlib + cdylib</pre>
 

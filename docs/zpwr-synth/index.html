@@ -35,6 +35,8 @@
         <nav class="tutorial-crumbs" aria-label="Breadcrumb">
           <span class="current">Docs</span>
           <span class="sep">/</span>
+          <a href="report.html">Report</a>
+          <span class="sep">/</span>
           <a href="https://github.com/MenkeTechnologies/zpwr-synth" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
       </div>
@@ -72,58 +74,36 @@
       (<code>libs/zpwr-patch-core</code>, a git submodule) &mdash; the same signal-agnostic cable-routing core that powers
       <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">zpwr-fx</a>.
       A patch &mdash; a grid of DSP nodes wired by per-input source selection &mdash; <em>is</em> the voice, instantiated across a polyphonic pool.</p>
-      <p>The default voice is <code>Osc(Note) &rarr; VCA &larr; Env(Gate)</code>. It is a fully modular instrument in the lineage of VCV Rack, Cherry Audio Voltage Modular and NI Reaktor Blocks: you build the entire voice by wiring DSP blocks with cables.</p>
+      <p>It is a fully modular instrument in the lineage of VCV Rack, Cherry Audio Voltage Modular and NI Reaktor Blocks: you build the entire voice by wiring DSP blocks with cables.</p>
       <p>Part of the MenkeTechnologies audio stack alongside
       <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">zpwr-fx</a>,
       <a href="https://github.com/MenkeTechnologies/zpwr-midi-fx" target="_blank" rel="noopener noreferrer">zpwr-midi-fx</a>, and
       <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">zpwr-patch-core</a>.</p>
     </section>
 
-    <section class="tutorial-section" id="architecture">
-      <h2>Architecture</h2>
+    <section class="tutorial-section" id="formats">
+      <h2>Formats &amp; Platforms</h2>
+      <p>Builds as AU, VST3, CLAP and Standalone on macOS (Apple Silicon / Intel) and Linux (x86_64 / aarch64). On macOS the default build is a universal binary (<code>x86_64;arm64</code>), so the VST3/AU/CLAP load on both Intel and Apple Silicon hosts. Windows builds VST3 + CLAP (AU is macOS-only).</p>
+      <p>The Standalone hosts the full WebView editor and takes MIDI from any connected input. User presets are <code>.zsynthpatch</code> files under <code>~/Library/zpwr-synth/Presets</code>.</p>
+    </section>
+
+    <section class="tutorial-section" id="patch-model">
+      <h2>Patch Model</h2>
+      <p>The default voice is <code>Osc(Note) &rarr; VCA &larr; Env(Gate)</code>. There is no fixed signal path: a patch &mdash; a grid of DSP nodes wired by per-input source selection &mdash; <em>is</em> the voice, instantiated across a polyphonic pool. Each node carries a type, 4 inputs, up to 12 params and one output:</p>
       <pre>ZpwrSynthProcessor (JUCE AudioProcessor)
   &#9492;&#9472; zsynth::PolyEngine                 # pool of voices, one zpc::RuntimeGraph each
        &#9492;&#9472; zpc::RuntimeGraph (per voice) # the shared core graph, evaluated per sample
-            &#9500;&#9472; nodes[16]   each: type + 4 inputs + up to 12 params + 1 output
-            &#9474;    types: Osc, Wt, Supersaw, FM, Karplus, Additive, Sync, ChordOsc,
-            &#9474;           HardKick, Screech, Hoover, Reese, Sub, Noise, Sample,
-            &#9474;           Granular, Env, VCA, Filter, Folder, Waveshaper, Crusher,
-            &#9474;           Glide, SampleHold, Delay, LFO, RingMod, Drive, Gain, Mixer &hellip;
+            &#9500;&#9472; nodes[N]   each: type + 4 inputs + up to 12 params + 1 output
             &#9500;&#9472; external sources fed per voice (id &rarr; value, supplied each sample):
             &#9474;    In L/R, Noise, Soft Keys (expandable pool), Note, Gate, Velocity, Mod Wheel,
             &#9474;    Pitch Bend, Aftertouch, MPE Pressure / Slide / Bend
             &#9500;&#9472; mods[ ]     route list: source &rarr; (node, param) &times; depth
             &#9492;&#9472; out L / out R  (each selects a source)</pre>
-      <p>The synth-specific node types (<code>dsp/SynthModules.cpp</code>, namespace <code>zsynth</code>) are a DSP pack registered onto the core registry; the generators (<code>Osc</code>, <code>Wt</code>, <code>Sample</code>, <code>Granular</code>) read each voice's <code>Note</code>/<code>Gate</code> straight from the core's <code>ComputeContext::external</code> array, so one patch definition plays polyphonically.</p>
-      <p>The DSP module pack and per-voice graph are headless-unit-tested (<code>tests/synth_modules_test.cpp</code>: oscillator tuning, ADSR, generators). MIDI/MPE reaches the synth from the host or the standalone's MIDI input.</p>
+      <p>The synth-specific node types (<code>dsp/SynthModules.cpp</code>, namespace <code>zsynth</code>) are a DSP pack registered onto the core registry; the generators (<code>Osc</code>, <code>Wt</code>, <code>Sample</code>, <code>Granular</code>) read each voice's <code>Note</code>/<code>Gate</code> straight from the core's <code>ComputeContext::external</code> array, so one patch definition plays polyphonically. The patch is saved as JSON in plugin state. MIDI/MPE reaches the synth from the host or the standalone's MIDI input.</p>
     </section>
 
-    <section class="tutorial-section" id="ui">
-      <h2>User Interface</h2>
-      <p>The editor is a WebView hosting the shared zpwr-patch-core cyberpunk patcher (<code>libs/zpwr-patch-core/webui</code>, served from <code>BinaryData</code>) &mdash; byte-for-byte the same UI zpwr-fx uses: drag-to-patch neon cables (fan-out, feedback, per-cable gain + colour), a dynamic block grid (<strong>+ ADD BLOCK</strong> / delete any number, no fixed node count), double-click a block for its detail modal, and a per-param mod matrix. Panes:</p>
-      <ul>
-        <li><strong>PATCH</strong> &mdash; the node grid + cable routing + an expandable row of soft-key macro knobs (<code>+</code>/<code>&minus;</code> to add/remove; 16 active by default). The toolbar carries an <strong>INIT</strong> button (unplug every cable &amp; mod, keep the blocks) and <strong>&#128465;</strong> (blank the whole patch). An <strong>&#9889; EZ MODE</strong> toggle lays down (and keeps) a playable voice &mdash; generators(Note) &rarr; VCA &larr; amp Env(Gate), then VCA &rarr; Filter (cutoff swept by a second filter Env) &rarr; out. While on, oscillators you add are summed straight into the voice; your generator types are kept. Two toolbar toggles drive the stereo image: <strong>Stereo</strong> mirrors every block into a right-channel clone (an independent dual-mono voice per side), and <strong>Stereo Lock</strong> (shown only when Stereo is on) keeps the two channels in sync &mdash; moving a knob on either side moves its clone by the same delta, and the mirror is bidirectional.</li>
-        <li><strong>PERFORM</strong> &mdash; a play surface with no patching. A <strong>PRESET MORPH</strong> pad bilinearly interpolates between four corner presets (A/B/C/D, host-automatable <code>morphX</code>/<code>morphY</code> so it runs editor-closed; &#127922; fills all four corners at random). An Omnisphere-style <strong>ORB</strong>: drag the puck where the angle selects one of 8 randomised scenes and the distance from centre scales intensity, &#127922; rolls fresh scenes, and &#9210; / &#9654; record the orb gesture and loop it back. XY macro pads (each drives a pair of soft keys, per-pad <strong>HOLD</strong>/<strong>SPRING</strong> release), a row of macro knobs, eight macro-surface <strong>SNAPSHOTS</strong> (click empty to save, filled to recall, right-click to clear), dice/&#127922; <strong>RANDOMIZE</strong> for all macros, <strong>scale/key</strong> quantize + <strong>CHORD</strong> stacking (Oct/5th/Maj/Min/Maj7/Min7/Sus4/Power), and an on-screen keyboard with pitch-bend / mod wheels. The control panel also carries the <strong>MIDI IN</strong> toggles (<strong>PROGRAM</strong> = respond to MIDI Program Change, <strong>BANK</strong> = respond to Bank Select CC0/CC32; both default ON) and the <strong>ARP</strong> controls &mdash; mode (Up/Down/Up-Down/Random/As-Played), rate (<code>1/4</code>&hellip;<code>1/16T</code>) and <strong>LATCH</strong>.</li>
-        <li><strong>PRESETS</strong> &mdash; 256 general factory voices across Factory 1 + Factory 2 (128 each; category-prefixed names: <code>BA</code> bass, <code>LD</code> lead, <code>PD</code> pad, <code>KY</code> keys, <code>PL</code> pluck, <code>BR</code> brass, <code>BE</code> bell, <code>ST</code> strings, <code>DR</code> perc, <code>SEQ</code>/<code>FX</code> etc.) spanning subtractive, FM, additive, supersaw, wavetable, vector, sync and Karplus voices, plus three genre banks designed from documented production techniques &mdash; an uplifting <code>Trance</code> bank, a <code>Hard Techno</code> bank, and a <code>Schranz</code> bank (&approx;160 BPM). Each is generated by an offline tool in <code>tools/gen_*_bank.cpp</code> (shared scaffolding in <code>tools/preset_gen.h</code>). Every preset carries facet tags (Type / Character / Style / Author / Desc) stored in the preset JSON, so the browser's TYPE / CHARACTER / STYLE / BANK facets are fully populated. Plus user presets (<code>.zsynthpatch</code> under <code>~/Library/zpwr-synth/Presets</code>).</li>
-        <li><strong>NKS export</strong> &mdash; every factory voice can be written as a Native Kontrol Standard <code>.nksf</code> preset (RIFF/NIKS container: NISI summary metadata from the facet tags, PLID plugin match, PCHK = the real plugin state, NICA controller page). Each also gets a Komplete Kontrol preview &mdash; a 7&nbsp;s offline render (single sustained C3 + release tail, faded, 44.1&nbsp;kHz Ogg Vorbis) written to <code>&lt;bank&gt;/.previews/&lt;name&gt;.nksf.ogg</code>. Launch the standalone with <code>ZPWR_EXPORT_NKS=&lt;dir&gt;</code> to export every factory voice into one subfolder per bank.</li>
-        <li><strong>SETTINGS</strong> &mdash; master in/out (dB) + bypass, Auto Gain Stage + target, the brickwall limiter, the rest of the audio-engine settings, about.</li>
-      </ul>
-      <h3>Auto gain staging</h3>
-      <p>Two Settings (both on by default) keep the signal between blocks from clipping no matter how hot the patch-cable gains are, per block, inside every voice graph (and the FX buses):</p>
-      <ul>
-        <li><strong>Auto Gain Stage</strong> rides levels &mdash; a fast-attack / slow-release peak follower whose smoothed gain (&le; 1) pulls each block toward the Auto-Gain Target ceiling.</li>
-        <li><strong>Soft Clip</strong> is the guarantee &mdash; an instant (sample-accurate) tanh bound at the same ceiling on every block output, catching the fast transients the AGC's &asymp;2&nbsp;ms attack would miss.</li>
-      </ul>
-      <p>The live cable glow tracks each block's level; turn either off in Settings for raw gain. Distinct from the master Brickwall Limiter (a single hard ceiling on the final output).</p>
-    </section>
-
-    <section class="tutorial-section" id="softkeys">
-      <h2>Soft Keys &amp; Automation</h2>
-      <p>Host-automatable parameters are the soft keys (<code>sk0</code>&hellip;, an expandable pool with a fixed ceiling; 16 active by default, the active count saved in plugin state) plus <code>master_in</code> / <code>master_out</code> / <code>master_bypass</code>; everything else lives in the patch (saved as JSON in plugin state). Modulation is the patching itself: any LFO / Env node output or soft key patched into a node input &mdash; or mod-routed to a param &mdash; is a mod-matrix connection.</p>
-    </section>
-
-    <section class="tutorial-section" id="nodes">
-      <h2>Node Types</h2>
+    <section class="tutorial-section" id="modules">
+      <h2>Modules</h2>
       <p>The full catalog &mdash; every patchable block with its inputs and parameters &mdash; lives in the
       <a href="reference.html">Module Reference</a>, generated from the live registry. The synth-specific generator and shaper nodes added on top of the shared core include:</p>
       <ul>
@@ -160,43 +140,43 @@
       <p>Every oscillator (<code>Osc</code>, <code>Wt</code>, <code>Supersaw</code>, <code>FM</code>, <code>Sub</code>, <code>Sync</code>, <code>Additive</code>) has a <strong>Voices</strong> (1&ndash;11) unison param plus <strong>Detune</strong> (cents) &mdash; detuned copies summed and loudness-normalised. <code>Voices = 1</code> is the classic mono behaviour, so existing patches are unchanged. A first-class <strong>Trigger</strong> modulation source (a 1-sample impulse on each note-on edge) sits alongside Note / Gate / Velocity for modular-style routing.</p>
     </section>
 
-    <section class="tutorial-section" id="build">
-      <h2>Build, Test &amp; Run</h2>
-      <p>JUCE 8.0.13 and clap-juce-extensions are fetched automatically via CMake <code>FetchContent</code> &mdash; no system install required. The <code>libs/zpwr-patch-core</code> submodule must be checked out first.</p>
-      <pre>git submodule update --init --recursive   # one-time: pull zpwr-patch-core
-cmake -B build                            # configure (Unix Makefiles); add -G Ninja for Ninja
-cmake --build build                       # build AU + VST3 + CLAP + Standalone</pre>
-      <p>Build a single target with <code>cmake --build build --target ZpwrSynth_Standalone</code>. Artifacts land under <code>build/ZpwrSynth_artefacts/&lt;config&gt;/</code>:</p>
-      <pre>build/ZpwrSynth_artefacts/&lt;config&gt;/Standalone/ZpwrSynth.app
-build/ZpwrSynth_artefacts/&lt;config&gt;/VST3/ZpwrSynth.vst3
-build/ZpwrSynth_artefacts/&lt;config&gt;/AU/ZpwrSynth.component
-build/ZpwrSynth_artefacts/&lt;config&gt;/CLAP/ZpwrSynth.clap</pre>
-      <p>On macOS the default build is a universal binary (<code>x86_64;arm64</code>). For a faster host-only dev build, configure a fresh build dir with <code>-DCMAKE_OSX_ARCHITECTURES=arm64</code>. <code>scripts/build_pkg.sh</code> bundles the built universal VST3/AU/CLAP into a macOS <code>.pkg</code>; product name, version and bundle id are read from the build tree. Windows builds VST3 + CLAP (AU is macOS-only) via <code>scripts/build_win.ps1 [-Arch x64|ARM64|both] [-Install]</code> (requires Visual Studio 2022 + CMake).</p>
-      <p><code>COPY_PLUGIN_AFTER_BUILD</code> is <code>FALSE</code>, so the AU/VST3/CLAP are not auto-installed into the user plugin folders &mdash; copy them manually if you want the host to scan them. To build against a local JUCE clone (offline): <code>cmake -B build -DFETCHCONTENT_SOURCE_DIR_JUCE=/path/to/JUCE</code>.</p>
-      <h3>Run (dev)</h3>
-      <p>The Standalone is the dev driver &mdash; it hosts the full WebView editor and takes MIDI from any connected input:</p>
-      <pre>open "build/ZpwrSynth_artefacts/Release/Standalone/ZpwrSynth.app"   # macOS
-# or run the binary directly to see stdout/logs:
-build/ZpwrSynth_artefacts/Release/Standalone/ZpwrSynth.app/Contents/MacOS/ZpwrSynth</pre>
-      <p>Export the full NKS factory banks (every voice + Komplete Kontrol previews) by launching the standalone with <code>ZPWR_EXPORT_NKS=&lt;dir&gt;</code> set.</p>
-      <h3>Test</h3>
-      <p>The tests are headless C++ &mdash; no JUCE GUI or audio hardware needed &mdash; registered with CTest and runnable in CI on Linux. They cover the per-block DSP module pack (oscillator tuning, ADSR, generators, analog circuit models), the modular voice-pool engine the plugin runs (note on/off + release, unison, polyphony, mono mode, live edits), and validation of every shipped factory voice (each parses, references only registered blocks, wires an output, and renders finite audio).</p>
-      <pre>cmake --build build                          # builds the test executables alongside the plugin
-ctest --test-dir build --output-on-failure   # run the whole suite
-ctest --test-dir build -R poly               # run a subset by name regex</pre>
-      <h3>Reference docs</h3>
-      <p><code>docs/reference.html</code> is the full node reference &mdash; every patchable synth module with its inputs and parameters, grouped by category. It is generated from the live module registry (the same catalog the plugin's UI shows), so it never drifts from the build. <code>docs/reference.pdf</code> is the same content paginated for print.</p>
-      <pre># regenerate docs/reference.html from the registry
-cmake --build build --target gen_reference
-build/gen_reference docs/reference.html
-# rebuild docs/reference.pdf (needs pandoc + xelatex) - also refreshes the HTML
-scripts/reference_pdf.sh</pre>
-      <p>The renderer (<code>zpc::renderReferenceHtml</code>) lives in zpwr-patch-core and is shared by all four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw); per-module docs come from each block's <code>description</code>/<code>category</code> metadata.</p>
+    <section class="tutorial-section" id="modulation">
+      <h2>Modulation</h2>
+      <p>Modulation is the patching itself: any LFO / Env node output or soft key patched into a node input &mdash; or mod-routed to a param &mdash; is a mod-matrix connection. The editor exposes a per-param mod matrix; the per-voice graph carries a route list (<code>source &rarr; (node, param) &times; depth</code>).</p>
+      <p>Per-voice external mod sources fed to every patch each sample are Note, Gate, Velocity, Mod Wheel, Pitch Bend, Aftertouch, MPE Pressure / Slide / Bend, Noise, In L/R, and the soft keys (an expandable pool). A first-class <strong>Trigger</strong> source (a 1-sample impulse on each note-on edge) sits alongside Note / Gate / Velocity for modular-style routing.</p>
+    </section>
+
+    <section class="tutorial-section" id="softkeys">
+      <h2>Soft Keys &amp; Automation</h2>
+      <p>Host-automatable parameters are the soft keys (<code>sk0</code>&hellip;, an expandable pool, ceiling 32; 16 active by default, the active count saved in plugin state), <code>master_in</code> / <code>master_out</code> / <code>master_bypass</code>, <strong>plus a reserved pool of 96 <code>Auto N</code> host params</strong> &mdash; right-click any block param to bind it (the Kontakt/Reaktor model), so any module parameter becomes host-automatable / CC-mappable. 32 soft keys + 96 auto params = <strong>128 CC-mappable slots</strong>, one per MIDI CC. Everything else lives in the patch (saved as JSON in plugin state).</p>
+    </section>
+
+    <section class="tutorial-section" id="ui">
+      <h2>User Interface</h2>
+      <p>The editor is a WebView hosting the shared zpwr-patch-core cyberpunk patcher (<code>libs/zpwr-patch-core/webui</code>, served from <code>BinaryData</code>) &mdash; byte-for-byte the same UI zpwr-fx uses: drag-to-patch neon cables (fan-out, feedback, per-cable gain + colour), a dynamic block grid (<strong>+ ADD BLOCK</strong> / delete any number, no fixed node count), double-click a block for its detail modal, and a per-param mod matrix. Panes:</p>
+      <ul>
+        <li><strong>PATCH</strong> &mdash; the node grid + cable routing + an expandable row of soft-key macro knobs (<code>+</code>/<code>&minus;</code> to add/remove; 16 active by default). The toolbar carries an <strong>INIT</strong> button (unplug every cable &amp; mod, keep the blocks) and <strong>&#128465;</strong> (blank the whole patch). An <strong>&#9889; EZ MODE</strong> toggle lays down (and keeps) a playable voice &mdash; generators(Note) &rarr; VCA &larr; amp Env(Gate), then VCA &rarr; Filter (cutoff swept by a second filter Env) &rarr; out. While on, oscillators you add are summed straight into the voice; your generator types are kept. Two toolbar toggles drive the stereo image: <strong>Stereo</strong> mirrors every block into a right-channel clone (an independent dual-mono voice per side), and <strong>Stereo Lock</strong> (shown only when Stereo is on) keeps the two channels in sync &mdash; moving a knob on either side moves its clone by the same delta, and the mirror is bidirectional.</li>
+        <li><strong>SETTINGS</strong> &mdash; master in/out (dB) + bypass, Auto Gain Stage + target, the brickwall limiter, the rest of the audio-engine settings, about.</li>
+      </ul>
+      <h3>Auto gain staging</h3>
+      <p>Two Settings (both on by default) keep the signal between blocks from clipping no matter how hot the patch-cable gains are, per block, inside every voice graph (and the FX buses):</p>
+      <ul>
+        <li><strong>Auto Gain Stage</strong> rides levels &mdash; a fast-attack / slow-release peak follower whose smoothed gain (&le; 1) pulls each block toward the Auto-Gain Target ceiling.</li>
+        <li><strong>Soft Clip</strong> is the guarantee &mdash; an instant (sample-accurate) tanh bound at the same ceiling on every block output, catching the fast transients the AGC's &asymp;2&nbsp;ms attack would miss.</li>
+      </ul>
+      <p>The live cable glow tracks each block's level; turn either off in Settings for raw gain. Distinct from the master Brickwall Limiter (a single hard ceiling on the final output).</p>
     </section>
 
     <section class="tutorial-section" id="playing">
-      <h2>Playing</h2>
-      <p>The editor has an on-screen keyboard at the bottom plus computer-keyboard input: the home/QWERTY rows (<code>A W S E D F T G Y H U J K &hellip;</code>) play a chromatic octave around C4. Click a key once to give the keyboard focus, then type.</p>
+      <h2>Perform</h2>
+      <p>The <strong>PERFORM</strong> pane is a play surface with no patching. A <strong>PRESET MORPH</strong> pad bilinearly interpolates between four corner presets (A/B/C/D, host-automatable <code>morphX</code>/<code>morphY</code> so it runs editor-closed; &#127922; fills all four corners at random). An Omnisphere-style <strong>ORB</strong>: drag the puck where the angle selects one of 8 randomised scenes and the distance from centre scales intensity, &#127922; rolls fresh scenes, and &#9210; / &#9654; record the orb gesture and loop it back. XY macro pads (each drives a pair of soft keys, per-pad <strong>HOLD</strong>/<strong>SPRING</strong> release), a row of macro knobs, eight macro-surface <strong>SNAPSHOTS</strong> (click empty to save, filled to recall, right-click to clear), dice/&#127922; <strong>RANDOMIZE</strong> for all macros, <strong>scale/key</strong> quantize + <strong>CHORD</strong> stacking (Oct/5th/Maj/Min/Maj7/Min7/Sus4/Power), and an on-screen keyboard with pitch-bend / mod wheels. The control panel also carries the <strong>MIDI IN</strong> toggles (<strong>PROGRAM</strong> = respond to MIDI Program Change, <strong>BANK</strong> = respond to Bank Select CC0/CC32; both default ON) and the <strong>ARP</strong> controls &mdash; mode (Up/Down/Up-Down/Random/As-Played), rate (<code>1/4</code>&hellip;<code>1/16T</code>) and <strong>LATCH</strong>.</p>
+      <p>The editor also has an on-screen keyboard at the bottom plus computer-keyboard input: the home/QWERTY rows (<code>A W S E D F T G Y H U J K &hellip;</code>) play a chromatic octave around C4. Click a key once to give the keyboard focus, then type.</p>
+    </section>
+
+    <section class="tutorial-section" id="presets">
+      <h2>Presets</h2>
+      <p>The <strong>PRESETS</strong> pane ships 256 general factory voices across Factory 1 + Factory 2 (128 each; category-prefixed names: <code>BA</code> bass, <code>LD</code> lead, <code>PD</code> pad, <code>KY</code> keys, <code>PL</code> pluck, <code>BR</code> brass, <code>BE</code> bell, <code>ST</code> strings, <code>DR</code> perc, <code>SEQ</code>/<code>FX</code> etc.) spanning subtractive, FM, additive, supersaw, wavetable, vector, sync and Karplus voices, plus three genre banks designed from documented production techniques &mdash; an uplifting <code>Trance</code> bank, a <code>Hard Techno</code> bank, and a <code>Schranz</code> bank (&approx;160 BPM). Each is generated by an offline tool in <code>tools/gen_*_bank.cpp</code> (shared scaffolding in <code>tools/preset_gen.h</code>). Every preset carries facet tags (Type / Character / Style / Author / Desc) stored in the preset JSON, so the browser's TYPE / CHARACTER / STYLE / BANK facets are fully populated. Plus user presets (<code>.zsynthpatch</code> under <code>~/Library/zpwr-synth/Presets</code>).</p>
+      <p><strong>NKS export</strong> &mdash; every factory voice can be written as a Native Kontrol Standard <code>.nksf</code> preset (RIFF/NIKS container: NISI summary metadata from the facet tags, PLID plugin match, PCHK = the real plugin state, NICA controller page). Each also gets a Komplete Kontrol preview &mdash; a 7&nbsp;s offline render (single sustained C3 + release tail, faded, 44.1&nbsp;kHz Ogg Vorbis) written to <code>&lt;bank&gt;/.previews/&lt;name&gt;.nksf.ogg</code>. Launch the standalone with <code>ZPWR_EXPORT_NKS=&lt;dir&gt;</code> to export every factory voice into one subfolder per bank.</p>
     </section>
   </main>
   </div>

@@ -95,15 +95,15 @@
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
       <p class="tutorial-subtitle"><strong>zpwr-file-browser</strong> is the shared multi-pane <strong>file browser</strong> of the MenkeTechnologies GUI stack &mdash; a host-agnostic vanilla-JS front end plus a pure-Rust filesystem crate, both extracted from Audio-Haxor so every app browses files from one source of truth. The front end is loaded as a classic script and calls a fixed set of invoke names on the host IPC object (<code>window.vstUpdater</code>); each host supplies the filesystem backend.</p>
-      <p class="tutorial-subtitle">The Rust crate ships those backend operations as 33 pure <code>pub async fn</code> functions (faithfully ported, no Tauri types), so it builds Tauri-free by default. Enabling the <code>tauri</code> cargo feature additively compiles 34 thin <code>#[tauri::command]</code> wrappers &mdash; one per pure fn, plus the <code>fb_watcher_set</code> watcher command &mdash; each named with the exact invoke name the front end expects.</p>
+      <p class="tutorial-subtitle">The Rust crate ships those backend operations as 34 pure <code>pub async fn</code> functions (faithfully ported, no Tauri types), so it builds Tauri-free by default. Enabling the <code>tauri</code> cargo feature additively compiles 35 thin <code>#[tauri::command]</code> wrappers &mdash; one per pure fn, plus the <code>fb_watcher_set</code> watcher command &mdash; each named with the exact invoke name the front end expects. A parallel <code>capi</code> feature compiles the <code>ffi</code> module, exposing the same surface to non-Tauri (JUCE) hosts through the <code>staticlib</code> C ABI entry <code>fb_invoke</code>.</p>
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">v0.1.0</div><div class="stat-label">Version</div></div>
-        <div class="stat-card"><div class="stat-val cyan">33</div><div class="stat-label">Pure fs_* fns</div></div>
-        <div class="stat-card"><div class="stat-val green">34</div><div class="stat-label">Tauri commands</div></div>
-        <div class="stat-card"><div class="stat-val cyan">3</div><div class="stat-label">Rust src files</div></div>
-        <div class="stat-card"><div class="stat-val green">2,003</div><div class="stat-label">Rust src lines</div></div>
-        <div class="stat-card"><div class="stat-val">15</div><div class="stat-label">Direct deps</div></div>
+        <div class="stat-card"><div class="stat-val cyan">34</div><div class="stat-label">Pure fs_* fns</div></div>
+        <div class="stat-card"><div class="stat-val green">35</div><div class="stat-label">Tauri commands</div></div>
+        <div class="stat-card"><div class="stat-val cyan">4</div><div class="stat-label">Rust src files</div></div>
+        <div class="stat-card"><div class="stat-val green">2,226</div><div class="stat-label">Rust src lines</div></div>
+        <div class="stat-card"><div class="stat-val">16</div><div class="stat-label">Direct deps</div></div>
         <div class="stat-card"><div class="stat-val cyan">5,359</div><div class="stat-label">Front-end JS lines</div></div>
         <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Host apps</div></div>
       </div>
@@ -116,23 +116,24 @@
         <tbody>
           <tr><td>Front end</td><td><code>webui/file-browser.js</code> (5,359 lines) + <code>file-browser.css</code> + the <code>#tabFiles</code> markup; multi-pane, sortable + resizable columns, fzf filter with matched-char highlight, color labels, tree sidebar, context menu, text/hex/image quicklook + preview pane, git status</td></tr>
           <tr><td>Backend contract</td><td>the front end calls fixed invoke names on <code>window.vstUpdater.*</code>; each method returns a Promise; unsupported optional capabilities resolve to a neutral value (never throw) so rows/previews degrade gracefully</td></tr>
-          <tr><td>Pure Rust core</td><td><code>crate/src/lib.rs</code> &mdash; 33 <code>pub async fn</code> filesystem functions returning <code>Result&lt;T, String&gt;</code>, no Tauri types; ported verbatim from Audio-Haxor's command bodies with the Tauri layer stripped</td></tr>
-          <tr><td>Tauri command layer</td><td><code>crate/src/commands.rs</code> &mdash; 34 thin <code>#[tauri::command]</code> wrappers (each awaits its pure counterpart), compiled only under the additive <code>tauri</code> feature; param names mirror the pure fns so Tauri's camelCase&rarr;snake_case arg mapping resolves</td></tr>
+          <tr><td>Pure Rust core</td><td><code>crate/src/lib.rs</code> &mdash; 34 <code>pub async fn</code> filesystem functions returning <code>Result&lt;T, String&gt;</code>, no Tauri types; ported verbatim from Audio-Haxor's command bodies with the Tauri layer stripped</td></tr>
+          <tr><td>Tauri command layer</td><td><code>crate/src/commands.rs</code> &mdash; 35 thin <code>#[tauri::command]</code> wrappers (each awaits its pure counterpart), compiled only under the additive <code>tauri</code> feature; param names mirror the pure fns so Tauri's camelCase&rarr;snake_case arg mapping resolves</td></tr>
+          <tr><td>C ABI layer</td><td><code>crate/src/ffi.rs</code> &mdash; the <code>staticlib</code> C ABI for non-Tauri (JUCE) hosts, compiled under the additive <code>capi</code> feature; one entry <code>fb_invoke(cmd, args_json)</code> dispatches by name into the pure fns and returns a JSON envelope, with <code>fb_string_free</code> to release results</td></tr>
           <tr><td>Watcher</td><td><code>crate/src/fb_watcher.rs</code> &mdash; framework-agnostic <code>WatcherSession</code>; <code>notify</code>-based, non-recursive, 300&nbsp;ms-debounced single-directory watch; canonicalizes the path and hands it back; always compiled (no Tauri/JUCE types)</td></tr>
-          <tr><td>Build</td><td>Cargo <code>crate-type = ["rlib"]</code>, <code>publish = false</code>; <code>cargo build</code> (no features) stays Tauri-free; <code>--features tauri</code> adds the command layer</td></tr>
+          <tr><td>Build</td><td>Cargo <code>crate-type = ["rlib", "staticlib"]</code>, <code>publish = false</code>; <code>cargo build</code> (no features) stays Tauri-free; <code>--features tauri</code> adds the command layer; <code>--features capi</code> adds the <code>staticlib</code> C ABI</td></tr>
         </tbody>
       </table>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FILESYSTEM SURFACE</h2>
-      <p>33 pure functions in <code>lib.rs</code>, mirrored by 34 command wrappers in <code>commands.rs</code> (the extra wrapper is <code>fb_watcher_set</code>). Grouped by role:</p>
+      <p>34 pure functions in <code>lib.rs</code>, mirrored by 35 command wrappers in <code>commands.rs</code> (the extra wrapper is <code>fb_watcher_set</code>). Grouped by role:</p>
       <table class="arch-table">
         <thead><tr><th>Group</th><th>Functions</th></tr></thead>
         <tbody>
           <tr><td>List / inspect</td><td><code>fs_list_dir</code> &middot; <code>fs_list_subdirs</code> &middot; <code>fs_get_info</code> &middot; <code>fs_folder_size</code> &middot; <code>fs_disk_usage</code> &middot; <code>fs_xattrs</code> &middot; <code>fs_git_status</code></td></tr>
           <tr><td>Create / modify</td><td><code>fs_create_dir</code> &middot; <code>fs_create_file</code> &middot; <code>fs_touch</code> &middot; <code>fs_copy_path</code> &middot; <code>fs_duplicate</code> &middot; <code>fs_make_alias</code> &middot; <code>fs_chmod</code> &middot; <code>fs_symlink_retarget</code> &middot; <code>rename_file</code></td></tr>
           <tr><td>Delete</td><td><code>delete_file</code> &middot; <code>move_to_trash</code> &middot; <code>fs_secure_delete</code></td></tr>
-          <tr><td>Read / preview</td><td><code>fs_read_head</code> &middot; <code>fs_read_head_bytes</code> &middot; <code>fs_read_file_base64</code> &middot; <code>fs_read_file_bytes</code></td></tr>
+          <tr><td>Read / preview</td><td><code>fs_read_head</code> &middot; <code>fs_read_head_bytes</code> &middot; <code>fs_read_file_base64</code> &middot; <code>fs_write_file_base64</code> &middot; <code>fs_read_file_bytes</code></td></tr>
           <tr><td>Search / compare</td><td><code>fs_grep</code> &middot; <code>fs_find_duplicates</code> &middot; <code>fs_compare_dirs</code> &middot; <code>fs_diff</code> &middot; <code>fs_hash</code></td></tr>
           <tr><td>Archive</td><td><code>fs_compress</code> (zip) &middot; <code>fs_extract</code> (.zip / .tar / .tar.gz / .tgz / .7z)</td></tr>
           <tr><td>Open / run</td><td><code>fs_open_in_editor</code> &middot; <code>fs_open_terminal</code> &middot; <code>fs_run_program</code></td></tr>
@@ -147,7 +148,7 @@
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">$</span>DEPENDENCIES</h2>
-      <p>15 direct dependencies in <code>[dependencies]</code>, plus <code>xattr</code> under the <code>cfg(unix)</code> target. <code>tauri</code> is optional (pulled in only by the <code>tauri</code> feature).</p>
+      <p>16 direct dependencies in <code>[dependencies]</code>, plus <code>xattr</code> under the <code>cfg(unix)</code> target. <code>tauri</code> and <code>futures</code> are optional (pulled in only by the <code>tauri</code> and <code>capi</code> features respectively).</p>
       <table class="arch-table">
         <thead><tr><th>Dependency</th><th>Role</th></tr></thead>
         <tbody>
@@ -163,6 +164,7 @@
           <tr><td><code>notify</code></td><td>filesystem watcher backend (FSEvents / inotify, poll fallback)</td></tr>
           <tr><td><code>xattr</code> (unix)</td><td>extended attributes for <code>fs_xattrs</code></td></tr>
           <tr><td><code>tauri</code> (optional)</td><td>command layer &mdash; only compiled under the <code>tauri</code> feature</td></tr>
+          <tr><td><code>futures</code> (optional)</td><td>minimal <code>block_on</code> executor driving the sync-bodied <code>fs_*</code> fns from the C ABI &mdash; only compiled under the <code>capi</code> feature</td></tr>
         </tbody>
       </table>
 
@@ -186,8 +188,8 @@
         <tbody>
           <tr><td>Version</td><td>0.1.0</td></tr>
           <tr><td>License</td><td>MIT</td></tr>
-          <tr><td>Crate type</td><td><code>rlib</code> (<code>publish = false</code>); <code>tauri</code> feature additive</td></tr>
-          <tr><td>Rust source</td><td>3 files, 2,003 lines (<code>lib.rs</code>, <code>commands.rs</code>, <code>fb_watcher.rs</code>)</td></tr>
+          <tr><td>Crate type</td><td><code>rlib</code> + <code>staticlib</code> C ABI (<code>publish = false</code>); <code>tauri</code> and <code>capi</code> features additive</td></tr>
+          <tr><td>Rust source</td><td>4 files, 2,226 lines (<code>lib.rs</code>, <code>commands.rs</code>, <code>fb_watcher.rs</code>, <code>ffi.rs</code>)</td></tr>
           <tr><td>Front end</td><td><code>file-browser.js</code> (5,359), <code>file-browser.css</code> (1,876), <code>file-browser.html</code> (168)</td></tr>
           <tr><td>Hosts</td><td><a href="https://github.com/MenkeTechnologies/Audio-Haxor">Audio-Haxor</a>, <a href="https://github.com/MenkeTechnologies/traderview">traderview</a>, <a href="https://github.com/MenkeTechnologies/ztranslator">ztranslator</a> (Tauri), <a href="https://github.com/MenkeTechnologies/zpwr-daw">zpwr-daw</a> (JUCE)</td></tr>
           <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>

@@ -4,145 +4,231 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-patch-core — engineering report. Signal-agnostic modular patch graph: dependency, architecture, layout, status.">
-  <title>zpwr-patch-core — Engineering Report</title>
+  <meta name="description" content="Engineering report for zpwr-patch-core — module map, dependency footprint and test status of the signal-agnostic modular patch graph behind the MenkeTechnologies plugin stack.">
+  <title>zpwr-patch-core &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../hud-static.css">
-  <link rel="stylesheet" href="../product.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .mapping-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .mapping-card { border:1px solid var(--border);border-left:3px solid var(--magenta);background:var(--bg-card);padding:0.6rem 0.9rem;border-radius:2px; }
+    .mapping-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--magenta);margin:0 0 0.3rem; }
+    .mapping-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.5; }
+    .mapping-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+    .feature-card li code { font-size:10px; }
+  </style>
 </head>
-<body class="crt">
-  <header class="tutorial-header">
-    <div class="tutorial-header-inner">
-      <h1 class="tutorial-brand">// ZPWR-PATCH-CORE</h1>
-      <nav class="tutorial-crumbs" aria-label="Breadcrumb">
-        <a href="../">MenkeTechnologiesMeta</a>
-        <span class="sep">/</span>
-        <a href="./">zpwr-patch-core</a>
-        <span class="sep">/</span>
-        <span class="current">Engineering report</span>
-        <span class="sep">/</span>
-        <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">GitHub</a>
-      </nav>
-    </div>
-  </header>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-PATCH-CORE &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="blocks.html">Blocks</a>
+            <span class="sep">/</span>
+            <a href="vcv_port_report.html">Port Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            v0.3.0 &middot; patch JSON v4 &middot; juce_core-only routing graph &middot; module map &middot; dependency footprint &middot; test status
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+    <main class="tutorial-main">
 
-  <main class="tutorial-main">
-    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
-    <p class="tutorial-subtitle">Signal-agnostic modular patch graph — the shared routing core for <code>zpwr-fx</code>, <code>zpwr-synth</code>, and <code>zpwr-midi-fx</code>. <span class="tag-paid">Private core.</span></p>
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">
+        zpwr-patch-core (<code>zpc</code>) is the signal-agnostic modular patch graph shared by the
+        MenkeTechnologies plugin stack &mdash; zpwr-fx, zpwr-synth and zpwr-midi-fx. It is built as a
+        static library (<code>zpwr::patch_core</code>) from eight translation units and ~57 headers
+        under <code>include/zpc/</code>, and ships universal (x86_64 + arm64) on macOS. The graph is
+        templated on the signal type carried between nodes: <code>float</code> for audio, a note-event
+        stream for MIDI. The headline numbers are taken from the live registries the plugins run
+        (4238 blocks across the Audio / Synth / MIDI registries, per
+        <a href="blocks.html" style="color:var(--accent-light);">the Block Catalog</a>); coverage against the
+        VCV Rack / Voltage Modular / Eurorack ecosystems (7374 modules audited) is in the
+        <a href="vcv_port_report.html" style="color:var(--accent-light);">Port Report</a>.
+      </p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">4238</div><div class="stat-label">Blocks Registered</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Registries (FX / Synth / MIDI)</div></div>
+        <div class="stat-card"><div class="stat-val green">1</div><div class="stat-label">Runtime Dependency</div></div>
+        <div class="stat-card"><div class="stat-val">7</div><div class="stat-label">Headless Test Suites</div></div>
+        <div class="stat-card"><div class="stat-val">~57</div><div class="stat-label">Headers (include/zpc)</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Translation Units</div></div>
+        <div class="stat-card"><div class="stat-val">v4</div><div class="stat-label">Patch JSON Version</div></div>
+        <div class="stat-card"><div class="stat-val">7374</div><div class="stat-label">Modules Audited (Port Report)</div></div>
+      </div>
 
-    <section class="tutorial-section">
-      <h2>Build &amp; Position</h2>
-      <table class="report">
-        <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
-        <tr><td>Language</td><td>C++20</td><td><code>CMAKE_CXX_STANDARD 20</code>, standard required</td></tr>
-        <tr><td>Dependency</td><td>juce_core only</td><td>no audio / MIDI / GUI / networking coupling; JUCE curl path disabled</td></tr>
-        <tr><td>Consumed as</td><td><code>zpwr::patch_core</code></td><td>added via <code>add_subdirectory</code>; consumers normally already provide <code>juce::juce_core</code></td></tr>
-        <tr><td>Signal type</td><td>templated</td><td><code>SignalTraits&lt;S&gt;</code> — <code>float</code> for audio, note-event stream for MIDI</td></tr>
-        <tr><td>Core modules</td><td>Expr · Gain · Mixer</td><td>registered by <code>registerCoreModules</code>; hosts add their own</td></tr>
-        <tr><td>Editor</td><td>WebView</td><td>shared <code>WebEditor&lt;Engine&gt;</code> backend, ~30 native functions</td></tr>
-        <tr><td>Audio pack</td><td>1190+ module types</td><td><code>registerAudioModules</code> (consumed by zpwr-fx/zpwr-synth); includes a 100+-model analog pack (<code>registerAnalog</code>); parity in <code>FX_PARITY.md</code></td></tr>
-        <tr><td>Test</td><td>PatchCoreTest</td><td>headless console app, builds against a JUCE checkout via <code>ZPC_JUCE_DIR</code></td></tr>
-        <tr><td>Status</td><td>shipping core</td><td>private — backs the paid audio stack</td></tr>
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>MODULE MAP</h2>
+      <p class="tutorial-subtitle">
+        The library is a small juce_core-only core plus a set of header-only block packs. The core
+        owns routing, evaluation order, the mod matrix and serialization; the packs register the audio,
+        synthesis and MIDI blocks the plugins expose. Per-block jacks, params and badges live in
+        <a href="blocks.html" style="color:var(--accent-light);">Blocks</a>.
+      </p>
+      <table class="file-table">
+        <thead><tr><th>Unit</th><th>Kind</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>include/zpc/PatchCore.h</code> + <code>src/PatchCore.cpp</code></td><td>core</td><td>Patch data, module registry, runtime graph, engine; routing / topological order / mod-matrix / per-sample eval; the signal-agnostic core modules (Expr, Gain, Mixer); JSON serialization and version migration.</td></tr>
+          <tr><td><code>include/zpc/ScriptEngine.h</code> + <code>src/ScriptEngine.cpp</code></td><td>core</td><td>RT-safe expression VM exposed as the <code>Expr</code> module.</td></tr>
+          <tr><td><code>include/zpc/WebEditor.h</code></td><td>header</td><td>Shared WebView editor backend &mdash; catalog / patch / preset / browser native functions consumed by every host.</td></tr>
+          <tr><td><code>include/zpc/HostSupport.h</code></td><td>header</td><td>Soft-knob pool, host state, BinaryData finder, <code>MidiInbox</code>, CPU / RAM meters.</td></tr>
+          <tr><td><code>include/zpc/LayeredEngine.h</code></td><td>header</td><td>Unlimited layers, each a full engine copy, with per-layer parallel / series bus routing + JSON round-trip.</td></tr>
+          <tr><td><code>include/zpc/GlobalMods.h</code></td><td>header</td><td>Shared global-modulator bus &mdash; LFOs / envelopes / random + the full MIDI / MPE source set.</td></tr>
+          <tr><td><code>include/zpc/ReferenceDoc.h</code></td><td>header</td><td>Offline reference-page renderer (registry &rarr; reference.html / PDF).</td></tr>
+          <tr><td><code>include/zpc/PresetStore.h</code>, <code>PresetTags.h</code>, <code>BlockPresets.h</code></td><td>header</td><td>File-based preset CRUD, BROWSE-tab tag vocabulary, and per-block factory presets.</td></tr>
+          <tr><td><code>include/zpc/Wavetables.h</code>, <code>Scala.h</code>, <code>Multisample.h</code>, <code>Sfz/SampleLoad.h</code>, <code>Nksf.h</code></td><td>header</td><td>Wavetable oscillator + tables, Scala microtuning, multisample / SFZ / NKSF sample loading.</td></tr>
+          <tr><td><code>include/zpc/dsp/*</code> + <code>src/dsp/WavetableBank.cpp</code></td><td>dsp</td><td>juce-free synthesis DSP primitives &mdash; virtual-analog oscillator, filter, wavetable bank.</td></tr>
+          <tr><td><code>src/midi/*</code> (Scale, ChordDictionary, ChordEngine, Arpeggiator, MidiModules)</td><td>midi</td><td>Shared note-stream module registry + chord &amp; scale engines, used by zpwr-midi-fx and zpwr-synth.</td></tr>
+          <tr><td>block packs: <code>AudioModules.h</code>, <code>Analog*.h</code>, <code>Circuit.h</code>, <code>TubeAmp.h</code>, <code>Eventide.h</code>, <code>Valhalla.h</code>, <code>Traktor*.h</code>, <code>Physical*.h</code>, <code>Synthesis.h</code>, <code>MoreOscillators.h</code>, <code>GranularSpectral.h</code>, <code>Convolution.h</code>, <code>NovelBlocks.h</code></td><td>header</td><td>Register the audio and synthesis blocks listed in the catalog; per-block jacks / params / badges live in <a href="blocks.html" style="color:var(--accent-light);">Blocks</a>.</td></tr>
+        </tbody>
       </table>
-    </section>
 
-    <section class="tutorial-section">
-      <h2>Architecture</h2>
-      <figure class="diagram">
-      <svg viewBox="0 0 760 312" role="img" aria-label="zpwr-patch-core architecture: signal-agnostic templated patch graph">
-        <defs>
-          <marker id="ah-cy" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow" d="M0,0 L8,4 L0,8 Z"/></marker>
-          <marker id="ah-mag" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow-mag" d="M0,0 L8,4 L0,8 Z"/></marker>
-        </defs>
-        <rect class="d-box-mag" x="196" y="14" width="360" height="26" rx="5"/>
-        <text class="d-t-mag" x="376" y="31" text-anchor="middle">WebEditor&lt;Engine&gt; · catalog / patch / preset · JSON serialise + migrate</text>
-        <rect class="d-box" x="20" y="58" width="150" height="58" rx="6"/>
-        <text class="d-t-cy" x="95" y="78" text-anchor="middle">ext sources</text>
-        <text class="d-t-sm" x="95" y="94" text-anchor="middle">In L/R · noise · keys</text>
-        <text class="d-t-sm" x="95" y="108" text-anchor="middle">MIDI / MPE</text>
-        <rect class="d-box" x="20" y="150" width="150" height="50" rx="6"/>
-        <text class="d-t-cy" x="95" y="172" text-anchor="middle">ModuleRegistry&lt;S&gt;</text>
-        <text class="d-t-sm" x="95" y="188" text-anchor="middle">node types</text>
-        <rect class="d-group" x="196" y="50" width="360" height="170" rx="8"/>
-        <text class="d-cap" x="206" y="68">PatchEngine&lt;S&gt; — topo eval · lock-free swap</text>
-        <rect class="d-box" x="214" y="104" width="86" height="42" rx="6"/><text class="d-t" x="257" y="129" text-anchor="middle">Node 0</text>
-        <rect class="d-box" x="333" y="104" width="86" height="42" rx="6"/><text class="d-t" x="376" y="129" text-anchor="middle">Node 1</text>
-        <rect class="d-box" x="452" y="104" width="86" height="42" rx="6"/><text class="d-t" x="495" y="129" text-anchor="middle">Node N</text>
-        <line class="d-flow" x1="300" y1="125" x2="331" y2="125" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="419" y1="125" x2="450" y2="125" marker-end="url(#ah-cy)"/>
-        <path class="d-flow" d="M495,104 C495,76 257,76 257,102" marker-end="url(#ah-cy)"/>
-        <text class="d-t-sm" x="376" y="82" text-anchor="middle">feedback · 1-sample delay</text>
-        <path class="d-mod" d="M257,146 L257,176 L495,176 L495,148" marker-end="url(#ah-mag)"/>
-        <text class="d-t-mag" x="376" y="195" text-anchor="middle">per-param mod matrix (source, depth)</text>
-        <line class="d-flow" x1="170" y1="86" x2="212" y2="118" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="170" y1="172" x2="212" y2="138" marker-end="url(#ah-cy)"/>
-        <rect class="d-box" x="590" y="92" width="152" height="34" rx="6"/><text class="d-t" x="666" y="113" text-anchor="middle">S signal out</text>
-        <rect class="d-box" x="590" y="136" width="152" height="34" rx="6"/><text class="d-t-sm" x="666" y="157" text-anchor="middle">float mod projection</text>
-        <line class="d-flow" x1="538" y1="116" x2="588" y2="109" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="538" y1="134" x2="588" y2="150" marker-end="url(#ah-cy)"/>
-        <rect class="d-box-acc" x="20" y="252" width="352" height="44" rx="6"/>
-        <text class="d-t-acc" x="40" y="270">S = float</text>
-        <text class="d-t" x="40" y="288">→ audio · zpwr-fx, zpwr-synth</text>
-        <rect class="d-box-acc" x="390" y="252" width="352" height="44" rx="6"/>
-        <text class="d-t-acc" x="410" y="270">S = NoteStream</text>
-        <text class="d-t" x="410" y="288">→ MIDI · zpwr-midi-fx</text>
-      </svg>
-      <figcaption>One templated graph (SignalTraits&lt;S&gt;) compiled twice — float for audio, a note-event stream for MIDI.</figcaption>
-      </figure>
-    </section>
+      <hr class="section-rule">
 
-    <section class="tutorial-section">
-      <h2>Runtime model</h2>
-      <p>Nodes are wired by source id with fan-out and feedback. The runtime graph
-      is rebuilt in topological order on each structural edit; cycles resolve with a
-      one-sample delay. Every node param carries a <code>(source, depth)</code>
-      mod-matrix entry, and every cable has its own gain + colour. Live param edits
-      are lock-free (atomic params); structural edits build a new graph and swap it
-      atomically so the audio thread never blocks.</p>
-      <pre>g-&gt;evalSample (timeIndex, ext, N);
-out = g-&gt;sourceValue (g-&gt;outputSource (0)) * g-&gt;outputGain (0);</pre>
-      <p>Each node exposes an <code>S</code> signal output plus a <code>float</code>
-      scalar projection used as its mod-matrix value; the <code>float</code>
-      instantiation is the plain audio graph.</p>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>Serialisation &amp; migration</h2>
-      <p><code>patchToJson</code> stamps <code>"v": kPatchJsonVersion</code>;
-      <code>patchJsonVersion(json)</code> reads it (missing ⇒ 1 = legacy).
-      <code>migrateSourceIds(patch, remap)</code> rewrites every source id a patch
-      references — input cables, mod sources, outputs — so hosts can shift a legacy
-      external-source layout forward on load.</p>
-    </section>
-
-    <section class="tutorial-section">
-      <h2>Layout</h2>
-      <table class="report">
-        <tr><th>Path</th><th>Role</th></tr>
-        <tr><td><code>include/zpc/PatchCore.h</code></td><td>patch data, module registry, runtime graph, engine, serialization</td></tr>
-        <tr><td><code>include/zpc/ScriptEngine.h</code></td><td>RT-safe expression VM (the <code>Expr</code> module)</td></tr>
-        <tr><td><code>include/zpc/WebEditor.h</code></td><td>shared WebView editor backend (catalog / patch / preset native functions)</td></tr>
-        <tr><td><code>include/zpc/HostSupport.h</code></td><td>host integration helpers</td></tr>
-        <tr><td><code>src/PatchCore.cpp</code></td><td>routing / topo / mod-matrix / eval + core modules + serialization / migration</td></tr>
-        <tr><td><code>src/ScriptEngine.cpp</code></td><td>expression VM implementation</td></tr>
-        <tr><td><code>tests/PatchCoreTest.cpp</code></td><td>headless unit test</td></tr>
-        <tr><td><code>webui/</code></td><td>shared WebView UI (cyberpunk CSS, fonts, JUCE interop JS)</td></tr>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DEPENDENCY FOOTPRINT</h2>
+      <p class="tutorial-subtitle">
+        The routing library is deliberately thin on the link line: exactly one external target, no
+        networking, and PIC so it folds straight into each plugin binary.
+      </p>
+      <table class="file-table">
+        <thead><tr><th>Dependency</th><th>Scope</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>juce::juce_core</code></td><td>runtime (linked)</td><td>The only external target the graph lib links. <code>JUCE_USE_CURL=0</code> is defined so it pulls in no networking.</td></tr>
+          <tr><td><code>zdsp::core</code></td><td>vendored, not linked here</td><td>Shared real-time audio DSP, header-only at <code>libs/zdsp-core</code>. <em>Not</em> linked into the juce_core-only graph lib &mdash; the audio plugins link it themselves because it needs the heavier JUCE audio modules.</td></tr>
+          <tr><td>JUCE checkout (<code>-DZPC_JUCE_DIR</code>)</td><td>optional, test/tool builds</td><td>Standalone headless test and developer-tool builds pull a JUCE checkout via this flag.</td></tr>
+        </tbody>
       </table>
-    </section>
+      <p class="tutorial-subtitle">
+        Consumers add the core with <code>add_subdirectory</code> and link <code>zpwr::patch_core</code>;
+        the consumer's <code>CMAKE_OSX_ARCHITECTURES</code> (default <code>x86_64;arm64</code>) propagates,
+        so it compiles universal as part of each plugin's VST3 / CLAP binary.
+      </p>
 
-    <div class="note">© MenkeTechnologies. The shared core of the audio stack:
-    <a href="../zpwr-fx/">zpwr-fx</a>, <a href="../zpwr-synth/">zpwr-synth</a>,
-    <a href="../zpwr-midi-fx/">zpwr-midi-fx</a>.</div>
+      <hr class="section-rule">
 
-    <nav class="product-nav">
-      <a href="./">Overview</a>
-      <span class="sep">·</span>
-      <a href="README.md">README</a>
-      <span class="sep">·</span>
-      <a href="../">MenkeTechnologiesMeta</a>
-    </nav>
-  </main>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">
+        Seven headless console-app test suites live under <code>tests/</code> and are built through the
+        JUCE CMake API when <code>juce::juce_core</code> is available. <code>GlobalModsTest</code> and
+        <code>ZdspCheck</code> are gated on <code>juce_audio_basics</code> / the vendored
+        <code>zdsp-core</code> submodule respectively. These suites and the lint were inventoried from
+        the source tree for this report; they were not executed here, so no pass/fail counts are claimed.
+      </p>
+      <table class="file-table">
+        <thead><tr><th>Suite</th><th>Gate</th><th>Covers</th></tr></thead>
+        <tbody>
+          <tr><td><code>PatchCoreTest</code></td><td><code>juce_core</code></td><td>Core patch model, routing, eval, serialization / migration.</td></tr>
+          <tr><td><code>LayeredEngineTest</code></td><td><code>juce_core</code></td><td>Layer stacking + per-layer parallel/series bus routing + JSON round-trip.</td></tr>
+          <tr><td><code>DspModulesTest</code></td><td><code>juce_core</code></td><td>juce-free synthesis DSP primitives.</td></tr>
+          <tr><td><code>MidiModulesTest</code></td><td><code>juce_core</code></td><td>Note-stream registry, chord &amp; scale engines, arpeggiator.</td></tr>
+          <tr><td><code>HostSupportTest</code></td><td><code>juce_core</code></td><td>Soft-knob pool, host state, meters, MidiInbox.</td></tr>
+          <tr><td><code>GlobalModsTest</code></td><td><code>juce_audio_basics</code></td><td>Global-modulator bus: slot layout, MIDI routing, generated sources.</td></tr>
+          <tr><td><code>ZdspCheck</code></td><td>vendored <code>zdsp-core</code></td><td>Vendored shared real-time DSP sanity check.</td></tr>
+        </tbody>
+      </table>
+      <div class="feature-grid" style="margin-top:1.2rem;">
+        <div class="feature-card">
+          <h4>Developer Tools</h4>
+          <p>The build also produces <code>GenSeedModules</code> (seed/registry generation) and
+          <code>DspBench</code> (DSP benchmarking) alongside the test suites.</p>
+        </div>
+        <div class="feature-card">
+          <h4>ASCII String Lint</h4>
+          <p>An ASCII string-literal linter (<code>scripts/lint_ascii_strings.py</code>) rejects
+          non-ASCII bytes inside C++ string / char literals. It runs in CI on every push
+          (<code>.github/workflows/lint-ascii.yml</code>) and is wired as a
+          <code>.githooks/pre-commit</code> hook.</p>
+        </div>
+      </div>
+
+      <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      ZPWR-PATCH-CORE &middot; ENGINEERING REPORT &middot; v0.3.0 &middot; 4238 BLOCKS &middot; 3 REGISTRIES &middot; PATCH JSON v4 &middot; juce_core-ONLY &middot; 7 HEADLESS TEST SUITES &middot; MENKETECHNOLOGIES
+    </footer>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const btnTheme = document.getElementById('btnTheme');
+    const btnCrt = document.getElementById('btnCrt');
+    const btnNeon = document.getElementById('btnNeon');
+    const crtH = document.getElementById('crtH');
+    const crtV = document.getElementById('crtV');
+    btnTheme?.addEventListener('click', () => {
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+    btnCrt?.addEventListener('click', () => {
+      btnCrt.classList.toggle('active');
+      const on = btnCrt.classList.contains('active');
+      if (crtH) crtH.style.display = on ? '' : 'none';
+      if (crtV) crtV.style.display = on ? '' : 'none';
+    });
+    btnNeon?.addEventListener('click', () => {
+      btnNeon.classList.toggle('active');
+      document.querySelector('.app')?.classList.toggle('neon-off');
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => { requestAnimationFrame(() => { bar.style.width = w; }); });
+      });
+    });
+  </script>
 </body>
 </html>

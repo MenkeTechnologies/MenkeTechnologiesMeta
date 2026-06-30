@@ -39,6 +39,9 @@
     .idx-prose { font-size: 13px; line-height: 1.75; color: var(--text-dim); max-width: 46rem; }
     .idx-prose p { margin: 0 0 0.8rem; }
     .idx-prose strong { color: var(--text); font-weight: 600; }
+    .idx-fig { margin: 1.3rem 0 1.5rem; max-width: 52rem; }
+    .idx-fig img { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-left: 2px solid var(--cyan); border-radius: 3px; background: #0a0a14; }
+    .idx-fig figcaption { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-muted); margin-top: 0.45rem; line-height: 1.5; }
     .idx-prose code, .idx-code-inline {
       font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 12px; color: var(--cyan);
       background: var(--cyan-dim); padding: 0.05rem 0.3rem; border-radius: 2px;
@@ -89,6 +92,8 @@
           <nav class="idx-crumbs" aria-label="Breadcrumb">
             <span class="current">Docs</span>
             <span class="sep">/</span>
+            <a href="report.html">Report</a>
+            <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
         </div>
@@ -130,6 +135,10 @@
           <p>zpwr-patch-core (<code>zpc</code>) owns the parts that are the same in every modular plugin and nothing else. It <strong>knows nothing about audio or MIDI</strong> — each host plugin supplies the node types and the per-sample signal sources, and the core handles routing, evaluation order, modulation and serialisation. It depends only on <code>juce::juce_core</code>.</p>
           <p>The graph is <strong>templated on the signal type</strong> carried between nodes (a <code>SignalTraits&lt;S&gt;</code> policy): <code>float</code> for audio (zpwr-fx, zpwr-synth) and a note-event stream for MIDI (zpwr-midi-fx). Every node carries an <code>S</code> signal output plus a <code>float</code> scalar projection — its mod-matrix value — so the <code>float</code> instantiation is the plain audio graph.</p>
         </div>
+        <figure class="idx-fig">
+          <img src="arch_diagram.svg" alt="zpwr-patch-core full signal and control architecture — host buffer to plugin processBlock to the layered engine to the per-voice patch graph to the shared aux/master bus to output, with external sources, the mod matrix, lock-free graph swap, and the engine CPU optimizations called out">
+          <figcaption>Full signal &amp; control path — signal flows top→bottom (cyan), control/modulation enters from the right (dashed). The same diagram is embedded in the block-catalog PDF.</figcaption>
+        </figure>
         <ul class="idx-list">
           <li><strong>Routing</strong> — nodes wired by source ids, fan-out, feedback.</li>
           <li><strong>Evaluation</strong> — topological order each rebuild; cycles resolve with a one-sample delay.</li>

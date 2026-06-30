@@ -12,7 +12,6 @@
   <link rel="stylesheet" href="../hud-static.css">
   <link rel="stylesheet" href="../tutorial.css">
   <style>
-    .tutorial-main { max-width: 68rem; }
     .cat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:0.75rem;margin:1rem 0; }
     .cat-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.8rem 1rem;border-radius:2px; }
     .cat-card h4 { font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.4rem; }
@@ -72,7 +71,7 @@
             <a href="https://github.com/MenkeTechnologies/ztranslator" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p class="docs-build-line">Embeddable engine &middot; MIDI / keystroke / mouse / AppleScript routing &middot; signed-32-bit rules VM &middot; BOME <code>.bmtp</code> import &middot; JSON project model &middot; pure Rust</p>
-          <p class="docs-build-line"><span>4,168 source lines &middot; 3,381 code &middot; 18 Rust files &middot; 22 tests</span></p>
+          <p class="docs-build-line"><span>9,925 source lines &middot; 8,484 code &middot; 20 Rust files &middot; 65 tests</span></p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -123,9 +122,9 @@ engine.open_input("nanoKONTROL2 SLIDER/KNOB")?;</pre>
         <h2>Data model</h2>
         <p><code>Project → Preset → Translator</code>, where each <code>Translator</code> carries:</p>
         <div class="cat-grid">
-          <div class="cat-card"><h4>Incoming</h4><p>The trigger: a MIDI message, a keystroke, or a timer. The matcher captures message bytes into the rules VM's inputs.</p></div>
+          <div class="cat-card"><h4>Incoming</h4><p>The trigger &mdash; one of 26 types: MIDI / 14-bit, OSC, Art-Net + sACN DMX, serial, gamepad, HID, MIDI clock, MTC, MMC, Ableton Link, audio, CV/gate, HTTP / WebSocket / MQTT / TCP, RTP-MIDI, keystroke, timer, or cron schedule. The matcher captures the value into the rules VM's inputs.</p></div>
           <div class="cat-card"><h4>Rules</h4><p>An ordered list of rules run on the integer VM before the action fires &mdash; conditionals, arithmetic, variable assignment, control flow.</p></div>
-          <div class="cat-card"><h4>Outgoing</h4><p>The action: MIDI out, keystroke, mouse, AppleScript, timer control, or a host-defined custom command.</p></div>
+          <div class="cat-card"><h4>Outgoing</h4><p>The action &mdash; one of 39: MIDI / OSC / DMX / sACN out, MIDI clock + MTC generators, MMC, RTP-MIDI, Ableton Link, HTTP / WebSocket / MQTT / TCP, CV/gate, gamepad rumble, keystroke, mouse, AppleScript, speak / play-sound / clipboard, notify, file write, serial, timer, preset control, or a host-defined custom command.</p></div>
         </div>
         <p>The model is <code>serde</code>-serializable; native projects are stored as JSON via <code>Project::load_json</code> / <code>Project::save_json</code>. Presets group translators and can be switched at runtime.</p>
       </section>
@@ -150,7 +149,7 @@ engine.open_input("nanoKONTROL2 SLIDER/KNOB")?;</pre>
 
       <section class="tutorial-section">
         <h2>Outgoing actions &amp; platforms</h2>
-        <p>The <code>Outgoing</code> enum has 15 variants:</p>
+        <p>The <code>Outgoing</code> enum has 41 variants:</p>
         <div class="cat-grid">
           <div class="cat-card"><h4>MIDI out</h4><p>Sent through a <code>midir</code> output port. Cross-platform.</p></div>
           <div class="cat-card"><h4>Keystroke / mouse</h4><p>OS synthesis via macOS <code>CGEvent</code> (incl. mouse wheel), through a keycode table (<code>keycodes.rs</code>).</p></div>
@@ -166,14 +165,14 @@ engine.open_input("nanoKONTROL2 SLIDER/KNOB")?;</pre>
 
       <section class="tutorial-section">
         <h2>Architecture</h2>
-        <p>The crate is 18 Rust files, 4,168 source lines (3,381 code). See the <a href="report.html">engineering report</a> for the full subsystem and per-file breakdown.</p>
+        <p>The crate is 20 Rust files, 9,925 source lines (8,484 code). See the <a href="report.html">engineering report</a> for the full subsystem and per-file breakdown.</p>
         <div class="cat-grid">
-          <div class="cat-card"><h4>engine/</h4><p>Worker-thread engine: input ports, dispatch loop, event sink, timer scheduler, outgoing delay (1,086 lines).</p></div>
-          <div class="cat-card"><h4>rules.rs</h4><p>Rules compiler + signed-32-bit integer VM (600 lines).</p></div>
-          <div class="cat-card"><h4>bmtp/</h4><p>BOME <code>.bmtp</code> import + export: INI, XML payloads, options, unsigned re-serialize, lossless passthrough (971 lines).</p></div>
-          <div class="cat-card"><h4>model.rs</h4><p><code>Project / Preset / Translator</code> model, 15 Outgoing + 7 Incoming variants, JSON load/save (433 lines).</p></div>
-          <div class="cat-card"><h4>actions/ + keycodes.rs</h4><p>macOS <code>CGEvent</code> keystroke / mouse / AppleScript synthesis (423 lines).</p></div>
-          <div class="cat-card"><h4>matcher.rs + midi.rs</h4><p>Incoming-trigger matching and <code>midir</code> message plumbing (185 lines).</p></div>
+          <div class="cat-card"><h4>engine/</h4><p>Worker-thread engine: input ports, dispatch loop, all non-MIDI trigger sources, MIDI clock + MTC generators, event sink, timer scheduler, outgoing delay (4,180 lines).</p></div>
+          <div class="cat-card"><h4>rules.rs</h4><p>Rules compiler + signed-32-bit integer VM (723 lines).</p></div>
+          <div class="cat-card"><h4>bmtp/</h4><p>BOME <code>.bmtp</code> import + export: INI, XML payloads, options, unsigned re-serialize, lossless passthrough (1,540 lines).</p></div>
+          <div class="cat-card"><h4>model.rs</h4><p><code>Project / Preset / Translator</code> model, 39 Outgoing + 26 Incoming variants, JSON load/save (1,323 lines).</p></div>
+          <div class="cat-card"><h4>actions/ + keycodes.rs</h4><p>macOS <code>CGEvent</code> keystroke / mouse / AppleScript + say / afplay / pbcopy (716 lines).</p></div>
+          <div class="cat-card"><h4>sources.rs + serial.rs</h4><p>OSC / Art-Net / sACN / RTP-MIDI codecs + serial framing (396 lines).</p></div>
         </div>
       </section>
 

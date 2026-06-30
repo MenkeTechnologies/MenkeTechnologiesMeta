@@ -73,6 +73,8 @@
         <nav class="tutorial-crumbs" aria-label="Breadcrumb">
           <span class="current">Docs</span>
           <span class="sep">/</span>
+          <a href="report.html">Report</a>
+          <span class="sep">/</span>
           <a href="https://github.com/MenkeTechnologies/zpwr-midi-fx" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
         <p class="hub-lede" style="margin:0.35rem 0 0;font-size:11px;color:var(--text-muted);font-family:'Share Tech Mono',ui-monospace,monospace;">v0.2.1 &middot; VST3 / AU / CLAP / Standalone &middot; built on JUCE 8.0.13</p>
@@ -112,6 +114,17 @@
       <p>It is built on the shared <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">zpwr-patch-core</a> (zpc) graph &mdash; the same engine as zpwr-fx and zpwr-synth, instantiated on a note-event stream instead of audio samples. Part of the MenkeTechnologies audio stack alongside <a href="https://github.com/MenkeTechnologies/zpwr-synth" target="_blank" rel="noopener noreferrer">zpwr-synth</a> and <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">zpwr-fx</a>.</p>
     </section>
 
+    <section class="tutorial-section hub-section" id="formats">
+      <h2>Formats &amp; Platforms</h2>
+      <div class="hub-fmt">
+        <span><b>VST3</b></span>
+        <span><b>AU</b> (macOS)</span>
+        <span><b>CLAP</b> (note-effect)</span>
+        <span><b>Standalone</b></span>
+      </div>
+      <p>Built on JUCE 8.0.13 with a cyberpunk WebView UI. On macOS the build is a <b>universal binary</b> (<code>x86_64;arm64</code>), so the VST3 / AU / CLAP load on both Intel and Apple Silicon hosts. On Windows it ships <b>VST3 + CLAP</b> (AU is macOS-only); x64 and ARM64 are separate builds. The audio path is pass-through, so it drops in front of any instrument.</p>
+    </section>
+
     <section class="tutorial-section hub-section" id="patch-model">
       <h2>Patch Model</h2>
       <p>A dynamic set of blocks (add / remove / reorder), each with a module type, note-stream inputs plus a scalar <code>Mod</code> input (unbounded summed cables per slot), up to six parameters, and one output. Inputs select any source; the two outputs (<code>Out A</code>, <code>Out B</code>) merge to the plugin's MIDI out. The graph is evaluated once per audio block in topological order, and note-offs are scheduled across block boundaries so nothing ever hangs.</p>
@@ -126,8 +139,8 @@
     </section>
 
     <section class="tutorial-section hub-section" id="modules">
-      <h2>Module Library</h2>
-      <p><b>93 note-stream modules</b> across 10 categories &mdash; harmony, sequencing, probability, routing, control sources, dynamics, expression, tuning, MPE / voicing, plus a family of cellular-automaton sequencers (Game of Life, Brian's Brain, Langton's Ant). The <a href="reference.html">reference</a> lists every block with its inputs and parameters, generated from the live registry so it never drifts.</p>
+      <h2>Modules</h2>
+      <p><b>111 note-stream modules</b> across 10 categories &mdash; harmony, sequencing, probability, routing, control sources, dynamics, expression, tuning, MPE / voicing, plus a family of cellular-automaton sequencers (Game of Life, Brian's Brain, Langton's Ant). The <a href="reference.html">reference</a> lists every block with its inputs and parameters, generated from the live registry so it never drifts.</p>
       <ul class="cat-grid">
         <li><a href="reference.html#ch-modulation">Modulation</a> <span class="cat-count">7</span></li>
         <li><a href="reference.html#ch-dynamics">Dynamics</a> <span class="cat-count">8</span></li>
@@ -144,19 +157,34 @@
     </section>
 
     <section class="tutorial-section hub-section" id="mod-matrix">
-      <h2>Mod Matrix</h2>
+      <h2>Modulation</h2>
       <p>A dynamic list of routes, each mapping a <b>scalar source &rarr; any block parameter</b> with a depth. Routing rebuilds the graph; depth is a live, lock-free tweak. The same sources are available on each block's <code>Mod</code> input. Sources:</p>
       <ul class="feat-list">
-        <li><b>Soft Keys</b> &mdash; an expandable pool of host-automatable macros (16 active by default; <code>+</code> / <code>&minus;</code> to add / remove, active count saved in plugin state).</li>
+        <li><b>Soft Keys</b> &mdash; an expandable pool of host-automatable macros (ceiling 32; 16 active by default; <code>+</code> / <code>&minus;</code> to add / remove, active count saved in plugin state).</li>
+        <li><b>Auto-param pool</b> &mdash; a reserved pool of 96 <code>Auto N</code> host params; right-click any block param to bind it (the Kontakt/Reaktor model), so any module parameter becomes host-automatable / CC-mappable. 32 soft keys + 96 auto params = <b>128 CC-mappable slots</b>, one per MIDI CC.</li>
         <li><b>LFO</b> and <b>Env</b> block outputs, and <b>Random</b>.</li>
         <li><b>Performance controllers</b> &mdash; Mod Wheel, Pitch Bend, Aftertouch, Velocity, Expression (CC11), Sustain (CC64).</li>
         <li><b>MPE</b> &mdash; per-note Bend, Pressure and Slide (CC74), read from the most recently active note's channel.</li>
       </ul>
     </section>
 
+    <section class="tutorial-section hub-section" id="softkeys">
+      <h2>Soft Keys &amp; Automation</h2>
+      <p>The host-automatable parameters are the <b>soft keys</b> &mdash; an expandable pool of macros (ceiling 32; 16 active by default, the active count saved in plugin state), with <code>+</code> / <code>&minus;</code> to add / remove &mdash; <b>plus a reserved pool of 96 <code>Auto N</code> host params</b>: right-click any block param to bind it (the Kontakt/Reaktor model), so any module parameter becomes host-automatable / CC-mappable. 32 soft keys + 96 auto params = <b>128 CC-mappable slots</b>, one per MIDI CC. Everything else lives in the patch, saved as zpc JSON in plugin state. Modulation is the patching itself: any LFO / Env block output or soft key patched into a block input &mdash; or mod-routed to a param &mdash; is a mod-matrix connection.</p>
+    </section>
+
+    <section class="tutorial-section hub-section" id="ui">
+      <h2>User Interface</h2>
+      <p>The editor is a WebView hosting the shared zpwr-patch-core cyberpunk patcher &mdash; the same UI as zpwr-fx and zpwr-synth: drag-to-patch neon cables (fan-out, feedback, per-cable level + colour), a dynamic block grid (add / delete any number, no fixed block count), and a per-param mod matrix. Every control has a hover tooltip explaining what it does. Tabs:</p>
+      <ul class="feat-list">
+        <li><b>PATCH</b> &mdash; the block grid + cable routing + an expandable row of soft-key macro knobs. The toolbar carries <b>&#9889; EZ WIRE</b> (auto-wire MIDI In &rarr; your blocks &rarr; Out A), <b>INIT</b> (unplug every cable &amp; mod, keep the blocks) and <b>&#128465;</b> (blank the whole patch). The <b>INPUTS</b> column exposes every patchable source as a jack &mdash; the note input, all scalar modulators (Random + performance / MPE controllers) and the soft keys. Cables are drawn between jacks and can be dragged to re-patch; right-click a cable for its editor (<b>Level</b>, <b>Colour</b>, <b>Disconnect</b>).</li>
+        <li><b>PERFORM</b> &mdash; a macros-and-pads play surface with no patching (see <a href="#perform">Perform</a>).</li>
+        <li><b>PRESETS</b> &mdash; browse and manage the factory bank and user patches (see <a href="#presets">Presets</a>).</li>
+      </ul>
+    </section>
+
     <section class="tutorial-section hub-section" id="perform">
-      <h2>Perform &amp; Global</h2>
-      <p><b>Stereo</b> &mdash; <code>&#8862; STEREO</code> mirrors every block, cable and mod into an independent right-channel chain (<code>In R &rarr; Out R</code>), kept in sync as you edit; knobs stay independent so you can dial width. <code>&#128274; LOCK</code> additionally keeps the mirrored knobs locked to the left channel &mdash; the lock is bidirectional and offset-preserving. Locked clone blocks are dimmed.</p>
+      <h2>Perform</h2>
       <p>The <b>PERFORM tab</b> is a macros-and-pads view with no patching, for live play:</p>
       <ul class="feat-list">
         <li><b>Preset Morph</b> &mdash; a 4-corner XY pad (A/B/C/D) that bilinearly interpolates between four captured presets; X/Y are reserved host params (<code>morphX</code> / <code>morphY</code>), so the morph is host-automatable.</li>
@@ -168,39 +196,8 @@
       <p><b>MIDI In response</b> &mdash; <code>PROGRAM</code> and <code>BANK</code> toggles (both default ON): incoming Program Change switches presets, with Bank Select (CC0 MSB / CC32 LSB) captured for the next Program Change. Both are saved in plugin state.</p>
     </section>
 
-    <section class="tutorial-section hub-section" id="build">
-      <h2>Build</h2>
-      <p>JUCE 8.0.13 is vendored via CMake <code>FetchContent</code> (no system install required). CLAP support comes from clap-juce-extensions, fetched the same way.</p>
-      <pre class="hub-code"><span class="c"># configure + build all formats</span>
-cmake -S . -B build
-cmake --build build
-
-<span class="c"># build a single format/target instead of all of them</span>
-cmake --build build --target ZpwrMidiFx_Standalone   <span class="c"># or _VST3 / _AU / _CLAP</span></pre>
-      <p>On macOS the default build is a <b>universal binary</b> (<code>x86_64;arm64</code>). <code>scripts/build_pkg.sh</code> bundles the built universal VST3 / AU / CLAP into a macOS <code>.pkg</code> and the Standalone app into <code>/Applications</code>; product name, version and bundle id are read from the build tree. On Windows, <code>scripts/build_win.ps1</code> builds VST3 + CLAP (AU is macOS-only) for x64 and ARM64.</p>
-      <p>The reference docs are generated from the live registry:</p>
-      <pre class="hub-code"><span class="c"># regenerate docs/reference.html from the registry</span>
-cmake --build build --target gen_reference
-build/gen_reference_artefacts/Debug/gen_reference docs/reference.html
-
-<span class="c"># rebuild docs/reference.pdf (needs pandoc + xelatex) — also refreshes the HTML</span>
-scripts/reference_pdf.sh</pre>
-    </section>
-
-    <section class="tutorial-section hub-section" id="test">
-      <h2>Test</h2>
-      <pre class="hub-code">ctest --test-dir build --output-on-failure</pre>
-      <p>Coverage: the chord dictionary and voicing engine, scale quantizer, Euclidean generator, arpeggiator traversal, and the full patch graph &mdash; routing, pass-through, every module, the mod matrix (soft-key / aftertouch / envelope modulation) and JSON round-tripping. The note modules and the graph have no GUI dependency and are unit-tested without audio hardware or a plugin host.</p>
-    </section>
-
-    <section class="tutorial-section hub-section" id="formats">
-      <h2>Formats &amp; Presets</h2>
-      <div class="hub-fmt">
-        <span><b>VST3</b></span>
-        <span><b>AU</b> (macOS)</span>
-        <span><b>CLAP</b> (note-effect)</span>
-        <span><b>Standalone</b></span>
-      </div>
+    <section class="tutorial-section hub-section" id="presets">
+      <h2>Presets</h2>
       <p>A factory bank ships with the plugin (Chord Arp, Strummed Chords, Euclidean Pulse, Fifth Harmonizer, Arp Echo, Random Walk, Step Melody, Tone Cluster, Jazz Voicing, MPE Spread and more) spanning arps, harmony, rhythm, generative and FX chains. User patches are saved as <code>zpwr-midi-fx/Presets/*.zmfxpatch</code> under the user application data directory and managed from the PRESETS tab.</p>
       <p>&copy; MenkeTechnologies. Part of the MenkeTechnologies audio stack alongside <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">zpwr-fx</a>, <a href="https://github.com/MenkeTechnologies/zpwr-synth" target="_blank" rel="noopener noreferrer">zpwr-synth</a>, and <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">zpwr-patch-core</a>.</p>
     </section>

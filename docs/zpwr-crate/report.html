@@ -99,9 +99,9 @@
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">v0.1.0</div><div class="stat-label">Version</div></div>
-        <div class="stat-card"><div class="stat-val cyan">20</div><div class="stat-label">src .rs files</div></div>
-        <div class="stat-card"><div class="stat-val green">11,790</div><div class="stat-label">Source lines</div></div>
-        <div class="stat-card"><div class="stat-val cyan">14</div><div class="stat-label">C ABI exports</div></div>
+        <div class="stat-card"><div class="stat-val cyan">28</div><div class="stat-label">src .rs files</div></div>
+        <div class="stat-card"><div class="stat-val green">17,791</div><div class="stat-label">Source lines</div></div>
+        <div class="stat-card"><div class="stat-val cyan">19</div><div class="stat-label">C ABI exports</div></div>
         <div class="stat-card"><div class="stat-val">13</div><div class="stat-label">Dependencies</div></div>
         <div class="stat-card"><div class="stat-val green">3</div><div class="stat-label">Crate types</div></div>
         <div class="stat-card"><div class="stat-val cyan">2</div><div class="stat-label">Consumers</div></div>
@@ -118,14 +118,14 @@
           <tr><td>Index</td><td>SQLite WAL with a writer + round-robin read pool (sized from <code>num_cpus</code>); contentless FTS5 trigram table linked to <code>audio_samples.id</code>; a <code>REGEXP</code> user function over a cached <code>regex::Regex</code> map</td></tr>
           <tr><td>Browse</td><td><code>crate_query</code> faceted filter (category incl. parent node, pack, manufacturer, BPM, key, loop/one-shot, favorites, LIKE/regex search, pagination) plus facets + category counts</td></tr>
           <tr><td>Native consumer</td><td>Audio-Haxor links the <code>rlib</code> and calls <code>Database</code> / <code>scan</code> directly</td></tr>
-          <tr><td>C ABI consumer</td><td>zpwr-daw links <code>libzpwr_crate.a</code> (or the cdylib); 14 <code>crate_*</code> exports, JSON params/results, declared in hand-written <code>include/zpwr_crate.h</code></td></tr>
+          <tr><td>C ABI consumer</td><td>zpwr-daw links <code>libzpwr_crate.a</code> (or the cdylib); 19 <code>crate_*</code> exports, JSON params/results, declared in hand-written <code>include/zpwr_crate.h</code></td></tr>
           <tr><td>Build</td><td>Cargo with <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>, <code>publish = false</code>; Linux x86_64 + macOS aarch64 in CI</td></tr>
         </tbody>
       </table>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>C ABI SURFACE</h2>
-      <p>14 <code>#[no_mangle] extern "C"</code> exports, declared in <code>include/zpwr_crate.h</code> (no cbindgen). Structured data crosses as UTF-8 JSON; every returned <code>char*</code> is freed with <code>crate_string_free</code>, handles with <code>crate_free</code>.</p>
+      <p>19 <code>#[no_mangle] extern "C"</code> exports, declared in <code>include/zpwr_crate.h</code> (no cbindgen). Structured data crosses as UTF-8 JSON; every returned <code>char*</code> is freed with <code>crate_string_free</code>, handles with <code>crate_free</code>.</p>
       <table class="arch-table">
         <thead><tr><th>Export</th><th>Role</th></tr></thead>
         <tbody>
@@ -134,15 +134,18 @@
           <tr><td><code>crate_scan</code> / <code>crate_scan_unified</code></td><td>scan + index sample roots; unified incremental driver across domains</td></tr>
           <tr><td><code>crate_scan_plugins</code> / <code>crate_scan_midi</code> / <code>crate_scan_video</code></td><td>scan installed plugins / MIDI files / video assets into the library</td></tr>
           <tr><td><code>crate_query</code></td><td>faceted browse &mdash; JSON params in, JSON result out</td></tr>
+          <tr><td><code>crate_browse_query</code> / <code>crate_browse_facets</code></td><td>unified-browser query + facets across domains, as JSON</td></tr>
           <tr><td><code>crate_facets</code> / <code>crate_category_counts</code></td><td>filter-bar facets; category histogram, as JSON</td></tr>
           <tr><td><code>crate_genre_rules_report</code></td><td>genre-rules report as JSON</td></tr>
           <tr><td><code>crate_favorite_list</code> / <code>crate_favorite_toggle</code></td><td>read / toggle favorited pack ids</td></tr>
+          <tr><td><code>crate_waveform_peaks</code></td><td>min/max peak envelope for a sample at a given width, as JSON</td></tr>
+          <tr><td><code>crate_loop_region_get</code> / <code>crate_loop_region_set</code></td><td>read / store a sample's loop region</td></tr>
         </tbody>
       </table>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">/</span>SCHEMA COMPATIBILITY</h2>
-      <p>Migrations replicate the Audio-Haxor subset <code>v1 / v9 / v10 / v12 / v14 / v24 / v27</code>, so opening an existing Audio-Haxor database is a <strong>no-op</strong> &mdash; it is already past those versions. <code>audio_samples_fts</code> is a contentless FTS5 trigram table linked to <code>audio_samples.id</code>; a WAL journal plus a writer + round-robin read pool keep reads from blocking on the writer. The per-sample <code>sample_analysis</code> pipeline (BPM/key parse, category + pack/manufacturer assignment) is separate; this crate owns the schema + read/browse side and creates the analysis tables so browser joins resolve.</p>
+      <p>The schema is built by 15 versioned migrations &mdash; <code>v1 / v2 / v6 / v8 / v9 / v10 / v12 / v14 / v15 / v16 / v17 / v20 / v24 / v27 / v28</code>; the subset <code>v1 / v9 / v10 / v12 / v14 / v24 / v27</code> is aligned with Audio-Haxor, so opening an existing Audio-Haxor database is a <strong>no-op</strong> &mdash; it is already past those versions. <code>audio_samples_fts</code> is a contentless FTS5 trigram table linked to <code>audio_samples.id</code>; a WAL journal plus a writer + round-robin read pool keep reads from blocking on the writer. The per-sample <code>sample_analysis</code> pipeline (BPM/key parse, category + pack/manufacturer assignment) is separate; this crate owns the schema + read/browse side and creates the analysis tables so browser joins resolve.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">$</span>CI GATES</h2>

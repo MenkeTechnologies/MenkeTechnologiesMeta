@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="MenkeTechnologies Publications — Engineering report. The paid book pipeline: 12 typeset deliverables (4 original novels + 8 reference works), 2,962 pages, 263,108 novel words, pandoc + LaTeX (lualatex) cyberpunk-themed builds, zero overfull boxes.">
+  <title>MenkeTechnologies Publications &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    /* Color-scheme picker strip (populated by hud-theme.js #hudSchemeGrid) */
+    .hub-scheme-strip { border-bottom:1px dashed var(--border); background:color-mix(in srgb, var(--bg-secondary) 85%, transparent); padding:0.55rem 1.5rem 0.65rem; position:relative; }
+    .hub-scheme-strip-inner { max-width:76rem; margin:0 auto; display:flex; align-items:center; gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto; font-family:'Orbitron',sans-serif; font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--accent); }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch;} .hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:11px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+    .pub-footer { border-top:1px solid var(--border);margin-top:3rem;padding:1.2rem 1.5rem;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-muted);text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// MENKETECHNOLOGIES PUBLICATIONS &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Catalog</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">Paid book pipeline &middot; pandoc &rarr; lualatex &middot; cyberpunk theme &middot; 12 typeset deliverables &middot; 4 original novels + 8 reference works &middot; zero overfull boxes</p>
+          <p class="docs-build-line">Source: <code>src/strykelang</code> v0.17.26 &middot; <code>src/zshrs</code> v0.12.4 &middot; <code>src/zpwr</code> v48.9.1</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Catalog</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>AT A GLANCE</h2>
+      <p class="tutorial-subtitle">The paid companion books, reference manuals, the zpwr encyclopedia, and four original novels &mdash; every figure below counted from the rendered deliverables in this repository.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">12</div><div class="stat-label">Typeset Deliverables</div></div>
+        <div class="stat-card"><div class="stat-val accent">2,962</div><div class="stat-label">Total Pages</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Original Novels</div></div>
+        <div class="stat-card"><div class="stat-val green">263,108</div><div class="stat-label">Novel Words</div></div>
+        <div class="stat-card"><div class="stat-val">466</div><div class="stat-label">Novel Pages</div></div>
+        <div class="stat-card"><div class="stat-val">96</div><div class="stat-label">Chapters</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Reference Works</div></div>
+        <div class="stat-card"><div class="stat-val green">0</div><div class="stat-label">Overfull Boxes</div></div>
+      </div>
+
+      <div style="margin:1.2rem 0;">
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Page Distribution &mdash; 2,962 pages</p>
+        <div class="bar-wrap" style="height:26px;">
+          <div class="bar-fill cyan" style="width:84.27%;"></div>
+          <span class="bar-pct" style="font-size:12px;">2,496 reference / 466 novel &middot; 84.3% reference</span>
+        </div>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Reference: stryke companion (204) + stryke reference (1,253) + zshrs companion (202) + zshrs reference (202) + zemacs companion (112) + zemacs reference (81) + fusevm companion (34) + zpwr encyclopedia (408). Novels: <code>THE STACK</code> (106) + the Deep Time Trilogy (118 / 120 / 122).</p>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>THE DELIVERABLES</h2>
+      <p class="tutorial-subtitle">Each row is a rendered, shippable product. Reference works are generated from the public source submodules under <code>src/</code>; the novels are hand-written narrative markdown. All share one toolchain: pandoc &rarr; lualatex with the cyberpunk theme.</p>
+      <table class="file-table">
+        <thead><tr><th>Deliverable</th><th>Kind</th><th class="num">Pages</th><th>Formats</th></tr></thead>
+        <tbody>
+          <tr><td>THE STACK</td><td>Novel &mdash; fantasy</td><td class="num">106</td><td><code>md</code> <code>tex</code> <code>pdf</code> <code>html</code></td></tr>
+          <tr><td>THE COMPILED MIND</td><td>Novel &mdash; SF, Book One</td><td class="num">118</td><td><code>md</code> <code>tex</code> <code>pdf</code> <code>html</code></td></tr>
+          <tr><td>THE WAKING FLEET</td><td>Novel &mdash; SF, Book Two</td><td class="num">120</td><td><code>md</code> <code>tex</code> <code>pdf</code> <code>html</code></td></tr>
+          <tr><td>THE INHERITORS</td><td>Novel &mdash; SF, Book Three</td><td class="num">122</td><td><code>md</code> <code>tex</code> <code>pdf</code> <code>html</code></td></tr>
+          <tr><td>stryke &mdash; The Companion</td><td>Reference &mdash; book</td><td class="num">204</td><td><code>md</code> <code>tex</code> <code>pdf</code></td></tr>
+          <tr><td>stryke &mdash; Reference</td><td>Reference &mdash; manual</td><td class="num">1,253</td><td><code>html</code> <code>tex</code> <code>pdf</code></td></tr>
+          <tr><td>zshrs &mdash; The Companion</td><td>Reference &mdash; book</td><td class="num">202</td><td><code>md</code> <code>tex</code> <code>pdf</code></td></tr>
+          <tr><td>zshrs &mdash; Reference</td><td>Reference &mdash; manual</td><td class="num">202</td><td><code>html</code> <code>tex</code> <code>pdf</code></td></tr>
+          <tr><td>zemacs &mdash; The Companion</td><td>Reference &mdash; book</td><td class="num">112</td><td><code>md</code> <code>tex</code> <code>pdf</code></td></tr>
+          <tr><td>zemacs &mdash; Reference</td><td>Reference &mdash; manual</td><td class="num">81</td><td><code>md</code> <code>tex</code> <code>pdf</code></td></tr>
+          <tr><td>fusevm &mdash; The Machine</td><td>Reference &mdash; book</td><td class="num">34</td><td><code>md</code> <code>tex</code> <code>pdf</code></td></tr>
+          <tr><td>zpwr Encyclopedia</td><td>Reference &mdash; encyclopedia</td><td class="num">408</td><td><code>tex</code> <code>pdf</code> <code>html</code></td></tr>
+          <tr class="total-row"><td>12 deliverables</td><td>4 novels + 8 reference</td><td class="num">2,962</td><td>pdf + html + tex</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>THE NOVELS</h2>
+      <p class="tutorial-subtitle"><em>THE STACK</em> is a high-tech fantasy whose world is a literalization of the stack. <em>The Deep Time Trilogy</em> &mdash; <em>The Compiled Mind</em> &rarr; <em>The Waking Fleet</em> &rarr; <em>The Inheritors</em> &mdash; is its hard-SF sibling: a generation ship dying of the heat shed by an interpreted mind that forks a disposable process for every act, the compiled successor that replaces it, and the long work of making it outlast its maker.</p>
+      <table class="file-table">
+        <thead><tr><th>Title</th><th class="num">Words</th><th class="num">Pages</th><th class="num">Chapters</th></tr></thead>
+        <tbody>
+          <tr><td>THE STACK</td><td class="num">62,404</td><td class="num">106</td><td class="num">24</td></tr>
+          <tr><td>THE COMPILED MIND</td><td class="num">66,046</td><td class="num">118</td><td class="num">24</td></tr>
+          <tr><td>THE WAKING FLEET</td><td class="num">66,721</td><td class="num">120</td><td class="num">24</td></tr>
+          <tr><td>THE INHERITORS</td><td class="num">67,937</td><td class="num">122</td><td class="num">24</td></tr>
+          <tr class="total-row"><td>4 novels</td><td class="num">263,108</td><td class="num">466</td><td class="num">96</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>THE PIPELINE</h2>
+      <p class="tutorial-subtitle">One toolchain renders every deliverable, paid and reference alike.</p>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>pandoc &rarr; lualatex</h4>
+          <p>Narrative markdown (or generated reference) in; <code>book.{tex,pdf}</code> out. <code>extreport</code> class with <code>--top-level-division=chapter</code> so each <code>#</code> heading becomes a neon <code>\chapter</code> page.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Cyberpunk theme</h4>
+          <p>Shared palette across PDF and HTML: <code>#05050A</code> bg, neon cyan / magenta / pink / green. Orbitron headings, Share Tech Mono code, Arimo body &mdash; loaded per-glyph with a luaotfload fallback chain so no arrow or box-drawing glyph ever drops.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Overflow guards</h4>
+          <p><code>fvextra</code> breaklines, <code>xurl</code>, and a robust breakable <code>\texttt</code> keep code and long identifiers inside the margin. Build asserts <strong>zero overfull boxes</strong> on every book.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Web rendition</h4>
+          <p>Each novel also ships a single-file <code>book.html</code> (<code>book_html.sh</code>, pandoc &rarr; html5) with the same theme embedded &mdash; same source, two outputs.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Versioned source</h4>
+          <p>Reference content comes from the public source submodules under <code>src/</code>; bump a submodule and re-run the generators to rebuild a book against newer source. The novels carry an <code>EDITION</code> string instead of a crate version.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Guarded build</h4>
+          <p><code>tests/run.sh</code> guards the failure modes this repo has hit: a leak guard (no paid sources tracked in the public submodules), markdown hygiene, generator syntax, and &mdash; under <code>BUILD=1</code> &mdash; zero overfull boxes and a page floor.</p>
+        </div>
+      </div>
+
+      <div class="pub-footer">
+        // MENKETECHNOLOGIES PUBLICATIONS &middot; PRIVATE &middot; PAID PRODUCTS &middot; figures counted from rendered deliverables
+      </div>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

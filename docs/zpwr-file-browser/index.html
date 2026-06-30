@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-file-browser — the shared multi-pane file browser for the MenkeTechnologies GUI stack. A host-agnostic vanilla-JS front end plus a pure-Rust filesystem crate of 33 fs_* functions, mounted by Audio-Haxor, traderview, ztranslator (Tauri) and zpwr-daw (JUCE).">
+  <meta name="description" content="zpwr-file-browser — the shared multi-pane file browser for the MenkeTechnologies GUI stack. A host-agnostic vanilla-JS front end plus a pure-Rust filesystem crate of 34 fs_* functions, mounted by Audio-Haxor, traderview, ztranslator (Tauri) and zpwr-daw (JUCE).">
   <title>zpwr-file-browser — Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,7 +84,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
           </nav>
-          <p class="docs-build-line">shared GUI component &middot; host-agnostic vanilla-JS front end &middot; pure-Rust <code>fs_*</code> crate (33 functions) &middot; 34 <code>#[tauri::command]</code> wrappers behind the <code>tauri</code> feature &middot; one source of truth for all four apps</p>
+          <p class="docs-build-line">shared GUI component &middot; host-agnostic vanilla-JS front end &middot; pure-Rust <code>fs_*</code> crate (34 functions) &middot; 35 <code>#[tauri::command]</code> wrappers behind the <code>tauri</code> feature &middot; <code>staticlib</code> C ABI behind the <code>capi</code> feature &middot; one source of truth for all four apps</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -112,7 +112,7 @@
         <table class="example-tbl">
           <tbody>
             <tr><td>Audio-Haxor &middot; traderview &middot; ztranslator (Tauri / Rust)</td><td>enable the crate's <code>tauri</code> feature and register <code>zpwr_file_browser::commands::fs_*</code> in <code>tauri::generate_handler![&hellip;]</code>, or implement the fs commands directly as <code>#[tauri::command]</code>s on the host IPC object</td></tr>
-            <tr><td>zpwr-daw (JUCE / C++)</td><td>implement the fs commands as WebView native functions, or link a shared Rust backend over a C ABI (mirroring <code>zpwr-embed-terminal</code>)</td></tr>
+            <tr><td>zpwr-daw (JUCE / C++)</td><td>implement the fs commands as WebView native functions, or enable the crate's <code>capi</code> feature, link the <code>staticlib</code>, and drive every fs op through the shipped C ABI entry <code>fb_invoke(cmd, args_json)</code> (header <code>include/zpwr_file_browser.h</code>, mirroring <code>zpwr-embed-terminal</code>)</td></tr>
           </tbody>
         </table>
         <p>The front end calls the same invoke names everywhere; only the host-side backend differs.</p>
@@ -120,7 +120,7 @@
 
       <section class="tutorial-section">
         <h2>Rust core (<code>crate/</code>)</h2>
-        <p><code>crate/</code> (package <code>zpwr-file-browser</code>) holds the filesystem logic faithfully ported from Audio-Haxor: 33 pure <code>pub async fn</code> filesystem functions with no Tauri types, so the crate is usable in any context. Enable the <code>tauri</code> cargo feature to also compile <code>zpwr_file_browser::commands</code> &mdash; 34 thin <code>#[tauri::command]</code> wrappers (one per pure fn, plus <code>fb_watcher_set</code>), each named with the exact invoke name the front end calls. The feature is additive: a plain <code>cargo build</code> (no features) keeps the crate Tauri-free.</p>
+        <p><code>crate/</code> (package <code>zpwr-file-browser</code>) holds the filesystem logic faithfully ported from Audio-Haxor: 34 pure <code>pub async fn</code> filesystem functions with no Tauri types, so the crate is usable in any context. Enable the <code>tauri</code> cargo feature to also compile <code>zpwr_file_browser::commands</code> &mdash; 35 thin <code>#[tauri::command]</code> wrappers (one per pure fn, plus <code>fb_watcher_set</code>), each named with the exact invoke name the front end calls. The features are additive: a plain <code>cargo build</code> (no features) keeps the crate Tauri-free. For non-Tauri (JUCE) hosts, the <code>capi</code> feature compiles <code>zpwr_file_browser::ffi</code> &mdash; a <code>staticlib</code> C ABI whose single entry <code>fb_invoke(cmd, args_json)</code> dispatches by name into the same pure fns and returns a JSON envelope.</p>
 <pre>zpwr-file-browser = { path = "&hellip;/zpwr-file-browser/crate", features = ["tauri"] }</pre>
 <pre>.manage(zpwr_file_browser::commands::watcher_state())
 .invoke_handler(tauri::generate_handler![
@@ -205,9 +205,10 @@
             <tr><td><code>webui/file-browser.js</code></td><td>the browser front end (base CRUD + generic file-manager only); loaded as a classic script</td></tr>
             <tr><td><code>webui/file-browser.css</code></td><td>the <code>.fb-*</code> / <code>fileBrowser</code> / <code>.file-*</code> rule set (extracted)</td></tr>
             <tr><td><code>webui/file-browser.html</code></td><td>the file-browser tab pane markup (<code>#tabFiles</code>); the host mounts it where its tab system expects the <code>files</code> pane</td></tr>
-            <tr><td><code>crate/src/lib.rs</code></td><td>the 33 pure <code>fs_*</code> functions + return types + <code>format_size</code></td></tr>
-            <tr><td><code>crate/src/commands.rs</code></td><td>the 34 thin <code>#[tauri::command]</code> wrappers (<code>tauri</code> feature only)</td></tr>
+            <tr><td><code>crate/src/lib.rs</code></td><td>the 34 pure <code>fs_*</code> functions + return types + <code>format_size</code></td></tr>
+            <tr><td><code>crate/src/commands.rs</code></td><td>the 35 thin <code>#[tauri::command]</code> wrappers (<code>tauri</code> feature only)</td></tr>
             <tr><td><code>crate/src/fb_watcher.rs</code></td><td>the framework-agnostic <code>WatcherSession</code></td></tr>
+            <tr><td><code>crate/src/ffi.rs</code></td><td>the <code>staticlib</code> C ABI &mdash; <code>fb_invoke</code> / <code>fb_string_free</code> (<code>capi</code> feature only)</td></tr>
           </tbody>
         </table>
       </section>

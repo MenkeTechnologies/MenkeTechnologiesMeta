@@ -4,107 +4,200 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-synth — engineering report. JUCE software synthesizer: build targets, formats, DSP architecture, status.">
-  <title>zpwr-synth — Engineering Report</title>
+  <meta name="description" content="zpwr-synth engineering report &mdash; a fully modular polyphonic synthesizer plugin (AU / VST3 / CLAP / Standalone) on JUCE 8: module map, dependency footprint and test status.">
+  <title>zpwr-synth &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../hud-static.css">
-  <link rel="stylesheet" href="../product.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .mapping-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .mapping-card { border:1px solid var(--border);border-left:3px solid var(--magenta);background:var(--bg-card);padding:0.6rem 0.9rem;border-radius:2px; }
+    .mapping-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--magenta);margin:0 0 0.3rem; }
+    .mapping-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.5; }
+    .mapping-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+    .feature-card li code { font-size:10px; }
+  </style>
 </head>
-<body class="crt">
-  <header class="tutorial-header">
-    <div class="tutorial-header-inner">
-      <h1 class="tutorial-brand">// ZPWR-SYNTH</h1>
-      <nav class="tutorial-crumbs" aria-label="Breadcrumb">
-        <a href="../">MenkeTechnologiesMeta</a>
-        <span class="sep">/</span>
-        <a href="./">zpwr-synth</a>
-        <span class="sep">/</span>
-        <span class="current">Engineering report</span>
-        <span class="sep">/</span>
-        <a href="https://github.com/MenkeTechnologies/zpwr-synth" target="_blank" rel="noopener noreferrer">GitHub</a>
-      </nav>
-    </div>
-  </header>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-SYNTH &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="reference.html">Reference</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-synth" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            module map &middot; dependency footprint &middot; test status &mdash; a patch <em>is</em> the voice
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+    <main class="tutorial-main">
 
-  <main class="tutorial-main">
-    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
-    <p class="tutorial-subtitle">JUCE fully modular patch-graph synthesizer on the shared zpwr-patch-core engine, modeled on SynthMaster&nbsp;3. <span class="tag-paid">Paid product.</span></p>
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">zpwr-synth is a fully modular polyphonic synthesizer plugin built on JUCE 8.0.13 (C++20, CMake 3.22+), shipping as AU, VST3, CLAP and Standalone. There is no fixed signal path: the plugin runs the shared modular patch graph from the <code>zpwr-patch-core</code> submodule, and a patch <em>is</em> the voice, instantiated across the voice pool. <code>dsp/SynthModules.cpp</code> registers <strong>309</strong> synth-specific DSP node types onto the core's <code>zpc::ModuleRegistry</code> &mdash; the same registry the live reference is generated from &mdash; spanning virtual-analog and wavetable oscillators, FM/additive/granular generators, hardstyle and physical-modelling voices, filters, shapers and CV modulators. The DSP core (<code>dsp/</code> + <code>src/</code>) is roughly 12.3k lines of own source; the pure-DSP layer (<code>zpwr_dsp</code>) carries no JUCE dependency and is headless-testable. Version 0.2.23.</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">309</div><div class="stat-label">Synth DSP Node Types</div></div>
+        <div class="stat-card"><div class="stat-val">32</div><div class="stat-label">Voice-Pool Ceiling (kMaxVoices)</div></div>
+        <div class="stat-card"><div class="stat-val">128</div><div class="stat-label">CC-Mappable Automation Slots</div></div>
+        <div class="stat-card"><div class="stat-val green">5</div><div class="stat-label">CTest Suites</div></div>
+        <div class="stat-card"><div class="stat-val">~1,365</div><div class="stat-label">Test LOC</div></div>
+        <div class="stat-card"><div class="stat-val">~12.3k</div><div class="stat-label">Own DSP Source Lines</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Plugin Formats (AU/VST3/CLAP/SA)</div></div>
+        <div class="stat-card"><div class="stat-val">256</div><div class="stat-label">General Factory Voices</div></div>
+      </div>
 
-    <section class="tutorial-section">
-      <h2>Build &amp; Position</h2>
-      <table class="report">
-        <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
-        <tr><td>Language</td><td>C++</td><td>DSP core has no JUCE dependency</td></tr>
-        <tr><td>Framework</td><td>JUCE</td><td>plugin wrapper owns the parameter tree</td></tr>
-        <tr><td>Engine</td><td><code>zpc::LayeredEngine</code></td><td>shared <a href="../zpwr-patch-core/">zpwr-patch-core</a> graph; Instrument -&gt; Layer[16] -&gt; Voice, each voice a free patch graph</td></tr>
-        <tr><td>Formats</td><td>VST3 · AU · CLAP · Standalone</td><td>CLAP via <code>clap-juce-extensions</code></td></tr>
-        <tr><td>Targets</td><td>macOS arm64/x86_64 · Linux x86_64/aarch64 · Windows x64/arm64</td><td>cross-platform, cross-arch from day one (Windows builds VST3 + CLAP via <code>scripts/build_win.ps1</code>)</td></tr>
-        <tr><td>Build system</td><td><code>CMake</code></td><td><code>CMakeLists.txt</code> at repo root</td></tr>
-        <tr><td>Modules</td><td>49 voice + 1190+ FX</td><td>49 voice blocks (<code>buildSynthRegistry</code>) + master/2-aux FX-bus rack on the shared 1190+-module audio pack</td></tr>
-        <tr><td>DSP core</td><td><code>dsp/</code></td><td>pure-C++ static lib, headless-unit-testable</td></tr>
-        <tr><td>Status</td><td><span class="ok">stable</span></td><td>full voice engine, layered mixer with aux/master bus rack, factory preset banks</td></tr>
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>MODULE MAP</h2>
+      <p class="tutorial-subtitle">The processor hosts a polyphonic pool of voices, each running the shared signal-agnostic node graph from <code>zpwr-patch-core</code>. The synth-specific generators, voices, filters and modulators are a DSP pack registered onto that core registry.</p>
+      <table class="file-table">
+        <thead><tr><th>Module</th><th>Source</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--accent);">ZpwrSynthProcessor</td><td><code>src/PluginProcessor.cpp/.h</code></td><td>JUCE AudioProcessor; hosts the WebView editor, host params (soft keys + auto pool), MIDI/MPE intake, preset state.</td></tr>
+          <tr><td style="color:var(--accent);">PolyEngine</td><td><code>dsp/PolyEngine.cpp/.h</code></td><td>Voice pool (ceiling <code>kMaxVoices = 32</code>); poly / mono / legato / duophonic modes; unison stacking (<code>kMaxUnison = 11</code>); parallel per-voice rendering via worker threads.</td></tr>
+          <tr><td style="color:var(--accent);">RuntimeGraph (per voice)</td><td><code>libs/zpwr-patch-core</code></td><td>Shared signal-agnostic node graph evaluated per sample; nodes carry type + 4 inputs + up to 12 params + 1 output, fed per-voice external sources.</td></tr>
+          <tr><td style="color:var(--accent);">Voice / Layer / Instrument</td><td><code>dsp/Voice.cpp, Layer.cpp, Instrument.cpp</code></td><td>Voice lifecycle and layering (<code>kMaxLayers = 16</code>) over the graph engine.</td></tr>
+          <tr><td style="color:var(--accent);">Oscillators &amp; generators</td><td><code>dsp/SynthModules.cpp</code></td><td>Osc, Wt (wavetable), Supersaw, FM, Sub, Sync, Additive, Vector, ChordOsc, DCO/VCO, Vosim, PAF, Shepard, Buzz, Bytebeat, Granular, Sample &mdash; most with unison Voices + Detune.</td></tr>
+          <tr><td style="color:var(--accent);">Physical / instrument voices</td><td><code>dsp/SynthModules.cpp</code></td><td>Karplus and a large family of waveguide / modal voices (strings, winds, brass, mallets, organs, world instruments) registered as self-contained note-driven nodes.</td></tr>
+          <tr><td style="color:var(--accent);">Hardstyle / genre voices</td><td><code>dsp/SynthModules.cpp</code></td><td>HardKick, Screech, Hoover, Reese and drum-machine voices (TR-808/909/606) for techno / hardstyle / DnB material.</td></tr>
+          <tr><td style="color:var(--accent);">Filters &amp; shapers</td><td><code>dsp/SynthModules.cpp</code></td><td>TPT state-variable Filter, DiodeLadder (303-style), Folder, Waveshaper, Crusher (bit/SR reduction), Drive, RingMod.</td></tr>
+          <tr><td style="color:var(--accent);">Envelopes &amp; modulators</td><td><code>dsp/Envelope.h, LFO.h, ModMatrix.h, SynthModules.cpp</code></td><td>ADSR Env, LFO, StepLFO, NoiseLFO, SampleHold, Glide, Scaler; per-param mod matrix routing source &rarr; (node, param) &times; depth.</td></tr>
+          <tr><td style="color:var(--accent);">Utility / routing</td><td><code>dsp/SynthModules.cpp</code></td><td>VCA (in1 &times; in2), Gain, Mixer, Delay, Noise &mdash; signal plumbing inside the graph.</td></tr>
+          <tr><td style="color:var(--accent);">Editor &amp; preset UI</td><td><code>src/PluginEditor.cpp, PresetManager.cpp, PresetBrowser.cpp</code></td><td>WebView patcher (served from BinaryData), factory + user preset management, NKS export.</td></tr>
+          <tr><td style="color:var(--accent);">Sample / wavetable stores</td><td><code>src/SampleBank.cpp, SampleStore.cpp, UserWavetableStore.h</code></td><td>Backing stores for Sample/Granular slots and user wavetables (resources/samples.bin, wavetables.bin).</td></tr>
+        </tbody>
       </table>
-    </section>
 
-    <section class="tutorial-section">
-      <h2>Engine</h2>
-      <figure class="diagram">
-      <svg viewBox="0 0 760 300" role="img" aria-label="zpwr-synth architecture: layered modular instrument with FX bus rack">
-        <defs>
-          <marker id="ah-cy" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow" d="M0,0 L8,4 L0,8 Z"/></marker>
-          <marker id="ah-mag" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow-mag" d="M0,0 L8,4 L0,8 Z"/></marker>
-        </defs>
-        <rect class="d-box-acc" x="16" y="118" width="64" height="44" rx="6"/><text class="d-t-acc" x="48" y="144" text-anchor="middle">notes</text>
-        <rect class="d-group" x="104" y="40" width="300" height="222" rx="8"/>
-        <text class="d-cap" x="116" y="58">Instrument → Layer[16]</text>
-        <rect class="d-box" x="128" y="78" width="260" height="166" rx="6"/>
-        <rect class="d-box" x="120" y="70" width="260" height="166" rx="6"/>
-        <rect class="d-box" x="112" y="62" width="260" height="166" rx="6"/>
-        <text class="d-t-cy" x="126" y="84">Layer · polyphonic voice pool</text>
-        <text class="d-cap" x="126" y="104">Voice = patch graph · 299 voice modules</text>
-        <rect class="d-box" x="128" y="116" width="68" height="38" rx="5"/><text class="d-t-sm" x="162" y="139" text-anchor="middle">Osc</text>
-        <rect class="d-box" x="214" y="116" width="68" height="38" rx="5"/><text class="d-t-sm" x="248" y="139" text-anchor="middle">Filter</text>
-        <rect class="d-box" x="300" y="116" width="68" height="38" rx="5"/><text class="d-t-sm" x="334" y="139" text-anchor="middle">Amp</text>
-        <line class="d-flow" x1="196" y1="135" x2="212" y2="135" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="282" y1="135" x2="298" y2="135" marker-end="url(#ah-cy)"/>
-        <path class="d-mod" d="M162,154 L162,176 L334,176 L334,156" marker-end="url(#ah-mag)"/>
-        <text class="d-t-mag" x="248" y="193" text-anchor="middle">ADSR · LFO · S&amp;H · mod matrix</text>
-        <text class="d-t-sm" x="248" y="216" text-anchor="middle">VA · wavetable · FM · additive · supersaw</text>
-        <rect class="d-group" x="430" y="40" width="248" height="222" rx="8"/>
-        <text class="d-cap" x="442" y="58">FX-bus rack · 1190+ audio pack</text>
-        <rect class="d-box" x="446" y="78" width="216" height="42" rx="6"/><text class="d-t" x="554" y="104" text-anchor="middle">Master bus</text>
-        <rect class="d-box" x="446" y="130" width="216" height="42" rx="6"/><text class="d-t" x="554" y="156" text-anchor="middle">Aux bus 1</text>
-        <rect class="d-box" x="446" y="182" width="216" height="42" rx="6"/><text class="d-t" x="554" y="208" text-anchor="middle">Aux bus 2</text>
-        <text class="d-t-sm" x="554" y="246" text-anchor="middle">each a patch graph · incl. 171 analog models</text>
-        <rect class="d-box-acc" x="694" y="118" width="52" height="44" rx="6"/><text class="d-t-acc" x="720" y="144" text-anchor="middle">Out</text>
-        <line class="d-flow" x1="80" y1="140" x2="102" y2="140" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="404" y1="140" x2="428" y2="140" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="678" y1="140" x2="692" y2="140" marker-end="url(#ah-cy)"/>
-      </svg>
-      <figcaption>Each voice is a free patch graph; layers run polyphonic pools into a master + 2-aux FX rack on the shared audio pack.</figcaption>
-      </figure>
-      <ul>
-        <li><strong>Instrument &rarr; Layer[16] &rarr; Voice</strong> on the shared
-        <code>zpc::LayeredEngine</code> (zpwr-patch-core); each voice is a free patch graph.</li>
-        <li><strong>299 voice modules</strong> (<code>buildSynthRegistry</code>) — VA / wavetable /
-        FM / additive / supersaw / Karplus / sampler oscillators, SynthFilter + diode ladder,
-        ADSR / LFO / S&amp;H, VCA / mixer / scaler.</li>
-        <li><strong>FX-bus rack</strong>: master + 2 aux buses, each a patch graph running the
-        shared 1190+-module audio registry (same pack as zpwr-fx, incl. 171 analog models).</li>
-        <li>Polyphonic voice pool with round-robin voice stealing; per-param mod matrix;
-        sidechain + global mods into the bus rack.</li>
-      </ul>
-    </section>
+      <hr class="section-rule">
 
-    <nav class="product-nav">
-      <a href="./">Overview</a>
-      <span class="sep">·</span>
-      <a href="README.md">README</a>
-      <span class="sep">·</span>
-      <a href="../">MenkeTechnologiesMeta</a>
-    </nav>
-  </main>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">Headline structural facts about the engine &mdash; how a single patch definition becomes a polyphonic voice and what feeds it each sample.</p>
+      <div class="feature-grid" style="margin-top:1.2rem;">
+        <div class="feature-card"><h4>Patch is the voice</h4><p>No fixed signal path. The default voice is <code>Osc(Note) &rarr; VCA &larr; Env(Gate)</code>; each node carries a type, 4 inputs, up to 12 params and one output. The patch is saved as JSON in plugin state.</p></div>
+        <div class="feature-card"><h4>Shared graph core</h4><p>The graph engine is <code>zpwr-patch-core</code> (<code>libs/zpwr-patch-core</code>, a git submodule) &mdash; the same signal-agnostic cable-routing core that powers zpwr-fx. <code>PolyEngine</code> holds one <code>zpc::RuntimeGraph</code> per voice.</p></div>
+        <div class="feature-card"><h4>Per-voice external sources</h4><p>Fed each sample: In L/R, Noise, Soft Keys (expandable pool), Note, Gate, Velocity, Mod Wheel, Pitch Bend, Aftertouch, MPE Pressure / Slide / Bend, plus a first-class <code>Trigger</code> impulse on each note-on edge.</p></div>
+        <div class="feature-card"><h4>Unison &amp; layering</h4><p>Every oscillator carries a <code>Voices</code> (1&ndash;11) unison param plus <code>Detune</code> (cents). Pool ceiling <code>kMaxVoices = 32</code>, <code>kMaxUnison = 11</code>, <code>kMaxLayers = 16</code>; <code>Voices = 1</code> keeps classic mono behaviour.</p></div>
+        <div class="feature-card"><h4>Soft keys &amp; automation</h4><p>32 soft keys (16 active by default) + a reserved pool of 96 <code>Auto N</code> host params = <strong>128 CC-mappable slots</strong>, one per MIDI CC. Right-click any block param to bind it (the Kontakt/Reaktor model).</p></div>
+        <div class="feature-card"><h4>Headless DSP layer</h4><p>The pure-DSP layer (<code>zpwr_dsp</code>) carries no JUCE dependency and is headless-testable. Generators read each voice's <code>Note</code>/<code>Gate</code> from the core's <code>ComputeContext::external</code> array.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DEPENDENCY FOOTPRINT</h2>
+      <p class="tutorial-subtitle">JUCE and the CLAP wrapper are vendored via FetchContent; the patch graph and clip engine are in-tree git submodules. No system installs are required.</p>
+      <table class="file-table">
+        <thead><tr><th>Dependency</th><th>Pin</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>JUCE</td><td><code>8.0.13</code></td><td>Vendored via FetchContent (no system install). Plugin formats AU / VST3 / Standalone; WebView editor (<code>NEEDS_WEB_BROWSER</code>).</td></tr>
+          <tr><td>clap-juce-extensions</td><td><code>pinned commit</code></td><td>Adds the CLAP format on top of the JUCE wrapper (same path zpwr-fx uses).</td></tr>
+          <tr><td>zpwr-patch-core</td><td><code>submodule (libs/)</code></td><td>Shared modular patch graph + DSP primitives + script engine; the synth registers its nodes onto this registry.</td></tr>
+          <tr><td>zpwr-clip-engine</td><td><code>submodule (libs/)</code></td><td>CLIP / note-stream engine, reuses <code>zpwr_patch_core</code>.</td></tr>
+          <tr><td>C++ / build</td><td><code>C++20, CMake &ge; 3.22</code></td><td>macOS default universal binary (<code>x86_64;arm64</code>); Linux x86_64 / aarch64; Windows VST3 + CLAP via WebView2.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">Validation is a CTest suite of <strong>5</strong> headless test executables (&approx;1,365 lines) registered in <code>CMakeLists.txt</code>, using a lightweight in-file assertion harness &mdash; no external test framework, failures print to <code>std::cerr</code> and the binary exits non-zero.</p>
+      <table class="file-table">
+        <thead><tr><th>CTest target</th><th>Source</th><th>Coverage</th></tr></thead>
+        <tbody>
+          <tr><td>dsp_smoke</td><td><code>tests/dsp_smoke.cpp</code></td><td>Core DSP primitives produce finite, in-range output.</td></tr>
+          <tr><td>synth_modules</td><td><code>tests/synth_modules_test.cpp</code></td><td>The registered synth node types (largest suite, ~629 lines): compute behaviour, params, voice state.</td></tr>
+          <tr><td>poly_engine</td><td><code>tests/poly_engine_test.cpp</code></td><td>PolyEngine voice allocation, unison, poly/mono/legato/duo modes.</td></tr>
+          <tr><td>factory_presets</td><td><code>tests/factory_presets_test.cpp</code></td><td>Factory preset JSON loads and instantiates cleanly.</td></tr>
+          <tr><td>midifx_stage</td><td><code>tests/midifx_stage_test.cpp</code></td><td>MIDI / MPE input staging into the engine.</td></tr>
+        </tbody>
+      </table>
+      <p class="tutorial-subtitle" style="margin-top:1rem;">There is also an offline benchmark (<code>tools/synth_bench.cpp</code>) and generator tools (<code>tools/gen_*_bank.cpp</code>, <code>gen_reference.cpp</code>, <code>gen_wavetables.cpp</code>, <code>gen_samples.cpp</code>) that build factory banks, wavetables, sample data and the module reference from the same source the plugin runs. No dedicated CI workflow file ships in this repo; tests are run locally via <code>ctest</code> against the headless DSP libraries.</p>
+
+    </main>
+    <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      ZPWR-SYNTH &middot; ENGINEERING REPORT &middot; MENKETECHNOLOGIES
+    </footer>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const btnTheme = document.getElementById('btnTheme');
+    const btnCrt = document.getElementById('btnCrt');
+    const btnNeon = document.getElementById('btnNeon');
+    const crtH = document.getElementById('crtH');
+    const crtV = document.getElementById('crtV');
+    btnTheme?.addEventListener('click', () => {
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+    btnCrt?.addEventListener('click', () => {
+      btnCrt.classList.toggle('active');
+      const on = btnCrt.classList.contains('active');
+      if (crtH) crtH.style.display = on ? '' : 'none';
+      if (crtV) crtV.style.display = on ? '' : 'none';
+    });
+    btnNeon?.addEventListener('click', () => {
+      btnNeon.classList.toggle('active');
+      document.querySelector('.app')?.classList.toggle('neon-off');
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => { requestAnimationFrame(() => { bar.style.width = w; }); });
+      });
+    });
+  </script>
 </body>
 </html>

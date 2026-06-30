@@ -131,7 +131,7 @@ fn detect_ableton_version() -> (String, String) {
 | Creator | Display string | "Ableton Live 11.0" |
 | Revision | Git-like hash (optional) | "" |
 
-**Note**: All 23 templates use `MajorVersion="5"`. MinorVersion varies (10.0_377 → 12.0_12300).
+**Note**: All 25 templates use `MajorVersion="5"`. MinorVersion varies (10.0_377 → 12.0_12300).
 Target `11.0_433` for broad compatibility.
 
 ---

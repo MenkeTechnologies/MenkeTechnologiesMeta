@@ -4,90 +4,209 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-fx — engineering report. JUCE modular multi-effects plugin: build targets, formats, patch-graph architecture, 1190+-module catalog incl. 171 analog models, status.">
-  <title>zpwr-fx — Engineering Report</title>
+  <meta name="description" content="zpwr-fx engineering report — module map, dependency footprint, and test status for the JUCE 8 modular patch-effects plugin: 3346 audio blocks across 19 categories, 128 CC-mappable slots, 42 factory presets, 4 plugin formats.">
+  <title>zpwr-fx &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../hud-static.css">
-  <link rel="stylesheet" href="../product.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .mapping-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .mapping-card { border:1px solid var(--border);border-left:3px solid var(--magenta);background:var(--bg-card);padding:0.6rem 0.9rem;border-radius:2px; }
+    .mapping-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--magenta);margin:0 0 0.3rem; }
+    .mapping-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.5; }
+    .mapping-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+    .feature-card li code { font-size:10px; }
+  </style>
 </head>
-<body class="crt">
-  <header class="tutorial-header">
-    <div class="tutorial-header-inner">
-      <h1 class="tutorial-brand">// ZPWR-FX</h1>
-      <nav class="tutorial-crumbs" aria-label="Breadcrumb">
-        <a href="../">MenkeTechnologiesMeta</a>
-        <span class="sep">/</span>
-        <a href="./">zpwr-fx</a>
-        <span class="sep">/</span>
-        <span class="current">Engineering report</span>
-        <span class="sep">/</span>
-        <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">GitHub</a>
-      </nav>
-    </div>
-  </header>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-FX &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="reference.html">Reference</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            module map &middot; dependency footprint &middot; test status &mdash; a JUCE 8 modular patch-effects plugin
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+    <main class="tutorial-main">
 
-  <main class="tutorial-main">
-    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
-    <p class="tutorial-subtitle">JUCE modular multi-effects plugin — a fully modular patch graph on the shared zpwr-patch-core engine. <span class="tag-paid">Paid product.</span></p>
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">zpwr-fx (project <code>ZpwrFX</code>, v0.1.23) is a JUCE 8 modular patch-effects
+        plugin. The audio engine is a dynamic patch graph of mono DSP blocks wired by per-input source selection,
+        summing into two stereo output buses. The block palette is not built here &mdash; it is the shared audio module
+        pack from <strong>zpwr-patch-core</strong> (registered via <code>zpc::registerAudioModules</code>, re-exported as
+        <code>zfx::registerAudioModules</code>): <strong>3346 audio blocks</strong> across 19 categories (4218 total
+        across the wider audio/synth/MIDI stack). This repo is the FX host: the JUCE processor/editor, the host-param and
+        automation surface, factory presets, and the embedded WebView UI. The plugin's own C++ is compact &mdash;
+        <code>src/</code> is ~1,400 lines (PluginProcessor.cpp 812, PluginEditor.cpp 340, plus headers and
+        <code>FxConfig.h</code>) &mdash; with the heavy DSP and registry living in the shared submodule.</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">3346</div><div class="stat-label">Audio Blocks</div></div>
+        <div class="stat-card"><div class="stat-val">19</div><div class="stat-label">Block Categories</div></div>
+        <div class="stat-card"><div class="stat-val">128</div><div class="stat-label">CC-Mappable Slots</div></div>
+        <div class="stat-card"><div class="stat-val">42</div><div class="stat-label">Factory Presets</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Plugin Formats</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Submodule Deps</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Headless Test Apps</div></div>
+        <div class="stat-card"><div class="stat-val">~1.4k</div><div class="stat-label">Host C++ Lines</div></div>
+      </div>
 
-    <section class="tutorial-section">
-      <h2>Build &amp; Position</h2>
-      <table class="report">
-        <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
-        <tr><td>Language</td><td>C++</td><td>JUCE audio plugin</td></tr>
-        <tr><td>Engine</td><td><code>zpc::LayeredEngine</code></td><td>shared <a href="../zpwr-patch-core/">zpwr-patch-core</a> graph (<code>add_subdirectory libs/zpwr-patch-core</code>)</td></tr>
-        <tr><td>Formats</td><td>VST3 · AU · CLAP · Standalone</td><td>CLAP via <code>clap-juce-extensions</code></td></tr>
-        <tr><td>Targets</td><td>macOS arm64/x86_64 · Linux x86_64/aarch64 · Windows x64/arm64</td><td>cross-platform, cross-arch from day one (Windows builds VST3 + CLAP via <code>scripts/build_win.ps1</code>)</td></tr>
-        <tr><td>Build system</td><td><code>CMake</code></td><td><code>CMakeLists.txt</code> at repo root</td></tr>
-        <tr><td>Modules</td><td>1190+ module types</td><td>shared registry (<code>buildFxRegistry</code>); +111 note-stream in zpwr-midi-fx = 1300+ stack-wide; parity tracked in <code>FX_PARITY.md</code></td></tr>
-        <tr><td>Analog models</td><td>100+ named circuits</td><td><code>registerAnalog</code>/<code>registerAnalogTime</code>: synth filters + comps/limiters (1176/LA-2A/LA-3A/Fairchild/dbx/SSL/API2500/Distressor/Sta-Level) + EQs (Pultec/API/Neve/SSL/Manley/Helios/GML) + preamps/tape + pedals (TS808/RAT/BigMuff/Klon/DS-1/MXR/Octavia/OCD/MetalZone) + amps (Fender/Marshall/Vox/Mesa) + enhancers + phaser/trem + chorus + reverb/echo (EMT140/BX20/RE-201/Echorec/MemoryMan) — generic topologies, no IR/sample clones</td></tr>
-        <tr><td>Routing</td><td>free patch graph</td><td>cables by source id, fan-out, feedback; per-param mod matrix; unlimited layers; ⚡ EZ-wire auto-routing</td></tr>
-        <tr><td>Status</td><td><span class="ok">stable</span></td><td>patch graph + full 1190+ module catalog incl. 171 analog models</td></tr>
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>MODULE MAP</h2>
+      <p class="tutorial-subtitle">The host-side components in this repo, plus the shared engine they delegate to. The FX
+        C++ is small and focused; the DSP catalog and graph engine live in the <code>zpwr-patch-core</code> submodule.</p>
+      <table class="file-table">
+        <thead><tr><th>Module</th><th>Source</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--accent);">ZpwrFxProcessor</td><td><code>src/PluginProcessor.cpp/.h</code></td><td>AudioProcessor: patch graph host, processBlock, state save/restore, factory programs, MIDI PC/Bank Select, master-insert plugin host</td></tr>
+          <tr><td style="color:var(--accent);">ZpwrFxEditor</td><td><code>src/PluginEditor.cpp/.h</code></td><td>JUCE 8 WebBrowserComponent editor; binds native JS&harr;C++ functions and the soft-key sliders</td></tr>
+          <tr><td style="color:var(--accent);">FxConfig</td><td><code>src/FxConfig.h</code></td><td>Host layout constants: 16 active / 32 max soft keys, 96 auto-param pool, 11 MIDI/MPE sources, 12 default nodes, source-id map</td></tr>
+          <tr><td style="color:var(--accent);">Audio module pack</td><td><code>libs/zpwr-patch-core</code></td><td>The 3346-block palette + graph engine (topological sort, one-sample feedback resolution); registered onto the core</td></tr>
+          <tr><td style="color:var(--accent);">ScriptEngine (Expr)</td><td><code>zpwr-patch-core (Expr block)</code></td><td>RT-safe expression VM for user per-sample code; tested here via tests/ScriptEngineTest.cpp</td></tr>
+          <tr><td style="color:var(--accent);">Soft keys + Auto pool</td><td><code>PluginProcessor (APVTS)</code></td><td>32 soft-key host params + 96 reserved Auto N slots = 128 CC-mappable, bind any block param for host automation</td></tr>
+          <tr><td style="color:var(--accent);">Master insert host</td><td><code>zpc::PluginInsert / PluginHost</code></td><td>Hosts one external VST3/AU on the master path (JUCE_PLUGINHOST_VST3/AU enabled)</td></tr>
+          <tr><td style="color:var(--accent);">WavRecorder</td><td><code>zpc::WavRecorder</code></td><td>RT-safe 32-bit float capture of the master output to ~/Music/zpwr</td></tr>
+          <tr><td style="color:var(--accent);">gen_reference</td><td><code>tools/gen_reference.cpp</code></td><td>Console app generating reference.html/PDF from the live module registry so docs never drift</td></tr>
+        </tbody>
       </table>
-    </section>
 
-    <section class="tutorial-section">
-      <h2>Signal Path</h2>
-      <figure class="diagram">
-      <svg viewBox="0 0 760 244" role="img" aria-label="zpwr-fx architecture: free-routed audio patch graph">
-        <defs>
-          <marker id="ah-cy" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow" d="M0,0 L8,4 L0,8 Z"/></marker>
-          <marker id="ah-mag" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path class="d-arrow-mag" d="M0,0 L8,4 L0,8 Z"/></marker>
-        </defs>
-        <rect class="d-group" x="36" y="44" width="688" height="150" rx="8"/>
-        <text class="d-cap" x="48" y="62">Layer — full engine copy (unlimited layers)</text>
-        <rect class="d-box-acc" x="48" y="96" width="64" height="44" rx="6"/><text class="d-t-acc" x="80" y="122" text-anchor="middle">In L/R</text>
-        <rect class="d-box" x="156" y="96" width="104" height="44" rx="6"/><text class="d-t" x="208" y="122" text-anchor="middle">Filter</text>
-        <rect class="d-box" x="304" y="96" width="104" height="44" rx="6"/><text class="d-t" x="356" y="122" text-anchor="middle">Delay</text>
-        <rect class="d-box" x="452" y="96" width="104" height="44" rx="6"/><text class="d-t" x="504" y="122" text-anchor="middle">Reverb</text>
-        <rect class="d-box-acc" x="600" y="96" width="64" height="44" rx="6"/><text class="d-t-acc" x="632" y="122" text-anchor="middle">Out</text>
-        <line class="d-flow" x1="112" y1="118" x2="154" y2="118" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="260" y1="118" x2="302" y2="118" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="408" y1="118" x2="450" y2="118" marker-end="url(#ah-cy)"/>
-        <line class="d-flow" x1="556" y1="118" x2="598" y2="118" marker-end="url(#ah-cy)"/>
-        <path class="d-flow" d="M504,96 C504,70 208,70 208,94" marker-end="url(#ah-cy)"/>
-        <text class="d-t-sm" x="356" y="76" text-anchor="middle">any node → any node · feedback (1-sample)</text>
-        <path class="d-mod" d="M208,140 L208,166 L504,166 L504,142" marker-end="url(#ah-mag)"/>
-        <text class="d-t-mag" x="356" y="184" text-anchor="middle">per-param mod matrix · per-cable gain + colour</text>
-        <text class="d-t-sm" x="48" y="222">⚡ EZ WIRE auto-chains In → blocks → Out</text>
-        <text class="d-t-cy" x="724" y="222" text-anchor="end">1190+ modules · 171 analog models</text>
-      </svg>
-      <figcaption>Free-routed audio graph on zpwr-patch-core — not a fixed slot rack. Layers stack without limit.</figcaption>
-      </figure>
-      <p>Not a fixed slot rack: nodes are wired freely by source id, the graph
-      rebuilds in topological order on each structural edit, and live param edits
-      stay lock-free via an atomic graph swap. Each layer is a full engine copy.</p>
-    </section>
+      <hr class="section-rule">
 
-    <nav class="product-nav">
-      <a href="./">Overview</a>
-      <span class="sep">·</span>
-      <a href="README.md">README</a>
-      <span class="sep">·</span>
-      <a href="../">MenkeTechnologiesMeta</a>
-    </nav>
-  </main>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>BLOCK CATEGORIES</h2>
+      <p class="tutorial-subtitle">The 3346 blocks are grouped into 19 categories: Oscillator, Filter, Distortion, Amp,
+        Modulation, Delay, Reverb, Dynamics, Pitch, Utility, EQ, Effect, Envelope, Routing, Sequencing, Spectral,
+        Stereo, Physical, and Tape. Each block exposes three inputs (In 1, In 2, Mod), six parameters, and one output. The set includes a
+        large circuit-modeled group (zero-delay-feedback ladders/SVFs, Shockley-diode and Ebers-Moll clippers, Koren
+        triode/EL34 stages, Jiles-Atherton tape, Lambert-W wavefolder, four-diode ring mod). The authoritative per-block
+        listing is the generated <a href="reference.html">Module Reference</a>.</p>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DEPENDENCY FOOTPRINT</h2>
+      <p class="tutorial-subtitle">No external package registry: every dependency is a git submodule. The plugin links a
+        focused set of JUCE modules and the shared patch-core engine.</p>
+      <table class="file-table">
+        <thead><tr><th>Dependency</th><th>Kind</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--accent);">JUCE</td><td><code>submodule (libs/JUCE)</code></td><td>Framework. Linked modules: juce_audio_utils, juce_gui_extra, juce_dsp (+ recommended config/warning flags)</td></tr>
+          <tr><td style="color:var(--accent);">zpwr-patch-core</td><td><code>submodule (libs/zpwr-patch-core)</code></td><td>The audio module pack, patch graph engine, and shared WebView UI assets</td></tr>
+          <tr><td style="color:var(--accent);">clap-juce-extensions</td><td><code>submodule (libs/clap-juce-extensions)</code></td><td>Wraps the same plugin as a CLAP (CLAP_ID com.menketechnologies.zpwrfx, features audio-effect/multi-effects)</td></tr>
+          <tr><td style="color:var(--accent);">zpwr-clip-engine</td><td><code>submodule (libs/zpwr-clip-engine)</code></td><td>Clip/pattern engine for the Clip tab (from zpwr-daw)</td></tr>
+        </tbody>
+      </table>
+      <div class="feature-grid" style="margin-top:1.2rem;">
+        <div class="feature-card"><h4>Build System</h4><p>CMake (&ge; 3.22), <code>juce_add_plugin</code> with FORMATS VST3 / AU / Standalone, plus a CLAP target via clap-juce-extensions &mdash; <strong>four shipped formats</strong>.</p></div>
+        <div class="feature-card"><h4>Embedded UI</h4><p>UI is embedded via <code>juce_add_binary_data</code> (<code>JUCE_WEB_BROWSER=1</code>, <code>JUCE_USE_CURL=0</code>, no node build) &mdash; self-contained, no external files.</p></div>
+        <div class="feature-card"><h4>Submodules</h4><p>All four dependencies are git submodules: <code>JUCE</code>, <code>zpwr-patch-core</code>, <code>clap-juce-extensions</code>, and <code>zpwr-clip-engine</code>. No external package registry.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">Two headless C++ test console apps ship in the repo (built as JUCE console targets)
+        and each returns a non-zero exit code on any failure.</p>
+      <table class="file-table">
+        <thead><tr><th>Test</th><th>File</th><th>Coverage</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--accent);">ScriptEngineTest</td><td><code>tests/ScriptEngineTest.cpp</code></td><td>~27 cases over the Expr VM: arithmetic/precedence, pow, params, math funcs, clamp/if/lerp, persistent state, div-by-zero / log(0) finiteness, tap() feedback stability, comments, and 8 expected compile-failure cases (dangling assignment, unknown func/var, assign to read-only, wrong arity, empty)</td></tr>
+          <tr><td style="color:var(--accent);">PatchGraphTest</td><td><code>tests/PatchGraphTest.cpp</code></td><td>The audio module pack on zpwr-patch-core: registry lookups (Filter/Expr/Comb present), output finiteness across runs, Drive output bounded, chained Drive&rarr;Filter finiteness, and PathLFO axis behaviour (flat path centred, bipolar sweep within &plusmn;1)</td></tr>
+        </tbody>
+      </table>
+      <div class="feature-grid" style="margin-top:1.2rem;">
+        <div class="feature-card"><h4>Scope</h4><p>These are correctness/sanity checks (registry integrity, numerical finiteness, output bounding, compile-time rejection of unsafe scripts) rather than a perceptual audio-quality suite. The tests here target the FX-side integration and the Expr VM.</p></div>
+        <div class="feature-card"><h4>No Committed CI</h4><p>There is <strong>no CI workflow committed</strong> in this repo, and the broader 3346-block catalog is validated upstream in <code>zpwr-patch-core</code>.</p></div>
+        <div class="feature-card"><h4>RT-Safety</h4><p>Both suites are RT-safety oriented &mdash; the engine guarantees finite, sanitized output (NaN/Inf &rarr; 0) and rejects over-limit scripts at compile time.</p></div>
+      </div>
+
+      <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      ZPWR-FX &middot; ENGINEERING REPORT &middot; MENKETECHNOLOGIES
+    </footer>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const btnTheme = document.getElementById('btnTheme');
+    const btnCrt = document.getElementById('btnCrt');
+    const btnNeon = document.getElementById('btnNeon');
+    const crtH = document.getElementById('crtH');
+    const crtV = document.getElementById('crtV');
+    btnTheme?.addEventListener('click', () => {
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+    btnCrt?.addEventListener('click', () => {
+      btnCrt.classList.toggle('active');
+      const on = btnCrt.classList.contains('active');
+      if (crtH) crtH.style.display = on ? '' : 'none';
+      if (crtV) crtV.style.display = on ? '' : 'none';
+    });
+    btnNeon?.addEventListener('click', () => {
+      btnNeon.classList.toggle('active');
+      document.querySelector('.app')?.classList.toggle('neon-off');
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => { requestAnimationFrame(() => { bar.style.width = w; }); });
+      });
+    });
+  </script>
 </body>
 </html>
