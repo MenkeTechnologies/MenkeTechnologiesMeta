@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-clip-engine — the shared DAW arranger/sequencer and clip grid for the MenkeTechnologies app stack, extracted from zpwr-daw. One canvas grid with swappable domains (arranger, piano-roll, launcher, automation) plus a pure-C++17 header-only C-ABI engine (zpc_clip_*) consumed natively by the daw and via Rust FFI by the Tauri apps.">
+  <title>zpwr-clip-engine — Shared Arranger / Sequencer + Clip Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+    .card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); padding: 14px 16px; }
+    .card h3 { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 13px; letter-spacing: 1px; margin: 0 0 6px; }
+    .card p { color: var(--text-dim); font-size: 12.5px; line-height: 1.6; margin: 0; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    .status-banner { border: 1px solid var(--accent); border-radius: 6px; background: var(--bg-card); padding: 12px 16px; margin: 16px 0; color: var(--text); font-size: 12.5px; line-height: 1.6; }
+    .status-banner strong { color: var(--accent); }
+    ul.feat { columns: 2; column-gap: 28px; list-style: none; padding: 0; margin: 8px 0; }
+    ul.feat li { color: var(--text-dim); font-size: 12.5px; line-height: 1.7; break-inside: avoid; }
+    ul.feat li b { color: var(--cyan); font-weight: 600; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+    .doc-footer a { color: var(--cyan); }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZPWR-CLIP-ENGINE // SHARED ARRANGER · SEQUENCER · CLIP GRID</h1>
+          <div class="docs-sub">// one canvas grid with swappable domains, plus a header-only C-ABI scheduler — extracted from zpwr-daw, shared by every app</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="report.html">Engineering Report</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpwr-clip-engine" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <div class="status-banner"><strong>Shared component.</strong> "One arranger, every app, one grid — content swapped, never re-implemented." The sequencer/arranger frontend and its scheduling engine were extracted verbatim from <a href="https://github.com/MenkeTechnologies/zpwr-daw">zpwr-daw</a>; hosts mount the grid through a single entry point, <code>initClipSeq({ nf, getCAT })</code>, and supply a backend.</div>
+
+      <p class="lede">zpwr-clip-engine is the shared DAW arranger / sequencer for the MenkeTechnologies GUI app stack. It is one canvas-2D grid with swappable <strong>domains</strong> — arranger, notes/piano-roll, launcher/session, automation lanes — plus the clip palette, MIDI export, and project/bank serialization. The <strong>real scheduling engine lives here too</strong> (<code>engine/</code>): the pattern → events → step/transport/MIDI scheduler, extracted from zpwr-daw as a pure-C++17, header-only <strong>C ABI</strong> (<code>zpc_clip_*</code>) — header-only <code>ClipEngine</code> + <code>MidiFile</code>, no JUCE, no external deps. Created by MenkeTechnologies.</p>
+
+      <div class="card-grid">
+        <div class="card"><h3>One grid, swappable domains</h3><p>A single canvas grid renders arranger, piano-roll, launcher/session, and automation-lane domains — content is swapped, never re-implemented per app.</p></div>
+        <div class="card"><h3>One engine, every consumer</h3><p>The <code>zpc_clip_*</code> C ABI builds two ways from one source: <code>libzpwr_clip_engine_static.a</code> (the daw links it natively) and <code>libzpwr_clip_engine.dylib</code>/<code>.so</code> (the Tauri apps load it through a Rust FFI wrapper).</p></div>
+        <div class="card"><h3>Mount through one entry</h3><p>Hosts call <code>initClipSeq({ nf, getCAT })</code> and supply a backend; the <code>nf</code> functions bridge the grid to whichever engine the host uses.</p></div>
+        <div class="card"><h3>No JUCE, no deps</h3><p>The engine is header-only C++17 (<code>ClipEngine</code> + <code>MidiFile</code>) with no JUCE and no external dependencies — so it embeds in native and Tauri hosts alike.</p></div>
+      </div>
+
+      <h2 class="reg-h">Hosts</h2>
+      <ul class="feat">
+        <li><b>zpwr-daw</b> (JUCE / C++) — drives the grid through native <code>nf</code> functions backed by this engine plus its own audio voices / per-track instruments (real sound).</li>
+        <li><b>Tauri apps</b> (Audio-Haxor, traderview, ztranslator) — bridge <code>nf</code> → the C ABI via a Rust FFI wrapper.</li>
+        <li><b>Domains</b> — arranger, notes / piano-roll, launcher / session, automation lanes.</li>
+        <li><b>Clip palette</b> — the swappable clip bank shared across domains.</li>
+        <li><b>MIDI export</b> — pattern/event data written out via the engine's <code>MidiFile</code>.</li>
+        <li><b>Serialization</b> — project / bank save &amp; load.</li>
+      </ul>
+
+      <h2 class="reg-h">Mounting</h2>
+      <p class="lede">A host mounts the shared grid through one entry point and supplies its backend bridge:</p>
+      <pre class="code">import { initClipSeq } from './webui/grid/index.js';
+
+// nf = the host's bridge functions (native in the daw, FFI in Tauri apps);
+// getCAT = the host's content/category provider for the clip palette
+initClipSeq({ nf, getCAT });</pre>
+
+      <h2 class="reg-h">Layout</h2>
+      <p class="lede">See the <a href="report.html">engineering report</a> for the module map across <code>webui/</code> (the shared frontend) and <code>engine/</code> (the C-ABI scheduler).</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zpwr-clip-engine &middot; shared arranger / sequencer + clip engine &middot; <a href="https://github.com/MenkeTechnologies/zpwr-clip-engine">zpwr-clip-engine</a> &middot; <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-clip-engine engineering report — module map for the shared arranger/sequencer frontend (webui/: clip, grid, lib) and the header-only C++17 C-ABI scheduling engine (engine/: ClipEngine + MidiFile, zpc_clip_*). Extracted from zpwr-daw; consumed natively and via Rust FFI.">
+  <title>zpwr-clip-engine — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    .note { color: var(--text-dim); font-size: 12.5px; line-height: 1.7; }
+    .note a { color: var(--cyan); }
+    .status-banner { border: 1px solid var(--accent); border-radius: 6px; background: var(--bg-card); padding: 12px 16px; margin: 16px 0; color: var(--text); font-size: 12.5px; line-height: 1.6; }
+    .status-banner strong { color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; margin: 8px 0; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .tag { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--cyan); }
+    ol.phases { color: var(--text-dim); font-size: 12.5px; line-height: 1.8; padding-left: 20px; }
+    ol.phases b { color: var(--cyan); font-weight: 600; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+    .doc-footer a { color: var(--cyan); }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="docs-header">
+      <div class="docs-header-inner">
+        <div class="docs-title-block">
+          <h1>ZPWR-CLIP-ENGINE // ENGINEERING REPORT</h1>
+          <div class="docs-sub">// shared frontend (webui/) + header-only C-ABI scheduler (engine/)</div>
+        </div>
+        <div class="docs-header-actions">
+          <div class="docs-toolbar">
+            <a class="btn btn-secondary" href="index.html">Home</a>
+            <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zpwr-clip-engine" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <div class="status-banner"><strong>Shared component, two halves.</strong> A canvas-2D arranger/sequencer <em>frontend</em> (<code>webui/</code>) and the pattern→events→step/transport/MIDI <em>scheduler</em> (<code>engine/</code>, a header-only C++17 C ABI). Both were extracted verbatim from <a href="https://github.com/MenkeTechnologies/zpwr-daw">zpwr-daw</a> so every host shares one implementation.</div>
+
+      <h2 class="reg-h">Architecture</h2>
+      <p class="note"><strong>zpwr-clip-engine</strong> is consumed two ways from one source. The frontend (<code>webui/</code>) is mounted by hosts through <code>initClipSeq({ nf, getCAT })</code>: one canvas grid renders swappable domains (arranger, notes/piano-roll, launcher/session, automation lanes) plus the clip palette. The engine (<code>engine/</code>) is the scheduler as a pure-C++17, header-only C ABI (<code>zpc_clip_*</code>) — <code>ClipEngine</code> + <code>MidiFile</code>, no JUCE, no external deps — built both as a static lib the JUCE daw links natively and as a dylib/.so the Tauri apps load through a Rust FFI wrapper. The <code>nf</code> bridge is what differs per host; the grid and the scheduler do not.</p>
+
+      <h2 class="reg-h">Module map</h2>
+      <table>
+        <thead><tr><th>area</th><th>responsibility</th></tr></thead>
+        <tbody>
+          <tr><td>webui/grid</td><td>the canvas grid — model, interactions, cursors, sequencer, project state, domain entry (<code>index.js</code>, <code>grid-core.js</code>, <code>grid-model.js</code>, <code>grid-interactions.js</code>, <code>sequencer.js</code>, <code>project.js</code>)</td></tr>
+          <tr><td>webui/clip</td><td>the clip layer — clip grid, clip bank/palette, sequencer view, and the non-audio basic backend for preview (<code>clip.js</code>, <code>clip-grid.js</code>, <code>clip-bank.js</code>, <code>clip-seq.js</code>, <code>clip-basic-backend.js</code>)</td></tr>
+          <tr><td>webui/lib</td><td>shared frontend helpers used across the clip and grid layers</td></tr>
+          <tr><td>engine/</td><td>the C++17 header-only scheduler exposed as the <code>zpc_clip_*</code> C ABI — <code>ClipEngine</code> (pattern → events → step/transport) and <code>MidiFile</code> (MIDI export)</td></tr>
+          <tr><td>bindings/</td><td>the build glue producing the static lib (native daw link) and the dylib/.so (Tauri Rust-FFI load) from the one engine source</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Consumers</h2>
+      <ol class="phases">
+        <li><b>zpwr-daw</b> (JUCE / C++) — links <code>libzpwr_clip_engine_static.a</code> natively and drives the grid via native <code>nf</code> functions, adding its own audio voices / per-track instruments for real sound.</li>
+        <li><b>Tauri apps</b> (Audio-Haxor, traderview, ztranslator) — load <code>libzpwr_clip_engine.dylib</code>/<code>.so</code> through a Rust FFI wrapper and bridge <code>nf</code> → the C ABI.</li>
+        <li><b>One source of truth</b> — the grid and scheduler are never re-implemented per app; only the <code>nf</code> backend bridge and supplied content differ.</li>
+      </ol>
+
+      <h2 class="reg-h">Build</h2>
+      <p class="note">The engine builds two artifacts from one C++17 header-only source via <code>bindings/</code>: <code>libzpwr_clip_engine_static.a</code> for native linking and <code>libzpwr_clip_engine.dylib</code>/<code>.so</code> for FFI loading. Because it is header-only with no JUCE or external dependencies, the same engine embeds in native and Tauri hosts without divergence.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zpwr-clip-engine &middot; engineering report &middot; <a href="https://github.com/MenkeTechnologies/zpwr-clip-engine">zpwr-clip-engine</a> &middot; <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
