@@ -14,8 +14,8 @@
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-14_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-14)
 [![Tier 6](https://img.shields.io/badge/tier_6-19_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-19)
-[![Rust](https://img.shields.io/badge/rust-2.6M_LOC-orange.svg)](#0x09-code-volume)
-[![Code](https://img.shields.io/badge/code-9.9M_lines-brightgreen.svg)](#0x09-code-volume)
+[![Rust](https://img.shields.io/badge/rust-2.8M_LOC-orange.svg)](#0x09-code-volume)
+[![Code](https://img.shields.io/badge/code-10.4M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -640,28 +640,28 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 2,610,972 | 7,026 |
-| JSON | 2,585,995 | 954 |
+| Rust | 2,782,702 | 7,137 |
+| JSON | 2,647,744 | 937 |
 | Perl | 1,904,852 | 19,751 |
-| JavaScript | 659,398 | 5,305 |
-| C Header | 358,563 | 474 |
+| JavaScript | 742,646 | 6,522 |
+| HTML | 392,113 | 1,187 |
+| C Header | 359,032 | 475 |
 | Zsh | 280,264 | 1,303 |
-| HTML | 263,948 | 1,154 |
-| CSS | 215,806 | 1,911 |
-| Stryke (`.stk`) | 201,089 | 3,382 |
-| TeX | 163,464 | 27 |
-| Vim Script | 118,381 | 821 |
-| C++ | 114,946 | 174 |
+| CSS | 247,499 | 2,695 |
+| Stryke (`.stk`) | 201,076 | 3,382 |
+| TeX | 175,447 | 32 |
+| Vim Script | 119,704 | 857 |
+| C++ | 115,355 | 176 |
 | AWK | 82,368 | 2,191 |
-| Shell | 76,661 | 2,267 |
+| Shell | 77,182 | 2,276 |
 | C | 75,012 | 40 |
-| Python | 45,326 | 609 |
-| Scheme | 37,786 | 1,155 |
-| TOML | 35,512 | 534 |
+| Python | 45,967 | 610 |
+| Scheme | 37,797 | 1,155 |
+| TOML | 36,170 | 585 |
 | Kotlin | 29,813 | 271 |
 | SQL | 29,188 | 119 |
-| *Other (85 languages)* | 49,742 | 728 |
-| **Total** | **9,939,086** | **50,914** |
+| *Other (85 languages)* | 50,459 | 741 |
+| **Total** | **10,432,390** | **53,198** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -671,16 +671,16 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 <!-- BEGIN gen-code-volume:repos -->
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | JSON 1,581,560 | Rust 743,151 |
-| `strykelang` | Perl 1,902,103 | Rust 414,998 |
-| `zshrs` | Rust 438,969 | Zsh 50,324 |
+| `traderview` | JSON 1,581,560 | Rust 756,103 |
+| `strykelang` | Perl 1,902,103 | Rust 415,242 |
+| `zshrs` | Rust 439,266 | Zsh 50,324 |
 | `zpwr-synth` | JSON 325,606 | C Header 102,640 |
 | `zpwr-midi-fx` | JSON 137,950 | C Header 119,687 |
-| `Audio-Haxor` | Rust 118,888 | JSON 102,167 |
-| `MenkeTechnologiesPublications` | TeX 161,505 | HTML 103,985 |
-| `zemacs` | Rust 92,164 | JSON 57,045 |
-| `zpwr-fx` | JSON 68,974 | C Header 63,565 |
-| `zpwr-patch-core` | JSON 68,960 | C Header 63,376 |
+| `Audio-Haxor` | Rust 118,892 | JSON 102,167 |
+| `zemacs` | Rust 133,646 | JSON 70,766 |
+| `MenkeTechnologiesPublications` | TeX 173,488 | HTML 104,009 |
+| `ztranslator` | JSON 88,611 | JavaScript 67,108 |
+| `docs` | HTML 228,564 | CSS 2,467 |
 <!-- END gen-code-volume:repos -->
 
 Numbers refresh as repos add commits — regenerate with `bin/gen-code-volume --in-place`.
@@ -693,10 +693,10 @@ Every line above is hand-authored. The standard software-engineering productivit
 | Net LOC/day baseline | Career total | This tree ÷ baseline |
 |---:|---:|---:|
 | 100/day (optimistic ceiling) | ~920,000 | **~11×** |
-| 50/day (mid estimate) | ~460,000 | **~22×** |
-| 20/day (conservative) | ~184,000 | **~54×** |
+| 50/day (mid estimate) | ~460,000 | **~23×** |
+| 20/day (conservative) | ~184,000 | **~57×** |
 
-The defensible floor is **≥10 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
+The defensible floor is **≥11 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
 <!-- END gen-code-volume:careers -->
 
 The baseline is an industry estimate, not a measured value; the Total is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
