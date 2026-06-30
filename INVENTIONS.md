@@ -1,51 +1,1509 @@
 # MenkeTechnologies — Invention Ledger
 
 Candidate "world's first" capabilities across the stack. The bar: a genuinely
-**novel capability** (not a faster dup) **and** best-in-class implementation.
-Every entry states the **claim**, its **basis**, and an honest **caveat** — a web
-search is never exhaustive, so "no prior art found" is recorded as that, not as a
-proven absolute. Claims are owned by MenkeTechnologies; this ledger just keeps them
-honest and falsifiable.
+**novel capability** (not a faster dup) **and** a real implementation. Every entry
+states the **claim**, its **basis** (in-repo evidence), and an honest **caveat** — a
+web search is never exhaustive, so "no prior art found" is recorded as that, not as a
+proven absolute. A **confidence** tag (high / med / low) reflects how solid the
+implementation is *and* how defensible the "first" framing is.
 
-| # | Claim | Basis | Caveat |
-| --- | --- | --- | --- |
-| 1 | **zpwr-daw — a general-purpose DAW arranger that runs as a plugin AND embeds in any GUI app**: a *complete* two-view arranger (Arrangement + Session, clips, breakpoint automation, tempo/meter maps) shipping standalone, as a VST3 inside another DAW, and embedded in arbitrary hosts — including **non-audio** ones (traderview → trades, ztranslator → translations, Audio-Haxor → stryke on clips) off the same clip/automation timeline. | Closest prior art, none a clean dup (see analysis). | "None found", not proven — a web search is not exhaustive. Audio render path written but **unverified** (pending a JUCE build); the editor/arranger/automation are verified. |
-| 5 | **zpwr-daw — the world's first DAW designed for audio-production *algorithm generation* / one-click professional polished music**: built from the ground up so the modular graph + embedded scripting (stryke) + generative engine produce a finished, professionally-mixed track from a single action — generation as the primary workflow, not a sample-pack/loop assist bolted onto a linear DAW. | Core shipped: the generative engine (`zpwr-algo-production`, ported from Audio-Haxor — structure/MIDI/genre/orchestration, 282 tests) is linked into the daw over a C ABI; the **PRODUCE tab** generates a full arrangement in one click and loads it live, with a chooseable output (`.zdp` daw-native project or Ableton `.als`). Maturing: the auto-mix/master polish via the modular graph. | "None found", not proven (search not exhaustive). AI/generative *assistants* and loop packs exist, but a DAW architected around algorithmic generation of a complete, polished mix as the core workflow has no clean prior art found. |
-| 4 | **zpwr-daw — the world's first DAW with an embedded scripting language for all lifecycle hooks + GUI automation**: stryke embedded as a first-class scripting layer wired to *every* DAW lifecycle hook (load/save/transport/clip/track/render events) and able to drive the GUI itself (automation of the interface, not just audio params) — beyond an actions/console API. | In implementation (WIP); part of the stryke ↔ daw integration. | "None found", not proven (search not exhaustive). **Impl WIP** — recorded ahead of completion; demote/adjust if a dup surfaces or scope changes. Reaper ReaScript / Bitwig controller scripts expose *some* actions, but a language bound to **all** lifecycle hooks **and** GUI automation has no clean prior art found. |
-| 3 | **zpwr-daw — the world's first DAW with an embedded shell terminal**: a real interactive shell running *inside* the DAW (the MenkeTechnologies stack — zshrs/stryke), not a constrained scripting console (Reaper ReaScript, Bitwig controller scripts) but a full terminal for driving the shell/CLI from within the project. | In implementation now; part of the zshrs/stryke ↔ daw integration. | "None found", not proven (search not exhaustive). **In progress** — entry recorded ahead of completion; demote/adjust if a dup surfaces or scope changes. Scripting consoles exist (ReaScript, Max), but a full embedded interactive **shell terminal** in a DAW has no clean prior art found. |
-| 6 | **fusevm — the world's first solo-authored, from-scratch bytecode VM with a real JIT hosting five+ distinct production language frontends**: one person built the whole execution engine — a bytecode VM plus a 3-tier (linear/block/tracing) Cranelift JIT that emits native machine code at runtime, and an AOT object compiler — and **five independent language frontends** (`strykelang`/Perl 5, `zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp) each lower their own lex→parse→AST pipeline onto the **same** `fusevm` bytecode rather than carrying a bespoke runtime. The novelty is the *combination*: solo author **+** from-scratch VM with a genuine machine-code JIT **+** 5+ real frontends. | Verified in-repo: `fusevm/src/jit.rs` builds a `cranelift_jit::JITModule`, calls `get_finalized_function` and transmutes the result into callable native fn pointers, with an mmap + `PROT_EXEC` disk-cache path; `fusevm/src/aot.rs` emits a relocatable `.o` via `cranelift_object`. Five crates depend on the `fusevm` crate and lower to `fusevm::Chunk`/`Op` (strykelang, zshrs, awkrs, vimlrs, elisprs). | "None found", not proven — a deep multi-source search (see analysis) located **no** project combining all three criteria, but it cannot cover private, non-English, pre-GitHub, or defunct hobby projects. The JIT is opt-in behind Cargo features (every frontend enables it); the interpreter is the default fallback. The "solo" line for the single nearest near-miss (Deegen) is itself contestable — see analysis. |
-| 2 | **zpwr-daw — the world's first fully modular DAW**: not a fixed channel-strip mixer with a modular *device* bolted on, but a DAW whose entire signal path is a user-patchable graph — **every track auto-owns a layer**, each layer is a **stereo patch graph** (one cable carries L/R) hosting oscillators/FX/VST3-AU plugins, the **synth panel and mod matrix are generated from that same patch**, and master/aux/global-mod buses are themselves patch graphs (the patch panel's tabs). The ~3.5k mono FX become stereo for free via a dual-mono wrapper (run once per channel, independent state) — no hand-written stereo block set. | `zpc::StereoGraph` (`PatchEngineT<StereoSample>`) + `wrapMonoAsStereo` + native stereo Plugin host, shared across all four products; per-track stereo graphs wired into the daw. | "None found", not proven (search not exhaustive); see near-miss analysis. The modular **audio render** (per-track stereo graphs → master mix) is **in progress / partially unverified** — the graph, wrapper, and stereo plugin block are compile-verified; full per-track audio + the cue bus are still being wired. |
+Claims are owned by MenkeTechnologies; this ledger keeps them honest and falsifiable.
+It was assembled by sweeping every repo in the monorepo (documented firsts **and**
+novel capabilities inferred from source), so some entries are recorded ahead of a
+formal prior-art survey. Where a capability is WIP, aspirational, or only design-doc
+deep, the caveat says so.
 
-### Prior-art analysis (why each near-miss isn't a dup)
+**Reading the confidence tag**
+- **high** — implemented and verified in-repo (often test- or build-verified); the "first" may still be author-asserted.
+- **med** — implemented but partial, or the "first/novel" framing is the softer part.
+- **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-- **NI Maschine** — a hybrid **groovebox** tied to NI's hardware/ecosystem workflow. By NI's own words it *"has never been a full DAW"* (no complex automation/mixing, by design). The Maschine 3 software does run without a controller, but it's a groove workstation, **not a general-purpose DAW** — so it isn't a dup of a *full GP DAW* as a plugin.
-- **Komplete Kontrol** — a plugin **host** + preset browser + smart-play (scales / arp). **No step sequencing or arrangement at all** — definitively not a DAW.
-- **Tracktion Engine** — a **compile-time developer library** for building DAW apps, not a loadable plugin you embed at runtime.
+Total: ~160 candidates (entries 1–129 plus lettered sub-entries — 11a, the zterminal additions
+105a–105n, and the zemacs additions 120a–120q). Marquee claims (the six original ledger entries,
+kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
+
+---
+
+## I. Execution engine & language runtimes — fusevm + five frontends
+
+**1. ★ Solo-authored from-scratch JIT VM hosting five+ production language frontends** — `med`
+One person built the whole execution engine — a bytecode VM plus a 3-tier
+(linear/block/tracing) Cranelift JIT emitting native machine code at runtime, and an
+AOT object compiler — and **five independent language frontends** (`strykelang`/Perl 5,
+`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp) each lower their own
+lex→parse→AST pipeline onto the **same** `fusevm` bytecode. The novelty is the
+combination: solo author **+** from-scratch VM with a genuine machine-code JIT **+** 5+
+real frontends. *Basis:* `fusevm/src/jit.rs` builds a `cranelift_jit::JITModule`,
+transmutes finalized functions to native fn pointers, with an mmap+`PROT_EXEC` disk
+cache; `fusevm/src/aot.rs` emits a relocatable `.o` via `cranelift_object`; five crates
+depend on `fusevm` and emit `fusevm::Chunk`/`Op`. `fusevm/src/op.rs` (~224 ops),
+`host.rs`/`awk_host.rs` host-trait injection seam. *Caveat:* "None found", not proven —
+the deep search (see analysis) found no project meeting all three criteria but cannot
+cover private/defunct work; the nearest near-miss (Deegen) is contestable. JIT is
+opt-in behind Cargo features; interpreter is the default fallback.
+
+**2. AOT native compiler that reuses the interpreter's own per-op step as single source of truth** — `med`
+Whole-program AOT lowers each bytecode op to a native basic block that calls back into
+the *same* `VM::exec_op` the interpreter uses (via an `extern "C"` shim), so AOT and
+interpreter semantics can never diverge. *Basis:* `fusevm/src/aot.rs`
+`fusevm_aot_exec_op` → `VM::aot_exec_op` → `VM::exec_op`; `compile_object` emits a `.o`
+exporting `fusevm_aot_entry` + serialized chunk; `staticlib` crate-type. *Caveat:* for
+unspecialized ops this is threaded-code AOT (native dispatch + shared per-op call) more
+than maximal native lowering; the win is removing the dispatch loop and forbidding a
+semantic fork.
+
+**3. Multi-phase tracing JIT with cross-frame deopt state materialization** — `med`
+A from-scratch tracing JIT inlines calls (incl. bounded self-recursion), traces
+branches across caller and inlined-callee frames, stitches side traces at hot
+side-exits, and on deopt reconstructs full interpreter state (synthetic frames + live
+stack) to resume mid-callee. *Basis:* `fusevm/src/jit.rs` (`DeoptInfo`/`DeoptFrame`,
+`MAX_INLINE_RECURSION=4`, `MAX_TRACE_CHAIN=4`); `fusevm/src/vm.rs`
+`materialize_deopt_frames()`. *Caveat:* speculative tracing JITs with deopt/side-traces
+are well-trodden (LuaJIT, PyPy, TraceMonkey) — novelty is implementation, not concept;
+hard bounds make it narrower than production tracers. Not a categorical first.
+
+**4. Behavior-transparent persistent native-code disk cache across all three JIT tiers** — `med`
+An opt-in on-disk cache persists compiled native code for linear, block, **and** tracing
+tiers across process restarts, keyed by chunk op-hash (tracing also by anchor IP +
+content hash), with a conservative relocation loader that falls back to in-memory JIT on
+any unknown relocation — so it only removes codegen time, never changing results or tier
+selection. *Basis:* `jit-disk-cache` feature in `fusevm/Cargo.toml`; `fusevm/src/jit.rs`
+`SCHEMA_VERSION`, FNV reloc IDs, Apple-Silicon W^X handling, atomic temp+rename;
+`fusevm/benches/jit_disk_cache.rs`. *Caveat:* persistent JIT caches exist; the notable
+combination is covering a *tracing* tier in a hand-written VM. W^X/reloc correctness not
+independently tested here.
+
+**5. JIT-compiled Emacs Lisp running with no Emacs process** — `high`
+`.el` programs run as standalone CLI processes that trace-compile hot loops to native
+machine code via the shared Cranelift JIT — Emacs Lisp with a JIT and no Emacs anywhere.
+*Basis:* `elisprs/src/compiler.rs` lowers all special forms to `fusevm::Chunk`;
+`src/host.rs:1842` `run_chunk` calls `vm.enable_tracing_jit()`; 234 native subrs + 617
+prelude defuns. **Build-verified:** a 1,000,000-iteration `while` JIT-ran to the correct
+sum; `mapcar` over a lambda returned `(1 4 9 16)`. *Caveat:* "Milestone 1 · early"; many
+open `BUGS.md` items; a large subset of Emacs Lisp, not the editor environment.
+
+**6. AOT-compiled standalone native Emacs Lisp binary** — `high`
+elisprs AOT-compiles a `.el` file into a self-contained native Mach-O executable that
+runs with no interpreter and no Emacs present. *Basis:* `elisprs/src/aot.rs`
+`compile_executable` → `fusevm::aot::compile_object`, embeds the elisp heap image into
+`chunk.names`, links `libelisprs.a` + C `main`; `src/aot_runtime.rs` rebuilds the heap.
+**Build-verified:** the arm64 binary correctly handled a user `defun` + `symbol-name`.
+*Caveat:* full constant reification for runtime-constructed constants is WIP; the whole
+prelude (~73k objects) is embedded per binary.
+
+**7. Standalone JIT-compiled Vim script outside any editor** — `high`
+vimlrs runs ordinary `.vim` scripts as standalone programs with a tracing JIT that
+compiles hot numeric loops to native code — Vimscript outside a Vim/Neovim host with
+real JIT acceleration. *Basis:* `vimlrs/src/fusevm_bridge.rs:2917` `enable_tracing_jit()`;
+`src/compile_viml.rs`; 14 trace-JIT proof tests assert loop bodies lower to
+`Op::GetSlot/SetSlot/NumLt/Add` with no `CallBuiltin`; `for i in range(N)` lowers to a
+native counter loop with no list materialized. *Caveat:* self-described "early"; only
+numeric/float/bitwise loops trace; builtin surface ~113 of Neovim's `funcs.c`;
+`:command`/`:autocmd` unimplemented.
+
+**8. Vim script AOT-compiled to a standalone native executable** — `high`
+A `.vim` script AOT-compiles to a self-contained native binary with no Vim, no
+interpreter, nothing re-interpreted at startup. *Basis:* `vimlrs/src/aot.rs:312`
+`build_native()` → `fusevm::aot::compile_object()` → C entry stub → link `libvimlrs.a`.
+**Build-verified:** `file` reports `Mach-O 64-bit executable arm64`, ran standalone.
+*Caveat:* native path rejects scripts defining `:function` today — covers function-free
+top-level scripts only.
+
+**9. AWK script AOT-compiled to a standalone native binary** — `high`
+awkrs AOT-compiles a BEGIN-only AWK program to native machine code and links it into a
+self-contained executable shipping no AWK interpreter. *Basis:* `awkrs/src/aot.rs`
+`build_native` → `compile_begin_only` → `fusevm::aot::compile_object` → link
+`libawkrs.a`; `--aot` (`src/cli.rs:61`). *Caveat:* limited to BEGIN-only programs
+(per-record rules and `END` rejected); no end-to-end test of the linked binary found.
+AWK JIT itself is not first — frawk/zawk precede it.
+
+**10. Two-tier persistent cache (bytecode + machine code) for AWK** — `med`
+awkrs persists compiled AWK *bytecode* to disk and reloads it on later runs, and
+separately persists fusevm-emitted *machine code* across processes — two-tier
+persistence the README's survey of BWK/gawk/mawk/goawk/frawk/zawk finds in none.
+*Basis:* `awkrs/src/script_cache.rs` (rkyv shard `~/.awkrs/scripts.rkyv`, flock-atomic);
+machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-conducted
+survey; the machine-code tier engages only for JIT-eligible numeric chunks.
+
+**11. Five classic-language DAP debuggers on one shared VM** — `high`
+Every frontend (AWK, zsh, Perl-like stryke, Emacs Lisp, Vim script) ships a real Debug
+Adapter Protocol server (`--dap` over stdio or TCP) wrapping a shared line-stop /
+step-over / step-out / breakpoint debugger state machine, with matching IntelliJ DAP
+clients — source-level interactive debugging for five languages that historically have
+**no** DAP debugger (AWK, VimL, zsh) on a single VM substrate. *Basis:* `awkrs/src/dap.rs`
+(1085 L) + `debugger.rs`; `strykelang/.../dap.rs` (1997 L, the original it was ported
+from); `elisprs/src/dap.rs` (503 L); `vimlrs/src/dap.rs` (353 L);
+`zshrs/src/extensions/dap.rs` (879 L) + `tests/dap_integration.rs`; IntelliJ `*DapClient.kt`
+in each editors tree; line tracking via debug-only `Op::DebugLine`. *Caveat:* the
+debuggers share design (ported from stryke's), not a single fusevm op — line tracking is
+per-frontend; variable drill-down depth varies by value model (awk = scalars + flat assoc
+only); "first DAP debugger for AWK/VimL/zsh" rests on non-exhaustive prior-art absence.
+
+**11a. Fused superinstructions collapsing whole counted/append loops into one dispatch** — `high`
+The opcode set includes macro-op superinstructions (`AccumSumLoop`, `SlotIncLtIntJumpBack`,
+`ConcatConstLoop`, `PushIntRangeLoop`) that execute an entire counted-sum, loop-backedge,
+string-append, or array-push loop in a single VM dispatch. *Basis:* 11 fused ops in
+`fusevm/src/op.rs`; bench `sum(1..1M)` via `AccumSumLoop` at **142 ns vs 31 ms** unfused
+(`fusevm/benches/classic.rs`); the block JIT register-allocates `AccumSumLoop` with block
+params. *Caveat:* superinstruction fusion is a classic interpreter technique; the
+distinctiveness is degree / the specific loop-shaped fusions, and gains are
+workload-specific.
+
+---
+
+## II. zshrs — the compiled shell
+
+**12. Compiled Unix shell: bytecode VM, JIT, no tree-walker** — `high`
+First Unix shell whose entire execution model compiles every construct to register-based
+bytecode (fusevm, ~129 ops) and runs on a JIT'd VM, with the AST tree-walker **physically
+removed** rather than kept as a fallback. *Basis:* `docs/DESIGN_GOALS.md` §0x06 Phase F
+deletes `execute_simple/pipeline/list/compound/command_bg` (~1,275 LOC) from `src/exec.rs`;
+`tests/tree_walker_absent.rs` + `tests/no_tree_walker_dispatch.rs` (160 tests) pin absence
+and per-construct behavior; `src/extensions/compile_zsh.rs` (615 KB),
+`src/fusevm_bridge.rs:951`. *Caveat:* strong historical claim vs csh/ksh/bash/zsh/fish
+interpreters; zsh's `.zwc` caches parsed AST for re-interpretation, not bytecode-on-a-VM.
+fusevm is an external dependency.
+
+**13. Cranelift JIT + AOT-to-native-binary for shell code** — `high`
+Hot shell bytecode JIT-compiles to native x86-64/aarch64 (tiered linear/block) with an
+on-disk cache; a script also AOT-compiles to a relocatable `.o` linked against the shell
+runtime staticlib into a standalone executable. *Basis:* `Cargo.toml`
+`fusevm = { features = ["jit-disk-cache","aot"] }`; `src/extensions/aot.rs:379`
+`build_native` → `fusevm::aot::compile_object` → `cc` link `libzsh.a`; `zbuild` builtin
+(`ext_builtins.rs:5377`); trailer path bakes source into a binary copy (magic
+`ZSHRSAOT`), ~25 codec tests. *Caveat:* command execution still routes through the
+linked-in interpreter runtime (not a fully standalone-compiled program). `AOT_DESIGN.md`
+extras (perfect-hash completion tables, compile-time AOP, hardware-counter timing) are
+design-doc-only.
+
+**14. rkyv-mmap'd bytecode image cache — the only cross-invocation shell bytecode cache** — `high`
+Compiled bytecode persists across invocations as zero-copy rkyv-mmap'd images (sharded
+per source-root with a two-level `index.rkyv`, ~150–200 ns), so warm starts skip
+lex/parse/compile entirely. *Basis:* `src/extensions/script_cache.rs`
+(`~/.zshrs/scripts.rkyv`, mmap + `check_archived_root`), `autoload_cache.rs` (16k+
+bulk prewarm), `daemon/shard.rs`. *Caveat:* distinct from zsh `.zwc` (per-file static
+parsed AST); inner codec is still bincode inside the rkyv container.
+
+**15. Companion daemon as core shell substrate** — `high`
+A singleton background daemon that shells connect to over a Unix socket owns all
+bytecode-cache mutation, supervises jobs, serves compiled bytecode via mmap (data
+plane), and brokers cross-shell pub/sub — spawned on demand by the first client, with N
+thin clients. *Basis:* `zshrs-daemon` crate (40+ modules; `server.rs:35` UnixListener
+mode-600 + `SO_PEERCRED`; `pidlock.rs` flock singleton; `shard.rs:426` mmap reads;
+`pubsub.rs`/`state.rs:348` fan-out; `tests/daemon_http.rs`). *Caveat:* daemon-down falls
+through to source-interp (opportunistic accelerator). RFC notes fish's `fishd` was
+var-sync only, removed 2014.
+
+**16. Data-plane / control-plane split for shell config lookup** — `med`
+Tab/prompt/alias lookups read daemon-built bytecode via direct mmap (~150–200 ns, no IPC
+per call) while only configuration *mutation* crosses a JSON-over-Unix-socket control
+plane. *Basis:* `src/extensions/canonical_apply.rs` mmaps `~/.zshrs/images/*-recorder.rkyv`
+into the executor's HashMaps at cold-start (the doc rejects the earlier per-startup-IPC
+version as 5–10 ms too slow); `DESIGN_GOALS.md` §0x04a hard-rule #2. *Caveat:* an
+architectural design point; overlaps the daemon claim.
+
+**17. Daemon as a universal user-space service consumable from any shell** — `med`
+The daemon doubles as a general service — persistent KV, job submission, cross-process
+locks, fsnotify triggers, pub/sub, build-artifact cache, cron-equivalent scheduling —
+usable from bash/fish via an HTTP client with scoped auth tokens, collapsing
+cron/anacron/launchd/flock/sccache into one daemon. *Basis:* `docs/DAEMON_AS_SERVICE.md`;
+`daemon/http.rs`, `bins/zd.rs` HTTP client, `daemon/auth.rs` (scoped vs flat tokens,
+`scope_denied` 403), `daemon/schedule.rs` (6-field cron, sqlite tick loop). *Caveat:*
+some endpoints are v1/partial; the decoupling thesis is partly forward-looking.
+
+**18. Native cross-shell pub/sub + dispatch primitives** — `med`
+Cross-shell publish/subscribe as native daemon primitives — scope/topic subscriptions
+(`shell:<id>`, `tag:<name>`, `user:<name>`, `*`) over command/chpwd/prompt/exit/signal
+topics, brokered without filesystem-IPC polling. *Basis:* `daemon/pubsub.rs`; builtins
+`zsend`/`zsubscribe`; RFC contrasts zconvey (filesystem-IPC + per-prompt polling).
+*Caveat:* the cross-*host* federation leg is largely unbuilt (see #34).
+
+**19. Session-persistent, daemon-supervised jobs (`zjob`) surviving shell exit** — `med`
+Native jobs supervised by the daemon survive shell exit at **process** granularity (not
+terminal granularity), with captured stdout/stderr and queryable status — replacing
+nohup/disown/setsid/pueue/screen-as-runner. *Basis:* `daemon/jobs.rs` (38 KB),
+`daemon/zjob_builtin.rs` (output to `~/.zshrs/jobs/{id}.{out,err}`). *Caveat:* author
+framing as "tmux at process granularity"; restart-policy maturity unverified.
+
+**20. `zsync` — push/pull/diff a live shell's mutable state to a shared canonical store** — `med`
+Snapshots a running shell's entire mutable overlay (aliases, global/suffix aliases,
+options, params/arrays/assoc, env, path/fpath/manpath) into a daemon canonical store so
+other shells pull it — cross-shell state sync as a builtin. *Basis:*
+`src/extensions/overlay_snapshot.rs` `enumerate_all_overlays` + `daemon/zsync.rs`
+(push/pull/diff, `canonical_changed` event) + `daemon/canonical.rs`. *Caveat:* v1 stores
+canonical as JSON in catalog.db.
+
+**21. Plugin-Framework-Agnostic State-Modification Recorder (PFA-SMR) + replay protocol** — `high`
+A feature-gated recorder captures, via runtime AOP over the state-mutating dispatcher,
+every alias/function/var/bind/complete/source mutation produced by **any** plugin
+framework (zinit/oh-my-zsh/prezto/antidote/antigen/zplug/zpwr) at per-definition
+granularity, as typed ordered events over a versioned serde wire protocol the daemon
+ingests and replays into live state. *Basis:* `src/recorder/mod.rs` (`RecordEvent` with
+`order_idx`/`ts_ns`/22 `DefKind`s); daemon ingest `daemon/ops.rs:1396`; replay in
+`canonical_apply.rs`; tests `recorder_harness.rs` (24 scripts),
+`recorder_zsh_functions.rs` (~1200 functions). *Caveat:* a *state-mutation* recorder, not
+PTY/keystroke capture; replay is partial (inline function bodies, `zmodload`, sourced
+files not replayed); must re-run on new plugin installs.
+
+**22. Open wire protocol for third-party shell recorders** — `low`
+A shell-agnostic recorder ingest protocol (`recorder_ingest`/`definitions_emit`/SSE
+`/stream/definitions`) lets non-zshrs shells (bash, fish) emit per-definition state
+records with file:line provenance into the same daemon store. *Basis:*
+`docs/RECORDER_PROTOCOL.md` (bundle/event encodings, minimal fish reference recorder,
+conformance checklist); `daemon/definitions.rs`. *Caveat:* protocol + reference snippets
+documented; third-party adoption hypothetical; overlaps #21.
+
+**23. Runtime aspect-oriented `intercept` advice on any shell command** — `high`
+First-class AOP — `intercept before|after|around <pattern> { … }` weaves advice around
+any command/function, with `intercept_proceed` to call the original and
+`$INTERCEPT_MS`/`$INTERCEPT_ARGS` exposed to advice. *Basis:* `src/extensions/intercepts.rs`
+(`AdviceKind::{Before,After,Around}`, `run_intercepts` glob matching, proceed gating);
+README:217. *Caveat:* runtime advice on the dispatch path, not the compile-time AOP
+weaving described (but unimplemented) in `AOT_DESIGN.md`; the only zsh analog is
+`addwrapper()`.
+
+**24. Plugin-manager state surfaced as IDE External Library roots** — `med`
+The IDE integration reads plugin-manager state and exposes each plugin as a navigable,
+indexable, find-usages-able IDE library root, grouped by inferred manager. *Basis:*
+`zshrs --dump-plugins` (reads `plugin_cache` SQLite, `plugin_cache.rs` 68 KB); JetBrains
+`ZshrsLibraryRootProvider.kt`/`ZshrsPluginRegistry.kt` implementing
+`AdditionalLibraryRootsProvider`. *Caveat:* scoped to the bundled JetBrains plugin.
+
+**25. Native LSP language server built into the shell binary** — `high`
+An LSP server ships as a native, dependency-free subsystem of the shell binary itself
+(`zshrs --lsp`, hand-rolled stdio JSON-RPC) rather than a separate Node process. *Basis:*
+`src/extensions/lsp.rs` (561 KB) + `lsp_symbols.rs` (45 KB); JetBrains driver in
+`editors/intellij/.../lsp/`; RFC contrasts bash-language-server (Node, external).
+*Caveat:* "first" contrasts against mainstream third-party LSPs, not a formal proof.
+
+**26. Native DAP debug adapter built into the shell binary** — `high`
+A full Debug Adapter Protocol server (`zshrs --dap HOST:PORT`, TCP) for line-level
+shell-script debugging — breakpoints, stack frames, evaluation — as a first-class
+subsystem. *Basis:* `src/extensions/dap.rs` (33 KB); JetBrains debugger client
+(`ZshrsDebugProcess`, `ZshrsBreakpointHandler`, `ZshrsStackFrame`, `ZshrsEvaluator`).
+*Caveat:* line tracking depends on debug-only VM instrumentation (fusevm `Op::DebugLine`);
+variable/scope inspection maturity unverified.
+
+**27. Compiled completion functions as rkyv-mmap'd fusevm bytecode** — `med`
+zsh completion functions pre-compile to fusevm bytecode stored in mmap'd rkyv shards
+(consumed zero-copy on Tab), replacing zsh's re-interpret-shell-script-per-Tab model
+where ~11,656 lines of library shell run per keypress. *Basis:* `src/compsys/README.md`
+(rkyv-mmap hot path, parallel rayon compinit); `autoload_cache.rs` (16k+ autoload
+bytecodes bulk-committed). *Caveat:* overlaps #14 but completion-specific.
+
+**28. In-editor live compsys completion (zsh completion driven from an LSP)** — `med`
+zsh's compsys is reimplemented in Rust (~128 files / ~22k LOC mirroring zsh
+`Completion/`) and driven outside an interactive shell so an LSP surfaces the same
+matches a Tab press would, with no subshell spawn. *Basis:* `src/compsys/ported/`;
+`src/compsys/in_editor.rs:256` `complete_at`; LSP wiring `lsp.rs:1697`;
+`tests/compsys_backend_proof.rs`. *Caveat:* Phase 0.5 / unproven end-to-end — no
+per-command completer (`_git`/`_kubectl`) ported yet, in-editor smoke test yields zero
+matches (no `compinit` bootstrap); framework real, content WIP.
+
+**29. Read-only SQLite mirrors of live shell state for SQL/`dbview` introspection** — `med`
+The shell mirrors its internal tables (aliases, `_comps`/`_services`/`_patcomps`,
+zstyles, functions, executables, autoloads, hooks, plugins, entry stats) into queryable
+SQLite views so the operator can run SQL / `dbview` against shell state — without those
+rows affecting execution or cache semantics. *Basis:* `compsys/README.md` §0x04;
+`dbview` builtin in `ext_builtins.rs`; `daemon/catalog.db` schema; `canonical.rs`
+`hydrate_sqlite_view`. *Caveat:* explicitly inspection-only.
+
+**30. `zcache export` → `eval` canonical-state reset round-trip** — `med`
+Emits any subsystem's full canonical state as eval-compatible shell source with a wipe
+prefix, so `eval $(zcache export <target>)` resets aliases/path/functions/`_comps`/
+zstyle/bindkey to canonical in the live process — no parser, no importer, preserving
+`$$`/fds/cwd/history/jobs. *Basis:* `docs/DAEMON.md` "Universal cache dump/export/view"
+(`zcache export aliases` → `unalias -m '*'` + re-`alias`; `--additive`);
+`daemon/ops.rs`/`export.rs` (82 KB). *Caveat:* round-trip fidelity depends on canonical
+capture completeness.
+
+**31. Snapshot / diff / bisect of full shell state** — `med`
+Saves portable rkyv snapshots of canonical state, structurally diffs two snapshots
+per-record, and bisects to the first diverging record — git-like state archaeology for a
+shell environment. *Basis:* `daemon/snapshot.rs`
+(`snapshot_save/load/diff/bisect`, `~/.zshrs/snapshots/<tag>.rkyv`);
+`DAEMON_AS_SERVICE.md`. *Caveat:* v1 defers publish/sign/verify and registry transport.
+
+**32. Anti-fork in-process coreutils + fork-free command substitution** — `low`
+Executes 24 coreutils (cat/head/tail/wc/sort/find/uniq/cut/tr/seq/date/…) plus 4 xattr
+ops as in-process builtins and captures `$(builtin)` via `dup2` with zero fork.
+*Basis:* `src/extensions/ext_builtins.rs` (353 KB), RFC "Anti-Fork Architecture" +
+Appendix A parity matrix; xattr syscalls `src/ported/modules/attr.rs`; `fds.rs`.
+*Caveat:* in-process coreutils exist (busybox/nushell); the novel leg is doing it inside
+a zsh-compatible compiled shell with fork-free cmdsubst — "fastest, not first" by the
+project's own rule for the coreutils alone.
+
+**33. No-fork parallel execution: worker pool + VM-executed parallel primitives** — `med`
+Shell-native parallel primitives (`async`/`await`/`pmap`/`pgrep`/`peach`/`barrier`)
+compile to bytecode and run on a persistent warm thread pool, replacing the
+fork(2)-per-subtask model (completion runs, command/process substitution) with bounded
+crossbeam dispatch — no address-space duplication. *Basis:* `src/extensions/worker.rs`
+(crossbeam pool, `available_parallelism()` clamped [2,18], 4×N backpressure,
+catch_unwind per task; doc contrasts zsh's `zfork()`/`forklevel`). *Caveat:*
+`async`/`await` as shell keywords overlap other languages; novelty is the zsh-superset
+surface + no-fork execution.
+
+**34. Cross-host daemon federation as a shell primitive** — `low`
+Federating peer shell-daemons across hosts so canonical state / pub-sub / dispatch span
+machines as first-class shell primitives. *Basis:* locked design goal in `DESIGN_GOALS.md`
+§0x04a + `federate` scope hooks in `daemon/auth.rs:166`, `builtins.rs:1961`,
+`canonical.rs`. *Caveat:* **largely aspirational** — no dedicated `federation.rs`, only
+scattered scope hooks; recorded ahead of implementation.
+
+**35. `zask` — daemon-queued cross-shell UI inbox (pull-mode)** — `low`
+Any process enqueues interactive UI requests (picker/input/dialog/menu/progress) to a
+daemon that never auto-renders; the target shell pulls them on demand (Ctrl-X q /
+`zask take`) without disturbing an active prompt. *Basis:* `daemon/zask.rs` +
+`zask_builtin.rs` (queue + `ask:pending` status-line event + inbox model). *Caveat:* v1
+implements the queue; actual TUI rendering is deferred to ZLE integration — partly
+stubbed.
+
+**36. Shell-level xUnit test framework with cross-language-ported assertions** — `low`
+A built-in xUnit-style test framework (`zassert_eq/ne/ok/err/gt/lt/match/contains/near/
+dies`, `ztest_run`, `ztest_skip`) runs in-process, ported from the author's strykelang
+test runner; `z*`-prefixed to avoid clashing with POSIX `test`/`[`. *Basis:*
+`src/extensions/ztest.rs` (40 KB); runner CLI in `bins/zshrs.rs`. *Caveat:* bats/shunit2
+exist as external scripts; novelty is in-binary, compiled, with `zassert_dies` semantics.
+
+**37. zsh-aware source formatter surfaced via LSP formatting** — `low`
+A zsh-source formatter built into the shell, surfaced as `zshrs --fmt` and LSP
+`textDocument/formatting`, operating on the shell's own parsed AST. *Basis:*
+`src/extensions/fmt.rs` (47 KB) + `func_body_fmt.rs`. *Caveat:* shfmt exists for
+POSIX/bash externally; novelty is a native zsh-aware formatter wired to the shell's own
+parser + LSP.
+
+**38. No-GC shell runtime guarantee** — `low`
+A shell runtime that never traces, compacts, or stops the world — deterministic Rust
+ownership + `Arc` refcount + scope-bounded arenas, with a dependency policy banning GC'd
+crates — pitched as viable in latency-critical (audio/network/robotics) pipelines.
+*Basis:* `docs/AOT_DESIGN.md` §0x10 (memory-model table vs bash/zsh/fish/nu/Raku;
+dependency-rejection rules); `Cargo.toml` `panic = "abort"`. *Caveat:* the property is
+inherited from Rust (other Rust shells like nushell are equally non-tracing) — the
+differentiator is the explicit guarantee, not a unique mechanism.
+
+**39. Reads and byte-compares zsh's own `.zwc` wordcode as a parser-parity oracle** — `med`
+Decodes zsh's native compiled `.zwc` wordcode and emits a canonical AST S-expression so
+zshrs's parser output can be byte-compared against zsh's own `bin_zcompile()` output — a
+verifiable parser-parity oracle. *Basis:* `src/extensions/zwc_decode.rs` (43 KB) +
+`zwc.rs` (60 KB) + `ast_sexp.rs` → `tests/parity_harness.rs`. *Caveat:* verification
+infrastructure, not a user-facing capability.
+
+**40. Real-PTY, per-file-persistent zsh test harness (ZTST)** — `low`
+A harness driving zshrs through a real PTY with a persistent per-file shell process and a
+block-boundary protocol, to prove behavioral parity against zsh's own ZTST suite (incl.
+ZLE/completion blocks). *Basis:* `docs/ZTST_PTY_HARNESS.md`; `src/ported/modules/zpty.rs`.
+*Caveat:* testing infrastructure with a forward-looking phase plan.
+
+---
+
+## III. strykelang — the language
+
+**41. Tri-tier Cranelift JIT + native-AOT for a Perl-5-compatible language** — `high`
+A dynamic Perl-5-shaped language whose numeric hot paths lower to the shared fusevm
+three-tier Cranelift JIT, with a separate path AOT-compiling whole programs to
+relocatable native objects linked against `libstryke.a`. *Basis:* `jit.rs` (5,465 L,
+linear+block tiers), `fusevm_bridge.rs` (5,063 L), `fusevm_native.rs` (2,850 L, "Phase 1
+of retiring strykelang's own VM"), `aot_native.rs` (`stryke build --native`). *Caveat:*
+tiers live in the sibling fusevm crate; stryke today offloads only eligible numeric
+segments (strings/arrays/hashes/closures stay on stryke's VM); whole-program native is WIP.
+
+**42. Self-contained AOT trailer-format executables with versioned magic** — `high`
+`stryke build` appends a zstd-compressed script payload as a versioned, OS-loader-invisible
+trailer (`STRYKEAOT` magic) to a copy of the interpreter binary, with idempotent rebuild
+and ~50 µs magic-suffix detection. *Basis:* `aot.rs` (530 L) layout
+`[zstd payload][u64 lens][u32 ver][u32 rsv][8B magic]`. *Caveat:* this track re-parses +
+re-runs on the interpreter at startup; the truly-native artifact is `aot_native.rs`.
+
+**43. rkyv zero-copy mmap'd bytecode cache for warm-start reruns** — `high`
+Second-run scripts skip lex/parse/compile via a single rkyv-archived shard mmap'd and read
+through zero-copy `ArchivedHashMap`, ~11× faster warm starts, shared across concurrent
+invocations via the OS page cache. *Basis:* `script_cache.rs` (779 L,
+`~/.stryke/scripts.rkyv`); `docs/CACHE_RKYV_MIGRATION.md` ("SHIPPED", p50 241 µs→22 µs).
+*Caveat:* not fully zero-copy (inner Program/Chunk still bincode); mtime+hash invalidation.
+
+**44. rkyv zero-copy KV store as a core builtin** — `high`
+A first-class persistent CRUD key/value store (`kv_get`/`kv_set`/…) backed by a zero-copy
+rkyv archive — `kv_get` is `mmap + validate + cast`, no per-read deserialize. *Basis:*
+`kvstore.rs` (722 L), framed vs Python `shelve`/Ruby `PStore`/Perl `DBM_File` (all pay
+parse+alloc per read). *Caveat:* single-file archive + in-memory HashMap mirror + atomic
+rewrite on commit; not a concurrent multi-writer DB.
+
+**45. `ai` as a no-import language primitive with `tool fn` / MCP DSL** — `high`
+LLM agents, tool-calling, MCP client/server, RAG memory, and cost-aware batching ship as
+a built-in `ai` primitive (call, `~>` thread-macro, `|>` pipe; ~80 `ai_*` builtins; hard
+USD ceiling via `max_cost_run_usd`, `ai_cost`, `tokens_of`, `ai_mock` deterministic test
+interception) rather than an imported SDK. *Basis:* `ai.rs` (6,638 L: agent loop,
+multi-provider dispatch, SSE streaming, prompt caching, vision/PDF, batch API, sqlite
+RAG, `ai_filter/map/sort/classify/match/dedupe`); `ai_sugar.rs` desugars
+`tool fn`/`mcp_server` (build-time JSON-schema-from-signature); `mcp.rs` (1,249 L,
+JSON-RPC stdio + streamable-HTTP). *Caveat:* in-process/offline model deferred (local =
+shell-out to Ollama/LM Studio); server-side `mcp_server { }` DSL pending (only client
+ships); Anthropic-first.
+
+**46. Inline Rust FFI blocks compiled to cdylib at runtime** — `high`
+`rust { … }` blocks embedded in stryke source compile to a cdylib via
+`rustc --crate-type=cdylib -O` on first run, content-hash-cached, dlopened, and
+registered as callable subs. *Basis:* `rust_ffi.rs` (812 L) + `rust_sugar.rs`; cache at
+`~/.stryke/ffi/<sha256>.(dylib|so)`, ~10 ms warm dlopen. *Caveat:* requires `rustc` on the
+machine; cdylib runs with caller privileges (same trust model as `do FILE`).
+
+**47. Value provenance / lineage tracking as a builtin** — `med`
+`mark($x)` tags a value's heap Arc so subsequent operations accumulate a lineage record
+retrievable via `provenance($x)` — automatic dataflow lineage exposed as a user verb,
+zero-cost when unused. *Basis:* `provenance.rs` (469 L), framed "no existing scripting
+language ships this". *Caveat:* lineage accrues only for marked values; op coverage
+breadth unverified.
+
+**48. Polymorphic steganography builtins (`hide`/`reveal`)** — `med`
+`hide(carrier, secret[, key])` auto-detects carrier type — PNG LSB embed in RGB channels
+or zero-width-char text encoding (U+200B/U+200C) — with a self-describing wire format
+(CRC framing + key-XOR) for `reveal`. *Basis:* `stego.rs` (412 L). *Caveat:* two carrier
+kinds only; LSB stego is not cryptographically robust.
+
+**49. NAT-traversal builtins: STUN hole-punching + TURN relay fallback** — `high`
+Language-level peer connectivity: `stun`/`punch` implement an RFC-8489 STUN client + UDP
+hole-punching state machine with no third-party crate, plus an RFC-8656 TURN relay-fallback
+client for symmetric NATs. *Basis:* `nat_punch.rs` (835 L, hand-rolled
+XOR-MAPPED-ADDRESS), `turn_client.rs` (965 L). *Caveat:* IPv4 only; protocol coverage is
+the common-case subset.
+
+**50. SHM multi-target IPC `teleport`/`arrive` + `turnbuckle` liveness** — `high`
+`teleport($val, @pids)` broadcasts a serialized value to N receiver processes via a single
+POSIX shared-memory allocation + N read-only mmaps (beating N socket copies), with
+`arrive()` to receive and `turnbuckle($peer_pid)` for 1:1 heartbeat liveness over UDS
+datagrams. *Basis:* `teleport.rs` (420 L), `turnbuckle.rs` (271 L). *Caveat:* POSIX-only;
+value still JSON-serialized once on the sender; closures/blessed objects don't round-trip.
+
+**51. `cluster()` SSH worker pool + `pmap_on` distributed work-stealing** — `high`
+A built-in `cluster()` opens persistent SSH connections, spawns `stryke --remote-worker`
+processes, and exposes the pool as a language value over which `pmap_on $cluster { … }`
+distributes work with work-stealing. *Basis:* `cluster.rs` (601 L), `remote_wire.rs`
+(1,077 L, framed bincode v3 persistent-session protocol). *Caveat:* requires the stryke
+binary on remotes; closures don't round-trip the wire.
+
+**52. Bare-metal stress builtins + fleet agent/controller REPL** — `high`
+The single binary doubles as `stryke agent` and `stryke controller` (interactive fleet
+REPL: `status`/`fire`/`terminate`, ~29-verb scatter/gather over TCP+bincode), plus stress
+builtins (`stress_cpu`/`stress_mem`/`stress_io`/`heat`) pinning all cores to ~100% TDP.
+*Basis:* `agent.rs` (1,017 L), `controller.rs` (1,448 L), `stress.rs` (1,835 L);
+`tests/suite/scriptable_controller_pin.rs`. *Caveat:* mTLS/Prometheus/k8s are roadmap; TDP
+figures are M3-Max-specific.
+
+**53. Probabilistic data structures (sketches) as stdlib builtins** — `med`
+Bloom filter, HyperLogLog, count-min sketch, etc. ship as first-class `%b` builtins next to
+`set`/`deque`/`heap`, `Arc<Mutex>`-wrapped for safe use under parallel iteration. *Basis:*
+`sketches.rs` (3,479 L), framed world-first-as-stdlib vs `pyprobables`/`bloom-filters` npm.
+*Caveat:* the algorithms are well-known; the claim is "as stdlib primitives".
+
+**54. Tri-directional source translation: Perl ⇄ stryke and zsh → stryke** — `high`
+Built-in subcommands convert Perl→stryke (`convert`), stryke→Perl (`deconvert`), and
+zsh→stryke (classifying builtins native vs externals to `system()`), with an AST deparser
+round-tripping code refs to source. *Basis:* `convert.rs` (1,990 L), `deconvert.rs`,
+`zsh_convert.rs` (1,979 L), `deparse.rs` (2,144 L). *Caveat:* conversion fidelity
+unverified; zsh externals fall back to `system()` strings.
+
+**55. Empirically-validated Perl 5 `--compat` on a JIT'd runtime** — `med`
+A `--compat` mode pinning behavior to upstream Perl 5, specified by a ~20,000-test parity
+corpus, on a JIT'd runtime — claimed 2nd-fastest single-threaded dynamic language (behind
+LuaJIT) and fastest multithreaded. *Basis:* `docs/patent.md` Patent D #20;
+`examples/rosetta/README.md` (beats perl5/Python/Ruby/Julia/Raku, beats LuaJIT on 3 of 8);
+`parity/`; English.pm aliases `english.rs`; C3 MRO `mro.rs`. *Caveat:* the 20,000-test
+count and benchmark numbers are claims, not independently re-verified here.
+
+**56. Encyclopedic no-import stdlib (~10k verbs) incl. git/jq absorbed as builtins** — `high`
+Thousands of builtins without import — version control (git), structured-data query (jq),
+terminal viz, crypto/stats/linalg — inverting "core minimal, libraries optional". *Basis:*
+82 `math_wolfram_*.rs` (astronomy, GR, quantum gates, BLAS/LAPACK, pandas/scipy/sklearn
+analogues) + ~30 `builtins_*.rs`; `builtins_github.rs`; ~7,300–10,900 dispatch arms
+(documented ~10,449 incl. aliases). *Caveat:* exact count fuzzy (alias vs primary);
+absorbed jq/git are native subset reimplementations, not full upstream parity.
+
+**57. `god` heap introspection + nine compile-time reflection hashes** — `med`
+`god EXPR` dumps heap pointer, Arc strong/weak counts, payload size, and
+generator/pipeline/closure-capture internals with cycle detection; complemented by nine
+compile-time-populated globally-named introspection hashes (`%b`/`%all`/`%k`/`%a`/`%pc`/…)
+giving O(1) bidirectional name↔callable indexing under the invariant `%all = %a + %b + %k`.
+*Basis:* `god.rs` (336 L); reflection table seeded `builtins.rs:609`; `patent.md` D #17.
+*Caveat:* the disjoint-union invariant wasn't independently re-verified.
+
+**58. Polymorphic literal-typed range operator inferring 11+ element domains** — `high`
+A single range operator infers element type from endpoint literal form — integer, char,
+hex (preserving width/case), IPv4, IPv6, ISO date (step=days), year-month (step=months),
+HH:MM time, weekday names, month names, Roman numerals — with no trait/protocol
+boilerplate. *Basis:* `value.rs` (~4533–4587) ordered dispatch; `Op::Range`/`RangeStep`
+`vm.rs:6343`; `examples/ipv4_cidr.stk`, `examples/roman_numerals_no_interop.stk`.
+*Caveat:* detection is heuristic/order-sensitive; the int/char part is Perl-`..`-like — the
+date/IP/Roman/time unification is the novel part.
+
+**59. Pipeline-operator family extended with parallel and distributed arrows** — `high`
+Five+ first-class pipeline operators (`|>`, `->`/`->>`, `~>`/`~>>`) extended with arrows
+that fan a pipeline across cores (`ThreadArrowPar`) and across a remote cluster
+(`ThreadArrowDist`), composable with bare-fn, arrow-block, and positional-placeholder
+stage forms. *Basis:* `token.rs:179-216`; parser wiring `parser.rs:10099`
+(`parse_thread_macro_dist`/`_par`). *Caveat:* the "universal-access" framing is an
+abstraction over the operator set, not a verified invariant.
+
+**60. First-party LSP + DAP with a multi-editor plugin suite** — `high`
+An embedded language server and a DAP server ship in-tree, plus first-party editor
+integrations spanning a full IntelliJ plugin (lexer/parser/DAP/refactor/navigate), Vim,
+Lua/Neovim, Helix, and VS Code/coc. *Basis:* `lsp.rs` + `lsp_extras.rs`/`lsp_symbols.rs`;
+`dap.rs` (1,997 L, `st --dap`, reuses `debugger.rs`); `editors/intellij/` Kotlin plugin,
+`stryke.vim`, `stryke.lua`, `helix-languages.toml`, `coc-settings.json`. *Caveat:*
+per-editor completeness varies.
+
+**61. Reference docs generated from the LSP doc corpus (single source of truth)** — `med`
+`docs/reference.html` and the interactive `stryke docs` browser are generated from one
+in-code corpus (`lsp::DOC_CATEGORIES` + `doc_text_for`), so hover-docs, the terminal
+pager, and the static HTML site never drift. *Basis:* `bins/gen_docs.rs`
+(`cargo run --bin gen-docs`), `doc_render.rs`, `docs.rs`. *Caveat:* each piece (LSP hover,
+doc-gen) has prior art; the single-source unification is the novel bit.
+
+**62. Rails-shaped web framework runtime as language builtins** — `med`
+`web_*` builtins (`serve`, ORM `web_db_*`, chainable models, migrator) provide a Rails-style
+DSL whose generator emits a full-stack app, intended to AOT-compile to a single static
+binary on thread-per-core io_uring. *Basis:* `web.rs` (3,952 L) + `web_orm.rs` (1,880 L,
+SQLite-backed ORM/migrator); `stryke_web/` generator; `docs/WEB_FRAMEWORK.md`. *Caveat:*
+HTTP/2, glommio/io_uring, SIMD parser deferred to "Phase 2+"; ORM is SQLite-only.
+
+**63. Package manager that AOT-compiles the whole dep graph to native** — `med`
+A Cargo/uv/Nix/Bundler/npm-synthesis package manager (`s` CLI: `init`/`add`/`build`/
+`publish`) with TOML manifest, hash-pinned lockfile, content-addressable store, and
+per-package-scoped features, whose `s build --release` AOT-compiles user code + every dep +
+stdlib through Cranelift to one static binary. *Basis:* `pkg/`
+(`manifest.rs`/`lockfile.rs`/`resolver.rs`/`store.rs`/`commands.rs`);
+`docs/PACKAGE_REGISTRY.md`; `bins/s.rs`. *Caveat:* the "compile every transitive dep to
+native" feature depends on the still-WIP whole-program native path; registry maturity
+unverified.
+
+---
+
+## IV. Audio & the modular DAW — the zpwr stack
+
+**64. ★ General-purpose DAW arranger that runs as a plugin AND embeds in any GUI app** — `med`
+A *complete* two-view arranger (Arrangement + Session, clips, breakpoint automation,
+tempo/meter maps) shipping standalone, as a VST3 inside another DAW, **and** embedded in
+arbitrary hosts — designed to drive even **non-audio** ones off the same clip/automation
+timeline. *Basis:* `zpwr-daw` app + `zpwr-clip-engine`; editor/arranger/automation
+verified. *Caveat:* "None found", not proven (see analysis). The audio render path is
+written but **unverified** (pending JUCE build). **Honesty correction:** the *non-audio*
+embeds (traderview → trades, ztranslator → translations) are **aspirational** — a grep of
+those app repos finds no clip-engine/timeline mount; traderview uses a stryke-JIT
+backtester + uPlot, ztranslator a MIDI-rules VM. The cross-domain-timeline claim is design
+intent, not yet wired in those apps.
+
+**65. ★ Fully modular DAW — every track/layer/bus is one user-patchable graph** — `med`
+Not a fixed channel-strip mixer with a modular *device* bolted on, but a DAW whose entire
+signal path is a user-patchable graph — **every track auto-owns a layer**, each layer is a
+**stereo patch graph** hosting oscillators/FX/VST3-AU plugins, the **synth panel and mod
+matrix are generated from that same patch**, and master/aux/global-mod buses are themselves
+patch graphs. *Basis:* `zpc::StereoGraph` (`PatchEngineT<StereoSample>`) + native stereo
+Plugin host, shared across all four products; per-track stereo graphs wired into the daw.
+*Caveat:* "None found", not proven (see analysis). Modular **audio render** (per-track
+graphs → master mix) is in progress / partially unverified — graph/wrapper/stereo-block are
+compile-verified; full per-track audio + cue bus still being wired.
+
+**66. ★ DAW with an embedded interactive shell terminal** — `med`
+A real interactive shell running *inside* the DAW (the MenkeTechnologies stack —
+zshrs/stryke), not a constrained scripting console, for driving the shell/CLI from within
+the project. *Basis:* part of the zshrs/stryke ↔ daw integration. *Caveat:* "None found",
+not proven; **in progress**, recorded ahead of completion. Scripting consoles exist
+(ReaScript, Max), but a full embedded interactive **shell terminal** in a DAW has no clean
+prior art found.
+
+**67. ★ DAW with an embedded scripting language for all lifecycle hooks + GUI automation** — `med`
+stryke embedded as a first-class scripting layer wired to *every* DAW lifecycle hook
+(load/save/transport/clip/track/render) and able to drive the GUI itself (interface
+automation, not just audio params). *Basis:* part of the stryke ↔ daw integration.
+*Caveat:* "None found", not proven; **impl WIP**. Reaper ReaScript / Bitwig controller
+scripts expose *some* actions, but a language bound to **all** lifecycle hooks **and** GUI
+automation has no clean prior art found.
+
+**68. ★ DAW designed for one-click algorithmic music production** — `med`
+Built from the ground up so the modular graph + embedded scripting + generative engine
+produce a finished, professionally-mixed track from a single action — generation as the
+primary workflow, not a loop-pack assist bolted onto a linear DAW. *Basis:* generative
+engine (`zpwr-algo-production`, 282 tests) linked over a C ABI; the **PRODUCE tab**
+generates a full arrangement in one click with chooseable output (`.zdp` or Ableton `.als`).
+*Caveat:* "None found", not proven. Auto-mix/master polish is maturing.
+
+**69. Signal-agnostic patch-graph core templated on the signal type** — `high`
+One modular cable-routing/evaluation engine that "knows nothing about audio or MIDI",
+templated on the signal it carries (`float` audio, an `L/R` stereo pair, or a note-event
+stream), so one core powers an FX, a synth, a MIDI effect, and a DAW unchanged. *Basis:*
+`zpwr-patch-core/include/zpc/PatchCore.h` (graph templated on `SignalTraits<S>`),
+`src/PatchCore.cpp`; tests `PatchCoreTest.cpp`. *Caveat:* signal-agnostic graphs exist in
+research patchers; the reusable cross-domain C++ core is the novel artifact.
+
+**70. ~3.5k mono FX blocks auto-promoted to true stereo via dual-mono wrapping** — `high`
+Any of the ~3.4k mono DSP blocks runs in real stereo "for free" by a generic wrapper that
+instantiates the block once per channel with independent L/R state, over a stereo graph
+where a single cable carries an L/R pair — no hand-written stereo block set. *Basis:*
+`StereoGraph.h` (`wrapMonoAsStereo`, `registerStereoModules`), `StereoPluginBlock.h`; wired
+in `zpwr-daw .../PluginProcessor.cpp`. *Caveat:* the daw stereo path is compile/link-verified
+and "sums silence until a track's stereo graph hosts an instrument/FX".
+
+**71. Unified ~4,238-block globally-unique DSP library across audio/synth/MIDI** — `high`
+One shared, deduplicated block catalog (3,366 audio, 309 synth, 563 MIDI), every name
+globally unique, drawn on by all three plugins and the DAW. *Basis:*
+`zpwr-patch-core/BLOCKS.md` (auto-generated by `scripts/gen_blocks.py` from registration
+sites); category counts grep-confirmed. *Caveat:* raw count includes many close variants;
+"largest" not independently benchmarked.
+
+**72. 194 component-level analog-circuit-modeled blocks on a shared device-solver** — `high`
+194 blocks are true per-sample nodal/Newton circuit solves — ZDF ladder/SVF,
+Shockley-diode & Ebers-Moll-BJT clippers, Koren 12AX7 triode + EL34 push-pull power stage,
+Jiles-Atherton tape hysteresis, Lambert-W Lockhart wavefolder, four-diode ring mod — not
+voiced approximations, sharing one `ckt::` framework. *Basis:* `Circuit.h`, `TubeAmp.h`,
+`Analog.h`; per-block audit `ANALOG_CIRCUIT_MODELING.md` ("0 abstract / 0 partial").
+*Caveat:* breadth is the novelty; individual device models are established techniques.
+
+**73. 21 physical-model instrument-network blocks with string↔body coupling** — `med`
+21 blocks are full instrument networks — Extended Karplus-Strong waveguide strings + modal
+resonator banks + **bidirectional** string↔body coupling — so sympathetic resonance and
+attack transients emerge from the physics. *Basis:* `PhysicalModel.h` (12 `tech="physical"`
+tags), `Physical.h`; `BLOCKS.md` PHY badge. *Caveat:* physical modeling is a known field;
+novelty is offering coupled string/body networks as drop-in patch blocks.
+
+**74. Generative-math block family: number-theory / chaos / cellular-automaton generators** — `med`
+A large family of sound/sequence generators driven by pure mathematics — Abelian sandpile,
+abundant/Achilles/Harshad number gates, Collatz/Fibonacci/prime sequences,
+Game-of-Life / Langton's-Ant / Brian's-Brain CA, strange attractors and chaotic neuron maps
+— as first-class audio and MIDI blocks. *Basis:* `NovelBlocks.h`, `AudioModules.h`; 365
+blocks self-described "a first as a synth block". *Caveat:* scattered math-music mappings
+exist in research/Reaktor patches; the systematic registry library is the claim.
+
+**75. Mod matrix derived automatically from the patch graph** — `med`
+The modulation matrix is not a separate fixed grid — every node carries a `float` scalar
+projection of its output and every node parameter exposes a `(source, depth)` mod slot, so
+any block is automatically a modulation source for any parameter. *Basis:* `PatchCore.h` /
+`src/PatchCore.cpp` (mod-matrix eval, per-node scalar projection); README [0x00]. *Caveat:*
+modular synths inherently allow mod-from-anywhere; the explicit per-node-scalar-projection
+formalization is the distinctive engineering.
+
+**76. True-stereo mirror maintained from a single editable mono chain (Stereo Lock)** — `med`
+A "Stereo" toggle mirrors an entire mono patch (every block, cable, mod) into an independent
+right-channel clone chain (node `j′ = j + N`, reading In R where the original reads In L),
+auto-re-mirrored on every structural edit, with an optional "Lock" linking L/R knobs.
+*Basis:* `zpwr-patch-core` README [0x03] (`stereoize`/`stripStereo`/`stereoSync`/
+`NodeDef::clone`/`reconcilePresetModes`). *Caveat:* audio-host only; an editor/graph
+transform, not a new DSP capability.
+
+**77. Reusable sub-patch "user modules" with a serverless git-backed registry** — `med`
+Any selection of blocks (with internal cables, mods, tempo-sync) saves as a self-contained
+reindexable `.zmod` sub-graph that splices into any patch and degrades gracefully across
+hosts, shared through a static git-backed JSON registry with no server (PR-based publishing).
+*Basis:* `PatchCore.h` (`extractSubPatch`/`spliceInsert`/`ModulePorts`); README [0x05]
+(`.zmod`, `registryUrl`, `listModules`/`saveModule`/`importRegistryModule`). *Caveat:*
+Phase 1 splices modules into real blocks (no nested-block encapsulated playback yet).
+
+**78. Single FX plugin exposing the entire patch-graph palette (H3000-Factory generalized)** — `high`
+A shipping VST3/AU/CLAP effect with no fixed node count where the user wires any number of
+the 2,782 audio blocks into arbitrary feedback/cross-modulation patches — the
+"build-your-own-algorithm" idea generalized to thousands of primitives. *Basis:*
+`zpwr-fx/README.md` [0x00]/[0x02] (dynamic patch graph, summing buses, one-sample-delay
+feedback); `src/` consumes `libs/zpwr-patch-core`. *Caveat:* practical patch size is
+CPU-bound.
+
+**79. Fully modular polyphonic synth where the patch *is* the voice** — `med`
+A VCV-Rack/Reaktor-Blocks-lineage synth with no fixed signal path: the user-built patch
+graph is instantiated as each voice across a polyphonic pool, with Scala microtuning applied
+as a fractional-note external so every oscillator inherits the tuning. *Basis:*
+`zpwr-synth/README.md` [0x00]/[0x01] (`zsynth::PolyEngine` → `zpc::RuntimeGraph` per voice);
+`dsp/SynthModules.cpp`; `Scala.h`. *Caveat:* modular synths exist (VCV, Voltage Modular);
+novelty is sharing the exact graph core with the FX/MIDI/DAW products.
+
+**80. Modular MIDI-effect operating on a note-event stream through the same patch core** — `high`
+A patchable grid of note-stream modules (harmony, sequencing, probability, MPE/voicing, plus
+CA sequencers like Game of Life / Brian's Brain / Langton's Ant) running the *same*
+signal-agnostic patch core as the audio plugins, but with note events as the inter-block
+signal — vs. fixed chord/arp tools like Cthulhu. *Basis:* `zpwr-midi-fx/README.md`
+[0x00]/[0x01]; `src/midi/MidiModules.cpp` (563 MIDI registrations). *Caveat:* README's "111
+modules" is a representative tier vs BLOCKS.md's 563 registrations (different granularities).
+
+**81. One clip/arranger engine, single source, dual-built C ABI + JS, embedded across apps** — `med`
+The DAW's pattern→events→transport/MIDI scheduler is extracted as a header-only pure-C++17
+engine that compiles two ways from one source (a static `.a` the DAW links natively and a
+`.dylib`/`.so` Tauri apps load via Rust FFI), paired with one JS canvas grid whose domains
+(arranger/notes/launcher/automation) are reused verbatim by every GUI app, with a non-audio
+JS fallback backend. *Basis:* `zpwr-clip-engine/README.md` (`engine/include/zpc/ClipEngine.h`,
+`capi/clip_engine.h` `zpc_clip_*`, `CMakeLists.txt` shared+static, `webui/clip/clip-seq.js`,
+`clip-basic-backend.js`). *Caveat:* the Tauri FFI wiring "lands in steps"; several commands
+are no-ops in non-DAW hosts.
+
+**82. Byte-identical MIDI export from independent C++ and JS code paths** — `med`
+Standard MIDI File export is implemented twice (native C++ `MidiFile.h` and JS
+`export/midi.js`) and produces byte-identical output, so a project exports identically
+whether driven by the native engine or the browser fallback. *Basis:*
+`zpwr-clip-engine/.../MidiFile.h` + `webui/clip/export/midi.js`; tests under `webui/grid/tests/`.
+*Caveat:* a parity guarantee asserted in docs/tests, not independently re-verified.
+
+**83. Generative engine that emits finished Ableton Live Sets and native projects from one action** — `high`
+A standalone Rust engine generates a complete professionally-arranged track (section
+structure, key/tempo with key-compatibility theory, per-section MIDI, genre engines) and
+writes a full Ableton `.als` Live Set (MIDI + audio clips + automation) or a native `.zdp`
+embedding the live project JSON for instant in-DAW load. *Basis:* `zpwr-algo-production/src/`
+(`als_project.rs`, `als_generator.rs`, `midi_generator.rs`, `trance_generator.rs`, `zdp.rs`
++ XML templates); "all 7 generator modules build, 280 tests pass". *Caveat:* genre coverage
+is currently mainly trance.
+
+**84. Dependency-free BPM detection + audio similarity fingerprinting** — `low`
+Tempo estimation and an audio fingerprint/similarity metric with zero external DSP
+dependencies (symphonia decode only), usable for sample selection in generation. *Basis:*
+`zpwr-algo-production/src/bpm.rs`, `similarity.rs` (both ✅, "zero external deps"). *Caveat:*
+standard DSP tasks; novelty is the dependency-free embeddable packaging.
+
+**85. Plugin scanner with architecture detection via direct Mach-O/PE parsing + live KVR checking** — `med`
+A desktop app that maps every VST2/VST3/AU/CLAP plugin, reads each binary's architecture
+(ARM64/x86_64/Universal) by directly parsing Mach-O/PE headers, indexes sample libraries and
+DAW project files with header-extracted metadata, and checks KVR for newer versions with a
+persistent scan changelog. *Basis:* `Audio-Haxor/README.md` [0x01]/[0x09];
+`src-tauri/src/audio_extensions.rs`, `crates/zpwr-crate`. *Caveat:* a cross-platform
+asset/plugin manager; "no other does this" not proven.
+
+---
+
+## V. Desktop GUI applications & shared UI
+
+**86. Embeddable PDF *editor* engine (parse/edit/sign in any window)** — `med`
+A full PDF editor — not just a viewer — extracted as a linkable pure-Rust engine plus a
+mountable GUI, so any host app can render, mark up, sign, and re-save PDFs in-window.
+*Basis:* `zpdf-core/README.md` ("an embeddable PDF *editor* does not exist"); modules
+doc/page/text/annot/form/sign/security/convert all "real"; `Pdf::from_bytes`/`to_bytes`
+in-memory; `frontend/` mountable viewer; lopdf-backed, MIT (no PDFium/MuPDF). *Caveat:* the
+companion **app** `zpdf` is day-1 planning ("no source code yet"); the engine is the real
+artifact.
+
+**87. Pure-Rust PDF linearization ("fast web view") writer** — `med`
+A from-scratch linearized-PDF serializer (page-1-first object ordering, `/Linearized` dict,
+dual `/Prev`-linked xref, primary hint stream with per-page locator table) in pure Rust,
+which the underlying `lopdf` does not provide. *Basis:* `zpdf-core` `linearize` module
+("a self-contained writer (lopdf has none)… structure is ISO-shaped and reopen-verified").
+*Caveat:* "reopen-verified" / structure-shaped, not third-party conformance certification.
+
+**88. Pure-Rust AES-256 (PDF 2.0, V5/R6) encryption validated against qpdf** — `med`
+A pure-Rust ISO 32000-2 AES-256 (AESV3) PDF encryption with Algorithm 2.A/2.B key
+derivation, bidirectionally validated against qpdf; plus pure-Rust template-matching `ocr`
+(no model/network/C, `font8x8`). *Basis:* `zpdf-core` `security` + `ocr` modules. *Caveat:*
+other Rust PDF libs exist; the notable part is a dependency-light MIT engine. "Validated
+against qpdf" asserted in README, not re-run here.
+
+**89. Self-hosting Docker daemon via Apple Virtualization.framework** — `med`
+A Docker-Desktop replacement that *provides its own* `dockerd` by booting a Linux guest
+directly on macOS Virtualization.framework (`objc2-virtualization`) — no
+`vfkit`/`limactl`/`qemu`/Colima binary and no Docker Desktop dependency. *Basis:*
+`zcontainer-core/README.md` "Daemon management": `src/daemon.rs`, `src/vm.rs` (`vm` feature),
+`scripts/build-guest-image.sh` (Kata VZ kernel + Alpine/dockerd rootfs + vsock bridge),
+socket proxy to `~/.zcontainer/run/docker.sock`. *Caveat:* the managed-VM path requires a
+signed `tauri build` (`com.apple.security.virtualization`); an unsigned build reports
+`vm_runtime_unavailable`, so end-to-end self-hosting isn't verifiable from a dev build.
+
+**90. Unified Docker + Kubernetes engine behind one embeddable command surface** — `med`
+Both the Docker Engine API (`bollard`, no `docker` CLI) and the kube-apiserver (`kube-rs`, no
+`kubectl`/`helm`) are driven through a single synchronous JSON `invoke` surface that builds
+as rlib/staticlib/cdylib, so a C/C++ host and the Tauri app get identical Docker+K8s+Helm
+behavior. *Basis:* `zcontainer-core/README.md` command tables (`docker.*`, `k8s.*`,
+`k8s.helm.releases.list` decoded from `helm.sh/release.v1` secrets), streaming
+logs/exec/port-forward, `include/zcontainer_core.h`. *Caveat:* Docker+K8s in one GUI is
+Lens/Rancher territory; novelty is the embeddable single-surface engine.
+
+**91. Native userspace WireGuard inside a Tunnelblick-class client** — `med`
+A from-scratch Tunnelblick-architecture VPN engine (system `openvpn` + management interface)
+that adds a *native pure-Rust userspace WireGuard data path* (`boringtun` Noise pump + real
+tun/utun + UDP), behind one embeddable command surface. *Basis:* `ztunnel-core/README.md`
+"Backends"; `wireguard` feature; rlib/staticlib/cdylib + `include/ztunnel_core.h`. *Caveat:*
+"in development"; bringing tunnels up needs root; the OpenVPN/WireGuard pieces are mature
+elsewhere — the combination + embeddability is the angle.
+
+**92. One embeddable mail engine across Rust / C++ / webview hosts** — `med`
+A complete Thunderbird-class mail client (accounts, IMAP/POP3/SMTP, MIME, store, search,
+filters, OpenPGP/S-MIME/CardDAV) extracted as one engine with a C ABI + header-only C++ RAII
+wrapper + a mountable GUI, embedding into multiple desktop apps. *Basis:* `zemail-core/README.md`
+— `src/ffi.rs`, `include/zemail_core.{h,hpp}`, `frontend/` `mountZemail()`, single
+`invoke(cmd,args)`; rlib/staticlib/cdylib headless core. *Caveat:* "in development"; many
+features PARTIAL; credentials never persisted (engine-grade, not a finished product).
+
+**93. Cross-client feature superset in one mail engine** — `low`
+A single mail engine porting signature features from many rivals into one command surface —
+Hey's Screener, ProtonMail self-destruct (`message.expire`), Gmail snooze/nudge/categories,
+Spark pin/set-aside, Apple Mail VIP, RFC 8058 one-click unsubscribe, scheduled send.
+*Basis:* `zemail-core/README.md` command rows (`screener.*`, `message.expire`,
+`message.snooze`, `vip.*`, `message.unsubscribe`, `outbox.schedule`). *Caveat:* individually
+common features; the angle is aggregation into one embeddable engine; some are
+model/store-level not server-enforced.
+
+**94. MIDI-translation engine routing MIDI to a non-MIDI protocol matrix** — `med`
+A BOME-MIDI-Translator-class engine whose Outgoing layer fans far beyond MIDI/keystroke into
+a large protocol matrix — OSC, Art-Net/DMX, sACN/E1.31, MQTT, WebSocket, raw TCP, HTTP,
+Ableton Link, eurorack CV/gate (DC-coupled audio), MTC/MMC/RTP-MIDI, gamepad rumble, HID —
+all from one rules VM, embedding into non-MIDI Tauri hosts. *Basis:* `ztranslator/README.md`
+Outgoing-actions table (backends `rosc`/`rumqttc`/`tungstenite`/`rusty_link`/`cpal`/`gilrs`),
+`rules.rs` integer VM, `tauri/` plugin + `frontend/ztranslator_view.js` `mountZTranslator`.
+*Caveat:* PORT_REPORT self-reports 61.1% BOME coverage; OS-control + CV/gate are macOS-only.
+
+**95. Lossless clean-room BOME `.bmtp` round-trip** — `med`
+A clean-room importer/exporter for BOME MIDI Translator Pro `.bmtp` projects that round-trips
+losslessly — undecoded encodings (`MID1`, `KAM1`, mouse, serial) are preserved verbatim so a
+project survives re-export even when individual entries aren't yet natively understood.
+*Basis:* `ztranslator/README.md` §0x03; `bmtp/` module; `Outgoing::Raw`. *Caveat:* export is
+unsigned (no RSA signature), so signed BomeBox/MT-Player export is out of scope.
+
+**96. One workspace → desktop (embedded Postgres) and multi-user web (axum) from identical crates** — `med`
+A trading journal shipping two binaries from one Rust workspace — a Tauri desktop app that
+downloads/runs an embedded PostgreSQL on first launch (auto-login, offline) and an axum web
+server on external Postgres (argon2+JWT) — sharing crates, schema, migrations, FIFO roll-up,
+and verbatim frontend. *Basis:* `traderview/README.md` §0x01-0x03; `postgresql_embedded`
+(`~/.theseus`), shared `traderview-{core,db,import}`; `src-tauri` holds `Embedded` across
+`axum::serve`. *Caveat:* dual-target embedded/external DB patterns exist generally; the
+specific novelty is modest.
+
+**97. On-device, LLM-free receipt + tax-form OCR with a US tax compute engine** — `med`
+A trading journal bundling a no-cloud/no-LLM receipt + IRS-form OCR pipeline (Apple Vision/
+Tesseract/PaddleOCR ensemble, W-2 / 1099-* / 1098 parsers, 20-bucket Schedule C taxonomy)
+feeding a dependency-light US federal tax compute engine pinned to IRS Rev. Proc. 2024-40
+with 218 unit tests. *Basis:* `traderview` crates — `traderview-ocr` (5.2k LOC),
+`traderview-expense`, `traderview-tax` (6.6k LOC, deps only `rust_decimal`+`serde`).
+*Caveat:* the notable part is integration ($0/receipt, on-device) inside a trading app; test
+counts/LOC are README-reported.
+
+**98. stryke-JIT backtest engine + walk-forward + custom-indicator AST in a journal** — `med`
+A trading journal embedding the stryke language's JIT as its backtest/strategy engine —
+JIT-compiled backtests, a walk-forward sweeper, a custom-indicator AST, and strategy alerts
+gated by optional stryke predicates with webhook payload templating. *Basis:*
+`traderview/README.md` §0x00 + `traderview-core` ("stryke-JIT backtest engine + walk-forward
+sweeper… custom-indicator AST"), `traderview-stryke` host bridge running stryke lifecycle
+hooks as sandboxed subprocesses. *Caveat:* an application of the fusevm/stryke runtime (#1);
+engine maturity not build-verified.
+
+**99. A shared cyberpunk widget library spanning a heterogeneous desktop-app suite** — `med`
+~120 framework-free `window.ZGui.*` components — including DAW-grade controls (rotary knob,
+88-key playable piano, modular patchbay with drag-to-connect bezier cables, ADSR/LFO/curve
+editors, dB faders, peak/LUFS meters) alongside tables, modals, charts, and shell chrome —
+consumed by submodule (never copied) as the single UI source across a whole suite of unrelated
+desktop apps (terminal, mail, FTP, PDF, container, trading, translator…). *Basis:*
+`zgui-core/README.md` (full `webui/` table) + `CONSUMERS.md` (submodule-only rule). *Caveat:*
+shared component libraries aren't novel; the unusual part is one cyberpunk kit carrying *both*
+business-app widgets and synth/DAW hardware controls as plain static JS with no build step.
+
+**100. Enforced cross-app UI baseline via a headless CI gate** — `med`
+A mandatory `ZGui.appShell` baseline (splash, ⌘K palette, rebindable shortcuts, settings,
+native OS menu) plus a headless render gate that fails any app's build if the baseline
+stamp/chrome or submodule placement is missing — mechanically enforcing one UI across the
+suite, with auto-installed Emacs/readline editing on every `<input>`/`<textarea>`. *Basis:*
+`zgui-core/CONSUMERS.md` §0 (`appShell`, `scripts/baseline-gate.mjs`, `dataset.zguiBaseline`,
+placement assertions), `util.js`. *Caveat:* a discipline/tooling invention, not user-facing.
+
+**101. Six browser power-tools in one MV3 extension with a pure-Rust native host** — `med`
+One Chrome MV3 extension unifies a `pass`/browserpass-compatible vault (profile + credit-card
+autofill), a segmented multi-connection download accelerator, a JetBrains-style MRU tab
+switcher, fzf history, a Tampermonkey-equivalent userscript engine, full-page screenshot
+stitching, and a Wappalyzer-compatible detector over a vendored 3,993-fingerprint corpus —
+all backed by a single pure-Rust native-messaging host. *Basis:* `zpwrchrome/README.md` +
+`zpwrchrome-host` (Rust port of browserpass-native v3.1.2 + `otp`/`search`/`dl.*`, `ureq`+
+rustls); 3004 JS + 127 Rust tests; `lib/wappalyzer/engine.js`. *Caveat:* each capability
+replaces a known tool; novelty is consolidation + a single static Rust host.
+
+**102. Pure-Rust segmented download accelerator that owns the browser's default** — `med`
+A multi-connection (`Range`-segmented) download accelerator in a vendorable pure-Rust host
+(no aria2/axel binary) that intercepts every Chrome download by default, with
+truncation/premature-EOF detection, resume, cookie+UA forwarding, and a byte-count completion
+gate. *Basis:* `zpwrchrome/README.md` "Segmented download accelerator" (`zpwrchrome-host`
+`dl.*`, HEAD probe → N concurrent Range GETs, pre-allocated dest). *Caveat:* download
+accelerators are a known category; the angle is doing it as the default handler from a single
+Rust host.
+
+**103. MacVim-style native GUI wrapping a Rust Emacs port** — `med`
+A native desktop GUI that wraps the `zemacs` Rust Emacs/Helix-modal editor by running it in
+an embedded PTY and driving it purely through ex-commands, with every GUI surface (menubar,
+toolbar, palette, dialogs, file tree) built from zgui-core. *Basis:* `zemacs-gui/README.md`
+— `zpwr-embed-terminal` PTY, `open_intake.rs` (`mvim://` deep-link → `:open`), bundled
+`zemacs`+`stryke` sidecars, `frontend/menu.js` zgui widgets → PTY. *Caveat:* the
+"wrap-a-CLI-editor-in-a-window" pattern is MacVim; novelty is doing it for a new Rust Emacs
+entirely through a shared web widget kit + PTY.
+
+**104. First-class tmux client over the native wire protocol (live editing + profiles + dashboard)** — `high`
+A terminal emulator that speaks tmux's native control protocol directly to the server socket
+(no `tmux` subprocess) and is the first to (a) live-edit a running tmux server's
+options/buffers/keybindings from its own UI, (b) capture entire-config + tmux-state into
+one-click switchable profiles, and (c) ship a custom live telemetry dashboard built from a
+real component library. *Basis:* `zterminal/docs/INVENTIONS.md` (3 documented firsts) backed
+by `crates/ztmux-core`; dashboard on zgui-core. *Caveat:* "first" is to the author's
+knowledge; the tmux-client and dashboard claims are documented as verified in-repo.
+
+**105. Unified Exposé + scrollback search across native panes *and* tmux panes** — `low`
+zterminal blends its own i3-style native split tree (one PTY per pane) with tmux so Exposé
+(`⌃⌘E`) tiles every native window *and* every tmux pane together, and `⌃⌘P` greps every tmux
+pane's scrollback — treating native and tmux panes as one searchable surface, and decoding
+inline-image protocols (incl. Kitty animation) even when wrapped by tmux passthrough. *Basis:*
+`zterminal/README.md` (Exposé `⌃⌘E`, search `⌃⌘P`, native split tree, image protocols through
+tmux). *Caveat:* splits and image protocols individually exist (kitty/wezterm/iTerm2); the
+combination is the candidate; not in the repo's own INVENTIONS.md.
+
+> zterminal is an Alacritty derivative (`zterminal_core`); base VT/grid/search/hints are
+> **not** claimed. The entries below are zterminal's own additions.
+
+**105a. Per-pane process/activity monitor spanning native panes and the reparented tmux server** — `med`
+An in-app "Processes" tab renders a live CPU/MEM process tree rooted at every pane's shell —
+including descending into the *tmux server's* reparented children — and can signal/kill only
+pids that are descendants of its own panes. *Basis:* `src/event.rs` `pane_process_tree()`
+builds a ppid→children map from a `sysinfo` snapshot, seeds roots from `wc.pane_shells()` +
+`ztmux_core::ops::panes()` pids (labeled `tmux <s>:<w>.<p>`); `"kill_process"` IPC arm gates
+signals to the `seen` descendant set. *Caveat:* Unix-only; an inspector, not a `top`
+replacement.
+
+**105b. GUI env-var editor that hot-injects exports into every running shell** — `med`
+Editing an env var in the control panel both persists it to `[env]` in `zterminal.toml` and
+live-broadcasts ` export NAME=value` / ` unset NAME` into the PTY of every already-running
+shell across all panes, so it takes effect without relaunching. *Basis:* `src/settings.rs`
+`save_env_var()`/`delete_env_var()` (toml_edit) then `EventType::BroadcastInput`;
+`export_command()` POSIX-single-quotes + leading space (to dodge `HISTCONTROL=ignorespace`);
+`window_context.rs` `broadcast_input()`. *Caveat:* injects a shell command — affects shells at
+a prompt, not arbitrary child programs.
+
+**105c. Native tmux session save/restore (resurrect/continuum) over the wire protocol** — `med`
+Reimplements tmux-resurrect/continuum natively over tmux's binary wire protocol — snapshotting
+every session→window→pane with exact `window_layout`, cwd, and the pane process's full captured
+command line, then rebuilding the tree, optionally relaunching processes (resurrect-style
+whitelist) and replaying saved pane scrollback, with opt-in auto-restore on launch. *Basis:*
+`crates/ztmux-core/src/snapshot.rs` (`<name>.json` + `<name>.contents/`); `proc.rs` reads each
+pane's foreground command line natively (libproc `KERN_PROCARGS2` / `/proc`, no `pgrep`);
+`src/event.rs` `resumed()` fires `restore(...)` off-loop; overlay `⌃⌘S`. *Caveat:* live process
+state can't be restored (panes return as fresh shells with the command replanted); resurrect as
+a concept is prior art — the novelty is doing it natively over the wire from an emulator.
+
+**105d. Cross-session/cross-window tmux broadcast beyond `synchronize-panes`** — `med`
+A broadcast overlay sends keystrokes (or snippets) to an arbitrary *checked set* of tmux panes
+spanning any windows and sessions at once — which native tmux can't do, since
+`synchronize-panes` is scoped to a single window. *Basis:* `crates/ztmux-core/src/ops.rs`
+`broadcast_list()` + send-keys toggle; `src/settings.rs` `open_tmux_broadcast()` +
+`"tmux_broadcast_list"` / `"snippet_broadcast"` arms; `⌃⌘B`. *Caveat:* requires a running tmux
+server.
+
+**105e. Whole control plane as an in-process webview app built only from the shared component library** — `med`
+zterminal's entire configuration/inspection surface (Settings, Dashboard, tmux, Keybindings,
+Logs, About, command palette, every overlay) is a single-binary in-process webview app built
+*only* from `zgui-core`, served over a custom `zterminal://` protocol — a terminal whose whole
+control plane is a reusable design-system app, not native dialogs or a TUI. *Basis:*
+`src/settings.rs` embeds `settings/frontend` + `zgui-core/webui` via `include_dir!`, injects an
+`IPC_BRIDGE` (`window.__ztermInvoke` → wry `postMessage` → Rust `dispatch()`); same `ZGui.fzf`
+powers palette, history, and cross-pane search. *Caveat:* the dashboard sub-piece is already
+captured (#104); this is the broader umbrella.
+
+**105f. Shell-history palette that resolves the focused shell's real HISTFILE from its process env** — `low`
+The `⌘R` history palette fuzzy-searches the *actual* history file of the focused shell —
+discovered by reading that child process's live `HISTFILE` env var — parsing
+zsh-extended/bash/fish formats, rather than assuming a default path. *Basis:* `src/daemon.rs`
+`shell_histfile(pid)` via `KERN_PROCARGS2` / `/proc`; `src/settings.rs`
+`resolve_histfile()`/`parse_history()` (zsh `: <ts>:<dur>;cmd`-aware, tested). *Caveat:* history
+pickers exist; the per-shell HISTFILE-from-process-env resolution is the distinctive bit.
+
+**105g. Recent-directories tracker harvested from live pane cwd across native and tmux panes** — `low`
+Because OSC 133/OSC 7 don't carry cwd, zterminal harvests each open pane's live
+foreground-process working directory — from its own panes *and* every tmux pane — into a
+pinnable most-recent-first Recent Dirs list. *Basis:* `src/recent_dirs.rs`
+(`~/.zterminal/recent_dirs.json`); `src/event.rs` `current_cwds()` merges
+`daemon::foreground_process_path(...)` with tmux `#{pane_current_path}`. *Caveat:* sampled on
+tab refresh; Unix-only.
+
+**105h. Single pre-vte stream interceptor recovering four protocols vte drops, incl. through tmux passthrough** — `low`
+One scanner ahead of `vte` peels Kitty APC graphics, Sixel DCS, iTerm2 OSC-1337 images, *and*
+OSC 133 semantic-prompt marks out of the PTY stream — all of which stock `vte` discards or
+truncates — unwrapping tmux `ESC Ptmux;…` passthrough so each works inside tmux. *Basis:*
+`zterminal_core/src/graphics/scanner.rs`; `shell.rs` routes OSC 133 A/B/C/D through the same
+path, anchored to absolute scrollback lines. *Caveat:* WezTerm supports the image protocols; the
+unified pre-vte recovery incl. OSC 133 + tmux-unwrap is the combination.
+
+**105i. Failed-command gutter marks from OSC 133 exit codes** — `low`
+A thin left-margin gutter flags every prompt line and turns red when that command exited
+non-zero, driven by recovered OSC 133 `D;exit` marks. *Basis:* `zterminal_core/src/shell.rs`
+records `exit_code` per command zone; `src/display/mod.rs` `shell_gutter_rects(...)`. *Caveat:*
+needs the shell-integration snippet; exit-status decorations exist (fish/iTerm2).
+
+**105j. Config-driven background image that renders behind cells even inside tmux** — `low`
+A GPU background image set via *config* (not an escape sequence) shows through translucent
+default-bg cells and keeps working inside tmux (which would strip a display escape); inline
+images can also draw behind text via negative Kitty z-index. *Basis:* `src/config/window.rs`
+(`background_image`, `background_image_opacity`); `src/renderer/graphics.rs` textured quads with
+z-order; live reload on path change. *Caveat:* kitty/others support bg images; the
+config-survives-tmux angle and `z<0` behind-text are the distinctive parts.
+
+**105k. Zero-dependency `icat` that self-enables tmux passthrough via Kitty Unicode placeholders** — `low`
+The bundled `zterminal-icat` emits the Kitty protocol from any image using only `base64` (+
+`sips` on macOS), and — uniquely for an icat-style tool — enables tmux `allow-passthrough` itself
+and places the image via Kitty *Unicode placeholders* so it survives tmux redraws. *Basis:*
+`extra/zt-icat`; placeholder placement decoded in `zterminal_core/src/graphics/placeholder.rs`.
+*Caveat:* narrow helper script.
+
+**105l. Native menu, keybindings, and palette sharing one action-dispatch path** — `low`
+Every macOS menu item carries the same key-equivalent as its keybinding and dispatches the
+*identical* action object through the same `run_palette_action` path as the key press and the
+command palette — one source of truth for menu, key, and palette. *Basis:* `src/macos/menu.rs`
+builds a Cocoa `NSMenu` from `config::bindings::platform_key_bindings`, sending
+`EventType::MenuAction`. *Caveat:* an architectural single-source-of-truth, not a user-visible
+terminal first.
+
+**105m. Glassy translucent webview overlays composited over the live GL terminal** — `low`
+Control-panel and palette webviews render semi-transparent over the still-visible GPU terminal
+beneath, with a live opacity slider, by driving native window alpha. *Basis:* `src/settings.rs`
+`set_overlay_opacity()`/`apply_overlay_alpha()` set `NSWindow.alphaValue` (winit transparency
+crashes the view, so it uses AppKit directly). *Caveat:* macOS-only; cosmetic.
+
+**105n. Per-pane output triggers reacting to streamed rendered output** — `low`
+User-defined regexes match each pane's freshly-rendered output as it streams, firing a desktop
+notification, bell, or shell command (`$ZT_TRIGGER_TEXT`/`$ZT_TRIGGER_NAME`), scanning only
+lines completed since the last wakeup with a cooldown. *Basis:* `src/triggers.rs`
+(`TriggerActionKind`, `COOLDOWN`, `~/.zterminal/triggers.json`); `window_context.rs`
+`scan_pane_triggers()`. *Caveat:* iTerm2 "Triggers" is direct prior art — **not a first**;
+included for completeness, the per-pane + zterminal-pane-model framing is the only distinguishing
+angle.
+
+---
+
+## VI. Language connectors & data ecosystem
+
+**106. First-party connector ecosystem for a Perl5-like language (31 packages)** — `med`
+strykelang ships a 31-package first-party connector ecosystem spanning cloud (AWS/GCP/Azure),
+orchestration (Docker, k8s), messaging (Kafka, ZeroMQ), 9+ databases (Postgres/MySQL/MSSQL/
+Mongo/Redis/Scylla/Neo4j/ClickHouse/DuckDB), columnar (Arrow/Parquet/Polars/Spark), search
+(Elasticsearch/OpenSearch), gRPC, browser/GUI automation, office I/O, and MCP — breadth of
+native data/cloud connectivity not previously offered for a Perl5-lineage language. *Basis:*
+31 `stryke-*` dirs; `stryke-demo/README.md` package matrix + single `s install`; every README
+carries the `[stryke-package]` badge. *Caveat:* "first for a Perl5-like language" is a framing
+claim; tiers vary in maturity; breadth, not any single deep integration, is the novelty.
+
+**107. No-FFI "policy layer" connectors built entirely from language core builtins** — `med`
+Several connectors are pure-`.stk` packages (zero FFI table, zero cdylib, zero helper binary)
+adding production policy on top of capabilities the language exposes as core builtins —
+connector-as-pure-library. *Basis:* `stryke-fleet`/`stryke-mcpd` have rust=0, stk=11 each;
+READMEs state "no `[ffi]` table, no cdylib, no helper binary — just `.stk` modules on
+`use ...`"; wrap core `pty_*`/`pmap`, `mcp_server_start`. *Caveat:* novelty depends on the
+core shipping those builtins; the packages are orchestration/policy.
+
+**108. Parallel Expect/PTY fan-out as a language package** — `low`
+Declarative, transcripted Expect-style PTY automation running one playbook across N hosts in
+parallel (one PTY per thread) — extending the single-session Tcl/Expect model to playbook-driven
+parallel fan-out. *Basis:* `stryke-fleet/README.md` (`Fleet::Session`/`Playbook`/`Fanout`,
+"one PTY per thread, results in target order", on core `pty_*` + `pmap`). *Caveat:* pdsh/Ansible/
+parallel-ssh exist; the novelty is the Expect-playbook layer in-language.
+
+**109. MCP servers as a single static native binary** — `med`
+Author Model Context Protocol servers that compile to one static native binary, eliminating
+the Node runtime / Python venv current MCP servers drag onto the target. *Basis:*
+`stryke-mcpd/README.md`; `Mcpd::Schema/Server/Tools/Client`; core `mcp_server_start`; stdout-purity
+test. *Caveat:* Rust/Go MCP SDKs also yield static binaries; the distinctive part is MCP
+authoring in this Perl5-like language.
+
+**110. Whole office-suite read+write in native Rust, no LibreOffice** — `med`
+Reads and writes the full office suite — Excel/ODS, Word/ODT, PowerPoint/ODP, PDF — entirely
+in native Rust with no `soffice`/LibreOffice/pandoc subprocess and no external install.
+*Basis:* `stryke-office/README.md`; ~51k LOC across 17 src files incl. `pptx_write.rs`,
+`pdf_build.rs`, `pdf_form.rs`, `chart_render.rs`, `barcode.rs`. *Caveat:* "entirely native"
+likely means a curated feature subset; fidelity vs LibreOffice unverified.
+
+**111. Full pandas + numpy surface in one in-process cdylib** — `low`
+Exposes a pandas (DataFrame/Series/Index/IO) plus numpy (ndarray/ufuncs/linalg/random/fft/
+polynomial/masked/datetime64) surface through a single dlopened cdylib, in-process. *Basis:*
+`stryke-polars/README.md`; 19 rust + 50 stk files; loaded via `use Polars`. *Caveat:* backed
+by polars/ndarray; novelty is the consolidated binding surface for this language.
+
+---
+
+## VII. Command-line tools
+
+**112. `lsof` rewrite claiming 5–21× speedup with TUI + JSON** — `med`
+A Rust lsof reimplementation headlining 5–21× faster process↔file/socket mapping, adding
+JSON/CSV output, watch/leak-detection modes, and an interactive TUI classic lsof lacks.
+*Basis:* `lsofrs/src/{darwin,linux,freebsd}.rs`, `net_map.rs`, `tui_app.rs`, `leak.rs`,
+`monitor.rs`; ~23.5k LOC; on crates.io. *Caveat:* the 5–21× figure is self-reported; speed/UX,
+not a fundamentally new capability.
+
+**113. `iftop` rewrite with no-external-tool process attribution + NDJSON streaming** — `low`
+A real-time per-flow bandwidth monitor attributing sockets to processes natively (libproc on
+macOS, `/proc` on Linux) with no external tools, plus a headless NDJSON `--json` stream classic
+iftop lacks. *Basis:* `iftoprs/src/capture/`, `src/ui/`, `src/main.rs`; ~21.9k LOC; on
+crates.io. *Caveat:* process-attribution and JSON exist in nethogs/bandwhich; the combination
+is the differentiator.
+
+**114. Pygments-style token model driven from editable TOML** — `low`
+A real-time log colorizer fusing ccze with the pygments "regex→token" idea, where named regex
+capture groups become semantic tokens and all rules/themes live in editable TOML, so recoloring
+is a theme swap with no rule edits. *Basis:* `zcolorizer/src/{rules,theme,engine,modules,
+modules_modern}.rs`; `--themes-json`, live `--watch`; ~3855 LOC. *Caveat:* ccze and pygments
+predate it; the novelty is the TOML-driven capture-group→token fusion in a streaming CLI.
+
+**115. Temp-file stack as a CLI data structure** — `low`
+An original concept (not a rewrite): a flock-protected stack of temporary files exposed as a
+CLI (`tp`) with push/pop/shift/unshift and dual indexing by position or `@name`. *Basis:*
+`temprs/src/model/app.rs`, `src/model/opts.rs`, `src/util/utils.rs`; on crates.io. *Caveat:*
+conceptually a thin stack abstraction over `mktemp` + a lockfile.
+
+**116. Zero-Python native Powerline with a byte-level upstream parity harness** — `med`
+A native single-binary Rust port of Python `powerline-status` that is drop-in compatible with
+existing `powerline/config` themes and eliminates Python's ~50–150 ms per-render
+interpreter-startup tax, validated by 462 parity tests that run the upstream Python interpreter
+and assert byte/value-identical output. *Basis:* `powerliners/src/ported/`, `src/extensions/`,
+`src/bin/`; 134/137 upstream `.py` files DONE (97.8%); 2473 lib tests; per-line `// py:NNN`
+citations. *Caveat:* a faithful port; novelty is the engineering rigor + perf win, not new
+functionality (powerline-go exists but isn't a byte-parity port).
+
+**117. Multi-dialect SQL DDL → dual-stack (Spring + Rust/Loco) REST backend codegen** — `low`
+Parses MySQL/PostgreSQL/SQLite/MSSQL DDL dumps into one model and emits a fully wired REST
+backend on two stacks — JVM (Spring Boot + JPA) and notably Rust/Loco (SeaORM entities, Axum
+controllers, `loco_rs` migrations) — a SQL-to-Loco generator being uncommon. *Basis:*
+`api-rest-generator/src/loco.rs` (~3954 LOC), `parser.rs`, `entity.rs`, `templates.rs`; JVM
+generator in Kotlin/Gradle. *Caveat:* SQL-to-CRUD generators are crowded; only the Rust/Loco
+target is unusual.
+
+**118. Embeddable pure-Rust Zotero engine reused across GUI apps** — `med`
+A from-scratch Rust reimplementation of the Zotero reference-manager engine (37 item types,
+CSL processor, BibTeX/RIS/CSL-JSON/EndNote/MODS/MARCXML/RDF I/O, DOI/ISBN/PMID/arXiv lookup,
+dedup) extracted as one engine (rlib/staticlib/cdylib + C ABI + header-only C++ wrapper +
+mountable webui) so the same citation engine embeds inside other GUI apps. *Basis:*
+`zcite/crates/zcite-core/src/{schema,model,store,search,bib,csl,import,export,identifier,pdf,
+duplicates,webdav,zotero,ffi}.rs`; `include/zcite_core.{h,hpp}`; `webui/`; `PORT_REPORT.md`
+self-assesses 95.0% weighted Zotero coverage (54 full / 6 partial / 0 missing). *Caveat:*
+"in development"; a reimplementation of Zotero — the novelty is the embeddable-engine packaging.
+
+**119. Multi-dialect raw-packet network scanner in safe Rust** — `low`
+An Nmap-dialect scanner implementing a broad set of raw-packet techniques (TCP connect,
+SYN/NULL/FIN/Xmas/ACK/Window/Maimon half-open, UDP, SCTP, idle scan, IP-protocol scan, FTP
+bounce, IPv6, OS detection against `nmap-os-db`, `-sV` against `nmap-service-probes`) in
+memory-safe Rust with parallel/sharded pipelines. *Basis:* `nmaprs/src/{syn,sctp,idle,ip_proto,
+ftp_bounce,os_detect,vscan,nse}.rs`; ~24k LOC; on crates.io. *Caveat:* explicitly NOT
+byte-for-byte Nmap and does NOT embed the NSE Lua runtime; several areas marked Partial.
+
+---
+
+## VIII. Editor & shell ecosystem
+
+**120. Five embedded scripting languages in one editor binary, zero FFI** — `med`
+zemacs embeds five scripting interpreters — Emacs Lisp, Vimscript, AWK, zsh, and stryke —
+directly compiled into the binary with no external process and no C-ABI/FFI between them, all
+driving the live buffer through one uniform host API. *Basis:* `zemacs/README.md:72` ("the only
+editor to embed 5 scripting languages with zero external dependencies and no FFI between them");
+`book/src/scripting.md` (`:elisp`/`:vim`/`:awk`/`:zsh`/`:stryke`, `SPC a r` unified REPL); each
+is a pure-Rust crate lowering onto shared fusevm bytecode. *Caveat:* overlaps #1 (the editor-
+embedding angle of the same crate family); "world first" is the repo's own assertion; each
+interpreter exposes only a subset of its host API.
+
+> zemacs is a **Helix fork** — tree-sitter language breadth, rainbow brackets, indent queries,
+> and the core modal model are Helix base and **not** claimed. The entries below (per CHANGELOG
+> + source) are zemacs's own additions on top of Helix.
+
+**120a. Vim operator-pending grammar emulated on a selection-first engine** — `high`
+zemacs reconstructs Vim's verb→noun operator-pending grammar (`d{motion}`, `c{motion}`,
+`y{motion}`, `ciw`/`di(`, `df,`/`ct)`, `.` dot-repeat, `q`/`@` macros, named marks, Replace
+mode) entirely on top of Helix's noun→verb selection-first engine, without modifying the
+engine's selection model. *Basis:* `zemacs-term/src/keymap/vim.rs` (each operator is a nested
+submap whose motions run `[collapse_selection, extend-motion, operate]` so "operate over the
+motion" is reproduced; counts ride the engine prefix); Helix has no operator-pending mode.
+*Caveat:* Vim has the grammar; the novelty is emulating it over a fundamentally different
+(selection-first) core.
+
+**120b. Three runtime-swappable editing-model presets on one engine** — `high`
+A single running editor exposes vim, emacs, and helix keymap personalities switchable live via
+`:keymap <preset>`, where the emacs preset reroutes the modal engine so the editor boots into
+Insert mode and binds real emacs chords there (modeless-on-modal). *Basis:*
+`zemacs-term/src/commands/typed.rs:17260` (`keymap` cmd, `set_keymap:18221` swaps live + sets
+default mode); `keymap/emacs.rs` (emacs bindings in Insert, `C-space` enters Select);
+`keymap/vim.rs`, `keymap/default.rs`. *Caveat:* multi-keymap configs exist (evil-mode), but those
+emulate the *other* model inside a host; here all three are first-class presets over one Rust
+selection engine, swappable without restart.
+
+**120c. Self-verifying feature-coverage harness ("port report")** — `high`
+An anti-tamper instrument measures zemacs's own coverage of the cited Vim/Neovim + Emacs +
+Spacemacs feature surface by re-deriving the numerator from source on every run and flagging any
+mapping that points at non-existent code as "broken" — making it structurally impossible to
+inflate the number. *Basis:* `port/README.md` (evidence tokens `static:`/`typable:`/`key:` must
+resolve or count absent; `broken` must be 0); `scripts/gen_port_report.py` (46 KB); denominators
+from primary Neovim/Emacs/Spacemacs docs in `port/data/`; outputs `docs/port_report.{md,html}`.
+*Caveat:* coverage dashboards exist; the source-derived, broken-loud, self-auditing design as a
+shipped editor artifact is the unusual part.
+
+**120d. Thread-local raw-pointer host ABI bridging bare-fn-pointer interpreters to the live buffer** — `med`
+One language-agnostic editor "host ABI" lets interpreters that expose only bare `fn` pointers
+with thread-local state mutate the live document, by publishing the in-flight
+`compositor::Context` through a type-erased thread-local pointer installed by an RAII guard for
+one synchronous on-thread eval, with a guard stack for nested evals. *Basis:*
+`zemacs-term/src/commands/scripting/mod.rs` (`CX_PTR` thread-local, `CxGuard` RAII, `with_cx`;
+`api_insert`/`api_goto_char`/`api_delete_region` build undoable `Transaction`s);
+`SCRIPTING_EMBED_PLAN.md` §2.1. *Caveat:* the architectural substrate of #120, recorded
+separately as a distinct mechanism; `unsafe`, single-thread-only.
+
+**120e. Cross-language unified REPL with persistent per-language history** — `med`
+A single REPL panel fronts all five embedded interpreters (elisp/viml/stryke/awk/zsh) behind one
+read-eval-print loop, cycling the active language with Tab and persisting separate input
+histories per language to `~/.zemacs/repl-history.toml`. *Basis:* `zemacs-term/src/ui/repl.rs`
+(660 L, `ReplLang` enum, transcript scrollback); opened via `:repl [lang]` / `SPC a r`. *Caveat:*
+part of the captured scripting story; the one-panel-many-languages REPL with per-language
+persisted history is the distinct artifact.
+
+**120f. AWK as a built-in undoable region filter** — `med`
+`:awk <prog>` runs an embedded AWK interpreter over the current selection (or whole buffer) and
+replaces it with the captured output as a single undo step, in-process with no external `awk`.
+*Basis:* `zemacs-term/src/commands/scripting/mod.rs::run_awk_filter` (runs `awk::run` outside any
+editor borrow, applies one `Transaction`); `commands/scripting/awk.rs`. *Caveat:* piping a
+selection through external `awk` (`!awk`) is a classic vi idiom; the novelty is the in-binary
+interpreter wired as an undoable in-place filter.
+
+**120g. Built-in diff3 three-pane merge-conflict resolver** — `med`
+A native JetBrains-style three-pane (ours/result/theirs) conflict resolver with a diff3 base
+pane, inline char-level highlighting, per-block resolution, and a recomputed live Result pane
+written back as one undoable transaction. *Basis:* `zemacs-term/src/ui/merge.rs` (2211 L,
+`imara_diff`, `DiffRow`/`Block`/`Resolution`); `:merge`/`:diff`, `]n`/`[n`. *Caveat:* 3-way merge
+tools are common standalone; embedding one as a terminal overlay in a Helix-based modal editor is
+the novel part (Helix has none).
+
+**120h. Native magit-style git porcelain in a non-Emacs modal editor** — `med`
+A magit-style interactive git porcelain (sectioned status, per-hunk staging, interactive rebase,
+branch/stash menus, commit-log + per-commit diff, ahead/behind counts) as a built-in terminal
+overlay. *Basis:* `zemacs-term/src/ui/magit.rs` (3162 L, `parse_status` unit-tested,
+stage/unstage/discard/commit, `MagitLog`/`MagitShow`); `:magit`/`:git`/`:gst`. *Caveat:* Magit
+(Emacs) and porcelains (lazygit) are prior art; novelty is native-Rust and built into this
+editor.
+
+**120i. Org-mode subset with a cross-file date-aware agenda** — `med`
+An org-mode subset (outline folding, TODO cycling, capture) plus a date-aware agenda that
+aggregates TODO/DONE headings from all open `.org` buffers and a shallow filesystem walk,
+bucketing Overdue/Today/Upcoming with a dependency-free date model. *Basis:*
+`zemacs-term/src/ui/org_agenda.rs` + `commands/org.rs` (24 KB, `parse_agenda`/`today`
+unit-tested); `:org-agenda`/`:agenda`, `:org-capture`. *Caveat:* Org-mode is canonical Emacs;
+this is a native reimplementation of a slice (babel/export/recurring deferred).
+
+**120j. Byte-faithful hex editor with automatic binary-file routing** — `med`
+Binary files a text editor would reject instead open automatically in a built-in xxd-style hex
+editor backed by a raw `Vec<u8>` (not the text rope), with nibble/ASCII overwrite editing and
+byte-faithful round-trip on save. *Basis:* `zemacs-term/src/ui/hex.rs` (720 L; raw-byte backing,
+`Ctrl-s` writes via `std::fs::write`); CHANGELOG ("binaries now open here instead of being
+rejected"). *Caveat:* `hexl-mode`/standalone hex editors are prior art; novelty is the
+auto-routing-on-binary-detection in a Helix fork. Overwrite-only (no length change).
+
+**120k. Integrated PTY terminal multiplexer inside the editor** — `med`
+Real PTY-backed shells in editor panes (vt100-parsed grid blitted to the surface) with its own
+`C-\` window-leader for split/focus and click-to-focus across panes — a small terminal
+multiplexer living inside the modal editor. *Basis:* `zemacs-term/src/ui/terminal.rs`
+(`portable_pty` + `vt100`, background reader thread, F12 detach); `:terminal`/`:term`, `SPC p '`.
+*Caveat:* integrated terminals exist (Emacs/VS Code); the multiplexer-style window leader +
+per-pane PTY in a Helix fork (Helix has none) is the addition.
+
+**120l. IDE workbench with persisted layout and tree-sitter structure outline** — `med`
+A JetBrains-style workbench renders inside the editor view — project file tree, tree-sitter
+structure outline, problems/run panels, right-hand error-stripe minimap — entirely from
+in-process editor state (no PTY bridge), with the whole layout (drawer widths, folds, hidden
+panels, minimap, colorscheme) persisted to appdata and restored. *Basis:*
+`zemacs-term/src/ui/ide.rs` (4883 L), `file_tree.rs`, `run.rs` (live console with ANSI scrubbing),
+`run_config.rs`; `:ide`/`:workbench`/`F2`. *Caveat:* IDE chrome is common in GUI IDEs; doing it as
+a pure-terminal overlay fed only from editor state, in a Helix fork, is unusual.
+
+**120m. Snippet library with live tab-stops overriding emmet, per-language scoped** — `med`
+A CRUD snippet-library TUI whose bodies are validated against the LSP-snippet engine; typing a
+trigger + Tab expands with live `${1:…}`/`$0` tab stops, with user triggers taking priority over
+emmet abbreviation expansion and scoped per language. *Basis:* `zemacs-term/src/ui/snippets.rs`
+(validates via `zemacs_core::snippets::Snippet`, persists `snippets.toml`); `emmet_expand`/
+`snippet_expand`. *Caveat:* yasnippet/LSP snippets are prior art; the integrated CRUD TUI +
+emmet-priority + LSP-syntax validation combo is the addition (Helix has snippets, no managing
+TUI).
+
+**120n. Spacemacs-style discoverable leader with tunable which-key** — `med`
+A labelled Spacemacs `SPC` command tree ported onto the Helix engine with which-key-style popups
+whose auto-display is tunable per-prefix (`auto-info`, `auto-info-exclude`), plus a
+frecency-ranked recent-file picker and a startify start screen. *Basis:* `keymap/vim.rs`
+`SPACEMACS_TYPABLE` table; `docs/spacemacs_gaps.md` (tracks 358/702 remaining);
+`frecent_file_picker` + `ui/startify.rs`. *Caveat:* which-key + Spacemacs leaders are Emacs prior
+art; the novelty is the native port onto a Helix selection engine with per-prefix tunability and
+a gap-tracked coverage doc.
+
+**120o. Reflection-based auto-generated settings editor** — `med`
+The in-editor Settings page is not a hand-maintained schema — it serializes the live editor
+`Config` to TOML on every render and exposes every leaf (typed bool/int/float/str/enum/raw-TOML),
+writing edits back to `config.toml` with live reload. *Basis:* `zemacs-term/src/ui/settings.rs`
+(`Kind`/`ENUMS` cycle support). *Caveat:* auto-generated config UIs exist generally; a fully
+reflective settings TUI for a terminal modal editor is unusual (Helix is TOML-by-hand only).
+
+**120p. Wildfire expand-region bound to `<ret>`** — `low`
+Pressing `<ret>` in Normal mode selects the closest text object and grows to the next enclosing
+one on repeat; `<backspace>` shrinks — a Wildfire/expand-region port wired to the engine's
+text-object hierarchy. *Basis:* `zemacs-term/src/keymap/vim.rs:255-259`
+(`"ret" => wildfire`, `"backspace" => wildfire_shrink`). *Caveat:* expand-region / wildfire.vim
+are direct prior art; this is a native port (Helix's `expand_selection` isn't the
+ret-grows/backspace-shrinks UX).
+
+**120q. Bundled built-in text-utility command suite** — `low`
+A broad in-editor text-tooling suite usually requiring plugins ships built-in: arithmetic `:calc`,
+UUID v1/v4 insert, lorem-ipsum, password generators (simple→paranoid→phonetic→numeric),
+base64/base64url, ROT13/Caesar, NATO phonetic, JSON omit/table, markdown-table align, delimiter
+align, narrow-to-region, and a spell checker (`]s`/`z=`/`zg`). *Basis:*
+`book/src/generated/{typable-cmd.md,static-cmd.md}`; `calc` at `commands/typed.rs:12374`. *Caveat:*
+each utility individually mirrors a Spacemacs/Emacs/vim plugin — not novel in isolation; the
+candidate is the breadth shipped built-in in one Helix-fork binary (a coverage note more than an
+invention).
+
+**121. Reflection-generated, drift-proof editor language tooling for a shell** — `med`
+Editor support (Emacs major mode, Vim/Neovim runtime, VS Code extension) for the `zshrs` shell
+whose syntax grammars/font-lock are auto-generated from the shell binary's own reflection tables
+(`zshrs --dump-reflection`) so they carry the complete builtin/extension surface and never
+drift, plus LSP (`zshrs --lsp`) and DAP (`zshrs --dap`). *Basis:* `vscode-zsh/README.md:34-37`
+(grammar via `gen_grammar.sh`, standalone `source.zshrs`, 113 extensions own scope, DAP
+Implemented); `vim-zsh/README.md:32` ("never drifts"); `emacs-zsh/README.md` (`zshrs-mode`,
+reflection-driven font-lock, lint via `zshrs -n`, eglot LSP). *Caveat:* the novel substrate is
+zshrs itself; these three are editor front-ends; reflection-driven grammar gen + shell DAP are
+the distinctive bits.
+
+**122. Namespaced verb-dispatcher "terminal OS" at corpus scale** — `med`
+A single-author zsh framework that is simultaneously a namespaced `zpwr <verb>` CLI dispatcher
+(~460 verbs), a fully-wired zsh+tmux+vim/neovim+fzf cockpit, and an env-var control plane
+spanning the entire terminal. *Basis:* `zpwr/autoload/common/zpwr` dispatcher;
+`DESCRIPTION.md:55` (460 verbs, 14,100 completions, 2,000 aliases, 190,000 LOC);
+`README.md:47-49` positions vs Dotmatrix/famous dotfiles. *Caveat:* "category of one" is
+positioning, not prior-art-proven; oh-my-zsh/prezto/large dotfiles occupy adjacent space;
+counts self-reported.
+
+**123. Live shell-introspection HUD with self-history sparklines** — `low`
+`zpwr top` is a live dashboard profiling the *shell itself* — RSS/vmem, history size, zle
+widgets, hooks, function/completion/alias/builtin counts with delta tracking — plus sparklines
+of the last 40 shell startup times (color-coded vs a 100 ms threshold) and 30-day commit
+velocity, with startup times auto-logged each init. *Basis:* `zpwr/README.md:890`; startup
+history to `$ZPWR_LOCAL/startup_history.log`; `aliasrank`/`funcrank` (`README.md:1000,1010`).
+*Caveat:* an instrumentation convenience, not foundational; not runtime-verified.
+
+**124. Largest curated zsh completion corpus as an offline reference index** — `high`
+A ~47k-file curated zsh completion corpus (claimed largest), much auto-generated by scraping
+`--help`/man/web then hand-verified, that doubles as a greppable offline reference index for
+command interfaces of tools you don't have installed. *Basis:* verified `find -name '_*'` →
+**47,346** files (README claims "47,332"); `zsh-more-completions/README.md:27,52,56-60`
+(auto-generate-then-curate pipeline, uniform `#compdef`/`_arguments`, `architecture_src/`,
+ZUnit suite, scientific ecosystems: BIND9, EPICS, GRASS GIS, Quantum ESPRESSO, BLAST+, CCP4).
+*Caveat:* "largest in existence" is unprovable; auto-gen depth varies; scale is the feature,
+not a new mechanism.
+
+**125. Remote-package completions with versions + descriptions in the menu** — `low`
+Several completion plugins fetch *live remote* package data with inline descriptions into the
+zsh menu (pip/cargo/gem/cpan/dotnet/npm/xcode). *Basis:* `zsh-pip-description-completion/README.md`
++ siblings `zsh-cargo-completion`, `zsh-gem-completion`, `zsh-cpan-completion`,
+`zsh-dotnet-completion`, `zsh-better-npm-completion`, `zsh-xcode-completions`. *Caveat:* one
+collective candidate; remote-data completions exist elsewhere; novelty is breadth. `pip search`
+is disabled upstream by PyPI, so that path may be degraded.
+
+**126. Spacebar live-expander with fish-style ghost-text preview of expansions** — `med`
+A pure-zsh plugin that rewrites the spacebar into a live expander for regular/global/suffix
+aliases, typo corrections, globs, parameters, history, and command-substitution — parsing deep
+prefix chains (`sudo`/`env`/`nice`/…) to find the real command — and shows fish-style ghost text
+previewing what an alias *would* expand to before you press space. *Basis:*
+`zsh-expand/README.md:73,115-127`; ghost text in `zsh-expand.plugin.zsh:419-420`
+(`ZPWR_EXPAND_PREVIEW`, `zle-line-pre-redraw`). *Caveat:* zsh-abbr/fish abbreviations exist;
+the distinctive bits are the ghost-text preview of alias expansion + deep prefix-chain parsing;
+test count self-reported.
+
+**127. Neon disk TUI combining live per-mount I/O, SMART health, and free-space alerts** — `low`
+A Rust/ratatui TUI unifying live disk-usage bars, live per-mount read/write throughput (Linux
+`/proc/diskstats`, macOS), SMART health status (macOS `diskutil`), and threshold-crossing
+free-space alerts in one screen. *Basis:* `storageshower/README.md:59,101-118`; Rust crate
+(ratatui + crossterm + sysinfo). *Caveat:* ncdu/dust/gdu cover disk-usage TUIs; the combination
+of live I/O + SMART + alerting is the differentiator, not a new algorithm.
+
+---
+
+## IX. Publications
+
+**128. Auto-generated, auto-typeset reference manuals + encyclopedia for the whole stack** — `low`
+Companion reference manuals and the zpwr encyclopedia are programmatically generated and typeset
+from each product's own source repo (language crate, grammar, shell wizard pages) through one
+shared pandoc→lualatex HUD-themed pipeline, with a test suite asserting zero overfull boxes and
+a 200-page floor. *Basis:* `MenkeTechnologiesPublications/README.md` ("How generation resolves
+source"); `zshrs/scripts/{update_reference_html.sh,gen_grammar_docs.py,reference_pdf.sh}`;
+`zpwr/docs/genEncyclopediaTex.py` (587 L, reads `page_*.zsh` wizard pages) + `regenPDF.sh`;
+`tests/run.sh`. *Caveat:* doc-generation pipelines (Sphinx, mdBook) are common; the distinctive
+part is generating typeset *book/encyclopedia* deliverables from the stack's own
+LSP/grammar/wizard corpus.
+
+**129. Novels as literalizations of the compiler stack** — `low`
+Original novels whose narratives are deliberate literalizations of the project's own compiler
+architecture — THE STACK (fantasy: a dying interpreted kingdom replaced by a compiled forge, a
+blade drawn from five dead master tongues) and THE DEEP TIME TRILOGY (*The Compiled Mind* → *The
+Waking Fleet* → *The Inheritors*: a ship dying of heat shed by an interpreted mind that forks a
+subprocess per act, replaced by a compiled successor) — produced through the same pandoc→lualatex
+book pipeline. *Basis:* `MenkeTechnologiesPublications/README.md` (fantasy/scifi/scifi2/scifi3,
+106/118/120/122 pages, zero overfull boxes); `fusevm/docs/book.md` ("THE MACHINE"); per-book
+`scripts/book_pdf.sh`. *Caveat:* a creative/thematic novelty, not a software invention; only the
+typesetting pipeline is technical.
+
+---
+
+## Appendix — deep prior-art analyses (marquee claims)
+
+### Why each near-miss isn't a dup — GP DAW as a plugin / embeddable (#64)
+
+- **NI Maschine** — a hybrid **groovebox** tied to NI's hardware/ecosystem workflow. By NI's own
+  words it *"has never been a full DAW"* (no complex automation/mixing, by design). Maschine 3
+  software runs without a controller, but it's a groove workstation, **not a general-purpose DAW**.
+- **Komplete Kontrol** — a plugin **host** + preset browser + smart-play. **No step sequencing or
+  arrangement at all** — definitively not a DAW.
+- **Tracktion Engine** — a **compile-time developer library** for building DAW apps, not a loadable
+  plugin you embed at runtime.
 - **Sequencer plugins** (SEQUND, Stepic, B-Step, Playbeat) — **step sequencers**, not full DAWs.
 
-Net: no clean prior art for a **general-purpose full DAW arranger as a runtime plugin / embeddable component**, and none for one driving **non-audio** hosts off its timeline. Claimed as "none found", owned by MenkeTechnologies, not stamped as a proven absolute.
+Net: no clean prior art for a **general-purpose full DAW arranger as a runtime plugin / embeddable
+component**, and none for one driving **non-audio** hosts off its timeline. Claimed as "none
+found", owned by MenkeTechnologies, not stamped as a proven absolute. (The non-audio-host embeds
+are design intent, not yet wired in the target apps — see the #64 caveat.)
 
-### Prior-art analysis (fully modular DAW — claim #2)
+### Why each near-miss isn't a dup — fully modular DAW (#65)
 
-- **Bitwig Studio (The Grid)** — a modular **sound-design device** *inside* a conventional DAW; the DAW's tracks/mixer/routing are a **fixed** architecture, not a patch graph. Modular is a device, not the DAW.
-- **Reaktor / Max / Max for Live / VCV Rack** — fully modular **instruments/environments**, but **not DAWs** (no general-purpose arranger + mixer + project model).
-- **Usine Hollyhock** — a modular audio environment with sequencing, the closest near-miss; it is patch-based but presents as a modular host/performance tool rather than a general-purpose track-and-arrangement DAW. Recorded as a near-miss, not a confirmed dup.
-- **Reason (Reason Studios)** — the strongest near-miss: a full DAW with a **modular rack** (flip to the back, patch CV/audio cables between fixed devices). But it is **not fully modular** — devices are fixed-architecture units, the signal path/mixer isn't a free graph, and **many parameters have no CV input, so they can't be modulated/patched at all**. zpwr-daw's claim is the stronger one: **every** track/layer/bus is a patch graph and **every** block param is a graph node param, modulatable from the mod matrix — no fixed devices, no un-modulatable params. Reason is rack-modular; zpwr-daw is graph-modular end to end.
+- **Bitwig Studio (The Grid)** — a modular **sound-design device** *inside* a conventional DAW; the
+  DAW's tracks/mixer/routing are a **fixed** architecture, not a patch graph.
+- **Reaktor / Max / Max for Live / VCV Rack** — fully modular **instruments/environments**, but
+  **not DAWs** (no general-purpose arranger + mixer + project model).
+- **Usine Hollyhock** — a modular audio environment with sequencing, the closest near-miss; patch-based
+  but presents as a modular host/performance tool rather than a general-purpose track-and-arrangement
+  DAW.
+- **Reason (Reason Studios)** — the strongest near-miss: a full DAW with a **modular rack** (patch
+  CV/audio cables between fixed devices). But it is **not fully modular** — devices are fixed-architecture
+  units, the signal path/mixer isn't a free graph, and **many parameters have no CV input**. zpwr-daw's
+  claim is stronger: **every** track/layer/bus is a patch graph and **every** block param is a graph
+  node param, modulatable from the mod matrix. Reason is rack-modular; zpwr-daw is graph-modular end to
+  end.
 
-Net: no clean prior art found for a **general-purpose DAW whose every track/layer, mixer bus, synth, and mod matrix is one user-patchable graph (with no un-modulatable params)**. "None found", owned by MenkeTechnologies, not stamped absolute; and the modular audio engine is still being wired (caveat above).
+Net: no clean prior art found for a **general-purpose DAW whose every track/layer, mixer bus, synth,
+and mod matrix is one user-patchable graph (with no un-modulatable params)**. "None found", owned by
+MenkeTechnologies, not stamped absolute; the modular audio engine is still being wired.
 
-### Prior-art analysis (solo + from-scratch JIT VM + 5+ frontends — claim #6)
+### Why each near-miss isn't a dup — solo + from-scratch JIT VM + 5+ frontends (#1)
 
-A deep-research pass (fan-out web search → source fetch → adversarial verification) found that the documented prior art splits cleanly along a structural line: **solo authors reach a real JIT only on one language; 5+ frontends on one runtime appear only in team/foundation/company efforts.** No documented project does all three at once.
+A deep-research pass (fan-out web search → source fetch → adversarial verification) found that the
+documented prior art splits cleanly: **solo authors reach a real JIT only on one language; 5+ frontends
+on one runtime appear only in team/foundation/company efforts.** No documented project does all three.
 
-- **LuaJIT (Mike Pall)** — solo, a genuine tracing JIT with SSA opts and multi-arch backends, but **one language** (Lua). Fails on breadth.
-- **LuaJIT Remake / Deegen (Haoran Xu, "sillycross")** — the single closest near-miss: a solo-built, from-scratch VM with a **real** copy-and-patch baseline JIT. But it implements only **1–2 languages** (Lua 5.1, an SOM/DSOM experiment) and its author frames multi-language generality as *future* work. Caveat: the formal arXiv paper lists a second author (his advisor), so "solo" applies to the repo/blog/implementation, not the publication — this is the most contestable attribution in the analysis.
-- **Parrot VM (Perl community / Parrot Foundation)** — **9** frontends (Rakudo, Lua, Winxed, BASIC, PHP, Python, …), but a **team/foundation** effort, and it **never shipped a production JIT** (JIT experiments were abandoned). Fails on solo *and* JIT.
-- **clox / Crafting Interpreters (Bob Nystrom)** — solo from-scratch bytecode VM, but a **pure interpreter** (no JIT) and **one language** (Lox). Fails on JIT and breadth.
-- **Team shared runtimes — JVM, CLR/.NET, BEAM, GraalVM/Truffle, LLVM, RPython/PyPy** — these have both 5+ frontends and a JIT, but every one is an institutional/company/community effort, **not solo**. They establish that hosting many languages on one JIT runtime has historically *required* a team.
+- **LuaJIT (Mike Pall)** — solo, a genuine tracing JIT, but **one language** (Lua). Fails on breadth.
+- **LuaJIT Remake / Deegen (Haoran Xu, "sillycross")** — the closest near-miss: a solo-built from-scratch
+  VM with a **real** copy-and-patch baseline JIT. But it implements only **1–2 languages** and frames
+  multi-language generality as *future* work. Caveat: the arXiv paper lists a second author (his advisor),
+  so "solo" applies to the repo/blog/implementation — the most contestable attribution here.
+- **Parrot VM (Perl community / Parrot Foundation)** — **9** frontends, but a **team/foundation** effort
+  that **never shipped a production JIT**. Fails on solo *and* JIT.
+- **clox / Crafting Interpreters (Bob Nystrom)** — solo from-scratch bytecode VM, but a **pure
+  interpreter** and **one language** (Lox). Fails on JIT and breadth.
+- **Team shared runtimes — JVM, CLR/.NET, BEAM, GraalVM/Truffle, LLVM, RPython/PyPy** — 5+ frontends and
+  a JIT, but every one is an institutional/company/community effort, **not solo**.
 
-Net: no clean prior art found for a **single author who built a from-scratch VM with a real machine-code JIT and five+ distinct language frontends targeting it**. The honest phrasing is "no known prior art combines all three criteria" — recorded as "none found", owned by MenkeTechnologies, **not** stamped as a proven categorical first. Time-sensitive: Deegen is actively developed and explicitly designed to generalize, so a future release could become the first genuine documented counterexample.
+Net: no clean prior art found for a **single author who built a from-scratch VM with a real machine-code
+JIT and five+ distinct language frontends targeting it**. Recorded as "none found", owned by
+MenkeTechnologies, **not** stamped a proven categorical first. Time-sensitive: Deegen is actively
+developed and explicitly designed to generalize, so a future release could become the first documented
+counterexample.
 
-Other stack "first" claims (zshrs, stryke, etc.) live in their own repos; add them
-here only with the same claim / basis / caveat rigor — and check for prior art
-(Maschine/KK/Tracktion class) before stamping "first".
+---
+
+### Methodology & caveats
+
+This ledger was assembled by sweeping every repo in the monorepo with parallel research agents — reading
+documented "firsts" **and** inferring novel capabilities from source/architecture (many entries were
+never documented as inventions before). Confidence tags are honest: **low** entries are early/WIP,
+design-doc-only, or known-category tools whose novelty is the combination/packaging. Every "world's
+first" rests on **non-exhaustive** prior-art absence, not proof.
+
+A few entries were deliberately **excluded** as non-original: `fzf-tab` (upstream Aloxaf/fzf-tab, only CI
+additions), `revolver` and `zunit` (upstream molovo zsh forks), and `LearningCollectionAPI` (conventional
+Spring Boot CRUD). `zemacs`'s tree-sitter language breadth, rainbow brackets, and indent queries are
+**inherited from Helix** (it's a Helix fork) and are **not** claimed as firsts. Several "apps" are
+scaffolds whose real artifact is the `-core` crate (`zpdf`, `zoffice`, `zphoto`, thin `zemail`/`zftp`/
+`zreq`/`ztunnel` shells; `zftp-core` transports are a phased deliverable; `app-store` is a static
+storefront).
