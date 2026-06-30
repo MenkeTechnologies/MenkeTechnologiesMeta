@@ -77,6 +77,47 @@ writes global state.
   → scope tokens to the core's container.
 - **`splash` / `crt` / `neonGlow`** — `position:fixed` full‑document overlays that blank the whole host.
 
+## 3a. Feeding the host — one app, not many
+
+"Buttons, not global keys" is the prohibition; **feeding the host** is the positive pattern that makes
+it feel like *one whole app* rather than several bolted together. Instead of the core opening a *second*
+palette/settings of its own, it **contributes its commands and settings into the host's single shell**,
+so they surface in the **one** `⌘K` palette and the **one** `⚙` settings panel the user already knows.
+
+The host exposes a handle when it mounts the view; the core feeds into it:
+
+```
+// host (standalone shell or an embedding app) mounts the view and exposes a handle:
+window.__myShell = ZGui.appShell(root, { palette: [...], settingsExtra: (panel) => window.__mySettingsExtra?.(panel) });
+
+// the core feeds the ONE shell instead of binding/owning its own:
+window.__myShell.setPaletteItems(myCommands);   // its commands appear in the host's ⌘K palette
+window.__mySettingsExtra = (panel) => { /* render the core's options into the host's settings */ };
+```
+
+Net effect: **one keyboard owner, one palette, one settings panel.** A `-core` dropped into another app
+reads as a native part of it — its commands are in the host's palette, its options in the host's
+settings — not a competing mini-app. This is *why* the prohibition exists, stated as the goal.
+
+**Enforced structurally, not by convention.** When a host embeds a core it wraps the mount in
+`ZGui.embed.view(fn)`, which swaps the document‑global surface (`appShell`, `palette.bindHotkey`,
+`shortcuts.init`, `colorscheme.load`/`:root`) to **throwing stubs** for the duration. A core that tries
+to seize a global key/keymap/theme **throws at init** instead of silently fighting the host. Pane‑scoped
+APIs (`palette.create`, `buttonBar`, `colorscheme.scope`) are *not* stubbed.
+
+**A view that keeps its own domain keymap** (app‑specific keys the host doesn't know — e.g. a translator's
+`⌘T`/`⌘B`, MIDI panic) handles those itself, but coexists with the host by two guards:
+
+- **pane‑active**: if mounted as one of several panes, ignore keys unless this pane is `.active` — so
+  sibling embeds' keys don't all fire at once.
+- **defer shell‑owned keys**: when running under the host shell (`window.__myShell` present), defer the
+  baseline keys (`⌘K` / `⌘,` / `?` / `F1`) to the shell so there's no double‑bind. Standalone (no
+  shell handle), the view keeps them.
+
+For a CLI‑wrapping app (zemacs‑gui), "feeding" goes one layer further: menu/shortcut actions are
+translated to **bytes written into the editor PTY** — the GUI feeds the editor process, and the editor's
+real keymap lives in the CLI, reached by typing into the terminal.
+
 ## 4. Placement & serving
 
 ### Same layout for JUCE and Tauri (by design)

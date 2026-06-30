@@ -190,6 +190,14 @@ It is the family's file surface (open/import/export, project/sample/asset browsi
   asset makes the WebView treat it as `data` and abort parsing at the byte — the inline
   module never runs and the UI silently loses whole sections. Keep assets clean text;
   `file <asset>` must report text, not `data`.
+- **Embedded cores feed the host's keyboard — they never bind their own.** Two `⌘K` bindings on
+  one `document` fight; an embedded core that calls `appShell` / `palette.bindHotkey` /
+  `shortcuts.init` collides with the host. A core **feeds** the one shell instead —
+  `__hostShell.setPaletteItems(...)` + `settingsExtra` — so its commands land in the host's single
+  palette/settings and it reads as one app. `ZGui.embed.view()` enforces this by stubbing the
+  document‑global surface to throw at init. A view keeping its own domain keymap defers the
+  shell‑owned keys (`⌘K`/`⌘,`/`?`/`F1`) when a host shell is present and gates on pane‑active.
+  See `GUI_APP_ARCHITECTURE.md` §3 + §3a.
 
 ## Conformance checklist
 
