@@ -1428,6 +1428,301 @@ typesetting pipeline is technical.
 
 ---
 
+## X. Round-2 deep-dive additions
+
+A second pass did source-level deep sweeps of the projects that were thinly covered. **Most of the
+desktop `-core` apps are honestly ports** (zpdf→Acrobat, zcontainer→Docker Desktop, zftp→Cyberduck,
+zreq→Postman, zemail→Thunderbird, zphoto→GIMP, zoffice→LibreOffice, zgo→Alfred, ztunnel→Tunnelblick)
+— competent pure-Rust reimplementations, but parity features aren't "firsts", so they were **not**
+expanded into the ledger (see the consolidated note at #86). The genuinely-inventive finds below are
+the exceptions: **traderview** (an unusually deep, original system) and **zpwrchrome**
+(architecturally novel), plus original work in **zgui-core**, a few standout shared libraries,
+ztranslator's beyond-BOME extensions, and two cross-stack meta-patterns.
+
+### traderview — institutional-grade quant inside a retail journal
+
+**130. Multi-method tax-lot engine + dual-layer (per-broker & cross-broker) wash-sale detection** — `high`
+The roll-up closes lots by FIFO/LIFO/HIFO/loss-harvest ("Lifoust") and runs IRS §1091 wash-sale
+detection both within one broker AND at the taxpayer level across brokers (catching disallowed
+losses no single 1099-B sees), plus §988 ordinary-income forex tracking. *Basis:* `traderview-core/
+src/{rollup,tax_lot_optimizer,wash_sale,cross_broker_wash,forex_988}.rs`, all tested. *Caveat:* two
+wash-sale models (per-pair vs per-replacement); cross-broker needs all brokers loaded.
+
+**131. Multi-asset-class P&L kernel (options 100×, futures tick math, forex pips, crypto perps)** — `high`
+One P&L kernel computes realized P&L per `AssetClass` — equity options via contract multiplier,
+futures via `tick_size`/`tick_value` (with point-value fallback + zero-tick guard), forex via
+JPY-aware pip math, and crypto incl. isolated-margin perpetual liquidation price and staking/airdrop
+income. *Basis:* `traderview-core/src/{pnl,forex_calc,crypto_liquidation,crypto_staking}.rs`.
+*Caveat:* options as discrete legs; no OCC/OSI symbol decoding / combo recognition.
+
+**132. Quant statistics + correlation-aware position sizing + Monte Carlo equity forecaster** — `high`
+Computes R-multiple, MAE/MFE edge ratio, expectancy, SQN, Sharpe/Sortino (rolling + deflated),
+Kelly (discrete/continuous/dynamic), correlation-drag-adjusted sizing with a don't-stack-correlated
+gate and Marchenko-Pastur RMT covariance cleaning, and a Monte Carlo equity forecaster (percentile
+fans, max-drawdown distribution, probability of ruin) bootstrapped from the trader's own R-multiples.
+*Basis:* `traderview-core/src/{r_multiple,sqn,deflated_sharpe,kelly_criterion,position_size,
+marchenko_pastur_cleaning,monte_carlo,equity_forecast}.rs`. *Caveat:* MC assumes IID R resampling.
+
+**133. Backtest validation & regime-attribution suite** — `high`
+Beyond running a strategy it validates and attributes it: a tournament ranking every registry
+strategy on one symbol/period, regime-conditional (trend/range/chop) attribution at entry bar,
+strategy-portfolio Pearson diversification benefit, post-backtest trade-PnL bootstrap MC, and
+walk-forward efficiency (OOS/IS) as an overfit detector. *Basis:* `traderview-core/src/{algo_
+tournament,algo_regime_attribution,algo_strategy_portfolio,algo_backtest_mc,algo_walk_forward}.rs`;
+22-strategy library. *Caveat:* backtest is interpreted over hardcoded indicators (no JIT/DSL — see
+#98).
+
+**134. Broker-grade paper-trading simulator (algorithmic parent orders, margin, corporate actions)** — `high`
+A full simulated brokerage: TWAP/VWAP/POV parent-order slicing, bracket/OCO, trailing/stop-limit/
+on-close/recurring orders, DRIP, auto dividend crediting (long-credit/short-debit from the fill
+ledger), value-preserving split adjustment, short-borrow fees, margin + margin interest, cash
+interest, and auto-liquidation. *Basis:* `traderview-db/src/paper_*.rs`; migrations 0076–0102.
+*Caveat:* fills modeled against polled quotes, not a matching engine.
+
+**135. Live broker execution + WebSocket fill pumps across six brokers** — `med`
+Native REST trading clients + reconnecting WS fill-pumps for Alpaca/IBKR/Schwab/Tastytrade/Tradier/
+Webull(RO), routed by a dispatcher that logs order intent and feeds fills into the roll-up. *Basis:*
+`traderview-db/src/{alpaca,ibkr,schwab,tastytrade,tradier,webull}_trading.rs` + `*_pump.rs`,
+`broker_dispatcher.rs`. *Caveat:* WIP — only Alpaca fully wired; others return `integration_pending`.
+
+**136. ~1,600-module dependency-light pure-Rust quant compute library** — `high`
+`traderview-core` is a ~297k-LOC, ~1,600-module pure-compute quant library: exotic option pricers
+(semi-analytic Heston, American LSMC, Asian/barrier/lookback/chooser/cliquet/quanto, Garman-Kohlhagen,
+Bachelier, Black76, swaption), first/second-order + portfolio Greeks, fixed income (Nelson-Siegel-
+Svensson, key-rate/effective/Macaulay durations, OAS), microstructure (Kyle's lambda, VPIN, Amihud,
+order-flow imbalance), forensic scores (Altman Z, Beneish M, Piotroski F, Zmijewski), and stats/ML
+(GARCH/GJR, Kalman family, ARIMA, Markov-switching, ridge/lasso/elastic-net/quantile regression,
+wavelet, bootstrap) — with a self-contained complex type to stay dependency-free, zero
+`todo!`/`unimplemented!`, each `#[cfg(test)]`. *Caveat:* breadth over depth; many are one-shot
+calculators not wired into the workflow.
+
+**137. Real-time market-data ingestion mesh + derived live scanners** — `high`
+Background pollers/WebSockets ingest Yahoo (cookie+crumb auth), Finnhub WS ticks, FINRA Reg SHO
+short-volume/dark-pool, SEC EDGAR (Form 4 + 13F), Nasdaq halts, Reddit WSB + StockTwits sentiment,
+and CoinGecko — then synthesize live derived scanners: unusual-options-activity rotator, dark-pool %,
+gamma-squeeze/market-gamma regime, hard-to-borrow ranker, RVOL acceleration, breadth divergence, and
+a confluence autotrade pipeline. *Basis:* `traderview-db/src/{market_data,yahoo_auth,short_interest,
+darkpool,disclosures,thirteen_f,halts,sentiment}.rs` + derived `{uoa_stream,gamma_squeeze,htb_ranker,
+rvol_accel,breadth_divergence,confluence_autotrade}.rs`. *Caveat:* X/Twitter is a stub; several feeds
+use unofficial endpoints that can break.
+
+**138. Embedded-Postgres lifecycle hardening (persisted password + stale-PID reaper)** — `high`
+Makes a downloaded portable Postgres survive restarts/crashes: persists a generated password to a
+`0o600` file (defeating the library's per-launch random password that would lock the user out) and
+cleans stale `postmaster.pid` lockfiles by reading the PID and probing liveness via
+`libc::kill(pid,0)`, with an orphan reaper and start-race recovery. *Basis:* `traderview-db/src/
+embedded.rs`. *Caveat:* distinct from #96; Windows path unconfirmed.
+
+**139. Execution-quality TCA + trade tape-replay + per-setup attribution** — `med`
+Institutional-style transaction-cost analysis in a retail journal: Almgren-style implementation-
+shortfall decomposition, VWAP-relative and per-symbol slippage, a fill-quality report, time-and-sales
+tape replay reconstructed per trade, plus named-setup attribution (win rate / expectancy / avg-R /
+profit factor by setup tag) and an R-multiple distribution report. *Basis:* `traderview-core/src/
+{implementation_shortfall,vwap_slippage,setup_catalog}.rs`; `traderview-db/src/{fill_quality,tape_
+replay,r_distribution}.rs`. *Caveat:* needs arrival-price/VWAP data per execution.
+
+**140. Embedded personal-finance / FIRE planning suite inside a trading journal** — `high`
+The same workspace ships ~48 personal-finance planners — Coast/Barista/Lean/Fat FIRE, glide-path and
+bond-tent decumulation, debt avalanche/snowball, PSLF, Roth-vs-traditional, RMD, Social-Security
+claiming age, 529/FAFSA EFC, mortgage/HELOC/rent-vs-buy, CD/bond ladders, I-Bond/TIPS, budgeting,
+net-worth — alongside the IRS Schedule C/D/E + federal tax engine (brackets, SE tax, QBI §199A, AMT,
+NIIT, credits; ~218 tests pinned to Rev. Proc. 2024-40). *Basis:* `traderview-core`/`traderview-db`
+planners + `traderview-tax/src/{engine,brackets,se_tax,qbi,amt,niit,credits}.rs` + `traderview-
+expense/src/{schedule_e,schedule_d}.rs`. *Caveat:* EITC unimplemented; constants are 2025-specific.
+
+### zpwrchrome — a genuinely unique browser power-suite
+
+**141. Single native host multiplexing six tool families over the browserpass wire envelope** — `high`
+Five non-pass tool domains (`dl.*`, `otp`, `search`, `run.spawn`, `zcite.save`) are smuggled through
+the browserpass-native v3.1.2 protocol by dispatching additive action names *before* the upstream
+switch and deliberately reusing BP error codes, so a strict 1:1 port of the Go binary stays
+unmodified while the host serves tools browserpass never imagined. *Basis:* `src/bin/zpwrchrome_host.rs`
+(double-parse + dispatch ordering), `src/extensions/mod.rs`, `frame.rs`. *Caveat:* the pass half is
+faithful parity; the novelty is the layering discipline.
+
+**142. Filesystem-as-IPC, stateless-host + detached-per-job download worker model** — `high`
+Instead of a long-lived daemon (IDM/aria2), every `dl.add` spawns a detached `--dl-worker <gid>`
+process owning the transfer, with all coordination through per-gid JSON state files guarded by
+`O_EXCL` locks — so short-lived host invocations (`dl.pause`/`resume`/`list`) mutate a running
+download they share no memory with, and jobs survive service-worker death. The transfer itself is the
+`Range`-segmented multi-connection accelerator that takes over Chrome's default download. *Basis:*
+`src/extensions/dl.rs` (`spawn_worker` with setsid + FD-close sweep, `with_gid_lock`). *Caveat:*
+polling control (100–250 ms); Unix-only.
+
+**143. Truncation-integrity gate — never reports a short CDN download as complete** — `high`
+A premature EOF (CDN closing before `Content-Length` bytes) is classified as resumable, a final
+byte-count gate refuses to stamp a job `done` below `Content-Length`, and forward progress on resume
+is excluded from the retry budget so a repeatedly-truncating server still finishes — directly fixing
+the bug class where Chrome reports a corrupt partial as 100%. *Basis:* `dl.rs` `run_worker` terminal
+block, `stream_into_file` `Ok(0)`→`Transient`. *Caveat:* byte-count only — no content checksum.
+
+**144. `pass` as a structured identity/credit-card vault where the store IS the schema** — `high`
+Profile and credit-card autofill is driven by `profile/*` and `creditcard/*` gpg entries whose keys
+are literally WHATWG autocomplete tokens (or longest-match synonyms), with alias-chain backfill
+(`cc-exp`↔month/year, `name`↔given/family) and a React/Vue-safe native value-setter across all frames
+— turning UNIX `pass` into a 1Password-class identity filler with no separate database. *Basis:*
+`lib/identity-tokens.js`, `background.js` `fillIdentityForm()`. *Caveat:* browserpass does login fill;
+the new part is the schema-as-store + alias backfill.
+
+**145. In-extension Web Crypto TOTP/HOTP decoupled from `pass otp` and gpg PATH** — `med`
+OTP codes are computed inside the extension via Web Crypto (HMAC-SHA1/256/512, RFC 6238/4226) directly
+from the stored `otpauth://` URL, sidestepping both the `pass-otp` gpg extension and the
+Chrome-spawned-host PATH problem (where `pass` lives in a dir not on the host's launch PATH). *Basis:*
+`lib/totp.js`, tested. *Caveat:* a re-implementation; the delta is the dependency/PATH decoupling.
+
+**146. MV3-native userscript engine on `chrome.userScripts` with race-safe serial sync** — `med`
+A Tampermonkey-equivalent built on Chrome 120+'s `chrome.userScripts` (USER_SCRIPT world +
+`configureWorld`), injecting a GM_* shim as prepended source, with a single-flight serial sync chain
+that defeats the "Duplicate script ID" race across concurrent registrations, plus auto-expansion of
+bare-host `@match` to `*.host`; falls back to `webNavigation`+`scripting` injection on older Chrome.
+*Basis:* `background.js` `syncUserScripts`, `lib/gm-shim.js`, `lib/userscript.js`. *Caveat:* GM_* is a
+subset; native mode needs the per-extension toggle.
+
+**147. Local Wappalyzer engine with one-pass page-side DOM-rule pre-flight** — `med`
+A from-scratch JS reimplementation of every Wappalyzer matcher group plus implies/requires/excludes
+graph rewrites and `\1` version backrefs, where all ~1,045 DOM-selector rules are evaluated in a
+single injected `querySelector` sweep keyed for O(1) lookup — fully offline in an MV3 service worker,
+no cloud call. *Basis:* `lib/wappalyzer/engine.js`; header capture via `webRequest.onCompleted`.
+*Caveat:* corpus vendored upstream; novelty is the offline MV3 engine + batched DOM pre-flight.
+
+**148. Debugger-free full-page screenshot with overlap-stitch sticky suppression** — `med`
+Captures off-screen content without the `chrome.debugger` permission (no "DevTools attached" banner)
+and eliminates repeated sticky/fixed banners purely by overlapping each scroll step by 200 px so the
+next tile overwrites them (no DOM mutation), then stitches on an `OffscreenCanvas` in the service
+worker. *Basis:* `lib/screenshot.js`. *Caveat:* scroll-capture is GoFullPage's approach; deltas are
+the no-debugger stance + the chunked write path (#149).
+
+**149. Sessionized chunked-base64 write protocol to beat Chrome's 1 MiB native-messaging ceiling** — `med`
+A host action streams payloads larger than Chrome's ~1 MiB host→extension cap by splitting base64
+across N `dl.writeFileChunk` calls keyed by a sanitized sessionId, appending into a `.part` scratch
+file, then atomically renaming to the download dir — the mechanism that lets a multi-megapixel
+screenshot PNG land on disk at all. *Basis:* `dl.rs` `dl_write_file_chunk` + self-contained RFC 4648
+base64. *Caveat:* reusable platform-limit workaround (overlaps #148).
+
+**150. No-shell post-download command runner** — `med`
+Per-rule basename-glob→argv post-download automation executes via `std::process::Command` with no
+shell anywhere on the path, so `{path}`/`{dir}`/`{name}` substitution carries zero quoting/injection
+surface, gated by an optional Run/Skip confirmation that survives SW suspension, with captured output
+(64 KiB cap) and a timeout that kills runaways. *Basis:* `zpwrchrome-host/src/extensions/
+run_command.rs`. *Caveat:* pipes/redirects require explicit `bash -c`.
+
+**151. File-decoupled "Save to zcite" web connector** — `med`
+Extracts CSL-JSON (Highwire `citation_*`, Dublin Core, OpenGraph, schema.org JSON-LD) and the host
+drops it as a plain file into zcite's inbox dir — computed with the same `dirs` crate zcite-core uses
+so paths agree — so the MIT extension/host act as a Zotero-Connector for a separate reference manager
+while sharing only a file format and a path, never linking the paid engine. *Basis:* `lib/zcite-
+extract.js`; `zpwrchrome-host/src/extensions/zcite.rs`. *Caveat:* needs zcite running.
+
+**152. JetBrains-switcher deltas: named scenes, opener-tree forest, frecency, domain-hue minimap** — `med`
+Beyond porting JetBrains' Recent-Files UX, the tab switcher adds save/restore of named tab "scenes"
+(persisted across restart), an opener-tree forest reconstructed from `openerTabId` with iterative
+flatten (50k-deep chains without stack overflow), frecency re-ranking, and a domain-hue minimap.
+*Basis:* `lib/util.js`, `background.js` scene handlers. *Caveat:* individual features exist elsewhere
+(OneTab/Workona); novelty is bundling into the JetBrains-modal idiom.
+
+### zgui-core — original components in the shared library
+
+**153. In-component fzf engine with live-tunable scoring weights** — `high`
+Ships the actual fzf subsequence-scoring algorithm (match/gap/boundary/camel/consecutive bonuses) as
+a reusable matcher + `<mark>` highlighter, with the eight weights exposed as live-tunable sliders.
+*Basis:* `zgui-core/webui/fzf.js` (582 L), `fzf-settings.js`, `fzf.test.cjs`. *Caveat:* single-threaded
+JS port (not the Go optimal-alignment path); for in-memory lists.
+
+**154. Drag-to-wire bezier patchbay / modular-synth kernel** — `high`
+A generic patching widget where any two `[data-key]` jacks are wired by a pointer drag, rendered as
+SVG bezier patch-cables with glow + click-to-disconnect, plus jack/module factories — a reusable
+kernel for modular synths, node editors, and signal-flow UIs. *Basis:* `zgui-core/webui/patchbay.js`.
+*Caveat:* layout/zoom/bus-routing left to the host.
+
+**155. Image-rendered playable 88-key piano with LED light-guide** — `high`
+An on-screen playable piano whose keys are polygon clip-path hit-zones positioned from
+`keyboard_geom.json` over a perspective-rendered `keyboard.png`, with mouse-drag glissando, global
+pointer-up release, and a per-key LED light-guide (`guide()`/`light()`/`colorize('rainbow'|'octave')`)
+over MIDI 21–108, plus a companion `piano-roll.js` note editor. *Basis:* `zgui-core/webui/keyboard.js`.
+*Caveat:* renders/controls only — produces no sound.
+
+**156. One framework-free library co-shipping a full DAW surface and a trading-terminal set** — `high`
+The same `window.ZGui.*` factory family ships a complete DAW control surface (spectrogram, spectrum
+analyzer, EQ/filter curves, waveform player, step sequencer, channel strip, knob/fader/drawbar,
+wavetable, env/LFO, LUFS/peak/VU meters) and a market-data terminal set (order book, depth chart,
+candlestick, volume profile, time-and-sales, liquidity heatmap, CVD line) — as plain static JS with no
+build step, no React/Vue, no virtual DOM (each of ~220 components is a self-contained IIFE returning a
+`{el, get(), set()}` handle). *Basis:* `zgui-core/webui/*.js`; `CONSUMERS.md`. *Caveat:* each is a
+widget, not a DSP/exchange engine; novelty is the breadth of specialized domains in one framework-free
+kit.
+
+**157. Auto-installed Emacs/readline line editing on every text input** — `high`
+Loading the library globally installs a single capture-phase key handler giving every
+`<input>`/`<textarea>` full Emacs/readline editing — `^A/^E/^B/^F`, `M-b/M-f`, `^W/^K/^U/M-d` kills
+feeding a shared kill-ring, `^Y` yank, `^T` transpose — with no per-field wiring. *Basis:*
+`zgui-core/webui/util.js` (`lineEdit`/`installReadline`/`killRing`, auto-invoked at load). *Caveat:*
+single kill-ring slot; relies on the host loading `util.js` everywhere (the stack does).
+
+### ztranslator — extensions beyond the BOME baseline
+
+**158. Bidirectional protocol-bridge extensions beyond BOME (audio→MIDI, CV/gate over DC-coupled audio, clock/timecode generation)** — `med`
+Beyond faithfully porting BOME (#94/#95), the engine extends it past MIDI in directions BOME has no
+equivalent for: ~25 *incoming* trigger sources (the captured matrix item was outgoing-only), live
+audio-feature extraction to MIDI (peak amplitude, adaptive-baseline onset, autocorrelation pitch →
+note number), a eurorack CV/gate bridge over a DC-coupled audio interface (read/write per-channel DC
+levels + gate thresholds), and a clock/timecode *generation* hub (24-PPQN MIDI clock slaved to Ableton
+Link, streaming MTC quarter-frame master, MMC). *Basis:* `ztranslator-core/src/model.rs` `Incoming`
+enum + `src/engine/mod.rs`. *Caveat:* audio/CV/gate are macOS-only; CV correctness depends on a
+genuinely DC-coupled interface.
+
+### Shared libraries & infrastructure
+
+**159. Offline-first Ed25519 licensing with woven anti-tamper seeds and a $0 signed-manifest kill-switch** — `high`
+A self-hostable licensing core verifies Ed25519-signed typed tokens fully offline and node-locks to
+hashed hardware IDs, with two anti-crack primitives: a `binding_seed`/`guarded_seed` whose value only
+a valid signature reproduces (so NOP-ing the license gate isn't enough — a cracker must forge Ed25519),
+plus a global kill-switch delivered as a signed manifest/CRL pulled from any *untrusted* free static
+host (signature verified before trust, `issued`-based anti-replay). *Basis:* `zpwr-license/crates/
+license-core/src/{lib,antitamper,online}.rs`; rlib+staticlib+cdylib. *Caveat:* README is honest that
+client checks are patchable; `tamper_tripwire` carries brick risk; standard ed25519-dalek — novelty is
+the scheme.
+
+**160. Lock-free stream-from-disk → in-RAM reader hot-swap (glitch-free, virtual-EOF loop-off)** — `med`
+`LockFreeStreamSource` starts playback from a disk-backed reader for instant audio, then atomically
+swaps in a RAM-backed reader mid-playback without the audio thread observing the switch (ring buffer
+on a background `TimeSliceThread`, `SpinLock` + generation counters instead of a CoreAudio-blocking
+`CriticalSection`), and models a synthetic EOF so toggling loop off plays the current iteration to its
+natural boundary. *Basis:* `zdsp-core/include/zdsp/lock_free_stream_source.h` (363 L). *Caveat:*
+RT-safety rests on review of the atomics, not a test; ported from the Audio-Haxor engine.
+
+**161. Single-source PTY terminal core driving both Tauri (rlib) and JUCE (C-ABI) webviews** — `low`
+A framework-agnostic `portable-pty` `TerminalSession` exposed simultaneously as a Rust rlib and a
+hand-written C ABI (`zet_*`), paired with one xterm.js frontend that auto-detects its transport (Tauri
+invoke/listen vs JUCE native functions), so the identical embedded terminal backs multiple apps across
+two GUI stacks from one source. *Basis:* `zpwr-embed-terminal/src/{lib,ffi}.rs`, `webui/terminal.js`.
+*Caveat:* constituent pieces are conventional; the modest novelty is the dual-host single-source
+packaging.
+
+### Cross-stack meta-patterns
+
+**162. Embeddable-engine pattern replicated across ~12 desktop domains by a solo author** — `med`
+A dozen otherwise-unrelated desktop products are each built as the *same* engine shape: one
+`Engine::invoke(cmd, json) → json` command surface, compiled as rlib **and** staticlib **and** cdylib,
+fronted by a hand-written C ABI **and** a header-only C++ RAII wrapper **and** a mountable
+framework-free webview, **and** a Tauri v2 plugin — so identical behavior embeds in a Rust app, a C/C++
+host (e.g. a JUCE DAW), and a webview. *Basis:* the identical pattern in `zftp-core`, `zreq-core`,
+`zemail-core`, `zcite-core`, `zcontainer-core`, `zphoto-core`, `zpdf-core`, `ztranslator-core`,
+`ztunnel-core`, `zgo-core`, `zoffice-core`, `zdsp-core`. *Caveat:* the individual apps are largely
+ports; the systemic, uniform reuse of one embeddable-engine contract across this many domains is the
+claimed novelty, not the apps.
+
+**163. "Durable-dependency" discipline — reimplementing crypto/zip/protobuf/OCR/NAT from scratch to avoid C/network/runtime deps** — `med`
+A consistent, stack-wide stance of reimplementing normally-vendored primitives from scratch — pinned
+to published spec vectors — to keep cores pure-Rust, build-dependency-light, and offline: hand-rolled
+MD5/SHA/HMAC vs RFC/FIPS vectors (`zreq-core/src/crypto.rs`), gRPC `.proto` compiled at runtime via
+`protox` with no `protoc` (`zreq-core/src/grpc.rs`), a stored-ZIP writer with its own CRC-32 +
+font8x8 template OCR (`zpdf-core/src/{convert,ocr}.rs`), STUN/TURN NAT traversal with no third-party
+crate (`strykelang`), and byte-parity ports that run the upstream interpreter as an oracle
+(`powerliners`). *Basis:* the cited modules across the stack. *Caveat:* a recurring engineering
+philosophy, not a single artifact; the reimplementations are subsets, not always audited.
+
+---
+
 ## Appendix — deep prior-art analyses (marquee claims)
 
 ### Why each near-miss isn't a dup — GP DAW as a plugin / embeddable (#64)
