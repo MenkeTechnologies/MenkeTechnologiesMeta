@@ -18,8 +18,8 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~160 candidates (entries 1–129 plus lettered sub-entries — 11a, the zterminal additions
-105a–105n, and the zemacs additions 120a–120q). Marquee claims (the six original ledger entries,
+Total: ~161 candidates (entries 1–129 plus lettered sub-entries — 11a, the zterminal additions
+105a–105n, and the zemacs additions 120a–120r). Marquee claims (the six original ledger entries,
 kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
 ---
@@ -1293,6 +1293,24 @@ align, narrow-to-region, and a spell checker (`]s`/`z=`/`zg`). *Basis:*
 each utility individually mirrors a Spacemacs/Emacs/vim plugin — not novel in isolation; the
 candidate is the breadth shipped built-in in one Helix-fork binary (a coverage note more than an
 invention).
+
+**120r. Built-in LLM assistant compiled into a CLI/Emacs-style editor — no plugin, out of the box** — `med`
+zemacs ships a Cursor-style AI assistant **compiled into the editor binary itself** — bound to
+`SPC a i`, it sends the current selection (with language fence) as code context to a pluggable LLM
+backend (Anthropic default, OpenAI alternate) behind one `Provider` trait, runs the network call
+off the UI thread, and renders the reply in a scratch buffer — with no package to install, no
+external agent process, and no FFI. Anthropic is the default with `ANTHROPIC_API_KEY`, so a
+freshly-built binary is AI-capable out of the box. *Basis:* `zemacs-term/src/ai/{mod,anthropic,openai}.rs`
+(the `Provider` trait + two vendor backends, `ZEMACS_AI_PROVIDER`/`ZEMACS_AI_MODEL` env config);
+`ai_chat` at `zemacs-term/src/commands.rs:8859` (selection→fenced-context prompt → scratch buffer,
+`spawn_blocking` off the UI thread); keymap binding `zemacs-term/src/keymap/vim.rs:889`
+(`SPC a i`). *Caveat:* the *terminal/Emacs-style* + *built-in, no-plugin* framing is the angle —
+GUI editors ship AI built-in (Cursor, Zed, Windsurf), and Emacs/Neovim get LLMs via packages
+(gptel, copilot.el, avante.nvim, codecompanion), so this is "first **CLI/Emacs-style editor** with
+the assistant compiled in," not first-AI-editor; "no prior art found" is non-exhaustive, not
+proven. It is also self-described **Phase 1** — non-streaming single-turn chat; the streaming chat
+panel, inline edit, and autonomous agent are scaffolded in the module docs but not yet wired. A
+zemacs (Helix-fork) addition.
 
 **121. Reflection-generated, drift-proof editor language tooling for a shell** — `med`
 Editor support (Emacs major mode, Vim/Neovim runtime, VS Code extension) for the `zshrs` shell
