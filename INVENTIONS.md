@@ -764,28 +764,19 @@ asset/plugin manager; "no other does this" not proven.
 
 ## V. Desktop GUI applications & shared UI
 
-**86. Embeddable PDF *editor* engine (parse/edit/sign in any window)** — `med`
-A full PDF editor — not just a viewer — extracted as a linkable pure-Rust engine plus a
-mountable GUI, so any host app can render, mark up, sign, and re-save PDFs in-window.
-*Basis:* `zpdf-core/README.md` ("an embeddable PDF *editor* does not exist"); modules
-doc/page/text/annot/form/sign/security/convert all "real"; `Pdf::from_bytes`/`to_bytes`
-in-memory; `frontend/` mountable viewer; lopdf-backed, MIT (no PDFium/MuPDF). *Caveat:* the
-companion **app** `zpdf` is day-1 planning ("no source code yet"); the engine is the real
-artifact.
-
-**87. Pure-Rust PDF linearization ("fast web view") writer** — `med`
-A from-scratch linearized-PDF serializer (page-1-first object ordering, `/Linearized` dict,
-dual `/Prev`-linked xref, primary hint stream with per-page locator table) in pure Rust,
-which the underlying `lopdf` does not provide. *Basis:* `zpdf-core` `linearize` module
-("a self-contained writer (lopdf has none)… structure is ISO-shaped and reopen-verified").
-*Caveat:* "reopen-verified" / structure-shaped, not third-party conformance certification.
-
-**88. Pure-Rust AES-256 (PDF 2.0, V5/R6) encryption validated against qpdf** — `med`
-A pure-Rust ISO 32000-2 AES-256 (AESV3) PDF encryption with Algorithm 2.A/2.B key
-derivation, bidirectionally validated against qpdf; plus pure-Rust template-matching `ocr`
-(no model/network/C, `font8x8`). *Basis:* `zpdf-core` `security` + `ocr` modules. *Caveat:*
-other Rust PDF libs exist; the notable part is a dependency-light MIT engine. "Validated
-against qpdf" asserted in README, not re-run here.
+**86. Pure-Rust embeddable reimplementations of named desktop tools (a "port family" — not firsts)** — `low`
+Many of the desktop `-core` engines are faithful pure-Rust reimplementations of an existing tool, so
+their *features* are parity, not invention, and they are consolidated here rather than carried as
+separate claims: **zpdf-core**→Acrobat (a full editor — render/annotate/form/sign/AES-256-vs-qpdf/
+linearization/convert), **zcontainer-core**→Docker Desktop (Docker+K8s+Helm via bollard/kube-rs),
+**zftp-core**→Cyberduck (13-protocol OpenDAL + pure-Rust SCP), **zreq-core**→Postman (collections/
+auth-signers/codegen/gRPC-Web), **zemail-core**→Thunderbird (IMAP/POP3/SMTP/PGP/CardDAV + a cross-
+client feature superset: Hey Screener, Proton expire, Gmail snooze…), **zphoto-core**→GIMP/Photoshop,
+**zoffice-core**→LibreOffice, **zgo-core**→Alfred, **ztunnel-core**→Tunnelblick (adds a native
+userspace WireGuard data path), **zcite-core**→Zotero. *Basis:* each project's README + PORT_REPORT.
+*Caveat:* parity features are **not "world's firsts"**. The genuine novelty across this family is not
+any one app but (a) the shared **embeddable-engine pattern** (#162) and (b) the **durable-dependency
+discipline** (#163); the one app-level exception that *is* a distinct first is #89 below.
 
 **89. Self-hosting Docker daemon via Apple Virtualization.framework** — `med`
 A Docker-Desktop replacement that *provides its own* `dockerd` by booting a Linux guest
@@ -796,40 +787,6 @@ directly on macOS Virtualization.framework (`objc2-virtualization`) — no
 socket proxy to `~/.zcontainer/run/docker.sock`. *Caveat:* the managed-VM path requires a
 signed `tauri build` (`com.apple.security.virtualization`); an unsigned build reports
 `vm_runtime_unavailable`, so end-to-end self-hosting isn't verifiable from a dev build.
-
-**90. Unified Docker + Kubernetes engine behind one embeddable command surface** — `med`
-Both the Docker Engine API (`bollard`, no `docker` CLI) and the kube-apiserver (`kube-rs`, no
-`kubectl`/`helm`) are driven through a single synchronous JSON `invoke` surface that builds
-as rlib/staticlib/cdylib, so a C/C++ host and the Tauri app get identical Docker+K8s+Helm
-behavior. *Basis:* `zcontainer-core/README.md` command tables (`docker.*`, `k8s.*`,
-`k8s.helm.releases.list` decoded from `helm.sh/release.v1` secrets), streaming
-logs/exec/port-forward, `include/zcontainer_core.h`. *Caveat:* Docker+K8s in one GUI is
-Lens/Rancher territory; novelty is the embeddable single-surface engine.
-
-**91. Native userspace WireGuard inside a Tunnelblick-class client** — `med`
-A from-scratch Tunnelblick-architecture VPN engine (system `openvpn` + management interface)
-that adds a *native pure-Rust userspace WireGuard data path* (`boringtun` Noise pump + real
-tun/utun + UDP), behind one embeddable command surface. *Basis:* `ztunnel-core/README.md`
-"Backends"; `wireguard` feature; rlib/staticlib/cdylib + `include/ztunnel_core.h`. *Caveat:*
-"in development"; bringing tunnels up needs root; the OpenVPN/WireGuard pieces are mature
-elsewhere — the combination + embeddability is the angle.
-
-**92. One embeddable mail engine across Rust / C++ / webview hosts** — `med`
-A complete Thunderbird-class mail client (accounts, IMAP/POP3/SMTP, MIME, store, search,
-filters, OpenPGP/S-MIME/CardDAV) extracted as one engine with a C ABI + header-only C++ RAII
-wrapper + a mountable GUI, embedding into multiple desktop apps. *Basis:* `zemail-core/README.md`
-— `src/ffi.rs`, `include/zemail_core.{h,hpp}`, `frontend/` `mountZemail()`, single
-`invoke(cmd,args)`; rlib/staticlib/cdylib headless core. *Caveat:* "in development"; many
-features PARTIAL; credentials never persisted (engine-grade, not a finished product).
-
-**93. Cross-client feature superset in one mail engine** — `low`
-A single mail engine porting signature features from many rivals into one command surface —
-Hey's Screener, ProtonMail self-destruct (`message.expire`), Gmail snooze/nudge/categories,
-Spark pin/set-aside, Apple Mail VIP, RFC 8058 one-click unsubscribe, scheduled send.
-*Basis:* `zemail-core/README.md` command rows (`screener.*`, `message.expire`,
-`message.snooze`, `vip.*`, `message.unsubscribe`, `outbox.schedule`). *Caveat:* individually
-common features; the angle is aggregation into one embeddable engine; some are
-model/store-level not server-enforced.
 
 **94. MIDI-translation engine routing MIDI to a non-MIDI protocol matrix** — `med`
 A BOME-MIDI-Translator-class engine whose Outgoing layer fans far beyond MIDI/keystroke into
