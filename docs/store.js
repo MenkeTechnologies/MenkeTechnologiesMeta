@@ -339,7 +339,7 @@
       glyph: 'EM',
       category: 'Developer Tools',
       badge: 'NEW',
-      tagline: 'A Rust port of Emacs — a terminal modal editor forked from Helix, with a Vim-style modal editing core and full Spacemacs functionality layered on top; a windowed GUI build ships as zemacs-gui. Free and open source.',
+      tagline: 'A Rust port of Emacs — a terminal modal editor with a Vim-style modal editing core and full Spacemacs functionality layered on top; a windowed GUI build ships as zemacs-gui. Free and open source.',
       pills: ['Rust', 'Modal editing', 'Emacs / Spacemacs', 'Free / OSS'],
       price: 0,
       tiers: [
@@ -468,7 +468,7 @@
     },
     {
       id: 'zemacs-book', name: 'The zemacs Book', glyph: 'eB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to zemacs — the modal editor on the Helix engine, with vim, emacs, and Spacemacs keymaps, and the first editor to embed five programming languages (elisp, vimscript, stryke, AWK, Zsh) in its core. Pandoc + LaTeX typeset.',
+      tagline: 'The companion book to zemacs — the modal editor with vim, emacs, and Spacemacs keymaps, and the first editor to embed five programming languages (elisp, vimscript, stryke, AWK, Zsh) in its core. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'zemacs', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
@@ -604,8 +604,8 @@
       "features": ["zshrs, the first compiled Unix shell", "Bytecode + Cranelift JIT, parallel runtime, worker pool", "Drop-in zsh compatibility and AOP intercepts", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zemacs-book": {
-      "overview": "The companion book to zemacs — the modal editor on the Helix engine. Vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first editor ever to embed five complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
-      "features": ["zemacs, end to end — the Helix-engine editor wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: five languages embedded in the core — elisp, vimscript, stryke, AWK, Zsh", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
+      "overview": "The companion book to zemacs — the modal editor with vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first editor ever to embed five complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
+      "features": ["zemacs, end to end — the modal editor wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: five languages embedded in the core — elisp, vimscript, stryke, AWK, Zsh", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
     },
     "fusevm-book": {
       "overview": "The companion book to fusevm — the language-agnostic bytecode VM that stryke, zshrs, awkrs, and vimlrs all compile to. The value model and opcode set, the interpreter and its fused superinstructions, the three-tier Cranelift JIT, and the closed-world AOT compiler that lowers a whole program to native registers and a standalone binary.",
@@ -766,25 +766,25 @@
       ]
     },
     "zemacs": {
-      "overview": "A Rust port of Emacs, built on a Helix fork — its Vim-style modal editing core in Rust — with full Spacemacs functionality layered on top. This is the terminal editor; a windowed GUI front-end ships separately as zemacs-gui. Free and open source.",
+      "overview": "A Rust port of Emacs with a Vim-style modal editing core in Rust and full Spacemacs functionality layered on top. This is the terminal editor; a windowed GUI front-end ships separately as zemacs-gui. Free and open source.",
       "features": [
-        "Rust core — a Helix fork, modal editing in the Vim tradition",
+        "Rust core — modal editing in the Vim tradition",
         "Full Spacemacs functionality (keybindings, layers, leader-key UX)",
         "Emacs-style extensibility on a modern Rust foundation",
         "Terminal editor; the GUI build is zemacs-gui",
         "Cross-platform",
-        "Free / OSS — MPL-2.0 licensed (Helix fork)"
+        "Free / OSS — MPL-2.0 licensed"
       ]
     },
     "zemacs-gui": {
-      "overview": "A native desktop GUI for the zemacs editor. It wraps the zemacs modal-editing core — the Rust Helix-fork engine — in a windowed front-end, the way MacVim wraps the Vim CLI editor: GUI tabs, menus, font rendering, mouse, and native file dialogs over the same editor underneath. Free and open source.",
+      "overview": "A native desktop GUI for the zemacs editor. It wraps the zemacs modal-editing core in a windowed front-end, the way MacVim wraps the Vim CLI editor: GUI tabs, menus, font rendering, mouse, and native file dialogs over the same editor underneath. Free and open source.",
       "features": [
         "GUI front-end over the zemacs terminal editor — same modal core, native window",
         "Native tabs, menu bar, and toolbar; GUI font rendering and mouse support",
         "Native open/save dialogs and drag-and-drop",
         "Modal editing, tree-sitter syntax, and LSP inherited from the zemacs core",
         "Cross-platform",
-        "Free / OSS — MPL-2.0 licensed (zemacs / Helix lineage)"
+        "Free / OSS — MPL-2.0 licensed"
       ]
     },
     "strykelang": {
