@@ -59,7 +59,16 @@ while IFS= read -r wf; do
             ok=0
         done < <(grep -nE 'curl[^|]+\|[[:space:]]*(sh|bash)|wget[^|]+\|[[:space:]]*(sh|bash)' "$wf")
     fi
-done < <(find . -path './.git' -prune -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
+done < <(find . -path './.git' -prune \
+    -o -path '*/grammars/sources/*' -prune \
+    -o -path '*/build/_deps/*' -prune \
+    -o -path '*/clap-libs/*' -prune \
+    -o -path '*/clap-juce-extensions/*' -prune \
+    -o -path '*/node_modules/*' -prune \
+    -o -path '*/vendor/*' -prune \
+    -o -path '*/target/*' -prune \
+    -o -path '*/third_party/*' -prune \
+    -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked workflow files checked, $risky lines with curl-pipe-shell pattern"

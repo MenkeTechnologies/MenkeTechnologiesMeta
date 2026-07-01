@@ -19,7 +19,16 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root" || exit
 
 # Find every .github/workflows/*.yml across the umbrella + meta.
-files=$(find . -path './.git' -prune -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
+files=$(find . -path './.git' -prune \
+    -o -path '*/grammars/sources/*' -prune \
+    -o -path '*/build/_deps/*' -prune \
+    -o -path '*/clap-libs/*' -prune \
+    -o -path '*/clap-juce-extensions/*' -prune \
+    -o -path '*/node_modules/*' -prune \
+    -o -path '*/vendor/*' -prune \
+    -o -path '*/target/*' -prune \
+    -o -path '*/third_party/*' -prune \
+    -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
 [[ -n "$files" ]] || { echo "SKIP  no workflow files found"; exit 0; }
 
 n_files=$(echo "$files" | wc -l | tr -d ' ')

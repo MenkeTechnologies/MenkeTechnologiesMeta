@@ -61,7 +61,16 @@ except yaml.YAMLError as e:
         ok=0
         continue
     }
-done < <(find . -path './.git' -prune -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
+done < <(find . -path './.git' -prune \
+    -o -path '*/grammars/sources/*' -prune \
+    -o -path '*/build/_deps/*' -prune \
+    -o -path '*/clap-libs/*' -prune \
+    -o -path '*/clap-juce-extensions/*' -prune \
+    -o -path '*/node_modules/*' -prune \
+    -o -path '*/vendor/*' -prune \
+    -o -path '*/target/*' -prune \
+    -o -path '*/third_party/*' -prune \
+    -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked workflow files checked, $broken with YAML parse errors"

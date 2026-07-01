@@ -90,7 +90,16 @@ while IFS= read -r wf; do
             fi
         done < <(grep -E "$action@v[0-9]+" "$wf" 2>/dev/null || true)
     done
-done < <(find . -path './.git' -prune -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
+done < <(find . -path './.git' -prune \
+    -o -path '*/grammars/sources/*' -prune \
+    -o -path '*/build/_deps/*' -prune \
+    -o -path '*/clap-libs/*' -prune \
+    -o -path '*/clap-juce-extensions/*' -prune \
+    -o -path '*/node_modules/*' -prune \
+    -o -path '*/vendor/*' -prune \
+    -o -path '*/target/*' -prune \
+    -o -path '*/third_party/*' -prune \
+    -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked_files workflow files, $checked_uses first-party action references checked, $deprecated on deprecated major version"

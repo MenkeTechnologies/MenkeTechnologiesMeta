@@ -56,6 +56,14 @@ parse_fail=0
 
 while IFS= read -r wf; do
     [[ -f "$wf" ]] || continue
+    # Only lint workflows that actually run: GitHub runs a workflow only when
+    # its `.github/workflows/` sits at a repository root. The meta root and every
+    # submodule have a `.git` (dir or gitlink file); vendored/generated
+    # third-party trees (tree-sitter `grammars/sources/*`, CMake `build/_deps/*`,
+    # vendored CLAP libs, node_modules, …) had their `.git` stripped, so their
+    # nested workflows never fire. Skip anything whose enclosing dir isn't a repo.
+    repodir="${wf%/.github/workflows/*}"
+    [[ -e "$repodir/.git" ]] || continue
     checked=$((checked + 1))
 
     output=$(python3 -c '
@@ -103,7 +111,16 @@ except Exception:
             ok=0
             ;;
     esac
-done < <(find . -path './.git' -prune -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
+done < <(find . -path './.git' -prune \
+    -o -path '*/grammars/sources/*' -prune \
+    -o -path '*/build/_deps/*' -prune \
+    -o -path '*/clap-libs/*' -prune \
+    -o -path '*/clap-juce-extensions/*' -prune \
+    -o -path '*/node_modules/*' -prune \
+    -o -path '*/vendor/*' -prune \
+    -o -path '*/target/*' -prune \
+    -o -path '*/third_party/*' -prune \
+    -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked workflow files checked ($parse_fail delegated to iter-68), $unfiltered with unfiltered push trigger"
