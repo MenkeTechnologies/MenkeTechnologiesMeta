@@ -615,7 +615,7 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 46 | ~805 MB |
+| Tier 1 — Core | 47 | ~805 MB |
 | Tier 2 — Stryke ecosystem | 32 | ~38 MB |
 | Tier 3 — zsh-more-completions | 1 | ~203 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
