@@ -157,7 +157,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 
 | Project | What it is |
 |---|---|
-| [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | Single Homebrew tap for 11 MenkeTechnologies CLI formulas (`awkrs` / `iftoprs` / `lsofrs` / `nmaprs` / `powerliners` / `storageshower` / `stryke` / `temprs` / `zpwrchrome-host` / `zshrs` / `zshrs-all`). Formulas auto-bumped by each tool's `Release` workflow via `HOMEBREW_TAP_TOKEN`. |
+| [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | Single Homebrew tap for 16 MenkeTechnologies CLI formulas (`awkrs` / `elisprs` / `htoprs` / `iftoprs` / `lsofrs` / `nmaprs` / `powerliners` / `storageshower` / `stryke` / `temprs` / `vimlrs` / `zemacs` / `zpwrchrome-host` / `zshrs` / `zshrs-all` / `zshrs-daemon`). Formulas auto-bumped by each tool's `Release` workflow via `HOMEBREW_TAP_TOKEN`. |
 | [`stryke-arrow`](https://github.com/MenkeTechnologies/stryke-arrow) | Apache Arrow integration. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-arrow/) · [report](https://menketechnologies.github.io/stryke-arrow/report.html)</sub> |
 | [`stryke-aws`](https://github.com/MenkeTechnologies/stryke-aws) | AWS SDK bindings (S3, EC2, SQS, Lambda, ...). &middot; <sub>[docs](https://menketechnologies.github.io/stryke-aws/) · [report](https://menketechnologies.github.io/stryke-aws/report.html)</sub> |
 | [`stryke-azure`](https://github.com/MenkeTechnologies/stryke-azure) | Microsoft Azure SDK bindings. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-azure/) · [report](https://menketechnologies.github.io/stryke-azure/report.html)</sub> |
@@ -557,9 +557,9 @@ cd MenkeTechnologiesMeta
 # install zpwr (the terminal OS)
 ./zpwr/install/zpwrInstall.sh
 
-# install any CLI tool via the unified homebrew tap (11 formulas: awkrs, iftoprs, lsofrs, nmaprs, powerliners, storageshower, stryke, temprs, zpwrchrome-host, zshrs, zshrs-all)
+# install any CLI tool via the unified homebrew tap (16 formulas: awkrs, elisprs, htoprs, iftoprs, lsofrs, nmaprs, powerliners, storageshower, stryke, temprs, vimlrs, zemacs, zpwrchrome-host, zshrs, zshrs-all, zshrs-daemon)
 brew tap MenkeTechnologies/menketech
-brew install stryke zshrs lsofrs iftoprs awkrs nmaprs temprs powerliners storageshower zpwrchrome-host
+brew install stryke zshrs lsofrs iftoprs htoprs awkrs nmaprs temprs powerliners storageshower zpwrchrome-host zemacs elisprs vimlrs
 # `zshrs-all` is the full zshrs install (shell + zd client + recorder +
 # daemon). It conflicts_with `zshrs` — pick one. Use `zshrs-all` if you
 # want the recorder/daemon tooling alongside the shell binary.
