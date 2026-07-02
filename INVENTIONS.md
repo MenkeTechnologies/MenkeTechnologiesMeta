@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~161 candidates (entries 1–129 plus lettered sub-entries — 11a, the zterminal additions
+Total: ~162 candidates (entries 1–129 plus lettered sub-entries — 11a, 104a, the zterminal additions
 105a–105n, and the zemacs additions 120a–120r). Marquee claims (the six original ledger entries,
 kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
@@ -885,6 +885,24 @@ one-click switchable profiles, and (c) ship a custom live telemetry dashboard bu
 real component library. *Basis:* `zterminal/docs/INVENTIONS.md` (3 documented firsts) backed
 by `crates/ztmux-core`; dashboard on zgui-core. *Caveat:* "first" is to the author's
 knowledge; the tmux-client and dashboard claims are documented as verified in-repo.
+
+**104a. First complete vertical integration of the terminal stack — emulator + multiplexer + shell + CLI, one owner, wire protocol immune to upstream** — `high`
+One author owns every layer of the terminal stack *and the wire protocol between them*:
+the emulator (`zterminal`), the native tmux client engine (`ztmux-core`), the tmux
+server+client rewrite (`ztmux`), the shell (`zshrs`), and the CLI suite (`zpwr`). Because
+both ends of the tmux wire protocol are owned, upstream tmux can never break it: `ztmux-core`
+(client) and `ztmux` (server) both pin `PROTOCOL_VERSION = 8`, so a future upstream protocol
+bump would break ztmux-core only against a *system* tmux — the ztmux-core↔ztmux pairing stays
+version-locked because both endpoints move together under one owner. The client leans into the
+owned server by default (probes the `ztmux-<uid>` socket before `tmux-<uid>`, prefers the
+`ztmux` binary), so no third party sits in the critical path from keystroke to rendered cell.
+*Basis:* `ztmux-core/src/transport.rs:23` `const PROTOCOL_VERSION: u32 = 8` + `socket_path()`
+probes `ztmux-<uid>` first; `ztmux/src/ported/tmux_protocol_h.rs:1` `pub const PROTOCOL_VERSION:
+i32 = 8`; `ztmux-core/src/ops.rs` `tmux_bin` ztmux-over-tmux preference; `zterminal` embeds
+`crates/ztmux-core`; `zshrs` + `zpwr` are the shell and CLI in the same monorepo. *Caveat:*
+"first person" is author-asserted, not a proven absolute — a web search can't exhaustively rule
+out another solo owner of an equivalent full stack; the verifiable in-repo part is that all five
+layers exist under one author here and the two wire-protocol endpoints pin the same version.
 
 **105. Unified Exposé + scrollback search across native panes *and* tmux panes** — `low`
 zterminal blends its own i3-style native split tree (one PTY per pane) with tmux so Exposé
