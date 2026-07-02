@@ -65,6 +65,7 @@
         <div class="card"><h3>JSON out</h3><p>Session tree, pane previews, search corpus, broadcast list, dashboard summary — all returned as <code>serde_json::Value</code> for the host to render.</p></div>
         <div class="card"><h3>Native process inspection</h3><p>Reads the full command line running in each pane via libproc / <code>/proc</code> — again, no subprocess.</p></div>
         <div class="card"><h3>Snapshot save / restore</h3><p>A native tmux-resurrect replacement: layout, cwd, full command line, active state, pane contents, and a process whitelist.</p></div>
+        <div class="card"><h3>Owned on both ends</h3><p>The same protocol version 8 is pinned by ztmux-core (client) and <a href="https://github.com/MenkeTechnologies/ztmux">ztmux</a> (the tmux server rewritten in Rust). Upstream tmux cannot break the pairing — both ends move together under one owner.</p></div>
       </div>
 
       <h2 class="reg-h">Capabilities</h2>
@@ -90,6 +91,16 @@ let out  = transport::command(&amp;sock, &amp;["list-sessions"])?;
 // high-level ops return serde_json::Value for the GUI to render
 let tree = ops::tree();              // sessions → windows → panes (+ previews)
 ops::send_keys(&amp;panes, "echo hi", true);</pre>
+
+      <h2 class="reg-h">Vertical integration — the wire protocol is owned end-to-end</h2>
+      <p class="lede">ztmux-core is one half of a client/server pair MenkeTechnologies controls on <em>both</em> ends. The client pins <code>PROTOCOL_VERSION = 8</code> (<code>src/transport.rs</code>); the server it talks to can be upstream <code>tmux</code> <em>or</em> <a href="https://github.com/MenkeTechnologies/ztmux">ztmux</a> — the from-source tmux rewrite in Rust — which pins the identical <code>PROTOCOL_VERSION = 8</code>. Upstream tmux is free to bump its protocol in a future release, which would break ztmux-core against a <em>system</em> tmux server; the ztmux-core&nbsp;↔&nbsp;ztmux pairing stays version-locked because both endpoints move together under one owner. The wire contract is fixed by this stack, not by upstream tmux's release cadence. The client leans into the owned server by default — <code>socket_path()</code> probes the <code>ztmux-&lt;uid&gt;</code> socket dir before <code>tmux-&lt;uid&gt;</code>, and <code>ops::tmux_bin</code> prefers the <code>ztmux</code> binary — so a running ztmux server is what gets driven when both are present.</p>
+      <ul class="feat">
+        <li><b>GUI host</b> — <a href="https://github.com/MenkeTechnologies/zterminal">zterminal</a> embeds ztmux-core and renders the JSON.</li>
+        <li><b>Client engine</b> — ztmux-core speaks the imsg wire protocol (v8) to the server socket.</li>
+        <li><b>Server</b> — <a href="https://github.com/MenkeTechnologies/ztmux">ztmux</a>, the tmux server+client rewritten in Rust, pins the same v8.</li>
+        <li><b>Shell</b> — <a href="https://github.com/MenkeTechnologies/zshrs">zshrs</a> runs inside the panes.</li>
+        <li><b>CLI suite</b> — <a href="https://github.com/MenkeTechnologies/zpwr">zpwr</a> is the command environment on top.</li>
+      </ul>
 
       <h2 class="reg-h">Hosts</h2>
       <p class="lede">ztmux-core is consumed by the zterminal GUI and is built to drop into other MenkeTechnologies apps: each calls these functions and renders the JSON in its own frontend. See the <a href="report.html">engineering report</a> for the module map.</p>
