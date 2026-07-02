@@ -348,7 +348,7 @@
       download: 'https://github.com/MenkeTechnologies/zemacs/releases/latest',
       repo: 'https://github.com/MenkeTechnologies/zemacs',
       docs: [
-        { label: 'Reference (PDF)', desc: 'The complete zemacs reference — every keybinding by mode, the full [editor] configuration schema, every typable : command, every static command with its default keys, and the language-support matrix. Generated from the source.', url: 'docs/zemacs-reference.pdf' },
+        { label: 'Reference (PDF)', desc: 'The complete zemacs reference — every keybinding by mode, the full IDE configuration schema, every typable : command, every static command with its default keys, and the language-support matrix. Generated from the source.', url: 'docs/zemacs-reference.pdf' },
       ],
     },
     {
@@ -357,7 +357,7 @@
       glyph: 'EG',
       category: 'Developer Tools',
       badge: 'NEW',
-      tagline: 'A native desktop GUI for the zemacs editor — wraps the zemacs modal-editing core in a windowed front-end with GUI tabs, menus, font rendering, mouse support, and native open/save dialogs, the way MacVim wraps Vim. Free and open source.',
+      tagline: 'A native desktop GUI for the zemacs IDE — wraps the zemacs modal-editing core in a windowed front-end with GUI tabs, menus, font rendering, mouse support, and native open/save dialogs, the way MacVim wraps Vim. Free and open source.',
       pills: ['Rust', 'GUI editor', 'Emacs / Spacemacs', 'Free / OSS'],
       price: 0,
       tiers: [
@@ -399,6 +399,14 @@
       repo: 'https://github.com/MenkeTechnologies/iftoprs',
     },
     {
+      id: 'htoprs', name: 'htoprs', glyph: 'ht', category: 'CLI Tools', badge: 'FREE',
+      tagline: 'A from-source Rust port of htop — the interactive process viewer (process tree, per-core CPU/memory meters, sort/filter/search, signal sending, renice), reimplemented in memory-safe Rust against the upstream htop C source. Early scaffold (v0.1.0), GPL-2.0.',
+      pills: ['Rust', 'htop port', 'GPL-2.0 / OSS'], price: 0,
+      tiers: [{ name: 'Open Source', desc: 'GPL-2.0-or-later', price: 0 }],
+      download: 'https://github.com/MenkeTechnologies/htoprs/tags',
+      repo: 'https://github.com/MenkeTechnologies/htoprs',
+    },
+    {
       id: 'temprs', name: 'temprs', glyph: 'tm', category: 'CLI Tools', badge: 'FREE',
       tagline: 'A temporary-file stack manager — full-spectrum control over scratch files and data.',
       pills: ['Rust', 'CLI', 'Free / OSS'], price: 0,
@@ -413,6 +421,14 @@
       tiers: [{ name: 'Open Source', desc: 'MIT licensed', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/powerliners/releases/latest',
       repo: 'https://github.com/MenkeTechnologies/powerliners',
+    },
+    {
+      id: 'ztmux', name: 'ztmux', glyph: 'zx', category: 'CLI Tools', badge: 'FREE',
+      tagline: 'The world\'s first 100%-functional tmux in Rust — a from-source port of the whole program (server + client), not a wrapper or control-mode client: the grid/screen model, the VT input parser, layouts, the command language, formats, and the terminal back end, reimplemented in memory-safe Rust and diffed byte-for-byte against the upstream tmux C source of truth — 689/689 parity cases passing. MIT-licensed.',
+      pills: ['Rust', 'tmux port', 'MIT / OSS'], price: 0,
+      tiers: [{ name: 'Open Source', desc: 'MIT licensed', price: 0 }],
+      download: 'https://github.com/MenkeTechnologies/ztmux/tags',
+      repo: 'https://github.com/MenkeTechnologies/ztmux',
     },
     {
       id: 'storageshower', name: 'storageshower', glyph: 'ss', category: 'CLI Tools', badge: 'FREE',
@@ -468,7 +484,7 @@
     },
     {
       id: 'zemacs-book', name: 'The zemacs Book', glyph: 'eB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to zemacs — the modal editor with vim, emacs, and Spacemacs keymaps, and the first editor to embed five programming languages (elisp, vimscript, stryke, AWK, Zsh) in its core. Pandoc + LaTeX typeset.',
+      tagline: 'The companion book to zemacs — the modal IDE with vim, emacs, and Spacemacs keymaps, and the first IDE to embed five programming languages (elisp, vimscript, stryke, AWK, Zsh) in its core. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'zemacs', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
@@ -503,9 +519,33 @@
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
     {
+      id: 'powerliners-book', name: 'The powerliners Book', glyph: 'pB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to powerliners — the Rust port of the powerline statusline/prompt renderer: the segment model, the UNIX-socket daemon and its upstream wire protocol, the JSON theme/colorscheme system, and the shell/editor bindings, all with zero Python runtime. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'powerliners', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'desktop-in-rust-book', name: 'Rewriting the Desktop in Rust', glyph: 'dR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The cross-cutting book on the MenkeTechnologies desktop ports — zreq (Postman), zcite (Zotero), ztunnel (Tunnelblick), zgo (Alfred), zftp (Cyberduck), zcontainer (Docker Desktop / Lens), zoffice, zemail, zpdf, and zphoto — and the "engine core, thin shell" architecture they share: pure-Rust *-core engines with a C ABI, embedded across every app behind one Tauri v2 shell and the zgui-core toolkit. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'Architecture', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
       id: 'zpwr-encyclopedia', name: 'The zpwr Encyclopedia', glyph: 'zE', category: 'Publications', badge: 'REFERENCE',
       tagline: 'The complete reference to zpwr — the most advanced UNIX terminal environment (500+ subcommands, 2000+ aliases). Every verb, alias, and subsystem, LaTeX-typeset into one volume.',
       pills: ['Encyclopedia', 'zpwr', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'inventions-book', name: 'Firsts', glyph: 'iF', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The narrative edition of the MenkeTechnologies invention ledger — ~161 candidate "world\'s first" capabilities across the stack, each with its claim, its in-repo basis, and an honest caveat and confidence tag. From the solo from-scratch JIT VM hosting five language frontends and the compiled Unix shell to the fully modular DAW and the first compiled-native Docker+Kubernetes GUI, with an appendix of adversarial prior-art analyses for the six marquee claims. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'Inventions', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'ztmux-book', name: 'The ztmux Book', glyph: 'xB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to ztmux — the world\'s first 100%-functional tmux in Rust (the whole server + client, not a wrapper or control-mode client): the client/server split and libevent loop, the grid/screen and scrollback model, the VT input parser, the layout engine, the lalrpop command language and its one-file-per-command mirror of tmux\'s cmd-*.c, formats/config/keys, and the terminal back end — plus the port methodology (diffed byte-for-byte against the vendored tmux C source of truth, 689/689 parity cases passing) and the anti-drift gate that forbids fake functions. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'ztmux', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
   ];
@@ -604,8 +644,8 @@
       "features": ["zshrs, the first compiled Unix shell", "Bytecode + Cranelift JIT, parallel runtime, worker pool", "Drop-in zsh compatibility and AOP intercepts", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zemacs-book": {
-      "overview": "The companion book to zemacs — the modal editor with vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first editor ever to embed five complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
-      "features": ["zemacs, end to end — the modal editor wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: five languages embedded in the core — elisp, vimscript, stryke, AWK, Zsh", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
+      "overview": "The companion book to zemacs — the modal IDE with vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first IDE ever to embed five complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
+      "features": ["zemacs, end to end — the modal IDE wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: five languages embedded in the core — elisp, vimscript, stryke, AWK, Zsh", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
     },
     "fusevm-book": {
       "overview": "The companion book to fusevm — the language-agnostic bytecode VM that stryke, zshrs, awkrs, and vimlrs all compile to. The value model and opcode set, the interpreter and its fused superinstructions, the three-tier Cranelift JIT, and the closed-world AOT compiler that lowers a whole program to native registers and a standalone binary.",
@@ -627,9 +667,25 @@
       "overview": "The companion book to zterminal — the GPU-accelerated, cross-platform terminal emulator in Rust. The OpenGL ES glyph-atlas renderer, xterm-compatible VT parsing, native i3-style tiling with one PTY per pane, native tmux control over the wire protocol (no subprocess), the embedded-WebView control panel, and the command-palette-driven workflow — across BSD, Linux, macOS, and Windows.",
       "features": ["zterminal, end to end — the GPU terminal emulator", "The OpenGL ES 2.0 glyph-atlas renderer and xterm-compatible VT parser", "Native i3-style tiling: one shell + PTY per pane, GL-scissored", "Native tmux control via the wire protocol; exposé, broadcast, cross-pane search, session save/restore", "The embedded-WebView control panel, command palette, and TOML configuration", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
+    "powerliners-book": {
+      "overview": "The companion book to powerliners — a Rust port of Python's powerline-status statusline/prompt renderer, shipping as a multi-binary suite with zero Python runtime and sub-millisecond render. The segment model and the built-in segment library, the UNIX-socket daemon that speaks the upstream powerline wire protocol, the JSON theme and colorscheme format, and the shell, tmux, vim, and ipython bindings.",
+      "features": ["powerliners, end to end — the powerline prompt/statusline system in Rust", "The segment model and adapters — git_status, ci_status, kubecontext, and the net-new segments", "The UNIX-socket daemon and the upstream powerline wire protocol", "Drop-in JSON theme/colorscheme compatibility; tmux, zsh, bash, vim, ipython bindings", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "desktop-in-rust-book": {
+      "overview": "Rewriting the Desktop in Rust — the cross-cutting book on the MenkeTechnologies desktop-app fleet and the architecture that ties it together. Ten from-scratch Rust ports — zreq (Postman), zcite (Zotero), ztunnel (Tunnelblick), zgo (Alfred), zftp (Cyberduck), zcontainer (Docker Desktop / Lens), zoffice, zemail, zpdf (Acrobat / Preview), and zphoto (GIMP / Photoshop) — each a thin Tauri v2 shell over a pure-Rust *-core engine that exposes a native Rust API and a C ABI, so the same engine embeds inside every other app, all behind the shared zgui-core toolkit.",
+      "features": ["The 'engine core, thin shell' thesis: WebView shell, Tauri command bridge, GUI-free *-core engine", "The *-core pattern and its C ABI embedding contract — ten engines, one shape", "One app per chapter: zreq, zcite, ztunnel, zgo, zftp, zcontainer, zoffice, zemail, zpdf, zphoto", "zcontainer: the first compiled-native desktop GUI for both Docker and Kubernetes, against an all-Electron field", "The embed matrix — how one engine bump reaches every shell that vendors it", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
     "zpwr-encyclopedia": {
       "overview": "The complete reference to zpwr — the most advanced UNIX terminal environment, with 500+ subcommands and 2000+ aliases. Every verb, alias, and subsystem, LaTeX-typeset into one volume.",
       "features": ["Every zpwr verb and subcommand (500+)", "2000+ aliases, 47k completions, vim + tmux integration", "Generated from the live zpwr source", "LaTeX-typeset encyclopedia, DRM-free PDF"]
+    },
+    "ztmux-book": {
+      "overview": "The companion book to ztmux — the world's first 100%-functional tmux in Rust. Not a wrapper around the tmux binary and not a control-mode client: it reimplements the whole program — server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end — in memory-safe Rust, seeded from the tmux-rs port and validated module-by-module against the vendored upstream tmux C source of truth. The book walks that architecture and the port methodology: a parity suite that runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte (689/689 cases passing) and an anti-drift gate that fails the build on any Rust function with no tmux C counterpart.",
+      "features": ["ztmux, end to end — the whole tmux program reimplemented in Rust", "The client/server split, the libevent loop, and the session/window/pane state tree", "The grid/screen + scrollback model, the VT input parser, and the layout engine", "The lalrpop command language, one file per command mirroring tmux's cmd-*.c", "The port methodology: byte-for-byte parity vs system tmux, 689/689 cases passing", "The anti-drift gate: no Rust function survives without a tmux C counterpart", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "inventions-book": {
+      "overview": "Firsts — the narrative edition of the MenkeTechnologies invention ledger (INVENTIONS.md). It walks the ~161 candidate 'world's first' capabilities across the stack, grouped by subsystem, and holds each to the same falsifiable bar: a genuinely novel capability plus a real in-repo implementation. Every claim carries its basis (files, functions, build artifacts) and an honest caveat — 'no prior art found' is recorded as exactly that, never as proof — plus a high/med/low confidence tag. The six marquee claims get an appendix of adversarial prior-art analyses.",
+      "features": ["~161 candidate firsts, each as claim + in-repo basis + honest caveat + confidence tag", "The execution engine: a solo from-scratch JIT VM hosting five language frontends on one bytecode", "The compiled Unix shell, the Perl-5 superset, and the fully modular patch-graph DAW", "zcontainer: the first compiled-native desktop GUI for both Docker and Kubernetes", "Appendix: adversarial prior-art analyses for the six marquee (★) claims", "The methodology: how to claim — and how to refute — a first honestly", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "vscode-stryke": {
       "overview": "A VS Code / VSCodium extension that turns the editor into a full stryke IDE — syntax highlighting, completion, and diagnostics for the stryke language.",
@@ -771,15 +827,15 @@
         "Rust core — modal editing in the Vim tradition",
         "Full Spacemacs functionality (keybindings, layers, leader-key UX)",
         "Emacs-style extensibility on a modern Rust foundation",
-        "Terminal editor; the GUI build is zemacs-gui",
+        "Terminal IDE; the GUI build is zemacs-gui",
         "Cross-platform",
         "Free / OSS — MPL-2.0 licensed"
       ]
     },
     "zemacs-gui": {
-      "overview": "A native desktop GUI for the zemacs editor. It wraps the zemacs modal-editing core in a windowed front-end, the way MacVim wraps the Vim CLI editor: GUI tabs, menus, font rendering, mouse, and native file dialogs over the same editor underneath. Free and open source.",
+      "overview": "A native desktop GUI for the zemacs IDE. It wraps the zemacs modal-editing core in a windowed front-end, the way MacVim wraps the Vim CLI editor: GUI tabs, menus, font rendering, mouse, and native file dialogs over the same IDE underneath. Free and open source.",
       "features": [
-        "GUI front-end over the zemacs terminal editor — same modal core, native window",
+        "GUI front-end over the zemacs terminal IDE — same modal core, native window",
         "Native tabs, menu bar, and toolbar; GUI font rendering and mouse support",
         "Native open/save dialogs and drag-and-drop",
         "Modal editing, tree-sitter syntax, and LSP inherited from the zemacs core",
@@ -1017,6 +1073,17 @@
         "Completions for zsh, bash, fish, elvish, powershell"
       ]
     },
+    "htoprs": {
+      "overview": "A from-source Rust port of htop — the interactive process viewer, ported against the upstream htop C source rather than wrapping the htop binary. Early scaffold (crate v0.1.0), GPL-2.0-or-later.",
+      "features": [
+        "Interactive process viewer in Rust: live process table and tree view",
+        "Per-core CPU, memory, and swap meters",
+        "Sort, filter, search, and tag processes",
+        "Signal sending (kill) and renice from the UI",
+        "Ported module-by-module against the upstream htop C source of truth",
+        "GPL-2.0-or-later, matching htop's license"
+      ]
+    },
     "temprs": {
       "overview": "A temporary-file stack manager in Rust (binary: tp) with stack-based push/pop/shift/unshift operations and an atomic, flock-protected master record.",
       "features": [
@@ -1043,6 +1110,19 @@
         "Targets tmux, zsh, bash, vim, ipython prompts",
         "Bundled vim plugin via include_str!, no +python3 needed",
         "Net-new segments: gpu_usage, thermal, aws/gcp context"
+      ]
+    },
+    "ztmux": {
+      "overview": "The world's first 100%-functional tmux in Rust — a from-source port of the whole program, not a wrapper around the tmux binary and not a control-mode client. The server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end, reimplemented in memory-safe Rust. Correctness is measured, not claimed: a parity suite runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte — 689/689 cases passing. MIT-licensed.",
+      "features": [
+        "The whole tmux program in Rust: server + client, not a wrapper",
+        "689/689 parity cases passing — byte-for-byte against system tmux",
+        "Validated module-by-module against the vendored upstream tmux C source of truth",
+        "Grid/screen + scrollback model, VT input parser, and the layout engine",
+        "lalrpop command grammar; one file per command mirroring tmux's cmd-*.c",
+        "libevent event loop and the tmux client/server socket protocol",
+        "Anti-drift gate: build fails on any Rust function with no tmux C counterpart",
+        "MIT-licensed, self-contained (vendors tmux C + tmux-rs as references)"
       ]
     },
     "storageshower": {
@@ -1820,8 +1900,8 @@
   // (audio-haxor, traderview) and Pages-disabled repos (zpwr-fx/synth/midi-fx,
   // which link a PDF catalog instead) are intentionally absent so no link 404s.
   var DOC_REPOS = [
-    'api-rest-generator', 'awkrs', 'fusevm', 'iftoprs', 'lsofrs', 'nmaprs',
-    'powerliners', 'storageshower', 'temprs', 'strykelang', 'zshrs', 'zpwr',
+    'api-rest-generator', 'awkrs', 'fusevm', 'htoprs', 'iftoprs', 'lsofrs', 'nmaprs',
+    'powerliners', 'storageshower', 'temprs', 'strykelang', 'zshrs', 'ztmux', 'zpwr',
     'zpwrchrome', 'stryke-arrow', 'stryke-aws', 'stryke-azure',
     'stryke-clickhouse', 'stryke-demo', 'stryke-docker', 'stryke-duckdb',
     'stryke-email', 'stryke-fleet', 'stryke-gcp', 'stryke-grpc', 'stryke-gui',
