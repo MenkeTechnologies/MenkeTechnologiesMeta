@@ -1150,7 +1150,7 @@
         "Tampermonkey-equivalent userscript engine with GM_* shim",
         "Wappalyzer-compatible detection, 3,993-fingerprint corpus",
         "Full-page screenshot capture with OffscreenCanvas stitching",
-        "54 commands; 2993 node:test + 117 cargo test cases"
+        "54 commands; 3012 node:test + 127 cargo test cases"
       ]
     },
     "zpwr-daw": {
@@ -1700,7 +1700,7 @@
     "zsh-more-completions": {
       "overview": "The largest curated zsh completion corpus in existence, wiring over 47k command completions into compsys — auto-generated from --help, man pages, and web research, then cleaned and verified.",
       "features": [
-        "The largest curated zsh completion corpus: 47,316 files",
+        "The largest curated zsh completion corpus: 47,365 files",
         "Over 47k command completions wired into compsys",
         "Harvested from Nix, Homebrew, APT, Fedora, Kali, Alpine, FreeBSD",
         "Exotic ecosystems: Hackage, OPAM, Hex.pm, CPAN, CRAN",
