@@ -903,6 +903,14 @@ i32 = 8`; `ztmux-core/src/ops.rs` `tmux_bin` ztmux-over-tmux preference; `ztermi
 "first person" is author-asserted, not a proven absolute — a web search can't exhaustively rule
 out another solo owner of an equivalent full stack; the verifiable in-repo part is that all five
 layers exist under one author here and the two wire-protocol endpoints pin the same version.
+Prior-art sweep (WebSearch, 2026-07, US-only, not exhaustive): the closest single-author case
+is WezTerm (Wez Furlong) — emulator **+** multiplexer, but it drives an existing shell (bash/
+zsh/fish) and ships no shell or CLI suite; Zellij (Aram Drevekenin **+ team**) is a multiplexer
+only; Warp is a **company** and uses existing shells; Ghostty (Mitchell Hashimoto) and kitty
+(Kovid Goyal) are emulators with no shell rewrite; and every custom shell (fish, nushell,
+Elvish/xiaq, Oils) owns only the shell layer. No party found owning emulator **+** multiplexer
+**+** a from-scratch shell **+** a CLI suite together — the five-layer combination is the
+candidate first.
 
 **105. Unified Exposé + scrollback search across native panes *and* tmux panes** — `low`
 zterminal blends its own i3-style native split tree (one PTY per pane) with tmux so Exposé
