@@ -7,7 +7,7 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-142-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-144-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-48_core-cyan.svg)](#tier-1--core-48)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
@@ -20,11 +20,11 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 142 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 144 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `vimlrs` (the standalone VimL interpreter on `fusevm`), `elisprs` (the standalone Emacs Lisp interpreter, running on `fusevm`), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zcite` / `zreq` / `ztunnel` / `zgo` / `zftp` / `zcontainer` (the ported Tauri v2 desktop apps — Zotero / Postman / Tunnelblick / Alfred / Cyberduck / Docker Desktop + Lens reimagined in Rust, each with its embeddable `*-core` engine), `zterminal` (the GPU-accelerated terminal emulator) `zemacs` (the Rust Emacs port — a Vim-style modal core built out toward Spacemacs), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-file-browser` (the shared multi-pane file browser — JS front end + Rust `fs` crate) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-i18n` (the shared portable i18n runtime) + `zpwr-clip-engine` (the shared JS arranger/sequencer frontend extracted from `zpwr-daw`) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `vscode-awk`, `vim-awk`, `emacs-awk`, `vscode-viml`, `vim-viml`, `emacs-viml`, `tmux-fzf-url`), the cyberpunk editor theme (`zpwr-theme` — VS Code + JetBrains), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `vimlrs` (the standalone VimL interpreter on `fusevm`), `elisprs` (the standalone Emacs Lisp interpreter, running on `fusevm`), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` (the Rust CLI tools), `iftoprs` / `storageshower` (TUIs), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zcite` / `zreq` / `ztunnel` / `zgo` / `zftp` / `zcontainer` / `zstation` (the ported Tauri v2 desktop apps — Zotero / Postman / Tunnelblick / Alfred / Cyberduck / Docker Desktop + Lens / Station reimagined in Rust, each with its embeddable `*-core` engine), `zterminal` (the GPU-accelerated terminal emulator) `zemacs` (the Rust Emacs port — a Vim-style modal core built out toward Spacemacs), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-file-browser` (the shared multi-pane file browser — JS front end + Rust `fs` crate) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-i18n` (the shared portable i18n runtime) + `zpwr-clip-engine` (the shared JS arranger/sequencer frontend extracted from `zpwr-daw`) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 31-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `vscode-awk`, `vim-awk`, `emacs-awk`, `vscode-viml`, `vim-viml`, `emacs-viml`, `tmux-fzf-url`), the cyberpunk editor theme (`zpwr-theme` — VS Code + JetBrains), the Chrome extension (`zpwrchrome`), the public website (`MenkeTechnologies.github.io`), and the web-API services `api-rest-generator` and `LearningCollectionAPI`.
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -60,7 +60,7 @@
 git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git && cd MenkeTechnologiesMeta && git submodule foreach --recursive 'git checkout main 2>/dev/null || true'
 ```
 
-`--recurse-submodules` fetches all 142 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
+`--recurse-submodules` fetches all 144 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -80,9 +80,9 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 142 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 144 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (48)
+### Tier 1 — Core (50)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -132,6 +132,8 @@ Five languages share one self-authored execution engine — the [`fusevm`](https
 | [`zphoto`](https://github.com/MenkeTechnologies/zphoto) | **Photo suite replacing GIMP and Photostop** (Rust, Tauri v2 desktop app) — images. Consumes `zphoto-core`. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zphoto) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zphoto/report)</sub> |
 | [`zphoto-core`](https://github.com/MenkeTechnologies/zphoto-core) | **Embeddable photo engine** (pure Rust, no GUI deps) — images parse + edit, extracted from `zphoto`. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zphoto-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zphoto-core/report)</sub> |
 | [`zoffice-core`](https://github.com/MenkeTechnologies/zoffice-core) | **Embeddable office engine** (pure Rust, no GUI deps) — document / spreadsheet / presentation parse + edit, extracted from `zoffice`. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zoffice-core/report)</sub> |
+| [`zstation`](https://github.com/MenkeTechnologies/zstation) | **Workspace of isolated web apps replacing Station** (Rust, Tauri v2 desktop app) — one window arranges your web apps (Slack, Gmail, Discord, Notion, …) as Trello-like draggable/resizable tiles, each in its own native session-isolated webview so a login never leaks cookies or storage across services. Consumes `zstation-core`. A station.app port plus added features. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zstation) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zstation/report)</sub> |
+| [`zstation-core`](https://github.com/MenkeTechnologies/zstation-core) | **Embeddable workspace engine** (pure Rust, no GUI deps) behind `zstation` — service catalog, tile board and on-disk persistence behind one JSON command surface, plus a mountable web view. Builds `rlib` + `staticlib` + `cdylib` so the same station board embeds across the GUI stack. **Private.** &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zstation-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zstation-core/report)</sub> |
 | [`ztranslator-core`](https://github.com/MenkeTechnologies/ztranslator-core) | **Embeddable event-translation engine** (pure Rust, no GUI deps) — the real-time MIDI / OSC / DMX / file-watcher routing engine behind `ztranslator`; integer-VM rule matching, BOME `.bmtp` import/export, JSON projects. Builds `rlib` + `staticlib` + `cdylib` so the same routing engine embeds across the GUI stack. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/ztranslator-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/ztranslator-core/report)</sub> |
 | [`zemacs-gui-core`](https://github.com/MenkeTechnologies/zemacs-gui-core) | **Embeddable GUI surface for `zemacs-gui`** (webui-only, all `zgui-core` widgets) — the MacVim-style menu bar, ⌘-shortcuts, Open/Save/Help dialogs and drag-drop that bridge to the `zemacs` IDE PTY, extracted from `zemacs-gui`. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zemacs-gui-core) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zemacs-gui-core/report)</sub> |
 | [`zcite`](https://github.com/MenkeTechnologies/zcite) | **Reference manager replacing Zotero** (Rust, Tauri v2 desktop app) — library, collections, tags & saved searches, citations/bibliographies (APA/MLA/Chicago/IEEE), BibTeX/RIS/CSL-JSON import-export, DOI/ISBN/PMID lookup, duplicate detection. Bundles its embeddable pure-Rust `zcite-core` engine (`rlib` + `staticlib` + `cdylib`) so the same reference engine embeds across the GUI stack. A Zotero port plus added features. **Paid product** — in the app-store. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zcite) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zcite/report)</sub> |
@@ -315,6 +317,8 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 1 — Core | [`zphoto`](https://github.com/MenkeTechnologies/zphoto) | — | — | — |
 | 1 — Core | [`zphoto-core`](https://github.com/MenkeTechnologies/zphoto-core) | — | — | — |
 | 1 — Core | [`zoffice-core`](https://github.com/MenkeTechnologies/zoffice-core) | — | — | — |
+| 1 — Core | [`zstation`](https://github.com/MenkeTechnologies/zstation) | — | — | — |
+| 1 — Core | [`zstation-core`](https://github.com/MenkeTechnologies/zstation-core) | — | — | — |
 | 1 — Core | [`ztranslator-core`](https://github.com/MenkeTechnologies/ztranslator-core) | — | — | — |
 | 1 — Core | [`zemacs-gui-core`](https://github.com/MenkeTechnologies/zemacs-gui-core) | — | — | — |
 | 1 — Core | [`zcite`](https://github.com/MenkeTechnologies/zcite) | — | — | — |
@@ -616,13 +620,13 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 48 | ~805 MB |
+| Tier 1 — Core | 50 | ~805 MB |
 | Tier 2 — Stryke ecosystem | 32 | ~38 MB |
 | Tier 3 — zsh-more-completions | 1 | ~203 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
 | Tier 5 — Editor / multiplexer plugins | 14 | ~12 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 19 | ~1.06 GB |
-| **Total** | **142** | **~2.2 GB** |
+| **Total** | **144** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
