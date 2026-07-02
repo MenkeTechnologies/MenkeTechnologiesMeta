@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zstation — a workspace of isolated web apps in Rust behind a cyberpunk HUD, a from-scratch port of the defunct station.app. One window arranges Slack, Gmail, Discord, Notion, Linear, Claude and any site as Trello-like tiles, each in its own native session-isolated webview. Tauri v2 desktop app powered by zstation-core.">
+  <title>zstation — Workspace of Isolated Web Apps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .status-note { color: var(--text-dim); font-size: 12.5px; line-height: 1.6; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-secondary); padding: 10px 12px; margin: 14px 0; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+    .card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); padding: 14px 16px; }
+    .card h3 { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 13px; letter-spacing: 1px; margin: 0 0 6px; }
+    .card p { color: var(--text-dim); font-size: 12.5px; line-height: 1.6; margin: 0; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZSTATION // WORKSPACE OF ISOLATED WEB APPS</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zstation" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">// a from-scratch station.app port — Tauri v2 desktop shell · native isolated webviews · cyberpunk HUD · powered by zstation-core</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Engineering Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zstation" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="status-note">Status: in active development. The Tauri v2 desktop shell, the cyberpunk HUD front-end, the native session-isolated webview host, and the embeddable <code>zstation-core</code> engine are implemented and wired together. This page is an overview; the <a href="report.html">engineering report</a> tracks status by area. Features are marked planned unless implemented — nothing here claims a working capability that is not yet in the codebase.</p>
+
+      <p class="lede"><strong>zstation</strong> is a workspace of isolated web apps written in Rust — a from-scratch port of the defunct <a href="https://en.wikipedia.org/wiki/Station_(software)" target="_blank" rel="noopener noreferrer">station.app</a>, built as a <strong>Tauri v2</strong> desktop application behind a cyberpunk HUD. One window arranges your web apps (Slack, Gmail, Discord, Notion, Linear, Claude, …) as <strong>Trello-like draggable/resizable tiles</strong>, each running in its <em>own isolated session</em> so logging into one never leaks cookies or storage into another. Its board engine is extracted as <a href="https://github.com/MenkeTechnologies/zstation-core" target="_blank" rel="noopener noreferrer"><code>zstation-core</code></a>, an embeddable library so the same station board can be reused inside the other MenkeTechnologies GUI apps. It is a paid product, created by MenkeTechnologies.</p>
+
+      <div class="card-grid">
+        <div class="card"><h3>Real session isolation</h3><p>Each tile is a <strong>native, separately-partitioned webview</strong> floated over the window — not an <code>iframe</code>. Slack/Gmail/etc. forbid framing and iframes share the cookie jar anyway; only native partitioned webviews truly isolate a login.</p></div>
+        <div class="card"><h3>Rust + Tauri v2</h3><p>A native desktop shell rather than a browser-wrapped web app — the UI is a Tauri v2 WebView, the logic is Rust. Child webviews come from Tauri v2's <code>WebviewWindow::add_child</code>.</p></div>
+        <div class="card"><h3>Embeddable core</h3><p>The board engine lives in <code>zstation-core</code>, decoupled from the GUI, so the same code can embed in other MenkeTechnologies apps behind the shared <code>zgui-core</code> toolkit.</p></div>
+        <div class="card"><h3>Trello-like board</h3><p>Drag, resize and stack tiles; distinct partitions never share anything, so a second account of the same service is just a tile with its own session name (<code>slack:work</code>).</p></div>
+      </div>
+
+      <h2 class="reg-h">How isolation works</h2>
+      <p class="lede">Each tile is isolated by <code>partition</code>: on macOS/iOS via <code>WebviewBuilder::data_store_identifier([u8; 16])</code> (a stable id hashed from the partition name), and on Windows via <code>.data_directory(&lt;app_local_data&gt;/partitions/&lt;partition&gt;)</code>. Tiles that share a partition share a login; distinct partitions never share cookies or storage. The host commands live in <code>app/src-tauri/src/station_webview.rs</code> and the mountable view calls them through the <code>frontend/station-host.js</code> shim.</p>
+
+      <h2 class="reg-h">GUI baseline (the 10-point family contract)</h2>
+      <p class="lede">R1 &#8984;K command palette &middot; R2 Stryke Hooks editor &middot; R3 embedded terminal &middot; R4 shared cyberpunk theme &middot; R5 tab bar + tile dashboard &middot; R6 logo top-left &middot; R7 fuzzy filters &middot; R8 sortable/resizable tables &middot; R9 clip-engine arrangement grid &middot; R10 multi-pane file browser — all consumed from the shared submodules and wired in the app shell.</p>
+
+      <h2 class="reg-h">Where it goes next</h2>
+      <p class="lede">See the <a href="report.html">engineering report</a> for the two-layer split, the host command surface and status by area, and the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella for the wider desktop stack.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zstation &middot; workspace of isolated web apps</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

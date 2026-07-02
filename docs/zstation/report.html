@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zstation engineering report — the two-layer split (Tauri v2 app shell over the embeddable zstation-core engine), the native session-isolated webview host command surface, the GUI baseline, and status by area. Early-stage and in active development.">
+  <title>zstation — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZSTATION // ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zstation" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">// two-layer split · native isolated-webview host · GUI baseline · status by area</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Home</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zstation" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <section class="hero-stats">
+        <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version (early-stage)</span></div>
+        <div class="hero-stat"><span class="num">2</span><span class="lbl">layers (app shell · core)</span></div>
+        <div class="hero-stat"><span class="num">6</span><span class="lbl">native-webview host commands</span></div>
+        <div class="hero-stat"><span class="num">10</span><span class="lbl">GUI baseline points</span></div>
+      </section>
+      <p class="note">zstation is early-stage and in active development. The figures on this page are derived from the repository as it stands today (<code>app/src-tauri/</code>, <code>frontend/</code>, and the <code>zstation-core</code> submodule). Anything not yet in the codebase is described as planned — this is a roadmap, not a claim of coverage.</p>
+
+      <h2 class="reg-h">What zstation is</h2>
+      <p class="note">zstation is a from-scratch port of the defunct station.app: one window that arranges your web apps as Trello-like tiles, each in its own isolated session. The desktop shell is a <strong>Tauri v2</strong> application with a cyberpunk HUD front-end. The board logic is factored out into a separate, embeddable engine, <a href="https://github.com/MenkeTechnologies/zstation-core" target="_blank" rel="noopener noreferrer">zstation-core</a>, so the same engine can be reused inside the other MenkeTechnologies GUI apps without dragging GUI or platform dependencies into them. It is a paid product, created by MenkeTechnologies.</p>
+
+      <h2 class="reg-h">Two-layer split</h2>
+      <table>
+        <thead><tr><th>layer</th><th>repository</th><th>responsibility</th></tr></thead>
+        <tbody>
+          <tr><td>desktop app</td><td>zstation (this repo)</td><td>Tauri v2 shell, cyberpunk HUD front-end, native isolated-webview host, shared-submodule wiring</td></tr>
+          <tr><td>engine + view</td><td>zstation-core</td><td>service catalog, tile board model, board persistence, and the mountable Trello-board view</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Native isolated-webview host</h2>
+      <p class="note">Real per-service session isolation requires native, separately-partitioned webviews (an <code>iframe</code> cannot isolate a login: services forbid framing and iframes share the cookie jar). The host places one child webview per tile via Tauri v2 <code>WebviewWindow::add_child</code> and isolates each by <code>partition</code> — <code>data_store_identifier</code> on macOS/iOS, <code>data_directory</code> on Windows. The host exposes these commands to the mountable view (in <code>app/src-tauri/src/station_webview.rs</code>):</p>
+      <table>
+        <thead><tr><th>command</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td>station_webviews_state</td><td>create/show the isolated child webview for a tile, and report host state</td></tr>
+          <tr><td>station_webview_set_bounds</td><td>keep the webview aligned to the tile body as it drags/resizes</td></tr>
+          <tr><td>station_webview_set_visible</td><td>hide the webview when the Board tab is not active (it paints above the DOM)</td></tr>
+          <tr><td>station_webview_navigate</td><td>point a tile's webview at a new URL</td></tr>
+          <tr><td>station_webview_reload</td><td>reload a tile's webview</td></tr>
+          <tr><td>station_webview_close</td><td>tear down a tile's webview</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">GUI baseline</h2>
+      <p class="note">zstation consumes the 10-point MenkeTechnologies family GUI contract from the shared submodules: &#8984;K command palette, Stryke Hooks editor, embedded terminal, shared cyberpunk theme, tab bar + tile dashboard, top-left logo, fuzzy filters, sortable/resizable tables, clip-engine arrangement grid, and a multi-pane file browser — wired in the app shell rather than reimplemented per app.</p>
+
+      <h2 class="reg-h">Verification</h2>
+      <p class="note">The embeddable engine carries in-source Rust unit tests plus a headless Node test suite for the mountable view (see the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zstation-core/report" target="_blank" rel="noopener noreferrer">zstation-core report</a>). The Tauri host layer is exercised through the app build; the pure engine runs without network access and passes identically in headless CI.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zstation &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zstation-core engineering report — module map, command surface, dependency footprint and test status for the embeddable pure-Rust workspace-of-isolated-webviews engine. Early-stage and in active development.">
+  <title>zstation-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZSTATION-CORE // ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zstation-core" target="_blank" rel="noopener noreferrer">Source</a>
+          </nav>
+          <p class="docs-build-line">// module map · command surface · host shim · test status</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Home</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zstation-core" target="_blank" rel="noopener noreferrer">Source</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <section class="hero-stats">
+        <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version (early-stage)</span></div>
+        <div class="hero-stat"><span class="num">3</span><span class="lbl">crate-types (rlib · staticlib · cdylib)</span></div>
+        <div class="hero-stat"><span class="num">11</span><span class="lbl">engine commands</span></div>
+        <div class="hero-stat"><span class="num">5</span><span class="lbl">in-source unit tests</span></div>
+      </section>
+      <p class="note">zstation-core is early-stage and in active development. The figures on this page are derived from the crate source as it stands today (<code>Cargo.toml</code>, <code>src/lib.rs</code>): version, crate-types, the dotted commands matched in <code>Engine::invoke</code>, and the in-source unit tests. The "planned" column lists work that is not yet implemented — it is a roadmap, not a claim of coverage.</p>
+
+      <h2 class="reg-h">Module map</h2>
+      <table>
+        <thead><tr><th>module</th><th>role today</th><th>planned</th></tr></thead>
+        <tbody>
+          <tr><td>lib (Engine)</td><td>one dotted command surface via <code>Engine::invoke</code>; JSON in / JSON out; board persistence</td><td>more dispatch coverage as the board model grows</td></tr>
+          <tr><td>model</td><td>service · tile · board types (position, size, z-order, partition/session)</td><td>tile groups, per-tile settings, richer layout</td></tr>
+          <tr><td>catalog</td><td>the built-in service catalog (Slack, Gmail, Discord, Notion, Linear, Claude, … + custom URL tiles)</td><td>editable/user-supplied catalog, favicons</td></tr>
+          <tr><td>store</td><td>board load/save to the profile directory (<code>dirs</code>)</td><td>multiple named boards, import/export</td></tr>
+          <tr><td>error</td><td>engine <code>Result</code> + <code>Error</code> with stable machine tags for a <code>{error:{tag,message}}</code> envelope</td><td>more granular tags</td></tr>
+          <tr><td>tauri_plugin (feature <code>tauri</code>)</td><td>Tauri v2 glue: exposes the engine as the ordinary app command <code>zst_invoke</code> for GUI hosts</td><td>event stream if the board moves from pull- to push-driven</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Command surface</h2>
+      <table>
+        <thead><tr><th>cmd</th><th>args</th><th>returns</th></tr></thead>
+        <tbody>
+          <tr><td>version</td><td>—</td><td>{ name, version }</td></tr>
+          <tr><td>service.catalog</td><td>—</td><td>[Service]</td></tr>
+          <tr><td>service.get</td><td>{ id }</td><td>Service</td></tr>
+          <tr><td>board.get</td><td>—</td><td>Board</td></tr>
+          <tr><td>board.json</td><td>—</td><td>Board (raw JSON)</td></tr>
+          <tr><td>board.reset</td><td>—</td><td>empty Board</td></tr>
+          <tr><td>tile.add</td><td>{ service?, url?, title?, partition?, x?, y?, w?, h? }</td><td>Tile</td></tr>
+          <tr><td>tile.remove</td><td>{ id }</td><td>{ ok }</td></tr>
+          <tr><td>tile.update</td><td>{ id, patch }</td><td>Tile</td></tr>
+          <tr><td>tile.bring_front</td><td>{ id }</td><td>Tile</td></tr>
+          <tr><td>layout.save</td><td>{ tiles:[{ id,x,y,w,h,z }] }</td><td>{ ok }</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">The host shim</h2>
+      <p class="note">Real per-service session isolation <strong>cannot</strong> use <code>iframe</code>s: Slack/Gmail/etc. send <code>X-Frame-Options</code> / CSP <code>frame-ancestors</code> that forbid framing, and iframes share the page's cookie jar anyway. It requires <em>native, separately-partitioned webviews</em>. Positioning one is a host concern, so the engine stays host-agnostic and the mountable view calls a small shim the host provides — <code>window.__stationHost</code> — with <code>open</code>, <code>setBounds</code>, <code>setVisible</code>, <code>reload</code>, <code>navigate</code>, <code>close</code> and <code>clearSession</code>. In <code>zstation</code> this shim is backed by Tauri v2 <code>WebviewWindow::add_child</code> plus per-webview <code>data_store_identifier</code> / <code>data_directory</code>. With no shim present (plain browser preview) the view falls back to a best-effort <code>iframe</code> so the UI still renders for frontend dev.</p>
+
+      <h2 class="reg-h">Build surfaces</h2>
+      <p class="note">The crate declares <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>. The <code>rlib</code> links natively into Rust/Tauri hosts. Dependencies are foundational and vendorable — <code>serde</code>, <code>serde_json</code>, <code>thiserror</code>, <code>dirs</code> — with no network, TLS or UI stack, so the default build compiles in headless CI. The optional <code>tauri</code> feature adds the Tauri v2 app-command layer.</p>
+
+      <h2 class="reg-h">Verification</h2>
+      <p class="note">The crate carries in-source unit tests over the engine command surface (version reporting, the service catalog, tile add/remove/update, board reset and layout persistence) plus a headless Node test suite for the mountable view (<code>frontend/zstation.test.cjs</code>). The pure core runs without network access and is intended to pass identically in a headless Linux CI.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zstation-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
