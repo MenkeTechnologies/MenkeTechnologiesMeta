@@ -28,6 +28,7 @@ create it in a submodule and route every app through it.
 | zftp | Tauri v2 (static `frontend/`) | `zftp` |
 | zcite | Tauri v2 (static `frontend/`) | `zcite` |
 | zemail | Tauri v2 (static `frontend/`) | `zemail` |
+| zstation | Tauri v2 (static `frontend/`, native multiwebview) | `zstation` |
 | zemacs-gui | Tauri v2 (static `frontend/`) | `zemacs-gui` |
 | zgo | Tauri v2 (`app/` workspace) | `zgo` |
 | zcontainer | Tauri v2 (`app/` workspace) | `zcontainer` |
