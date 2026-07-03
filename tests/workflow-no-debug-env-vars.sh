@@ -110,7 +110,8 @@ while IFS= read -r wf; do
     done < <(grep -nE '^(\s*)(ACTIONS_STEP_DEBUG|ACTIONS_RUNNER_DEBUG|GIT_TRACE(_PACKET|_PERFORMANCE)?|GIT_CURL_VERBOSE)\s*:' "$wf" 2>/dev/null || true)
 done < <(find . -path './.git' -prune \
     -o -path '*/grammars/sources/*' -prune \
-    -o -path '*/build/_deps/*' -prune \
+    -o -path '*/_deps/*' -prune \
+    -o -path '*/libs/JUCE/*' -prune \
     -o -path '*/clap-libs/*' -prune \
     -o -path '*/clap-juce-extensions/*' -prune \
     -o -path '*/node_modules/*' -prune \

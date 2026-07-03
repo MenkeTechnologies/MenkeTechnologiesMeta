@@ -92,7 +92,8 @@ while IFS= read -r wf; do
     done
 done < <(find . -path './.git' -prune \
     -o -path '*/grammars/sources/*' -prune \
-    -o -path '*/build/_deps/*' -prune \
+    -o -path '*/_deps/*' -prune \
+    -o -path '*/libs/JUCE/*' -prune \
     -o -path '*/clap-libs/*' -prune \
     -o -path '*/clap-juce-extensions/*' -prune \
     -o -path '*/node_modules/*' -prune \
