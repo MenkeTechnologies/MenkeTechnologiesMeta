@@ -4,7 +4,7 @@ Which shared submodules each GUI app consumes. Source of truth is each app's `.g
 this table is the human-readable map. Any `-core` engine can be embedded in any GUI app, and
 every GUI app embeds the full shared component set it needs.
 
-_Last reconciled: 2026-06-30._
+_Last reconciled: 2026-07-03._
 
 ## Components
 
@@ -48,6 +48,10 @@ the app that owns that engine. The office/mail/pdf cores embed across every full
 | **zpdf** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | ✓ | ✓ | _(source)_ |
 | **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zgo** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zftp** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zcontainer** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zstation** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | **zphoto** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | **zterminal** | — | — | — | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 
@@ -84,6 +88,14 @@ the app that owns that engine. The office/mail/pdf cores embed across every full
   `embed-terminal` component is n/a since it is itself the terminal. Both are **paid products** in the
   app-store. `zphoto-core` / `ztmux-core` follow the same `-core` embed model as `zpdf-core`; they have
   no matrix column of their own since they are app-specific engines.
+- **Ported Tauri apps (zgo / zftp / zcontainer / zstation):** the four newest ported GUI apps —
+  `zgo` (Alfred), `zftp` (Cyberduck), `zcontainer` (Docker Desktop + Lens), `zstation` (Station) —
+  follow the same full-GUI-app convention as the rows above: the standard set (embed-terminal /
+  hooks / file-browser / i18n / office-core / mail-core / pdf-core) shows the intended embed, not
+  necessarily what each app's `.gitmodules` has wired yet. Current variable-column wiring is
+  literal: `zstation` embeds `zpwr-clip-engine` + `ztranslator-core` (both ✓); `zftp` already wires
+  `office-core` / `mail-core` / `pdf-core` in `.gitmodules`; `zcontainer` is wired only to
+  `zcontainer-core` so far (its standard-set ✓s are design intent, like `zpdf` / `zterminal`).
 - **Not consumed by any GUI app:** `zpwr-theme`, `zpwr-jobs`, `zpwr-license` (tooling/editor).
 - **patch-core** is JUCE-plugin-only (daw + synth/fx/midi-fx); the Tauri apps don't use it.
 - **zgui-core (extracted):** the shared `window.ZGui` chrome toolkit (shell/settings/dialog/table/
