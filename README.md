@@ -8,7 +8,7 @@
 ```
 
 [![Submodules](https://img.shields.io/badge/submodules-144-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-48_core-cyan.svg)](#tier-1--core-48)
+[![Tier 1](https://img.shields.io/badge/tier_1-50_core-cyan.svg)](#tier-1--core-50)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
@@ -34,7 +34,7 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (46)](#tier-1--core-46)
+  - [Tier 1 — Core (50)](#tier-1--core-50)
   - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
