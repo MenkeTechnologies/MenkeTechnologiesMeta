@@ -16,7 +16,7 @@ _Last reconciled: 2026-06-30._
 | **zpwr-hooks-editor** | Monaco stryke hooks editor (webview) |
 | **zpwr-crate** | Sample-library scan + SQLite/FTS persistence + faceted browser (+ bpm/key/lufs/similarity/sample_analysis) |
 | **ztranslator** | The standalone translation app + the shared `ztranslator_view.js` (the view embedded in other apps); engine now lives in `ztranslator-core` |
-| **ztranslator-core** | Embeddable pure-Rust MIDI/OSC/DMX/Link translation engine, no GUI deps; native (Rust/Tauri) + C ABI. Engine behind the `ztranslator` app + what other apps embed |
+| **ztranslator-core** | Embeddable pure-Rust event-translation/routing engine (MIDI / OSC / DMX / Link / file-watcher triggers → a large outgoing protocol matrix), not a MIDI-only engine; no GUI deps; native (Rust/Tauri) + C ABI. Engine behind the `ztranslator` app + what other apps embed |
 | **zpwr-file-browser** | Filesystem file manager (webui + Rust fs backend) |
 | **zpwr-i18n** | Localization runtime (JSON loader) |
 | **zgui-core** | Shared cyberpunk GUI toolkit (webui) — canonical shell/settings/dialog/table/command-palette/fzf/colorscheme/notification chrome on `window.ZGui`; extracted from Audio-Haxor, zreq, `zpwr-patch-core` |
@@ -64,7 +64,7 @@ the app that owns that engine. The office/mail/pdf cores embed across every full
   the same model as `zpwr-clip-engine`'s engine — a pure-Rust core that links natively into Rust/Tauri
   hosts and over a C ABI elsewhere, so one engine each embeds across the whole GUI stack. Any `-core`
   can be embedded in any GUI app.
-- **ztranslator-core (extracted):** the MIDI/OSC/DMX/Link engine is split out of the `ztranslator` app
+- **ztranslator-core (extracted):** the event-translation engine (MIDI / OSC / DMX / Link / file-watcher triggers) is split out of the `ztranslator` app
   into `ztranslator-core.git`. The `ztranslator` repo keeps the standalone app + the shared
   `ztranslator_view.js`; the engine + C ABI live in the core, so haxor/traderview/daw embed
   `ztranslator-core` rather than the app repo. The "ztranslator" matrix column tracks apps embedding

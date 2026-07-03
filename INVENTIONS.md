@@ -588,7 +588,7 @@ verified. *Caveat:* "None found", not proven (see analysis). The audio render pa
 written but **unverified** (pending JUCE build). **Honesty correction:** the *non-audio*
 embeds (traderview → trades, ztranslator → translations) are **aspirational** — a grep of
 those app repos finds no clip-engine/timeline mount; traderview uses a stryke-JIT
-backtester + uPlot, ztranslator a MIDI-rules VM. The cross-domain-timeline claim is design
+backtester + uPlot, ztranslator an integer-rules event-translation VM. The cross-domain-timeline claim is design
 intent, not yet wired in those apps.
 
 **65. ★ Fully modular DAW — every track/layer/bus is one user-patchable graph** — `med`
@@ -788,7 +788,7 @@ socket proxy to `~/.zcontainer/run/docker.sock`. *Caveat:* the managed-VM path r
 signed `tauri build` (`com.apple.security.virtualization`); an unsigned build reports
 `vm_runtime_unavailable`, so end-to-end self-hosting isn't verifiable from a dev build.
 
-**94. MIDI-translation engine routing MIDI to a non-MIDI protocol matrix** — `med`
+**94. General event-translation engine routing any trigger to a non-MIDI protocol matrix** — `med`
 A BOME-MIDI-Translator-class engine whose Outgoing layer fans far beyond MIDI/keystroke into
 a large protocol matrix — OSC, Art-Net/DMX, sACN/E1.31, MQTT, WebSocket, raw TCP, HTTP,
 Ableton Link, eurorack CV/gate (DC-coupled audio), MTC/MMC/RTP-MIDI, gamepad rumble, HID —

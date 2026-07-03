@@ -68,7 +68,7 @@ A load-bearing architecture rule, not a style note:
 | Arrangement grid (`zpwr-clip-engine` `createGrid` + a domain) — R9 | any time/sequence-ordered data | a purely tabular app, **if** it has no timeline content |
 | Sample/content crate browser (`zpwr-crate`) | audio/asset apps | non-asset apps (e.g. `zcontainer`) |
 | Audio engine / ALS generation / genre rules / MIDI / KVR | audio apps only | everything non-audio |
-| `ztranslator` view (MIDI/OSC/DMX/Link) | show-control apps | non-show-control apps |
+| `ztranslator` view (event translation — MIDI/OSC/DMX/Link) | show-control apps | non-show-control apps |
 
 > Domain-relevant surfaces that are **not** relevant must be recorded as "N/A — <reason>"
 > in the app's ledger row. Silence is treated as an un-ported FAIL, not as N/A.
