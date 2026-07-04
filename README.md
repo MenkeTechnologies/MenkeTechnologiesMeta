@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 144 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 145 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -627,7 +627,7 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
 | Tier 5 — Editor / multiplexer plugins | 14 | ~12 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 20 | ~1.06 GB |
-| **Total** | **144** | **~2.2 GB** |
+| **Total** | **145** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
