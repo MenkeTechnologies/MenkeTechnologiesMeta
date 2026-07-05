@@ -53,6 +53,19 @@
       ],
     },
     {
+      id: 'zstation',
+      name: 'zstation',
+      glyph: 'ST',
+      category: 'Desktop Apps',
+      badge: 'NEW',
+      tagline: 'A workspace of isolated web apps in Rust behind a cyberpunk HUD — a from-scratch port of the defunct station.app. One window arranges Slack, Gmail, Discord, Notion, Linear, Claude and any site as Trello-like draggable tiles, each running in its OWN native, session-isolated webview so logging into one never spills cookies or storage into another (something an iframe fundamentally cannot do). Its pure-Rust zstation-core engine is extracted so the same station board embeds inside the other MenkeTechnologies apps.',
+      pills: ['Tauri v2', 'Rust', 'Isolated webviews', 'Embeddable core'],
+      price: 20,
+      tiers: [
+        { name: 'Personal', desc: 'Single user, all platforms; updates within this major version', price: 20 },
+      ],
+    },
+    {
       id: 'zoffice',
       name: 'zoffice',
       glyph: 'O',
@@ -215,6 +228,21 @@
         { label: 'Manual (PDF)', desc: 'The zpwr-daw manual — shared-engine architecture overview + per-module node & parameter reference for the note-stream blocks every track wires, generated from the live registry.', url: 'docs/zpwr-daw-reference.pdf' },
         { label: 'Full Catalog (PDF)', desc: 'The complete shared patch-graph reference — every block across all four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw), with an alphabetical index.', url: 'docs/zpwr-patch-core-block-catalog.pdf' },
       ],
+    },
+    {
+      id: 'zwire',
+      name: 'zwire',
+      glyph: 'ZW',
+      category: 'Desktop Apps',
+      badge: 'NEW',
+      tagline: 'A Chromium superset — the zpwrchrome power-tool, a cyberpunk chrome theme, and a cyberpunk new-tab page preloaded on every launch. A runtime rebrand of an unbranded Chromium snapshot (no compile), with an optional source-fork build path. Free and open source.',
+      pills: ['Chromium', 'zpwrchrome', 'Cyberpunk', 'Free / OSS'],
+      price: 0,
+      tiers: [
+        { name: 'Open Source', desc: 'MIT licensed', price: 0 },
+      ],
+      download: 'https://github.com/MenkeTechnologies/zwire/tags',
+      repo: 'https://github.com/MenkeTechnologies/zwire',
     },
     {
       id: 'zpwr-synth',
@@ -447,6 +475,14 @@
       repo: 'https://github.com/MenkeTechnologies/zpwrchrome',
     },
     {
+      id: 'zwire-host', name: 'zwire-host', glyph: 'wh', category: 'CLI Tools', badge: 'FREE',
+      tagline: 'A universal local host — one ~500 KB Rust binary that exposes the machine (sysinfo, PTY terminals, filesystem watch/tail, exec, background jobs, a peered-mesh pub/sub event bus, and a per-app KV store) over both Chrome native-messaging and a newline-JSON local-socket daemon. Also embeddable as a Rust library.',
+      pills: ['Rust', 'native host · daemon', 'sysinfo · PTY · FS · exec', 'Free / OSS'], price: 0,
+      tiers: [{ name: 'Open Source', desc: 'MIT licensed', price: 0 }],
+      download: 'https://github.com/MenkeTechnologies/zwire-host/releases/latest',
+      repo: 'https://github.com/MenkeTechnologies/zwire-host',
+    },
+    {
       id: 'the-stack', name: 'The Stack', glyph: 'TS', category: 'Publications', badge: 'FICTION',
       tagline: 'A high-tech fantasy novel — the dying interpreted kingdom, the compiled forge that replaces it, a blade drawn from five dead master tongues, and the war on the fork. The stack, literalized as a world.',
       pills: ['Novel', 'Fantasy', 'DRM-free PDF'], price: 20,
@@ -546,6 +582,12 @@
       id: 'ztmux-book', name: 'The ztmux Book', glyph: 'xB', category: 'Publications', badge: 'REFERENCE',
       tagline: 'The companion book to ztmux — the world\'s first 100%-functional tmux in Rust (the whole server + client, not a wrapper or control-mode client): the client/server split and libevent loop, the grid/screen and scrollback model, the VT input parser, the layout engine, the lalrpop command language and its one-file-per-command mirror of tmux\'s cmd-*.c, formats/config/keys, and the terminal back end — plus the port methodology (diffed byte-for-byte against the vendored tmux C source of truth, 689/689 parity cases passing) and the anti-drift gate that forbids fake functions. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'ztmux', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'zwire-book', name: 'The zwire Book', glyph: 'wB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to zwire — Chromium/Blink rebranded in the strykelang cyberpunk HUD (not a WebView wrapper, not a new engine): why a real Blink base is required for zpwrchrome\'s Manifest V3 surface, the unbranded snapshot that retains --load-extension, the runtime rebrand vs the source fork and its nine HUD patches, the new-tab HUD, the internal-page scheme picker and native host, the dedicated ~/.zwire profile, and the CDP overlay layer. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'zwire', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
   ];
@@ -683,6 +725,10 @@
       "overview": "The companion book to ztmux — the world's first 100%-functional tmux in Rust. Not a wrapper around the tmux binary and not a control-mode client: it reimplements the whole program — server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end — in memory-safe Rust, seeded from the tmux-rs port and validated module-by-module against the vendored upstream tmux C source of truth. The book walks that architecture and the port methodology: a parity suite that runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte (689/689 cases passing) and an anti-drift gate that fails the build on any Rust function with no tmux C counterpart.",
       "features": ["ztmux, end to end — the whole tmux program reimplemented in Rust", "The client/server split, the libevent loop, and the session/window/pane state tree", "The grid/screen + scrollback model, the VT input parser, and the layout engine", "The lalrpop command language, one file per command mirroring tmux's cmd-*.c", "The port methodology: byte-for-byte parity vs system tmux, 689/689 cases passing", "The anti-drift gate: no Rust function survives without a tmux C counterpart", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
+    "zwire-book": {
+      "overview": "The companion book to zwire — a Chromium/Blink browser rebranded in the strykelang cyberpunk HUD. Not a WebView wrapper (WebKit, no MV3) and not a fresh engine: a real Blink base, skinned and extended, on a dedicated profile that never touches system Chrome. The book draws the line the whole project is built on — what a runtime rebrand can reach (HUD colors, the new-tab page, the internal-page skin, your extensions on a prebuilt base) versus what only a compiled source fork can (tab geometry, UI fonts, the neon toolbar, via nine authored patches against a pinned Chromium tag) — and is honest about which capability lives on which side.",
+      "features": ["Why a real Blink base is required — zpwrchrome's Manifest V3 surface (userScripts, declarativeNetRequestWithHostAccess, nativeMessaging, webRequest, service-worker background)", "The unbranded Chromium snapshot that still carries --load-extension (removed from branded Chrome in v137)", "The two build paths: the no-compile runtime rebrand vs the source fork's nine HUD patches", "The new-tab HUD, the internal-page scheme picker, its eight schemes, and the native host", "The dedicated ~/.zwire profile and per-user staged extensions — never collides with system Chrome", "The CDP overlay layer and the cross-platform / updating operations matrix", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
     "inventions-book": {
       "overview": "Firsts — the narrative edition of the MenkeTechnologies invention ledger (INVENTIONS.md). It walks the ~161 candidate 'world's first' capabilities across the stack, grouped by subsystem, and holds each to the same falsifiable bar: a genuinely novel capability plus a real in-repo implementation. Every claim carries its basis (files, functions, build artifacts) and an honest caveat — 'no prior art found' is recorded as exactly that, never as proof — plus a high/med/low confidence tag. The six marquee claims get an appendix of adversarial prior-art analyses.",
       "features": ["~161 candidate firsts, each as claim + in-repo basis + honest caveat + confidence tag", "The execution engine: a solo from-scratch JIT VM hosting five language frontends on one bytecode", "The compiled Unix shell, the Perl-5 superset, and the fully modular patch-graph DAW", "zcontainer: the first compiled-native desktop GUI for both Docker and Kubernetes", "Appendix: adversarial prior-art analyses for the six marquee (★) claims", "The methodology: how to claim — and how to refute — a first honestly", "Pandoc + LaTeX typeset, DRM-free PDF"]
@@ -783,6 +829,18 @@
         "Owned, no-subscription desktop mail"
       ]
     },
+    "zstation": {
+      "overview": "A workspace of isolated web apps in Rust (Tauri v2) behind a cyberpunk HUD — a from-scratch port of the defunct station.app. One window arranges your web apps as Trello-like draggable, resizable tiles, each running in its OWN native, session-isolated webview (per-partition WKWebView data store on macOS / WebView2 data directory on Windows) so logging into one never spills cookies or storage into another. Its pure-Rust zstation-core engine is extracted so the same station board embeds across the GUI stack.",
+      "features": [
+        "Workspace of web apps in Rust + Tauri v2, ported from station.app",
+        "Trello-like draggable, resizable tiles on one board",
+        "Per-service session isolation via native child webviews (WKWebView / WebView2), not iframes",
+        "Built-in catalog of common web apps plus arbitrary custom URLs",
+        "On-disk tile-board persistence",
+        "Cyberpunk HUD interface",
+        "Embeddable zstation-core engine (rlib + staticlib + cdylib)"
+      ]
+    },
     "zoffice": {
       "overview": "A from-scratch office suite in Rust (Tauri v2 desktop app) that replaces Microsoft Office — documents, spreadsheets, and presentations behind a cyberpunk HUD. Its pure-Rust zoffice-core engine is extracted so the same office engine embeds inside the other apps.",
       "features": [
@@ -841,6 +899,29 @@
         "Modal editing, tree-sitter syntax, and LSP inherited from the zemacs core",
         "Cross-platform",
         "Free / OSS — MPL-2.0 licensed"
+      ]
+    },
+    "zwire": {
+      "overview": "A Chromium superset — the zpwrchrome power-tool, a cyberpunk chrome theme, and a cyberpunk new-tab page preloaded on every launch, on a real Chromium/Blink engine. The base is an unbranded Chromium snapshot (no Google branding, no \"for automated testing\" banner) that still honors the --load-extension switch dropped from branded Chrome 137+: a stable base binary launched against a dedicated profile with a fixed extension set, so the default path needs no source fork and nothing to compile — with an optional source-fork build path for full chrome theming. Free and open source.",
+      "features": [
+        "Chromium/Blink base = an unbranded Chromium snapshot — keeps --load-extension, so extensions preload from the command line",
+        "zpwrchrome, a cyberpunk chrome theme, and a cyberpunk new-tab page loaded on every launch",
+        "Runtime rebrand, not a fork — dedicated profile + fixed extension set, nothing to compile",
+        "macOS: rebrands the base bundle's Dock name, ⌘-Tab, and menu-bar title + icon in place, never touching a system Chrome install",
+        "One-command install — scripts/install.sh fetches the base, links the launcher on PATH, and rebrands",
+        "Free / OSS — MIT licensed"
+      ]
+    },
+    "zwire-host": {
+      "overview": "A single self-contained Rust binary (~500 KB, no Python, no psutil) that exposes the local machine to any app over one JSON message protocol. It began as the Chrome native-messaging host for zwire's HUD and is now a universal local endpoint — reachable from a browser extension and, as a newline-delimited-JSON local-socket daemon, from tmux, emacs, desktop apps, plugins, shell scripts, and any language. Both transports feed the same dispatcher, so every command works over either one. Free and open source.",
+      "features": [
+        "One static Rust binary, zero runtime dependencies — no system Python, no pip install psutil, nothing to break on a fresh machine",
+        "Two transports, one dispatcher — Chrome native messaging (u32-length + JSON) and a local-socket daemon (Unix domain socket / Windows named pipe, newline-delimited JSON)",
+        "Streams live system stats (sysinfo), runs PTY terminals (portable-pty), crawls and watches/tails the filesystem, and execs commands",
+        "Background jobs that notify on completion, process list/kill, clipboard / notify / open, and a per-app key/value store",
+        "A pub/sub event bus that federates across a mesh of peered hosts",
+        "Also a Rust library — sibling hosts (e.g. zpwrchrome-host) embed it as a dependency",
+        "Free / OSS — MIT licensed"
       ]
     },
     "strykelang": {
@@ -1004,6 +1085,10 @@
         "Compiled-native (not Electron / not a TUI)",
         "Cross-platform — macOS, Linux, and Windows",
         "Embeddable zcontainer-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/zcontainer/dashboard.webp", "cap": "Overview — engine status, workload donut, live CPU chart, disk usage, and recent activity" },
+        { "src": "assets/zcontainer/containers.webp", "cap": "Containers — per-container CPU/memory sparklines, net & block I/O, PIDs, and port mappings" }
       ]
     },
     "zterminal": {
@@ -1015,6 +1100,10 @@
         "Cross-pane search, broadcast input, and a unified window exposé",
         "tmux-resurrect-style session save/restore from the command palette",
         "Extensive TOML configuration and high-throughput VTE performance"
+      ],
+      "screenshots": [
+        { "src": "assets/zterminal/dashboard.webp", "cap": "Dashboard — live tmux server stats, session/window/pane gauges, PTY throughput, and the zgui-core widget showcase" },
+        { "src": "assets/zterminal/settings.webp", "cap": "Settings — color-scheme presets, custom palette, CRT/vignette/neon effects, and live TOML config reload" }
       ]
     },
     "awkrs": {
