@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~193 candidates (numbered entries through 165 plus lettered sub-entries — 11a, 104a, the
+Total: ~194 candidates (numbered entries through 166 plus lettered sub-entries — 11a, 104a, the
 zterminal additions 105a–105n, and the zemacs additions 120a–120r). Marquee claims (the six original
 ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
@@ -1763,6 +1763,27 @@ browser extensions add status/stat bars, and terminal powerline bars are ubiquit
 tmux-powerline bar rendered on every page and wired to a browser-native multiplexer's live
 pane/prefix state has no prior art found; search not exhaustive. System segments are inert
 without the native host connected; top frame only, toggled via the ⌘K palette.
+
+**166. Web browser shipping a dedicated native local-host agent (filesystem crawler + exec + PTY) reused verbatim by an editor and an extension host** — `med`
+zwire ships `zwire-host` — a single native agent that recursively **crawls the filesystem**
+(`fs_walk`, capped, ext/depth/dirs-only/substring filters), runs subprocesses, watches/tails
+files, opens multiplexed PTY terminals, and exposes clipboard/notify/open + a small state
+store — usable as a `serve` NDJSON local-socket daemon, a one-shot `call`, **and** an
+embeddable Rust library (`zwire_host::api::{walk, exec}`). The same agent binary/crate backs
+**three** independent frontends unchanged: the zwire browser HUD (statusbar telemetry, pane
+terminals), the **zemacs** editor (auto-spawns `zwire-host serve`, no manual step), and the
+**zpwrchrome** extension host (`zpwrchrome-host` pins it as a git dependency and calls
+`zwire_host::api` for its `host.crawl` / `host.exec` actions). *Basis:*
+`zwire/extensions/hud-internal/native/zwire-host/src/lib.rs:6` (capability list),
+`fsops.rs:116` (`fs_walk` recursive crawl) + `api.rs:104` (`walk`) + `api.rs:44` (`exec`);
+`zemacs/zemacs-term/src/commands/host.rs:1` (client bridge, auto-spawn `serve`);
+`zpwrchrome/zpwrchrome-host/Cargo.toml:52` (`zwire-host = { git = …, tag = "v0.3.0" }`).
+*Caveat:* this is a **filesystem** crawler, **not** a web crawler — it walks local paths, not
+URLs. "None found", not proven: browsers ship single-purpose native-messaging hosts
+(password managers, download helpers), but a general filesystem-crawl + exec + watch + PTY
+host shipped with the browser *and* reused verbatim by an editor and an extension host has no
+prior art found; search not exhaustive. The daemon is a privileged local process (same trust
+model as any native-messaging host).
 
 ---
 
