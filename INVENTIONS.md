@@ -18,9 +18,9 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~162 candidates (entries 1–129 plus lettered sub-entries — 11a, 104a, the zterminal additions
-105a–105n, and the zemacs additions 120a–120r). Marquee claims (the six original ledger entries,
-kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
+Total: ~192 candidates (numbered entries through 164 plus lettered sub-entries — 11a, 104a, the
+zterminal additions 105a–105n, and the zemacs additions 120a–120r). Marquee claims (the six original
+ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
 ---
 
@@ -1721,6 +1721,31 @@ font8x8 template OCR (`zpdf-core/src/{convert,ocr}.rs`), STUN/TURN NAT traversal
 crate (`strykelang`), and byte-parity ports that run the upstream interpreter as an oracle
 (`powerliners`). *Basis:* the cited modules across the stack. *Caveat:* a recurring engineering
 philosophy, not a single artifact; the reimplementations are subsets, not always audited.
+
+### zwire — a Chromium browser with built-in tmux-style multiplexing
+
+**164. Web browser with a built-in tmux-style pane/window/session multiplexer** — `med`
+zwire (a rebranded Chromium) ships tmux's full control model *inside the browser* driven
+by a prefix key (Ctrl-b, ⌥-b fallback) — not a two-pane "split view" but nested
+SESSION → WINDOWS → PANES with splits both directions to any depth, named windows,
+zoom, `synchronize-panes` typing broadcast, copy-mode, and detach — in **two** independent
+engines: an **in-page iframe overlay** where every pane is a real webpage (any site framed
+by stripping `X-Frame-Options` / `frame-ancestors`), and an **OS-window tiling engine**
+where panes are real browser windows tiled by `chrome.windows` geometry (cols/rows/main-v
+layouts), both fed by one prefix-key content script and surviving MV3 worker eviction via
+persisted state. *Basis:* `zwire/extensions/hud-internal/ztmux.js` (777 L — iframe overlay,
+`isPrefix()` Ctrl-b/⌥-b, `toggleSync()`/`broadcastSync()`, nested `tree` splits);
+`zwire/extensions/hud-internal/background.js` (644 L — `TMUX` window/pane model, `tmuxCmd()`
+split/nav, `rectsFor()` layouts, `tile()`, `publishTmux()` state persist);
+`zwire/newtab/tmux-pane.js` pane forwarder; the fork's `0008-allow-framing.patch`
+(`renderer_host/ancestor_throttle.cc`) bypasses X-Frame-Options natively so any site frames
+into the N-pane tiling. *Caveat:* "None found", not proven — a web survey found terminal
+multiplexers (tmux/Zellij) and browser *tab-tiling / split-view* features (e.g. Vivaldi),
+but no browser exposing the full tmux model (prefix key, named windows, sessions, nested
+splits, synchronize-panes) built in; the search is not exhaustive. Runs today as an MV3
+extension on unbranded Chromium; the native fork patch is authored/apply-clean but the
+whole-chrome fork is an optional ~100 GB source build. `synchronize-panes` relays a
+semantic-token subset (printable keys + C-w/C-u), not arbitrary keystrokes.
 
 ---
 
