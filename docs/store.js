@@ -428,7 +428,7 @@
     },
     {
       id: 'htoprs', name: 'htoprs', glyph: 'ht', category: 'CLI Tools', badge: 'FREE',
-      tagline: 'A from-source Rust port of htop — the interactive process viewer (process tree, per-core CPU/memory meters, sort/filter/search, signal sending, renice), reimplemented in memory-safe Rust against the upstream htop C source. Early scaffold (v0.1.0), GPL-2.0.',
+      tagline: 'A from-source Rust port of htop — the interactive process viewer (process tree, per-core CPU/memory meters, sort/filter/search, signal sending, renice), reimplemented in memory-safe Rust against the upstream htop C source — the bulk of the htop 3.5.1 C surface faithfully ported function-for-function, each fn citing its C source line. GPL-2.0.',
       pills: ['Rust', 'htop port', 'GPL-2.0 / OSS'], price: 0,
       tiers: [{ name: 'Open Source', desc: 'GPL-2.0-or-later', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/htoprs/tags',
@@ -1163,7 +1163,7 @@
       ]
     },
     "htoprs": {
-      "overview": "A from-source Rust port of htop — the interactive process viewer, ported against the upstream htop C source rather than wrapping the htop binary. Early scaffold (crate v0.1.0), GPL-2.0-or-later.",
+      "overview": "A from-source Rust port of htop — the interactive process viewer, ported against the upstream htop C source rather than wrapping the htop binary — the bulk of the htop 3.5.1 C surface faithfully ported function-for-function. GPL-2.0-or-later.",
       "features": [
         "Interactive process viewer in Rust: live process table and tree view",
         "Per-core CPU, memory, and swap meters",
