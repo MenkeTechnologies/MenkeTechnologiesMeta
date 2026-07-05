@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~192 candidates (numbered entries through 164 plus lettered sub-entries — 11a, 104a, the
+Total: ~193 candidates (numbered entries through 165 plus lettered sub-entries — 11a, 104a, the
 zterminal additions 105a–105n, and the zemacs additions 120a–120r). Marquee claims (the six original
 ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
@@ -1746,6 +1746,23 @@ splits, synchronize-panes) built in; the search is not exhaustive. Runs today as
 extension on unbranded Chromium; the native fork patch is authored/apply-clean but the
 whole-chrome fork is an optional ~100 GB source build. `synchronize-panes` relays a
 semantic-token subset (printable keys + C-w/C-u), not arbitrary keystrokes.
+
+**165. Web browser with a tmux/powerline statusbar pinned to every page** — `med`
+zwire renders a real tmux-style **powerline** statusbar (full `►`/`◄` chevron segments,
+alternating shade blocks) fixed to the bottom of *every* web page, fusing tmux session
+state with live machine telemetry: LEFT shows the `ZW` signature, the **C-b prefix block**
+that lights when the multiplexer prefix is armed, active window/pane list, color scheme,
+VIM mode, and ⌘K; RIGHT streams real host stats from the native host — CPU · MEM · SWAP ·
+DISK · IO · NET · LOAD · UP · TEMP · BATT · LAN · WAN · host · clock — themed by the active
+HUD scheme. *Basis:* `zwire/extensions/hud-internal/zstatus.js` (203 L, registered
+`manifest.json:168`; powerline `.sig`/`.pll`/`.plr` chevron CSS, `setTmux()` reads
+`zb_tmux`, `refreshSys()` reads `zb_sys`, prefix-armed indicator off `zb_tmux.armed`);
+telemetry from `zwire/extensions/hud-internal/native/zwire-host/src/sysmon.rs`
+(`cpu`/`mem`/`load`/`net`/`temp` via `sysinfo`). *Caveat:* "None found", not proven —
+browser extensions add status/stat bars, and terminal powerline bars are ubiquitous, but a
+tmux-powerline bar rendered on every page and wired to a browser-native multiplexer's live
+pane/prefix state has no prior art found; search not exhaustive. System segments are inert
+without the native host connected; top frame only, toggled via the ⌘K palette.
 
 ---
 
