@@ -14,7 +14,7 @@
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-14_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-14)
 [![Tier 6](https://img.shields.io/badge/tier_6-20_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-20)
-[![Rust](https://img.shields.io/badge/rust-2.8M_LOC-orange.svg)](#0x09-code-volume)
+[![Rust](https://img.shields.io/badge/rust-3.1M_LOC-orange.svg)](#0x09-code-volume)
 [![Code](https://img.shields.io/badge/code-10.4M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
@@ -651,28 +651,30 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 2,782,702 | 7,137 |
-| JSON | 2,647,744 | 937 |
-| Perl | 1,904,852 | 19,751 |
-| JavaScript | 742,646 | 6,522 |
-| HTML | 392,113 | 1,187 |
-| C Header | 359,032 | 475 |
-| Zsh | 280,264 | 1,303 |
-| CSS | 247,499 | 2,695 |
-| Stryke (`.stk`) | 201,076 | 3,382 |
-| TeX | 175,447 | 32 |
-| Vim Script | 119,704 | 857 |
-| C++ | 115,355 | 176 |
-| AWK | 82,368 | 2,191 |
-| Shell | 77,182 | 2,276 |
-| C | 75,012 | 40 |
-| Python | 45,967 | 610 |
-| Scheme | 37,797 | 1,155 |
-| TOML | 36,170 | 585 |
-| Kotlin | 29,813 | 271 |
+| Rust | 3,148,642 | 7,842 |
+| JSON | 1,925,576 | 693 |
+| Perl | 1,902,491 | 19,534 |
+| JavaScript | 582,880 | 4,013 |
+| HTML | 530,926 | 1,305 |
+| C++ | 351,797 | 1,080 |
+| C Header | 328,150 | 2,026 |
+| C | 289,952 | 572 |
+| TeX | 262,300 | 45 |
+| Stryke (`.stk`) | 200,685 | 3,377 |
+| Zsh | 130,129 | 1,030 |
+| Vim Script | 121,873 | 905 |
+| CSS | 114,738 | 557 |
+| AWK | 82,707 | 2,192 |
+| C++ Header | 78,161 | 273 |
+| Shell | 75,766 | 2,365 |
+| Python | 47,469 | 326 |
+| Scheme | 37,894 | 1,156 |
+| TOML | 36,502 | 632 |
+| Kotlin | 29,820 | 272 |
 | SQL | 29,188 | 119 |
-| *Other (85 languages)* | 50,459 | 741 |
-| **Total** | **10,432,390** | **53,198** |
+| Objective-C++ | 20,810 | 64 |
+| *Other (84 languages)* | 61,188 | 722 |
+| **Total** | **10,389,644** | **51,756** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -682,16 +684,16 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 <!-- BEGIN gen-code-volume:repos -->
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | JSON 1,581,560 | Rust 756,103 |
-| `strykelang` | Perl 1,902,103 | Rust 415,242 |
-| `zshrs` | Rust 439,266 | Zsh 50,324 |
-| `zpwr-synth` | JSON 325,606 | C Header 102,640 |
-| `zpwr-midi-fx` | JSON 137,950 | C Header 119,687 |
-| `Audio-Haxor` | Rust 118,892 | JSON 102,167 |
-| `zemacs` | Rust 133,646 | JSON 70,766 |
-| `MenkeTechnologiesPublications` | TeX 173,488 | HTML 104,009 |
-| `ztranslator` | JSON 88,611 | JavaScript 67,108 |
-| `docs` | HTML 228,564 | CSS 2,467 |
+| `traderview` | JSON 1,581,560 | Rust 772,877 |
+| `strykelang` | Perl 1,902,103 | Rust 415,527 |
+| `zpwr-fx` | C++ 334,186 | C Header 308,756 |
+| `zshrs` | Rust 447,886 | Zsh 50,324 |
+| `zemacs` | Rust 224,299 | JSON 88,928 |
+| `docs` | HTML 374,812 | JavaScript 3,538 |
+| `MenkeTechnologiesPublications` | TeX 262,075 | HTML 102,234 |
+| `Audio-Haxor` | Rust 125,381 | JSON 111,935 |
+| `ztmux` | Rust 122,906 | C 76,754 |
+| `awkrs` | AWK 82,138 | Rust 52,860 |
 <!-- END gen-code-volume:repos -->
 
 Numbers refresh as repos add commits — regenerate with `bin/gen-code-volume --in-place`.
@@ -705,7 +707,7 @@ Every line above is hand-authored. The standard software-engineering productivit
 |---:|---:|---:|
 | 100/day (optimistic ceiling) | ~920,000 | **~11×** |
 | 50/day (mid estimate) | ~460,000 | **~23×** |
-| 20/day (conservative) | ~184,000 | **~57×** |
+| 20/day (conservative) | ~184,000 | **~56×** |
 
 The defensible floor is **≥11 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
 <!-- END gen-code-volume:careers -->
