@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-zmq — ZEROMQ CLIENT FOR STRYKE // REQ/REP + PUB/SUB + PUSH/PULL + DEALER/ROUTER. Brokerless messaging client for stryke. Opt-in cdylib package with libzmq vendored in — no system library required.">
+  <title>stryke-zmq — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 42%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-ZMQ &mdash; ZEROMQ CLIENT FOR STRYKE // REQ/REP + PUB/SUB + PUSH/PULL + DEALER/ROUTER</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package &middot; cdylib <code>libstryke_zmq</code> (libzmq vendored) &middot; loaded on <code>use Zmq</code> &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-zmq/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-ZMQ</h2>
+      <p class="tutorial-subtitle"><strong>Brokerless messaging, no daemon to babysit.</strong> ZeroMQ client for stryke &mdash; request/reply, publish/subscribe, push/pull pipeline, and dealer/router, over TCP, IPC, or in-process transports. Opt-in package; <code>libzmq</code> is vendored into the cdylib, so there is no system library requirement on the consumer machine.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release tarball (no rustc/cmake on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-zmq
+
+# from a local checkout
+cd ~/projects/stryke-zmq
+cargo build --release        # first build vendors libzmq via cmake (~1-2 min)
+s pkg install -g .           # cdylib lands in ~/.stryke/store/zmq@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>There is no CLI launcher &mdash; this is a library. The cdylib is <code>dlopen</code>ed in-process on the first <code>use Zmq</code>; a shared <code>zmq::Context</code> plus a socket-handle registry are held in <code>OnceCell</code>, so sockets persist across calls.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start</h2>
+<pre>use Zmq
+
+# REQ/REP over TCP
+val $server = Zmq::socket("rep", bind =&gt; "tcp://*:5555")
+val $client = Zmq::socket("req", connect =&gt; "tcp://localhost:5555")
+
+Zmq::send($client, "ping")
+val $request = Zmq::recv($server, timeout_ms =&gt; 1000)   # "ping"
+Zmq::send($server, "pong")
+val $reply = Zmq::recv($client, timeout_ms =&gt; 1000)     # "pong"
+
+Zmq::close($client)
+Zmq::close($server)</pre>
+        <p>PUB/SUB with a topic filter and a one-shot request:</p>
+<pre>val $sub = Zmq::socket("sub", connect =&gt; "tcp://localhost:5556", subscribe =&gt; "weather")
+val $msg = Zmq::recv($sub, timeout_ms =&gt; 500)
+
+val $reply = Zmq::request("tcp://localhost:5555", "hello", timeout_ms =&gt; 2000)</pre>
+        <p>PUSH/PULL pipeline and multipart frames over inproc (from <code>examples/</code>):</p>
+<pre># PUSH/PULL — fan-out work distribution
+val $puller = Zmq::socket("pull", bind =&gt; "inproc://work")
+val $pusher = Zmq::socket("push", connect =&gt; "inproc://work")
+Zmq::send($pusher, $_) for ("task-a", "task-b", "task-c")
+val $task = Zmq::recv($puller, timeout_ms =&gt; 1000)
+
+# multipart — atomic frame group
+Zmq::send_multipart($dealer, ["header", "body", "trailer"])
+val @frames = Zmq::recv_multipart($router, timeout_ms =&gt; 1000)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API &mdash; complete reference</h2>
+        <p>The whole <code>Zmq</code> namespace, grouped by purpose. Every function below exists in <code>lib/Zmq.stk</code>. Functions split into two classes: <strong>socket ops</strong> (take a handle, touch a live libzmq socket) and <strong>pure helpers</strong> (validation, endpoint, topic, and table utilities &mdash; no socket created, no FFI socket call).</p>
+
+        <h3>Introspection</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::version()</td><td>package (crate) version string</td></tr>
+            <tr><td>Zmq::lib_version()</td><td>vendored libzmq <code>{ major, minor, patch, version }</code></td></tr>
+            <tr><td>Zmq::has($capability)</td><td>probe one capability: <code>curve gssapi ipc pgm tipc norm draft</code> &rarr; bool | undef</td></tr>
+            <tr><td>Zmq::capabilities()</td><td>probe every capability at once &rarr; <code>{ ipc, pgm, tipc, norm, curve, gssapi, draft }</code></td></tr>
+            <tr><td>Zmq::io_threads($value?)</td><td>get (no arg) or set the shared context's <code>ZMQ_IO_THREADS</code> pool size (default 1, process-wide)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Socket lifecycle</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::socket($type, %opts)</td><td>create socket, return integer handle. type: <code>req rep pub sub push pull dealer router pair xpub xsub stream</code>. opts: <code>bind</code>, <code>connect</code>, <code>subscribe</code> + any settable option</td></tr>
+            <tr><td>Zmq::socket_pair(%opts)</td><td><code>{ a, b, endpoint }</code> &mdash; a connected inproc PAIR in one call (a = bound, b = connected). opt: <code>endpoint</code></td></tr>
+            <tr><td>Zmq::socket_count()</td><td><code>{ count, handles }</code> &mdash; how many sockets the cdylib holds open + their handles (leak detection); reads the local registry, no libzmq call</td></tr>
+            <tr><td>Zmq::close($handle)</td><td>close + remove the socket</td></tr>
+            <tr><td>Zmq::bind / connect / unbind / disconnect ($handle, $endpoint)</td><td>dynamic endpoint management; <code>bind</code> returns the concrete endpoint (resolves <code>tcp://*:*</code>)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Send / receive</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::send($handle, $data, %opts)</td><td>send a frame; <code>more =&gt; 1</code>; <code>encoding =&gt; utf8|hex|base64</code></td></tr>
+            <tr><td>Zmq::send_multipart($handle, $parts, %opts)</td><td>send an arrayref of frames atomically; <code>encoding</code> opt</td></tr>
+            <tr><td>Zmq::recv($handle, %opts)</td><td>receive a frame; <code>timeout_ms</code>, <code>encoding</code>; returns undef on timeout</td></tr>
+            <tr><td>Zmq::recv_multipart($handle, %opts)</td><td>receive all frames of a message as a list; empty list on timeout</td></tr>
+            <tr><td>Zmq::recv_more($handle, %opts)</td><td>drain the trailing frames of a message a prior <code>recv</code> started (while <code>RCVMORE</code> is set)</td></tr>
+            <tr><td>Zmq::drain($handle, %opts)</td><td>non-blocking drain &mdash; every whole multipart message already queued (each an arrayref), stopping at the empty queue (<code>ZMQ_DONTWAIT</code>); opts: <code>encoding</code>, <code>max</code></td></tr>
+            <tr><td>Zmq::sendrecv($handle, $data, %opts)</td><td>send then recv one turn on a kept handle (REQ/DEALER/PAIR) &mdash; one round-trip without an ephemeral socket; undef on reply timeout</td></tr>
+            <tr><td>Zmq::request($endpoint, $data, %opts)</td><td>one-shot REQ round-trip; <code>timeout_ms</code> (default 5000), <code>encoding</code>; returns reply or undef on timeout</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Pub/sub topic filters</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::subscribe / unsubscribe ($handle, $topic)</td><td>SUB topic filter (<code>""</code> = all)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Socket options + readiness</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::set($handle, $opt, $value)</td><td>full socket-option table: timeouts, buffers, hwm, <code>tcp_keepalive*</code>, <code>heartbeat*</code>, ipv6, immediate, conflate, router/req flags, CURVE keys, plain auth, identity&hellip;</td></tr>
+            <tr><td>Zmq::get($handle, $opt)</td><td>read back any option (type, last_endpoint, mechanism, fd, CURVE keys as z85, keepalive counters, gssapi principals&hellip;)</td></tr>
+            <tr><td>Zmq::poll($handle, %opts)</td><td><code>{ readable, writable }</code>; opt: <code>timeout_ms</code></td></tr>
+            <tr><td>Zmq::poll_many($handles, %opts)</td><td>one <code>zmq_poll</code> over many handles &rarr; <code>{ handle, readable, writable, error }</code> per handle</td></tr>
+            <tr><td>Zmq::events($handle)</td><td><code>{ readable, writable, events }</code> &mdash; zero-wait readiness peek via <code>ZMQ_EVENTS</code> (not a <code>zmq_poll</code> call)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Monitor + proxy device</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::monitor($handle, $endpoint, %opts)</td><td>publish lifecycle events to an inproc endpoint; opt: <code>events</code></td></tr>
+            <tr><td>Zmq::monitor_recv($handle, %opts)</td><td>decode one event <code>{ event, value, endpoint }</code> from a monitor PAIR</td></tr>
+            <tr><td>Zmq::proxy($frontend, $backend, %opts)</td><td>backgrounded <code>zmq_proxy</code> device; opts: <code>capture</code>, <code>control</code> (steerable)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>CURVE + Z85 codec</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::curve_keypair()</td><td><code>{ public, secret }</code> z85 keys (needs libsodium-enabled libzmq)</td></tr>
+            <tr><td>Zmq::curve_public($secret)</td><td><code>{ secret, public }</code> &mdash; derive the public key from a z85 secret</td></tr>
+            <tr><td>Zmq::valid_curve_key($key)</td><td><code>{ key, valid, reason }</code> &mdash; a CURVE key is exactly 40 Z85 chars (32 bytes)</td></tr>
+            <tr><td>Zmq::z85_encode / z85_decode ($data, %opts)</td><td>z85 codec; opt: <code>encoding</code></td></tr>
+            <tr><td>Zmq::z85_valid($z85)</td><td><code>{ z85, valid, reason }</code> &mdash; structural RFC-32 check (length &divide;5 + Z85 alphabet)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Endpoint helpers (pure)</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::parse_endpoint($endpoint)</td><td><code>{ transport, address, known_transport, host?, port? }</code> &mdash; no socket</td></tr>
+            <tr><td>Zmq::build_endpoint(%opts)</td><td><code>{ endpoint, known_transport }</code> &mdash; inverse of parse_endpoint; opts: <code>transport</code>, <code>address</code> | <code>host</code>+<code>port</code></td></tr>
+            <tr><td>Zmq::endpoint_bind_to_connect($endpoint, %opts)</td><td><code>{ endpoint, bind_endpoint, changed }</code> &mdash; rewrite a wildcard bind host (<code>*</code>/<code>0.0.0.0</code>/<code>::</code>) to a connectable one (opt: <code>host</code>, default localhost)</td></tr>
+            <tr><td>Zmq::endpoint_connect_to_bind($endpoint, %opts)</td><td><code>{ endpoint, connect_endpoint, changed }</code> &mdash; inverse: rewrite a concrete host to a bind wildcard (opt: <code>host</code>, default <code>*</code>)</td></tr>
+            <tr><td>Zmq::valid_endpoint($endpoint)</td><td><code>{ endpoint, valid, reason, transport }</code> &mdash; strict transport-syntax check (stricter than parse_endpoint)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Topic + subscription helpers (pure)</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::topic_match($subscription, $topic)</td><td>ZMQ SUB prefix match (empty subscription matches all) &rarr; 1 | ""</td></tr>
+            <tr><td>Zmq::topic_match_any($topic, \@subs)</td><td><code>{ topic, match, matched }</code> &mdash; which subscriptions prefix-match the topic (XPUB set routing)</td></tr>
+            <tr><td>Zmq::topic_overlaps($a, $b)</td><td><code>{ a, b, overlaps, subsumes }</code> &mdash; true when one prefix subscription subsumes the other</td></tr>
+            <tr><td>Zmq::prune_subscriptions(\@subs)</td><td><code>{ pruned, removed }</code> &mdash; reduce a subscription set to its minimal cover</td></tr>
+            <tr><td>Zmq::subscription_diff(\@current, \@desired)</td><td><code>{ add, remove, unchanged }</code> &mdash; the set difference to reconcile a SUB filter</td></tr>
+            <tr><td>Zmq::build_subscription($topic, %opts)</td><td><code>{ frame, subscribe, topic }</code> &mdash; SUB/XSUB wire frame: leading <code>\x01</code> (or <code>\x00</code>) + topic</td></tr>
+            <tr><td>Zmq::parse_subscription($frame)</td><td><code>{ subscribe, topic, frame }</code> &mdash; inverse: split the action byte from the topic</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Socket-type + table helpers (pure)</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Zmq::valid_socket_type($type)</td><td><code>{ valid, canonical }</code> &mdash; aliases collapse (<code>publish</code> &rarr; <code>pub</code>)</td></tr>
+            <tr><td>Zmq::socket_types()</td><td>every canonical socket-type name</td></tr>
+            <tr><td>Zmq::socket_type_id($type)</td><td>the libzmq <code>ZMQ_*</code> integer for a type (PAIR=0 &hellip; STREAM=11)</td></tr>
+            <tr><td>Zmq::socket_peers($type)</td><td>socket types <code>$type</code> can validly connect to</td></tr>
+            <tr><td>Zmq::socket_types_compatible($a, $b)</td><td>1 | "" &mdash; whether two types can be connected as peers (REQ&harr;REP, PUB&harr;SUB&hellip;)</td></tr>
+            <tr><td>Zmq::socket_caps($type)</td><td><code>{ type, pattern, can_send, can_recv }</code> &mdash; messaging pattern + directionality</td></tr>
+            <tr><td>Zmq::socket_caps_all()</td><td>the <code>socket_caps</code> table for every type</td></tr>
+            <tr><td>Zmq::socket_option_names()</td><td>every option <code>set</code>/<code>get</code> accept &rarr; <code>{ name, settable, gettable, kind }</code></td></tr>
+            <tr><td>Zmq::valid_socket_option($opt)</td><td><code>{ opt, known, settable, gettable, kind }</code> &mdash; single-name lookup to guard a <code>set</code>/<code>get</code></td></tr>
+            <tr><td>Zmq::encoding_names()</td><td>every payload encoding &rarr; <code>{ name, aliases, binary_safe }</code></td></tr>
+            <tr><td>Zmq::socket_event_names()</td><td>every monitor event &rarr; <code>{ name, flag, is_error }</code></td></tr>
+            <tr><td>Zmq::monitor_event_flag($name)</td><td>the <code>ZMQ_EVENT_*</code> flag for an event name (inverse of parse_monitor_event; accepts <code>all</code>)</td></tr>
+            <tr><td>Zmq::parse_monitor_event(event =&gt; $id, &hellip;)</td><td><code>{ event, name, is_error, value_meaning, value?, endpoint? }</code> &mdash; decode a <code>zmq_socket_monitor</code> event</td></tr>
+          </tbody>
+        </table>
+
+        <p>Endpoints follow ZeroMQ transport syntax: <code>tcp://host:port</code>, <code>ipc:///path</code>, <code>inproc://name</code>, <code>pgm://</code>, <code>epgm://</code>. The pure helpers create no socket. Full prose reference in the <a href="https://github.com/MenkeTechnologies/stryke-zmq#0x04-api-reference">README API section</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Socket types</h2>
+        <p>Twelve types are accepted by <code>Zmq::socket</code>, one per ZeroMQ messaging pattern. Aliases (e.g. <code>publish</code>) collapse to the canonical name via <code>Zmq::valid_socket_type</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>req / rep</td><td>request/reply &mdash; synchronous RPC-style exchange (strict send&rarr;recv state machine)</td></tr>
+            <tr><td>pub / sub</td><td>publish/subscribe &mdash; topic-filtered fan-out (SUB is recv-only, PUB send-only)</td></tr>
+            <tr><td>xpub / xsub</td><td>raw pub/sub that carry subscription frames on the wire (for proxy/broker topologies)</td></tr>
+            <tr><td>push / pull</td><td>pipeline &mdash; PUSH load-balances to PULL workers (fan-out work distribution)</td></tr>
+            <tr><td>dealer / router</td><td>async, identity-addressed routing (the building blocks behind REQ/REP)</td></tr>
+            <tr><td>pair</td><td>exclusive 1:1, typically inproc thread coordination</td></tr>
+            <tr><td>stream</td><td>raw non-ZMTP TCP peers</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Encodings &amp; binary-safe payloads</h2>
+        <p>Payloads default to UTF-8 framing. For arbitrary bytes (NULs, high bytes), pass <code>encoding =&gt; "hex"</code> or <code>encoding =&gt; "base64"</code> on <strong>both</strong> the send and the matching recv so the message round-trips intact. <code>Zmq::encoding_names()</code> lists every accepted encoding with its aliases and a <code>binary_safe</code> flag.</p>
+<pre># round-trip a NUL-containing byte string as hex
+Zmq::send($a, "\x00\xff\x01", encoding =&gt; "hex")
+val $bytes = Zmq::recv($b, timeout_ms =&gt; 1000, encoding =&gt; "hex")</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Socket options</h2>
+        <p><code>Zmq::set</code>/<code>Zmq::get</code> cover the full libzmq option surface, grouped by value kind. <code>Zmq::socket_option_names()</code> returns the live table (<code>{ name, settable, gettable, kind }</code>); guard one lookup with <code>Zmq::valid_socket_option($opt)</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>i32 tuning</td><td><code>sndhwm rcvhwm linger sndtimeo rcvtimeo sndbuf rcvbuf rate recovery_ivl reconnect_ivl reconnect_ivl_max backlog multicast_hops tos connect_timeout handshake_ivl heartbeat_ivl heartbeat_ttl heartbeat_timeout tcp_keepalive tcp_keepalive_cnt tcp_keepalive_idle tcp_keepalive_intvl</code></td></tr>
+            <tr><td>wider ints</td><td><code>maxmsgsize</code> (i64), <code>affinity</code> (u64)</td></tr>
+            <tr><td>booleans</td><td><code>ipv6 immediate conflate probe_router router_mandatory router_handover req_relaxed req_correlate xpub_verbose plain_server curve_server gssapi_server gssapi_plaintext</code></td></tr>
+            <tr><td>byte strings</td><td><code>identity subscribe unsubscribe</code></td></tr>
+            <tr><td>CURVE keys</td><td><code>curve_publickey curve_secretkey curve_serverkey</code> (40-char z85 or raw bytes)</td></tr>
+            <tr><td>plain / misc strings</td><td><code>plain_username plain_password socks_proxy zap_domain xpub_welcome_msg gssapi_principal&hellip;</code></td></tr>
+          </tbody>
+        </table>
+<pre>val $s = Zmq::socket("dealer")
+Zmq::set($s, "rcvtimeo", 500)
+Zmq::set($s, "identity", "worker-1")
+val $id = Zmq::get($s, "identity")</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Monitoring socket lifecycle</h2>
+        <p><code>Zmq::monitor</code> wires a socket's connect/disconnect/handshake events to an inproc PAIR; <code>Zmq::monitor_recv</code> decodes one event at a time. <code>Zmq::socket_event_names()</code> lists every event with its flag and <code>is_error</code> bit, and <code>Zmq::parse_monitor_event</code> maps a raw 16-bit event id to its symbolic name plus what the 32-bit value carries (<code>fd</code>, <code>errno</code>, reconnect interval, protocol error code, ZAP status).</p>
+<pre>Zmq::monitor($sock, "inproc://mon", events =&gt; "all")
+val $ev = Zmq::monitor_recv($mon, timeout_ms =&gt; 1000)   # { event, value, endpoint }</pre>
+        <p>A backgrounded <code>Zmq::proxy($frontend, $backend, %opts)</code> runs a <code>zmq_proxy</code> device with optional <code>capture</code> and steerable <code>control</code> sockets.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Socket handles</h2>
+        <p>ZeroMQ sockets are stateful and long-lived, so the API is handle-based: <code>Zmq::socket</code> returns an integer handle the caller keeps; every later op takes that handle. This is deliberate &mdash; a SUB socket must stay open to keep receiving and a REQ/REP exchange is a send&rarr;recv state machine. A fork-per-call model would drop messages between calls and re-pay connection setup each time.</p>
+        <p>The cdylib holds the sockets in a registry behind a mutex. ZeroMQ requires one-thread-at-a-time access per socket; the mutex provides exactly that, plus the cross-thread memory fence libzmq mandates when a socket migrates between threads (<code>zmq::Socket</code> is <code>Send</code>, not <code>Sync</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>ZeroMQ integration requires libzmq, the C library every ZMQ binding wraps. The Rust binding (<code>zmq</code> &rarr; <code>zmq-sys</code> &rarr; <code>zeromq-src</code>) compiles libzmq and libsodium from source and links them statically. The artifact is big enough that it doesn't belong in stryke core &mdash; opt in once, get all four messaging patterns.</p>
+        <p>Because libzmq is vendored into the cdylib, there is no system <code>libzmq.so</code>/<code>.dylib</code> requirement on the consumer machine. A from-source build needs cmake plus a C/C++ compiler; the published release tarball is prebuilt per host triple.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>zmq__*</code> export in the cdylib is a JSON-string-in / JSON-string-out function. stryke's FFI bridge resolves the symbols listed in <code>stryke.toml</code>'s <code>[ffi]</code> table on first <code>use Zmq</code>, passes a JSON-encoded args dict per call, and copies the returned JSON into a stryke string. Allocations are freed via <code>stryke_free_cstring</code>.</p>
+<pre># a handler error becomes a stryke die
+{"error": "Zmq::recv: ..."}
+
+# a receive timeout becomes undef / empty-list in the wrapper
+{"timeout": true}</pre>
+        <p>A handler that panics is caught at the boundary and returned as an error rather than crossing the FFI boundary and aborting the host shell.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Troubleshooting</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>recv returns undef</td><td>that is a timeout, not an error &mdash; the wrapper maps <code>{"timeout": true}</code> to <code>undef</code>/empty-list. Raise <code>timeout_ms</code> or check the peer is connected.</td></tr>
+            <tr><td>SUB drops early messages</td><td>ZMQ's slow-joiner behaviour: a SUB must subscribe before the PUB sends, and the connection takes a moment to settle. Send a few messages, or use a higher-level handshake. See <code>examples/pub_sub.stk</code>.</td></tr>
+            <tr><td>binary data garbled</td><td>pass the same <code>encoding =&gt; hex|base64</code> on both send and recv; UTF-8 framing corrupts NULs and high bytes.</td></tr>
+            <tr><td>curve_keypair errors</td><td>needs a libsodium-enabled libzmq &mdash; probe <code>Zmq::has("curve")</code> first.</td></tr>
+            <tr><td>leaked sockets</td><td><code>Zmq::socket_count()</code> reports how many handles the cdylib still holds; close what you no longer need.</td></tr>
+            <tr><td>unknown socket handle</td><td>the handle was closed or never created &mdash; the cdylib returns <code>{"error":"unknown socket handle: N"}</code>, which becomes a <code>die</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-zmq/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate (zmq -> vendored libzmq)
+&#9500;&#9472;&#9472; src/lib.rs             # zmq__* exports + socket registry + tests
+&#9500;&#9472;&#9472; stryke.toml            # package manifest + [ffi] table
+&#9500;&#9472;&#9472; lib/Zmq.stk            # stryke wrapper (use Zmq)
+&#9500;&#9472;&#9472; examples/              # req_rep, pub_sub, push_pull, multipart
+&#9500;&#9472;&#9472; t/                     # stryke assertion suites
+&#9500;&#9472;&#9472; tests/                 # docs/readme/polish lint gates
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

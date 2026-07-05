@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="emacs-awk — Emacs major mode (awkrs-mode) for AWK, targeting the awkrs Rust implementation. Filetype detection for *.awk and awk shebangs, font-lock for keywords, built-in variables, built-in functions, field references and /regex/, brace-aware indentation, run via awkrs, eldoc + completion, and LSP via awkrs --lsp (eglot + lsp-mode).">
+  <title>emacs-awk — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line { margin: 0.35rem 0 0; font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em; max-width: 42rem; opacity: 0.75; }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px; }
+    .parity-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.6rem; margin: 0.7rem 0; }
+    .cat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.6rem 0.8rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .cat-card h4 { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan); margin: 0 0 0.35rem; }
+    .cat-card p { margin: 0; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// EMACS-AWK — EMACS MAJOR MODE FOR AWK (AWKRS)</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/emacs-awk" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/awkrs" target="_blank" rel="noopener noreferrer">awkrs</a>
+          </nav>
+          <p class="docs-build-line">filetype detection (*.awk + awk shebang) · font-lock for keywords, built-in vars/funcs, fields, /regex/ · brace-aware indent · run via awkrs · LSP via awkrs --lsp</p>
+          <p class="docs-build-line">eglot + lsp-mode · eldoc + completion · settings awkrs-executable / awkrs-indent-offset · Package-Requires emacs 27.1</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/emacs-awk" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EMACS-AWK &mdash; AWK IN EMACS</h2>
+      <p class="tutorial-subtitle"><strong>Open a <code>.awk</code> file and the pattern/action engine lights up.</strong> emacs-awk targets <a href="https://github.com/MenkeTechnologies/awkrs" target="_blank" rel="noopener noreferrer">awkrs</a>, the Rust AWK implementation. <code>awkrs-mode</code> derives from <code>prog-mode</code>, font-locks AWK keywords, the 16 built-in variables, the 22 built-in functions, field references (<code>$0</code> <code>$1</code> <code>$NF</code>) and <code>/regex/</code> literals, indents brace blocks, runs the buffer through <code>awkrs</code> (<code>C-c C-c</code>), serves eldoc + completion for builtins, and wires <code>awkrs --lsp</code> into both eglot and lsp-mode. Named <code>awkrs-mode</code> so it does not clash with Emacs' built-in <code>awk-mode</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>The <code>awkrs</code> binary must be on <code>$PATH</code> to run buffers and for the language server (build <a href="https://github.com/MenkeTechnologies/awkrs" target="_blank" rel="noopener noreferrer">awkrs</a> with <code>cargo install --path .</code>).</p>
+<pre>;; manual
+(add-to-list 'load-path "/path/to/emacs-awk")
+(require 'awkrs-mode)
+
+;; use-package + built-in VC
+(use-package awkrs-mode
+  :mode "\\.awk\\'"
+  :vc (:url "https://github.com/MenkeTechnologies/emacs-awk"))</pre>
+        <p>Press <code>C-c C-c</code> to run a buffer. With eglot: <code>M-x eglot</code> in a <code>.awk</code> buffer, or <code>(add-hook 'awkrs-mode-hook #'eglot-ensure)</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What you get</h2>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>Filetype detection</h4><p>Every <code>*.awk</code> file uses <code>awkrs-mode</code> (<code>auto-mode-alist</code>); <code>awk</code> / <code>awkrs</code> shebangs are detected via <code>interpreter-mode-alist</code>.</p></div>
+          <div class="cat-card"><h4>Field-aware font-lock</h4><p>Keywords, the 16 built-in variables, the 22 built-in functions, field references <code>$0</code>/<code>$1</code>/<code>$NF</code>, and <code>/regex/</code> literals — with their own faces for built-in vars and fields.</p></div>
+          <div class="cat-card"><h4>Regex in operand position</h4><p>A <code>syntax-propertize</code> rule recognizes <code>/regex/</code> only where AWK allows it (after <code>~</code>, <code>(</code>, <code>,</code>, <code>=</code>, a keyword, line start), so division <code>a / b</code> is not mistaken for a regex.</p></div>
+          <div class="cat-card"><h4>Run via awkrs</h4><p><code>awkrs-run-buffer</code> (<code>C-c C-c</code>) runs the buffer's program through <code>awkrs -f FILE</code> in a <code>*compilation*</code> buffer with <code>next-error</code> navigation.</p></div>
+          <div class="cat-card"><h4>eldoc + completion</h4><p>One-line builtin signatures in the echo area and <code>completion-at-point</code> over the builtin function names, from <code>awkrs-stdlib.el</code>.</p></div>
+          <div class="cat-card"><h4>Language server</h4><p>Registers <code>awkrs --lsp</code> for <strong>eglot</strong> (built in since Emacs 29) and <strong>lsp-mode</strong>, both loaded lazily. Launched with <code>--lsp</code> only — no appended <code>--stdio</code>.</p></div>
+          <div class="cat-card"><h4>Verified</h4><p><code>scripts/face-test.el</code> byte-compiles the package and asserts the face at each probe token — proven to load and classify correctly.</p></div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Faces</h2>
+        <table class="parity-table">
+          <thead><tr><th>Token group</th><th>Face</th></tr></thead>
+          <tbody>
+            <tr><td>Keywords (<code>BEGIN</code> <code>END</code> <code>function</code> <code>if</code> <code>for</code> <code>print</code>)</td><td class="ok">font-lock-keyword-face</td></tr>
+            <tr><td>Built-in variables (<code>NR</code> <code>NF</code> <code>FS</code> <code>OFS</code> <code>RS</code> <code>SUBSEP</code>)</td><td class="ok">awkrs-builtin-var-face</td></tr>
+            <tr><td>Built-in functions (<code>length</code> <code>substr</code> <code>gsub</code> <code>sprintf</code> <code>split</code>)</td><td class="ok">font-lock-builtin-face</td></tr>
+            <tr><td>Field references (<code>$0</code> <code>$1</code> <code>$NF</code>)</td><td class="ok">awkrs-field-ref-face</td></tr>
+            <tr><td>User function names</td><td class="ok">font-lock-function-name-face</td></tr>
+            <tr><td>Strings / comments / <code>/regex/</code></td><td class="ok">via syntax table + syntax-propertize</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Run, language server &amp; config</h2>
+        <table class="parity-table">
+          <thead><tr><th>Setting / command</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>awkrs-executable</code></td><td><code>"awkrs"</code> &mdash; path to the executable used to run buffers and start the server</td></tr>
+            <tr><td><code>awkrs-indent-offset</code></td><td><code>4</code> &mdash; spaces per indent level</td></tr>
+            <tr><td><code>C-c C-c</code> (<code>awkrs-run-buffer</code>)</td><td>run the buffer's program through <code>awkrs -f FILE</code> via <code>compile</code></td></tr>
+            <tr><td><code>M-x eglot</code></td><td>start the server via eglot (Emacs 29+)</td></tr>
+            <tr><td><code>M-x lsp</code></td><td>start the server via lsp-mode</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compatibility</h2>
+        <table class="parity-table">
+          <thead><tr><th>Target</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Emacs 27.1+</td><td class="ok">Mode + font-lock + indent + run + eldoc + completion</td></tr>
+            <tr><td>eglot</td><td class="ok">Built in since Emacs 29; works on 27/28 if installed</td></tr>
+            <tr><td>lsp-mode</td><td class="ok">Registered client</td></tr>
+            <tr><td>Syntax highlighting</td><td class="ok">No binary required</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

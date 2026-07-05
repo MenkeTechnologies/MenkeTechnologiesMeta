@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-demo — live demos for all 14 stryke-* connector packages. One `s install` pulls them all from GitHub; each demo is a standalone .stk script. Includes docker-compose.yml for the live services (MySQL, Postgres, Kafka, Redis, MongoDB, LocalStack, gRPC server).">
+  <title>stryke-demo — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .demo-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .demo-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .demo-tbl td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .demo-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; font-size: 11.5px; }
+    .demo-tbl td.svc-none { color: var(--green); font-weight: 700; }
+    .demo-tbl td.svc-local { color: var(--cyan); }
+    .demo-tbl td.svc-cloud { color: var(--yellow); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-DEMO &mdash; LIVE DEMOS FOR EVERY STRYKE-* PACKAGE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">14 demos · one .stk script per stryke-* connector · docker-compose for 7 live services · <code>make all</code> runs every demo whose service is reachable</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-demo/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-DEMO</h2>
+      <p class="tutorial-subtitle"><strong>Fourteen packages, one pull.</strong> Live runnable demos for every <code>stryke-*</code> connector in the family &mdash; <a href="https://github.com/MenkeTechnologies/stryke-arrow">arrow</a>, <a href="https://github.com/MenkeTechnologies/stryke-aws">aws</a>, <a href="https://github.com/MenkeTechnologies/stryke-docker">docker</a>, <a href="https://github.com/MenkeTechnologies/stryke-duckdb">duckdb</a>, <a href="https://github.com/MenkeTechnologies/stryke-gcp">gcp</a>, <a href="https://github.com/MenkeTechnologies/stryke-grpc">grpc</a>, <a href="https://github.com/MenkeTechnologies/stryke-k8s">k8s</a>, <a href="https://github.com/MenkeTechnologies/stryke-kafka">kafka</a>, <a href="https://github.com/MenkeTechnologies/stryke-mongo">mongo</a>, <a href="https://github.com/MenkeTechnologies/stryke-mysql">mysql</a>, <a href="https://github.com/MenkeTechnologies/stryke-parquet">parquet</a>, <a href="https://github.com/MenkeTechnologies/stryke-postgres">postgres</a>, <a href="https://github.com/MenkeTechnologies/stryke-redis">redis</a>, <a href="https://github.com/MenkeTechnologies/stryke-spark">spark</a>. One <code>s install</code> pulls them all from GitHub; each demo is a standalone <code>.stk</code> script you can run directly. <code>docker-compose.yml</code> spins up every live service used by the demos.</p>
+
+      <section class="tutorial-section">
+        <h2>The 14 demos</h2>
+        <table class="demo-tbl">
+          <thead>
+            <tr><th>#</th><th>Package</th><th>Demo file</th><th>Service needed</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td><a href="https://github.com/MenkeTechnologies/stryke-arrow">stryke-arrow</a></td><td><code>demos/01_arrow.stk</code></td><td class="svc-none">none (in-process)</td></tr>
+            <tr><td>2</td><td><a href="https://github.com/MenkeTechnologies/stryke-mysql">stryke-mysql</a></td><td><code>demos/02_mysql.stk</code></td><td class="svc-local">MySQL 5.7+ / MariaDB</td></tr>
+            <tr><td>3</td><td><a href="https://github.com/MenkeTechnologies/stryke-postgres">stryke-postgres</a></td><td><code>demos/03_postgres.stk</code></td><td class="svc-local">Postgres 12+</td></tr>
+            <tr><td>4</td><td><a href="https://github.com/MenkeTechnologies/stryke-spark">stryke-spark</a></td><td><code>demos/04_spark.stk</code></td><td class="svc-none">none (embedded)</td></tr>
+            <tr><td>5</td><td><a href="https://github.com/MenkeTechnologies/stryke-aws">stryke-aws</a></td><td><code>demos/05_aws.stk</code></td><td class="svc-local">LocalStack or real AWS</td></tr>
+            <tr><td>6</td><td><a href="https://github.com/MenkeTechnologies/stryke-gcp">stryke-gcp</a></td><td><code>demos/06_gcp.stk</code></td><td class="svc-cloud">real GCP (ADC)</td></tr>
+            <tr><td>7</td><td><a href="https://github.com/MenkeTechnologies/stryke-kafka">stryke-kafka</a></td><td><code>demos/07_kafka.stk</code></td><td class="svc-local">Kafka broker</td></tr>
+            <tr><td>8</td><td><a href="https://github.com/MenkeTechnologies/stryke-grpc">stryke-grpc</a></td><td><code>demos/08_grpc.stk</code></td><td class="svc-local">reflection-enabled gRPC server</td></tr>
+            <tr><td>9</td><td><a href="https://github.com/MenkeTechnologies/stryke-parquet">stryke-parquet</a></td><td><code>demos/09_parquet.stk</code></td><td class="svc-none">none (in-process)</td></tr>
+            <tr><td>10</td><td><a href="https://github.com/MenkeTechnologies/stryke-duckdb">stryke-duckdb</a></td><td><code>demos/10_duckdb.stk</code></td><td class="svc-none">none (embedded)</td></tr>
+            <tr><td>11</td><td><a href="https://github.com/MenkeTechnologies/stryke-redis">stryke-redis</a></td><td><code>demos/11_redis.stk</code></td><td class="svc-local">Redis 6+</td></tr>
+            <tr><td>12</td><td><a href="https://github.com/MenkeTechnologies/stryke-mongo">stryke-mongo</a></td><td><code>demos/12_mongo.stk</code></td><td class="svc-local">MongoDB 5+</td></tr>
+            <tr><td>13</td><td><a href="https://github.com/MenkeTechnologies/stryke-k8s">stryke-k8s</a></td><td><code>demos/13_k8s.stk</code></td><td class="svc-local">Kubernetes 1.24+ (kind / k3s / cloud)</td></tr>
+            <tr><td>14</td><td><a href="https://github.com/MenkeTechnologies/stryke-docker">stryke-docker</a></td><td><code>demos/14_docker.stk</code></td><td class="svc-local">Docker daemon (Desktop / dockerd / DOCKER_HOST)</td></tr>
+          </tbody>
+        </table>
+        <p>Color legend: <span style="color:var(--green);font-weight:700">green = no service required</span> · <span style="color:var(--cyan)">cyan = local docker-compose can host it</span> · <span style="color:var(--yellow)">yellow = real cloud creds required</span>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># clone + bootstrap with stryke's package manager
+git clone https://github.com/MenkeTechnologies/stryke-demo
+cd stryke-demo
+s install            # pulls all 14 stryke-* packages from GitHub
+make install         # same thing, via the Makefile</pre>
+        <p><code>s install</code> resolves the 14 git deps declared in <code>stryke.toml</code>, builds each package's Rust cdylib into the global stryke store, and locks the resolved graph into <code>stryke.lock</code>. There is no per-demo install step &mdash; each demo script loads its package with a single <code>use</code> directive (e.g. <code>use Arrow</code>) and the connector is already in the store. The stryke binary is invoked as <code>s</code> throughout this repo (the <code>Makefile</code>, <code>stryke.toml</code> scripts, and every demo's <code>#!/usr/bin/env stryke</code> shebang).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Spin up all live services</h2>
+<pre># bring up MySQL, Postgres, Kafka, Redis, MongoDB, LocalStack, k3s
+make up               # wraps `docker compose up -d`
+
+# verify everything is healthy
+docker compose ps
+
+# tear down + clear volumes
+make down             # wraps `docker compose down -v`</pre>
+        <p><code>docker-compose.yml</code> ships exactly seven service containers &mdash; <code>mysql</code>, <code>postgres</code>, <code>redis</code>, <code>mongo</code>, <code>kafka</code> (KRaft, single-node), <code>localstack</code> (S3 + DynamoDB + SQS + Lambda + STS), and <code>k3s</code> (single-node Kubernetes for the stryke-k8s demo). The Arrow, Parquet, DuckDB, and Spark demos run embedded &mdash; no docker required. The gRPC demo expects an externally-running reflection-enabled gRPC server (not part of <code>docker-compose.yml</code>), and the GCP demo needs real Google Cloud credentials (no local emulator).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Run a single demo</h2>
+        <p>Every demo has a one-word <code>make</code> target that sets the connection env vars for you, or you can invoke the <code>.stk</code> file directly with <code>s</code>:</p>
+<pre># in-process / embedded — no service needed
+make arrow            # s demos/01_arrow.stk
+make duckdb           # s demos/10_duckdb.stk
+make spark            # s demos/04_spark.stk
+make parquet          # s demos/09_parquet.stk
+
+# service-backed — `make up` (or your own service) must be reachable
+make mysql            # MYSQL_URI=mysql://root:root@127.0.0.1:3306/test
+make postgres         # POSTGRES_URI=postgres://postgres:postgres@127.0.0.1:5432/postgres
+make redis            # REDIS_URL=redis://localhost:6379
+make mongo            # MONGODB_URI=mongodb://localhost:27017
+make kafka            # KAFKA_BROKERS=localhost:9092
+make aws              # AWS_ENDPOINT_URL=http://localhost:4566 (LocalStack)
+make k8s              # uses $KUBECONFIG / k3s kubeconfig
+make docker           # uses $DOCKER_HOST or /var/run/docker.sock
+
+# need explicit positional args (no make target wires them):
+s demos/06_gcp.stk gs://my-bucket projects/p/subscriptions/sub projects/p/topics/t
+s demos/08_grpc.stk localhost:50051</pre>
+        <p>Each demo prints what it's doing as it goes &mdash; nothing magic, nothing hidden. Read the <code>.stk</code> file to see exactly which package functions are being exercised; the demos are written to call <strong>every public verb</strong> of their connector, with the function name printed alongside each line of output (e.g. <code>Arrow::read_columnar limit=3 cols: ...</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Run everything available</h2>
+<pre># probe each service, skip demos whose dependency is unreachable
+make all
+
+# or the raw stryke entrypoint that does the probing
+s demos/run_all.stk</pre>
+        <p><code>run_all.stk</code> calls each connector's <code>::ping()</code> (and <code>AWS::sts_caller_identity()</code> for AWS) and runs only the demos whose backing service answers. The four in-process demos (<code>arrow</code>, <code>parquet</code>, <code>duckdb</code>, <code>spark</code>) always run. Demos whose service is unreachable print <code>&#9472;&#9472; NN name: SKIP (service not reachable)</code> and the runner moves on. The GCP and gRPC demos require explicit positional arguments, so <code>run_all.stk</code> prints a one-line reminder for each rather than invoking them.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Environment variables</h2>
+        <p>Connection details are read from the environment. The <code>make</code> targets set sensible localhost defaults (matching <code>docker-compose.yml</code>); override them to point at your own services.</p>
+        <table class="demo-tbl">
+          <thead>
+            <tr><th>Demo</th><th>Variable(s)</th><th>Default (set by make target)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>mysql</td><td><code>MYSQL_URI</code></td><td><code>mysql://root:root@127.0.0.1:3306/test</code></td></tr>
+            <tr><td>postgres</td><td><code>POSTGRES_URI</code></td><td><code>postgres://postgres:postgres@127.0.0.1:5432/postgres</code></td></tr>
+            <tr><td>redis</td><td><code>REDIS_URL</code></td><td><code>redis://localhost:6379</code></td></tr>
+            <tr><td>mongo</td><td><code>MONGODB_URI</code></td><td><code>mongodb://localhost:27017</code></td></tr>
+            <tr><td>kafka</td><td><code>KAFKA_BROKERS</code></td><td><code>localhost:9092</code></td></tr>
+            <tr><td>aws</td><td><code>AWS_ENDPOINT_URL</code>, <code>AWS_REGION</code>, <code>AWS_ACCESS_KEY_ID</code>, <code>AWS_SECRET_ACCESS_KEY</code></td><td>LocalStack at <code>:4566</code>, <code>us-east-1</code>, <code>test</code> / <code>test</code></td></tr>
+            <tr><td>k8s</td><td><code>KUBECONFIG</code></td><td>k3s kubeconfig (<code>./k3s-data/kubeconfig.yaml</code>)</td></tr>
+            <tr><td>docker</td><td><code>DOCKER_HOST</code></td><td>local <code>/var/run/docker.sock</code></td></tr>
+            <tr><td>gcp</td><td>ADC (<code>GOOGLE_APPLICATION_CREDENTIALS</code>) + positional args</td><td>none &mdash; real GCP required</td></tr>
+            <tr><td>grpc</td><td>positional <code>host:port</code> arg</td><td><code>localhost:50051</code></td></tr>
+          </tbody>
+        </table>
+        <p>Three demos also read optional opt-in flags that enable extra (slower or destructive) operations: <code>STRYKE_DEMO_LAMBDA</code> (aws &mdash; exercise <code>lambda_invoke</code>), <code>STRYKE_DEMO_DOCKER_BUILD</code> / <code>STRYKE_DEMO_DOCKER_PUSH</code> (docker &mdash; build/push an image), and <code>STRYKE_DEMO_SPARK_SCRIPT</code> (spark &mdash; submit a script via <code>Spark::submit</code>). Left unset, those branches are skipped.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connector API reference</h2>
+        <p>Each demo is written to call every public verb of its connector. The lists below are the exact functions exercised by each <code>.stk</code> file &mdash; read the demo source to see argument shapes and option keys (named args like <code>limit =&gt;</code>, <code>bind =&gt;</code>, <code>columns =&gt;</code>, <code>compression =&gt;</code>).</p>
+        <table class="arch-table">
+          <thead><tr><th>Connector</th><th>Public verbs exercised by the demo</th></tr></thead>
+          <tbody>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-arrow">Arrow</a></td><td><code>version</code>, <code>read</code>, <code>write</code>, <code>read_stream</code>, <code>write_iter</code>, <code>read_columnar</code>, <code>schema</code>, <code>stats</code>, <code>row_count</code>, <code>convert</code> &mdash; each also via the per-format namespaces <code>Arrow::CSV</code>, <code>Arrow::Parquet</code>, <code>Arrow::Feather</code>, <code>Arrow::JSON</code> (NDJSON), <code>Arrow::IPC</code>, plus <code>Arrow::DataFrame::load</code> / <code>dump</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-mysql">MySQL</a></td><td><code>version</code>, <code>ping</code>, <code>databases</code>, <code>tables</code>, <code>schema</code>, <code>query</code>, <code>query_one</code>, <code>query_col</code>, <code>query_scalar</code>, <code>query_stream</code>, <code>execute</code>, <code>insert_many</code>, <code>exec_file</code>, <code>dump</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-postgres">Postgres</a></td><td><code>version</code>, <code>ping</code>, <code>databases</code>, <code>tables</code>, <code>schema</code>, <code>query</code>, <code>query_one</code>, <code>query_col</code>, <code>query_scalar</code>, <code>query_stream</code>, <code>execute</code>, <code>insert_many</code>, <code>exec_file</code>, <code>dump</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-spark">Spark</a></td><td><code>version</code>, <code>ping</code>, <code>databases</code>, <code>tables</code>, <code>schema</code>, <code>query</code>, <code>query_one</code>, <code>query_col</code>, <code>query_scalar</code>, <code>query_stream</code>, <code>execute</code>, <code>dump</code>, <code>submit</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-aws">AWS</a></td><td><code>version</code>, <code>ping</code>, <code>sts_caller_identity</code>, <code>s3_list_buckets</code>, <code>s3_put_object</code>, <code>s3_get_object</code>, <code>s3_list_objects</code>, <code>s3_delete_object</code>, <code>ddb_list_tables</code>, <code>ddb_put_item</code>, <code>ddb_get_item</code>, <code>lambda_list_functions</code>, <code>lambda_invoke</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-gcp">GCP</a></td><td><code>version</code>, <code>ping</code>, <code>identity</code>, <code>gcs_list_buckets</code>, <code>gcs_put_object</code>, <code>gcs_get_object</code>, <code>gcs_list_objects</code>, <code>gcs_delete_object</code>, <code>pubsub_publish</code>, <code>pubsub_pull</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-kafka">Kafka</a></td><td><code>version</code>, <code>ping</code>, <code>cluster</code>, <code>topics</code>, <code>create_topic</code>, <code>delete_topic</code>, <code>describe</code>, <code>produce</code>, <code>produce_many</code>, <code>consume</code>, <code>consume_stream</code>, <code>groups</code>, <code>lag</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-grpc">Grpc</a></td><td><code>version</code>, <code>ping</code>, <code>list</code>, <code>describe</code>, <code>call</code> (server reflection driven).</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-parquet">Parquet</a></td><td><code>version</code>, <code>inspect</code>, <code>schema</code>, <code>stats</code>, <code>count</code>, <code>head</code>, <code>tail</code>, <code>rowgroups</code>, <code>stream</code>, <code>to_csv</code>, <code>to_json</code>, <code>compress</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-duckdb">DuckDB</a></td><td><code>version</code>, <code>ping</code>, <code>inspect</code>, <code>query</code>, <code>query_one</code>, <code>query_col</code>, <code>query_scalar</code>, <code>query_stream</code>, <code>execute</code>, <code>exec_file</code>, <code>import</code>, <code>export</code>, <code>tables</code>, <code>schema</code>, <code>dump</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-redis">Redis</a></td><td><code>version</code>, <code>ping</code>, <code>info</code>, <code>dbsize</code>, <code>raw</code>; strings (<code>get</code>/<code>set</code>/<code>mget</code>/<code>mset</code>/<code>incr</code>/<code>decr</code>/<code>del</code>/<code>exists</code>/<code>expire</code>/<code>ttl</code>/<code>type</code>/<code>keys</code>/<code>scan</code>); lists (<code>lpush</code>/<code>rpush</code>/<code>lpop</code>/<code>rpop</code>/<code>lrange</code>/<code>llen</code>); hashes (<code>hset</code>/<code>hget</code>/<code>hmset</code>/<code>hmget</code>/<code>hgetall</code>/<code>hkeys</code>/<code>hvals</code>/<code>hdel</code>); sets (<code>sadd</code>/<code>srem</code>/<code>smembers</code>/<code>sismember</code>/<code>scard</code>); sorted sets (<code>zadd</code>/<code>zrem</code>/<code>zrange</code>/<code>zscore</code>/<code>zcard</code>); <code>publish</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-mongo">Mongo</a></td><td><code>version</code>, <code>ping</code>, <code>list_databases</code>, <code>list_collections</code>, <code>count</code>, <code>insert_one</code>, <code>insert_many</code>, <code>find</code>, <code>find_one</code>, <code>find_stream</code>, <code>update_one</code>, <code>update_many</code>, <code>replace_one</code>, <code>delete_one</code>, <code>delete_many</code>, <code>aggregate</code>, <code>create_index</code>, <code>indexes</code>, <code>drop_index</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-k8s">K8s</a></td><td><code>version</code>, <code>ping</code>, <code>contexts</code>, <code>current_context</code>, <code>namespaces</code>, <code>api_resources</code>, <code>get</code>, <code>get_one</code>, <code>create</code>, <code>apply</code>, <code>replace</code>, <code>scale</code>, <code>delete_resource</code>, <code>watch</code>, <code>logs_follow</code>.</td></tr>
+            <tr><td><a href="https://github.com/MenkeTechnologies/stryke-docker">Docker</a></td><td><code>version</code>, <code>ping</code>, <code>info</code>, <code>images</code>, <code>pull</code>, <code>tag</code>, <code>push</code>, <code>build</code>, <code>create</code>, <code>run</code>, <code>start</code>, <code>stop</code>, <code>restart</code>, <code>kill</code>, <code>rm</code>, <code>rmi</code>, <code>ps</code>, <code>inspect</code>, <code>logs</code>, <code>logs_follow</code>, <code>exec</code>, <code>stats</code>, <code>events</code>; networks (<code>networks</code>/<code>network_create</code>/<code>network_rm</code>); volumes (<code>volumes</code>/<code>volume_create</code>/<code>volume_rm</code>).</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Cross-connector integration tests</h2>
+        <p>Beyond the single-connector demos, the <code>t/</code> directory holds standalone integration tests that wire connectors together &mdash; e.g. write with Arrow, query the same file with DuckDB, and reconcile the row counts against the Parquet footer. They cover Arrow compute pipelines, Parquet footer diagnostics and compression codecs, Arrow&#8596;DuckDB type round-trips, DuckDB <code>CTAS</code>/<code>COPY TO</code> and <code>read_parquet</code>/<code>read_csv</code>/<code>read_json</code> direct reads, <code>summarize</code>/<code>describe</code> vs Arrow stats, and Polars CSV round-trips and group-by vs DuckDB. Run one directly:</p>
+<pre>s t/integration_arrow_duckdb.stk
+s t/integration_duckdb_summarize_describe_vs_arrow_stats.stk</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-demo/
+&#9500;&#9472;&#9472; demos/
+&#9474;   &#9500;&#9472;&#9472; 01_arrow.stk        # arrow / csv / parquet / feather / json / ipc I/O
+&#9474;   &#9500;&#9472;&#9472; 02_mysql.stk        # CREATE / INSERT / SELECT + bind + insert_many
+&#9474;   &#9500;&#9472;&#9472; 03_postgres.stk     # same shape as mysql
+&#9474;   &#9500;&#9472;&#9472; 04_spark.stk        # SparkSQL via embedded DataFusion session
+&#9474;   &#9500;&#9472;&#9472; 05_aws.stk          # S3 + DynamoDB + STS (+ optional Lambda) via LocalStack
+&#9474;   &#9500;&#9472;&#9472; 06_gcp.stk          # GCS put/get/list + Pub/Sub publish/pull
+&#9474;   &#9500;&#9472;&#9472; 07_kafka.stk        # create-topic + produce + consume + admin + delete
+&#9474;   &#9500;&#9472;&#9472; 08_grpc.stk         # reflection-driven list + describe + call
+&#9474;   &#9500;&#9472;&#9472; 09_parquet.stk      # inspect + schema + stats + head/tail + recompress
+&#9474;   &#9500;&#9472;&#9472; 10_duckdb.stk       # in-mem + bind + import/export + file db
+&#9474;   &#9500;&#9472;&#9472; 11_redis.stk        # strings + lists + hashes + sets + sorted sets
+&#9474;   &#9500;&#9472;&#9472; 12_mongo.stk        # CRUD + aggregate + index admin
+&#9474;   &#9500;&#9472;&#9472; 13_k8s.stk          # discovery + create/apply + scale + logs + cleanup
+&#9474;   &#9500;&#9472;&#9472; 14_docker.stk       # pull + run + inspect + exec + logs + networks/volumes
+&#9474;   &#9492;&#9472;&#9472; run_all.stk         # ping each service + run reachable demos
+&#9500;&#9472;&#9472; t/                      # cross-connector integration tests
+&#9500;&#9472;&#9472; docker-compose.yml      # mysql / postgres / redis / mongo / kafka / localstack / k3s
+&#9500;&#9472;&#9472; Makefile                # `make &lt;name&gt;`, `up`, `down`, `all`, `install`, `clean`
+&#9500;&#9472;&#9472; stryke.toml             # package manifest (declares the 14 deps)
+&#9492;&#9472;&#9472; docs/                   # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Updating dep pins</h2>
+        <p><code>stryke.toml</code> pins each <code>stryke-*</code> package to <code>branch = "main"</code>. When the packages start cutting <code>vX.Y.Z</code> tags, swap <code>branch = "main"</code> to <code>tag = "vX.Y.Z"</code> for reproducible installs, then re-run <code>s install</code> to refresh <code>stryke.lock</code>:</p>
+<pre>s install         # re-resolve deps and rewrite stryke.lock
+make clean        # drop target/, tmp/, stryke.lock for a clean re-resolve</pre>
+      </section>
+
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

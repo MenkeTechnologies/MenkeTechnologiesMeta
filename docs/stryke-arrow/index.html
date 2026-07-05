@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-arrow — APACHE ARROW + PARQUET + FEATHER + ARROW-CSV/JSON FOR STRYKE. Apache Arrow + Parquet + Arrow IPC + Feather + arrow-CSV + arrow-JSON for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The heavy arrow-rs / parquet code ships as a Rust cdylib that stryke dlopens in-process on first `use Arrow`.">
+  <title>stryke-arrow — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-ARROW &mdash; APACHE ARROW + PARQUET + FEATHER + ARROW-CSV/JSON FOR STRYKE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package v0.19.0 · cdylib <code>libstryke_arrow.{dylib,so}</code> · 52 <code>arrow__*</code> FFI exports · 58 <code>Arrow::*</code> functions · dlopen'd in-process on <code>use Arrow</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-arrow/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-ARROW</h2>
+      <p class="tutorial-subtitle"><strong>Columnar data, on demand. No daily-driver weight.</strong> Apache Arrow + Parquet + Arrow IPC + Feather + arrow-CSV + arrow-JSON for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The heavy arrow-rs / parquet code ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Arrow</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-arrow
+
+# from a local checkout
+cd ~/projects/stryke-arrow
+cargo build --release            # produces target/release/libstryke_arrow.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/arrow@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use Arrow</code> &mdash; no helper-binary fork per call. Any stryke script that declares <code>use Arrow</code> (or a submodule like <code>use Arrow::Parquet</code>) resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use Arrow</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>read parquet/arrow/feather/csv/json (format from extension)</td><td><code>my @rows = Arrow::read("sales.parquet")</code></td></tr>
+            <tr><td>stream a huge file without buffering</td><td><code>Arrow::read_stream("events.parquet", callback =&gt; sub ($row) { process($row) })</code></td></tr>
+            <tr><td>footer-only schema, no data scan</td><td><code>my $sch = Arrow::schema("sales.parquet")</code></td></tr>
+            <tr><td>row count from parquet footer (no scan)</td><td><code>p Arrow::row_count("sales.parquet")</code></td></tr>
+            <tr><td>per-column stats (null/min/max/distinct)</td><td><code>p to_json(Arrow::stats("sales.parquet"))</code></td></tr>
+            <tr><td>write with compression</td><td><code>Arrow::write("out.parquet", \@rows, compression =&gt; "zstd")</code></td></tr>
+            <tr><td>server-side convert (no stryke round-trip)</td><td><code>Arrow::convert("in.csv", "out.parquet", compression =&gt; "zstd")</code></td></tr>
+            <tr><td>filter rows server-side (file &rarr; file)</td><td><code>Arrow::filter("sales.parquet", "big.parquet", "amount", "ge", 1000)</code></td></tr>
+            <tr><td>sort then take top-N</td><td><code>Arrow::sort("big.parquet", "ranked.parquet", [{ column =&gt; "amount", descending =&gt; 1 }])</code></td></tr>
+            <tr><td>project / rename / cast columns</td><td><code>Arrow::select("x.parquet", "y.parquet", ["id", "name"])</code></td></tr>
+          </tbody>
+        </table>
+        <p>The full API lives in the <a href="https://github.com/MenkeTechnologies/stryke-arrow#0x04-api-reference">README "API reference" section</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>Core stays small on purpose &mdash; most one-liner / awk-replacement work doesn't need 200 transitive crates of columnar data infrastructure. arrow-rs + parquet hit a different scale, so they ship as an opt-in package.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>arrow__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_arrow.{dylib,so}</code>, dlopened in-process on first <code>use Arrow</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Options</h2>
+        <p>Every <code>Arrow::*</code> op accepts a trailing <code>%opts</code>. The fields a given op honors depend on the verb; the sublibraries (<code>Arrow::Parquet</code>, <code>Arrow::IPC</code>, &hellip;) pin <code>format</code> for you.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>format (read)</td><td><code>parquet | ipc | arrow | feather | csv | tsv | json | ndjson</code> &mdash; default extension-detected</td></tr>
+            <tr><td>columns (read)</td><td><code>\@names</code> &mdash; projection at the source format</td></tr>
+            <tr><td>limit (read)</td><td>max rows</td></tr>
+            <tr><td>skip (read)</td><td>rows to skip from the start</td></tr>
+            <tr><td>batch_size (read)</td><td>reader batch size (default 8192)</td></tr>
+            <tr><td>compression (write)</td><td><code>snappy | gzip | zstd | lz4 | brotli | uncompressed</code> &mdash; parquet only, default snappy</td></tr>
+            <tr><td>row_group (write)</td><td>max rows per parquet row group (default 65536)</td></tr>
+            <tr><td>schema (write)</td><td>path to a JSON schema spec to skip inference on huge inputs</td></tr>
+            <tr><td>src_format / dst_format (convert)</td><td>override format detection on either side</td></tr>
+          </tbody>
+        </table>
+        <p>The README's <a href="https://github.com/MenkeTechnologies/stryke-arrow#0x03-options" target="_blank" rel="noopener noreferrer">Options section</a> is the authoritative field list.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference</h2>
+        <p>58 public <code>Arrow::*</code> functions ship in <code>lib/Arrow.stk</code>; 52 are backed by an <code>arrow__*</code> cdylib export (the <code>[ffi].exports</code> list in <code>stryke.toml</code>), the rest are pure-stryke helpers layered over them. Grouped below by role; the README's <a href="https://github.com/MenkeTechnologies/stryke-arrow#0x04-api-reference" target="_blank" rel="noopener noreferrer">API reference</a> carries the full per-signature detail.</p>
+
+        <h3>Read &amp; inspect</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Arrow::read(PATH, %opts)</code></td><td>every row as a hashref</td></tr>
+            <tr><td><code>Arrow::read_stream(PATH, callback =&gt; sub ($row){…}, %opts)</code></td><td>fire a callback per row; returns the count</td></tr>
+            <tr><td><code>Arrow::read_columnar(PATH, %opts)</code></td><td>column-major <code>{ schema, num_rows, columns }</code></td></tr>
+            <tr><td><code>Arrow::schema(PATH, %opts)</code></td><td><code>{ fields, metadata }</code> &mdash; no data scan</td></tr>
+            <tr><td><code>Arrow::stats(PATH, %opts)</code></td><td><code>{ num_rows, num_columns, file_size, columns }</code> &mdash; parquet uses footer stats</td></tr>
+            <tr><td><code>Arrow::row_count(PATH, %opts)</code></td><td>row count (shortcut over <code>stats</code>)</td></tr>
+            <tr><td><code>Arrow::column_names(PATH, %opts)</code></td><td>schema field names in file order</td></tr>
+            <tr><td><code>Arrow::column_count(PATH, %opts)</code></td><td>number of columns in the schema</td></tr>
+            <tr><td><code>Arrow::is_empty(PATH, %opts)</code></td><td><code>1</code> when there are zero data rows</td></tr>
+            <tr><td><code>Arrow::null_counts(PATH, %opts)</code></td><td>per-column null count, no materialization</td></tr>
+            <tr><td><code>Arrow::shape(PATH, %opts)</code></td><td><code>{ rows, columns }</code> (pandas/polars <code>.shape</code>)</td></tr>
+            <tr><td><code>Arrow::metadata(PATH, %opts)</code></td><td><code>{ src, format, bytes, rows, columns, types }</code> in one call</td></tr>
+            <tr><td><code>Arrow::count(PATH, %opts)</code></td><td>row count straight from the source, no JSON</td></tr>
+            <tr><td><code>Arrow::version()</code></td><td>the cdylib package version string</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Write &amp; convert</h3>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Arrow::write(PATH, \@rows, %opts)</code></td><td>write rows; opts <code>format</code>, <code>compression</code>, <code>row_group</code>, <code>schema</code></td></tr>
+            <tr><td><code>Arrow::write_iter(PATH, sub {…}, %opts)</code></td><td>iterator form &mdash; subref returns a row per call, <code>undef</code> to stop</td></tr>
+            <tr><td><code>Arrow::convert(SRC, DST, %opts)</code></td><td>server-side reader-to-writer; no round-trip through stryke memory</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Compute (file &rarr; file)</h3>
+        <p>Each reads <code>SRC</code>, applies the kernel, writes <code>DST</code>; none round-trips data through stryke. All accept <code>src_format</code>, <code>dst_format</code>, <code>compression</code>, <code>row_group</code> in <code>%opts</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Arrow::filter(SRC, DST, COLUMN, OP, VALUE, %opts)</code></td><td>keep rows where <code>COLUMN OP VALUE</code>; <code>OP</code> &isin; <code>eq|ne|lt|le|gt|ge</code></td></tr>
+            <tr><td><code>Arrow::filter_in(SRC, DST, COLUMN, \@values, %opts)</code></td><td>SQL <code>IN</code> &mdash; keep rows whose <code>COLUMN</code> is in the set</td></tr>
+            <tr><td><code>Arrow::filter_not_in(SRC, DST, COLUMN, \@values, %opts)</code></td><td>SQL <code>NOT IN</code> &mdash; the complement of <code>filter_in</code></td></tr>
+            <tr><td><code>Arrow::filter_str(SRC, DST, COLUMN, OP, VALUE, %opts)</code></td><td>string-search filter; <code>OP</code> &isin; <code>contains|starts_with|ends_with|like|ilike</code></td></tr>
+            <tr><td><code>Arrow::select(SRC, DST, \@cols, %opts)</code></td><td>project &amp; reorder to <code>\@cols</code> (output order = request order)</td></tr>
+            <tr><td><code>Arrow::drop(SRC, DST, \@cols, %opts)</code></td><td>complement of <code>select</code> &mdash; remove <code>\@cols</code></td></tr>
+            <tr><td><code>Arrow::distinct(SRC, DST, %opts)</code></td><td>drop duplicate rows, keeping first occurrence</td></tr>
+            <tr><td><code>Arrow::drop_nulls(SRC, DST, \@cols?, %opts)</code></td><td>drop rows null in any of <code>\@cols</code> (omit for every column)</td></tr>
+            <tr><td><code>Arrow::keep_nulls(SRC, DST, \@cols?, %opts)</code></td><td>complement of <code>drop_nulls</code> &mdash; keep rows with a null</td></tr>
+            <tr><td><code>Arrow::fill_null(SRC, DST, VALUE, \@cols?, %opts)</code></td><td>fill nulls with the constant <code>VALUE</code></td></tr>
+            <tr><td><code>Arrow::sort(SRC, DST, \@by, %opts)</code></td><td>lexicographic sort; <code>\@by</code> = <code>[{ column, descending, nulls_first }, …]</code></td></tr>
+            <tr><td><code>Arrow::reverse(SRC, DST, %opts)</code></td><td>reverse row order (last row first)</td></tr>
+            <tr><td><code>Arrow::gather(SRC, DST, \@indices, %opts)</code></td><td>select rows by an explicit 0-based index list</td></tr>
+            <tr><td><code>Arrow::top_k(SRC, DST, COLUMN, K, %opts)</code></td><td>the <code>K</code> largest values in <code>COLUMN</code> (<code>descending =&gt; 0</code> for smallest)</td></tr>
+            <tr><td><code>Arrow::value_counts(SRC, DST, COLUMN, %opts)</code></td><td>frequency of each distinct value; two-column output</td></tr>
+            <tr><td><code>Arrow::head / tail(SRC, DST, N, %opts)</code></td><td>first / last <code>N</code> rows</td></tr>
+            <tr><td><code>Arrow::slice(SRC, DST, OFFSET, LENGTH, %opts)</code></td><td>half-open window <code>[OFFSET, OFFSET+LENGTH)</code></td></tr>
+            <tr><td><code>Arrow::sample(SRC, DST, STEP, %opts)</code></td><td>systematic sample &mdash; keep every <code>STEP</code>-th row from <code>offset</code></td></tr>
+            <tr><td><code>Arrow::with_row_index(SRC, DST, %opts)</code></td><td>prepend a 0-based <code>UInt64</code> index column</td></tr>
+            <tr><td><code>Arrow::concat(\@srcs, DST, %opts)</code></td><td>concatenate same-schema sources into one <code>DST</code></td></tr>
+            <tr><td><code>Arrow::hstack(SRC, OTHER, DST, %opts)</code></td><td>horizontally stack <code>OTHER</code>'s columns onto <code>SRC</code></td></tr>
+            <tr><td><code>Arrow::rename(SRC, DST, \%map, %opts)</code></td><td>rename columns via <code>{ old =&gt; new }</code></td></tr>
+            <tr><td><code>Arrow::cast(SRC, DST, \%casts, %opts)</code></td><td>cast columns; type &isin; <code>int|int32|float|float32|str|bool</code></td></tr>
+            <tr><td><code>Arrow::unique(SRC, DST, COLUMN, %opts)</code></td><td>distinct values of a single <code>COLUMN</code>, sorted ascending</td></tr>
+            <tr><td><code>Arrow::add_column(SRC, DST, NAME, VALUE, TYPE, %opts)</code></td><td>append a constant-filled column</td></tr>
+            <tr><td><code>Arrow::fold_case(SRC, DST, %opts)</code></td><td>lower/upper-case every column name (<code>case</code> &isin; <code>lower|upper</code>)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Aggregation &amp; numeric transforms</h3>
+        <p>Read-only aggregates return their result in the payload (no <code>DST</code>); the in-place numeric ops are file &rarr; file. Numeric work casts the target column to <code>Float64</code> so one code path covers every integer/float width.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Arrow::sum(PATH, COLUMN, %opts)</code></td><td><code>{ column, sum, count }</code> &mdash; <code>count</code> excludes nulls</td></tr>
+            <tr><td><code>Arrow::mean(PATH, COLUMN, %opts)</code></td><td><code>{ column, mean, count }</code> &mdash; nulls excluded</td></tr>
+            <tr><td><code>Arrow::min_max(PATH, COLUMN, %opts)</code></td><td><code>{ column, min, max }</code> in a single pass</td></tr>
+            <tr><td><code>Arrow::std(PATH, COLUMN, %opts)</code></td><td>std + variance; sample by default, <code>population =&gt; 1</code> for <code>n</code></td></tr>
+            <tr><td><code>Arrow::median(PATH, COLUMN, %opts)</code></td><td>50th percentile; even count averages the two middle values</td></tr>
+            <tr><td><code>Arrow::quantile(PATH, COLUMN, Q, %opts)</code></td><td>the <code>Q</code>-quantile (<code>Q</code> &isin; <code>[0,1]</code>), linear interpolation</td></tr>
+            <tr><td><code>Arrow::corr(PATH, X, Y, %opts)</code></td><td>Pearson correlation over pairwise-complete rows</td></tr>
+            <tr><td><code>Arrow::describe(PATH, %opts)</code></td><td>per-column summary over every numeric column</td></tr>
+            <tr><td><code>Arrow::aggregate(SRC, DST, %opts)</code></td><td>column-wise aggregate; <code>agg</code> &isin; <code>sum|mean|min|max</code></td></tr>
+            <tr><td><code>Arrow::clip(SRC, DST, COLUMN, LOWER?, UPPER?, %opts)</code></td><td>clamp a numeric column into <code>[LOWER, UPPER]</code></td></tr>
+            <tr><td><code>Arrow::scale(SRC, DST, COLUMN, FACTOR, %opts)</code></td><td>multiply a numeric column by <code>FACTOR</code> in place</td></tr>
+            <tr><td><code>Arrow::add_const(SRC, DST, COLUMN, VALUE, %opts)</code></td><td>add <code>VALUE</code> to a numeric column in place</td></tr>
+            <tr><td><code>Arrow::abs(SRC, DST, COLUMN, %opts)</code></td><td>absolute value of a numeric column in place</td></tr>
+            <tr><td><code>Arrow::round(SRC, DST, COLUMN, %opts)</code></td><td>round to <code>decimals</code> places (default 0, half-away-from-zero)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>Arrow::*</code> wrapper builds a JSON args dict and calls a sibling <code>arrow__*</code> symbol resolved out of <code>libstryke_arrow.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use Arrow</code> (via stryke's <code>pkg::commands::try_load_ffi_for</code> resolver hook). It exposes 52 <code>arrow__*</code> entry points spanning four roles &mdash; read (<code>version</code>, <code>read</code>, <code>read_columnar</code>, <code>schema</code>, <code>stats</code>), write (<code>write</code>), conversion (<code>convert</code>), and compute / aggregation / numeric transforms (<code>filter</code>, <code>filter_in</code>, <code>filter_not_in</code>, <code>filter_str</code>, <code>select</code>, <code>drop</code>, <code>distinct</code>, <code>drop_nulls</code>, <code>keep_nulls</code>, <code>fill_null</code>, <code>sort</code>, <code>reverse</code>, <code>gather</code>, <code>top_k</code>, <code>value_counts</code>, <code>slice</code>, <code>head</code>, <code>tail</code>, <code>with_row_index</code>, <code>count</code>, <code>null_counts</code>, <code>shape</code>, <code>concat</code>, <code>hstack</code>, <code>rename</code>, <code>cast</code>, <code>sum</code>, <code>mean</code>, <code>min_max</code>, <code>std</code>, <code>median</code>, <code>quantile</code>, <code>corr</code>, <code>describe</code>, <code>aggregate</code>, <code>unique</code>, <code>clip</code>, <code>scale</code>, <code>add_const</code>, <code>abs</code>, <code>round</code>, <code>add_column</code>, <code>sample</code>, <code>fold_case</code>, <code>metadata</code>). The authoritative list is <code>[ffi].exports</code> in <code>stryke.toml</code>. Each export is an <code>extern "C" fn arrow__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code>; responses are JSON, errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with the message. Stateless package &mdash; arrow operations are pure file transforms, no process-level cache.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Per-format sublibraries</h2>
+        <p>Extension detection covers the common case (<code>Arrow::read("x.parquet")</code> just works), but each format also ships an explicit module that pins <code>format</code> on every call &mdash; useful when the extension is wrong or absent.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>use Arrow::Parquet</code></td><td><code>Arrow::Parquet::read / write / stats / …</code> &mdash; pins <code>format =&gt; parquet</code></td></tr>
+            <tr><td><code>use Arrow::IPC</code></td><td>Arrow IPC file format (<code>.arrow</code>)</td></tr>
+            <tr><td><code>use Arrow::Feather</code></td><td>Feather v2 &mdash; an alias for Arrow IPC v2</td></tr>
+            <tr><td><code>use Arrow::CSV</code></td><td>vectorized arrow-csv reader/writer</td></tr>
+            <tr><td><code>use Arrow::JSON</code></td><td>vectorized NDJSON reader/writer</td></tr>
+            <tr><td><code>use Arrow::DataFrame</code></td><td><code>Arrow::DataFrame::load(PATH)</code> &rarr; a stryke DataFrame when the builtin is available, else a <code>{ col =&gt; [vals] }</code> columnar hash; <code>dump(PATH, $df)</code> writes it back</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Supported formats</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Parquet (read + write)</td><td>snappy / gzip / zstd / lz4 / brotli / uncompressed</td></tr>
+            <tr><td>Arrow IPC (read + write)</td><td><code>.arrow</code> extension; no compression</td></tr>
+            <tr><td>Feather (read + write)</td><td>alias for Arrow IPC v2</td></tr>
+            <tr><td>CSV (read + write)</td><td>header row mandatory; schema inferred from first 1024 rows</td></tr>
+            <tr><td>JSON / NDJSON (read + write)</td><td>line-delimited only</td></tr>
+          </tbody>
+        </table>
+        <p>Compression codecs are backed by the <code>snap</code>, <code>zstd</code>, <code>flate2</code>, <code>lz4_flex</code>, and <code>brotli</code> crates; <code>snappy</code> is the parquet write default.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Runnable scripts live in <code>examples/</code> &mdash; each is self-contained (fixtures written under <code>/tmp</code>, cleaned up on exit) and runs end-to-end with <code>s examples/&lt;name&gt;.stk</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>discover.stk</code></td><td>round-trips a 4-row dataset through parquet + CSV + JSON, inspecting schema + row count</td></tr>
+            <tr><td><code>compute.stk</code></td><td>chains <code>filter &rarr; sort &rarr; select &rarr; head</code>, each step reading the previous output file</td></tr>
+            <tr><td><code>csv_to_parquet.stk</code></td><td><code>Arrow::convert(SRC, DST, compression =&gt; …)</code> with a stats summary</td></tr>
+            <tr><td><code>read_parquet.stk</code></td><td>basic parquet read loop</td></tr>
+            <tr><td><code>json_lines.stk</code></td><td>NDJSON read/write round-trip</td></tr>
+            <tr><td><code>dataframe_bridge.stk</code></td><td><code>Arrow::DataFrame::load</code> bridge into stryke's columnar value</td></tr>
+          </tbody>
+        </table>
+<pre># the filter -> sort -> select -> head pipeline from examples/compute.stk
+Arrow::filter("people.parquet", "pass.parquet", "score", "ge", 70)
+Arrow::sort("pass.parquet", "sorted.parquet", [{ column =&gt; "score", descending =&gt; 1 }])
+Arrow::select("sorted.parquet", "cols.parquet", ["name", "score"])
+Arrow::head("cols.parquet", "top.parquet", 2)
+p Arrow::count("top.parquet")</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+<pre>cargo test                       # Rust cdylib contract tests (tests/)
+s test t/                        # end-to-end round-trip per format</pre>
+        <p>The <code>t/</code> suite (<code>test_arrow.stk</code>, <code>test_compute.stk</code>, <code>test_stryke_arrow_surface.stk</code>) writes a small dataset in every format, reads it back, checks shape + values, and pins wrapper completeness. CI (<code>.github/workflows/ci.yml</code>) runs <code>cargo check</code> / <code>fmt</code> / <code>clippy</code> / <code>test</code> on Linux + macOS, then a <code>stryke-test</code> job that builds the cdylib, installs the package, and runs the <code>t/</code> suite against the real stryke binary.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-arrow/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — arrow__* extern "C" exports
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use Arrow`, `use Arrow::Parquet`, …
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

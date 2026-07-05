@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-gcp — GOOGLE CLOUD CLIENT FOR STRYKE // CLOUD STORAGE + PUB/SUB + SECRET MANAGER + BIGQUERY + FIRESTORE. Google Cloud client for stryke — Cloud Storage, Pub/Sub, Secret Manager, BigQuery, and Firestore. Opt-in package that ships as a Rust cdylib that stryke dlopens in-process on first `use GCP`.">
+  <title>stryke-gcp — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-GCP &mdash; GOOGLE CLOUD CLIENT FOR STRYKE // CLOUD STORAGE + PUB/SUB</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_gcp.{dylib,so}</code> · dlopen'd in-process on <code>use GCP</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-gcp/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-GCP</h2>
+      <p class="tutorial-subtitle"><strong>GCP from the pipe.</strong> Google Cloud client for stryke &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore, Compute Engine, Cloud Run, Cloud Functions, Cloud Logging, Cloud Monitoring, and IAM. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim; ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use GCP</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Scope</h2>
+        <p>Twelve service families ship in <code>v0.19.x</code>, exposed through <strong>84</strong> <code>gcp__*</code> FFI entry points and a set of typed <code>.stk</code> wrappers. The package is intentionally narrower than the full GCP REST surface &mdash; the goal is &ldquo;useful from a shell pipeline&rdquo;, not exhaustive API coverage.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Cloud Storage (GCS)</td><td>ls / get / put / rm / head / cp / compose / buckets / get+set IAM policy</td></tr>
+            <tr><td>Pub/Sub</td><td>publish / pull / ack / list+create+delete topics+subs / get topic / topic subscriptions / pump</td></tr>
+            <tr><td>Secret Manager</td><td>access / create / add-version / list / list-versions / delete</td></tr>
+            <tr><td>Auth identity</td><td>ADC + project resolution</td></tr>
+            <tr><td>BigQuery</td><td>query (jobs.query) + streaming insert + list/get datasets + list/get tables + list jobs</td></tr>
+            <tr><td>Firestore</td><td>get / set / delete / list / query / create (native-mode REST)</td></tr>
+            <tr><td>Compute Engine</td><td>list/get instances / start / stop / reset / list zones / regions / machine types / disks</td></tr>
+            <tr><td>Cloud Run</td><td>list/get services / list revisions (Admin API v2)</td></tr>
+            <tr><td>Cloud Functions</td><td>list / describe (API v2)</td></tr>
+            <tr><td>Cloud Logging</td><td>list entries / write entry / list logs (API v2)</td></tr>
+            <tr><td>Cloud Monitoring</td><td>list time series / list metric descriptors (API v3)</td></tr>
+            <tr><td>IAM</td><td>get policy / test permissions / list+get service accounts</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-gcp
+
+# from a local checkout
+cd ~/projects/stryke-gcp
+cargo build --release            # produces target/release/libstryke_gcp.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/gcp@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use GCP</code> &mdash; no helper-binary fork per call. Any stryke script that declares <code>use GCP</code> (or a submodule like <code>use GCP::Storage</code>) resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Auth</h2>
+        <p>Uses <strong>Application Default Credentials</strong> &mdash; the same chain as <code>gcloud</code>:</p>
+        <ol>
+          <li><code>$GOOGLE_APPLICATION_CREDENTIALS</code> pointing at a service-account JSON.</li>
+          <li><code>gcloud auth application-default login</code> on dev machines.</li>
+          <li>The GCE / Cloud Run / GKE metadata server when running on GCP.</li>
+        </ol>
+        <p>Set the project once and forget it:</p>
+<pre>export GOOGLE_CLOUD_PROJECT=my-project-id</pre>
+        <p>Per call, override the project with <code>project =&gt; "..."</code> on any public fn. ADC discovery, metadata-server lookup, WIF, and SA-file resolution run once per stryke session &mdash; the cached credentials live in <code>OnceCell</code> and are reused on every subsequent call.</p>
+<pre>GCP::Storage::ls "gs://my-bucket/", project =&gt; "other-project"
+GCP::PubSub::publish "my-topic", "x", project =&gt; "other-project"</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use GCP</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>auth + project check</td><td><code>p to_json GCP::identity()</code></td></tr>
+            <tr><td>list GCS keys</td><td><code>my @entries = GCP::Storage::ls "gs://my-bucket/prefix/", delimiter =&gt; "/"</code></td></tr>
+            <tr><td>put an object</td><td><code>GCP::Storage::put "gs://my-bucket/hello.txt", data =&gt; "hello stryke", content_type =&gt; "text/plain"</code></td></tr>
+            <tr><td>get an object</td><td><code>p GCP::Storage::get "gs://my-bucket/hello.txt"</code></td></tr>
+            <tr><td>publish to Pub/Sub</td><td><code>GCP::PubSub::publish "my-topic", "event payload", attrs =&gt; { source =&gt; "stryke" }</code></td></tr>
+            <tr><td>pull from Pub/Sub</td><td><code>my @msgs = GCP::PubSub::pull "my-sub", max =&gt; 10, ack =&gt; 1</code></td></tr>
+            <tr><td>pump (pull → callback → ack)</td><td><code>GCP::PubSub::pump "my-sub", iterations =&gt; 5, callback =&gt; sub ($m) { handle_message $m-&gt;{data} }</code></td></tr>
+          </tbody>
+        </table>
+        <p>Project / endpoint overrides apply on every public fn via <code>project =&gt; "..."</code>. The complete reference is below; the <a href="https://github.com/MenkeTechnologies/stryke-gcp#0x05-api-reference">README "API reference" section</a> is the authoritative mirror.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: <code>use GCP</code></h2>
+        <p>Plumbing fns plus the flat <code>GCP::&lt;service&gt;_&lt;op&gt;</code> entry points the namespaced wrappers delegate to.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::version()</td><td>cdylib package version string</td></tr>
+            <tr><td>GCP::ping(%opts)</td><td>connectivity probe</td></tr>
+            <tr><td>GCP::identity(%opts)</td><td><code>{ ok, project, credentials_source }</code></td></tr>
+          </tbody>
+        </table>
+        <p><strong>Pure helpers</strong> &mdash; credential-free string parsing / validation (no network, no auth):</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::parse_gs_uri($uri)</td><td><code>{ bucket, object }</code></td></tr>
+            <tr><td>GCP::build_gs_uri($b, $obj?)</td><td>bucket+object &rarr; <code>gs://</code> URI (inverse of parse_gs_uri)</td></tr>
+            <tr><td>GCP::gs_uri_to_url($uri)</td><td><code>gs://b/o</code> &rarr; <code>{ url, bucket, object }</code></td></tr>
+            <tr><td>GCP::url_to_gs_uri($url)</td><td>GCS URL &rarr; <code>{ uri, bucket, object }</code> (inverse of gs_uri_to_url)</td></tr>
+            <tr><td>GCP::parse_resource_name($n)</td><td><code>{ parts, pairs, trailing }</code> for <code>projects/p/topics/t</code></td></tr>
+            <tr><td>GCP::resource_name_parent($n)</td><td><code>{ name, parent, has_parent, collection, id }</code></td></tr>
+            <tr><td>GCP::build_resource_name(%opts)</td><td><code>{ parts }</code> or <code>{ pairs, trailing }</code> &rarr; resource name</td></tr>
+            <tr><td>GCP::parse_table_ref($ref)</td><td>BigQuery <code>project.dataset.table</code> / <code>project:dataset.table</code> &rarr; <code>{ table_ref, project, dataset, table, legacy }</code></td></tr>
+            <tr><td>GCP::build_table_ref(%opts)</td><td>inverse of parse_table_ref</td></tr>
+            <tr><td>GCP::valid_bucket_name($name)</td><td><code>{ name, valid, reason }</code> &mdash; GCS bucket rules</td></tr>
+            <tr><td>GCP::valid_project_id($id)</td><td>6-30 lowercase/digit/hyphen, start letter, no trailing hyphen</td></tr>
+            <tr><td>GCP::valid_object_name($name)</td><td>1-1024 UTF-8 bytes, no CR/LF, not <code>.</code>/<code>..</code></td></tr>
+            <tr><td>GCP::region_for_zone($zone)</td><td><code>us-central1-a</code> &rarr; <code>{ zone, region, zone_letter }</code></td></tr>
+            <tr><td>GCP::valid_label($key, $value?)</td><td>Resource Manager label rules</td></tr>
+            <tr><td>GCP::valid_pubsub_id($id)</td><td>Pub/Sub topic/sub/schema/snapshot id rules</td></tr>
+            <tr><td>GCP::valid_service_account_id($id)</td><td>IAM accountId: 6-30 chars, RFC1035</td></tr>
+            <tr><td>GCP::valid_secret_id($id)</td><td>Secret Manager secret ID: 1-255 chars</td></tr>
+            <tr><td>GCP::valid_dataset_id($id)</td><td>BigQuery dataset id: &le;1024, letters/digits/underscores</td></tr>
+            <tr><td>GCP::valid_table_id($id)</td><td>BigQuery table id: &le;1024 UTF-8 bytes (broader than dataset)</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Secret Manager</strong> (flat ops under <code>use GCP</code>):</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::secret_access($secret, %opts)</td><td>&rarr; <code>$value</code> &mdash; opt <code>version</code> (default <code>"latest"</code>)</td></tr>
+            <tr><td>GCP::secret_create($secret, %opts)</td><td>new empty secret, automatic replication</td></tr>
+            <tr><td>GCP::secret_add_version($secret, $value, %opts)</td><td>add a new version</td></tr>
+            <tr><td>GCP::secret_list(%opts)</td><td>&rarr; <code>@secret_ids</code></td></tr>
+            <tr><td>GCP::secret_list_versions($secret, %opts)</td><td>&rarr; <code>@{ {name, state, create_time} }</code> (newest first)</td></tr>
+            <tr><td>GCP::secret_delete($secret, %opts)</td><td>deletes the secret and all versions</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: <code>use GCP::Storage</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::Storage::ls $uri, %opts</td><td>&rarr; <code>@entries</code> (opt <code>delimiter</code>)</td></tr>
+            <tr><td>GCP::Storage::get $uri, %opts</td><td>&rarr; <code>$body</code> | <code>$path</code> (when <code>output =&gt; "PATH"</code>)</td></tr>
+            <tr><td>GCP::Storage::put $uri, %opts</td><td>&rarr; <code>\%resp</code> &mdash; <code>data =&gt; $bytes</code> | <code>input =&gt; "PATH"</code></td></tr>
+            <tr><td>GCP::Storage::head $uri, %opts</td><td>&rarr; <code>\%meta</code> (size, content_type, updated, md5_hash, &hellip;)</td></tr>
+            <tr><td>GCP::Storage::cp $src, $dst, %opts</td><td>&rarr; <code>\%resp</code> &mdash; server-side copy</td></tr>
+            <tr><td>GCP::Storage::rm $uri, %opts</td><td>&rarr; <code>\%resp</code></td></tr>
+            <tr><td>GCP::Storage::buckets %opts</td><td>&rarr; <code>@buckets</code></td></tr>
+            <tr><td>GCP::Storage::compose $bucket, $dst, \@sources</td><td>concatenate objects</td></tr>
+            <tr><td>GCP::Storage::get_iam_policy $bucket</td><td>&rarr; <code>\%policy</code></td></tr>
+            <tr><td>GCP::Storage::set_iam_policy $bucket, \%policy</td><td>&rarr; <code>\%resp</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>ls</code> entries: <code>{type=&gt;"object", key, size, content_type, md5, etag, updated, storage_class, generation}</code> or <code>{type=&gt;"prefix", key}</code> when <code>delimiter</code> is set.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: <code>use GCP::PubSub</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::PubSub::publish $topic, $data, %opts</td><td>&rarr; <code>\%resp</code> &mdash; opts <code>attrs</code>, <code>ordering_key</code></td></tr>
+            <tr><td>GCP::PubSub::pull $sub, %opts</td><td>&rarr; <code>@messages</code> &mdash; opts <code>max</code>, <code>deadline</code>, <code>ack</code></td></tr>
+            <tr><td>GCP::PubSub::ack $sub, $ids_or_aref, %opts</td><td>&rarr; <code>\%resp</code></td></tr>
+            <tr><td>GCP::PubSub::topics %opts</td><td>&rarr; <code>@topic_names</code></td></tr>
+            <tr><td>GCP::PubSub::subs %opts</td><td>&rarr; <code>@{ {name, topic} }</code></td></tr>
+            <tr><td>GCP::PubSub::create_topic $topic, %opts</td><td>&rarr; <code>\%resp</code></td></tr>
+            <tr><td>GCP::PubSub::create_sub $name, $topic, %opts</td><td>&rarr; <code>\%resp</code> &mdash; opt <code>ack_deadline</code></td></tr>
+            <tr><td>GCP::PubSub::delete_topic $topic, %opts</td><td>&rarr; <code>\%resp</code></td></tr>
+            <tr><td>GCP::PubSub::delete_sub $sub, %opts</td><td>&rarr; <code>\%resp</code></td></tr>
+            <tr><td>GCP::PubSub::get_topic $topic, %opts</td><td>&rarr; <code>{ topic, resource }</code></td></tr>
+            <tr><td>GCP::PubSub::topic_subs $topic, %opts</td><td>&rarr; <code>@subscription_ids</code></td></tr>
+            <tr><td>GCP::PubSub::pump $sub, %opts</td><td>&rarr; <code>$count</code> &mdash; callback + auto-ack</td></tr>
+          </tbody>
+        </table>
+        <p>Topic / subscription names accept bare (<code>my-topic</code>) or fully qualified (<code>projects/PROJECT/topics/my-topic</code>) forms. Bare names expand against <code>$opts{project}</code> or <code>$GOOGLE_CLOUD_PROJECT</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: <code>use GCP::BigQuery</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::BigQuery::query $sql, %opts</td><td>&rarr; <code>{ columns, rows, total_rows, complete }</code> &mdash; opts <code>max_results</code>, <code>timeout_ms</code>, <code>project</code></td></tr>
+            <tr><td>GCP::BigQuery::rows $sql, %opts</td><td>&rarr; <code>@rows</code> &mdash; just the row hashrefs</td></tr>
+            <tr><td>GCP::BigQuery::insert $dataset, $table, \@rows, %opts</td><td>&rarr; <code>{ inserted, errors }</code> &mdash; streaming insert</td></tr>
+            <tr><td>GCP::BigQuery::datasets %opts</td><td>&rarr; <code>@dataset_ids</code></td></tr>
+            <tr><td>GCP::BigQuery::dataset $dataset, %opts</td><td>&rarr; <code>{ dataset, resource }</code></td></tr>
+            <tr><td>GCP::BigQuery::tables $dataset, %opts</td><td>&rarr; <code>@table_ids</code></td></tr>
+            <tr><td>GCP::BigQuery::table $dataset, $table, %opts</td><td>&rarr; <code>{ dataset, table, resource }</code></td></tr>
+            <tr><td>GCP::BigQuery::jobs %opts</td><td>&rarr; <code>@{ {id, state, job_type, user_email} }</code> &mdash; opts <code>all_users</code>, <code>max_results</code>, <code>state_filter</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: <code>use GCP::Firestore</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::Firestore::get $collection, $document, %opts</td><td>&rarr; <code>\%data</code> | <code>undef</code></td></tr>
+            <tr><td>GCP::Firestore::set $collection, $document, \%data, %opts</td><td>&rarr; <code>\%resp</code> &mdash; create-or-overwrite</td></tr>
+            <tr><td>GCP::Firestore::delete $collection, $document, %opts</td><td>&rarr; <code>\%resp</code></td></tr>
+            <tr><td>GCP::Firestore::list $collection, %opts</td><td>&rarr; <code>@{ {id, data} }</code> &mdash; opt <code>page_size</code></td></tr>
+            <tr><td>GCP::Firestore::query $collection, %opts</td><td>&rarr; <code>@{ {id, data} }</code> &mdash; opts <code>field</code>, <code>op</code>, <code>value</code>, <code>limit</code></td></tr>
+            <tr><td>GCP::Firestore::create $collection, \%data, %opts</td><td>&rarr; <code>{ collection, id }</code> &mdash; auto-id; opt <code>document</code></td></tr>
+          </tbody>
+        </table>
+        <p>Field values cross as plain stryke data; the cdylib handles Firestore's typed encoding (<code>stringValue</code> / <code>integerValue</code> / &hellip;) in both directions. Flat forms are <code>GCP::firestore_get</code> / <code>_set</code> / <code>_delete</code> / <code>_list</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: <code>use GCP::Compute</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::Compute::instances $zone, %opts</td><td>&rarr; <code>@{ {name, status, machine_type, zone} }</code></td></tr>
+            <tr><td>GCP::Compute::get $zone, $instance, %opts</td><td>&rarr; <code>{ zone, instance, resource }</code></td></tr>
+            <tr><td>GCP::Compute::start $zone, $instance, %opts</td><td>&rarr; <code>{ instance, action, operation, status }</code></td></tr>
+            <tr><td>GCP::Compute::stop $zone, $instance, %opts</td><td>&rarr; <code>{ instance, action, operation, status }</code></td></tr>
+            <tr><td>GCP::Compute::reset $zone, $instance, %opts</td><td>&rarr; <code>{ instance, action, operation, status }</code></td></tr>
+            <tr><td>GCP::Compute::zones %opts</td><td>&rarr; <code>@{ {name, region, status} }</code></td></tr>
+            <tr><td>GCP::Compute::regions %opts</td><td>&rarr; <code>@{ {name, status} }</code></td></tr>
+            <tr><td>GCP::Compute::machine_types $zone, %opts</td><td>&rarr; <code>@{ {name, guest_cpus, memory_mb, description} }</code></td></tr>
+            <tr><td>GCP::Compute::disks $zone, %opts</td><td>&rarr; <code>@{ {name, size_gb, type, status, zone} }</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: Run / Functions / Logging / Monitoring / IAM</h2>
+        <p><code>use GCP::Run</code></p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::Run::services $region, %opts</td><td>&rarr; <code>@{ {name, uri, latest_revision} }</code></td></tr>
+            <tr><td>GCP::Run::get $region, $service, %opts</td><td>&rarr; <code>{ region, service, resource }</code></td></tr>
+            <tr><td>GCP::Run::revisions $region, $service, %opts</td><td>&rarr; <code>@{ {name, create_time} }</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>use GCP::Functions</code></p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::Functions::list %opts</td><td>&rarr; <code>@{ {name, state, url} }</code> &mdash; opt <code>region</code> (default <code>"-"</code> = all)</td></tr>
+            <tr><td>GCP::Functions::describe $region, $function, %opts</td><td>&rarr; <code>{ region, function, resource }</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>use GCP::Logging</code></p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::Logging::entries %opts</td><td>&rarr; <code>@{ {timestamp, severity, log_name, text_payload, json_payload} }</code> &mdash; opts <code>filter</code>, <code>page_size</code> (50), <code>order</code> (asc/desc)</td></tr>
+            <tr><td>GCP::Logging::write $log, %opts</td><td>&rarr; <code>{ log, written }</code> &mdash; opts <code>text</code> | <code>json</code>, <code>severity</code></td></tr>
+            <tr><td>GCP::Logging::logs %opts</td><td>&rarr; <code>@log_ids</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>use GCP::Monitoring</code></p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::Monitoring::time_series $filter, $start, $end, %opts</td><td>&rarr; <code>@series</code> &mdash; interval is RFC3339</td></tr>
+            <tr><td>GCP::Monitoring::descriptors %opts</td><td>&rarr; <code>@{ {type, display_name, kind, value_type} }</code> &mdash; opt <code>filter</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>use GCP::IAM</code></p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>GCP::IAM::get_policy $url, %opts</td><td>&rarr; <code>\%policy</code> &mdash; full <code>:getIamPolicy</code> endpoint</td></tr>
+            <tr><td>GCP::IAM::test_permissions $url, \@perms, %opts</td><td>&rarr; <code>@granted</code> &mdash; full <code>:testIamPermissions</code> endpoint</td></tr>
+            <tr><td>GCP::IAM::service_accounts %opts</td><td>&rarr; <code>@{ {email, display_name, unique_id} }</code></td></tr>
+            <tr><td>GCP::IAM::service_account $email, %opts</td><td>&rarr; <code>{ email, resource }</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Runnable <code>.stk</code> scripts ship under <code>examples/</code>. Each is read-only or eval-guarded so it exits cleanly when ADC is unreachable.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>discover.stk</td><td><code>s examples/discover.stk</code> &mdash; version + ADC source + identity + bucket count tour</td></tr>
+            <tr><td>whoami.stk</td><td><code>s examples/whoami.stk</code> &mdash; ADC identity + visible GCS bucket summary</td></tr>
+            <tr><td>gcs_browse.stk</td><td><code>s examples/gcs_browse.stk gs://bucket/prefix/</code> &mdash; list a GCS prefix</td></tr>
+            <tr><td>gcs_put_get.stk</td><td><code>s examples/gcs_put_get.stk gs://bucket/key</code> &mdash; round-trip a string through GCS</td></tr>
+            <tr><td>pubsub_pump.stk</td><td><code>s examples/pubsub_pump.stk my-sub</code> &mdash; long-poll a Pub/Sub subscription</td></tr>
+          </tbody>
+        </table>
+<pre># pubsub_pump.stk core — pull → callback → ack, 5 iterations
+val $n = GCP::PubSub::pump($sub,
+    iterations =&gt; 5,
+    max        =&gt; 10,
+    callback   =&gt; sub ($m) {
+        p "got $m-&gt;{message_id}: $m-&gt;{data}"
+    })
+p "handled $n messages"</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests &amp; dev workflow</h2>
+<pre>cargo test                       # compiles, no live calls
+s test t/                        # ADC-aware end-to-end
+
+# opt into per-service round-trips
+export STRYKE_GCP_TEST_BUCKET=my-test-bucket
+export STRYKE_GCP_TEST_TOPIC=my-test-topic
+export STRYKE_GCP_TEST_SUB=my-test-sub
+s test t/
+
+make            # release build
+make debug
+make test
+make install
+make clean</pre>
+        <p>The suite skips cleanly when the cdylib isn't installed, when ADC isn't reachable, or when the per-service env vars are unset.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>GCP integration needs an auth chain (Application Default Credentials), a TLS HTTP client, and JSON serialization &mdash; fine to bundle once, opt-in. The cdylib talks to GCP's REST APIs directly via <code>reqwest</code> + <code>google-cloud-auth</code>.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>gcp__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_gcp.{dylib,so}</code>, dlopened in-process on first <code>use GCP</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>GCP::*</code> wrapper builds a JSON args dict and calls a sibling <code>gcp__*</code> symbol resolved out of <code>libstryke_gcp.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use GCP</code>; a shared tokio runtime + <code>reqwest::Client</code> + cached ADC credentials are held in <code>OnceCell</code> &mdash; no fork-per-call, no re-running of ADC discovery / metadata-server / WIF / SA-file lookup on each call. Responses are JSON; errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with the message.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-gcp/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — gcp__* extern "C" exports
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use GCP`, `use GCP::Storage`, …
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

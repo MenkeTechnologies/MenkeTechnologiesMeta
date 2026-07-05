@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-email — email + campaign client for stryke. SMTP send, personalized mass mailing, templates, List-Unsubscribe, suppression lists, rate limiting — through your own authenticated SMTP. Opt-in Rust cdylib.">
+  <title>stryke-email — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .example-tbl td { padding: 6px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+    .example-tbl td:first-child { width: 30%; white-space: nowrap; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .fn-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .fn-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .fn-tbl td { padding: 6px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+    .fn-tbl td:first-child { white-space: nowrap; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .fn-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .toc-list { columns: 2; column-gap: 2rem; margin: 0.5rem 0; padding-left: 1.1rem; }
+    .toc-list li { margin: 0.15rem 0; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-EMAIL &mdash; EMAIL + CAMPAIGN CLIENT FOR STRYKE // SMTP + MASS MAILING + TEMPLATES + COMPLIANCE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package &middot; namespace <code>Email</code> &middot; cdylib <code>libstryke_email</code> &middot; v0.3.0 &middot; 27 public functions &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-email/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-EMAIL</h2>
+      <p class="tutorial-subtitle"><strong>Email + campaign client for stryke.</strong> Single send, personalized mass mailing, <code>{{merge}}</code> templates, List-Unsubscribe headers, suppression lists, and rate limiting &mdash; all over <strong>your own authenticated SMTP</strong>. Built on <code>lettre</code> with a pooled blocking transport (rustls, no tokio), cached per <code>(host, port, tls, user)</code>. An opt-in package, kept out of the stryke core binary so the daily-driver install stays slim.</p>
+
+      <section class="tutorial-section">
+        <h2>On this page</h2>
+        <ul class="toc-list">
+          <li><a href="#install">Install &amp; load model</a></li>
+          <li><a href="#connect">Connecting (SMTP config)</a></li>
+          <li><a href="#send-one">Send one message</a></li>
+          <li><a href="#send-raw">Send a pre-built message</a></li>
+          <li><a href="#templates">Templates &amp; merge</a></li>
+          <li><a href="#bulk">Mass mailing / campaigns</a></li>
+          <li><a href="#preflight">Preflight &amp; list ops</a></li>
+          <li><a href="#compliance">Compliance, built in</a></li>
+          <li><a href="#reference">Full function reference</a></li>
+          <li><a href="#urls">SMTP URL helpers</a></li>
+          <li><a href="#build-test">Build &amp; test</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+          <li><a href="#why">Why a package, not a builtin</a></li>
+          <li><a href="#siblings">Sibling packages</a></li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section" id="install">
+        <h2>Install &amp; load model</h2>
+        <pre>s add github.com/MenkeTechnologies/stryke-email</pre>
+        <p>On first <code>use Email</code>, stryke dlopens the cdylib in-process and registers every <code>email__*</code> export via <code>rust_ffi::load_cdylib</code>. Each wrapper builds a JSON args dict, calls the FFI symbol, and parses the JSON return; an <code>error</code> key in the return is turned into a <code>die</code> of the form <code>Email::&lt;fn&gt;: &lt;reason&gt;</code>. A pooled <code>SmtpTransport</code> is cached per <code>(host, port, tls, user)</code> tuple for the life of the process, so a whole mass mailing reuses one authenticated connection rather than reconnecting per message.</p>
+        <p>The template, address, and compliance helpers take no connection and are unit-tested in-crate, so they validate in CI with no SMTP server.</p>
+      </section>
+
+      <section class="tutorial-section" id="connect">
+        <h2>Connecting (SMTP config)</h2>
+        <p>Every send function takes connection parameters as trailing <code>%opts</code>. When <code>host</code> is omitted, the wrapper falls back to the <code>$SMTP_HOST</code> / <code>$SMTP_USER</code> / <code>$SMTP_PASS</code> environment variables.</p>
+        <table class="example-tbl">
+          <thead><tr><th>Key</th><th>Default</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>host</td><td>&mdash; (required)</td><td>SMTP server hostname; falls back to <code>$SMTP_HOST</code></td></tr>
+            <tr><td>tls</td><td>starttls</td><td><code>starttls</code> (587), <code>tls</code> (465), or <code>none</code> (25)</td></tr>
+            <tr><td>port</td><td>by <code>tls</code></td><td>Override the TLS-implied default port</td></tr>
+            <tr><td>username</td><td>&mdash;</td><td>SMTP auth user; falls back to <code>$SMTP_USER</code></td></tr>
+            <tr><td>password</td><td>&mdash;</td><td>SMTP auth password; falls back to <code>$SMTP_PASS</code></td></tr>
+          </tbody>
+        </table>
+        <pre>use Email
+
+var %conn = ( host =&gt; "smtp.example.com", username =&gt; "me", password =&gt; $ENV{SMTP_PASS} )
+
+# probe the connection before a campaign (EHLO/NOOP); returns 1 on success
+p Email::verify_connection(%conn)</pre>
+      </section>
+
+      <section class="tutorial-section" id="send-one">
+        <h2>Send one message</h2>
+        <p><code>Email::send($msg, %opts)</code> takes a message hashref &mdash; <code>from</code>, <code>to</code>, <code>subject</code>, optional <code>text</code> / <code>html</code> / <code>cc</code> / <code>bcc</code> / <code>reply_to</code> / <code>list_unsubscribe</code>. <code>to</code>/<code>cc</code>/<code>bcc</code> accept a string or an arrayref. With both <code>text</code> and <code>html</code> set, a multipart/alternative message is built. Returns <code>1</code> on success.</p>
+<pre>Email::send(
+    { from    =&gt; "Me &lt;me@example.com&gt;",
+      to      =&gt; "customer@example.com",
+      subject =&gt; "Your license key",
+      text    =&gt; "Thanks for your purchase. Key: ABC-123",
+      html    =&gt; "&lt;p&gt;Thanks for your purchase. Key: &lt;code&gt;ABC-123&lt;/code&gt;&lt;/p&gt;" },
+    %conn,
+)</pre>
+      </section>
+
+      <section class="tutorial-section" id="send-raw">
+        <h2>Send a pre-built message</h2>
+        <p><code>Email::send_raw($raw, $from, $to, %opts)</code> sends a full RFC 5322 message string you already assembled (for example, one returned by <code>Email::build_message</code> after signing or queueing). The envelope <code>from</code> and <code>to</code> (string or arrayref) are passed explicitly.</p>
+<pre>val $raw = Email::build_message(
+    { from =&gt; "Me &lt;me@example.com&gt;", to =&gt; "you@example.com",
+      subject =&gt; "Preview", text =&gt; "queued earlier" }
+)
+# ... store / sign / inspect $raw ...
+Email::send_raw($raw, "me@example.com", "you@example.com", %conn)</pre>
+      </section>
+
+      <section class="tutorial-section" id="templates">
+        <h2>Templates &amp; merge</h2>
+        <p>The merge engine is a deliberate mustache-lite: <code>{{ key }}</code> substitution only &mdash; no conditionals, no loops, unknown keys render empty. Keys are trimmed; string values insert verbatim, other JSON values insert their string form.</p>
+        <table class="fn-tbl">
+          <thead><tr><th>Function</th><th>Returns</th></tr></thead>
+          <tbody>
+            <tr><td>Email::merge($tmpl, $vars)</td><td>One string with <code>{{key}}</code> substituted from the <code>$vars</code> dict</td></tr>
+            <tr><td>Email::merge_many($tmpl, $rows)</td><td>Arrayref of strings &mdash; the template rendered once per var dict in <code>$rows</code></td></tr>
+            <tr><td>Email::render($template, $vars)</td><td>A rendered <code>{ subject, text, html }</code> hashref (each field merged with <code>$vars</code>)</td></tr>
+          </tbody>
+        </table>
+<pre>p Email::merge("Hi {{name}}", { name =&gt; "Ada" })          # "Hi Ada"
+p Email::merge("Hi {{missing}}!", {})                     # "Hi !"  (unknown key -&gt; empty)
+p Email::merge_many("{{p}} is out", [ { p =&gt; "v2" }, { p =&gt; "v3" } ])
+
+val $r = Email::render(
+    { subject =&gt; "{{product}} update", html =&gt; "&lt;p&gt;Hi {{name}}&lt;/p&gt;" },
+    { product =&gt; "Audio-Haxor", name =&gt; "Ada" },
+)</pre>
+      </section>
+
+      <section class="tutorial-section" id="bulk">
+        <h2>Mass mailing / campaigns</h2>
+        <p>Personalized, suppression-aware, rate-limited, with the unsubscribe header injected automatically. <code>send_bulk</code> iterates the recipient list once: per recipient it merges the subject/text/html template with the recipient's <code>vars</code> (plus <code>email</code> and <code>name</code>), skips suppressed addresses, injects <code>List-Unsubscribe</code> (whose URL can itself be per-recipient via <code>{{email}}</code>), sends, and records the outcome.</p>
+<pre>val $res = Email::send_bulk(
+    { subject =&gt; "Hi {{name}}, {{product}} v2 is out",
+      html    =&gt; "&lt;p&gt;Hi {{name}}, your {{product}} update is ready.&lt;/p&gt;" },
+    [
+        { email =&gt; "ada@example.com",  name =&gt; "Ada",  vars =&gt; { product =&gt; "Audio-Haxor" } },
+        { email =&gt; "alan@example.com", name =&gt; "Alan", vars =&gt; { product =&gt; "traderview" } },
+    ],
+    from             =&gt; "Me &lt;me@example.com&gt;",
+    suppression      =&gt; $opt_outs,                 # arrayref of opted-out emails
+    rate             =&gt; { per_minute =&gt; 120 },     # or { delay_ms =&gt; 500 }
+    list_unsubscribe =&gt; { url =&gt; "https://example.com/u?e={{email}}", mailto =&gt; "unsub@example.com" },
+    %conn,
+)
+
+p $res-&gt;{sent}      # 2
+p $res-&gt;{failed}    # 0
+p $res-&gt;{skipped}   # suppressed count
+p $res-&gt;{results}   # [ { email, ok, error? }, ... ]</pre>
+        <p>The result set <code>{ sent, failed, skipped, results }</code> lets the caller retry failures and update its own bounce / opt-out state. <code>rate</code> accepts an explicit <code>delay_ms</code> between sends, or a <code>per_minute</code> rate the cdylib converts into a sleep interval.</p>
+      </section>
+
+      <section class="tutorial-section" id="preflight">
+        <h2>Preflight &amp; list ops</h2>
+        <p>Network-free helpers to prepare and de-risk a recipient list before a campaign. All are pure and CI-tested.</p>
+        <table class="fn-tbl">
+          <thead><tr><th>Function</th><th>Behavior</th></tr></thead>
+          <tbody>
+            <tr><td>Email::validate_message($msg)</td><td>Returns <code>{ ok, errors }</code> &mdash; flags missing/invalid <code>from</code>, no recipients, all-invalid recipients, empty body</td></tr>
+            <tr><td>Email::build_message($msg)</td><td>Builds the raw RFC 5322 string without sending (preview / sign / queue)</td></tr>
+            <tr><td>Email::dedupe($recipients)</td><td>Returns <code>{ unique, duplicates }</code> &mdash; drops repeats by normalized email (first wins)</td></tr>
+            <tr><td>Email::chunk($recipients, $size)</td><td>Arrayref of batches of at most <code>$size</code> (<code>0</code> = one batch) for per-batch provider limits</td></tr>
+            <tr><td>Email::group_by_domain($addresses)</td><td>Returns <code>{ "example.com" =&gt; [emails], ... }</code> for per-domain throttling</td></tr>
+            <tr><td>Email::suppress_filter($recip, $supp)</td><td>Returns <code>{ kept, removed }</code> split by a suppression arrayref</td></tr>
+          </tbody>
+        </table>
+<pre>val $vm = Email::validate_message({ from =&gt; "me@x.com", to =&gt; "you@x.com", text =&gt; "hi" })
+p $vm-&gt;{ok}          # true
+
+val $d = Email::dedupe([ { email =&gt; "a@x.com" }, { email =&gt; "A@x.com" } ])
+p scalar @{ $d-&gt;{unique} }     # 1  (normalized match)
+
+p Email::chunk([1, 2, 3, 4, 5], 2)            # [ [1,2], [3,4], [5] ]
+p Email::group_by_domain([ "a@x.com", "b@y.com", "c@x.com" ])</pre>
+      </section>
+
+      <section class="tutorial-section" id="compliance">
+        <h2>Compliance, built in</h2>
+        <p>For sending to your own opted-in recipients through your own SMTP. The package ships the mechanisms that keep that legitimate:</p>
+        <table class="example-tbl">
+          <tr><td>List-Unsubscribe</td><td>RFC 2369 / 8058 one-click header auto-added to every <code>send_bulk</code> message; build it standalone with <code>unsubscribe_header</code>.</td></tr>
+          <tr><td>Suppression</td><td><code>suppress_filter</code> + <code>send_bulk</code>'s <code>suppression</code> honor opt-outs and bounces before send.</td></tr>
+          <tr><td>Rate limiting</td><td><code>per_minute</code> / <code>delay_ms</code> for deliverability and provider limits.</td></tr>
+          <tr><td>Validation</td><td>Address checks (<code>validate</code>, <code>validate_list</code>, <code>validate_message</code>) before sending.</td></tr>
+        </table>
+        <p>Consent and honoring unsubscribes (CAN-SPAM, GDPR, your provider's ToS) is the sender's responsibility &mdash; the package gives you the tools, not a way around them.</p>
+      </section>
+
+      <section class="tutorial-section" id="reference">
+        <h2>Full function reference</h2>
+        <p>27 public functions across the <code>Email</code> namespace. Send functions take trailing <code>%opts</code> SMTP params; everything else is network-free.</p>
+        <table class="fn-tbl">
+          <thead><tr><th>Function</th><th>Signature &amp; return</th></tr></thead>
+          <tbody>
+            <tr><td>version</td><td><code>version()</code> &rarr; package version string</td></tr>
+            <tr><td>verify_connection</td><td><code>verify_connection(%opts)</code> &rarr; <code>1</code> on a successful EHLO/NOOP</td></tr>
+            <tr><td>send</td><td><code>send($msg, %opts)</code> &rarr; <code>1</code>; <code>$msg</code> = <code>{ from, to, subject, text?, html?, cc?, bcc?, reply_to?, list_unsubscribe? }</code></td></tr>
+            <tr><td>send_raw</td><td><code>send_raw($raw, $from, $to, %opts)</code> &rarr; <code>1</code>; sends a pre-built RFC 5322 string</td></tr>
+            <tr><td>send_bulk</td><td><code>send_bulk($template, $recipients, %opts)</code> &rarr; <code>{ sent, failed, skipped, results }</code></td></tr>
+            <tr><td>send_template</td><td><code>send_template($template, $vars, $msg, %opts)</code> &rarr; <code>1</code>; merge then send a single message</td></tr>
+            <tr><td>build_message</td><td><code>build_message($msg)</code> &rarr; raw RFC 5322 string (no send)</td></tr>
+            <tr><td>render</td><td><code>render($template, $vars)</code> &rarr; rendered <code>{ subject, text, html }</code> hashref</td></tr>
+            <tr><td>merge</td><td><code>merge($tmpl, $vars)</code> &rarr; one merged string</td></tr>
+            <tr><td>merge_many</td><td><code>merge_many($tmpl, $rows)</code> &rarr; arrayref of merged strings</td></tr>
+            <tr><td>validate</td><td><code>validate($address)</code> &rarr; truthy when the address is RFC 5322-shaped (no MX lookup)</td></tr>
+            <tr><td>validate_list</td><td><code>validate_list($addresses)</code> &rarr; <code>{ valid, invalid }</code></td></tr>
+            <tr><td>validate_message</td><td><code>validate_message($msg)</code> &rarr; <code>{ ok, errors }</code></td></tr>
+            <tr><td>parse</td><td><code>parse($address)</code> &rarr; <code>{ name, email }</code></td></tr>
+            <tr><td>split_addresses</td><td><code>split_addresses($list)</code> &rarr; <code>[ { name, email } ]</code> (commas in quotes / angle brackets respected)</td></tr>
+            <tr><td>format_address</td><td><code>format_address($email, name =&gt; ...)</code> &rarr; RFC 5322 address string (inverse of <code>parse</code>)</td></tr>
+            <tr><td>domain</td><td><code>domain($address)</code> &rarr; the domain part (display name stripped)</td></tr>
+            <tr><td>normalize</td><td><code>normalize($address)</code> &rarr; canonical form: name stripped, trimmed, domain lowercased</td></tr>
+            <tr><td>unsubscribe_header</td><td><code>unsubscribe_header(url =&gt; ..., mailto =&gt; ...)</code> &rarr; List-Unsubscribe header value</td></tr>
+            <tr><td>suppress_filter</td><td><code>suppress_filter($recipients, $suppression)</code> &rarr; <code>{ kept, removed }</code></td></tr>
+            <tr><td>dedupe</td><td><code>dedupe($recipients)</code> &rarr; <code>{ unique, duplicates }</code></td></tr>
+            <tr><td>chunk</td><td><code>chunk($recipients, $size)</code> &rarr; arrayref of batches (<code>0</code> = one batch)</td></tr>
+            <tr><td>group_by_domain</td><td><code>group_by_domain($addresses)</code> &rarr; <code>{ domain =&gt; [emails] }</code></td></tr>
+            <tr><td>mailto</td><td><code>mailto($to, subject =&gt; ..., body =&gt; ..., cc =&gt; ..., bcc =&gt; ...)</code> &rarr; percent-encoded <code>mailto:</code> URL</td></tr>
+            <tr><td>parse_url</td><td><code>parse_url($url)</code> &rarr; <code>{ scheme, host, port, tls, username, password }</code></td></tr>
+            <tr><td>build_url</td><td><code>build_url($parts)</code> &rarr; SMTP URI (inverse of <code>parse_url</code>)</td></tr>
+            <tr><td>redact_url</td><td><code>redact_url($url)</code> &rarr; URI with the password replaced by <code>***</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="urls">
+        <h2>SMTP URL helpers</h2>
+        <p>Parse, rebuild, and safely log SMTP connection strings. <code>parse_url</code> derives the TLS mode (<code>smtps</code> &rarr; <code>tls</code>, otherwise <code>starttls</code>) and the default port (465 / 587) from the scheme; <code>redact_url</code> masks the password before it reaches a log line.</p>
+<pre>val $parts = Email::parse_url("smtps://me:secret@mail.example.com:465")
+# { scheme =&gt; "smtps", host =&gt; "mail.example.com", port =&gt; 465, tls =&gt; "tls", username =&gt; "me", ... }
+
+p Email::build_url({ host =&gt; "h", port =&gt; 587, username =&gt; "u", password =&gt; "p", tls =&gt; "starttls" })
+p Email::redact_url("smtps://user:secret@mail:465")   # "smtps://user:***@mail:465"
+p Email::mailto("you@x.com", subject =&gt; "Hi there")   # "mailto:you@x.com?subject=Hi%20there"</pre>
+      </section>
+
+      <section class="tutorial-section" id="build-test">
+        <h2>Build &amp; test</h2>
+<pre>make debug       # cargo build
+make test        # cargo test, then `s test t/` (live sends need $SMTP_HOST)
+make install     # s pkg install -g .</pre>
+        <p><code>cargo test</code> runs the in-crate unit tests (merge, validation, parsing, unsubscribe value, multipart build, URL round-trip, normalize) with no server. Point <code>$SMTP_HOST</code> at a local catch-all like MailHog (<code>tls =&gt; none</code>, port 1025) to exercise the send path without emailing anyone real.</p>
+      </section>
+
+      <section class="tutorial-section" id="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <table class="example-tbl">
+          <tr><td>relay / starttls error</td><td>The TLS mode does not match the port. Set <code>tls =&gt; tls</code> for 465, <code>starttls</code> for 587, <code>none</code> for a plaintext catch-all on 25/1025.</td></tr>
+          <tr><td>auth fails</td><td>Pass <code>username</code> / <code>password</code> in <code>%opts</code>, or export <code>$SMTP_USER</code> / <code>$SMTP_PASS</code>. <code>verify_connection</code> probes EHLO/NOOP without sending.</td></tr>
+          <tr><td>recipient skipped</td><td>It matched the <code>suppression</code> set (compared by normalized email). Check with <code>suppress_filter</code> first; the count shows up as <code>skipped</code>.</td></tr>
+          <tr><td>placeholder left blank</td><td>The <code>{{key}}</code> had no matching var. Merge renders unknown keys empty by design &mdash; verify the recipient's <code>vars</code> dict.</td></tr>
+          <tr><td>address rejected</td><td><code>validate</code> requires one <code>@</code>, a non-empty local part, and a dotted domain with no whitespace. It is a shape check, not an MX/deliverability lookup.</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="why">
+        <h2>Why a package, not a builtin</h2>
+        <p>The SMTP + TLS stack (<code>lettre</code>, rustls, the message builder) ships once, on demand, as an opt-in package &mdash; stryke core is never linked against it. The stryke side is a thin <code>.stk</code> wrapper; the heavy code lives in the <code>libstryke_email</code> cdylib and is dlopened on first <code>use Email</code>. The cdylib holds one pooled blocking transport per <code>(host, port, tls, user)</code> tuple, reused across a whole mass mailing &mdash; no per-message reconnect.</p>
+      </section>
+
+      <section class="tutorial-section" id="siblings">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+        <p>The full API also lives in the <a href="https://github.com/MenkeTechnologies/stryke-email#readme" target="_blank" rel="noopener noreferrer">README</a>, and the internals are documented in the <a href="report.html">engineering report</a>.</p>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

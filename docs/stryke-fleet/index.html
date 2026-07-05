@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-fleet — parallel expect/PTY automation. Transcripted sessions, declarative playbooks, a recipe corpus for interactive CLIs, and multi-host fan-out on stryke's thread pool. Pure stryke — no cdylib, no helper binary.">
+  <title>stryke-fleet — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .sub-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .sub-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .sub-tbl td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .sub-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; font-size: 11.5px; }
+    .sub-tbl td.mod-name { color: var(--green); font-weight: 700; font-family: 'Share Tech Mono', monospace; }
+    .sub-tbl td.cnt { color: var(--yellow); text-align: right; font-family: 'Share Tech Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-FLEET &mdash; PARALLEL EXPECT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">4 sublibraries &middot; transcripted PTY sessions &middot; declarative playbooks &middot; recipe corpus &middot; multi-host fan-out &middot; <code>use Fleet</code> pulls everything in one pass</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-fleet/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-FLEET</h2>
+      <p class="tutorial-subtitle"><strong>Expect, but N sessions at once.</strong> Tcl/Expect automated one terminal; pexpect bolted multiprocessing on the side. stryke-fleet is the orchestration layer over stryke's native PTY builtins (<code>pty_spawn</code>, <code>pty_expect</code>, <code>pty_expect_table</code>, &hellip;) and its thread pool (<code>pmap</code>): transcripted sessions (<code>Fleet::Session</code>), declarative step lists (<code>Fleet::Playbook</code>), a recipe corpus for ssh / scp / sftp / ftp / telnet / sudo / su / passwd / psql / mysql / mongo / redis-cli / docker / npm login / gpg / openssl / installers / network gear (<code>Fleet::Recipes</code>), and one-playbook-N-targets fan-out (<code>Fleet::Fanout</code>). Pure stryke: no <code>[ffi]</code> table, no cdylib, no helper binary &mdash; just <code>.stk</code> modules loaded by stryke's normal package resolver.</p>
+
+      <section class="tutorial-section">
+        <h2>The 4 sublibraries</h2>
+        <table class="sub-tbl">
+          <thead>
+            <tr><th>#</th><th>Module</th><th>File</th><th>Fns</th><th>Highlights</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td class="mod-name">Fleet::Session</td><td><code>lib/Session.stk</code></td><td class="cnt">24</td><td><code>open</code> &middot; <code>send</code>/<code>send_line</code>/<code>send_lines</code>/<code>send_secret</code>/<code>send_control</code> &middot; <code>expect</code> &middot; <code>expect_exact</code> (literal match) &middot; <code>expect_any</code> &middot; <code>sendline_expect</code> (send-then-expect atom) &middot; <code>branch</code> &middot; <code>read</code> &middot; <code>drain</code> (collect trailing output until idle) &middot; <code>buffer</code> &middot; <code>alive</code> &middot; <code>eof</code> &middot; <code>interact</code> &middot; <code>close</code> &middot; <code>transcript</code> &middot; <code>events</code>/<code>matches</code>/<code>last_match</code> &middot; <code>timed_out</code> &middot; <code>transcript_text</code></td></tr>
+            <tr><td>2</td><td class="mod-name">Fleet::Playbook</td><td><code>lib/Playbook.stk</code></td><td class="cnt">4</td><td><code>validate</code> &middot; <code>run</code> &mdash; ordered <code>+{expect, send, branches, timeout, optional, send_matched, retries, retry_send, delay}</code> steps; first non-optional timeout fails the run with the step name &middot; <code>dry_run</code> (pure step preview) &middot; <code>concat</code> (splice step lists)</td></tr>
+            <tr><td>3</td><td class="mod-name">Fleet::Recipes</td><td><code>lib/Recipes.stk</code></td><td class="cnt">49</td><td><code>ssh_login</code> &middot; <code>ssh_copy_id</code> &middot; <code>sudo</code> &middot; <code>doas</code> &middot; <code>su</code> &middot; <code>psql</code> &middot; <code>mysql</code> &middot; <code>mariadb</code> &middot; <code>pg_dump</code> &middot; <code>redis_cli</code> &middot; <code>mongo</code> &middot; <code>influx</code> &middot; <code>yes_to_all</code> &middot; <code>cisco_enable</code> &middot; <code>telnet_login</code> &middot; <code>sftp</code> &middot; <code>scp</code> &middot; <code>ftp_login</code> &middot; <code>passwd_change</code> &middot; <code>docker_login</code> &middot; <code>npm_login</code> &middot; <code>gpg_decrypt</code> &middot; <code>openssl_pem</code> &middot; <code>rsync</code> &middot; <code>ssh_keygen</code> &middot; <code>git_clone</code> &middot; <code>kinit</code> &middot; <code>ldapsearch</code> &middot; <code>restic</code> &middot; <code>borg</code> &middot; <code>age</code> &middot; <code>smbclient</code> &middot; <code>vault_login</code> &middot; <code>aws_configure</code> &middot; <code>htpasswd</code> &middot; <code>keytool</code> &middot; <code>ansible_vault</code> &middot; <code>sqlplus</code> &middot; <code>op_signin</code> &middot; <code>ssh_add</code> &middot; <code>unzip_encrypted</code> &middot; <code>cqlsh</code> &middot; <code>cryptsetup</code> &middot; <code>clickhouse_client</code> &middot; <code>gcloud_auth</code> &middot; <code>heroku_login</code> &middot; <code>pass_insert</code> &middot; <code>bw_unlock</code> &middot; <code>names</code></td></tr>
+            <tr><td>4</td><td class="mod-name">Fleet::Fanout</td><td><code>lib/Fanout.stk</code></td><td class="cnt">18</td><td><code>run</code> (N targets via <code>pmap</code>) &middot; <code>batch</code> (bounded concurrency) &middot; <code>ssh</code> (host-list convenience) &middot; <code>partition</code> (ok/failed split) &middot; <code>count</code> &middot; <code>all_ok</code> &middot; <code>failed_cmds</code> &middot; <code>ok_cmds</code> &middot; <code>find</code> (first result by cmd pattern) &middot; <code>pluck</code> &middot; <code>pluck_ok</code> &middot; <code>summarize</code> (counts + error lines) &middot; <code>group_by</code> (generic bucketing) &middot; <code>group_by_error</code> (bucket failures by error) &middot; <code>group_by_output</code> (bucket successes by output &mdash; config-drift) &middot; <code>grep_transcript</code> (which hosts printed X) &middot; <code>retry_failed</code> (re-run only the failures) &middot; <code>retry_until</code> (re-run failures up to N times)</td></tr>
+          </tbody>
+        </table>
+        <p>Color legend: <span style="color:var(--green);font-weight:700">green = module name</span> &middot; <span style="color:var(--yellow)">yellow = function count</span>. Recipes are pure data generators &mdash; they never spawn anything, so they compose with <code>@{...}</code> splices and unit-test without a network.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># From a release:
+s pkg install -g github.com/MenkeTechnologies/stryke-fleet
+
+# From a local checkout:
+git clone https://github.com/MenkeTechnologies/stryke-fleet
+cd stryke-fleet
+s pkg install -g .              # installs into ~/.stryke/store/stryke-fleet@&lt;version&gt;/
+
+# Or via Makefile:
+make install</pre>
+        <p>No cargo step. No cdylib. The installed store directory contains only <code>stryke.toml</code> + <code>lib/*.stk</code> &mdash; no compiled artifacts, fully portable across platforms.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick Start</h2>
+<pre>use Fleet                                       # pulls all four sublibraries
+
+# One session, transcripted
+val $s = Fleet::Session::open("ssh user\@host")
+Fleet::Session::expect($s, qr/password:/, 10)
+Fleet::Session::send($s, "$pw\n")
+Fleet::Session::close($s)
+
+# Declarative playbook &mdash; first non-optional timeout fails the run
+val $r = Fleet::Playbook::run("ssh user\@host", [
+    @{ Fleet::Recipes::ssh_login(+{ password =&gt; $pw }) },
+    +{ send   =&gt; "uptime\n" },
+    +{ expect =&gt; qr/load average/, timeout =&gt; 15, name =&gt; "uptime output" },
+    +{ send   =&gt; "exit\n" },
+])
+p $r-&gt;{ok} ? "done" : "failed: $r-&gt;{error}"
+p "$_-&gt;{event} $_-&gt;{data}" for @{ $r-&gt;{transcript} }
+
+# Branch tables &mdash; first match wins, optional action coderef
++{ branches =&gt; [
+       +{ re =&gt; qr/\(yes\/no\)\?/, do =&gt; fn { "yes\n" } },
+       +{ re =&gt; qr/password:/ },
+   ],
+   send_matched =&gt; 1 }
+
+# The headline: one playbook, fifty hosts, parallel PTY sessions
+val $results = Fleet::Fanout::ssh([@hosts],
+    Fleet::Recipes::ssh_login(+{ password =&gt; $pw }))
+val $part = Fleet::Fanout::partition($results)
+p "ok: #{len @{$part-&gt;{ok}}}  failed: #{len @{$part-&gt;{failed}}}"</pre>
+        <p>Pull only what you need with explicit sub-imports: <code>use Fleet::Playbook</code>, <code>use Fleet::Recipes</code>, etc. The umbrella <code>use Fleet</code> is just for convenience.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Fleet::Session &mdash; full reference</h2>
+        <p>A session is a hashref <code>+{ raw =&gt; &lt;pty handle&gt;, cmd =&gt; CMD, log =&gt; [] }</code> returned by <code>open</code>. Every send, match, timeout, and close is appended to <code>log</code> in order, so a finished or failed session can be replayed with <code>transcript</code> / <code>transcript_text</code>. The bare <code>pty_*</code> builtins stay reachable through <code>$s-&gt;{raw}</code>; this layer only adds bookkeeping.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Signature</th><th>Behavior</th></tr></thead>
+          <tbody>
+            <tr><td class="mod-name">open</td><td><code>open($cmd)</code></td><td>Spawn <code>$cmd</code> under a PTY (<code>pty_spawn</code>). Returns the session hashref with an empty transcript.</td></tr>
+            <tr><td class="mod-name">send</td><td><code>send($s, $text)</code></td><td>Write <code>$text</code> to stdin verbatim; logs a <code>send</code> event with the text.</td></tr>
+            <tr><td class="mod-name">send_line</td><td><code>send_line($s, $text)</code></td><td>Like <code>send</code> but guarantees a trailing newline (added unless <code>$text</code> already ends in one) &mdash; the common case for answering a prompt.</td></tr>
+            <tr><td class="mod-name">send_lines</td><td><code>send_lines($s, $lines)</code></td><td>Send each element of the <code>$lines</code> arrayref newline-terminated like <code>send_line</code>; one <code>send</code> event per line. Returns the count. Dies if <code>$lines</code> is not an arrayref.</td></tr>
+            <tr><td class="mod-name">send_secret</td><td><code>send_secret($s, $text)</code></td><td>Transmit a password/token in full (trailing newline added) but record a redacted <code>send</code> event (<code>data =&gt; "***", secret =&gt; 1</code>) so credentials never leak into transcript dumps.</td></tr>
+            <tr><td class="mod-name">send_control</td><td><code>send_control($s, $char)</code></td><td>Send a control byte (pexpect <code>sendcontrol</code>): <code>$char</code> is a letter a&ndash;z (Ctrl-A&hellip;Ctrl-Z, e.g. <code>"c"</code>&rarr;0x03, <code>"d"</code>&rarr;0x04 EOF, <code>"z"</code>&rarr;0x1a) or one of <code>@[\]^_?</code>. Logs a <code>send_control</code> event with char + byte (raw byte never dumped). Unknown char dies.</td></tr>
+            <tr><td class="mod-name">expect</td><td><code>expect($s, $pat, $timeout = 30)</code></td><td>Wait for <code>$pat</code> (<code>qr//</code> or string) in the output. Returns the matched text or <code>undef</code> on timeout; both outcomes are logged (<code>match</code> / <code>timeout</code>).</td></tr>
+            <tr><td class="mod-name">expect_exact</td><td><code>expect_exact($s, $text, $timeout = 30)</code></td><td>Wait for the LITERAL <code>$text</code> (quote-meta'd with <code>\Q&hellip;\E</code> so regex metacharacters match as themselves) &mdash; the right primitive for prompts containing <code>.</code>, <code>*</code>, <code>(</code>, a <code>$</code>, or a literal <code>(yes/no)?</code>. Logged like <code>expect</code>.</td></tr>
+            <tr><td class="mod-name">expect_any</td><td><code>expect_any($s, $pats, $timeout = 30)</code></td><td>Wait for the FIRST of the <code>$pats</code> arrayref to appear. Returns <code>+{ index =&gt; N, match =&gt; TEXT }</code> for the pattern that hit, or <code>undef</code> on timeout. Built on <code>branch</code>; dies if <code>$pats</code> is not an arrayref.</td></tr>
+            <tr><td class="mod-name">sendline_expect</td><td><code>sendline_expect($s, $text, $pat, $timeout = 30)</code></td><td>Send <code>$text</code> as a line then immediately wait for <code>$pat</code> &mdash; the send-then-expect atom expect scripts repeat. Returns the matched text (<code>undef</code> on timeout); both the send and expect outcome are logged.</td></tr>
+            <tr><td class="mod-name">branch</td><td><code>branch($s, $branches, $timeout = 30)</code></td><td>First-match-wins table (<code>pty_expect_table</code>). <code>$branches</code> is <code>[+{ re =&gt; qr/.../, do =&gt; fn {...} }, ...]</code> (<code>do</code> optional). Returns the action's return value when present, else the matched text; <code>undef</code> on timeout.</td></tr>
+            <tr><td class="mod-name">read</td><td><code>read($s, $timeout = 5)</code></td><td>Non-matching read of buffered output (<code>pty_read</code>).</td></tr>
+            <tr><td class="mod-name">drain</td><td><code>drain($s, $idle = 1)</code></td><td>Collect all remaining output until the child goes idle: repeated short-timeout reads, concatenated, stopping at the first empty read or EOF. Returns the accumulated string (<code>""</code> if nothing buffered). Not logged.</td></tr>
+            <tr><td class="mod-name">buffer</td><td><code>buffer($s)</code></td><td>Current unconsumed output buffer (<code>pty_buffer</code>).</td></tr>
+            <tr><td class="mod-name">alive</td><td><code>alive($s)</code></td><td>Is the child still running? (<code>pty_alive</code>)</td></tr>
+            <tr><td class="mod-name">eof</td><td><code>eof($s)</code></td><td>Has the child closed its side? (<code>pty_eof</code>)</td></tr>
+            <tr><td class="mod-name">interact</td><td><code>interact($s)</code></td><td>Hand the PTY to the user for manual debugging (<code>pty_interact</code>).</td></tr>
+            <tr><td class="mod-name">close</td><td><code>close($s)</code></td><td>Kill the child and release the PTY (<code>pty_close</code>); logs a <code>close</code> event with the cmd.</td></tr>
+            <tr><td class="mod-name">transcript</td><td><code>transcript($s)</code></td><td>The ordered event log: arrayref of <code>+{ event, data }</code> where event is <code>send</code> / <code>match</code> / <code>timeout</code> / <code>close</code> (or <code>send_control</code>).</td></tr>
+            <tr><td class="mod-name">events</td><td><code>events($s, $type)</code></td><td>Transcript entries of one event type, in order.</td></tr>
+            <tr><td class="mod-name">matches</td><td><code>matches($s)</code></td><td>The data of every <code>match</code> event, in order.</td></tr>
+            <tr><td class="mod-name">last_match</td><td><code>last_match($s)</code></td><td>The data of the most recent <code>match</code> event, or <code>undef</code>.</td></tr>
+            <tr><td class="mod-name">timed_out</td><td><code>timed_out($s)</code></td><td>1 if any expect/branch in this session timed out, else 0 &mdash; catches a degraded run even when an <code>optional</code> step let the playbook continue.</td></tr>
+            <tr><td class="mod-name">transcript_text</td><td><code>transcript_text($s)</code></td><td>Render the transcript as one <code>EVENT&lt;TAB&gt;DATA</code> line per event, newlines in data escaped &mdash; the human-readable dump for a failed session.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Fleet::Playbook &mdash; full reference</h2>
+        <p>A playbook is an arrayref of step hashrefs run in order against one PTY. <code>run</code> spawns and closes its own session when handed a string command, or drives a caller-supplied open <code>Fleet::Session</code> when handed a hashref (the caller then closes it).</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Signature</th><th>Behavior</th></tr></thead>
+          <tbody>
+            <tr><td class="mod-name">validate</td><td><code>validate($steps)</code></td><td>Die unless <code>$steps</code> is a well-formed playbook (arrayref of hashrefs, each with at least one of <code>expect</code>/<code>branches</code>/<code>send</code>; <code>branches</code> must be an arrayref; <code>retries</code> a non-negative integer; <code>delay</code> &ge; 0). Returns the step count.</td></tr>
+            <tr><td class="mod-name">dry_run</td><td><code>dry_run($steps)</code></td><td>Validate, then return a human-readable per-step listing (index, name, action, timeout/delay/retries/optional) without spawning anything. Drives <code>fleet.stk</code> previews.</td></tr>
+            <tr><td class="mod-name">concat</td><td><code>concat(@parts)</code></td><td>Splice any number of step-list arrayrefs into one playbook (skipping <code>undef</code> parts), validate the combined list, and return the flat arrayref &mdash; the explicit form of the <code>(@{ $a }, @{ $b })</code> recipe splice. Dies if any part is not an arrayref or any element is not a well-formed step.</td></tr>
+            <tr><td class="mod-name">run</td><td><code>run($cmd, $steps, $opts = +{})</code></td><td>Run <code>$steps</code> against <code>$cmd</code> (string &rarr; session spawned here; hashref &rarr; an already-open session). Returns <code>+{ ok, cmd, steps_run, transcript }</code>, plus <code>failed_step</code> and <code>error</code> when <code>ok == 0</code>. A non-optional expect/branch timeout fails the run with the step name; the session is always closed unless the caller passed it in open. <code>$opts-&gt;{timeout}</code> sets the default per-step timeout.</td></tr>
+          </tbody>
+        </table>
+        <h3 style="font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:1px;color:var(--cyan);text-transform:uppercase;margin-top:1rem;">Step keys</h3>
+        <table class="sub-tbl">
+          <thead><tr><th>Key</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>expect</code></td><td>Pattern (<code>qr//</code> or string) to wait for. A non-optional timeout fails the run.</td></tr>
+            <tr><td><code>branches</code></td><td>First-match-wins arrayref of <code>+{ re, do }</code> arms, run via <code>Session::branch</code>.</td></tr>
+            <tr><td><code>send</code></td><td>Text written to stdin after the expect/branch (or alone, for a send-only step).</td></tr>
+            <tr><td><code>send_matched</code></td><td>With <code>branches</code>: send the branch result back to the session.</td></tr>
+            <tr><td><code>timeout</code></td><td>Seconds for the step's expect/branch (default 30, or <code>$opts-&gt;{timeout}</code>).</td></tr>
+            <tr><td><code>name</code></td><td>Diagnostic label used in the failure <code>error</code> string.</td></tr>
+            <tr><td><code>optional</code></td><td>A timeout on this step is not a failure &mdash; the run continues.</td></tr>
+            <tr><td><code>retries</code></td><td>Re-attempt a timed-out expect/branch N more times (non-negative integer).</td></tr>
+            <tr><td><code>retry_send</code></td><td>String sent before each retry &mdash; a nudge like <code>"\n"</code>.</td></tr>
+            <tr><td><code>delay</code></td><td>Seconds (fractional ok) to sleep before the step runs.</td></tr>
+          </tbody>
+        </table>
+        <p>Every step must carry at least one of <code>expect</code> / <code>branches</code> / <code>send</code>, or <code>validate</code> rejects it before anything spawns.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Fleet::Recipes &mdash; the corpus</h2>
+        <p>Each recipe returns a plain playbook arrayref &mdash; pure data that composes with <code>@{...}</code> splices and unit-tests without a network. Options are passed as a single hashref. Where a recipe takes a <code>prompt</code> option it defaults to a generic shell-prompt regex; where it takes a <code>password</code>/<code>passphrase</code> it sends it with a trailing newline. <code>Fleet::Recipes::names</code> returns the full roster (48 entries).</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Recipe</th><th>Required opts</th><th>What it drives</th></tr></thead>
+          <tbody>
+            <tr><td class="mod-name">ssh_login</td><td><em>(none)</em></td><td>Optional host-key confirmation, optional password prompt, then a shell prompt. Opts: <code>password</code>, <code>prompt</code>, <code>timeout</code>.</td></tr>
+            <tr><td class="mod-name">ssh_copy_id</td><td><code>password</code></td><td>Accept host key (optional), answer remote password, expect the "Number of key(s) added" confirmation (optional).</td></tr>
+            <tr><td class="mod-name">sudo</td><td><code>password</code></td><td>Answer the password prompt, then expect <code>prompt</code>.</td></tr>
+            <tr><td class="mod-name">doas</td><td><code>password</code></td><td>OpenBSD/Alpine doas: send password (its prompt, generic "Password:" fallback), then the shell prompt.</td></tr>
+            <tr><td class="mod-name">su</td><td><code>password</code></td><td>Switch user: answer password, then expect <code>prompt</code>.</td></tr>
+            <tr><td class="mod-name">psql</td><td><em>(none)</em></td><td>Optional password prompt, then the <code>db=#</code> prompt.</td></tr>
+            <tr><td class="mod-name">pg_dump</td><td><code>password</code></td><td>libpq "Password: " / "Password for user NAME: " prompt (pg_dump, pg_restore, psql -W).</td></tr>
+            <tr><td class="mod-name">mysql</td><td><em>(none)</em></td><td>Optional password prompt, then the <code>mysql&gt;</code> prompt.</td></tr>
+            <tr><td class="mod-name">mariadb</td><td><em>(none)</em></td><td>Optional "Enter password:" then the <code>MariaDB [...]&gt;</code> prompt.</td></tr>
+            <tr><td class="mod-name">mongo</td><td><em>(none)</em></td><td>Optional password prompt, then the <code>&gt;</code> / <code>rs0:PRIMARY&gt;</code> prompt.</td></tr>
+            <tr><td class="mod-name">redis_cli</td><td><em>(none)</em></td><td>The <code>host:port&gt;</code> prompt; optional AUTH.</td></tr>
+            <tr><td class="mod-name">influx</td><td><code>password</code></td><td>InfluxDB v1 client auth ("username:" optional, "password:"), then the <code>&gt;</code> query prompt.</td></tr>
+            <tr><td class="mod-name">cqlsh</td><td><em>(none)</em></td><td>Cassandra cqlsh: optional password prompt, then the <code>cqlsh&gt;</code> prompt.</td></tr>
+            <tr><td class="mod-name">clickhouse_client</td><td><code>password</code></td><td>Answer the "Password for user (NAME):" prompt.</td></tr>
+            <tr><td class="mod-name">sqlplus</td><td><code>user</code>, <code>password</code></td><td>Oracle sqlplus: "Enter user-name:" then "Enter password:".</td></tr>
+            <tr><td class="mod-name">telnet_login</td><td><code>user</code>, <code>password</code></td><td><code>login:</code> &rarr; user, <code>Password:</code> &rarr; password, then <code>prompt</code>.</td></tr>
+            <tr><td class="mod-name">ftp_login</td><td><code>user</code>, <code>password</code></td><td><code>Name:</code> &rarr; user, <code>Password:</code> &rarr; password, then the <code>ftp&gt;</code> prompt.</td></tr>
+            <tr><td class="mod-name">docker_login</td><td><code>user</code>, <code>password</code></td><td><code>Username:</code> &rarr; user, <code>Password:</code> &rarr; password, then the success line.</td></tr>
+            <tr><td class="mod-name">npm_login</td><td><code>user</code>, <code>password</code>, <code>email</code></td><td>Legacy interactive npm login: Username / Password / Email prompts.</td></tr>
+            <tr><td class="mod-name">heroku_login</td><td><code>email</code>, <code>password</code></td><td>heroku login -i: email then password.</td></tr>
+            <tr><td class="mod-name">gcloud_auth</td><td><code>code</code></td><td>gcloud auth login --no-launch-browser: paste the authorization code.</td></tr>
+            <tr><td class="mod-name">op_signin</td><td><code>password</code></td><td>1Password CLI op signin: account master-password prompt.</td></tr>
+            <tr><td class="mod-name">bw_unlock</td><td><code>password</code></td><td>Bitwarden CLI bw unlock: master-password prompt (outputs a session token).</td></tr>
+            <tr><td class="mod-name">vault_login</td><td><code>password</code></td><td>vault login (userpass/ldap): hidden password prompt, then success banner.</td></tr>
+            <tr><td class="mod-name">cisco_enable</td><td><code>enable_password</code></td><td>Cisco enable mode: <code>&gt;</code> &rarr; enable &rarr; password &rarr; <code>#</code>.</td></tr>
+            <tr><td class="mod-name">scp</td><td><code>password</code></td><td>Optional host-key confirmation then a password prompt; the copy runs to completion.</td></tr>
+            <tr><td class="mod-name">sftp</td><td><em>(none)</em></td><td>Optional host-key confirmation, optional password, then the <code>sftp&gt;</code> prompt.</td></tr>
+            <tr><td class="mod-name">rsync</td><td><code>password</code></td><td>rsync over ssh: host-key accept then password (same prompts as scp).</td></tr>
+            <tr><td class="mod-name">smbclient</td><td><code>password</code></td><td>SMB password then the <code>smb: \&gt;</code> interactive prompt.</td></tr>
+            <tr><td class="mod-name">git_clone</td><td><em>(none)</em></td><td>ssh-key passphrase and/or https username+password &mdash; provide whichever the transport needs; all steps optional.</td></tr>
+            <tr><td class="mod-name">passwd_change</td><td><code>new_password</code></td><td>passwd chain: optional current password (root skips), new password, retype, success. Opt: <code>old_password</code>.</td></tr>
+            <tr><td class="mod-name">gpg_decrypt</td><td><code>passphrase</code></td><td>gpg --decrypt / symmetric: answer the passphrase prompt.</td></tr>
+            <tr><td class="mod-name">openssl_pem</td><td><code>passphrase</code></td><td>openssl PEM passphrase with verification ("Enter PEM pass phrase:" / "Verifying - ...").</td></tr>
+            <tr><td class="mod-name">ssh_keygen</td><td><em>(none)</em></td><td>Passphrase entered twice (empty <code>passphrase</code> &rArr; none); optional <code>overwrite</code> answers the "Overwrite (y/n)?" prompt.</td></tr>
+            <tr><td class="mod-name">ssh_add</td><td><code>passphrase</code></td><td>ssh-add: decrypt a private key by passphrase.</td></tr>
+            <tr><td class="mod-name">age</td><td><code>password</code></td><td>age passphrase prompt (decrypt asks once; <code>age -p</code> asks twice &mdash; confirm step optional).</td></tr>
+            <tr><td class="mod-name">cryptsetup</td><td><code>password</code></td><td>LUKS passphrase prompts for luksFormat (capital "YES" confirm + verify, both optional) and luksOpen.</td></tr>
+            <tr><td class="mod-name">keytool</td><td><code>password</code></td><td>Java keytool keystore password, plus a re-enter prompt when <code>confirm =&gt; 1</code>.</td></tr>
+            <tr><td class="mod-name">htpasswd</td><td><em>(none)</em></td><td>htpasswd -c: New password / Re-type new password. Opt: <code>password</code>.</td></tr>
+            <tr><td class="mod-name">ansible_vault</td><td><code>password</code></td><td>ansible-vault: existing "Vault password:" prompt, or the new + confirm pair when <code>new =&gt; 1</code>.</td></tr>
+            <tr><td class="mod-name">pass_insert</td><td><code>password</code></td><td>pass insert NAME: "Enter password for NAME:" then "Retype password for NAME:" (retype optional with -e).</td></tr>
+            <tr><td class="mod-name">unzip_encrypted</td><td><code>password</code></td><td>unzip of an encrypted archive: the per-archive "password:" prompt.</td></tr>
+            <tr><td class="mod-name">kinit</td><td><code>password</code></td><td>Kerberos kinit: single "Password for principal@REALM:" prompt.</td></tr>
+            <tr><td class="mod-name">ldapsearch</td><td><code>password</code></td><td>OpenLDAP simple-bind: "Enter LDAP Password: " prompt (ldapsearch -W).</td></tr>
+            <tr><td class="mod-name">aws_configure</td><td><code>secret_key</code></td><td>aws configure: access key, secret key, region (default ""), output format (default "json"). Opt: <code>access_key</code>.</td></tr>
+            <tr><td class="mod-name">restic</td><td><code>password</code></td><td>restic repository password (init asks twice &mdash; verify step optional).</td></tr>
+            <tr><td class="mod-name">borg</td><td><code>password</code></td><td>BorgBackup repository passphrase (init asks twice &mdash; verify step optional).</td></tr>
+            <tr><td class="mod-name">yes_to_all</td><td><em>(none)</em></td><td>Answer up to <code>$count</code> yes/no-style prompts with <code>$answer</code> (default "y"), tolerating runs that ask fewer.</td></tr>
+            <tr><td class="mod-name">names</td><td>&mdash;</td><td>Returns all 48 recipe names &mdash; what <code>s bin/fleet.stk recipes</code> lists.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Fleet::Fanout &mdash; full reference</h2>
+        <p>One playbook against N targets, each on its own PTY on its own <code>pmap</code> thread; results come back as an arrayref of <code>Playbook::run</code> result hashrefs in target order. The rest of the surface is triage over that result list.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Signature</th><th>Behavior</th></tr></thead>
+          <tbody>
+            <tr><td class="mod-name">run</td><td><code>run($cmds, $steps, $opts = +{})</code></td><td>Run <code>$steps</code> against every command in <code>$cmds</code> concurrently via <code>pmap</code>. Validates the playbook first; dies if <code>$cmds</code> is not an arrayref. <code>$opts</code> pass through to <code>Playbook::run</code>.</td></tr>
+            <tr><td class="mod-name">batch</td><td><code>batch($cmds, $steps, $batch_size, $opts = +{})</code></td><td>Run in consecutive batches of <code>$batch_size</code> &mdash; parallel within a batch, sequential between &mdash; to bound concurrency so a large fleet doesn't exhaust fds/network. Flat result list in order. <code>$batch_size</code> must be &ge; 1.</td></tr>
+            <tr><td class="mod-name">ssh</td><td><code>ssh($hosts, $steps, $opts = +{})</code></td><td>Fan <code>$steps</code> out over <code>$hosts</code> as <code>ssh HOST</code>. Opts: <code>user</code> (login name), <code>ssh_opts</code> (extra flags string), plus Playbook opts.</td></tr>
+            <tr><td class="mod-name">partition</td><td><code>partition($results)</code></td><td><code>+{ ok =&gt; [...], failed =&gt; [...] }</code> split.</td></tr>
+            <tr><td class="mod-name">count</td><td><code>count($results)</code></td><td><code>+{ total, ok, failed }</code> tally &mdash; the numbers-only core of <code>summarize</code>.</td></tr>
+            <tr><td class="mod-name">all_ok</td><td><code>all_ok($results)</code></td><td>1 iff every result is ok (empty set is vacuously ok), else 0 &mdash; the boolean fleet-pass gate.</td></tr>
+            <tr><td class="mod-name">summarize</td><td><code>summarize($results)</code></td><td><code>+{ total, ok, failed, errors =&gt; ["CMD: ERROR", ...] }</code> &mdash; one line per failure.</td></tr>
+            <tr><td class="mod-name">failed_cmds</td><td><code>failed_cmds($results)</code></td><td>The cmd string of every failed result, in order.</td></tr>
+            <tr><td class="mod-name">ok_cmds</td><td><code>ok_cmds($results)</code></td><td>The cmd string of every ok result, in order &mdash; the hand-off list for "now run the next stage only against the hosts that passed".</td></tr>
+            <tr><td class="mod-name">find</td><td><code>find($results, $pattern)</code></td><td>First result whose cmd matches <code>$pattern</code> (regex string or <code>qr//</code>), else <code>undef</code> &mdash; by-target lookup over a cmd-ordered list.</td></tr>
+            <tr><td class="mod-name">pluck</td><td><code>pluck($results, $key)</code></td><td>Map the <code>$key</code> coderef over all results &rarr; one extracted value per result, order preserved. <code>$key</code> required.</td></tr>
+            <tr><td class="mod-name">pluck_ok</td><td><code>pluck_ok($results, $key)</code></td><td>Like <code>pluck</code> but only over ok results &mdash; the projection without the undefs a failed result would yield.</td></tr>
+            <tr><td class="mod-name">group_by</td><td><code>group_by($results, $key)</code></td><td>Bucket all results by a <code>$key</code> coderef &rarr; <code>{ "key" =&gt; [cmd, ...] }</code>, cmd order preserved, undef key bucketed under "". The general primitive the two specialized groupers below build on.</td></tr>
+            <tr><td class="mod-name">group_by_error</td><td><code>group_by_error($results)</code></td><td>Bucket failures by error string &rarr; "which hosts failed the same way". Successes ignored.</td></tr>
+            <tr><td class="mod-name">group_by_output</td><td><code>group_by_output($results, $key = undef)</code></td><td>Bucket successes by captured output for config-drift detection (default key = last transcript <code>data</code> event; pass a <code>$key</code> for something finer).</td></tr>
+            <tr><td class="mod-name">grep_transcript</td><td><code>grep_transcript($results, $pattern)</code></td><td>Which targets printed <code>$pattern</code> anywhere in their transcript &rarr; arrayref of <code>+{ cmd, ok, match }</code> &mdash; catches things that didn't fail the playbook (a deprecation warning, a version banner).</td></tr>
+            <tr><td class="mod-name">retry_failed</td><td><code>retry_failed($results, $steps, $opts = +{})</code></td><td>Re-run only the failed entries once, in place; ok results pass through, re-runs are tagged <code>retried =&gt; 1</code>. Order preserved.</td></tr>
+            <tr><td class="mod-name">retry_until</td><td><code>retry_until($results, $steps, $max_attempts, $opts = +{})</code></td><td>Re-run each failure up to <code>$max_attempts</code> times, stopping per-target on first success; needed retries carry <code>retried =&gt; 1</code> and <code>attempts =&gt; N</code>. <code>$max_attempts</code> &ge; 1.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Four runnable scripts ship in <code>examples/</code>. The first three run anywhere &mdash; they drive a local <code>sh</code>/<code>cat</code>, no network &mdash; while <code>parallel_ssh.stk</code> needs real hosts.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>File</th><th>Run</th><th>What it shows</th></tr></thead>
+          <tbody>
+            <tr><td><code>local_demo.stk</code></td><td><code>s examples/local_demo.stk</code></td><td>A playbook drives a local <code>sh</code> (echo &rarr; expect &rarr; exit) and prints the transcript.</td></tr>
+            <tr><td><code>installer_autopilot.stk</code></td><td><code>s examples/installer_autopilot.stk</code></td><td><code>yes_to_all</code> answers a fake two-question installer simulated with <code>sh</code>.</td></tr>
+            <tr><td><code>orchestrate.stk</code></td><td><code>s examples/orchestrate.stk</code></td><td>All four layers in one flow against local <code>cat</code>: recipe splice + playbook + session transcript reads + fan-out summary.</td></tr>
+            <tr><td><code>parallel_ssh.stk</code></td><td><code>FLEET_HOSTS="web1 web2 db1" FLEET_PASS=... s examples/parallel_ssh.stk</code></td><td>The headline: one <code>ssh_login</code> recipe, N hosts, parallel sessions, partitioned ok/failed results.</td></tr>
+          </tbody>
+        </table>
+<pre># orchestrate.stk, condensed — recipe splice into a playbook, then fan-out
+val @plan = ( @{ Fleet::Recipes::yes_to_all(2) }, +{ send =&gt; "go\n" } )
+p "spliced playbook: #{Fleet::Playbook::validate(\@plan)} steps"
+
+val $res = Fleet::Fanout::run(["cat", "cat", "cat"], [
+    +{ send =&gt; "ping\n" },
+    +{ expect =&gt; qr/ping/, timeout =&gt; 5, name =&gt; "echo" },
+])
+val $sum = Fleet::Fanout::summarize($res)
+p "fanout: #{$sum-&gt;{total}} targets, #{$sum-&gt;{ok}} ok, #{$sum-&gt;{failed}} failed"</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Troubleshooting</h2>
+        <ul>
+          <li><strong>A run failed &mdash; what happened?</strong> The result hashref carries the full <code>transcript</code> plus <code>failed_step</code> and <code>error</code> ("timeout on &lt;step name&gt;"). Dump it with <code>Fleet::Session::transcript_text</code> or read the <code>+{ event, data }</code> entries directly.</li>
+          <li><strong>A prompt has regex metacharacters.</strong> Use <code>expect_exact</code> (or quotemeta the pattern) so a literal <code>$</code>, <code>.</code>, or <code>(yes/no)?</code> matches as itself instead of as a regex.</li>
+          <li><strong>The prompt sometimes doesn't fire.</strong> Add <code>retries</code> with a <code>retry_send =&gt; "\n"</code> nudge, or mark the step <code>optional</code> when its absence is acceptable.</li>
+          <li><strong>Credentials must not appear in logs.</strong> Use <code>send_secret</code> instead of <code>send</code>/<code>send_line</code> &mdash; the byte stream is transmitted in full but the transcript records a redacted <code>***</code> event.</li>
+          <li><strong>A large fleet exhausts file descriptors.</strong> Use <code>Fleet::Fanout::batch</code> with a <code>$batch_size</code> instead of <code>run</code> to bound concurrency.</li>
+          <li><strong>Transient failures across the fleet.</strong> Wrap with <code>retry_failed</code> (one re-run) or <code>retry_until($results, $steps, $max_attempts)</code> (per-target cap); inspect <code>group_by_error</code> to see which hosts failed the same way.</li>
+          <li><strong>Auditing what would be sent.</strong> Recipes are pure data &mdash; <code>to_json</code> the step list, or use <code>Fleet::Playbook::dry_run</code> for a per-step preview, before pointing it at production.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What's NOT in Here</h2>
+        <p>By design &mdash; these are stryke builtins, so we don't re-wrap them. If a function in this library can be replaced with one builtin call, it's a bug.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Category</th><th>Builtins (call directly)</th></tr></thead>
+          <tbody>
+            <tr><td>PTY primitives</td><td><code>pty_spawn</code> &middot; <code>pty_send</code> &middot; <code>pty_read</code> &middot; <code>pty_expect</code> &middot; <code>pty_expect_table</code> &middot; <code>pty_buffer</code> &middot; <code>pty_alive</code> &middot; <code>pty_eof</code> &middot; <code>pty_close</code> &middot; <code>pty_interact</code></td></tr>
+            <tr><td>Parallelism</td><td><code>pmap</code> &middot; <code>pgrep</code> &middot; <code>ppool</code> and the rest of the parallel suite</td></tr>
+            <tr><td>Remote dispatch</td><td><code>cluster([...])</code> + <code>pmap_on</code> &mdash; persistent SSH worker pools for <em>non-interactive</em> remote compute; Fleet is for sessions that prompt back</td></tr>
+            <tr><td>Method-form sugar</td><td><code>PtyHandle</code> class (<code>require "perl_pty_class.stk"</code> from strykelang examples)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>CLI</h2>
+<pre>s bin/fleet.stk expect "sh -c 'sleep 1; echo ready'" ready 10   # spawn, wait, print match
+s bin/fleet.stk exchange cat hello hello 5                      # spawn, send, wait
+s bin/fleet.stk recipes                                         # list the recipe corpus
+s bin/fleet.stk version
+s bin/fleet.stk help</pre>
+        <p><code>bin/fleet.stk</code> covers one-shot expect/send loops from the shell. Anything with branches, retries, or more than two steps belongs in a playbook script &mdash; see <code>examples/</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+<pre>s test t/                       # assertions across every public function</pre>
+        <p><code>t/test_fleet.stk</code> is headless-CI safe by contract: every PTY assertion drives a local <code>cat</code>/<code>sh</code> &mdash; no network, no SSH, no target hosts (enforced by <code>tests/repo-contract.sh</code>). Recipes are asserted structurally as data. Exits TAP-style via <code>test_run</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-fleet/
+&#9500;&#9472;&#9472; stryke.toml                # pure-stryke package manifest (no [ffi])
+&#9500;&#9472;&#9472; Makefile                   # test / install / clean
+&#9500;&#9472;&#9472; LICENSE                    # MIT
+&#9500;&#9472;&#9472; lib/
+&#9474;   &#9500;&#9472;&#9472; Fleet.stk              # `use Fleet` &mdash; pulls all four sublibs
+&#9474;   &#9500;&#9472;&#9472; Session.stk            # `use Fleet::Session`  &mdash; transcripted PTY sessions
+&#9474;   &#9500;&#9472;&#9472; Playbook.stk           # `use Fleet::Playbook` &mdash; declarative step runner
+&#9474;   &#9500;&#9472;&#9472; Recipes.stk            # `use Fleet::Recipes`  &mdash; login/prompt corpus
+&#9474;   &#9492;&#9472;&#9472; Fanout.stk             # `use Fleet::Fanout`   &mdash; parallel multi-target runs
+&#9500;&#9472;&#9472; bin/
+&#9474;   &#9492;&#9472;&#9472; fleet.stk              # CLI front-end (one-shot expect/exchange)
+&#9500;&#9472;&#9472; t/
+&#9474;   &#9492;&#9472;&#9472; test_fleet.stk         # all-surface assertions (local processes only)
+&#9500;&#9472;&#9472; examples/
+&#9474;   &#9500;&#9472;&#9472; local_demo.stk         # runnable anywhere &mdash; drives a local sh
+&#9474;   &#9500;&#9472;&#9472; installer_autopilot.stk# yes_to_all against a fake installer
+&#9474;   &#9500;&#9472;&#9472; parallel_ssh.stk       # the headline: recipe &times; N hosts, partitioned
+&#9474;   &#9492;&#9472;&#9472; orchestrate.stk        # all four layers: recipe + playbook + transcript + fanout
+&#9500;&#9472;&#9472; tests/                     # shell gate scripts (CI lints)
+&#9492;&#9472;&#9472; docs/                      # this site (GitHub Pages)</pre>
+      </section>
+
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

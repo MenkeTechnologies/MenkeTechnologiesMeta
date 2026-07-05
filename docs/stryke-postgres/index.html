@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-postgres — POSTGRESQL CLIENT FOR STRYKE // OPT-IN PACKAGE. PostgreSQL client for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. Ships as a Rust cdylib that stryke dlopens in-process on first `use Postgres`.">
+  <title>stryke-postgres — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-POSTGRES &mdash; POSTGRESQL CLIENT FOR STRYKE // OPT-IN PACKAGE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_postgres.{dylib,so}</code> · dlopen'd in-process on <code>use Postgres</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-postgres/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-POSTGRES</h2>
+      <p class="tutorial-subtitle"><strong>Postgres without the ORM.</strong> PostgreSQL client for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. Ships as a thin stryke library plus a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Postgres</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-postgres
+
+# from a local checkout
+cd ~/projects/stryke-postgres
+cargo build --release          # produces target/release/libstryke_postgres.{dylib,so}
+s pkg install -g .             # cdylib lands in ~/.stryke/store/postgres@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use Postgres</code> &mdash; no helper-binary fork per call. A <code>postgres::Client</code> cache keyed by connection URL is held in <code>OnceCell</code>, so there is no fresh TCP+TLS+auth handshake per call. Honors <code>DATABASE_URL</code> and <code>POSTGRES_URL</code> env vars. Any stryke script that declares <code>use Postgres</code> resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use Postgres</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>single scalar</td><td><code>p Postgres::query_scalar "SELECT COUNT(*) FROM users"</code></td></tr>
+            <tr><td>rows with positional binds</td><td><code>my @rows = Postgres::query "SELECT id, name FROM users WHERE created_at &gt; $1", bind =&gt; ["2025-01-01"]</code></td></tr>
+            <tr><td>write path (returns affected)</td><td><code>Postgres::execute "UPDATE users SET name = $1 WHERE id = $2", bind =&gt; ["alice", 42]</code></td></tr>
+            <tr><td>bulk insert</td><td><code>Postgres::insert_many "users", [{ name =&gt; "x", score =&gt; 1 }, { name =&gt; "y", score =&gt; 2 }]</code></td></tr>
+            <tr><td>upsert (ON CONFLICT)</td><td><code>Postgres::upsert "kv", { id =&gt; 1, hits =&gt; 1 }, conflict =&gt; ["id"]</code></td></tr>
+            <tr><td>schema introspection</td><td><code>p to_json Postgres::schema "users"</code></td></tr>
+            <tr><td>parse a DSN (no connection)</td><td><code>my $c = Postgres::parse_dsn "postgresql://u:p@host:5432/db?sslmode=require"</code></td></tr>
+            <tr><td>quote an identifier / literal</td><td><code>Postgres::quote_ident "weird col"</code></td></tr>
+          </tbody>
+        </table>
+        <p>A full runnable script &mdash; set <code>$DATABASE_URL</code> once, then call the surface:</p>
+<pre>use Postgres
+
+# Set $DATABASE_URL once, omit the named arg everywhere.
+$ENV{DATABASE_URL} = "postgres://wizard@127.0.0.1:5432/app"
+
+# Single scalar.
+p Postgres::query_scalar "SELECT COUNT(*) FROM users"
+
+# Rows with positional placeholders ($1, $2, …).
+val @rows = Postgres::query "SELECT id, name FROM users WHERE created_at &gt; \$1",
+                           bind =&gt; ["2025-01-01"]
+@rows |&gt; ep
+
+# Streaming variant — no full-result buffering.
+Postgres::query_stream "SELECT * FROM big_table",
+    callback =&gt; fn { process _ }
+
+# Write paths return { affected }.
+val $r = Postgres::execute "UPDATE users SET name = \$1 WHERE id = \$2",
+                          bind =&gt; ["alice", 42]
+p "updated $r-&gt;{affected}"
+
+# Bulk insert (columns inferred from the first row's keys).
+Postgres::insert_many "users",
+    [{ name =&gt; "x", score =&gt; 1, meta =&gt; { color =&gt; "blue" } },
+     { name =&gt; "y", score =&gt; 2, meta =&gt; { color =&gt; "red"  } }]
+
+# With RETURNING — get the generated rows back instead of a count.
+val @rows = Postgres::insert_many "users",
+    [{ name =&gt; "z", score =&gt; 3 }],
+    returning =&gt; "id"
+p $rows[0]-&gt;{id}
+
+# Schema introspection.
+p to_json Postgres::schema "users"
+p Postgres::tables |&gt; ep</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connection sources</h2>
+        <p>Every connecting call accepts the same <code>%opts</code> connection keys; resolution order is:</p>
+        <ol>
+          <li><code>url =&gt; "postgres://user:pass@host:port/db"</code> named arg</li>
+          <li>Individual named args: <code>host</code>, <code>port</code>, <code>user</code>, <code>password</code>, <code>database</code></li>
+          <li><code>$ENV{DATABASE_URL}</code> (or <code>$ENV{POSTGRES_URL}</code>) when neither <code>url</code> nor <code>host</code> is given</li>
+        </ol>
+        <p>All statements issued with the same <code>%opts</code> run on the same cached backend connection (connection affinity), which is what lets transactions, savepoints, and <code>LISTEN</code>/<code>NOTIFY</code> ride the same socket with no extra FFI handshake.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: read paths</h2>
+        <p><code>%opts</code> keys for read paths: <code>url</code>, <code>host</code>, <code>port</code>, <code>user</code>, <code>password</code>, <code>database</code>, <code>bind</code>, <code>limit</code> (<code>dump</code> only), <code>callback</code> (<code>query_stream</code> only). <code>bind</code> is an arrayref of positional values (<code>$1</code>, <code>$2</code>, …).</p>
+<pre>Postgres::query        $sql, %opts &rarr; @rows
+Postgres::query_stream $sql, %opts &rarr; $count    # callback per row, no buffering
+Postgres::query_one    $sql, %opts &rarr; \%row | undef
+Postgres::query_col    $sql, %opts &rarr; @values   # first column of each row
+Postgres::query_scalar $sql, %opts &rarr; $value | undef
+Postgres::dump         $table, %opts &rarr; @rows   # %opts limit =&gt; N</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: write paths</h2>
+<pre>Postgres::execute     $sql, %opts &rarr; { affected }
+Postgres::exec_file   $path, %opts &rarr; per-script result
+Postgres::insert_many $table, $rows_aref, %opts &rarr; $inserted_count | @rows
+Postgres::upsert      $table, $row_href, %opts &rarr; $affected | @rows
+Postgres::update      $table, $set_href, $where?, %opts &rarr; $affected
+Postgres::delete      $table, $where?, %opts &rarr; $affected
+Postgres::truncate    $table, %opts &rarr; 1   # %opts restart_identity =&gt; 1</pre>
+        <p><code>insert_many</code> infers columns from the first row's keys and returns the inserted-row count, or the generated rows when <code>returning =&gt; "col,…" | "*"</code> is set (each returning token is validated, so it's injection-safe). <code>upsert</code> issues <code>INSERT … ON CONFLICT DO UPDATE</code>: <code>conflict =&gt; \@cols</code> is required; <code>update =&gt; \@cols</code> defaults to every non-conflict column (an empty list makes it <code>DO NOTHING</code>); <code>returning</code> works the same as on <code>insert_many</code>. <code>update</code> binds the SET values and interpolates <code>$where</code> (pass trusted values; for a parameterized condition use <code>execute</code>); <code>delete</code> interpolates <code>$where</code>; both omit <code>$where</code> to affect every row. Table, conflict, and column names are identifier-validated.</p>
+<pre>Postgres::update "users", { status =&gt; "active", seen =&gt; 1 }, "id = 42"
+Postgres::delete "sessions", "expired_at &lt; now()"
+Postgres::upsert "kv", { id =&gt; 1, name =&gt; "a", hits =&gt; 1 }, conflict =&gt; ["id"]
+Postgres::upsert "kv", { id =&gt; 1, name =&gt; "x", hits =&gt; 9 },
+                 conflict =&gt; ["id"], update =&gt; ["hits"]
+val @r = Postgres::upsert "kv", { id =&gt; 2, name =&gt; "b" },
+                         conflict =&gt; ["id"], returning =&gt; "*"</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: bulk transfer (COPY)</h2>
+<pre>Postgres::copy_in   $sql, $data, %opts &rarr; $row_count   # COPY … FROM STDIN
+Postgres::copy_out  $sql, %opts &rarr; $data               # COPY … TO STDOUT</pre>
+        <p><code>copy_in</code> streams <code>$data</code> (text/CSV/TSV lines, per the COPY statement's FORMAT) straight into the table &mdash; Postgres's fastest bulk-load path. <code>copy_out</code> returns the server's COPY payload as a string.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: LISTEN / NOTIFY</h2>
+<pre>Postgres::notify  $channel, %opts &rarr; { ok }            # %opts payload =&gt; "..."
+Postgres::listen  $channels, %opts &rarr; @notifications   # name or aref; %opts timeout_ms (default 1000)</pre>
+        <p><code>notify</code> sends via <code>pg_notify($1,$2)</code> (bound, not interpolated). <code>listen</code> issues <code>LISTEN</code> on each channel (identifier-quoted) and drains pending notifications for <code>timeout_ms</code>, returning <code>{ channel, payload, pid }</code> rows.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: transactions</h2>
+        <p>All statements sharing the same <code>%opts</code> run on the same cached connection, so these ride on connection affinity with no extra FFI.</p>
+<pre>Postgres::begin       %opts &rarr; 1
+Postgres::commit      %opts &rarr; 1
+Postgres::rollback    %opts &rarr; 1
+Postgres::transaction $code, %opts &rarr; $code_result   # BEGIN; $code-&gt;(); COMMIT — or ROLLBACK + re-raise on die
+Postgres::savepoint         $name, %opts &rarr; 1
+Postgres::release_savepoint $name, %opts &rarr; 1
+Postgres::rollback_to       $name, %opts &rarr; 1</pre>
+        <p>Savepoints are nested rollback points inside an open transaction; the name is identifier-quoted (it can't be a bound parameter). <code>rollback_to</code> undoes work back to the savepoint while leaving the outer transaction open.</p>
+<pre>Postgres::begin %c
+Postgres::execute "INSERT INTO t VALUES (1)", %c
+Postgres::savepoint "a", %c
+Postgres::execute "INSERT INTO t VALUES (2)", %c
+Postgres::rollback_to "a", %c    # row (2) undone, row (1) kept
+Postgres::commit %c
+
+Postgres::transaction fn {
+    Postgres::execute "INSERT INTO accounts (id, cents) VALUES (1, 100)", %c
+    Postgres::execute "UPDATE accounts SET cents = cents - 100 WHERE id = 2", %c
+}, %c</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: metadata</h2>
+<pre>Postgres::ping         %opts &rarr; 1 | 0
+Postgres::tables       %opts &rarr; @names
+Postgres::databases    %opts &rarr; @names
+Postgres::schema       $table, %opts &rarr; column metadata (name/type/nullable)
+Postgres::count        $table, $where?, %opts &rarr; $row_count
+Postgres::exists       $table, $where?, %opts &rarr; 1 | 0   # SQL EXISTS — short-circuits
+Postgres::table_exists $name, %opts &rarr; 1 | 0             # $name must be a plain identifier
+Postgres::views        %opts &rarr; @names                   # user views as schema.view
+Postgres::functions    %opts &rarr; @names                   # user functions as schema.fn
+Postgres::indexes      %opts &rarr; @{ {name, def} }         # opt: table =&gt; "t"
+Postgres::roles        %opts &rarr; @{ {name, superuser, can_login} }
+Postgres::explain      $sql, %opts &rarr; @plan_lines        # opt: analyze =&gt; 1, params
+Postgres::db_size      %opts &rarr; { bytes, pretty }
+Postgres::table_size   $table, %opts &rarr; { table, bytes, pretty }
+Postgres::activity     %opts &rarr; @{ {pid, user, state, wait_event_type, age_seconds, query} }
+Postgres::locks        %opts &rarr; @{ {pid, locktype, mode, granted, relation} }
+Postgres::sequences    %opts &rarr; @names
+Postgres::extensions   %opts &rarr; @{ {name, version} }
+Postgres::triggers     %opts &rarr; @{ {name, table, event, timing} }
+Postgres::cancel_backend $pid, %opts &rarr; { pid, ok }      # opt: terminate =&gt; 1 (hard kill)</pre>
+        <p><code>count</code> and <code>exists</code> interpolate the table name and <code>$where</code>; pass binds in <code>%opts{bind}</code> (e.g. <code>exists "t", "id = $1", bind =&gt; [42]</code>). <code>exists</code> uses SQL <code>EXISTS</code>, which stops at the first matching row &mdash; prefer it over <code>count(…) &gt; 0</code> when you only need a yes/no.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: schema discovery</h2>
+<pre>Postgres::describe        $sql, %opts &rarr; { params, columns }   # prepare-only; type-checks without running
+Postgres::current         %opts &rarr; { database, user, schema, pid }
+Postgres::schemas         %opts &rarr; @names                      # non-system namespaces
+Postgres::matviews        %opts &rarr; @names                      # materialized views as schema.matview
+Postgres::server_settings %opts &rarr; @{ {name, setting, description} }   # pg_settings (SHOW ALL)
+Postgres::server_encoding %opts &rarr; { server_encoding, client_encoding, timezone }
+Postgres::constraints     $table, %opts &rarr; @{ {name, type, definition} }
+Postgres::foreign_keys    $table, %opts &rarr; @{ {name, column, references_table, references_column} }
+Postgres::primary_key     $table, %opts &rarr; @columns            # PK columns in key order; empty when none
+Postgres::column_defaults $table, %opts &rarr; @{ {column, default} }
+Postgres::table_stats     $table, %opts &rarr; { table, live_tuples, dead_tuples, seq_scan, idx_scan, n_tup_ins, n_tup_upd, n_tup_del }</pre>
+        <p><code>describe</code> prepares the statement via the extended protocol and reports the bind-parameter types (<code>$1</code>, <code>$2</code>, … in order) and the result-column shape WITHOUT executing it &mdash; the analyze-only counterpart of <code>explain</code>. <code>constraints</code>/<code>foreign_keys</code>/<code>primary_key</code>/<code>column_defaults</code> complement <code>schema</code>. The <code>$table</code> arg is bound via <code>$1::regclass</code>, so a bare or schema-qualified name resolves safely.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: server admin / maintenance</h2>
+<pre>Postgres::uptime          %opts &rarr; { started_at, uptime_seconds }
+Postgres::replication     %opts &rarr; @{ {pid, user, application, client_addr, state, sync_state, write_lag_bytes, replay_lag_bytes} }
+Postgres::current_setting $name, %opts &rarr; $setting | undef   # one GUC; opt: missing_ok =&gt; 1
+Postgres::set_config      $name, $value, %opts &rarr; $setting   # set one GUC; opt: local =&gt; 1 (SET LOCAL)
+Postgres::analyze         $table?, %opts &rarr; { ok, table }    # ANALYZE [VERBOSE]; whole DB when omitted
+Postgres::vacuum          $table?, %opts &rarr; { ok, table }    # VACUUM [FULL] [ANALYZE] [VERBOSE]
+Postgres::reindex         $name, %opts &rarr; { ok, target, name }   # opt target =&gt; index|table|schema|database|system (default index)</pre>
+        <p><code>current_setting</code> reads a single configuration parameter &mdash; the per-GUC complement of <code>server_settings</code>, which dumps them all; <code>set_config</code> writes one with the value bound (no interpolation). <code>analyze</code>/<code>vacuum</code>/<code>reindex</code> interpolate the identifier-validated table/index name (these statements take no bound parameters). <code>vacuum</code> cannot run inside a transaction block &mdash; do not call it between <code>begin</code> and <code>commit</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: pure helpers (no socket)</h2>
+        <p>Connection-string and quoting utilities that open no connection &mdash; safe to call without a reachable server.</p>
+<pre>Postgres::parse_dsn($dsn)              &rarr; { scheme, user, password, host, port, dbname, params }
+Postgres::parse_keyword_dsn($dsn)     &rarr; { user, password, host, port, dbname, params }   # libpq keyword/value form
+Postgres::build_keyword_dsn(%opts)    &rarr; $dsn   # parts → libpq keyword/value DSN
+Postgres::build_dsn(%opts)            &rarr; $dsn   # parts → URI DSN; inverse of parse_dsn
+Postgres::quote_ident($name)          &rarr; $quoted        # "weird""col"
+Postgres::unquote_ident($quoted)      &rarr; $name          # inverse of quote_ident
+Postgres::quote_qualified_ident($name)  &rarr; $quoted      # public.my table → "public"."my table"
+Postgres::parse_qualified_ident($name)  &rarr; \@parts      # inverse of quote_qualified_ident
+Postgres::quote_literal($val)         &rarr; $quoted        # 'O''Brien'
+Postgres::unquote_literal($lit)       &rarr; $val           # inverse of quote_literal (standard mode)
+Postgres::quote_nullable($val)        &rarr; $quoted        # like quote_literal, but undef → NULL
+Postgres::escape_like($val)           &rarr; $escaped       # 100% → 100\%, a_b → a\_b, \ → \\
+Postgres::unescape_like($pat)         &rarr; $literal       # inverse; rejects unescaped wildcard / dangling backslash
+Postgres::dollar_quote($val, $tag?)   &rarr; $quoted        # $tag$val$tag$ — auto-picks a non-colliding tag
+Postgres::unquote_dollar($quoted)     &rarr; $val           # inverse of dollar_quote
+Postgres::format_array(\@elems)       &rarr; $literal       # ["a,b","c"] → {"a,b",c}
+Postgres::parse_array($literal)       &rarr; \@elems        # inverse of format_array (1-D)
+Postgres::format_in_list(\@values)    &rarr; $operand       # [1,"a",undef] → (1, 'a', NULL) for `col IN (...)`
+Postgres::parse_in_list($list)        &rarr; \@values       # inverse of format_in_list
+Postgres::parse_range($literal)       &rarr; \%{ empty, lower, upper, lower_inclusive, upper_inclusive }
+Postgres::split_statements($sql)      &rarr; \@statements   # split a SQL script on top-level `;`
+Postgres::version()                   &rarr; package version string
+Postgres::server_version(%opts)       &rarr; Postgres version() build string</pre>
+        <p><code>split_statements</code> respects strings, dollar-quotes, and line/block comments; blank statements are dropped. <code>build_dsn</code>/<code>build_keyword_dsn</code> are the inverses of the parsers (well-known keys first, params sorted), so output re-parses cleanly.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Type encoding (Postgres &rarr; JSON)</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>bool</td><td><code>bool</code></td></tr>
+            <tr><td>int2 / int4 / int8</td><td><code>number</code></td></tr>
+            <tr><td>float4 / float8</td><td><code>number</code></td></tr>
+            <tr><td>text / varchar / bpchar / name</td><td><code>string</code></td></tr>
+            <tr><td>date</td><td><code>"YYYY-MM-DD"</code></td></tr>
+            <tr><td>timestamp</td><td><code>"YYYY-MM-DD HH:MM:SS[.ffffff]"</code></td></tr>
+            <tr><td>timestamptz</td><td><code>RFC 3339</code></td></tr>
+            <tr><td>uuid</td><td><code>string</code></td></tr>
+            <tr><td>json / jsonb</td><td><code>preserved as JSON</code></td></tr>
+            <tr><td>other</td><td><code>string</code> (text fallback; null when no text conversion exists)</td></tr>
+            <tr><td>NULL</td><td><code>null</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Bind parameters</h2>
+        <p>PostgreSQL placeholders are positional <code>$1</code>, <code>$2</code>, …  Pass binds as an arrayref. The cdylib's <code>json_to_param</code> maps JSON binds to wire values: null &rarr; NULL, bool &rarr; bool, int &rarr; <code>i64</code>, float &rarr; <code>f64</code>, string &rarr; text, array/object &rarr; jsonb. Add explicit casts (<code>$1::int</code>, <code>$2::text</code>) when type inference is ambiguous &mdash; Postgres is stricter than MySQL here.</p>
+<pre>Postgres::query  "SELECT * FROM t WHERE id = \$1::int",  bind =&gt; [42]
+Postgres::query  'SELECT $1::text || $2::text AS r',     bind =&gt; ["a", "b"]
+Postgres::execute 'INSERT INTO t (data) VALUES ($1)',    bind =&gt; [{x =&gt; 1}]   # jsonb</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Runnable <code>.stk</code> scripts ship in <code>examples/</code>; each skips cleanly when no connection URL is set.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>examples/quick_query.stk</code></td><td>list databases + tables, then run a small SELECT</td></tr>
+            <tr><td><code>examples/crud.stk</code></td><td>insert_many &rarr; exists &rarr; count &rarr; upsert &rarr; update &rarr; delete tour</td></tr>
+            <tr><td><code>examples/bulk_load.stk</code></td><td>load an array of hashes; with and without RETURNING</td></tr>
+            <tr><td><code>examples/dump_table.stk</code></td><td>stream a table to NDJSON on stdout via <code>query_stream</code></td></tr>
+            <tr><td><code>examples/discover.stk</code></td><td>read-only metadata tour; eval-guarded <code>ping</code></td></tr>
+            <tr><td><code>examples/explain.stk</code></td><td>print EXPLAIN + a result preview for a query you supply</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests &amp; dev workflow</h2>
+<pre>cargo test                          # unit + contract tests, no live calls
+DATABASE_URL='postgres://…' s test t/   # end-to-end against live Postgres
+
+make             # release build
+make test        # cargo test + s test t/
+make install     # release + pkg install -g .
+make clean</pre>
+        <p>The end-to-end suite skips cleanly when none of <code>$DATABASE_URL</code>, <code>$POSTGRES_URL</code>, <code>$POSTGRES_DSN</code> points at a reachable server.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>A real database client pulls in 100+ transitive crates (TLS, async runtime, type encoders). Most stryke one-liners never touch Postgres; for the ones that do, opt in with this package.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>pg__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_postgres.{dylib,so}</code>, dlopened in-process on first <code>use Postgres</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>Postgres::*</code> wrapper builds a JSON args dict and calls a sibling <code>pg__*</code> symbol resolved out of <code>libstryke_postgres.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use Postgres</code>; a <code>postgres::Client</code> cache keyed by connection URL is held in <code>OnceCell</code> &mdash; no fork-per-call, no fresh TCP+TLS+auth handshake. Responses are JSON; errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with the message.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-postgres/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — pg__* extern "C" exports + client cache
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper — `use Postgres`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest ([ffi] exports table)
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

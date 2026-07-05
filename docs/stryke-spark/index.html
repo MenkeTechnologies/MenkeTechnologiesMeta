@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-spark — APACHE SPARK CLIENT FOR STRYKE // OPT-IN PACKAGE. Apache Spark client for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim — ships as a Rust cdylib that stryke dlopens in-process on first `use Spark`.">
+  <title>stryke-spark — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-SPARK &mdash; APACHE SPARK CLIENT FOR STRYKE // OPT-IN PACKAGE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_spark.{dylib,so}</code> · dlopen'd in-process on <code>use Spark</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-spark/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-SPARK</h2>
+      <p class="tutorial-subtitle"><strong>Distributed compute from a stryke one-liner.</strong> Apache Spark client for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. Ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Spark</code>; the cdylib drives Spark through <code>spark-submit</code> with an embedded PySpark driver (<code>src/driver.py</code>, compiled in via <code>include_str!</code>).</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-spark
+
+# from a local checkout
+cd ~/projects/stryke-spark
+cargo build --release            # produces target/release/libstryke_spark.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/spark@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use Spark</code> &mdash; no helper-binary fork per call. You also need <code>spark-submit</code> reachable (e.g. <code>brew install apache-spark</code>, your distro's package, or a tarball with <code>$SPARK_HOME</code> set). Any stryke script that declares <code>use Spark</code> resolves the package automatically.</p>
+        <p><strong>Honest scope note.</strong> Each call still pays SparkSession init cost (seconds, dominated by JVM warmup). A long-running JVM driver daemon that persists <code>SparkSession</code> across calls is deferred &mdash; it needs a sidecar process design larger than the helper-binary &rarr; cdylib refactor. What the cdylib model eliminates is the helper-binary fork+exec overhead on top of <code>spark-submit</code>.</p>
+        <h3>JDK compatibility</h3>
+        <p>Spark 4.x officially supports JDK 17 &mdash; JDK 21+ trips a <code>getSubject is not supported</code> error in the Hive catalog code path even under <code>local[*]</code>. The cdylib defaults to <code>--conf spark.sql.catalogImplementation=in-memory</code> to dodge Hive, but a JDK 17 environment is still the smoothest. Set <code>JAVA_HOME</code> before running:</p>
+<pre>export JAVA_HOME=/path/to/jdk-17     # e.g. corretto-17, temurin-17</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use Spark</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>plain query (local[*])</td><td><code>my @rows = Spark::query "SELECT id, id * 2 AS doubled FROM range(5)"</code></td></tr>
+            <tr><td>remote cluster</td><td><code>Spark::query "SELECT * FROM events", master =&gt; "spark://cluster:7077"</code></td></tr>
+            <tr><td>scalar shortcut</td><td><code>p Spark::query_scalar "SELECT COUNT(*) FROM range(1000000)"</code></td></tr>
+            <tr><td>DDL</td><td><code>Spark::execute "CREATE TABLE IF NOT EXISTS logs (ts TIMESTAMP, msg STRING)"</code></td></tr>
+            <tr><td>schema</td><td><code>p to_json Spark::schema "logs"</code></td></tr>
+            <tr><td>table / database listings</td><td><code>p Spark::tables |&gt; ep; p Spark::databases |&gt; ep</code></td></tr>
+            <tr><td>spark-submit pass-through</td><td><code>Spark::submit "jobs/etl_pipeline.py", args =&gt; ["--date", "2026-01-01"]</code></td></tr>
+          </tbody>
+        </table>
+        <p>Each Spark call spins up a fresh JVM (~5&ndash;10s warmup). For multi-statement work, prefer one SQL with CTEs / subqueries over many separate calls. The complete API also lives in the <a href="https://github.com/MenkeTechnologies/stryke-spark#0x04-api-reference">README "API reference" section</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference</h2>
+        <p>Every public <code>Spark::*</code> function in <code>lib/Spark.stk</code>, grouped by role. The <strong>read paths</strong>, <strong>DDL/DML</strong>, <strong>external read/write</strong>, <strong>metadata</strong>, <strong>catalog introspection</strong>, <strong>temp views / session</strong>, <strong>caching + config</strong>, and <strong>submit</strong> groups call the JVM through <code>spark-submit</code>; the <strong>pure helpers</strong> group runs entirely in-process (no Spark, no JVM) and is safe to use anywhere.</p>
+
+        <h3>Read paths</h3>
+<pre>Spark::query        $sql, %opts &rarr; @rows                     # SELECT &rarr; rows as hashrefs
+Spark::query_stream $sql, %opts &rarr; $count                   # callback => sub fires per row, returns count
+Spark::query_one    $sql, %opts &rarr; \%row | undef            # SELECT … LIMIT 1
+Spark::query_col    $sql, %opts &rarr; @values                  # first column as a flat list
+Spark::query_scalar $sql, %opts &rarr; $value | undef          # first cell of LIMIT 1
+Spark::dump         $table, %opts &rarr; @rows                  # SELECT * FROM $table (columns/where/order_by/limit opts)
+Spark::count        $table, $where?, %opts &rarr; $row_count    # SELECT count(*) [WHERE $where]</pre>
+
+        <h3>DDL / DML</h3>
+<pre>Spark::execute $sql, %opts &rarr; { ok: true }                  # CREATE / INSERT / DROP / MERGE … (one ack on success)
+Spark::explain $sql, %opts &rarr; $plan_text                    # opts: mode (simple|extended|codegen|cost|formatted)</pre>
+
+        <h3>External read / write</h3>
+<pre>Spark::read  $path, %opts &rarr; @rows                          # opts: format, options, view, sql, limit
+Spark::write $sql,  %opts &rarr; { ok, … }                      # opts: path|table, format, mode, options</pre>
+        <p><code>read</code> loads a parquet/csv/json/orc source (default <code>parquet</code>); pass <code>view =&gt; "v", sql =&gt; "SELECT … FROM v"</code> to query it in the same call. <code>write</code> runs <code>$sql</code> and saves the result to a <code>path</code> or <code>table</code>, with <code>mode</code> &isin; <code>overwrite|append|ignore|errorifexists</code>.</p>
+
+        <h3>Metadata</h3>
+<pre>Spark::ping            %opts &rarr; 1 | 0                        # connectivity probe
+Spark::tables          %opts &rarr; @rows                       # catalog table rows
+Spark::databases       %opts &rarr; @rows
+Spark::schema          $table, %opts &rarr; @rows               # DESCRIBE TABLE column rows
+Spark::columns         $table, %opts &rarr; @rows               # name/type/nullable/is_partition/is_bucket
+Spark::functions       %opts &rarr; @rows                       # catalog functions
+Spark::version()       &rarr; $version                          # package version string</pre>
+
+        <h3>Catalog introspection + session</h3>
+<pre>Spark::views            %opts &rarr; @rows                      # { name, database, is_temp, type }
+Spark::catalogs         %opts &rarr; @rows                      # { name, description }
+Spark::current_database %opts &rarr; $name
+Spark::create_temp_view $name, $sql, %opts &rarr; \%resp        # createOrReplaceTempView
+Spark::drop_temp_view   $name, %opts &rarr; \%resp             # { ok, dropped }
+Spark::set_database     $database, %opts &rarr; \%resp          # catalog.setCurrentDatabase
+Spark::refresh_table    $table, %opts &rarr; \%resp            # catalog.refreshTable</pre>
+
+        <h3>Caching + runtime config</h3>
+<pre>Spark::cache   $table, %opts &rarr; { ok, cached }
+Spark::uncache $table, %opts &rarr; { ok, uncached }
+Spark::config  $key, %opts &rarr; $value | { ok }              # set with value => …</pre>
+
+        <h3>Submit pass-through</h3>
+<pre>Spark::submit $script_path, args => [...], %opts &rarr; { exit_code, output }</pre>
+        <p>Runs a <code>.py</code> / <code>.jar</code> workload through <code>spark-submit</code> &mdash; the escape hatch for jobs outside the SQL surface.</p>
+
+        <h3>Pure helpers (no Spark, no JVM)</h3>
+        <p>Parsers and builders for the Spark string formats that show up in configs, URLs, identifiers, and DDL. Each <code>parse_*</code> has an inverse <code>build_*</code> that round-trips it.</p>
+<pre># master URLs
+Spark::parse_master_url($url)   &rarr; { scheme, threads?, hosts?, master? }   # local[N], spark://… HA, k8s://…, yarn
+Spark::build_master_url(%opts)  &rarr; $url                                   # inverse
+
+# table identifiers
+Spark::parse_table_name($name)  &rarr; { catalog, database, table, parts }     # backtick-aware catalog.db.table
+Spark::build_table_name(%opts)  &rarr; $name                                   # inverse
+Spark::quote_qualified_ident($name) &rarr; $quoted                            # cat.db.my table &rarr; `cat`.`db`.`my table`
+Spark::parse_qualified_ident($name) &rarr; { name, parts, count }             # inverse; dot inside backticks stays literal
+Spark::quote_ident($name)       &rarr; $quoted                                # always wraps; embedded backticks doubled
+Spark::unquote_ident($quoted)   &rarr; $name                                  # inverse of quote_ident
+Spark::quote_ident_if_needed($name) &rarr; $quoted                            # quoteIfNeeded: users &rarr; users, 1col &rarr; `1col`
+
+# string literals + LIKE
+Spark::quote_literal($value)    &rarr; $quoted                                # it's &rarr; 'it\'s' (Spark string-literal escapes)
+Spark::unquote_literal($quoted) &rarr; $value                                 # inverse, single left-to-right escape pass
+Spark::escape_like($value)      &rarr; $escaped                               # 100% &rarr; 100\%, a_b &rarr; a\_b, \ &rarr; \\
+Spark::unescape_like($pattern)  &rarr; $literal                               # inverse; rejects an unescaped wildcard
+
+# sizes + durations
+Spark::parse_memory($memory)    &rarr; { value, suffix, bytes, mib }          # 512m/2g/1kb &rarr; bytes (binary: 1kb=1024)
+Spark::build_memory($bytes)     &rarr; { value, suffix, string, bytes }       # inverse; largest binary unit dividing evenly
+Spark::convert_memory($memory, $to) &rarr; { string, value, suffix, bytes }   # re-express in unit $to (b/k/m/g/t/p)
+Spark::parse_duration($duration) &rarr; { value, suffix, ms, unit }           # 30s/5min/100ms/1h/2d &rarr; ms
+Spark::build_duration($ms)      &rarr; { value, suffix, string, ms }          # inverse; largest unit dividing evenly
+
+# partitions
+Spark::build_partition_spec(\@pairs) &rarr; $clause                           # [col,val] pairs &rarr; PARTITION (col=val, …) DDL
+Spark::parse_partition_spec($spec)   &rarr; { partitions:[{column,value}] }   # inverse; quote-aware split
+Spark::parse_partition_path($path)   &rarr; { partitions:[{column,value}] }   # …/year=2024/month=01/ &rarr; segments
+Spark::build_partition_path(\@pairs) &rarr; $path                            # inverse
+
+# confs
+Spark::parse_conf($conf)        &rarr; { key, value }                         # split "key=value" on the first "="
+Spark::build_conf(%opts)        &rarr; $line                                  # inverse
+Spark::merge_confs(\@confs)     &rarr; { map, confs }                         # last-wins dedup, first-seen key order
+
+# data types
+Spark::parse_data_type($type)   &rarr; { base, args, params }                 # decimal(10,2) &rarr; ["10","2"]; depth-aware
+Spark::build_data_type(%opts)   &rarr; $type                                  # inverse; (…) scalars, &lt;…&gt; generics
+
+# storage levels
+Spark::parse_storage_level($name) &rarr; { name, use_disk, use_memory, use_off_heap, deserialized, replication }
+Spark::build_storage_level(%opts) &rarr; { name, … }                          # inverse of the flag tuple
+
+# packages, JDBC, app IDs, SQL splitting
+Spark::parse_maven_coordinate($coord) &rarr; { group, artifact, version, coordinate }   # one g:a:v coord
+Spark::split_packages($packages) &rarr; { packages:[{group,artifact,version,coordinate}], count }
+Spark::parse_jdbc_url($url)      &rarr; { subprotocol, subname, host, port, database, params }
+Spark::build_jdbc_url(%opts)     &rarr; $url                                  # inverse
+Spark::parse_app_id($id)        &rarr; { kind, id, … }                        # standalone / yarn / local app IDs
+Spark::split_sql_statements($sql) &rarr; { statements:[…], count }            # split on top-level ";" (quote/comment aware)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connection options (<code>%opts</code>)</h2>
+        <p>Every Spark-backed function takes a trailing <code>%opts</code> splat. These connection keys are merged into the FFI request by <code>Spark::_req</code> and forwarded to the driver:</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>master</td><td>Spark master URL, e.g. <code>local[*]</code> (default), <code>spark://cluster:7077</code></td></tr>
+            <tr><td>spark_home</td><td>override <code>$SPARK_HOME</code> for this call</td></tr>
+            <tr><td>spark_submit</td><td>path to the <code>spark-submit</code> binary</td></tr>
+            <tr><td>app_name</td><td>Spark application name</td></tr>
+            <tr><td>deploy_mode</td><td><code>client</code> / <code>cluster</code></td></tr>
+            <tr><td>packages</td><td>Maven coordinates for <code>--packages</code></td></tr>
+            <tr><td>jars</td><td>extra JARs for <code>--jars</code></td></tr>
+            <tr><td>database</td><td>database to use for the session</td></tr>
+            <tr><td>confs</td><td>hashref of <code>spark.*</code> config &rarr; <code>--conf</code></td></tr>
+            <tr><td>limit</td><td>row cap on read paths</td></tr>
+            <tr><td>callback</td><td><code>query_stream</code> only &mdash; <code>sub { … }</code> fired per row</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Type encoding</h2>
+        <p>Spark <code>df.toJSON()</code> does the heavy lifting; types map to JSON as Spark's JSON serializer dictates.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>boolean</td><td><code>bool</code></td></tr>
+            <tr><td>byte, short, int, long</td><td><code>number</code></td></tr>
+            <tr><td>float, double</td><td><code>number</code></td></tr>
+            <tr><td>decimal(p,s)</td><td><code>number</code> (precision permitting)</td></tr>
+            <tr><td>string, varchar, char</td><td><code>string</code></td></tr>
+            <tr><td>binary</td><td>base64 <code>string</code></td></tr>
+            <tr><td>date</td><td><code>"yyyy-MM-dd"</code></td></tr>
+            <tr><td>timestamp</td><td><code>"yyyy-MM-dd HH:mm:ss"</code></td></tr>
+            <tr><td>array&lt;T&gt;</td><td>JSON array</td></tr>
+            <tr><td>struct&lt;…&gt;</td><td>JSON object</td></tr>
+            <tr><td>map&lt;K,V&gt;</td><td>JSON object</td></tr>
+            <tr><td>NULL</td><td><code>null</code></td></tr>
+          </tbody>
+        </table>
+        <p>The columnar path also coerces Python <code>date</code>/<code>datetime</code>/<code>Decimal</code> to strings if Spark's serializer leaves them as native Python objects.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Bind parameters</h2>
+        <p>Spark SQL doesn't accept positional binds the way Postgres / MySQL do (the 3.5+ <code>args=</code> keyword on <code>SparkSession.sql</code> is gated on Connect for some deployments). For v1, inline values into the SQL string &mdash; use <code>Spark::quote_literal</code> for strings, and Spark SQL literal forms for the rest (numeric, <code>DATE '2026-01-01'</code>, etc.). Bind support via the cdylib's request JSON can be added once a clean cross-version path exists.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Runnable scripts under <code>examples/</code> &mdash; each is read-only / eval-guarded so it exits cleanly when no Spark driver is reachable.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>discover.stk</td><td>minimum-viable tour: version, ping, <code>query_scalar</code>, <code>query_col</code></td></tr>
+            <tr><td>quick_query.stk</td><td>a CTE query with <code>ORDER BY</code>, iterating returned rows</td></tr>
+            <tr><td>range_stats.stk</td><td><code>query_one</code> aggregate (COUNT/SUM/AVG/MIN/MAX) over <code>range(N)</code></td></tr>
+            <tr><td>sql_explain.stk</td><td><code>EXPLAIN</code> a query, then run it and print rows</td></tr>
+            <tr><td>parquet_pipeline.stk</td><td>pairs with stryke-arrow: Arrow writes parquet, Spark reads it via <code>read_files()</code></td></tr>
+          </tbody>
+        </table>
+<pre># range_stats.stk — aggregate over a generated range
+val $r = Spark::query_one "
+    SELECT COUNT(*) AS rows, SUM(id) AS total, AVG(id) AS mean,
+           MIN(id) AS min_id, MAX(id) AS max_id
+    FROM range($n)
+"
+p "n=#{$r-&gt;{rows}} sum=#{$r-&gt;{total}} mean=#{$r-&gt;{mean}}"</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Performance notes</h2>
+        <ul>
+          <li>Each call boots a fresh JVM via <code>spark-submit</code>. Plan for ~5&ndash;10s startup per call.</li>
+          <li>Batch work into one <code>query</code> with CTEs / subqueries / temp views when possible &mdash; that's a single submit, one JVM.</li>
+          <li>Local Spark warehouse files land under <code>./spark-warehouse/</code> and a <code>metastore_db/</code> directory in the cwd. Both are in <code>.gitignore</code>.</li>
+          <li>For interactive work against a remote cluster, point <code>--master</code> at a long-running standalone / YARN / k8s Spark cluster &mdash; the submit time is the same but the actual compute runs on warm executors.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+<pre>cargo test                                  # Rust unit tests, no live JVM
+JAVA_HOME=/path/to/jdk-17 s test t/         # end-to-end against local[*]</pre>
+        <p>The end-to-end suite skips cleanly when <code>spark-submit</code> isn't on PATH or the JVM can't start. The repo also carries shell lint gates under <code>tests/*.sh</code> (HTML structure, README and man-page hygiene, workflow formatting).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>Spark integration requires the JVM, <code>spark-submit</code>, and PySpark on the host. Most stryke one-liners never touch Spark; for the ones that do, opt in with this package.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>spark__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_spark.{dylib,so}</code>, dlopened in-process on first <code>use Spark</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>Spark::*</code> wrapper builds a JSON args dict and calls a sibling <code>spark__*</code> symbol resolved out of <code>libstryke_spark.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use Spark</code>; per call it writes the embedded PySpark driver (<code>src/driver.py</code>, included via <code>include_str!</code>) to a temp file and runs it through <code>spark-submit</code>, passing the JSON request envelope and reading JSON rows back. Each call boots a fresh JVM / <code>SparkSession</code> (~5&ndash;10s warmup); there is no persistent cross-call session daemon in this release. Responses are JSON; errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with the message.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-spark/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9500;&#9472;&#9472; lib.rs            # cdylib — spark__* extern "C" exports
+&#9474;   &#9492;&#9472;&#9472; driver.py         # embedded PySpark driver (include_str!)
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use Spark`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest ([ffi] exports table)
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

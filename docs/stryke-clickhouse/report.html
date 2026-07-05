@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-clickhouse engineering report — HTTP-interface transport over ureq/rustls, JSON result formats, JSONEachRow inserts, the connection cache, JSON-in/JSON-out FFI, pure helpers.">
+  <title>stryke-clickhouse — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-CLICKHOUSE &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_clickhouse</code> &middot; namespace <code>Clickhouse</code> &middot; JSON-in/JSON-out FFI over dlopen
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-clickhouse</strong> is an opt-in connector package in the stryke ecosystem &mdash; a ClickHouse client. It exposes SELECTs, bulk insert via JSONEachRow, DDL, and schema introspection as the <code>Clickhouse</code> package, against any ClickHouse server over its HTTP interface (default port 8123).</p>
+      <p class="tutorial-subtitle">Transport is <code>ureq</code> over rustls &mdash; synchronous, pure-Rust, no tokio, no OpenSSL. The cdylib caches a keep-alive connection pool and ships once on demand rather than being linked into stryke core.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">Clickhouse</div><div class="stat-label">stryke namespace</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Load model (dlopen)</div></div>
+        <div class="stat-card"><div class="stat-val green">HTTP</div><div class="stat-label">Transport (ureq, rustls)</div></div>
+        <div class="stat-card"><div class="stat-val cyan">43</div><div class="stat-label">Public functions</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>TRANSPORT</h2>
+      <p>The client uses ClickHouse's HTTP interface (default port 8123) via <code>ureq</code> &mdash; synchronous, pure-Rust, rustls-backed, no async runtime, no OpenSSL. SQL is sent in the POST body. SELECTs append <code>default_format=JSON</code> so results return as <code>{ meta, data, rows, statistics }</code>; DDL/DML return an empty body on success.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>CONNECTION CACHE</h2>
+      <p>One <code>ureq::Agent</code> (HTTP keep-alive pool) is cached per <code>(base_url, auth, database)</code> tuple in a <code>OnceCell&lt;Mutex&lt;HashMap&gt;&gt;</code> for the life of the stryke process, so repeated queries reuse the connection. The database rides on the query string (<code>?database=</code>) and HTTP Basic carries the credentials (default user <code>default</code>).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>INSERTS</h2>
+      <p><code>insert</code> serializes an array of row objects into an <code>INSERT INTO &lt;table&gt; FORMAT JSONEachRow</code> body &mdash; one JSON object per line &mdash; which is ClickHouse's high-throughput ingestion path and avoids per-row round trips.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>FFI CONTRACT + PURE HELPERS</h2>
+      <p>Each <code>#[no_mangle] extern "C" fn clickhouse__*</code> is a JSON-string-in / JSON-string-out wrapper; handlers run inside <code>catch_unwind</code> so a panic becomes an <code>{ "error": … }</code> result rather than crossing the C ABI into the host shell. The SQL-escaping and value-formatting helpers and the URL helpers take no connection and are unit-tested in-crate, so they validate in CI with no server present.</p>
+      <table class="arch-table">
+        <thead><tr><th>Group</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Liveness</td><td><code>version</code>, <code>ping</code>, <code>server_version</code></td></tr>
+          <tr><td>Query</td><td><code>query</code>, <code>query_rows</code>, <code>query_row</code>, <code>query_value</code>, <code>exec</code>, <code>insert</code>, <code>delete_where</code>, <code>raw</code></td></tr>
+          <tr><td>Introspection</td><td><code>databases</code>, <code>tables</code>, <code>describe</code>, <code>columns</code>, <code>count</code>, <code>table_exists</code>, <code>database_exists</code>, <code>settings</code>, <code>parts</code>, <code>disk_usage</code>, <code>mutations</code>, <code>processes</code></td></tr>
+          <tr><td>DDL</td><td><code>create_database</code>, <code>drop_database</code>, <code>create_table</code>, <code>drop_table</code>, <code>truncate_table</code>, <code>rename_table</code>, <code>add_column</code>, <code>drop_column</code>, <code>optimize</code></td></tr>
+          <tr><td>Pure helpers</td><td><code>escape</code>, <code>escape_like</code>, <code>quote_literal</code>, <code>quote_ident</code>, <code>valid_identifier</code>, <code>format_value</code>, <code>format_in_list</code>, <code>format_array</code>, <code>build_url</code>, <code>parse_url</code>, <code>redact_url</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>SQL MAPPING</h2>
+      <p>Introspection functions resolve against ClickHouse's <code>system.*</code> tables; DDL functions emit idempotent statements (<code>IF [NOT] EXISTS</code>). Identifiers/values interpolated into <code>system.*</code> predicates are run through the in-crate <code>escape_string</code> first.</p>
+      <table class="arch-table">
+        <thead><tr><th>Function</th><th>Statement</th></tr></thead>
+        <tbody>
+          <tr><td><code>server_version</code></td><td><code>SELECT version()</code></td></tr>
+          <tr><td><code>databases</code></td><td><code>SELECT name FROM system.databases ORDER BY name</code></td></tr>
+          <tr><td><code>tables</code></td><td><code>SELECT name FROM system.tables WHERE database = '&hellip;' ORDER BY name</code></td></tr>
+          <tr><td><code>describe</code></td><td><code>DESCRIBE TABLE &lt;table&gt;</code></td></tr>
+          <tr><td><code>table_exists</code></td><td><code>SELECT count() AS c FROM system.tables WHERE database = '&hellip;' AND name = '&hellip;'</code></td></tr>
+          <tr><td><code>database_exists</code></td><td><code>SELECT count() AS c FROM system.databases WHERE name = '&hellip;'</code></td></tr>
+          <tr><td><code>settings</code></td><td><code>SELECT name, value, changed, description FROM system.settings ORDER BY name</code></td></tr>
+          <tr><td><code>columns</code></td><td><code>SELECT name, type, default_kind, default_expression, data_compressed_bytes, data_uncompressed_bytes, comment FROM system.columns WHERE database = '&hellip;' AND table = '&hellip;' ORDER BY position</code></td></tr>
+          <tr><td><code>parts</code></td><td><code>SELECT &hellip; FROM system.parts WHERE database = '&hellip;' AND table = '&hellip;' AND active ORDER BY name</code></td></tr>
+          <tr><td><code>disk_usage</code></td><td><code>SELECT sum(rows), sum(bytes_on_disk), sum(data_compressed_bytes), sum(data_uncompressed_bytes), round(uncompressed/greatest(compressed,1),3) AS ratio FROM system.parts WHERE &hellip; AND active</code></td></tr>
+          <tr><td><code>mutations</code></td><td><code>SELECT mutation_id, command, create_time, parts_to_do, is_done, latest_fail_reason FROM system.mutations WHERE &hellip; ORDER BY create_time DESC</code></td></tr>
+          <tr><td><code>processes</code></td><td><code>SELECT query_id, user, query, elapsed, read_rows, read_bytes, memory_usage FROM system.processes ORDER BY elapsed DESC</code></td></tr>
+          <tr><td><code>create_database</code></td><td><code>CREATE DATABASE IF NOT EXISTS &lt;name&gt;</code></td></tr>
+          <tr><td><code>drop_database</code></td><td><code>DROP DATABASE IF EXISTS &lt;name&gt;</code></td></tr>
+          <tr><td><code>create_table</code></td><td><code>CREATE TABLE IF NOT EXISTS &lt;name&gt; (&lt;columns&gt;) ENGINE = &lt;engine, default MergeTree&gt; ORDER BY &lt;order_by, default tuple()&gt;</code> &mdash; or a full <code>sql</code> CREATE verbatim</td></tr>
+          <tr><td><code>drop_table</code></td><td><code>DROP TABLE IF EXISTS &lt;table&gt;</code></td></tr>
+          <tr><td><code>truncate_table</code></td><td><code>TRUNCATE TABLE IF EXISTS &lt;table&gt;</code></td></tr>
+          <tr><td><code>rename_table</code></td><td><code>RENAME TABLE &lt;from&gt; TO &lt;to&gt;</code></td></tr>
+          <tr><td><code>add_column</code></td><td><code>ALTER TABLE &lt;table&gt; ADD COLUMN IF NOT EXISTS &lt;name&gt; &lt;type&gt; [DEFAULT &lt;expr&gt;]</code></td></tr>
+          <tr><td><code>drop_column</code></td><td><code>ALTER TABLE &lt;table&gt; DROP COLUMN IF EXISTS &lt;name&gt;</code></td></tr>
+          <tr><td><code>delete_where</code></td><td><code>DELETE FROM &lt;table&gt; WHERE &lt;where&gt;</code> (lightweight delete, ClickHouse 22.8+)</td></tr>
+          <tr><td><code>optimize</code></td><td><code>OPTIMIZE TABLE &lt;table&gt; [FINAL]</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>PURE-HELPER SEMANTICS</h2>
+      <p>The SQL-building helpers take no connection and are exercised by the in-crate unit tests, so they validate in CI with no server present.</p>
+      <table class="arch-table">
+        <thead><tr><th>Helper</th><th>Rule</th></tr></thead>
+        <tbody>
+          <tr><td><code>escape</code></td><td>Escapes <code>\</code> &rarr; <code>\\</code> and <code>'</code> &rarr; <code>\'</code> for a single-quoted literal body.</td></tr>
+          <tr><td><code>quote_literal</code></td><td><code>'&lt;escape(value)&gt;'</code> &mdash; the escaped body wrapped in single quotes.</td></tr>
+          <tr><td><code>quote_ident</code></td><td>Backtick-wraps; embedded <code>`</code> becomes <code>\`</code>.</td></tr>
+          <tr><td><code>valid_identifier</code></td><td>True iff the value matches <code>[A-Za-z_][A-Za-z0-9_]*</code> (leading underscore allowed).</td></tr>
+          <tr><td><code>escape_like</code></td><td>Backslash-escapes <code>\</code>, <code>%</code>, <code>_</code> &mdash; the body to wrap with surrounding <code>%</code> and quote.</td></tr>
+          <tr><td><code>format_value</code></td><td>string&rarr;<code>'&hellip;'</code>, number&rarr;as-is, bool&rarr;<code>true</code>/<code>false</code>, null&rarr;<code>NULL</code>, array&rarr;<code>[&hellip;]</code>, object&rarr;quoted JSON string.</td></tr>
+          <tr><td><code>format_in_list</code></td><td><code>(v1, v2, &hellip;)</code> via <code>format_value</code>; empty input &rarr; <code>(NULL)</code> (matches nothing).</td></tr>
+          <tr><td><code>format_array</code></td><td><code>[v1, v2, &hellip;]</code> via <code>format_value</code>.</td></tr>
+          <tr><td><code>build_url</code></td><td>Resolves the base URL the opts connect to (scheme + host + port).</td></tr>
+          <tr><td><code>redact_url</code></td><td>Rewrites userinfo to <code>***</code>: <code>scheme://***@host&hellip;</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">?</span>URL PARSING</h2>
+      <p><code>parse_url</code> decomposes a URL into the connection fields. A missing scheme defaults to <code>http</code>; a missing port defaults to <code>8443</code> when the scheme is <code>https</code>, otherwise <code>8123</code>; a leading <code>/&lt;db&gt;</code> path names the database.</p>
+      <table class="arch-table">
+        <thead><tr><th>Field</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td><code>scheme</code></td><td>Before <code>://</code>; defaults to <code>http</code>.</td></tr>
+          <tr><td><code>host</code></td><td>Authority host (after any <code>user:pass@</code>).</td></tr>
+          <tr><td><code>port</code></td><td>Explicit port, else <code>8443</code> (https) / <code>8123</code> (http).</td></tr>
+          <tr><td><code>username</code> / <code>password</code></td><td>From the <code>user:pass@</code> userinfo, when present.</td></tr>
+          <tr><td><code>database</code></td><td>Leading path segment, or null when absent.</td></tr>
+          <tr><td><code>tls</code></td><td>True when scheme is <code>https</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>RESULT EXTRACTION</h2>
+      <p><code>query</code> returns the full result object <code>{ meta, data, rows, statistics }</code>; <code>query_rows</code> / <code>query_row</code> / <code>query_value</code> peel off the array / first row / first scalar respectively. <code>exec</code> is for statements that return no rows. The extraction logic is unit-tested in-crate against captured JSON payloads, so it validates without a live server.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>DEPENDENCIES</h2>
+      <p><code>ureq</code> (HTTP, rustls TLS) for transport and <code>serde_json</code> for the FFI payloads and result parsing. Pure-Rust throughout &mdash; no tokio, no OpenSSL, no native client library.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-clickhouse</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-clickhouse/issues" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-clickhouse/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

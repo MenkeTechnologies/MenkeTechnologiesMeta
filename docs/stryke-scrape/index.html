@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-scrape — web scraping / crawling client for stryke. Fetch, crawl (robots-respecting), sitemap discovery, plus pure CSS / table / link / structured-data (JSON-LD, OpenGraph) extraction. Wraps the spider engine. Opt-in Rust cdylib.">
+  <title>stryke-scrape — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td { padding: 6px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+    .example-tbl td:first-child { width: 30%; white-space: nowrap; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-SCRAPE &mdash; WEB SCRAPING + CRAWLING CLIENT FOR STRYKE // FETCH + CRAWL + SITEMAP + CSS EXTRACT + TABLES + LINKS + STRUCTURED DATA</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package &middot; namespace <code>Scrape</code> &middot; cdylib <code>libstryke_scrape</code> &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-scrape/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-SCRAPE</h2>
+      <p class="tutorial-subtitle"><strong>Web scraping / crawling client for stryke.</strong> Fetch a page, crawl a site (robots-respecting, depth/limit/subdomain bounded), discover via sitemap, then extract with CSS selectors, table-to-records, link harvesting, and structured data (JSON-LD, OpenGraph, Twitter cards). The crawl engine is <a href="https://github.com/spider-rs/spider" target="_blank" rel="noopener noreferrer">spider</a> &mdash; vendored, not reimplemented &mdash; driven through one embedded tokio runtime owned by the cdylib. Extraction is html5ever-backed and runs with no network. An opt-in package, kept out of the stryke core binary so the daily-driver install stays slim.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>An opt-in package &mdash; it is not in the stryke core binary, so install it explicitly. From a release (no <code>rustc</code> needed on the consumer machine):</p>
+<pre><code>s pkg install -g github.com/MenkeTechnologies/stryke-scrape</code></pre>
+        <p>From a local checkout (builds the cdylib with <code>cargo</code>, installs into <code>~/.stryke/store/scrape@&lt;version&gt;/</code>):</p>
+<pre><code>cd ~/projects/stryke-scrape
+cargo build --release
+s pkg install -g .
+# or simply:
+make install</code></pre>
+        <p>Then <code>use Scrape</code> in any script &mdash; the <code>libstryke_scrape</code> cdylib is dlopened in-process on first use, and every <code>Scrape::*</code> call dispatches to a matching <code>scrape__*</code> FFI symbol.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Fetch and extract</h2>
+<pre><code>use Scrape
+
+val $page = Scrape::fetch "https://example.com"
+p "$page-&gt;{status} — #{len $page-&gt;{html}} bytes"
+
+# selector ending in ` @attr` pulls that attribute, else element text.
+# `all =&gt; 1` makes every field an array of all matches.
+val $rec = Scrape::extract $page-&gt;{html}, {
+    title =&gt; "h1",
+    links =&gt; "a @href",
+}, all =&gt; 1</code></pre>
+        <p><code>fetch</code> returns <code>{ url, status, html }</code> for a single page; links are not followed. A field selector is a CSS selector; appending <code>@attr</code> (for example <code>"a.nav @href"</code>) pulls that attribute instead of the element text. Without <code>all =&gt; 1</code> each field is the first match; with it, each field is an array of every match.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Crawl a site</h2>
+<pre><code>val $res = Scrape::crawl "https://example.com",
+    limit       =&gt; 50,
+    depth       =&gt; 3,
+    delay       =&gt; 200,   # ms between requests
+    concurrency =&gt; 4
+
+p $res-&gt;{count}          # pages fetched, robots respected
+
+for val $p (@{ $res-&gt;{pages} }) {
+    val $rec = Scrape::extract $p-&gt;{html}, { title =&gt; "title" }
+    p "  [$p-&gt;{status}] $p-&gt;{url} — $rec-&gt;{title}"
+}</code></pre>
+        <p><code>crawl</code> returns <code>{ count, pages =&gt; [ { url, status, html? } ] }</code>. Set <code>include_html =&gt; 0</code> to map URLs only (bodies omitted), or use <code>Scrape::links</code> for just the link graph (<code>{ count, links =&gt; [...] }</code>) and <code>Scrape::sitemap</code> for sitemap-driven discovery (same shape as <code>crawl</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Crawl options</h2>
+        <p>Every network function takes the URL first, then keyword options. Only the keys you pass are applied; the rest fall back to courteous defaults.</p>
+        <table class="example-tbl">
+          <tr><td>limit</td><td>max pages to fetch.</td></tr>
+          <tr><td>depth</td><td>max link depth from the seed URL.</td></tr>
+          <tr><td>subdomains</td><td><code>1</code> to follow subdomains of the seed host.</td></tr>
+          <tr><td>respect_robots</td><td>robots.txt compliance &mdash; defaults to <code>1</code> (true).</td></tr>
+          <tr><td>delay</td><td>milliseconds between requests (politeness throttle).</td></tr>
+          <tr><td>concurrency</td><td>max in-flight requests.</td></tr>
+          <tr><td>timeout_ms</td><td>per-request timeout in milliseconds.</td></tr>
+          <tr><td>blacklist</td><td><code>[ ... ]</code> of URL substrings / patterns to skip.</td></tr>
+          <tr><td>proxies</td><td><code>[ ... ]</code> of proxy URLs.</td></tr>
+          <tr><td>user_agent</td><td>override the default <code>stryke-scrape/&lt;version&gt;</code> UA.</td></tr>
+          <tr><td>include_html</td><td>crawl / sitemap: <code>0</code> to omit page bodies (URL map only).</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Pure extraction</h2>
+        <p>Works on any HTML string you already have &mdash; no network:</p>
+        <table class="example-tbl">
+          <tr><td>extract</td><td>CSS selectors &rarr; record; <code>@attr</code> suffix for attributes; <code>all</code> for every match.</td></tr>
+          <tr><td>extract_table</td><td><code>&lt;table&gt;</code> &rarr; array of header-keyed row dicts.</td></tr>
+          <tr><td>extract_links</td><td>every <code>&lt;a href&gt;</code> as <code>{ text, href }</code>, resolved against a <code>base</code>.</td></tr>
+          <tr><td>extract_attrs</td><td>collect one attribute across every match of a selector.</td></tr>
+          <tr><td>extract_text</td><td>readable text of a selector (default <code>body</code>) &mdash; tags stripped, script/style skipped.</td></tr>
+          <tr><td>extract_meta</td><td>head metadata: title, description, keywords, canonical, robots, viewport, charset.</td></tr>
+          <tr><td>extract_images</td><td>every <code>&lt;img&gt;</code> as <code>{ src, alt }</code>, resolved against a <code>base</code>.</td></tr>
+          <tr><td>extract_feeds</td><td>RSS/Atom <code>&lt;link rel="alternate"&gt;</code> feed discovery.</td></tr>
+          <tr><td>structured</td><td>JSON-LD blocks + OpenGraph + Twitter card metadata.</td></tr>
+          <tr><td>microdata</td><td>schema.org <code>itemscope</code>/<code>itemprop</code> items as <code>{ type, properties }</code>.</td></tr>
+          <tr><td>headings</td><td><code>h1</code>&hellip;<code>h6</code> outline as <code>{ level, text, id }</code> in document order.</td></tr>
+          <tr><td>forms</td><td>every <code>&lt;form&gt;</code> as <code>{ action, method, fields }</code>, action resolved against a <code>base</code>.</td></tr>
+          <tr><td>select</td><td>outer (or <code>inner</code>) HTML of every element matching a selector.</td></tr>
+          <tr><td>select_text</td><td>cleaned text of every match of a selector, one string per match.</td></tr>
+          <tr><td>absolutize</td><td>resolve a relative <code>href</code> against a <code>base</code> URL.</td></tr>
+        </table>
+<pre><code>val $html = '&lt;table&gt;&lt;tr&gt;&lt;th&gt;Feature&lt;/th&gt;&lt;th&gt;Value&lt;/th&gt;&lt;/tr&gt;' +
+    '&lt;tr&gt;&lt;td&gt;Weight&lt;/td&gt;&lt;td&gt;1.2kg&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;'
+
+# &lt;table&gt; → array of header-keyed row dicts
+val $rows = Scrape::extract_table $html
+for val $r (@$rows) { p "$r-&gt;{Feature} = $r-&gt;{Value}" }
+
+# links resolved against a base URL
+val $links = Scrape::extract_links $html, base =&gt; "https://acme.test/products/widget"</code></pre>
+        <p><code>extract_table</code> maps the first <code>&lt;table&gt;</code> (or <code>%opts{selector}</code>) to header-keyed records, falling back to <code>col0</code>, <code>col1</code>&hellip; for columns without a header cell. <code>extract_text</code> collapses whitespace and skips <code>script</code> / <code>style</code> / <code>noscript</code> subtrees so embedded JS/CSS never leaks into readable output.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Structured data</h2>
+        <p><code>structured</code> returns JSON-LD blocks plus OpenGraph (<code>og:*</code>) and Twitter-card (<code>twitter:*</code>) metadata in one call. <code>microdata</code> reads schema.org <code>itemscope</code>/<code>itemprop</code> markup.</p>
+<pre><code>val $html = '&lt;meta property="og:title" content="Acme Widget"&gt;' +
+    '&lt;meta property="og:price" content="19.99"&gt;'
+
+val $meta = Scrape::structured $html
+p $meta-&gt;{opengraph}{title}    # Acme Widget
+p $meta-&gt;{opengraph}{price}    # 19.99</code></pre>
+        <p>The result shape is <code>{ jsonld =&gt; [...], opengraph =&gt; {...}, twitter =&gt; {...} }</code> &mdash; the <code>og:</code> / <code>twitter:</code> prefixes are stripped from the keys. <code>extract_meta</code> covers the plainer head fields: <code>title</code>, <code>description</code>, <code>keywords</code>, <code>robots</code>, <code>viewport</code>, <code>generator</code>, <code>charset</code>, and <code>canonical</code> &mdash; only fields actually present appear.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>URL and query-string helpers</h2>
+        <p>Pure URL utilities, no network &mdash; useful for building, normalizing, and comparing the URLs a crawl produces.</p>
+        <table class="example-tbl">
+          <tr><td>url_parse</td><td><code>$url</code> &rarr; <code>{ scheme, host, port, path, query, fragment, username, password }</code> (port falls back to the scheme default).</td></tr>
+          <tr><td>url_encode</td><td>RFC 3986 percent-encode a value (space &rarr; <code>%20</code>).</td></tr>
+          <tr><td>url_decode</td><td>decode <code>%XX</code> escapes; <code>plus_as_space =&gt; 1</code> turns <code>+</code> into a space.</td></tr>
+          <tr><td>parse_query</td><td>query string (leading <code>?</code> optional) &rarr; <code>{ key =&gt; value }</code>.</td></tr>
+          <tr><td>build_query</td><td><code>\%params</code> &rarr; percent-encoded, <code>&amp;</code>-joined query string.</td></tr>
+          <tr><td>same_origin</td><td>true when two URLs share scheme + host + port (the crawler scope check).</td></tr>
+          <tr><td>normalize_url</td><td>canonicalize for dedup: lowercase host, drop a default port + fragment, sort query keys.</td></tr>
+          <tr><td>set_query_params</td><td>merge <code>\%params</code> into a URL's query string; <code>replace</code> (default true) overrides existing keys.</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Politeness</h2>
+        <p><code>crawl</code>, <code>links</code>, and <code>sitemap</code> default <code>respect_robots</code> to true and send an identifying <code>stryke-scrape/&lt;version&gt;</code> User-Agent. <code>delay</code> and <code>concurrency</code> throttle a crawl. Respecting a site's terms of use, rate limits, and robots directives is the caller's responsibility &mdash; the package sets the courteous defaults.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference</h2>
+        <p>The <code>Scrape</code> namespace exposes the full surface below. Network functions take <code>$url</code> first, then options; pure functions take an HTML string or URL value. Every function backs a matching <code>scrape__*</code> FFI export.</p>
+<pre><code># Network (spider engine)
+Scrape::fetch    $url, %opts → { url, status, html }
+Scrape::crawl    $url, %opts → { count, pages => [ { url, status, html? } ] }
+Scrape::links    $url, %opts → { count, links => [ url, ... ] }
+Scrape::sitemap  $url, %opts → { count, pages => [ ... ] }
+
+# Pure extraction (no network)
+Scrape::extract         $html, \%fields, %opts → \%record   # opts: all
+Scrape::extract_table   $html, %opts → [ \%row, ... ]       # opts: selector
+Scrape::extract_links   $html, %opts → [ { text, href }, ... ]    # opts: base
+Scrape::extract_attrs   $html, $selector, $attr → [ value, ... ]
+Scrape::extract_text    $html, %opts → $string              # opts: selector (default body)
+Scrape::extract_meta    $html → { title, description, canonical, ... }
+Scrape::extract_images  $html, %opts → [ { src, alt }, ... ]      # opts: base
+Scrape::extract_feeds   $html, %opts → [ { title, href, type }, ... ]   # opts: base
+Scrape::structured      $html → { jsonld => [...], opengraph => {...}, twitter => {...} }
+Scrape::microdata       $html → [ { type, properties => { name => [values] } }, ... ]
+Scrape::headings        $html → [ { level, text, id }, ... ]
+Scrape::forms           $html, %opts → [ { action, method, fields => [...] }, ... ]  # opts: base
+Scrape::select          $html, $selector, %opts → [ html, ... ]  # opts: inner
+Scrape::select_text     $html, $selector → [ text, ... ]
+Scrape::absolutize      $base, $href → $url
+
+# URL / query-string helpers (pure)
+Scrape::url_encode      $value → $encoded
+Scrape::url_decode      $value, %opts → $decoded            # opts: plus_as_space
+Scrape::parse_query     $query → { key => value, ... }
+Scrape::build_query     \%params → $query_string
+Scrape::url_parse       $url → { scheme, host, port, path, query, fragment, username, password }
+Scrape::same_origin     $a, $b → $bool
+Scrape::normalize_url   $url → $canonical
+Scrape::set_query_params $url, \%params, %opts → $url        # opts: replace (default true)
+
+Scrape::version → $semver</code></pre>
+        <p>The same reference, with FFI and dependency detail, lives in the <a href="https://github.com/MenkeTechnologies/stryke-scrape#readme" target="_blank" rel="noopener noreferrer">README</a> and the <a href="report.html">engineering report</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+        <p>The pure-engine unit tests live in the crate and the offline surface test pins wrapper completeness &mdash; both run with no egress, so CI stays green without network. A live crawl is opt-in behind an environment variable.</p>
+<pre><code>cargo test                                       # pure extraction engines, no network
+s test t/                                         # wrapper surface + extraction
+SCRAPE_LIVE_URL=https://example.com s test t/     # opt-in live crawl</code></pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>The crawl + extraction stack (<code>spider</code>, the embedded tokio runtime, html5ever-backed CSS selection) ships once, on demand, as an opt-in package &mdash; stryke core is never linked against it. The stryke side is a thin <code>Scrape.stk</code> wrapper; the heavy code lives in the <code>libstryke_scrape</code> cdylib and is dlopened on first <code>use Scrape</code>. Network calls run on one embedded multi-thread tokio runtime, created lazily and reused for the life of the process &mdash; no per-call runtime spin-up.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

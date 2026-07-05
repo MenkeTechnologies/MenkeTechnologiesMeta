@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zwire-host — engineering report. A single self-contained Rust binary exposing the local machine over one JSON protocol via two transports; architecture, command surface, transports, dependencies, CI gates.">
+  <title>zwire-host — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZWIRE-HOST &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zwire-host" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Single static Rust binary &middot; two transports, one dispatcher &middot; 45 commands &middot; also a library &middot; macOS · Linux · Windows
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>zwire-host</strong> is a single self-contained Rust binary (~500&nbsp;KB, no Python, no <code>psutil</code>) that exposes the local machine to any app over one JSON message protocol. It began as the Chrome native-messaging host for the <a href="https://github.com/MenkeTechnologies/zwire" target="_blank" rel="noopener noreferrer">zwire</a> HUD and became a universal local endpoint: it also runs as a local-socket daemon speaking newline-delimited JSON, so browser extensions, tmux, emacs, desktop apps, plugins, shell scripts and any language reach the same capabilities.</p>
+      <p class="tutorial-subtitle">Two transports feed one dispatcher (<code>src/session.rs</code>): a native-messaging stdio framing and a local-socket daemon (Unix domain socket on macOS/Linux, named pipe on Windows). Every capability &mdash; sysinfo, filesystem crawl/watch/tail, exec, background jobs, process tools, a pub/sub bus that federates across TCP-peered hosts, PTY terminals and a per-app kv store &mdash; is reachable over either transport, and the crate is also a <code>zwire_host</code> library so sibling hosts can embed it.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">v0.3.0</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val cyan">17</div><div class="stat-label">src .rs files</div></div>
+        <div class="stat-card"><div class="stat-val green">3,047</div><div class="stat-label">Source lines</div></div>
+        <div class="stat-card"><div class="stat-val cyan">45</div><div class="stat-label">Protocol commands</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Transports</div></div>
+        <div class="stat-card"><div class="stat-val green">17</div><div class="stat-label">Capabilities</div></div>
+        <div class="stat-card"><div class="stat-val cyan">5</div><div class="stat-label">Dependencies</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Platforms</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">One dispatcher, many transports. A per-connection <code>Session</code> holds the connection's PTYs, sysinfo stream and bus/peer links; dropping it tears every one down, so a client disconnect never leaks a shell, a thread, a subscriber or a stale link. Requests carry an optional <code>id</code> echoed on the reply so one connection multiplexes many in-flight requests, streams and terminals.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>Native messaging</td><td>little-endian <code>u32</code> length + JSON body on <code>stdin</code>/<code>stdout</code>; the default when the browser launches the binary</td></tr>
+          <tr><td>Local-socket daemon</td><td><code>serve</code> speaks newline-delimited JSON over a Unix domain socket (<code>0600</code> under a <code>0700</code> dir) on macOS/Linux, or a per-user named pipe on Windows (via <code>interprocess</code>)</td></tr>
+          <tr><td>Dispatcher</td><td><code>Session::handle</code> routes one decoded request to the capability modules and either replies (RPC) or sets up a background stream; both transports drive it identically</td></tr>
+          <tr><td>Streams</td><td>sysinfo, <code>fs_watch</code>, <code>fs_tail</code>, PTY output and bus <code>pub</code> frames are pushed asynchronously, keyed by the request <code>id</code></td></tr>
+          <tr><td>Peering</td><td>TCP-peered daemons federate the bus single-hop (star and full-mesh without loops); inbound TCP is gated by a shared <code>--token</code>, local Unix clients are trusted</td></tr>
+          <tr><td>Library</td><td>the crate is <code>zwire_host</code> too; <code>default-features = false</code> drops <code>sysinfo</code> + <code>portable-pty</code> for embedders that only need fs/exec/kv/bus/jobs/watch</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>COMMAND SURFACE</h2>
+      <p>45 protocol commands, all reachable over both transports. The <code>hello</code> reply advertises which capability tags were compiled in so a client can feature-test.</p>
+      <table class="arch-table">
+        <thead><tr><th>Group</th><th>Commands</th></tr></thead>
+        <tbody>
+          <tr><td>Discovery &amp; kv</td><td><code>hello</code>, <code>hostinfo</code>, <code>kv_set</code>, <code>kv_get</code>, <code>kv_merge</code>, <code>kv_del</code>, <code>kv_keys</code></td></tr>
+          <tr><td>System stats</td><td><code>sysinfo_once</code>, <code>sysinfo_start</code>, <code>sysinfo_stop</code></td></tr>
+          <tr><td>Filesystem</td><td><code>fs_read</code>, <code>fs_write</code>, <code>fs_append</code>, <code>fs_list</code>, <code>fs_walk</code>, <code>fs_stat</code>, <code>fs_mkdir</code>, <code>fs_rm</code></td></tr>
+          <tr><td>Watch &amp; tail</td><td><code>fs_watch</code>, <code>fs_tail</code>, <code>watch_stop</code>, <code>watch_list</code></td></tr>
+          <tr><td>Exec &amp; OS</td><td><code>exec</code>, <code>open</code>, <code>clipboard_get</code>, <code>clipboard_set</code>, <code>notify</code></td></tr>
+          <tr><td>Background jobs</td><td><code>job_start</code>, <code>job_list</code>, <code>job_result</code>, <code>job_poll</code></td></tr>
+          <tr><td>Process tools</td><td><code>ps</code>, <code>kill</code>, <code>which</code></td></tr>
+          <tr><td>Pub/sub bus</td><td><code>sub</code>, <code>unsub</code>, <code>pub</code></td></tr>
+          <tr><td>Host-to-host peering</td><td><code>peers</code>, <code>peer_connect</code>, <code>remote</code></td></tr>
+          <tr><td>PTY terminals</td><td><code>pty_spawn</code>, <code>pty_write</code>, <code>pty_resize</code>, <code>pty_kill</code></td></tr>
+          <tr><td>Legacy zwire bridge</td><td><code>get</code> + <code>scheme</code>/<code>ui</code> keys over <code>~/.zwire/hud-scheme</code> and <code>~/.zwire/hud-ui.json</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SECURITY MODEL</h2>
+      <p>The Unix-socket daemon is created <code>0600</code> under a <code>0700</code> directory, so only the owning user can reach <code>exec</code>/<code>fs</code>/<code>pty</code>. Socket location resolves from <code>$ZWIRE_HOST_SOCK</code>, else <code>$XDG_RUNTIME_DIR/zwire-host.sock</code>, else <code>~/.zwire/host.sock</code>. Local Unix-socket clients are trusted and never authenticate. Inbound TCP peers must <code>auth</code>/<code>peer_hello</code> with a shared <code>--token</code> (or <code>$ZWIRE_HOST_TOKEN</code>) before anything privileged runs, and federation is single-hop so a forwarded event is delivered locally but not re-forwarded &mdash; no loops across star or fully-meshed topologies.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>CI GATES</h2>
+      <table class="arch-table">
+        <thead><tr><th>Gate</th><th>Command</th></tr></thead>
+        <tbody>
+          <tr><td>fmt</td><td><code>cargo fmt --all --check</code></td></tr>
+          <tr><td>clippy</td><td><code>cargo clippy --all-targets -- -D warnings</code></td></tr>
+          <tr><td>doc</td><td><code>RUSTDOCFLAGS=-D warnings cargo doc --no-deps</code></td></tr>
+          <tr><td>test</td><td><code>cargo test</code> (exercises the protocol over both transports)</td></tr>
+        </tbody>
+      </table>
+      <p>CI runs the four canonical polish gates on Ubuntu + macOS + Windows. The umbrella <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> repo additionally pins this crate's metadata across its gate suite &mdash; LICENSE present + canonical MIT text, <code>authors</code>/<code>repository</code>/<code>homepage</code> fields, and these docs pages.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Version</td><td>0.3.0</td></tr>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Binary size</td><td>~500 KB (release: <code>opt-level = "z"</code>, LTO, stripped, <code>panic = "abort"</code>)</td></tr>
+          <tr><td>Dependencies</td><td><code>serde_json</code>, <code>base64</code>, <code>sysinfo</code> (optional), <code>portable-pty</code> (optional), <code>interprocess</code> (Windows only)</td></tr>
+          <tr><td>Features</td><td><code>sysinfo-caps</code> (live stats + <code>ps</code>/<code>kill</code>), <code>pty</code> (terminals); both default-on, both droppable for a light embed</td></tr>
+          <tr><td>Platforms</td><td>macOS · Linux · Windows (all three in CI; battery reporting macOS-only via <code>pmset</code>)</td></tr>
+          <tr><td>Consumers</td><td><a href="https://github.com/MenkeTechnologies/zwire">zwire</a> (native-messaging), <code>zpwrchrome-host</code> (library embed)</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/zwire-host">github.com/MenkeTechnologies/zwire-host</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

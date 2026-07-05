@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zwire is a Chromium/Blink browser forked into a keyboard-driven cyberpunk HUD: a tmux-style tiling overlay (windows, panes, each an embedded webview), a ⌘K command palette, vim navigation, durable session CRUD, an 8-scheme HUD, and the zpwrchrome power-tool preloaded. A ~5,400-line HUD extension layer plus an optional 9-patch native Chromium fork.">
+  <title>zwire &mdash; Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .motto { font-family:'Orbitron',sans-serif;font-size:16px;color:var(--accent);letter-spacing:3px;margin:0.5rem 0 0.25rem; }
+    .motto.sub { font-size:12px;color:var(--cyan);letter-spacing:2px;margin:0 0 1.5rem; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:1rem;margin:1.2rem 0;text-align:center; }
+    .stat { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-label { font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:0.3rem; }
+
+    .cat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:0.6rem;margin:0.8rem 0; }
+    .cat-card { border:1px solid var(--border);border-left:2px solid var(--cyan);padding:0.6rem 0.9rem;background:color-mix(in srgb, var(--bg-card) 92%, transparent);border-radius:2px; }
+    .cat-card h4 { font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.35rem; }
+    .cat-card p { margin:0;font-size:11.5px;color:var(--text-dim);line-height:1.5; }
+    .cat-card code { font-size:11px;color:var(--accent-light); }
+
+    .code-block { margin:0.6rem 0;padding:0.8rem 1rem;border-left:2px solid var(--cyan);background:var(--bg-primary);font-family:'Share Tech Mono',ui-monospace,monospace;font-size:12px;color:var(--text);white-space:pre-wrap;word-break:break-word;line-height:1.7; }
+    .code-block .comment { color:var(--text-muted); }
+    .code-block .cmd { color:var(--cyan); }
+
+    .arch-table { width:100%;border-collapse:collapse;margin:0.6rem 0 1rem;font-size:12px; }
+    .arch-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:left;padding:6px 10px;border:1px solid var(--border); }
+    .arch-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:top; }
+    .arch-table td code { color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;font-size:11px; }
+    .arch-table tr:hover td { background:var(--bg-hover); }
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem; }
+    .hub-scheme-strip-inner { max-width:68rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent); }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px; }
+    @media (max-width:900px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch;} .hub-scheme-strip .scheme-grid{grid-template-columns:repeat(4,minmax(0,1fr));} }
+    @media (max-width:520px){ .hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZWIRE &mdash; FORKED CHROMIUM &middot; TILING HUD</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zwire" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwrchrome" target="_blank" rel="noopener noreferrer">zpwrchrome</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.8;">
+            Tmux-style tiling browser &middot; ⌘K palette &middot; vim nav &middot; session CRUD &middot; 8-scheme HUD &middot; on a real Blink engine &middot; optional 9-patch native fork (tag <code>150.0.7871.46</code>)
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zwire" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZWIRE REFERENCE</h2>
+      <p class="tutorial-subtitle">zwire is a Chromium/Blink browser forked into a cyberpunk HUD &mdash; a real engine running a keyboard-driven workspace: a tmux-style tiling overlay where every pane is an embedded webview, a ⌘K command palette, vim navigation, durable session management, and HUD reimplementations of Chrome's own internal pages. The <code>hud-internal</code> extension layer is ~5,400 lines across 11 subsystems and 12 pages; an optional 9-patch native fork restyles the chrome the extension layer can't reach. For patch-by-patch numbers see the <a href="report.html" style="color:var(--accent);">Engineering Report</a>.</p>
+
+      <p class="motto">A TILING, PALETTE-DRIVEN BROWSER ON A REAL BLINK ENGINE.</p>
+      <p class="motto sub">ZTMUX TILING &middot; ⌘K PALETTE &middot; SESSION CRUD &middot; 8-SCHEME HUD &middot; 9-PATCH NATIVE FORK</p>
+
+      <div class="stat-grid">
+        <div><div class="stat">9</div><div class="stat-label">native fork patches</div></div>
+        <div><div class="stat accent">45</div><div class="stat-label">tmux prefix actions</div></div>
+        <div><div class="stat">12</div><div class="stat-label">HUD pages</div></div>
+        <div><div class="stat accent">8</div><div class="stat-label">HUD color schemes</div></div>
+        <div><div class="stat">~5.4k</div><div class="stat-label">HUD extension LOC</div></div>
+        <div><div class="stat">150.0.7871.46</div><div class="stat-label">fork series tag</div></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════ WHAT IT IS ═══════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">#</span>WHAT IT IS</h2>
+      <p class="tutorial-subtitle">A keyboard-driven cyberpunk workspace on a genuine Blink engine &mdash; a HUD extension layer plus an optional native fork.</p>
+      <div class="cat-grid">
+        <div class="cat-card"><h4>Tiling HUD workspace</h4><p>The <code>ztmux</code> overlay: tmux-style tiling where every pane is an embedded webview &mdash; unlimited windows, recursive splits, zoom, layouts + preset grids, copy-mode, marks, and partial synchronize-panes. Rebindable prefix, 45 remappable actions.</p></div>
+        <div class="cat-card"><h4>Sessions &middot; palette &middot; vim</h4><p>Durable named sessions (windows/panes/webviews) with full CRUD + SVG layout previews. A ⌘K command palette, vim-style motions, a find bar, a powerline status bar, and HUD reimplementations of Chrome's internal pages &mdash; 12 pages in all.</p></div>
+        <div class="cat-card"><h4>Native 9-patch fork</h4><p>Optional. A C++ patch series restyles the native chrome the extension layer can't reach: tab shapes, UI font, neon toolbar, omnibox, product strings, the 8 HUD schemes in the color mixer + DevTools, plus allow-framing for the tiling overlay and ⌘K-palette focus hand-off.</p></div>
+        <div class="cat-card"><h4>Dedicated profile</h4><p>Everything runs against <code>$ZWIRE_STATE/profile</code> (default <code>~/Library/Application&nbsp;Support/zwire</code> on macOS) &mdash; bookmarks, history, sessions kept separate from system Chrome.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════ WHY A REAL BLINK BASE ═══════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">@</span>WHY A REAL BLINK BASE</h2>
+      <p class="tutorial-subtitle">zpwrchrome is a Manifest V3 extension needing <code>userScripts</code>, <code>declarativeNetRequestWithHostAccess</code>, <code>nativeMessaging</code>, <code>webRequest</code>, a service-worker background, and <code>minimum_chrome_version: 127</code>. None of that runs on WebKit (Tauri/Safari) or Servo &mdash; only a genuine Chromium engine loads it.</p>
+      <p style="font-size:12.5px;line-height:1.7;color:var(--text-dim);">The base is a plain Chromium continuous-build snapshot &mdash; unbranded, no Google logo, no "for automated testing" banner (that stripe is exclusive to Chrome for Testing). It is chosen for one reason: the <code>--load-extension</code> switch that preloads zpwrchrome was removed from <em>branded</em> Chrome in v137 but is kept in Chromium. Stock Google Chrome can no longer be scripted this way; Chromium can.</p>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════ ARCHITECTURE ═══════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">Layered from the prebuilt (or forked) base, up through the HUD workspace, to the optional native fork.</p>
+      <table class="arch-table">
+        <thead><tr><th>Component</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Base</td><td>Plain Chromium continuous-build snapshot (revision-pinned via <code>base.version</code>), downloaded by <code>scripts/fetch-base.sh</code>.</td></tr>
+          <tr><td>Rebrand</td><td><code>scripts/rebrand-macos.sh</code> patches the base bundle's Dock name to <code>zwire</code> + a cyberpunk <code>.icns</code>, deletes <code>CFBundleIconName</code>, and re-signs ad-hoc so macOS honors it.</td></tr>
+          <tr><td>Theme</td><td><code>theme/</code> &mdash; a Chrome theme mapping the HUD palette onto frame / toolbar / tabs (colors only). Present but <strong>not</strong> launcher-loaded: a static theme applies last and would override the fork's color mixer (0002) and the internal-HUD skin.</td></tr>
+          <tr><td>New tab</td><td><code>newtab/</code> &mdash; a <code>chrome_url_overrides.newtab</code> extension: the full HUD (Orbitron, CRT scanlines, neon omnibox), fonts vendored locally.</td></tr>
+          <tr><td>HUD workspace</td><td><code>extensions/hud-internal</code> (~5,400 LOC) &mdash; the tiling overlay <code>ztmux</code> (tmux-style panes/windows, each an embedded webview; rebindable prefix; partial synchronize-panes; durable session CRUD), the ⌘K palette (<code>zpalette</code>), vim nav + keymap (<code>zvim</code>/<code>zkeys</code>), find (<code>zfind</code>), a powerline status bar (<code>zstatus</code>), the 8-scheme picker, and 12 HUD pages (incl. Sessions + a Keyboard remapper). MV3 content scripts on <code>chrome://*/*</code> + <code>http(s)</code>, bridged to a native host. Needs <code>--extensions-on-chrome-urls</code>.</td></tr>
+          <tr><td>Power-tool</td><td><code>extensions/zpwrchrome</code> &mdash; the MV3 extension, loaded as a submodule (reuse, not copy).</td></tr>
+          <tr><td>Launcher</td><td><code>bin/zwire</code> starts the base against <code>$ZWIRE_STATE/profile</code> with newtab + zpwrchrome + hud-internal loaded and <code>--extensions-on-chrome-urls</code> set. Any dir missing a <code>manifest.json</code> is skipped, so a missing submodule degrades gracefully.</td></tr>
+          <tr><td>Fork</td><td><code>fork/</code> &mdash; optional source build: a 9-patch series restyles native tabs, colors, UI font, toolbar, omnibox, and the DevTools Theme dropdown, plus allow-framing and ⌘K-palette focus.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════ INSTALL ═══════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">$</span>INSTALL</h2>
+      <p class="tutorial-subtitle">Clone with submodules, run the installer, launch. Re-run <code>install.sh</code> after a base upgrade.</p>
+      <div class="code-block"><span class="cmd">git clone --recurse-submodules https://github.com/MenkeTechnologies/zwire.git</span>
+<span class="cmd">cd zwire</span>
+<span class="cmd">scripts/install.sh</span>          <span class="comment"># fetch base + link `zwire` on PATH + rebrand (macOS)</span>
+<span class="cmd">zwire</span>                    <span class="comment"># launch</span></div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════ NO-COMPILE VS FORK ═══════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>NO-COMPILE BASE VS. NATIVE FORK</h2>
+      <p class="tutorial-subtitle">The HUD workspace &mdash; tiling, palette, sessions, vim, the 8-scheme picker &mdash; ships in <strong>both</strong> paths; it is extension code, no compile required. What the two paths differ on is the <em>native</em> chrome. The default runs on a prebuilt Chromium snapshot, upgraded by swapping one binary. A solo-maintained source fork means re-merging patches against a codebase that changes daily &mdash; the trap that keeps Brave and ungoogled-chromium team-sized &mdash; so the compile is opt-in.</p>
+      <p style="font-size:12.5px;line-height:1.7;color:var(--text-dim);">A theme extension changes <strong>colors only</strong> &mdash; it can't reshape tabs, fonts, or the toolbar (native C++). For the whole chrome in the HUD, the optional <code>fork/</code> path compiles a patched Chromium: a 9-patch series (sharp tabs, cyberpunk palette, mono UI font, neon toolbar, sharp omnibox, <code>zwire</code> strings, 8 HUD schemes in the color mixer + DevTools, allow-framing for the ztmux overlay, and ⌘K-palette focus hand-off) authored against the pinned tag and verified apply-clean. It costs a ~100&nbsp;GB checkout, a 1&ndash;4&nbsp;hr first build, and ongoing rebase maintenance &mdash; no paid infra needed, but it won't fit on stock GitHub-hosted runners (checkout &gt; disk, cold build &gt; the 6&nbsp;h job cap), so build it locally or on a self-hosted runner with a warm checkout. See <a href="https://github.com/MenkeTechnologies/zwire/tree/main/fork" target="_blank" rel="noopener noreferrer" style="color:var(--cyan);">fork/</a> and the <a href="report.html" style="color:var(--accent);">Engineering Report</a>.</p>
+    </main>
+
+    <footer class="tutorial-main doc-footer" style="padding-top:0;">
+      zwire &middot; MIT &middot; part of the <a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">MenkeTechnologies</a> stack &middot; Built with the stryke HUD design system
+    </footer>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

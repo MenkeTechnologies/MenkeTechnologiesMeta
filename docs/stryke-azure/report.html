@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-azure — engineering report. Azure client for stryke over the GA Azure SDK for Rust plus an Azure Resource Manager management plane. cdylib/FFI architecture, service mapping, surface (89 FFI exports, 13 packages), scope, dependencies.">
+  <title>stryke-azure — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-AZURE &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_azure</code> (publish=false) &middot; namespace <code>Azure</code> &middot; JSON-in/JSON-out FFI over dlopen
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-azure</strong> is an opt-in connector package in the stryke ecosystem &mdash; the Azure counterpart to <a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a>. It exposes Blob Storage, Storage Queues, Cosmos DB, Key Vault Secrets and Keys, and Entra identity as the typed data plane, plus an Azure Resource Manager management plane (Virtual Machines, Storage-account management, Service Bus, Monitor, Container Instances / AKS, Resource Groups, Subscriptions) &mdash; all under the <code>Azure</code> package. The data plane is built on the official Azure SDK for Rust (GA <code>1.0.0</code>; Cosmos on the <code>0.35.0</code> preview).</p>
+      <p class="tutorial-subtitle">The SDK pulls in tokio, hyper, rustls, reqwest, and the typespec client-core plus per-service generated models &mdash; a dependency tree that ships once, on demand, as an opt-in package. stryke core is never linked against it. The management plane has no GA typed Rust SDK crate, so those ops reach ARM over REST &mdash; reusing the <em>same</em> shared Entra credential and the <em>same</em> <code>azure_core</code> HTTP client the typed data-plane clients use.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">89</div><div class="stat-label">FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val cyan">13</div><div class="stat-label">Packages (Azure + 12)</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Load model (dlopen)</div></div>
+        <div class="stat-card"><div class="stat-val green">v0.18.0</div><div class="stat-label">Package version</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">A single in-process cdylib. The stryke side is a thin <code>.stk</code> library; the heavy SDK code lives in <code>libstryke_azure</code> and is dlopened on first <code>use Azure</code>. No sidecar process, no fork per call.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke library (<code>lib/*.stk</code>)</td><td>Thin wrappers exposing typed functions; serialize args to JSON, decode responses, <code>die</code> on an <code>{error}</code> payload</td></tr>
+          <tr><td>cdylib (<code>libstryke_azure</code>)</td><td>Rust async (tokio); each <code>azure__*</code> export takes a JSON string and returns a JSON string</td></tr>
+          <tr><td>Persistent state</td><td>One shared tokio runtime + one <code>DeveloperToolsCredential</code> as <code>Arc&lt;dyn TokenCredential&gt;</code>, reused across every service client</td></tr>
+          <tr><td>FFI safety</td><td>Handler errors and panics are caught and surfaced as <code>{"error": ...}</code>; a panic never crosses the C ABI into the host shell</td></tr>
+          <tr><td>Build</td><td>Cargo <code>crate-type = ["cdylib"]</code>, <code>publish = false</code>; ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Tests</td><td>Rust unit tests under <code>src/</code> (endpoint construction + FFI-safety pins, offline) plus surface tests under <code>t/</code></td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; check, fmt, clippy <code>-D warnings</code>, test (ubuntu + macos), doc, release-build on three targets</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SERVICE MAPPING</h2>
+      <p>The surface tracks stryke-aws, remapped onto Azure's GA Rust SDK for the data plane and onto Azure Resource Manager REST for the management plane. The typed crate versions below are the ones pinned in <code>Cargo.lock</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>AWS</th><th>Azure</th><th>Backing crate / transport</th></tr></thead>
+        <tbody>
+          <tr><td>S3</td><td>Blob Storage</td><td><code>azure_storage_blob</code> 1.0.0</td></tr>
+          <tr><td>SQS</td><td>Storage Queues</td><td><code>azure_storage_queue</code> 1.0.0</td></tr>
+          <tr><td>DynamoDB</td><td>Cosmos DB (NoSQL)</td><td><code>azure_data_cosmos</code> 0.35.0 (preview; Cargo.lock pins the exact build)</td></tr>
+          <tr><td>Secrets Manager / SSM</td><td>Key Vault Secrets</td><td><code>azure_security_keyvault_secrets</code> 1.0.0</td></tr>
+          <tr><td>KMS</td><td>Key Vault Keys</td><td><code>azure_security_keyvault_keys</code> 1.0.0</td></tr>
+          <tr><td>STS</td><td>Entra identity token</td><td><code>azure_identity</code> 1.0.0</td></tr>
+          <tr><td>EC2</td><td>Virtual Machines</td><td>ARM REST (via <code>azure_core</code> 1.0.0)</td></tr>
+          <tr><td>ECS / EKS</td><td>Container Instances / AKS</td><td>ARM REST</td></tr>
+          <tr><td>SNS / SQS (enterprise)</td><td>Service Bus</td><td>ARM + data-plane REST</td></tr>
+          <tr><td>CloudWatch</td><td>Azure Monitor metrics</td><td>ARM REST</td></tr>
+          <tr><td>(account mgmt)</td><td>Storage account management</td><td>ARM REST</td></tr>
+          <tr><td>(resource mgmt)</td><td>Resource Groups / Subscriptions</td><td>ARM REST</td></tr>
+        </tbody>
+      </table>
+      <p>The data-plane services come from the GA typed crates. The management plane has no GA typed Rust SDK crate; rather than shipping an untyped second SDK or a separate process, those ops issue ARM REST calls through the <code>azure_core</code> HTTP pipeline already linked for the typed clients &mdash; one auth path, one runtime, one HTTP stack.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SURFACE</h2>
+      <p>89 FFI exports, surfaced through the flat <code>Azure</code> namespace plus twelve typed sub-packages. The <code>Azure</code> namespace also carries the pure helpers and the <code>version</code> / <code>ping</code> convenience wrappers.</p>
+      <table class="arch-table">
+        <thead><tr><th>Package</th><th>Plane</th><th>Surface</th></tr></thead>
+        <tbody>
+          <tr><td><code>Azure::Blob</code></td><td>data</td><td><code>ls</code>, <code>get</code>, <code>put</code>, <code>head</code>, <code>rm</code>, <code>containers</code>, <code>create_container</code>, <code>delete_container</code>, <code>set_metadata</code></td></tr>
+          <tr><td><code>Azure::Queue</code></td><td>data</td><td><code>ls</code>, <code>send</code>, <code>receive</code>, <code>delete</code>, <code>clear</code>, <code>count</code>, <code>create</code>, <code>drop</code>, <code>pump</code></td></tr>
+          <tr><td><code>Azure::Cosmos</code></td><td>data</td><td><code>databases</code>, <code>containers</code>, <code>put</code>, <code>get</code>, <code>delete</code>, <code>query</code>, <code>replace</code>, <code>create_database</code>, <code>create_container</code>, <code>delete_database</code>, <code>delete_container</code></td></tr>
+          <tr><td><code>Azure::Secrets</code></td><td>data</td><td><code>get</code>, <code>set</code>, <code>ls</code>, <code>rm</code>, <code>versions</code>, <code>backup</code> + <code>param_get</code> / <code>param_put</code> / <code>param_delete</code> aliases</td></tr>
+          <tr><td><code>Azure::Keys</code></td><td>data</td><td><code>encrypt</code>, <code>decrypt</code>, <code>ls</code>, <code>get</code></td></tr>
+          <tr><td><code>Azure::Compute</code></td><td>mgmt</td><td><code>ls</code>, <code>get</code>, <code>start</code>, <code>stop</code>, <code>deallocate</code>, <code>restart</code>, <code>status</code>, <code>skus</code></td></tr>
+          <tr><td><code>Azure::Containers</code></td><td>mgmt</td><td><code>groups</code>, <code>group</code>, <code>clusters</code>, <code>cluster</code>, <code>node_pools</code></td></tr>
+          <tr><td><code>Azure::Storage</code></td><td>mgmt</td><td><code>ls</code>, <code>get</code>, <code>keys</code></td></tr>
+          <tr><td><code>Azure::ResourceGroups</code></td><td>mgmt</td><td><code>ls</code>, <code>get</code>, <code>create</code>, <code>rm</code>, <code>resources</code></td></tr>
+          <tr><td><code>Azure::ServiceBus</code></td><td>mgmt + data</td><td><code>queues</code>, <code>topics</code>, <code>namespaces</code>, <code>send</code>, <code>receive</code></td></tr>
+          <tr><td><code>Azure::Subscriptions</code></td><td>mgmt</td><td><code>ls</code>, <code>locations</code></td></tr>
+          <tr><td><code>Azure::Monitor</code></td><td>mgmt</td><td><code>metrics</code></td></tr>
+          <tr><td><code>Azure</code> helpers</td><td>pure</td><td><code>parse_resource_id</code>, <code>resource_id_parent</code>, <code>build_resource_id</code>, <code>parse_connection_string</code>, <code>build_connection_string</code>, <code>redact_connection_string</code>, <code>parse_blob_uri</code>, <code>build_blob_uri</code>, <code>storage_endpoint</code>, <code>parse_storage_endpoint</code>, and the <code>valid_*</code> / <code>normalize_guid</code> / <code>format_guid</code> validators</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>The Azure SDK for Rust crates pull in tokio, hyper, rustls, and reqwest, plus a chain of typespec / generated-model support code. The core <code>stryke</code> binary stays slim precisely because each connector ships separately. Daily-driver work &mdash; one-liners, awk replacement, data scripting &mdash; doesn't need an Azure SDK, a Cosmos driver, or a Key Vault client linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI PROTOCOL</h2>
+      <p>JSON in, JSON out, over a C ABI. Each request is a JSON object of op-specific args. Each response is a JSON object; errors carry an <code>error</code> field with a verbatim message. The C string returned by every export is freed through the shared <code>stryke_free_cstring</code> symbol.</p>
+<pre># every export resolves the shared credential, builds a per-call
+# service client, and runs on the shared tokio runtime
+azure__blob_get('{"container":"data","name":"hello.txt","account":"acme"}')
+  -> {"container":"data","name":"hello.txt","body":"hi","content_length":2}
+
+# handler errors are surfaced, never thrown across the ABI
+azure__blob_get('{}')  ->  {"error":"missing container"}</pre>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-azure#readme" target="_blank" rel="noopener noreferrer">service map and usage sections</a> for the authoritative scope. The package is intentionally narrower than the underlying SDK &mdash; the goal is "useful from a shell pipeline", not "complete API coverage". Cosmos queries are single-partition (an SDK constraint); live, credential-backed round-trips are exercised manually against a real subscription.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-azure</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-azure/issues" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-azure/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

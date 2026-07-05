@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="emacs-zsh — Emacs major mode (zshrs-mode) for the zshrs shell, the first-ever Rust rewrite of zsh. Filetype detection for zsh dotfiles + shebangs, font-lock generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars via regexp-opt), shell-block-aware indentation, lint via zshrs -n, and LSP via zshrs --lsp (eglot + lsp-mode).">
+  <title>emacs-zsh — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line { margin: 0.35rem 0 0; font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em; max-width: 42rem; opacity: 0.75; }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px; }
+    .parity-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.6rem; margin: 0.7rem 0; }
+    .cat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.6rem 0.8rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .cat-card h4 { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan); margin: 0 0 0.35rem; }
+    .cat-card p { margin: 0; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// EMACS-ZSH — EMACS MAJOR MODE FOR THE ZSHRS SHELL</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/emacs-zsh" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zshrs" target="_blank" rel="noopener noreferrer">zshrs</a>
+          </nav>
+          <p class="docs-build-line">filetype detection (zsh dotfiles + zsh/zshrs shebang) · font-lock generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars) · shell-block-aware indent · lint via zshrs -n · LSP via zshrs --lsp</p>
+          <p class="docs-build-line">eglot + lsp-mode · settings zshrs-executable / zshrs-indent-offset · Package-Requires emacs 27.1</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/emacs-zsh" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EMACS-ZSH &mdash; ZSHRS IN EMACS</h2>
+      <p class="tutorial-subtitle"><strong>Open a <code>.zshrc</code> and the whole shell lights up.</strong> zshrs is the first-ever Rust rewrite of the zsh shell. <code>zshrs-mode</code> derives from <code>prog-mode</code>, font-locks the surface (<strong>137</strong> builtins, <strong>113</strong> zshrs extensions, <strong>245</strong> special variables) from the binary's own reflection tables, indents shell blocks, lints with <code>zshrs -n</code>, and wires <code>zshrs --lsp</code> into both eglot and lsp-mode.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>The <code>zshrs</code> binary must be on <code>$PATH</code> for the language server and linter (build <a href="https://github.com/MenkeTechnologies/zshrs" target="_blank" rel="noopener noreferrer">zshrs</a>).</p>
+<pre>;; manual
+(add-to-list 'load-path "/path/to/emacs-zsh")
+(require 'zshrs-mode)
+
+;; use-package + built-in VC
+(use-package zshrs-mode
+  :mode ("\\.zsh\\'" "\\.zsh-theme\\'")
+  :vc (:url "https://github.com/MenkeTechnologies/emacs-zsh"))</pre>
+        <p>With eglot: <code>M-x eglot</code> in a zsh buffer, or <code>(add-hook 'zshrs-mode-hook #'eglot-ensure)</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What you get</h2>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>Filetype detection</h4><p>zsh dotfiles (<code>.zshrc</code>, <code>.zshenv</code>, <code>.zprofile</code>, <code>.zlogin</code>, <code>.zlogout</code>, <code>.zpreztorc</code>) and <code>*.zsh</code> / <code>*.zsh-theme</code> use <code>zshrs-mode</code> (<code>auto-mode-alist</code>); <code>zsh</code> / <code>zshrs</code> shebangs via <code>interpreter-mode-alist</code>.</p></div>
+          <div class="cat-card"><h4>Reflection-driven font-lock</h4><p><strong>137</strong> builtins, <strong>113</strong> zshrs extensions, <strong>245</strong> special vars — not a hand-curated list.</p></div>
+          <div class="cat-card"><h4>Generated from the binary</h4><p><code>scripts/gen-stdlib.sh</code> dumps <code>.builtins</code> / <code>.extensions</code> / <code>.special_vars</code> from <code>zshrs --dump-reflection</code> and writes <code>zshrs-stdlib.el</code>, so it never drifts.</p></div>
+          <div class="cat-card"><h4>Extensions stand out</h4><p>The zshrs-specific extension builtins get their own bold <code>zshrs-extension-face</code>, distinct from the inherited zsh builtins.</p></div>
+          <div class="cat-card"><h4>Language server &amp; lint</h4><p>Registers <code>zshrs --lsp</code> for <strong>eglot</strong> and <strong>lsp-mode</strong> (lazy); <code>M-x zshrs-lint-buffer</code> runs <code>zshrs -n</code>.</p></div>
+          <div class="cat-card"><h4>Verified</h4><p><code>scripts/face-test.el</code> byte-compiles the package and asserts the face at each probe token — proven to load and classify correctly.</p></div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Faces</h2>
+        <table class="parity-table">
+          <thead><tr><th>Token group</th><th>Face</th></tr></thead>
+          <tbody>
+            <tr><td>Control flow / declarations (<code>if</code> <code>for</code> <code>case</code> <code>typeset</code> <code>local</code>)</td><td class="ok">font-lock-keyword-face</td></tr>
+            <tr><td>Extensions (113 zshrs-specific)</td><td class="ok">zshrs-extension-face (bold)</td></tr>
+            <tr><td>Builtins (137)</td><td class="ok">font-lock-builtin-face</td></tr>
+            <tr><td>Special variables (245)</td><td class="ok">font-lock-variable-name-face</td></tr>
+            <tr><td>Sigil variables (<code>$foo</code> <code>${...}</code> <code>$1</code>)</td><td class="ok">font-lock-variable-name-face</td></tr>
+            <tr><td>Punctuation sigils (<code>$?</code> <code>$@</code> <code>$#</code> <code>$*</code>)</td><td class="ok">font-lock-constant-face</td></tr>
+            <tr><td>Strings / comments</td><td class="ok">via syntax table</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Language server, lint &amp; config</h2>
+        <table class="parity-table">
+          <thead><tr><th>Setting / command</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>zshrs-executable</code></td><td><code>"zshrs"</code> &mdash; path to the executable used for the server and linter</td></tr>
+            <tr><td><code>zshrs-indent-offset</code></td><td><code>4</code> &mdash; spaces per indent level</td></tr>
+            <tr><td><code>M-x zshrs-lint-buffer</code></td><td>pipe the buffer to <code>zshrs -n</code> and show diagnostics</td></tr>
+            <tr><td><code>M-x eglot</code></td><td>start the server via eglot (Emacs 29+)</td></tr>
+            <tr><td><code>M-x lsp</code></td><td>start the server via lsp-mode</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compatibility</h2>
+        <table class="parity-table">
+          <thead><tr><th>Target</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Emacs 27.1+</td><td class="ok">Mode + font-lock + indent</td></tr>
+            <tr><td>eglot</td><td class="ok">Built in since Emacs 29; works on 27/28 if installed</td></tr>
+            <tr><td>lsp-mode</td><td class="ok">Registered client</td></tr>
+            <tr><td>Syntax highlighting</td><td class="ok">No binary required (tables are committed)</td></tr>
+            <tr><td><code>sh-mode</code></td><td class="ok">Not clobbered &mdash; <code>zshrs-mode</code> is opt-in</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

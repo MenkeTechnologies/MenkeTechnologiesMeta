@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vim-awk — engineering report. Runtime-file layout, a standalone AWK syntax grammar (POSIX core plus gawk / mawk extensions), filetype detection by extension and shebang, :make / :AwkRun / ALE / vim-lsp / coc / nvim-dap integration, and editor compatibility for the AWK language (awkrs) in Vim and Neovim.">
+  <title>vim-awk — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.accent { color: var(--cyan); }
+    .stat-val.green  { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .parity-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0;
+      font-size: 12px;
+    }
+    .parity-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .parity-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok    { color: var(--green); font-weight: 700; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VIM-AWK &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vim-awk" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Vim / Neovim support for AWK (awkrs) &middot; standalone AWK grammar (POSIX core + gawk / mawk extensions) &middot; *.awk + shebang filetype detection &middot; :make / :AwkRun &middot; ALE lint via awkrs -L invalid &middot; vim-lsp / coc / nvim-dap wiring for awkrs --lsp / --dap
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>vim-awk</strong> is the Vim / Neovim editor support for <strong>AWK</strong>, targeting <strong>awkrs</strong> &mdash; a pattern / action engine written in Rust with a POSIX / gawk / mawk-style union CLI. It ships as a standard Vim runtime tree (<code>ftdetect/</code>, <code>syntax/</code>, <code>indent/</code>, <code>ftplugin/</code>, <code>compiler/</code>, <code>plugin/</code>, <code>doc/</code>), so pathogen / vim-plug / native packages add it to <code>runtimepath</code> with no special handling.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the syntax file is a <strong>standalone AWK grammar</strong> covering the POSIX awk core plus the gawk / mawk extensions awkrs accepts &mdash; not a wrapper around another language's syntax. The token surface (keywords, statements, built-in variables, built-in functions) is hand-curated because AWK's grammar is small and fixed; <code>scripts/gen_syntax.sh</code> stamps the file with the awkrs version it was verified against (currently <strong>v0.4.14</strong>).</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">35</div><div class="stat-label">Built-in functions</div></div>
+        <div class="stat-card"><div class="stat-val accent">27</div><div class="stat-label">Built-in variables</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Pattern blocks</div></div>
+        <div class="stat-card"><div class="stat-val">13</div><div class="stat-label">Control-flow keywords</div></div>
+        <div class="stat-card"><div class="stat-val">7</div><div class="stat-label">Runtime files</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Integrations (ALE / lsp / coc / dap)</div></div>
+        <div class="stat-card"><div class="stat-val accent">2</div><div class="stat-label">Detection paths (ext + shebang)</div></div>
+        <div class="stat-card"><div class="stat-val">0</div><div class="stat-label">Config required</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>RUNTIME LAYOUT</h2>
+      <p class="tutorial-subtitle">Standard Vim runtime directories. Each file is loaded automatically when the plugin is on <code>runtimepath</code>; no entry point or sourcing call is required.</p>
+
+      <table class="parity-table">
+        <thead>
+          <tr><th>File</th><th>Responsibility</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>ftdetect/awk.vim</code></td><td>Sets <code>filetype=awk</code> for <code>*.awk</code> files and for any file whose first line is an awk / awkrs / gawk / mawk shebang (e.g. <code>#!/usr/bin/env awkrs</code>).</td></tr>
+          <tr><td><code>syntax/awk.vim</code></td><td>Standalone AWK grammar &mdash; comments / shebang, numbers, field references, strings, ERE regex literals, patterns, control flow, statements, built-in variables, built-in functions, and operators, linked to standard highlight groups.</td></tr>
+          <tr><td><code>indent/awk.vim</code></td><td>Standalone <code>indentexpr</code> (<code>GetAwkIndent()</code>) &mdash; indents after a line opening a block / paren / bracket, dedents lines starting with a closing delimiter.</td></tr>
+          <tr><td><code>ftplugin/awk.vim</code></td><td>Buffer-local options: <code>commentstring=# %s</code>, <code>comments=:#</code>, comment-continuation <code>formatoptions</code>, <code>:compiler awkrs</code>, the <code>:AwkRun</code> command and its <code>&lt;LocalLeader&gt;r</code> mapping, with a matching <code>b:undo_ftplugin</code>.</td></tr>
+          <tr><td><code>compiler/awkrs.vim</code></td><td>Defines the <code>awkrs</code> compiler: <code>makeprg=awkrs -L invalid -f %</code> with an <code>errorformat</code> for awkrs / gawk-style diagnostics, so <code>:make</code> routes them to the quickfix list.</td></tr>
+          <tr><td><code>plugin/awk.vim</code></td><td>Global wiring: ALE linter definition, vim-lsp server registration, coc + nvim-dap snippets (commented), and the <code>g:vim_awk_no_ale</code> / <code>g:vim_awk_no_lsp</code> opt-outs, behind a load guard.</td></tr>
+          <tr><td><code>doc/awk.txt</code></td><td>Vim help (<code>:help vim-awk</code>) with tagged sections for install, detection, syntax, running, linting, LSP, DAP, and options.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SYNTAX COVERAGE</h2>
+      <p class="tutorial-subtitle">Token categories taken from the AWK language definition &mdash; the POSIX awk core plus the gawk / mawk extensions awkrs accepts in its union CLI. Field references (<code>$0</code>, <code>$1</code>, <code>$NF</code>, <code>$(expr)</code>) and the <code>~</code> / <code>!~</code> match operators are first-class AWK constructs and are highlighted.</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Group</th><th>Tokens (sample)</th><th>Highlight link</th></tr></thead>
+        <tbody>
+          <tr><td>Patterns</td><td><code>BEGIN</code> <code>END</code> <code>BEGINFILE</code> <code>ENDFILE</code></td><td class="ok">PreProc</td></tr>
+          <tr><td>Control flow</td><td><code>if</code> <code>else</code> <code>while</code> <code>for</code> <code>do</code> <code>break</code> <code>continue</code> <code>next</code> <code>nextfile</code> <code>exit</code> <code>return</code> <code>delete</code> <code>in</code></td><td class="ok">Statement</td></tr>
+          <tr><td>Statements</td><td><code>print</code> <code>printf</code> <code>getline</code></td><td class="ok">Statement</td></tr>
+          <tr><td>Function definition</td><td><code>function</code> <code>func</code></td><td class="ok">Keyword</td></tr>
+          <tr><td>Built-in variables</td><td><code>NR</code> <code>NF</code> <code>FS</code> <code>OFS</code> <code>ORS</code> <code>RS</code> <code>FILENAME</code> <code>FNR</code> <code>RSTART</code> <code>RLENGTH</code> <code>SUBSEP</code> <code>ARGC</code> <code>ARGV</code> <code>ENVIRON</code> <code>CONVFMT</code> <code>OFMT</code></td><td class="ok">Special</td></tr>
+          <tr><td>String functions</td><td><code>length</code> <code>substr</code> <code>index</code> <code>split</code> <code>sub</code> <code>gsub</code> <code>match</code> <code>sprintf</code> <code>tolower</code> <code>toupper</code></td><td class="ok">Function</td></tr>
+          <tr><td>Arithmetic functions</td><td><code>sin</code> <code>cos</code> <code>atan2</code> <code>exp</code> <code>log</code> <code>sqrt</code> <code>int</code> <code>rand</code> <code>srand</code></td><td class="ok">Function</td></tr>
+          <tr><td>I/O functions</td><td><code>system</code> <code>close</code> <code>fflush</code></td><td class="ok">Function</td></tr>
+          <tr><td>Literals &amp; vars</td><td>field refs (<code>$0</code>/<code>$1</code>/<code>$NF</code>), strings, ERE regex <code>/.../</code>, numbers, <code>~</code> / <code>!~</code></td><td class="ok">String / Number / Identifier</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>TOOLING INTEGRATION</h2>
+      <p class="tutorial-subtitle">All integrations degrade gracefully: each is guarded so the plugin loads cleanly whether or not ALE / vim-lsp / coc / nvim-dap is installed. <code>-L invalid</code> lints, <code>-f</code> reads the program file, <code>--lsp</code> starts the language server, and <code>--dap</code> the debug adapter. Each of <code>--lsp</code> / <code>--dap</code> is the sole flag (no appended <code>--stdio</code>), mirroring <code>stryke --lsp</code>; the vim-lsp / nvim-dap clients add no transport args.</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Integration</th><th>Mechanism</th></tr></thead>
+        <tbody>
+          <tr><td>:make (compiler)</td><td>The <code>awkrs</code> compiler sets <code>makeprg=awkrs -L invalid -f %</code> with an <code>errorformat</code> matching awkrs / gawk diagnostics, routing them to the quickfix list.</td></tr>
+          <tr><td>:AwkRun</td><td>Buffer-local command running <code>awkrs -f %</code> on the current program, mapped to <code>&lt;LocalLeader&gt;r</code> (skipped if <code>g:vim_awk_no_maps</code> is set).</td></tr>
+          <tr><td>ALE</td><td>Registers a linter via <code>ale#linter#Define</code> running <code>awkrs -L invalid -f %t</code>; the handler parses <code>&lt;file&gt;:&lt;line&gt;: &lt;message&gt;</code> into error items. Skipped if ALE is absent or <code>g:vim_awk_no_ale</code> is set.</td></tr>
+          <tr><td>vim-lsp</td><td>Registers a server (<code>lsp#register_server</code>) running <code>awkrs --lsp</code>, allowlisted for the <code>awk</code> filetype. Skipped if vim-lsp is absent or <code>g:vim_awk_no_lsp</code> is set.</td></tr>
+          <tr><td>coc.nvim</td><td>A ready-to-paste <code>languageserver</code> block for <code>coc-settings.json</code> using <code>awkrs --lsp</code>, documented in the plugin source and README.</td></tr>
+          <tr><td>nvim-dap</td><td>A ready-to-paste adapter / configuration block using <code>awkrs --dap</code>, documented in the plugin source and README.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>COMPATIBILITY</h2>
+      <table class="parity-table">
+        <thead><tr><th>Target</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Vim 8+</td><td class="ok">Filetype, syntax, indent, ftplugin, compiler, doc</td></tr>
+          <tr><td>Neovim</td><td class="ok">Same runtime files (no Lua required for the core)</td></tr>
+          <tr><td>pathogen / vim-plug / native packages</td><td class="ok">Standard runtime layout &mdash; no plugin-manager-specific handling</td></tr>
+          <tr><td>ALE</td><td class="ok"><code>awkrs -L invalid</code> linter</td></tr>
+          <tr><td>vim-lsp</td><td class="ok"><code>awkrs --lsp</code> language server wired</td></tr>
+          <tr><td>coc.nvim</td><td class="ok"><code>languageserver</code> config provided</td></tr>
+          <tr><td>nvim-dap</td><td class="ok"><code>awkrs --dap</code> adapter config provided</td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

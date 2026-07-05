@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-utils — pure-stryke utility belt. Six sublibraries (String / List / Hash / Num / Time / Path) of higher-level composites that aren't part of stryke core. No cdylib, no helper binary — just .stk modules loaded on `use Utils`.">
+  <title>stryke-utils — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .sub-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .sub-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .sub-tbl td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .sub-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; font-size: 11.5px; }
+    .sub-tbl td.mod-name { color: var(--green); font-weight: 700; font-family: 'Share Tech Mono', monospace; }
+    .sub-tbl td.cnt { color: var(--yellow); text-align: right; font-family: 'Share Tech Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-UTILS &mdash; PURE-STRYKE UTILITY BELT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">6 sublibraries &middot; 149 composite functions &middot; zero builtin re-wraps &middot; no cdylib, no helper binary &middot; <code>use Utils</code> pulls everything in one pass</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-utils/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-UTILS</h2>
+      <p class="tutorial-subtitle"><strong>Boundary helpers only. Cross-checked against <code>%b</code>.</strong> stryke-utils ships six sublibraries (<code>String</code>, <code>List</code>, <code>Hash</code>, <code>Num</code>, <code>Time</code>, <code>Path</code>) of higher-level helpers that aren't part of stryke core. The obvious composites &mdash; <code>slugify</code>, <code>chunk</code>, <code>deep_merge</code>, <code>format_bytes</code>, <code>levenshtein</code>, <code>basename</code>, <code>common_prefix</code>, ~70 more &mdash; have all landed in <code>%b</code> as builtins, so they're not duplicated here. What's left is the long tail: <code>deep_merge_all</code>, <code>parse_duration</code>, <code>compound_ext</code>, <code>round_to_multiple</code>, <code>pad_center</code>, <code>escape_shell</code>, <code>mask_middle</code>, <code>unwrap</code>, <code>windows</code>, set ops. 149 functions across 6 modules. Pure stryke: no <code>[ffi]</code> table, no cdylib, no helper binary &mdash; just <code>.stk</code> modules loaded by stryke's normal package resolver.</p>
+
+      <section class="tutorial-section">
+        <h2>The 6 sublibraries</h2>
+        <table class="sub-tbl">
+          <thead>
+            <tr><th>#</th><th>Module</th><th>File</th><th>Fns</th><th>Highlights</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td class="mod-name">Utils::String</td><td><code>lib/String.stk</code></td><td class="cnt">33</td><td><code>ltrim</code>/<code>rtrim</code> &middot; <code>pad_center</code> &middot; <code>visible_width</code> &middot; <code>count_occurrences</code> &middot; <code>reverse_chars</code> &middot; <code>squeeze</code> &middot; <code>compact_whitespace</code> &middot; <code>partition</code>/<code>rpartition</code> &middot; <code>mask_middle</code> &middot; <code>escape_shell</code> &middot; <code>expand_tabs</code> &middot; <code>unexpand_tabs</code> &middot; <code>unwrap</code> &middot; <code>ellipsize</code> &middot; <code>truncate_words</code> &middot; <code>nth_index</code> &middot; <code>splitn</code> &middot; <code>capitalize_first</code>/<code>uncapitalize</code> &middot; <code>titleize</code> &middot; <code>normalize_newlines</code> &middot; <code>collapse_blank_lines</code> &middot; <code>strip_quotes</code> &middot; <code>repeat_to</code> &middot; <code>ensure_prefix</code>/<code>ensure_suffix</code> &middot; <code>prefix_lines</code> &middot; <code>nth_line</code> &middot; <code>count_lines_nonblank</code></td></tr>
+            <tr><td>2</td><td class="mod-name">Utils::List</td><td><code>lib/List.stk</code></td><td class="cnt">20</td><td><code>difference</code> &middot; <code>intersection</code> &middot; <code>union</code> &middot; <code>symmetric_difference</code> &middot; <code>is_disjoint</code> &middot; <code>windows</code> &middot; <code>cartesian</code> (2-list pairs) &middot; <code>rle_encode</code>/<code>rle_decode</code> &middot; <code>top_n</code>/<code>bottom_n</code> (optional key fn) &middot; <code>count_where</code> &middot; <code>transpose</code> &middot; <code>running_sum</code>/<code>running_product</code> &middot; <code>round_robin</code> (n-list interleave) &middot; <code>deltas</code> &middot; <code>rotate_left</code> &middot; <code>index_of_max</code></td></tr>
+            <tr><td>3</td><td class="mod-name">Utils::Hash</td><td><code>lib/Hash.stk</code></td><td class="cnt">26</td><td><code>deep_merge_all</code> (n-ary wrapper) &middot; <code>deep_get</code>/<code>deep_set</code>/<code>deep_has</code> (dot-path) &middot; <code>pluck_paths</code> (multi-path read) &middot; <code>map_keys</code>/<code>map_values</code> &middot; <code>all_hashes</code> &middot; <code>rename_keys</code> &middot; <code>flatten_keys</code>/<code>unflatten_keys</code> (dot-path ⇄ nested) &middot; <code>invert_multi</code> &middot; <code>deep_count</code> &middot; <code>to_query_string</code></td></tr>
+            <tr><td>4</td><td class="mod-name">Utils::Num</td><td><code>lib/Num.stk</code></td><td class="cnt">26</td><td><code>round_to_multiple</code>/<code>floor_to_multiple</code>/<code>ceil_to_multiple</code> &middot; <code>ordinal</code> (teen-aware) &middot; <code>percent_change</code> &middot; <code>weighted_avg</code> &middot; <code>percentile_of</code> (midrank) &middot; <code>digit_sum</code> &middot; <code>digit_count</code> &middot; <code>pct_of</code> &middot; <code>mean_abs_dev</code> &middot; <code>midrange</code> &middot; <code>clamp_to</code> &middot; <code>mod_floor</code> &middot; <code>next_power_of_two</code> &middot; <code>divisors_of</code></td></tr>
+            <tr><td>5</td><td class="mod-name">Utils::Time</td><td><code>lib/Time.stk</code></td><td class="cnt">18</td><td><code>parse_duration</code> &middot; <code>ago</code> (relative) &middot; <code>format_iso8601</code>/<code>format_date</code>/<code>format_time</code> &middot; <code>timed</code> &middot; <code>day_of_week</code> &middot; <code>format_human</code>/<code>format_clock</code> &middot; <code>add_duration</code>/<code>sub_duration</code> &middot; <code>parse_iso8601</code> (round-trips <code>format_iso8601</code>) &middot; <code>truncate_to_hour</code> &middot; <code>next_weekday</code>/<code>prev_weekday</code></td></tr>
+            <tr><td>6</td><td class="mod-name">Utils::Path</td><td><code>lib/Path.stk</code></td><td class="cnt">26</td><td><code>ext</code>/<code>compound_ext</code> &middot; <code>without_ext</code>/<code>set_ext</code>/<code>splitext</code> &middot; <code>strip_extension_all</code> &middot; <code>join</code> (variadic) &middot; <code>normalize</code> (path) &middot; <code>is_absolute</code>/<code>is_relative</code>/<code>is_bare</code> &middot; <code>relative</code> &middot; <code>with_name</code>/<code>with_parent</code>/<code>add_suffix</code> &middot; <code>strip_trailing_slash</code>/<code>ensure_trailing_slash</code> &middot; <code>segments</code>/<code>depth</code> &middot; <code>is_under</code></td></tr>
+          </tbody>
+        </table>
+        <p>Color legend: <span style="color:var(--green);font-weight:700">green = module name</span> &middot; <span style="color:var(--yellow)">yellow = function count</span>. Every sublibrary stands alone &mdash; no FFI, no required environment, no shared state between calls. Drop any single <code>lib/*.stk</code> file into another project as-is.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># From a release:
+s pkg install -g github.com/MenkeTechnologies/stryke-utils
+
+# From a local checkout:
+git clone https://github.com/MenkeTechnologies/stryke-utils
+cd stryke-utils
+s pkg install -g .              # installs into ~/.stryke/store/utils@&lt;version&gt;/
+
+# Or via Makefile:
+make install</pre>
+        <p>No cargo step. No cdylib. The installed store directory contains only <code>stryke.toml</code> + <code>lib/*.stk</code> &mdash; no compiled artifacts, fully portable across platforms.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick Start</h2>
+<pre>use Utils                                       # pulls all six sublibraries
+
+# Strings &mdash; long-tail composites
+Utils::String::ltrim("   hello")                # "hello"
+Utils::String::pad_center("hi", 8, ".")         # "...hi..."
+Utils::String::squeeze("aaabbc")                # "abc"
+Utils::String::compact_whitespace("a   b\t c")  # "a b c"
+Utils::String::partition("a/b/c", "/")          # ("a", "/", "b/c")
+Utils::String::rpartition("a/b/c", "/")         # ("a/b", "/", "c")
+Utils::String::mask_middle("4111232233334444", 4, 4)  # "4111********4444"
+Utils::String::escape_shell("it's \$foo")       # "'it'\\''s \$foo'"
+Utils::String::unwrap('"quoted"', '"')          # "quoted"
+
+# Lists &mdash; set ops + sliding windows
+Utils::List::difference([1,2,3,4], [2,4])       # [1,3]
+Utils::List::intersection([1,2,3], [2,3,5])     # [2,3]
+Utils::List::union([1,2], [2,3])                # [1,2,3]
+Utils::List::windows([1,2,3,4], 2)              # [[1,2],[2,3],[3,4]]
+
+# Hashes &mdash; variadic merge + dot-path access
+my $cfg = Utils::Hash::deep_merge_all($defaults, $env, $runtime)
+Utils::Hash::deep_get($cfg, "db.pool.max")      # nested read by dot path
+Utils::Hash::deep_set($cfg, "db.pool.min", 5)   # autovivifying write
+Utils::Hash::deep_has($cfg, "db.pool.min")      # missing-vs-undef differentiator
+
+# Numbers
+Utils::Num::ordinal(21)                         # "21st"
+Utils::Num::round_to_multiple(13, 5)            # 15
+
+# Time &mdash; parsing + relative phrasing + ISO formatting
+Utils::Time::parse_duration("1h30m")            # 5400
+Utils::Time::ago(time() - 90)                   # "1 minute ago"
+Utils::Time::format_iso8601()                   # "2026-06-10T14:23:05Z"
+
+# Paths &mdash; string-only path arithmetic
+Utils::Path::compound_ext("archive.tar.gz")     # "tar.gz"
+Utils::Path::set_ext("a/b.csv", "parquet")      # "a/b.parquet"
+Utils::Path::normalize("/a/b/../c/./d")         # "/a/c/d"
+Utils::Path::relative("/a/x", "/a/b/c")         # "../../x"
+Utils::Path::join("/a", "b/", "/c")             # "/a/b/c"
+
+# Everything else &mdash; slugify, chunk, uniq, deep_merge, format_bytes,
+# levenshtein, basename, common_prefix &mdash; call the stryke builtin directly.</pre>
+        <p>Pull only what you need with explicit sub-imports: <code>use Utils::String</code>, <code>use Utils::Path</code>, etc. The umbrella <code>use Utils</code> is just for convenience.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Full reference &mdash; Utils::String</h2>
+        <p>33 string composites. Every entry is a pure function: it reads its arguments and returns a new value (no in-place mutation). <code>use Utils::String</code> for this module alone, or <code>use Utils</code> for everything.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Behaviour</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>ltrim($s)</code></td><td>Strip leading whitespace only (bidirectional <code>trim</code> is a builtin).</td><td><code>ltrim("   hi")</code> &rarr; <code>"hi"</code></td></tr>
+            <tr><td><code>rtrim($s)</code></td><td>Strip trailing whitespace only.</td><td><code>rtrim("hi   ")</code> &rarr; <code>"hi"</code></td></tr>
+            <tr><td><code>pad_center($s, $width, $ch = " ")</code></td><td>Pad to <code>$width</code> centred; the extra char goes on the right. Returns <code>$s</code> unchanged when already wide enough.</td><td><code>pad_center("hi", 8, ".")</code> &rarr; <code>"...hi..."</code></td></tr>
+            <tr><td><code>visible_width($s)</code></td><td><code>length</code> after stripping ANSI escapes.</td><td><code>visible_width("\e[31mhi\e[0m")</code> &rarr; <code>2</code></td></tr>
+            <tr><td><code>count_occurrences($s, $needle)</code></td><td>Non-overlapping occurrence count; 0 for an empty needle.</td><td><code>count_occurrences("aaaa", "aa")</code> &rarr; <code>2</code></td></tr>
+            <tr><td><code>reverse_chars($s)</code></td><td>Reverse by code point (not graphemes).</td><td><code>reverse_chars("abc")</code> &rarr; <code>"cba"</code></td></tr>
+            <tr><td><code>squeeze($s)</code></td><td>Collapse runs of the same character to one, like <code>tr -s</code>.</td><td><code>squeeze("aaabbc")</code> &rarr; <code>"abc"</code></td></tr>
+            <tr><td><code>compact_whitespace($s)</code></td><td>Collapse every whitespace run to a single space and trim ends &mdash; the normalized form for comparison or hashing.</td><td><code>compact_whitespace("a   b\t c")</code> &rarr; <code>"a b c"</code></td></tr>
+            <tr><td><code>partition($s, $sep)</code></td><td>Split at the FIRST <code>$sep</code>, returning <code>($before, $sep, $after)</code>; <code>($s, "", "")</code> when absent.</td><td><code>partition("a/b/c", "/")</code> &rarr; <code>("a", "/", "b/c")</code></td></tr>
+            <tr><td><code>rpartition($s, $sep)</code></td><td>Split at the LAST <code>$sep</code>; <code>("", "", $s)</code> when absent.</td><td><code>rpartition("a/b/c", "/")</code> &rarr; <code>("a/b", "/", "c")</code></td></tr>
+            <tr><td><code>mask_middle($s, $head, $tail, $ch = "*")</code></td><td>Keep first <code>$head</code> + last <code>$tail</code> chars; replace the middle with <code>$ch</code>. Unchanged if shorter than <code>$head + $tail</code>.</td><td><code>mask_middle("4111222233334444", 4, 4)</code> &rarr; <code>"4111********4444"</code></td></tr>
+            <tr><td><code>escape_shell($s)</code></td><td>Single-quote for a POSIX shell argument; embedded quotes become <code>'\''</code>.</td><td><code>escape_shell("it's")</code> &rarr; <code>"'it'\''s'"</code></td></tr>
+            <tr><td><code>expand_tabs($s, $width = 4)</code></td><td>Replace each tab with <code>$width</code> spaces (not tab-stop aligned).</td><td><code>expand_tabs("x\ty", 2)</code> &rarr; <code>"x  y"</code></td></tr>
+            <tr><td><code>unexpand_tabs($s, $width = 4)</code></td><td>Convert leading <code>$width</code>-space runs back to tabs, per line; only leading whitespace is touched.</td><td><code>unexpand_tabs("        x", 4)</code> &rarr; <code>"\t\tx"</code></td></tr>
+            <tr><td><code>unwrap($s, $prefix, $suffix = undef)</code></td><td>Strip <code>$prefix</code>/<code>$suffix</code> only if BOTH match; <code>$suffix</code> defaults to <code>$prefix</code>.</td><td><code>unwrap('"quoted"', '"')</code> &rarr; <code>"quoted"</code></td></tr>
+            <tr><td><code>ellipsize($s, $max, $ellipsis = "…")</code></td><td>Truncate to at most <code>$max</code> characters; the ellipsis counts toward the cap.</td><td><code>ellipsize("hello world", 8)</code> &rarr; <code>"hello w…"</code></td></tr>
+            <tr><td><code>truncate_words($s, $n, $ellipsis = "…")</code></td><td>Keep the first <code>$n</code> whitespace-delimited words, appending the ellipsis when words were dropped.</td><td><code>truncate_words("a b c d", 2)</code> &rarr; <code>"a b…"</code></td></tr>
+            <tr><td><code>nth_index($s, $needle, $n)</code></td><td>Index of the <code>$n</code>-th (1-based) non-overlapping occurrence, or -1.</td><td><code>nth_index("a.b.c", ".", 2)</code> &rarr; <code>3</code></td></tr>
+            <tr><td><code>splitn($s, $sep, $n)</code></td><td>Split into at most <code>$n</code> pieces; the last piece keeps remaining separators verbatim.</td><td><code>splitn("a:b:c:d", ":", 2)</code> &rarr; <code>("a", "b:c:d")</code></td></tr>
+            <tr><td><code>capitalize_first($s)</code></td><td>Uppercase char 0 only; the rest untouched.</td><td><code>capitalize_first("hello")</code> &rarr; <code>"Hello"</code></td></tr>
+            <tr><td><code>uncapitalize($s)</code></td><td>Lowercase char 0 only.</td><td><code>uncapitalize("Hello")</code> &rarr; <code>"hello"</code></td></tr>
+            <tr><td><code>titleize($s)</code></td><td>Capitalize the first letter of every word, lowercasing the rest; collapses internal whitespace.</td><td><code>titleize("hELLO wORLD")</code> &rarr; <code>"Hello World"</code></td></tr>
+            <tr><td><code>normalize_newlines($s)</code></td><td>CRLF and lone CR both become LF &mdash; run before any text comparison or hash.</td><td><code>normalize_newlines("a\r\nb")</code> &rarr; <code>"a\nb"</code></td></tr>
+            <tr><td><code>collapse_blank_lines($s)</code></td><td>Collapse runs of 2+ blank lines (whitespace-only counts as blank) to one; normalizes newlines first.</td><td><code>collapse_blank_lines("a\n\n\nb")</code> &rarr; <code>"a\n\nb"</code></td></tr>
+            <tr><td><code>strip_quotes($s)</code></td><td>Strip one layer of matching <code>"…"</code> or <code>'…'</code>, auto-detecting which; unmatched input unchanged.</td><td><code>strip_quotes("'x'")</code> &rarr; <code>"x"</code></td></tr>
+            <tr><td><code>repeat_to($unit, $width)</code></td><td>Repeat <code>$unit</code> to exactly <code>$width</code> characters, truncating the last copy.</td><td><code>repeat_to("ab", 5)</code> &rarr; <code>"ababa"</code></td></tr>
+            <tr><td><code>remove_prefix($s, $prefix)</code></td><td>One-sided strip of <code>$prefix</code> if present.</td><td><code>remove_prefix("unwrap", "un")</code> &rarr; <code>"wrap"</code></td></tr>
+            <tr><td><code>remove_suffix($s, $suffix)</code></td><td>One-sided strip of <code>$suffix</code> if present.</td><td><code>remove_suffix("file.bak", ".bak")</code> &rarr; <code>"file"</code></td></tr>
+            <tr><td><code>ensure_prefix($s, $prefix)</code></td><td>Add <code>$prefix</code> only when absent (idempotent).</td><td><code>ensure_prefix("file", "/")</code> &rarr; <code>"/file"</code></td></tr>
+            <tr><td><code>ensure_suffix($s, $suffix)</code></td><td>Add <code>$suffix</code> only when absent (idempotent).</td><td><code>ensure_suffix("page", "/")</code> &rarr; <code>"page/"</code></td></tr>
+            <tr><td><code>prefix_lines($s, $prefix)</code></td><td>Prepend <code>$prefix</code> to every line; newlines kept verbatim.</td><td><code>prefix_lines("a\nb", "&gt; ")</code> &rarr; <code>"&gt; a\n&gt; b"</code></td></tr>
+            <tr><td><code>nth_line($s, $n)</code></td><td>The <code>$n</code>-th (1-based) line without its newline; negative <code>$n</code> counts from the end; <code>undef</code> when out of range.</td><td><code>nth_line("a\nb\nc", 2)</code> &rarr; <code>"b"</code></td></tr>
+            <tr><td><code>count_lines_nonblank($s)</code></td><td>Count lines with at least one non-whitespace character.</td><td><code>count_lines_nonblank("a\n\nb\n")</code> &rarr; <code>2</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Full reference &mdash; Utils::List</h2>
+        <p>20 arrayref composites &mdash; set operations, windowing, run-length, ranking, and running aggregates. Lists are passed and returned as arrayrefs.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Behaviour</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>difference($a, $b)</code></td><td>Items in <code>$a</code> not in <code>$b</code> (string equality, preserves <code>$a</code>'s order).</td><td><code>difference([1,2,3,4], [2,4])</code> &rarr; <code>[1,3]</code></td></tr>
+            <tr><td><code>intersection($a, $b)</code></td><td>Items in BOTH, in <code>$a</code>'s order, deduped.</td><td><code>intersection([1,2,3], [2,3,5])</code> &rarr; <code>[2,3]</code></td></tr>
+            <tr><td><code>union($a, $b)</code></td><td>Items in EITHER, deduped, <code>$a</code>'s first.</td><td><code>union([1,2], [2,3])</code> &rarr; <code>[1,2,3]</code></td></tr>
+            <tr><td><code>symmetric_difference($a, $b)</code></td><td>Items in exactly one list &mdash; (A&minus;B)&cup;(B&minus;A), deduped.</td><td><code>symmetric_difference([1,2,3], [2,3,4])</code> &rarr; <code>[1,4]</code></td></tr>
+            <tr><td><code>is_disjoint($a, $b)</code></td><td>True when the two lists share no element.</td><td><code>is_disjoint([1,2,3], [4,5])</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>windows($items, $size)</code></td><td>Sliding windows of length <code>$size</code>, step 1; dies on <code>$size &lt; 1</code>.</td><td><code>windows([1,2,3,4], 2)</code> &rarr; <code>[[1,2],[2,3],[3,4]]</code></td></tr>
+            <tr><td><code>chunk($items, $size)</code></td><td>Non-overlapping chunks of length <code>$size</code> (last is short if it does not divide evenly).</td><td><code>chunk([1,2,3,4,5], 2)</code> &rarr; <code>[[1,2],[3,4],[5]]</code></td></tr>
+            <tr><td><code>cartesian($a, $b)</code></td><td>Cartesian pairs, <code>$a</code>-major order (the cheap 2-list case).</td><td><code>cartesian([1,2], ["x"])</code> &rarr; <code>[[1,"x"],[2,"x"]]</code></td></tr>
+            <tr><td><code>rle_encode($items)</code></td><td>Run-length encode consecutive equal items.</td><td><code>rle_encode(["a","a","b"])</code> &rarr; <code>[["a",2],["b",1]]</code></td></tr>
+            <tr><td><code>rle_decode($pairs)</code></td><td>Inverse of <code>rle_encode</code>.</td><td><code>rle_decode([["a",2],["b",1]])</code> &rarr; <code>["a","a","b"]</code></td></tr>
+            <tr><td><code>top_n($items, $n, $key)</code></td><td>Largest <code>$n</code> items descending; numeric compare by default, optional <code>$key</code> scorer.</td><td><code>top_n([3,1,4,1,5], 2)</code> &rarr; <code>[5,4]</code></td></tr>
+            <tr><td><code>bottom_n($items, $n, $key)</code></td><td>Smallest <code>$n</code> items ascending; same <code>$key</code> contract as <code>top_n</code>.</td><td><code>bottom_n([3,1,4,1,5], 2)</code> &rarr; <code>[1,1]</code></td></tr>
+            <tr><td><code>count_where($items, $pred)</code></td><td>How many items satisfy <code>$pred</code> (counting companion to <code>grep</code>).</td><td><code>count_where([1,2,3,4], fn ($x) { $x &gt; 2 })</code> &rarr; <code>2</code></td></tr>
+            <tr><td><code>transpose($rows)</code></td><td>Transpose a rectangular matrix; dies on ragged rows.</td><td><code>transpose([[1,2,3],[4,5,6]])</code> &rarr; <code>[[1,4],[2,5],[3,6]]</code></td></tr>
+            <tr><td><code>running_sum($nums)</code></td><td>Inclusive prefix sums (scan companion to <code>sum</code>).</td><td><code>running_sum([1,2,3,4])</code> &rarr; <code>[1,3,6,10]</code></td></tr>
+            <tr><td><code>running_product($nums)</code></td><td>Inclusive prefix products.</td><td><code>running_product([1,2,3,4])</code> &rarr; <code>[1,2,6,24]</code></td></tr>
+            <tr><td><code>round_robin(@lists)</code></td><td>Interleave N arrayrefs by index, tolerating ragged lengths.</td><td><code>round_robin([1,2,3],[4,5],[6])</code> &rarr; <code>[1,4,6,2,5,3]</code></td></tr>
+            <tr><td><code>deltas($nums)</code></td><td>Adjacent differences (discrete derivative); N items yield N&minus;1 deltas.</td><td><code>deltas([1,4,9,16])</code> &rarr; <code>[3,5,7]</code></td></tr>
+            <tr><td><code>rotate_left($items, $n)</code></td><td>Cyclic left shift by <code>$n</code> (taken mod length; negative rotates right).</td><td><code>rotate_left([1,2,3,4,5], 2)</code> &rarr; <code>[3,4,5,1,2]</code></td></tr>
+            <tr><td><code>index_of_max($items, $key)</code></td><td>Index of the maximum (first on ties); -1 for empty; optional <code>$key</code> scorer.</td><td><code>index_of_max([3,9,2,9])</code> &rarr; <code>1</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Full reference &mdash; Utils::Hash</h2>
+        <p>24 public hashref composites plus two private helpers (<code>_vstr</code>, <code>_urlenc</code>). Variadic merge, dot-path access, key reshaping, predicate selection, diffing, and query-string serialization.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Behaviour</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>deep_merge_all(@hashes)</code></td><td>N-ary deep merge (later overrides earlier); folds the binary <code>deep_merge</code> builtin.</td><td><code>deep_merge_all($a, $b, $c)</code></td></tr>
+            <tr><td><code>deep_get($h, $path)</code></td><td>Read a nested value by dot path; <code>undef</code> on any missing segment. Pure read, no autoviv.</td><td><code>deep_get($cfg, "db.pool.max")</code></td></tr>
+            <tr><td><code>deep_set($h, $path, $value)</code></td><td>Set a nested value by dot path, autovivifying intermediates; returns the modified <code>$h</code>.</td><td><code>deep_set($cfg, "db.pool.min", 5)</code></td></tr>
+            <tr><td><code>deep_has($h, $path)</code></td><td>True if the dot path resolves to an existing key (even when the value is <code>undef</code>).</td><td><code>deep_has($cfg, "db.pool.min")</code></td></tr>
+            <tr><td><code>map_keys($h, $f)</code></td><td>Transform every key via <code>$f-&gt;($k, $v)</code>; values unchanged.</td><td><code>map_keys($h, fn ($k, $v) { uc($k) })</code></td></tr>
+            <tr><td><code>map_values($h, $f)</code></td><td>Transform every value via <code>$f-&gt;($v, $k)</code>; keys unchanged.</td><td><code>map_values($h, fn ($v, $k) { $v * 2 })</code></td></tr>
+            <tr><td><code>all_hashes($h)</code></td><td>True if every value is itself a hashref.</td><td><code>all_hashes({a =&gt; {}, b =&gt; {}})</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>rename_keys($h, $mapping)</code></td><td>Rename keys per <code>$mapping</code> (old &rarr; new); unmapped keys pass through.</td><td><code>rename_keys($h, {id =&gt; "uid"})</code></td></tr>
+            <tr><td><code>flatten_keys($h, $prefix)</code></td><td>Flatten nested hashes into one level of dot-path keys; empty nested hashes kept as leaves.</td><td><code>flatten_keys({a =&gt; {b =&gt; 1}})</code> &rarr; <code>{"a.b" =&gt; 1}</code></td></tr>
+            <tr><td><code>unflatten_keys($h)</code></td><td>Expand dot-path keys back into nested hashes.</td><td><code>unflatten_keys({"a.b" =&gt; 1})</code> &rarr; <code>{a =&gt; {b =&gt; 1}}</code></td></tr>
+            <tr><td><code>deep_delete($h, $path)</code></td><td>Delete the leaf at dot path, mutating <code>$h</code>; no-op if any segment is missing.</td><td><code>deep_delete($h, "a.b")</code></td></tr>
+            <tr><td><code>defaults($h, $def)</code></td><td>Copy of <code>$h</code> with <code>$def</code> keys added only where absent.</td><td><code>defaults({a =&gt; 1}, {a =&gt; 9, b =&gt; 2})</code> &rarr; <code>{a =&gt; 1, b =&gt; 2}</code></td></tr>
+            <tr><td><code>deep_keys($h)</code></td><td>Sorted list of every leaf dot path.</td><td><code>deep_keys({a =&gt; {b =&gt; 1}, c =&gt; 2})</code> &rarr; <code>["a.b","c"]</code></td></tr>
+            <tr><td><code>deep_values($h)</code></td><td>Leaf values in <code>deep_keys</code> order.</td><td><code>deep_values({a =&gt; {b =&gt; 1}})</code></td></tr>
+            <tr><td><code>count_values($h)</code></td><td>Frequency of each stringified value across the hash.</td><td><code>count_values({a =&gt; 1, b =&gt; 1, c =&gt; 2})</code> &rarr; <code>{1 =&gt; 2, 2 =&gt; 1}</code></td></tr>
+            <tr><td><code>map_entries($h, $f)</code></td><td>Map each <code>(k, v)</code> to a new <code>(k, v)</code> via <code>$f</code>.</td><td><code>map_entries({a =&gt; 1}, fn ($k, $v) { (uc($k), $v*10) })</code> &rarr; <code>{A =&gt; 10}</code></td></tr>
+            <tr><td><code>merge_with($f, $a, $b)</code></td><td>Merge <code>$a</code> and <code>$b</code>; on shared keys the value is <code>$f-&gt;(a_val, b_val)</code>.</td><td><code>merge_with(fn ($x, $y) { $x+$y }, {a =&gt; 1}, {a =&gt; 2})</code> &rarr; <code>{a =&gt; 3}</code></td></tr>
+            <tr><td><code>pick_by($h, $pred)</code></td><td>Keep pairs where <code>$pred-&gt;($k, $v)</code> is true.</td><td><code>pick_by({a =&gt; 1, b =&gt; 2}, fn ($k, $v) { $v &gt; 1 })</code> &rarr; <code>{b =&gt; 2}</code></td></tr>
+            <tr><td><code>omit_by($h, $pred)</code></td><td>Drop pairs where <code>$pred</code> is true (inverse of <code>pick_by</code>).</td><td><code>omit_by({a =&gt; 1, b =&gt; 2}, fn ($k, $v) { $v &gt; 1 })</code> &rarr; <code>{a =&gt; 1}</code></td></tr>
+            <tr><td><code>hash_diff($a, $b)</code></td><td>Shallow diff by stringified value: <code>{changed, added, removed}</code>.</td><td><code>hash_diff($old, $new)</code></td></tr>
+            <tr><td><code>invert_multi($h)</code></td><td>Invert a non-unique-valued hash: each value maps to a sorted arrayref of keys.</td><td><code>invert_multi({a =&gt; 1, b =&gt; 1, c =&gt; 2})</code> &rarr; <code>{1 =&gt; ["a","b"], 2 =&gt; ["c"]}</code></td></tr>
+            <tr><td><code>deep_count($h)</code></td><td>Count leaf values in a nested hash (size of <code>flatten_keys</code>).</td><td><code>deep_count({a =&gt; {b =&gt; 1, c =&gt; 2}, d =&gt; 3})</code> &rarr; <code>3</code></td></tr>
+            <tr><td><code>pluck_paths($h, $paths)</code></td><td>Project a set of dot paths into a flat result hash keyed by the path string.</td><td><code>pluck_paths($h, ["a.b", "d", "x.y"])</code></td></tr>
+            <tr><td><code>to_query_string($h)</code></td><td>Render a flat hash as a URL query string, keys sorted, key+value percent-encoded (RFC-3986).</td><td><code>to_query_string({b =&gt; 2, a =&gt; "x y"})</code> &rarr; <code>"a=x%20y&amp;b=2"</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Full reference &mdash; Utils::Num</h2>
+        <p>26 numeric composites: multiple-rounding, ordinals, change/aggregate stats, digit math, conversions, and bounds/moduli. Several die on degenerate input (zero step, zero whole, empty list) rather than returning a silently-wrong value.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Behaviour</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>round_to_multiple($x, $step)</code></td><td>Round to the nearest multiple of <code>$step</code>; dies on a zero step.</td><td><code>round_to_multiple(13, 5)</code> &rarr; <code>15</code></td></tr>
+            <tr><td><code>floor_to_multiple($x, $step)</code></td><td>Round down toward &minus;&infin; to a multiple of <code>$step</code>.</td><td><code>floor_to_multiple(13, 5)</code> &rarr; <code>10</code></td></tr>
+            <tr><td><code>ceil_to_multiple($x, $step)</code></td><td>Round up toward +&infin; to a multiple of <code>$step</code>.</td><td><code>ceil_to_multiple(11, 5)</code> &rarr; <code>15</code></td></tr>
+            <tr><td><code>ordinal($n)</code></td><td>Ordinal suffix, teen-aware (11th/12th/13th vs 21st/22nd/23rd).</td><td><code>ordinal(21)</code> &rarr; <code>"21st"</code></td></tr>
+            <tr><td><code>percent_change($old, $new)</code></td><td>Percent change from <code>$old</code> to <code>$new</code>; dies on a zero old value.</td><td><code>percent_change(50, 75)</code> &rarr; <code>50</code></td></tr>
+            <tr><td><code>weighted_avg($values, $weights)</code></td><td>Weighted average by parallel weights; dies on length mismatch, empty input, or zero total weight.</td><td><code>weighted_avg([1,10], [3,1])</code> &rarr; <code>3.25</code></td></tr>
+            <tr><td><code>percentile_of($sample, $x)</code></td><td>Percentile rank of <code>$x</code> within the sample (midrank for ties), 0-100.</td><td><code>percentile_of([1,2,3,4], 3)</code> &rarr; <code>62.5</code></td></tr>
+            <tr><td><code>digit_sum($n)</code></td><td>Sum of the decimal digits of <code>|int($n)|</code>.</td><td><code>digit_sum(1234)</code> &rarr; <code>10</code></td></tr>
+            <tr><td><code>digit_count($n)</code></td><td>Count of decimal digits of <code>|int($n)|</code>.</td><td><code>digit_count(0)</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>digital_root($n)</code></td><td>Repeatedly sum digits until one remains.</td><td><code>digital_root(9875)</code> &rarr; <code>2</code></td></tr>
+            <tr><td><code>pct_of($part, $whole)</code></td><td>What percent <code>$part</code> is of <code>$whole</code>; dies on a zero whole.</td><td><code>pct_of(25, 200)</code> &rarr; <code>12.5</code></td></tr>
+            <tr><td><code>mean_abs_dev($nums)</code></td><td>Mean absolute deviation about the mean; dies on empty input.</td><td><code>mean_abs_dev([1,2,3,4])</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>is_close($a, $b, $tol = 1e-9, $rel = 1e-9)</code></td><td>Float-safe equality: within <code>$tol</code> absolute OR <code>$rel</code> relative to the larger magnitude.</td><td><code>is_close(0.1 + 0.2, 0.3)</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>to_radians($deg)</code></td><td>Degrees &rarr; radians.</td><td><code>to_radians(180)</code> &rarr; <code>3.14159…</code></td></tr>
+            <tr><td><code>to_degrees($rad)</code></td><td>Radians &rarr; degrees.</td><td><code>to_degrees(3.14159265…)</code> &rarr; <code>180</code></td></tr>
+            <tr><td><code>round_sig($x, $sig = 3)</code></td><td>Round to <code>$sig</code> significant figures; dies on <code>$sig &lt; 1</code>.</td><td><code>round_sig(3.14159, 3)</code> &rarr; <code>3.14</code></td></tr>
+            <tr><td><code>clamp01($x)</code></td><td>Clamp into <code>[0, 1]</code>.</td><td><code>clamp01(1.5)</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>remap($x, $in_lo, $in_hi, $out_lo, $out_hi)</code></td><td>Linear remap between ranges (extrapolates outside); dies on a degenerate input range.</td><td><code>remap(5, 0, 10, 0, 100)</code> &rarr; <code>50</code></td></tr>
+            <tr><td><code>wrap($x, $min, $max)</code></td><td>Wrap into the half-open <code>[$min, $max)</code> (modular, for angles/cyclic indices); dies on an empty range.</td><td><code>wrap(370, 0, 360)</code> &rarr; <code>10</code></td></tr>
+            <tr><td><code>gcd($a, $b)</code></td><td>Greatest common divisor (Euclidean, on absolute values).</td><td><code>gcd(12, 18)</code> &rarr; <code>6</code></td></tr>
+            <tr><td><code>round_half_even($x, $digits = 0)</code></td><td>Banker's rounding (round half to even) &mdash; the IEEE-754 / finance default.</td><td><code>round_half_even(2.5)</code> &rarr; <code>2</code></td></tr>
+            <tr><td><code>clamp_to($x, $lo, $hi)</code></td><td>Clamp into <code>[$lo, $hi]</code> (arbitrary-range <code>clamp01</code>); dies on <code>$lo &gt; $hi</code>.</td><td><code>clamp_to(12, 0, 10)</code> &rarr; <code>10</code></td></tr>
+            <tr><td><code>mod_floor($x, $m)</code></td><td>Floored modulo carrying the sign of the DIVISOR; dies on a zero modulus.</td><td><code>mod_floor(-1, 3)</code> &rarr; <code>2</code></td></tr>
+            <tr><td><code>next_power_of_two($n)</code></td><td>Smallest power of two &ge; <code>$n</code>; dies on <code>$n &lt; 1</code>.</td><td><code>next_power_of_two(17)</code> &rarr; <code>32</code></td></tr>
+            <tr><td><code>midrange($nums)</code></td><td>Midpoint of the data's extent, <code>(min+max)/2</code>; dies on empty input.</td><td><code>midrange([1, 2, 9])</code> &rarr; <code>5</code></td></tr>
+            <tr><td><code>divisors_of($n)</code></td><td>Sorted list of every positive divisor of <code>|int($n)|</code>; dies on 0.</td><td><code>divisors_of(12)</code> &rarr; <code>[1,2,3,4,6,12]</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Full reference &mdash; Utils::Time</h2>
+        <p>17 public time/duration composites plus the private <code>_days_from_civil</code> helper. All calendar functions operate in UTC. <code>parse_iso8601</code> uses Howard Hinnant's days-from-civil algorithm and round-trips <code>format_iso8601</code> exactly.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Behaviour</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>parse_duration($s)</code></td><td>Duration string &rarr; seconds; accepts <code>d/h/m/s/ms</code>, whitespace ignored; dies on unknown units.</td><td><code>parse_duration("1h30m")</code> &rarr; <code>5400</code></td></tr>
+            <tr><td><code>ago($epoch, $now = undef)</code></td><td>Relative phrasing; past is "X ago", future is "in X"; rolls to the nearest unit.</td><td><code>ago(time() - 90)</code> &rarr; <code>"1 minute ago"</code></td></tr>
+            <tr><td><code>format_iso8601($epoch = undef)</code></td><td>UTC ISO-8601 string.</td><td><code>format_iso8601(0)</code> &rarr; <code>"1970-01-01T00:00:00Z"</code></td></tr>
+            <tr><td><code>format_date($epoch = undef)</code></td><td>YYYY-MM-DD (UTC).</td><td><code>format_date(0)</code> &rarr; <code>"1970-01-01"</code></td></tr>
+            <tr><td><code>format_time($epoch = undef)</code></td><td>HH:MM:SS (UTC).</td><td><code>format_time(0)</code> &rarr; <code>"00:00:00"</code></td></tr>
+            <tr><td><code>timed($code)</code></td><td>Run a coderef and return <code>[result, elapsed_seconds]</code>.</td><td><code>timed(fn { work() })</code></td></tr>
+            <tr><td><code>day_of_week($epoch = undef)</code></td><td>Weekday name (UTC).</td><td><code>day_of_week(0)</code> &rarr; <code>"Thursday"</code></td></tr>
+            <tr><td><code>format_human($epoch = undef)</code></td><td>Long human date (UTC).</td><td><code>format_human(0)</code> &rarr; <code>"Thursday, 1 January 1970"</code></td></tr>
+            <tr><td><code>format_clock($epoch = undef)</code></td><td>12-hour clock (UTC).</td><td><code>format_clock(0)</code> &rarr; <code>"12:00:00 AM"</code></td></tr>
+            <tr><td><code>add_duration($epoch, $dur)</code></td><td>Add a duration string to an epoch.</td><td><code>add_duration($t, "1h30m")</code></td></tr>
+            <tr><td><code>sub_duration($epoch, $dur)</code></td><td>Subtract a duration string from an epoch.</td><td><code>sub_duration($t, "1h30m")</code></td></tr>
+            <tr><td><code>parse_iso8601($s)</code></td><td>Parse a UTC ISO-8601 timestamp into an epoch (T- or space-separated, trailing Z optional); inverse of <code>format_iso8601</code>; dies on malformed input.</td><td><code>parse_iso8601("1970-01-01T00:00:00Z")</code> &rarr; <code>0</code></td></tr>
+            <tr><td><code>quarter($month)</code></td><td>Calendar quarter (1-4) for a 1-12 month; dies out of range.</td><td><code>quarter(4)</code> &rarr; <code>2</code></td></tr>
+            <tr><td><code>is_same_day($a, $b)</code></td><td>True if two epochs fall on the same UTC calendar day.</td><td><code>is_same_day(0, 3600)</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>truncate_to_hour($epoch = undef)</code></td><td>Floor an epoch to the start of its UTC hour (exact, DST-free).</td><td><code>truncate_to_hour(3661)</code> &rarr; <code>3600</code></td></tr>
+            <tr><td><code>next_weekday($epoch, $target)</code></td><td>Epoch of the next weekday <code>$target</code> (0=Sun..6=Sat) strictly after <code>$epoch</code>; dies out of range.</td><td><code>next_weekday($t, 1)</code></td></tr>
+            <tr><td><code>prev_weekday($epoch, $target)</code></td><td>Mirror of <code>next_weekday</code>, stepping back.</td><td><code>prev_weekday($t, 5)</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Full reference &mdash; Utils::Path</h2>
+        <p>26 path-string composites. This module only manipulates the path string &mdash; it never touches the disk. <code>Utils::Path::join</code> and <code>Utils::Path::normalize</code> are the two intentional name overlaps with builtins (path-join vs array-join; path-normalize vs vector-normalize).</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Behaviour</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>ext($path)</code></td><td>Last extension without the dot, or "".</td><td><code>ext("x.tar.gz")</code> &rarr; <code>"gz"</code></td></tr>
+            <tr><td><code>compound_ext($path)</code></td><td>Compound extension (each segment alphanumeric and &le; 4 chars).</td><td><code>compound_ext("archive.tar.gz")</code> &rarr; <code>"tar.gz"</code></td></tr>
+            <tr><td><code>without_ext($path)</code></td><td>Drop the single-segment extension.</td><td><code>without_ext("x/y.parquet")</code> &rarr; <code>"x/y"</code></td></tr>
+            <tr><td><code>set_ext($path, $new)</code></td><td>Replace the extension; leading "." in <code>$new</code> tolerated; adds it if absent.</td><td><code>set_ext("a/b.csv", "parquet")</code> &rarr; <code>"a/b.parquet"</code></td></tr>
+            <tr><td><code>splitext($path)</code></td><td>Split into <code>(stem, ext)</code>, ext without dot.</td><td><code>splitext("/a/b.csv")</code> &rarr; <code>("/a/b", "csv")</code></td></tr>
+            <tr><td><code>join(@parts)</code></td><td>Variadic, slash-aware path join; strips trailing slashes, drops empties, preserves a leading "/".</td><td><code>join("/a", "b/", "/c")</code> &rarr; <code>"/a/b/c"</code></td></tr>
+            <tr><td><code>normalize($path)</code></td><td>Resolve <code>.</code> and <code>..</code> lexically; walking above root collapses to "/" (or "." relative).</td><td><code>normalize("/a/b/../c/./d")</code> &rarr; <code>"/a/c/d"</code></td></tr>
+            <tr><td><code>is_absolute($path)</code></td><td>True if it starts with "/".</td><td><code>is_absolute("/a")</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>is_bare($path)</code></td><td>True if it has no "/" at all.</td><td><code>is_bare("file.txt")</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>relative($target, $from)</code></td><td>Path of <code>$target</code> relative to <code>$from</code> (both normalized first); "." if equal.</td><td><code>relative("/a/x", "/a/b/c")</code> &rarr; <code>"../../x"</code></td></tr>
+            <tr><td><code>with_name($path, $name)</code></td><td>Replace the final segment (verbatim, extension and all).</td><td><code>with_name("a/b.txt", "c.md")</code> &rarr; <code>"a/c.md"</code></td></tr>
+            <tr><td><code>add_suffix($path, $suffix)</code></td><td>Insert <code>$suffix</code> before the single-segment extension.</td><td><code>add_suffix("a/b.txt", "-bak")</code> &rarr; <code>"a/b-bak.txt"</code></td></tr>
+            <tr><td><code>strip_trailing_slash($path)</code></td><td>Remove trailing slashes (never reduces "/" itself to "").</td><td><code>strip_trailing_slash("a/b/")</code> &rarr; <code>"a/b"</code></td></tr>
+            <tr><td><code>ensure_trailing_slash($path)</code></td><td>Guarantee exactly one trailing slash.</td><td><code>ensure_trailing_slash("a/b")</code> &rarr; <code>"a/b/"</code></td></tr>
+            <tr><td><code>segments($path)</code></td><td>Non-empty segments (leading "/" dropped).</td><td><code>segments("/a/b/c")</code> &rarr; <code>["a","b","c"]</code></td></tr>
+            <tr><td><code>depth($path)</code></td><td>Segment count.</td><td><code>depth("/a/b/c")</code> &rarr; <code>3</code></td></tr>
+            <tr><td><code>is_under($path, $base)</code></td><td>True if <code>$path</code> is at or below <code>$base</code> after normalizing both (lexical only).</td><td><code>is_under("/a/b/c", "/a/b")</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>is_hidden($path)</code></td><td>True if the final component begins with a dot.</td><td><code>is_hidden("/a/.env")</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>expand_user($path)</code></td><td>Expand a leading "~" to <code>$ENV{HOME}</code>; non-tilde paths unchanged.</td><td><code>expand_user("~/x")</code> &rarr; <code>"$HOME/x"</code></td></tr>
+            <tr><td><code>sibling($path, $name)</code></td><td>Replace the final component with <code>$name</code>.</td><td><code>sibling("/a/b", "c")</code> &rarr; <code>"/a/c"</code></td></tr>
+            <tr><td><code>ancestors($path)</code></td><td>Every ancestor directory, nearest first.</td><td><code>ancestors("/a/b/c")</code> &rarr; <code>["/a/b","/a","/"]</code></td></tr>
+            <tr><td><code>with_stem($path, $stem)</code></td><td>Replace the stem (basename without extension), keeping the extension.</td><td><code>with_stem("/a/b.txt", "c")</code> &rarr; <code>"/a/c.txt"</code></td></tr>
+            <tr><td><code>common_ancestor($paths)</code></td><td>Longest common ancestor directory, segment-wise.</td><td><code>common_ancestor(["/a/b/x", "/a/b/y", "/a/c"])</code> &rarr; <code>"/a"</code></td></tr>
+            <tr><td><code>strip_extension_all($path)</code></td><td>Strip every extension from the final component (a leading-dot basename is unchanged).</td><td><code>strip_extension_all("a/b.tar.gz")</code> &rarr; <code>"a/b"</code></td></tr>
+            <tr><td><code>is_relative($path)</code></td><td>Negation of <code>is_absolute</code>.</td><td><code>is_relative("a/b")</code> &rarr; <code>1</code></td></tr>
+            <tr><td><code>with_parent($path, $dir)</code></td><td>Replace the directory, keeping the basename; trailing slash on <code>$dir</code> dropped.</td><td><code>with_parent("a/b/c.txt", "x/y")</code> &rarr; <code>"x/y/c.txt"</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What's NOT in Here</h2>
+        <p>By design &mdash; these are stryke builtins, so we don't re-wrap them. Every entry below was present in <code>stryke-utils</code> at one point and got deleted when the corresponding builtin landed in core. If a function in this library can be replaced with one builtin call, it's a bug.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Category</th><th>Builtins (call directly)</th></tr></thead>
+          <tbody>
+            <tr><td>String case / slug</td><td><code>trim</code> &middot; <code>slugify</code> &middot; <code>snake_case</code> &middot; <code>kebab_case</code> &middot; <code>camel_case</code> &middot; <code>pascal_case</code> &middot; <code>title_case</code> &middot; <code>swap_case</code> &middot; <code>indent</code> &middot; <code>dedent</code> &middot; <code>rot13</code></td></tr>
+            <tr><td>String predicates / distance</td><td><code>contains</code> &middot; <code>starts_with</code> &middot; <code>ends_with</code> &middot; <code>is_blank</code> &middot; <code>is_palindrome</code> &middot; <code>levenshtein</code> &middot; <code>hamming</code> &middot; <code>dice_coefficient</code> &middot; <code>find_all_indices</code> &middot; <code>common_prefix</code> &middot; <code>common_suffix</code></td></tr>
+            <tr><td>String padding / shaping</td><td><code>pad_left</code> &middot; <code>pad_right</code> &middot; <code>truncate</code> &middot; <code>strip_ansi</code> &middot; <code>word_wrap</code></td></tr>
+            <tr><td>List</td><td><code>chunk</code> &middot; <code>compact</code> &middot; <code>uniq</code> &middot; <code>uniq_by</code> &middot; <code>flatten</code> &middot; <code>group_by</code> &middot; <code>count_by</code> &middot; <code>index_by</code> &middot; <code>partition</code> &middot; <code>pluck</code> &middot; <code>sum</code> &middot; <code>mean</code> &middot; <code>median</code> &middot; <code>min_by</code> &middot; <code>max_by</code> &middot; <code>sort_by</code> &middot; <code>zip</code> &middot; <code>take</code> &middot; <code>drop</code> &middot; <code>range</code></td></tr>
+            <tr><td>Hash</td><td><code>deep_merge</code> &middot; <code>pick</code> &middot; <code>omit</code> &middot; <code>invert</code> &middot; <code>filter</code> &middot; <code>from_pairs</code> &middot; <code>to_pairs</code> &middot; <code>is_empty</code></td></tr>
+            <tr><td>Num</td><td><code>clamp</code> &middot; <code>between</code> &middot; <code>lerp</code> &middot; <code>round_to</code> &middot; <code>format_number</code> &middot; <code>format_bytes</code> &middot; <code>format_percent</code> &middot; <code>gcd</code> &middot; <code>lcm</code> &middot; <code>sign</code> &middot; <code>is_even</code> &middot; <code>is_odd</code></td></tr>
+            <tr><td>Time</td><td><code>now_ms</code> &middot; <code>now_us</code> &middot; <code>format_duration</code> &middot; <code>elapsed</code></td></tr>
+            <tr><td>Path</td><td><code>basename</code> &middot; <code>dirname</code> &middot; <code>common_prefix</code></td></tr>
+            <tr><td>Core (always was)</td><td><code>uc</code> &middot; <code>lc</code> &middot; <code>length</code> &middot; <code>sprintf</code> &middot; <code>substr</code> &middot; <code>index</code> &middot; <code>rindex</code> &middot; <code>split</code> &middot; <code>push</code>/<code>pop</code>/<code>shift</code>/<code>unshift</code>/<code>splice</code>/<code>sort</code>/<code>reverse</code>/<code>map</code>/<code>grep</code>/<code>join</code> &middot; <code>keys</code>/<code>values</code>/<code>exists</code>/<code>defined</code>/<code>scalar</code>/<code>wantarray</code> &middot; <code>abs</code>/<code>int</code>/<code>sqrt</code>/<code>sin</code>/<code>cos</code>/<code>log</code>/<code>exp</code> &middot; <code>time</code>/<code>localtime</code>/<code>gmtime</code>/<code>sleep</code> &middot; <code>mkdir</code>/<code>unlink</code>/<code>rmdir</code>/<code>opendir</code>/<code>readdir</code> &middot; <code>-e</code>/<code>-d</code>/<code>-f</code>/<code>-s</code> &middot; <code>to_json</code>/<code>from_json</code> &middot; the <code>..</code> range and <code>x</code> repetition operators</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>CLI</h2>
+        <p><code>bin/utils.stk</code> is a thin dispatcher over the surviving lib fns &mdash; useful for shell pipelines without writing a full <code>.stk</code> file. Every subcommand routes to one function in <code>lib/*.stk</code>. The full subcommand surface (run <code>s bin/utils.stk help</code> for the in-tool usage):</p>
+<pre># String
+s bin/utils.stk pad-center "hi" 8 .            # ...hi...
+s bin/utils.stk squeeze "aaabbc"               # abc
+s bin/utils.stk compact-ws "a   b\t c"         # a b c
+s bin/utils.stk rpartition "a/b/c" /           # a/b  /  c  (tab-separated)
+s bin/utils.stk mask 4111222233334444 4 4      # 4111********4444
+s bin/utils.stk escape-shell "it's \$foo"
+s bin/utils.stk expand-tabs "x\ty" 2           # x  y
+s bin/utils.stk unwrap '"quoted"' '"'          # quoted
+s bin/utils.stk visible-width $'\e[31mhi\e[0m' # 2
+
+# Num
+s bin/utils.stk ordinal 21                     # 21st
+s bin/utils.stk round-multiple 13 5            # 15
+
+# Time
+s bin/utils.stk parse-duration 1h30m           # 5400
+s bin/utils.stk ago $((now - 90))              # 1 minute ago
+s bin/utils.stk iso  [EPOCH]                    # 2026-06-10T14:23:05Z
+s bin/utils.stk date [EPOCH]                    # 2026-06-10
+s bin/utils.stk time [EPOCH]                    # 14:23:05
+
+# Path
+s bin/utils.stk ext path/file.tar.gz           # gz
+s bin/utils.stk compound-ext archive.tar.gz    # tar.gz
+s bin/utils.stk without-ext path/file.tar.gz   # path/file.tar
+s bin/utils.stk set-ext a/b.csv parquet        # a/b.parquet
+s bin/utils.stk normalize a/./b/../c           # a/c
+s bin/utils.stk relative /a/x /a/b/c           # ../../x
+s bin/utils.stk path-join /a b/ /c             # /a/b/c
+
+# Meta
+s bin/utils.stk version
+s bin/utils.stk help
+
+# For builtins (slugify, format_bytes, format_duration, …) call stryke directly:
+s -e 'print slugify($ARGV[0])' -- "Hello, World!"</pre>
+        <p>The convenience wrappers that used to live here (<code>slugify</code>, <code>bytes</code>, <code>duration</code>, <code>basename</code>, …) were dropped when their targets became one-liner stryke builtins. An unknown subcommand exits non-zero with <code>utils: unknown subcommand</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Four runnable, self-contained programs in <code>examples/</code> &mdash; no services, no temp files. Run any with <code>s examples/&lt;name&gt;.stk</code>.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>File</th><th>What it shows</th></tr></thead>
+          <tbody>
+            <tr><td><code>discover.stk</code></td><td>Minimum-viable tour &mdash; one call from each of the six sublibraries plus the matching builtins that graduated out of this package, so you can see what is still here and what moved to core.</td></tr>
+            <tr><td><code>word_frequency.stk</code></td><td>Word-frequency pipeline over a string. Most steps (<code>trim</code>, <code>count_by</code>, <code>format_number</code>, <code>format_percent</code>, <code>pad_right</code>) are builtins now; the umbrella <code>use Utils</code> stays loaded as the discovery surface.</td></tr>
+            <tr><td><code>config_merge.stk</code></td><td>Layered config (defaults &rarr; env &rarr; runtime) via <code>Utils::Hash::deep_merge_all</code> + <code>deep_get</code>.</td></tr>
+            <tr><td><code>deploy_digest.stk</code></td><td>End-to-end deploy-log digest exercising the package's later additions: ISO-8601 parsing (Time), quote-strip + fills + ellipsize (String), error-rate and dispersion stats (Num), slowest-N ranking (List), and an output path derived from the input (Path). The same pipeline is pinned in <code>t/test_utils.stk</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+<pre>s test t/                       # assertions across every public function
+make check-counts               # verify every doc count matches the source</pre>
+        <p><code>t/test_utils.stk</code> covers every public function with at least one round-trip / boundary assertion and exits TAP-style via <code>test_run</code>. <code>scripts/check-counts.sh</code> derives the per-sublib counts, the total, the assertion count, and the example count straight from <code>lib/</code>, <code>t/</code>, and <code>examples/</code>, then fails if any number quoted in <code>README.md</code> or <code>docs/*.html</code> disagrees &mdash; so the hand-written doc numbers can't silently rot. It runs in CI on every push.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-utils/
+&#9500;&#9472;&#9472; stryke.toml                # pure-stryke package manifest (no [ffi])
+&#9500;&#9472;&#9472; Makefile                   # test / install / clean
+&#9500;&#9472;&#9472; LICENSE                    # MIT
+&#9500;&#9472;&#9472; lib/
+&#9474;   &#9500;&#9472;&#9472; Utils.stk              # `use Utils` &mdash; pulls all six sublibs
+&#9474;   &#9500;&#9472;&#9472; String.stk             # `use Utils::String` &mdash; 33 fns
+&#9474;   &#9500;&#9472;&#9472; List.stk               # `use Utils::List`   &mdash; 20 fns
+&#9474;   &#9500;&#9472;&#9472; Hash.stk               # `use Utils::Hash`   &mdash; 26 fns
+&#9474;   &#9500;&#9472;&#9472; Num.stk                # `use Utils::Num`    &mdash; 26 fns
+&#9474;   &#9500;&#9472;&#9472; Time.stk               # `use Utils::Time`   &mdash; 18 fns
+&#9474;   &#9492;&#9472;&#9472; Path.stk               # `use Utils::Path`   &mdash; 26 fns
+&#9500;&#9472;&#9472; bin/
+&#9474;   &#9492;&#9472;&#9472; utils.stk              # CLI front-end
+&#9500;&#9472;&#9472; t/
+&#9474;   &#9492;&#9472;&#9472; test_utils.stk         # all-surface assertions
+&#9500;&#9472;&#9472; examples/
+&#9474;   &#9500;&#9472;&#9472; discover.stk           # one call per sublib
+&#9474;   &#9500;&#9472;&#9472; word_frequency.stk     # String + List + Hash + Num pipeline
+&#9474;   &#9500;&#9472;&#9472; config_merge.stk       # layered config via deep_merge_all
+&#9474;   &#9492;&#9472;&#9472; deploy_digest.stk      # Time + String + Num + List + Path pipeline
+&#9500;&#9472;&#9472; tests/                     # shell gate scripts (CI lints)
+&#9492;&#9472;&#9472; docs/                      # this site (GitHub Pages)</pre>
+      </section>
+
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

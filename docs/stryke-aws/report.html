@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-aws — engineering report. AWS CLIENT FOR STRYKE across 17 services: S3 + DYNAMODB + SQS + LAMBDA + STS + SNS + SSM + SECRETS + SES + CLOUDWATCH + LOGS + EC2 + KMS + IAM + KINESIS + ECR + STEP FUNCTIONS. Architecture, FFI layer, service coverage, deferred ops, scope, dependencies.">
+  <title>stryke-aws — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .arch-table td:first-child { white-space: nowrap; color: var(--cyan); }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-AWS &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_aws.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use AWS</code> &middot; JSON-over-FFI envelope &middot; 17 services
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-aws</strong> is one of the opt-in connector packages in the stryke ecosystem. AWS client for stryke across 17 services &mdash; S3, DynamoDB, SQS, Lambda, STS, SNS, SSM Parameter Store, Secrets Manager, SES, CloudWatch, CloudWatch Logs, EC2, KMS, IAM, Kinesis, ECR, and Step Functions. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The 17 SDKs combined are too much to bake into stryke core, so they ship as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use AWS</code>.</p>
+      <p class="tutorial-subtitle">The official <code>aws-sdk-rust</code> crates pull in tokio, hyper, rustls, and a fat chain of smithy / signing / endpoint-resolution support code. Ships once as an opt-in package. Credentials and region come from the standard AWS chain (env vars, <code>~/.aws/config|credentials</code>, IMDS) &mdash; same as the <code>aws</code> CLI.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">17</div><div class="stat-label">Services</div></div>
+        <div class="stat-card"><div class="stat-val cyan">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them. The v1 helper-binary fork-per-call model was replaced in v0.2.0.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>17 service modules (<code>AWS::S3</code>, <code>AWS::Dynamo</code>, <code>AWS::SQS</code>, <code>AWS::Lambda</code>, <code>AWS::STS</code>, <code>AWS::SNS</code>, <code>AWS::SSM</code>, <code>AWS::Secrets</code>, <code>AWS::SES</code>, <code>AWS::CloudWatch</code>, <code>AWS::Logs</code>, <code>AWS::EC2</code>, <code>AWS::KMS</code>, <code>AWS::IAM</code>, <code>AWS::Kinesis</code>, <code>AWS::ECR</code>, <code>AWS::StepFunctions</code>) plus base <code>AWS</code>; each serializes args to JSON and parses the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_aws.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn aws__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use AWS</code>; a shared tokio runtime + per-region <code>aws_config::SdkConfig</code> cache held in <code>OnceCell</code>; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/aws@&lt;version&gt;/</code> after <code>make install</code>; <code>use AWS</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code> (<code>test_aws.stk</code> end-to-end, <code>test_stryke_aws_surface.stk</code> wrapper-completeness pin) with live-service variants gated on creds + opt-in env vars</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo check + fmt + clippy + test + doc, cross-target release build, plus the docs / structure / polish / newline gate jobs</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>SERVICE COVERAGE</h2>
+      <p>Each row is a stryke module (<code>use AWS::&lt;Service&gt;</code>) and the operations it currently wraps. The full surface lives in the <a href="index.html#reference">Docs API reference</a>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Module</th><th>Operations</th></tr></thead>
+        <tbody>
+          <tr><td><code>AWS::S3</code></td><td>ls, get, put, head, rm, buckets, versions, location, tags, mb (CreateBucket), rb (DeleteBucket)</td></tr>
+          <tr><td><code>AWS::Dynamo</code></td><td>get, put, delete, query, scan, describe, tables, transact, ttl, create, drop</td></tr>
+          <tr><td><code>AWS::SQS</code></td><td>send, receive, delete, list, purge, attrs, set_attrs, change_visibility, pump</td></tr>
+          <tr><td><code>AWS::Lambda</code></td><td>invoke, call, list, get</td></tr>
+          <tr><td><code>AWS::STS</code></td><td>caller_identity, assume_role</td></tr>
+          <tr><td><code>AWS::SNS</code></td><td>topics, create, publish, subscribe, unsubscribe, subscriptions, delete</td></tr>
+          <tr><td><code>AWS::SSM</code></td><td>get, put, by_path, delete, get_many (Parameter Store)</td></tr>
+          <tr><td><code>AWS::Secrets</code></td><td>get, create, put, list (Secrets Manager)</td></tr>
+          <tr><td><code>AWS::SES</code></td><td>send (email, v2)</td></tr>
+          <tr><td><code>AWS::CloudWatch</code></td><td>put, list (metrics)</td></tr>
+          <tr><td><code>AWS::Logs</code></td><td>groups, create, filter, events, put (CloudWatch Logs)</td></tr>
+          <tr><td><code>AWS::EC2</code></td><td>instances, start, stop, security_groups, vpcs, reboot</td></tr>
+          <tr><td><code>AWS::KMS</code></td><td>keys, describe, encrypt, decrypt, data_key</td></tr>
+          <tr><td><code>AWS::IAM</code></td><td>users, roles, user, role_policies, role</td></tr>
+          <tr><td><code>AWS::Kinesis</code></td><td>list, describe, put</td></tr>
+          <tr><td><code>AWS::ECR</code></td><td>repositories, images</td></tr>
+          <tr><td><code>AWS::StepFunctions</code></td><td>list, start, describe</td></tr>
+        </tbody>
+      </table>
+      <p>Flat extras on base <code>use AWS</code>: <code>s3_copy_object</code>, <code>s3_delete_objects</code> (≤1000), <code>ddb_update_item</code>, <code>ddb_batch_get_item</code> (≤100), <code>ddb_batch_write_item</code> (puts ≤25). Pure no-credential helpers (ARN / S3-URI / endpoint parsing + validation) are also on base <code>AWS</code> &mdash; see the <a href="index.html#helpers">Docs pure-helpers table</a>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>DEFERRED OPERATIONS</h2>
+      <p>These wrappers exist but <code>die</code> with a message naming the cdylib export that needs adding. Intentionally not yet wired so the cdylib surface stays auditable against <code>stryke.toml</code>'s <code>[ffi]</code> exports table.</p>
+      <table class="arch-table">
+        <thead><tr><th>Op</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>AWS::S3::presign</code></td><td>deferred &mdash; needs <code>aws__s3_presign</code></td></tr>
+          <tr><td><code>AWS::Dynamo::batch_write</code></td><td>deferred in the cdylib</td></tr>
+          <tr><td><code>AWS::Dynamo::scan_stream</code></td><td>deferred in the cdylib</td></tr>
+          <tr><td><code>AWS::Lambda</code> <code>invocation_type =&gt; "event"</code></td><td>fire-and-forget deferred in the cdylib</td></tr>
+          <tr><td>SQS <code>delay_seconds</code> / <code>dedup_id</code> / <code>group_id</code></td><td>send-option fields deferred</td></tr>
+          <tr><td>SQS <code>wait</code> / <code>visibility</code> on receive</td><td>deferred</td></tr>
+          <tr><td><code>AWS::SQS::list</code> <code>prefix</code> filter</td><td>deferred &mdash; grep client-side instead</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>The official <code>aws-sdk-rust</code> crates pull in tokio, hyper, rustls, and a fat chain of smithy / signing / endpoint-resolution support code. The 17 SDKs combined are way too much to bake into stryke core. This package ships them once, opt-in.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays slim precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need AWS SDKs, MongoDB drivers, or Spark Connect bindings linked in. Core stryke is never linked against this package's deps.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>AWS::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>aws__*</code> symbol resolved out of <code>libstryke_aws.{dylib,so}</code> (declared in <code>stryke.toml</code>'s <code>[ffi]</code> exports); the cdylib returns a JSON <code>CString</code> the wrapper parses. The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>.</p>
+<pre># request shape (built by the .stk wrapper)
+{"verb": "&lt;op&gt;", "...": ...}
+
+# response shape
+{"result": ...}            # success — per-fn shape
+{"error": "&lt;msg&gt;"}        # failure — wrapper die()s with the message</pre>
+      <p><strong>Persistent state:</strong> a shared tokio runtime + an <code>aws_config::SdkConfig</code> cache per region held in <code>OnceCell</code> &mdash; no fork-per-call, no full IMDS/SSO/env creds chain on each call.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-aws#readme">"Why this is a package"</a> + "API reference" sections for the authoritative scope. The package is intentionally narrower than its underlying SDKs &mdash; the goal is "useful from a shell pipeline", not "complete API coverage". DynamoDB items are plain JSON in / out (no <code>AttributeValue</code> wrappers); S3 put is buffered. Roadmap-later items: deferred ops above, typed-set passthrough, optimistic-locking helpers, and streaming multipart upload.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Version</td><td>v0.19.0</td></tr>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-aws">github.com/MenkeTechnologies/stryke-aws</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-aws/issues">github.com/MenkeTechnologies/stryke-aws/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,2991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vimlrs full reference — every implemented Vim builtin, option, ex-command, and v: constant with its LSP hover doc rendered as a static page.">
+  <title>vimlrs — Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 72rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px; color: var(--text-dim);
+      letter-spacing: 0.03em; max-width: 42rem; opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem; position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 72rem; margin: 0 auto;
+      display: flex; align-items: center; gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .chapter-index {
+      list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+      gap: 0.3rem;
+    }
+    .chapter-index li {
+      border: 1px solid var(--border); padding: 0.45rem 0.65rem; border-radius: 2px;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .chapter-index li a {
+      color: var(--cyan); text-decoration: none; font-size: 13px;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+    }
+    .chapter-index li a:hover { color: var(--accent-light); }
+    .chapter-count {
+      font-size: 10px; color: var(--text-muted);
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+    }
+    .chapter-meta {
+      font-size: 11px; color: var(--text-muted); margin: -0.3rem 0 0.8rem;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+    }
+
+    .doc-entry {
+      margin: 1rem 0 1.4rem;
+      padding: 0.75rem 0.9rem 0.5rem;
+      border-left: 2px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg) 94%, transparent);
+      border-radius: 2px;
+    }
+    .doc-entry h3 {
+      margin: 0 0 0.45rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--cyan);
+    }
+    .doc-entry h3 code {
+      color: var(--accent-light); background: transparent; border: none;
+      padding: 0; font-size: 1em; letter-spacing: 0.5px;
+    }
+    .doc-entry .doc-anchor {
+      color: var(--text-muted); font-size: 0.85em; margin-right: 0.25rem;
+      text-decoration: none;
+    }
+    .doc-entry .doc-anchor:hover { color: var(--accent); }
+    .doc-entry h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--accent-light);
+      margin: 0.8rem 0 0.3rem;
+    }
+    .doc-entry p {
+      font-size: 13px; line-height: 1.6; color: var(--text-dim);
+      margin: 0.35rem 0;
+    }
+    .doc-entry p code, .doc-entry li code {
+      color: var(--accent-light); font-size: 12px;
+    }
+    .doc-entry ul { margin: 0.3rem 0 0.5rem; padding-left: 1.25rem; }
+    .doc-entry li { font-size: 13px; color: var(--text-dim); line-height: 1.55; margin: 0.2rem 0; }
+    .doc-entry pre {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.7rem 0.9rem; overflow-x: auto;
+      color: var(--text); margin: 0.5rem 0;
+      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.35);
+    }
+    .doc-entry pre code { color: var(--text); background: transparent; border: none; padding: 0; }
+    [data-theme="light"] .doc-entry pre { box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); }
+
+    kbd {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      padding: 1px 6px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 3px;
+      color: var(--cyan);
+    }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+  <header class="tutorial-header">
+    <div class="tutorial-header-inner">
+      <div>
+        <h1 class="tutorial-brand">// VIMLRS — FULL REFERENCE</h1>
+        <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+          <a href="index.html">Docs</a>
+          <span class="sep">/</span>
+          <span class="current">Reference</span>
+          <span class="sep">/</span>
+          <a href="https://github.com/MenkeTechnologies/vimlrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+        <p class="docs-build-line">vimlrs v0.1.1 · 463 entries · 11 chapters · generated from <code>vimlrs/builtin_docs.rs</code></p>
+      </div>
+      <div class="tutorial-toolbar">
+        <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+        <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+        <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        <a class="btn btn-secondary" href="index.html">Hub</a>
+        <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/vimlrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="hub-scheme-strip">
+    <div class="hub-scheme-strip-inner">
+      <span class="hud-scheme-label">// Color scheme</span>
+      <div class="scheme-grid" id="hudSchemeGrid"></div>
+    </div>
+  </div>
+
+  <main class="tutorial-main">
+    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>LANGUAGE REFERENCE</h2>
+    <p class="tutorial-subtitle">Every implemented Vim builtin, supported option, ex-command, and <code>v:</code> constant with an LSP hover doc — rendered from the exact corpus that <code>vimlrs --lsp</code> serves. Jump via the chapter index, or <kbd>Ctrl+F</kbd> for a specific name.</p>
+    <section class="tutorial-section">
+      <h2>Chapters</h2>
+      <ul class="chapter-index">
+        <li><a href="#ch-string-manipulation">String manipulation</a> <span class="chapter-count">56</span></li>
+        <li><a href="#ch-list-manipulation">List manipulation</a> <span class="chapter-count">22</span></li>
+        <li><a href="#ch-dictionary-manipulation">Dictionary manipulation</a> <span class="chapter-count">9</span></li>
+        <li><a href="#ch-variables-type">Variables &amp; Type</a> <span class="chapter-count">8</span></li>
+        <li><a href="#ch-number-float">Number &amp; Float</a> <span class="chapter-count">13</span></li>
+        <li><a href="#ch-files-buffers-lines">Files, Buffers &amp; Lines</a> <span class="chapter-count">77</span></li>
+        <li><a href="#ch-system-environment">System &amp; Environment</a> <span class="chapter-count">44</span></li>
+        <li><a href="#ch-functional-misc">Functional &amp; Misc</a> <span class="chapter-count">210</span></li>
+        <li><a href="#ch-ex-commands">Ex Commands</a> <span class="chapter-count">6</span></li>
+        <li><a href="#ch-options">Options</a> <span class="chapter-count">15</span></li>
+        <li><a href="#ch-special-v-variables">Special v: Variables</a> <span class="chapter-count">3</span></li>
+      </ul>
+    </section>
+    <section class="tutorial-section" id="ch-string-manipulation">
+      <h2>String manipulation</h2>
+      <p class="chapter-meta">56 entries</p>
+      <article class="doc-entry" id="doc-byteidx">
+        <h3><a class="doc-anchor" href="#doc-byteidx">#</a> <code>byteidx</code></h3>
+        <pre><code class="lang-vim">byteidx({string}, {nr} [, {utf16}])
+</code></pre>
+        <p>Byte index of the {nr}&#39;th character in {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-byteidxcomp">
+        <h3><a class="doc-anchor" href="#doc-byteidxcomp">#</a> <code>byteidxcomp</code></h3>
+        <pre><code class="lang-vim">byteidxcomp({string}, {nr} [, {utf16}])
+</code></pre>
+        <p>Like byteidx() but counting composing characters separately.</p>
+      </article>
+      <article class="doc-entry" id="doc-char2nr">
+        <h3><a class="doc-anchor" href="#doc-char2nr">#</a> <code>char2nr</code></h3>
+        <pre><code class="lang-vim">char2nr({string} [, {utf8}])
+</code></pre>
+        <p>Codepoint of the first character of {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-charclass">
+        <h3><a class="doc-anchor" href="#doc-charclass">#</a> <code>charclass</code></h3>
+        <pre><code class="lang-vim">charclass({string})
+</code></pre>
+        <p>Character class (0 white, 1 punctuation, 2 word, ...) of the first char of {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-charidx">
+        <h3><a class="doc-anchor" href="#doc-charidx">#</a> <code>charidx</code></h3>
+        <pre><code class="lang-vim">charidx({string}, {idx} [, {countcc} [, {utf16}]])
+</code></pre>
+        <p>Character index of byte {idx} in {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-digraph-get">
+        <h3><a class="doc-anchor" href="#doc-digraph-get">#</a> <code>digraph_get</code></h3>
+        <pre><code class="lang-vim">digraph_get({chars})
+</code></pre>
+        <p>The digraph character defined for the two-character {chars}.</p>
+      </article>
+      <article class="doc-entry" id="doc-digraph-getlist">
+        <h3><a class="doc-anchor" href="#doc-digraph-getlist">#</a> <code>digraph_getlist</code></h3>
+        <pre><code class="lang-vim">digraph_getlist([{listall}])
+</code></pre>
+        <p>List of [chars, digraph] pairs for the defined digraphs.</p>
+      </article>
+      <article class="doc-entry" id="doc-digraph-set">
+        <h3><a class="doc-anchor" href="#doc-digraph-set">#</a> <code>digraph_set</code></h3>
+        <pre><code class="lang-vim">digraph_set({chars}, {digraph})
+</code></pre>
+        <p>Define {chars} as a digraph producing {digraph}; returns v:true.</p>
+      </article>
+      <article class="doc-entry" id="doc-digraph-setlist">
+        <h3><a class="doc-anchor" href="#doc-digraph-setlist">#</a> <code>digraph_setlist</code></h3>
+        <pre><code class="lang-vim">digraph_setlist({list})
+</code></pre>
+        <p>Define multiple digraphs from a List of [chars, digraph] pairs.</p>
+      </article>
+      <article class="doc-entry" id="doc-escape">
+        <h3><a class="doc-anchor" href="#doc-escape">#</a> <code>escape</code></h3>
+        <pre><code class="lang-vim">escape({string}, {chars})
+</code></pre>
+        <p>{string} with each character in {chars} prefixed by a backslash.</p>
+      </article>
+      <article class="doc-entry" id="doc-expandcmd">
+        <h3><a class="doc-anchor" href="#doc-expandcmd">#</a> <code>expandcmd</code></h3>
+        <pre><code class="lang-vim">expandcmd({string} [, {options}])
+</code></pre>
+        <p>{string} with command-line special items (&#39;%&#39;, &#39;&lt;cword&gt;&#39;, ...) expanded.</p>
+      </article>
+      <article class="doc-entry" id="doc-fnameescape">
+        <h3><a class="doc-anchor" href="#doc-fnameescape">#</a> <code>fnameescape</code></h3>
+        <pre><code class="lang-vim">fnameescape({string})
+</code></pre>
+        <p>{string} escaped for use as a Vim command file-name argument.</p>
+      </article>
+      <article class="doc-entry" id="doc-gettext">
+        <h3><a class="doc-anchor" href="#doc-gettext">#</a> <code>gettext</code></h3>
+        <pre><code class="lang-vim">gettext({text} [, {package}])
+</code></pre>
+        <p>Translated {text} via gettext (identity when no catalog).</p>
+      </article>
+      <article class="doc-entry" id="doc-iconv">
+        <h3><a class="doc-anchor" href="#doc-iconv">#</a> <code>iconv</code></h3>
+        <pre><code class="lang-vim">iconv({string}, {from}, {to})
+</code></pre>
+        <p>{string} converted from encoding {from} to {to}.</p>
+      </article>
+      <article class="doc-entry" id="doc-join">
+        <h3><a class="doc-anchor" href="#doc-join">#</a> <code>join</code></h3>
+        <pre><code class="lang-vim">join({list} [, {sep}])
+</code></pre>
+        <p>String of {list} items joined by {sep} (default space).</p>
+      </article>
+      <article class="doc-entry" id="doc-keytrans">
+        <h3><a class="doc-anchor" href="#doc-keytrans">#</a> <code>keytrans</code></h3>
+        <pre><code class="lang-vim">keytrans({string})
+</code></pre>
+        <p>{string} with key codes translated to readable form (e.g. &lt;C-A&gt;).</p>
+      </article>
+      <article class="doc-entry" id="doc-list2str">
+        <h3><a class="doc-anchor" href="#doc-list2str">#</a> <code>list2str</code></h3>
+        <pre><code class="lang-vim">list2str({list} [, {utf8}])
+</code></pre>
+        <p>String built from the List of codepoint numbers {list}.</p>
+      </article>
+      <article class="doc-entry" id="doc-match">
+        <h3><a class="doc-anchor" href="#doc-match">#</a> <code>match</code></h3>
+        <pre><code class="lang-vim">match({expr}, {pat} [, {start} [, {count}]])
+</code></pre>
+        <p>Byte index where {pat} matches in {expr}, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchbufline">
+        <h3><a class="doc-anchor" href="#doc-matchbufline">#</a> <code>matchbufline</code></h3>
+        <pre><code class="lang-vim">matchbufline({buf}, {pat}, {lnum}, {end} [, {dict}])
+</code></pre>
+        <p>List of matches of {pat} in buffer {buf} lines {lnum}..{end}.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchend">
+        <h3><a class="doc-anchor" href="#doc-matchend">#</a> <code>matchend</code></h3>
+        <pre><code class="lang-vim">matchend({expr}, {pat} [, {start} [, {count}]])
+</code></pre>
+        <p>Byte index just after the match of {pat} in {expr}, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchfuzzy">
+        <h3><a class="doc-anchor" href="#doc-matchfuzzy">#</a> <code>matchfuzzy</code></h3>
+        <pre><code class="lang-vim">matchfuzzy({list}, {str} [, {dict}])
+</code></pre>
+        <p>Items of {list} fuzzy-matching {str}, best first.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchfuzzypos">
+        <h3><a class="doc-anchor" href="#doc-matchfuzzypos">#</a> <code>matchfuzzypos</code></h3>
+        <pre><code class="lang-vim">matchfuzzypos({list}, {str} [, {dict}])
+</code></pre>
+        <p>Like matchfuzzy() plus match positions and scores.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchlist">
+        <h3><a class="doc-anchor" href="#doc-matchlist">#</a> <code>matchlist</code></h3>
+        <pre><code class="lang-vim">matchlist({expr}, {pat} [, {start} [, {count}]])
+</code></pre>
+        <p>List of the full match and submatches of {pat} in {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchstr">
+        <h3><a class="doc-anchor" href="#doc-matchstr">#</a> <code>matchstr</code></h3>
+        <pre><code class="lang-vim">matchstr({expr}, {pat} [, {start} [, {count}]])
+</code></pre>
+        <p>Matched substring of {pat} in {expr}, or empty string.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchstrlist">
+        <h3><a class="doc-anchor" href="#doc-matchstrlist">#</a> <code>matchstrlist</code></h3>
+        <pre><code class="lang-vim">matchstrlist({list}, {pat} [, {dict}])
+</code></pre>
+        <p>List of dicts describing matches of {pat} across the strings in {list}.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchstrpos">
+        <h3><a class="doc-anchor" href="#doc-matchstrpos">#</a> <code>matchstrpos</code></h3>
+        <pre><code class="lang-vim">matchstrpos({expr}, {pat} [, {start} [, {count}]])
+</code></pre>
+        <p>[match, start, end] of {pat} in {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-nr2char">
+        <h3><a class="doc-anchor" href="#doc-nr2char">#</a> <code>nr2char</code></h3>
+        <pre><code class="lang-vim">nr2char({expr} [, {utf8}])
+</code></pre>
+        <p>Character whose codepoint is {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-printf">
+        <h3><a class="doc-anchor" href="#doc-printf">#</a> <code>printf</code></h3>
+        <pre><code class="lang-vim">printf({fmt} [, {expr1} ...])
+</code></pre>
+        <p>Formatted string from printf-style {fmt} and arguments.</p>
+      </article>
+      <article class="doc-entry" id="doc-repeat">
+        <h3><a class="doc-anchor" href="#doc-repeat">#</a> <code>repeat</code></h3>
+        <pre><code class="lang-vim">repeat({expr}, {count})
+</code></pre>
+        <p>{expr} (String or List) repeated {count} times.</p>
+      </article>
+      <article class="doc-entry" id="doc-sha256">
+        <h3><a class="doc-anchor" href="#doc-sha256">#</a> <code>sha256</code></h3>
+        <pre><code class="lang-vim">sha256({string})
+</code></pre>
+        <p>SHA-256 hex digest of {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-shellescape">
+        <h3><a class="doc-anchor" href="#doc-shellescape">#</a> <code>shellescape</code></h3>
+        <pre><code class="lang-vim">shellescape({string} [, {special}])
+</code></pre>
+        <p>{string} quoted for safe use as a shell command argument.</p>
+      </article>
+      <article class="doc-entry" id="doc-soundfold">
+        <h3><a class="doc-anchor" href="#doc-soundfold">#</a> <code>soundfold</code></h3>
+        <pre><code class="lang-vim">soundfold({word})
+</code></pre>
+        <p>Sound-folded (phonetic) form of {word}.</p>
+      </article>
+      <article class="doc-entry" id="doc-split">
+        <h3><a class="doc-anchor" href="#doc-split">#</a> <code>split</code></h3>
+        <pre><code class="lang-vim">split({string} [, {pat} [, {keepempty}]])
+</code></pre>
+        <p>List of {string} split on {pat} (default whitespace).</p>
+      </article>
+      <article class="doc-entry" id="doc-str2float">
+        <h3><a class="doc-anchor" href="#doc-str2float">#</a> <code>str2float</code></h3>
+        <pre><code class="lang-vim">str2float({string} [, {quoted}])
+</code></pre>
+        <p>Float parsed from {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-str2list">
+        <h3><a class="doc-anchor" href="#doc-str2list">#</a> <code>str2list</code></h3>
+        <pre><code class="lang-vim">str2list({string} [, {utf8}])
+</code></pre>
+        <p>List of codepoint numbers for each character in {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-str2nr">
+        <h3><a class="doc-anchor" href="#doc-str2nr">#</a> <code>str2nr</code></h3>
+        <pre><code class="lang-vim">str2nr({string} [, {base}])
+</code></pre>
+        <p>Leading integer parsed from {string} in {base} (default 10).</p>
+      </article>
+      <article class="doc-entry" id="doc-strcharlen">
+        <h3><a class="doc-anchor" href="#doc-strcharlen">#</a> <code>strcharlen</code></h3>
+        <pre><code class="lang-vim">strcharlen({string})
+</code></pre>
+        <p>Number of characters in {string}, ignoring composing characters.</p>
+      </article>
+      <article class="doc-entry" id="doc-strcharpart">
+        <h3><a class="doc-anchor" href="#doc-strcharpart">#</a> <code>strcharpart</code></h3>
+        <pre><code class="lang-vim">strcharpart({src}, {start} [, {len} [, {skipcc}]])
+</code></pre>
+        <p>Character substring of {src} from char {start} for {len} chars.</p>
+      </article>
+      <article class="doc-entry" id="doc-strchars">
+        <h3><a class="doc-anchor" href="#doc-strchars">#</a> <code>strchars</code></h3>
+        <pre><code class="lang-vim">strchars({string} [, {skipcc}])
+</code></pre>
+        <p>Number of characters in {string}, counting composing chars unless {skipcc}.</p>
+      </article>
+      <article class="doc-entry" id="doc-strdisplaywidth">
+        <h3><a class="doc-anchor" href="#doc-strdisplaywidth">#</a> <code>strdisplaywidth</code></h3>
+        <pre><code class="lang-vim">strdisplaywidth({string} [, {col}])
+</code></pre>
+        <p>Display cell width of {string}, honoring &#39;tabstop&#39;.</p>
+      </article>
+      <article class="doc-entry" id="doc-strgetchar">
+        <h3><a class="doc-anchor" href="#doc-strgetchar">#</a> <code>strgetchar</code></h3>
+        <pre><code class="lang-vim">strgetchar({str}, {index})
+</code></pre>
+        <p>Codepoint at char {index} of {str}, or -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-stridx">
+        <h3><a class="doc-anchor" href="#doc-stridx">#</a> <code>stridx</code></h3>
+        <pre><code class="lang-vim">stridx({haystack}, {needle} [, {start}])
+</code></pre>
+        <p>Byte index of first {needle} in {haystack} at/after {start}, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-string">
+        <h3><a class="doc-anchor" href="#doc-string">#</a> <code>string</code></h3>
+        <pre><code class="lang-vim">string({expr})
+</code></pre>
+        <p>String representation of {expr}, quoting embedded strings (inverse of eval()).</p>
+      </article>
+      <article class="doc-entry" id="doc-strlen">
+        <h3><a class="doc-anchor" href="#doc-strlen">#</a> <code>strlen</code></h3>
+        <pre><code class="lang-vim">strlen({string})
+</code></pre>
+        <p>Number of bytes in {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-strpart">
+        <h3><a class="doc-anchor" href="#doc-strpart">#</a> <code>strpart</code></h3>
+        <pre><code class="lang-vim">strpart({src}, {start} [, {len} [, {chars}]])
+</code></pre>
+        <p>Byte (or char) substring of {src} from {start} for {len}.</p>
+      </article>
+      <article class="doc-entry" id="doc-strridx">
+        <h3><a class="doc-anchor" href="#doc-strridx">#</a> <code>strridx</code></h3>
+        <pre><code class="lang-vim">strridx({haystack}, {needle} [, {start}])
+</code></pre>
+        <p>Byte index of last {needle} in {haystack} at/before {start}, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-strtrans">
+        <h3><a class="doc-anchor" href="#doc-strtrans">#</a> <code>strtrans</code></h3>
+        <pre><code class="lang-vim">strtrans({string})
+</code></pre>
+        <p>{string} with unprintable characters shown as ^X / &lt;xx&gt;.</p>
+      </article>
+      <article class="doc-entry" id="doc-strutf16len">
+        <h3><a class="doc-anchor" href="#doc-strutf16len">#</a> <code>strutf16len</code></h3>
+        <pre><code class="lang-vim">strutf16len({string} [, {countcc}])
+</code></pre>
+        <p>Number of UTF-16 code units in {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-strwidth">
+        <h3><a class="doc-anchor" href="#doc-strwidth">#</a> <code>strwidth</code></h3>
+        <pre><code class="lang-vim">strwidth({string})
+</code></pre>
+        <p>Display cell width of {string} (no tab expansion).</p>
+      </article>
+      <article class="doc-entry" id="doc-submatch">
+        <h3><a class="doc-anchor" href="#doc-submatch">#</a> <code>submatch</code></h3>
+        <pre><code class="lang-vim">submatch({nr} [, {list}])
+</code></pre>
+        <p>The {nr}&#39;th submatch of the substitute() replacement.</p>
+      </article>
+      <article class="doc-entry" id="doc-substitute">
+        <h3><a class="doc-anchor" href="#doc-substitute">#</a> <code>substitute</code></h3>
+        <pre><code class="lang-vim">substitute({string}, {pat}, {sub}, {flags})
+</code></pre>
+        <p>{string} with matches of {pat} replaced by {sub}; {flags} &#39;g&#39; replaces all.</p>
+      </article>
+      <article class="doc-entry" id="doc-tolower">
+        <h3><a class="doc-anchor" href="#doc-tolower">#</a> <code>tolower</code></h3>
+        <pre><code class="lang-vim">tolower({string})
+</code></pre>
+        <p>{string} with all letters lowercased.</p>
+      </article>
+      <article class="doc-entry" id="doc-toupper">
+        <h3><a class="doc-anchor" href="#doc-toupper">#</a> <code>toupper</code></h3>
+        <pre><code class="lang-vim">toupper({string})
+</code></pre>
+        <p>{string} with all letters uppercased.</p>
+      </article>
+      <article class="doc-entry" id="doc-tr">
+        <h3><a class="doc-anchor" href="#doc-tr">#</a> <code>tr</code></h3>
+        <pre><code class="lang-vim">tr({src}, {fromstr}, {tostr})
+</code></pre>
+        <p>{src} with each char in {fromstr} replaced by the matching char in {tostr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-trim">
+        <h3><a class="doc-anchor" href="#doc-trim">#</a> <code>trim</code></h3>
+        <pre><code class="lang-vim">trim({text} [, {mask} [, {dir}]])
+</code></pre>
+        <p>{text} with leading/trailing {mask} chars (default whitespace) removed.</p>
+      </article>
+      <article class="doc-entry" id="doc-utf16idx">
+        <h3><a class="doc-anchor" href="#doc-utf16idx">#</a> <code>utf16idx</code></h3>
+        <pre><code class="lang-vim">utf16idx({string}, {idx} [, {countcc} [, {charidx}]])
+</code></pre>
+        <p>UTF-16 code-unit index of byte {idx} in {string}.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-list-manipulation">
+      <h2>List manipulation</h2>
+      <p class="chapter-meta">22 entries</p>
+      <article class="doc-entry" id="doc-add">
+        <h3><a class="doc-anchor" href="#doc-add">#</a> <code>add</code></h3>
+        <pre><code class="lang-vim">add({object}, {expr})
+</code></pre>
+        <p>Append {expr} to List or Blob {object}; returns {object}.</p>
+      </article>
+      <article class="doc-entry" id="doc-blob2list">
+        <h3><a class="doc-anchor" href="#doc-blob2list">#</a> <code>blob2list</code></h3>
+        <pre><code class="lang-vim">blob2list({blob})
+</code></pre>
+        <p>List of byte-value Numbers for each byte of {blob}.</p>
+      </article>
+      <article class="doc-entry" id="doc-copy">
+        <h3><a class="doc-anchor" href="#doc-copy">#</a> <code>copy</code></h3>
+        <pre><code class="lang-vim">copy({expr})
+</code></pre>
+        <p>Shallow copy of {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-count">
+        <h3><a class="doc-anchor" href="#doc-count">#</a> <code>count</code></h3>
+        <pre><code class="lang-vim">count({comp}, {expr} [, {ic} [, {start}]])
+</code></pre>
+        <p>Number of times {expr} occurs in String/List/Dict {comp}.</p>
+      </article>
+      <article class="doc-entry" id="doc-deepcopy">
+        <h3><a class="doc-anchor" href="#doc-deepcopy">#</a> <code>deepcopy</code></h3>
+        <pre><code class="lang-vim">deepcopy({expr} [, {noref}])
+</code></pre>
+        <p>Recursive (deep) copy of {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-flatten">
+        <h3><a class="doc-anchor" href="#doc-flatten">#</a> <code>flatten</code></h3>
+        <pre><code class="lang-vim">flatten({list} [, {maxdepth}])
+</code></pre>
+        <p>Flatten nested List {list} in place up to {maxdepth}.</p>
+      </article>
+      <article class="doc-entry" id="doc-flattennew">
+        <h3><a class="doc-anchor" href="#doc-flattennew">#</a> <code>flattennew</code></h3>
+        <pre><code class="lang-vim">flattennew({list} [, {maxdepth}])
+</code></pre>
+        <p>Flattened copy of nested List {list}, leaving {list} unchanged.</p>
+      </article>
+      <article class="doc-entry" id="doc-foreach">
+        <h3><a class="doc-anchor" href="#doc-foreach">#</a> <code>foreach</code></h3>
+        <pre><code class="lang-vim">foreach({expr1}, {expr2})
+</code></pre>
+        <p>Apply {expr2} to each item of {expr1} for its side effects; returns {expr1}.</p>
+      </article>
+      <article class="doc-entry" id="doc-index">
+        <h3><a class="doc-anchor" href="#doc-index">#</a> <code>index</code></h3>
+        <pre><code class="lang-vim">index({object}, {expr} [, {start} [, {ic}]])
+</code></pre>
+        <p>Index of first item equal to {expr} in {object}, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-indexof">
+        <h3><a class="doc-anchor" href="#doc-indexof">#</a> <code>indexof</code></h3>
+        <pre><code class="lang-vim">indexof({object}, {expr} [, {opts}])
+</code></pre>
+        <p>Index of first item for which {expr} is true, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-insert">
+        <h3><a class="doc-anchor" href="#doc-insert">#</a> <code>insert</code></h3>
+        <pre><code class="lang-vim">insert({object}, {item} [, {idx}])
+</code></pre>
+        <p>Insert {item} into List/Blob {object} before index {idx} (default 0).</p>
+      </article>
+      <article class="doc-entry" id="doc-list2blob">
+        <h3><a class="doc-anchor" href="#doc-list2blob">#</a> <code>list2blob</code></h3>
+        <pre><code class="lang-vim">list2blob({list})
+</code></pre>
+        <p>Blob built from the List of byte-value Numbers {list}.</p>
+      </article>
+      <article class="doc-entry" id="doc-mapnew">
+        <h3><a class="doc-anchor" href="#doc-mapnew">#</a> <code>mapnew</code></h3>
+        <pre><code class="lang-vim">mapnew({expr1}, {expr2})
+</code></pre>
+        <p>Like map() but returns a new container, leaving {expr1} unchanged.</p>
+      </article>
+      <article class="doc-entry" id="doc-max">
+        <h3><a class="doc-anchor" href="#doc-max">#</a> <code>max</code></h3>
+        <pre><code class="lang-vim">max({expr})
+</code></pre>
+        <p>Maximum value among the items of List/Dict {expr} (0 if empty).</p>
+      </article>
+      <article class="doc-entry" id="doc-min">
+        <h3><a class="doc-anchor" href="#doc-min">#</a> <code>min</code></h3>
+        <pre><code class="lang-vim">min({expr})
+</code></pre>
+        <p>Minimum value among the items of List/Dict {expr} (0 if empty).</p>
+      </article>
+      <article class="doc-entry" id="doc-range">
+        <h3><a class="doc-anchor" href="#doc-range">#</a> <code>range</code></h3>
+        <pre><code class="lang-vim">range({expr} [, {max} [, {stride}]])
+</code></pre>
+        <p>List of numbers from {expr} to {max} stepping by {stride}.</p>
+      </article>
+      <article class="doc-entry" id="doc-reduce">
+        <h3><a class="doc-anchor" href="#doc-reduce">#</a> <code>reduce</code></h3>
+        <pre><code class="lang-vim">reduce({object}, {func} [, {initial}])
+</code></pre>
+        <p>Fold {object} to a single value via {func}, starting at {initial}.</p>
+      </article>
+      <article class="doc-entry" id="doc-remove">
+        <h3><a class="doc-anchor" href="#doc-remove">#</a> <code>remove</code></h3>
+        <pre><code class="lang-vim">remove({object}, {idx} [, {end}])
+</code></pre>
+        <p>Remove and return item {idx} (or range {idx}..{end}) from {object}.</p>
+      </article>
+      <article class="doc-entry" id="doc-reverse">
+        <h3><a class="doc-anchor" href="#doc-reverse">#</a> <code>reverse</code></h3>
+        <pre><code class="lang-vim">reverse({object})
+</code></pre>
+        <p>Reverse List/Blob {object} in place; returns {object}.</p>
+      </article>
+      <article class="doc-entry" id="doc-slice">
+        <h3><a class="doc-anchor" href="#doc-slice">#</a> <code>slice</code></h3>
+        <pre><code class="lang-vim">slice({expr}, {start} [, {end}])
+</code></pre>
+        <p>Sub-list/Blob/String of {expr} from {start} up to (not including) {end}.</p>
+      </article>
+      <article class="doc-entry" id="doc-sort">
+        <h3><a class="doc-anchor" href="#doc-sort">#</a> <code>sort</code></h3>
+        <pre><code class="lang-vim">sort({list} [, {how} [, {dict}]])
+</code></pre>
+        <p>Sort {list} in place; {how} sets comparison; returns {list}.</p>
+      </article>
+      <article class="doc-entry" id="doc-uniq">
+        <h3><a class="doc-anchor" href="#doc-uniq">#</a> <code>uniq</code></h3>
+        <pre><code class="lang-vim">uniq({list} [, {how} [, {dict}]])
+</code></pre>
+        <p>Remove adjacent duplicate items from sorted {list} in place.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-dictionary-manipulation">
+      <h2>Dictionary manipulation</h2>
+      <p class="chapter-meta">9 entries</p>
+      <article class="doc-entry" id="doc-dictwatcheradd">
+        <h3><a class="doc-anchor" href="#doc-dictwatcheradd">#</a> <code>dictwatcheradd</code></h3>
+        <pre><code class="lang-vim">dictwatcheradd({dict}, {pattern}, {callback})
+</code></pre>
+        <p>Register {callback} to fire when keys matching {pattern} in {dict} change.</p>
+      </article>
+      <article class="doc-entry" id="doc-dictwatcherdel">
+        <h3><a class="doc-anchor" href="#doc-dictwatcherdel">#</a> <code>dictwatcherdel</code></h3>
+        <pre><code class="lang-vim">dictwatcherdel({dict}, {pattern}, {callback})
+</code></pre>
+        <p>Remove a watcher previously added with dictwatcheradd().</p>
+      </article>
+      <article class="doc-entry" id="doc-extend">
+        <h3><a class="doc-anchor" href="#doc-extend">#</a> <code>extend</code></h3>
+        <pre><code class="lang-vim">extend({expr1}, {expr2} [, {expr3}])
+</code></pre>
+        <p>Append/merge {expr2} into List/Dict {expr1} in place; returns {expr1}.</p>
+      </article>
+      <article class="doc-entry" id="doc-extendnew">
+        <h3><a class="doc-anchor" href="#doc-extendnew">#</a> <code>extendnew</code></h3>
+        <pre><code class="lang-vim">extendnew({expr1}, {expr2} [, {expr3}])
+</code></pre>
+        <p>Like extend() but returns a new container, leaving {expr1} unchanged.</p>
+      </article>
+      <article class="doc-entry" id="doc-get">
+        <h3><a class="doc-anchor" href="#doc-get">#</a> <code>get</code></h3>
+        <pre><code class="lang-vim">get({collection}, {key} [, {default}])
+</code></pre>
+        <p>Item {key}/{idx} of Dict/List/Blob, or {default} if absent.</p>
+      </article>
+      <article class="doc-entry" id="doc-has-key">
+        <h3><a class="doc-anchor" href="#doc-has-key">#</a> <code>has_key</code></h3>
+        <pre><code class="lang-vim">has_key({dict}, {key})
+</code></pre>
+        <p>1 if {dict} has an entry {key}, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-items">
+        <h3><a class="doc-anchor" href="#doc-items">#</a> <code>items</code></h3>
+        <pre><code class="lang-vim">items({dict})
+</code></pre>
+        <p>List of [key, value] pairs in {dict}.</p>
+      </article>
+      <article class="doc-entry" id="doc-keys">
+        <h3><a class="doc-anchor" href="#doc-keys">#</a> <code>keys</code></h3>
+        <pre><code class="lang-vim">keys({dict})
+</code></pre>
+        <p>List of all keys in {dict}.</p>
+      </article>
+      <article class="doc-entry" id="doc-values">
+        <h3><a class="doc-anchor" href="#doc-values">#</a> <code>values</code></h3>
+        <pre><code class="lang-vim">values({dict})
+</code></pre>
+        <p>List of all values in {dict}.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-variables-type">
+      <h2>Variables &amp; Type</h2>
+      <p class="chapter-meta">8 entries</p>
+      <article class="doc-entry" id="doc-empty">
+        <h3><a class="doc-anchor" href="#doc-empty">#</a> <code>empty</code></h3>
+        <pre><code class="lang-vim">empty({expr})
+</code></pre>
+        <p>1 if {expr} is empty (0, &#39;&#39;, [], {}, v:null), else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-exists">
+        <h3><a class="doc-anchor" href="#doc-exists">#</a> <code>exists</code></h3>
+        <pre><code class="lang-vim">exists({expr})
+</code></pre>
+        <p>1 if variable/option/function/command {expr} exists, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-funcref">
+        <h3><a class="doc-anchor" href="#doc-funcref">#</a> <code>funcref</code></h3>
+        <pre><code class="lang-vim">funcref({name} [, {arglist}] [, {dict}])
+</code></pre>
+        <p>Funcref bound by reference to {name} (ignores later redefinition).</p>
+      </article>
+      <article class="doc-entry" id="doc-function">
+        <h3><a class="doc-anchor" href="#doc-function">#</a> <code>function</code></h3>
+        <pre><code class="lang-vim">function({name} [, {arglist}] [, {dict}])
+</code></pre>
+        <p>Funcref for builtin/user function {name}, optionally bound to args/dict.</p>
+      </article>
+      <article class="doc-entry" id="doc-garbagecollect">
+        <h3><a class="doc-anchor" href="#doc-garbagecollect">#</a> <code>garbagecollect</code></h3>
+        <pre><code class="lang-vim">garbagecollect([{atexit}])
+</code></pre>
+        <p>Run the cyclic-reference garbage collector (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-islocked">
+        <h3><a class="doc-anchor" href="#doc-islocked">#</a> <code>islocked</code></h3>
+        <pre><code class="lang-vim">islocked({expr})
+</code></pre>
+        <p>1 if the variable named by {expr} is locked, else 0 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-len">
+        <h3><a class="doc-anchor" href="#doc-len">#</a> <code>len</code></h3>
+        <pre><code class="lang-vim">len({expr})
+</code></pre>
+        <p>Length of String/List/Dict/Blob {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-type">
+        <h3><a class="doc-anchor" href="#doc-type">#</a> <code>type</code></h3>
+        <pre><code class="lang-vim">type({expr})
+</code></pre>
+        <p>Numeric type code of {expr} (0 Number, 1 String, 2 Func, 3 List, 4 Dict, ...).</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-number-float">
+      <h2>Number &amp; Float</h2>
+      <p class="chapter-meta">13 entries</p>
+      <article class="doc-entry" id="doc-abs">
+        <h3><a class="doc-anchor" href="#doc-abs">#</a> <code>abs</code></h3>
+        <pre><code class="lang-vim">abs({expr})
+</code></pre>
+        <p>Absolute value of {expr} (Float in -&gt; Float out).</p>
+      </article>
+      <article class="doc-entry" id="doc-and">
+        <h3><a class="doc-anchor" href="#doc-and">#</a> <code>and</code></h3>
+        <pre><code class="lang-vim">and({expr1}, {expr2})
+</code></pre>
+        <p>Bitwise AND of {expr1} and {expr2}.</p>
+      </article>
+      <article class="doc-entry" id="doc-atan2">
+        <h3><a class="doc-anchor" href="#doc-atan2">#</a> <code>atan2</code></h3>
+        <pre><code class="lang-vim">atan2({expr1}, {expr2})
+</code></pre>
+        <p>Arc tangent of {expr1}/{expr2} in radians (-pi..pi).</p>
+      </article>
+      <article class="doc-entry" id="doc-float2nr">
+        <h3><a class="doc-anchor" href="#doc-float2nr">#</a> <code>float2nr</code></h3>
+        <pre><code class="lang-vim">float2nr({expr})
+</code></pre>
+        <p>{expr} truncated toward zero to a Number.</p>
+      </article>
+      <article class="doc-entry" id="doc-fmod">
+        <h3><a class="doc-anchor" href="#doc-fmod">#</a> <code>fmod</code></h3>
+        <pre><code class="lang-vim">fmod({expr1}, {expr2})
+</code></pre>
+        <p>Floating-point remainder of {expr1} / {expr2}.</p>
+      </article>
+      <article class="doc-entry" id="doc-invert">
+        <h3><a class="doc-anchor" href="#doc-invert">#</a> <code>invert</code></h3>
+        <pre><code class="lang-vim">invert({expr})
+</code></pre>
+        <p>Bitwise complement (NOT) of {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-isinf">
+        <h3><a class="doc-anchor" href="#doc-isinf">#</a> <code>isinf</code></h3>
+        <pre><code class="lang-vim">isinf({expr})
+</code></pre>
+        <p>1 if {expr} is +inf, -1 if -inf, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-isnan">
+        <h3><a class="doc-anchor" href="#doc-isnan">#</a> <code>isnan</code></h3>
+        <pre><code class="lang-vim">isnan({expr})
+</code></pre>
+        <p>1 if {expr} is a NaN Float, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-or">
+        <h3><a class="doc-anchor" href="#doc-or">#</a> <code>or</code></h3>
+        <pre><code class="lang-vim">or({expr1}, {expr2})
+</code></pre>
+        <p>Bitwise OR of {expr1} and {expr2}.</p>
+      </article>
+      <article class="doc-entry" id="doc-pow">
+        <h3><a class="doc-anchor" href="#doc-pow">#</a> <code>pow</code></h3>
+        <pre><code class="lang-vim">pow({x}, {y})
+</code></pre>
+        <p>{x} raised to the power {y} as a Float.</p>
+      </article>
+      <article class="doc-entry" id="doc-rand">
+        <h3><a class="doc-anchor" href="#doc-rand">#</a> <code>rand</code></h3>
+        <pre><code class="lang-vim">rand([{expr}])
+</code></pre>
+        <p>Pseudo-random 32-bit Number, optionally from seed-list {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-srand">
+        <h3><a class="doc-anchor" href="#doc-srand">#</a> <code>srand</code></h3>
+        <pre><code class="lang-vim">srand([{expr}])
+</code></pre>
+        <p>Initialize and return a seed List for rand().</p>
+      </article>
+      <article class="doc-entry" id="doc-xor">
+        <h3><a class="doc-anchor" href="#doc-xor">#</a> <code>xor</code></h3>
+        <pre><code class="lang-vim">xor({expr1}, {expr2})
+</code></pre>
+        <p>Bitwise XOR of {expr1} and {expr2}.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-files-buffers-lines">
+      <h2>Files, Buffers &amp; Lines</h2>
+      <p class="chapter-meta">77 entries</p>
+      <article class="doc-entry" id="doc-append">
+        <h3><a class="doc-anchor" href="#doc-append">#</a> <code>append</code></h3>
+        <pre><code class="lang-vim">append({lnum}, {text})
+</code></pre>
+        <p>Append {text} (String or List) below line {lnum}; 0 on success.</p>
+      </article>
+      <article class="doc-entry" id="doc-appendbufline">
+        <h3><a class="doc-anchor" href="#doc-appendbufline">#</a> <code>appendbufline</code></h3>
+        <pre><code class="lang-vim">appendbufline({buf}, {lnum}, {text})
+</code></pre>
+        <p>Append {text} below line {lnum} of buffer {buf}.</p>
+      </article>
+      <article class="doc-entry" id="doc-browse">
+        <h3><a class="doc-anchor" href="#doc-browse">#</a> <code>browse</code></h3>
+        <pre><code class="lang-vim">browse({save}, {title}, {initdir}, {default})
+</code></pre>
+        <p>Prompt for a file name via a dialog (GUI).</p>
+      </article>
+      <article class="doc-entry" id="doc-browsedir">
+        <h3><a class="doc-anchor" href="#doc-browsedir">#</a> <code>browsedir</code></h3>
+        <pre><code class="lang-vim">browsedir({title}, {initdir})
+</code></pre>
+        <p>Prompt for a directory via a dialog (GUI).</p>
+      </article>
+      <article class="doc-entry" id="doc-bufadd">
+        <h3><a class="doc-anchor" href="#doc-bufadd">#</a> <code>bufadd</code></h3>
+        <pre><code class="lang-vim">bufadd({name})
+</code></pre>
+        <p>Add a buffer for file {name} (without loading) and return its number (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-bufexists">
+        <h3><a class="doc-anchor" href="#doc-bufexists">#</a> <code>bufexists</code></h3>
+        <pre><code class="lang-vim">bufexists({buf})
+</code></pre>
+        <p>1 if buffer {buf} exists, else 0 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-buflisted">
+        <h3><a class="doc-anchor" href="#doc-buflisted">#</a> <code>buflisted</code></h3>
+        <pre><code class="lang-vim">buflisted({buf})
+</code></pre>
+        <p>1 if buffer {buf} exists and is listed, else 0 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-bufload">
+        <h3><a class="doc-anchor" href="#doc-bufload">#</a> <code>bufload</code></h3>
+        <pre><code class="lang-vim">bufload({buf})
+</code></pre>
+        <p>Ensure buffer {buf} is loaded (reading the file if needed) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-bufloaded">
+        <h3><a class="doc-anchor" href="#doc-bufloaded">#</a> <code>bufloaded</code></h3>
+        <pre><code class="lang-vim">bufloaded({buf})
+</code></pre>
+        <p>1 if buffer {buf} exists and is loaded, else 0 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-bufname">
+        <h3><a class="doc-anchor" href="#doc-bufname">#</a> <code>bufname</code></h3>
+        <pre><code class="lang-vim">bufname([{buf}])
+</code></pre>
+        <p>Name of buffer {buf} (default current) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-bufnr">
+        <h3><a class="doc-anchor" href="#doc-bufnr">#</a> <code>bufnr</code></h3>
+        <pre><code class="lang-vim">bufnr([{buf} [, {create}]])
+</code></pre>
+        <p>Buffer number of {buf}; optionally create it (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-bufwinid">
+        <h3><a class="doc-anchor" href="#doc-bufwinid">#</a> <code>bufwinid</code></h3>
+        <pre><code class="lang-vim">bufwinid({buf})
+</code></pre>
+        <p>window-ID of the first window showing buffer {buf}, else -1 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-bufwinnr">
+        <h3><a class="doc-anchor" href="#doc-bufwinnr">#</a> <code>bufwinnr</code></h3>
+        <pre><code class="lang-vim">bufwinnr({buf})
+</code></pre>
+        <p>Window number of the first window showing buffer {buf}, else -1 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-byte2line">
+        <h3><a class="doc-anchor" href="#doc-byte2line">#</a> <code>byte2line</code></h3>
+        <pre><code class="lang-vim">byte2line({byte})
+</code></pre>
+        <p>Line number containing byte offset {byte}, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-changenr">
+        <h3><a class="doc-anchor" href="#doc-changenr">#</a> <code>changenr</code></h3>
+        <pre><code class="lang-vim">changenr()
+</code></pre>
+        <p>Sequence number of the current entry in the buffer&#39;s change list (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-charcol">
+        <h3><a class="doc-anchor" href="#doc-charcol">#</a> <code>charcol</code></h3>
+        <pre><code class="lang-vim">charcol({expr} [, {winid}])
+</code></pre>
+        <p>Character column for position {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-chdir">
+        <h3><a class="doc-anchor" href="#doc-chdir">#</a> <code>chdir</code></h3>
+        <pre><code class="lang-vim">chdir({dir})
+</code></pre>
+        <p>Change the working directory to {dir}; returns the previous directory.</p>
+      </article>
+      <article class="doc-entry" id="doc-cindent">
+        <h3><a class="doc-anchor" href="#doc-cindent">#</a> <code>cindent</code></h3>
+        <pre><code class="lang-vim">cindent({lnum})
+</code></pre>
+        <p>C-indent amount Vim would use for line {lnum}.</p>
+      </article>
+      <article class="doc-entry" id="doc-col">
+        <h3><a class="doc-anchor" href="#doc-col">#</a> <code>col</code></h3>
+        <pre><code class="lang-vim">col({expr} [, {winid}])
+</code></pre>
+        <p>Byte column for position {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-delete">
+        <h3><a class="doc-anchor" href="#doc-delete">#</a> <code>delete</code></h3>
+        <pre><code class="lang-vim">delete({fname} [, {flags}])
+</code></pre>
+        <p>Delete file (or, with &#39;d&#39;/&#39;rf&#39;, directory) {fname}; 0 on success.</p>
+      </article>
+      <article class="doc-entry" id="doc-deletebufline">
+        <h3><a class="doc-anchor" href="#doc-deletebufline">#</a> <code>deletebufline</code></h3>
+        <pre><code class="lang-vim">deletebufline({buf}, {first} [, {last}])
+</code></pre>
+        <p>Delete lines {first}..{last} from buffer {buf}.</p>
+      </article>
+      <article class="doc-entry" id="doc-executable">
+        <h3><a class="doc-anchor" href="#doc-executable">#</a> <code>executable</code></h3>
+        <pre><code class="lang-vim">executable({expr})
+</code></pre>
+        <p>1 if {expr} is an executable found in $PATH, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-exepath">
+        <h3><a class="doc-anchor" href="#doc-exepath">#</a> <code>exepath</code></h3>
+        <pre><code class="lang-vim">exepath({expr})
+</code></pre>
+        <p>Full path of the executable {expr}, or empty if not found.</p>
+      </article>
+      <article class="doc-entry" id="doc-expand">
+        <h3><a class="doc-anchor" href="#doc-expand">#</a> <code>expand</code></h3>
+        <pre><code class="lang-vim">expand({string} [, {nosuf} [, {list}]])
+</code></pre>
+        <p>Expand wildcards and keywords (&#39;%&#39;, &#39;&lt;cfile&gt;&#39;, &#39;~&#39;, ...) in {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-filecopy">
+        <h3><a class="doc-anchor" href="#doc-filecopy">#</a> <code>filecopy</code></h3>
+        <pre><code class="lang-vim">filecopy({from}, {to})
+</code></pre>
+        <p>Copy file {from} to {to}; v:true on success.</p>
+      </article>
+      <article class="doc-entry" id="doc-filereadable">
+        <h3><a class="doc-anchor" href="#doc-filereadable">#</a> <code>filereadable</code></h3>
+        <pre><code class="lang-vim">filereadable({file})
+</code></pre>
+        <p>1 if {file} exists and is readable, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-filewritable">
+        <h3><a class="doc-anchor" href="#doc-filewritable">#</a> <code>filewritable</code></h3>
+        <pre><code class="lang-vim">filewritable({file})
+</code></pre>
+        <p>1 if {file} is writable, 2 if it is a writable directory, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-finddir">
+        <h3><a class="doc-anchor" href="#doc-finddir">#</a> <code>finddir</code></h3>
+        <pre><code class="lang-vim">finddir({name} [, {path} [, {count}]])
+</code></pre>
+        <p>Find directory {name} in {path}; the {count}&#39;th match (or List).</p>
+      </article>
+      <article class="doc-entry" id="doc-findfile">
+        <h3><a class="doc-anchor" href="#doc-findfile">#</a> <code>findfile</code></h3>
+        <pre><code class="lang-vim">findfile({name} [, {path} [, {count}]])
+</code></pre>
+        <p>Find file {name} in {path}; the {count}&#39;th match (or List).</p>
+      </article>
+      <article class="doc-entry" id="doc-fnamemodify">
+        <h3><a class="doc-anchor" href="#doc-fnamemodify">#</a> <code>fnamemodify</code></h3>
+        <pre><code class="lang-vim">fnamemodify({fname}, {mods})
+</code></pre>
+        <p>Modify file name {fname} per the :p/:h/:t/:r/:e {mods}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getbufinfo">
+        <h3><a class="doc-anchor" href="#doc-getbufinfo">#</a> <code>getbufinfo</code></h3>
+        <pre><code class="lang-vim">getbufinfo([{buf}])
+</code></pre>
+        <p>List of dicts with information about buffers.</p>
+      </article>
+      <article class="doc-entry" id="doc-getbufline">
+        <h3><a class="doc-anchor" href="#doc-getbufline">#</a> <code>getbufline</code></h3>
+        <pre><code class="lang-vim">getbufline({buf}, {lnum} [, {end}])
+</code></pre>
+        <p>List of lines {lnum}..{end} from buffer {buf}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getbufoneline">
+        <h3><a class="doc-anchor" href="#doc-getbufoneline">#</a> <code>getbufoneline</code></h3>
+        <pre><code class="lang-vim">getbufoneline({buf}, {lnum})
+</code></pre>
+        <p>Single line {lnum} from buffer {buf} as a String.</p>
+      </article>
+      <article class="doc-entry" id="doc-getbufvar">
+        <h3><a class="doc-anchor" href="#doc-getbufvar">#</a> <code>getbufvar</code></h3>
+        <pre><code class="lang-vim">getbufvar({buf}, {varname} [, {def}])
+</code></pre>
+        <p>Buffer-local variable/option {varname} from buffer {buf}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getchangelist">
+        <h3><a class="doc-anchor" href="#doc-getchangelist">#</a> <code>getchangelist</code></h3>
+        <pre><code class="lang-vim">getchangelist([{buf}])
+</code></pre>
+        <p>[changelist, index] for buffer {buf}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcwd">
+        <h3><a class="doc-anchor" href="#doc-getcwd">#</a> <code>getcwd</code></h3>
+        <pre><code class="lang-vim">getcwd([{winnr} [, {tabnr}]])
+</code></pre>
+        <p>Current working directory (optionally of a window/tab).</p>
+      </article>
+      <article class="doc-entry" id="doc-getfontname">
+        <h3><a class="doc-anchor" href="#doc-getfontname">#</a> <code>getfontname</code></h3>
+        <pre><code class="lang-vim">getfontname([{name}])
+</code></pre>
+        <p>Name of the font currently in use (GUI) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-getfperm">
+        <h3><a class="doc-anchor" href="#doc-getfperm">#</a> <code>getfperm</code></h3>
+        <pre><code class="lang-vim">getfperm({fname})
+</code></pre>
+        <p>Permissions of {fname} as a 9-character &#39;rwxrwxrwx&#39; String.</p>
+      </article>
+      <article class="doc-entry" id="doc-getfsize">
+        <h3><a class="doc-anchor" href="#doc-getfsize">#</a> <code>getfsize</code></h3>
+        <pre><code class="lang-vim">getfsize({fname})
+</code></pre>
+        <p>Size of file {fname} in bytes (-1 if absent, -2 if too large).</p>
+      </article>
+      <article class="doc-entry" id="doc-getftime">
+        <h3><a class="doc-anchor" href="#doc-getftime">#</a> <code>getftime</code></h3>
+        <pre><code class="lang-vim">getftime({fname})
+</code></pre>
+        <p>Last modification time of {fname} as seconds since the epoch, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-getftype">
+        <h3><a class="doc-anchor" href="#doc-getftype">#</a> <code>getftype</code></h3>
+        <pre><code class="lang-vim">getftype({fname})
+</code></pre>
+        <p>Type of file {fname}: &#39;file&#39;, &#39;dir&#39;, &#39;link&#39;, &#39;fifo&#39;, etc.</p>
+      </article>
+      <article class="doc-entry" id="doc-getline">
+        <h3><a class="doc-anchor" href="#doc-getline">#</a> <code>getline</code></h3>
+        <pre><code class="lang-vim">getline({lnum} [, {end}])
+</code></pre>
+        <p>Text of line {lnum} (or List of lines {lnum}..{end}) in the current buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-glob">
+        <h3><a class="doc-anchor" href="#doc-glob">#</a> <code>glob</code></h3>
+        <pre><code class="lang-vim">glob({expr} [, {nosuf} [, {list} [, {alllinks}]]])
+</code></pre>
+        <p>Expand file wildcards {expr}; String (or List) of matching paths.</p>
+      </article>
+      <article class="doc-entry" id="doc-glob2regpat">
+        <h3><a class="doc-anchor" href="#doc-glob2regpat">#</a> <code>glob2regpat</code></h3>
+        <pre><code class="lang-vim">glob2regpat({string})
+</code></pre>
+        <p>Vim regexp pattern equivalent to the file glob {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-globpath">
+        <h3><a class="doc-anchor" href="#doc-globpath">#</a> <code>globpath</code></h3>
+        <pre><code class="lang-vim">globpath({path}, {expr} [, {nosuf} [, {list} [, {alllinks}]]])
+</code></pre>
+        <p>Expand {expr} in every directory of {path}.</p>
+      </article>
+      <article class="doc-entry" id="doc-haslocaldir">
+        <h3><a class="doc-anchor" href="#doc-haslocaldir">#</a> <code>haslocaldir</code></h3>
+        <pre><code class="lang-vim">haslocaldir([{winnr} [, {tabnr}]])
+</code></pre>
+        <p>1 if the window/tab has a local working directory.</p>
+      </article>
+      <article class="doc-entry" id="doc-indent">
+        <h3><a class="doc-anchor" href="#doc-indent">#</a> <code>indent</code></h3>
+        <pre><code class="lang-vim">indent({lnum})
+</code></pre>
+        <p>Indent (in spaces) of line {lnum} in the current buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-isabsolutepath">
+        <h3><a class="doc-anchor" href="#doc-isabsolutepath">#</a> <code>isabsolutepath</code></h3>
+        <pre><code class="lang-vim">isabsolutepath({path})
+</code></pre>
+        <p>1 if {path} is an absolute path, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-isdirectory">
+        <h3><a class="doc-anchor" href="#doc-isdirectory">#</a> <code>isdirectory</code></h3>
+        <pre><code class="lang-vim">isdirectory({directory})
+</code></pre>
+        <p>1 if {directory} exists and is a directory, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-last-buffer-nr">
+        <h3><a class="doc-anchor" href="#doc-last-buffer-nr">#</a> <code>last_buffer_nr</code></h3>
+        <pre><code class="lang-vim">last_buffer_nr()
+</code></pre>
+        <p>Number of the last (highest-numbered) buffer (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-line">
+        <h3><a class="doc-anchor" href="#doc-line">#</a> <code>line</code></h3>
+        <pre><code class="lang-vim">line({expr} [, {winid}])
+</code></pre>
+        <p>Line number for position {expr} (&#39;.&#39;, &#39;$&#39;, mark, ...).</p>
+      </article>
+      <article class="doc-entry" id="doc-line2byte">
+        <h3><a class="doc-anchor" href="#doc-line2byte">#</a> <code>line2byte</code></h3>
+        <pre><code class="lang-vim">line2byte({lnum})
+</code></pre>
+        <p>Byte offset of the first byte of line {lnum} (1-based), else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-lispindent">
+        <h3><a class="doc-anchor" href="#doc-lispindent">#</a> <code>lispindent</code></h3>
+        <pre><code class="lang-vim">lispindent({lnum})
+</code></pre>
+        <p>Lisp indent amount Vim would use for line {lnum}.</p>
+      </article>
+      <article class="doc-entry" id="doc-mkdir">
+        <h3><a class="doc-anchor" href="#doc-mkdir">#</a> <code>mkdir</code></h3>
+        <pre><code class="lang-vim">mkdir({name} [, {flags} [, {prot}]])
+</code></pre>
+        <p>Create directory {name} (&#39;p&#39; makes parents); 1 on success.</p>
+      </article>
+      <article class="doc-entry" id="doc-nextnonblank">
+        <h3><a class="doc-anchor" href="#doc-nextnonblank">#</a> <code>nextnonblank</code></h3>
+        <pre><code class="lang-vim">nextnonblank({lnum})
+</code></pre>
+        <p>Line number of the first non-blank line at/after {lnum}, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-pathshorten">
+        <h3><a class="doc-anchor" href="#doc-pathshorten">#</a> <code>pathshorten</code></h3>
+        <pre><code class="lang-vim">pathshorten({path} [, {len}])
+</code></pre>
+        <p>Shorten directory components of {path} to {len} characters.</p>
+      </article>
+      <article class="doc-entry" id="doc-prevnonblank">
+        <h3><a class="doc-anchor" href="#doc-prevnonblank">#</a> <code>prevnonblank</code></h3>
+        <pre><code class="lang-vim">prevnonblank({lnum})
+</code></pre>
+        <p>Line number of the first non-blank line at/before {lnum}, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-readblob">
+        <h3><a class="doc-anchor" href="#doc-readblob">#</a> <code>readblob</code></h3>
+        <pre><code class="lang-vim">readblob({fname} [, {offset} [, {size}]])
+</code></pre>
+        <p>Blob of the (partial) contents of file {fname}.</p>
+      </article>
+      <article class="doc-entry" id="doc-readdir">
+        <h3><a class="doc-anchor" href="#doc-readdir">#</a> <code>readdir</code></h3>
+        <pre><code class="lang-vim">readdir({directory} [, {expr}])
+</code></pre>
+        <p>List of file names in {directory}, optionally filtered by {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-readfile">
+        <h3><a class="doc-anchor" href="#doc-readfile">#</a> <code>readfile</code></h3>
+        <pre><code class="lang-vim">readfile({fname} [, {type} [, {max}]])
+</code></pre>
+        <p>List of lines read from file {fname}.</p>
+      </article>
+      <article class="doc-entry" id="doc-rename">
+        <h3><a class="doc-anchor" href="#doc-rename">#</a> <code>rename</code></h3>
+        <pre><code class="lang-vim">rename({from}, {to})
+</code></pre>
+        <p>Rename/move file {from} to {to}; 0 on success.</p>
+      </article>
+      <article class="doc-entry" id="doc-resolve">
+        <h3><a class="doc-anchor" href="#doc-resolve">#</a> <code>resolve</code></h3>
+        <pre><code class="lang-vim">resolve({filename})
+</code></pre>
+        <p>Resolve symbolic links in {filename} to its real path.</p>
+      </article>
+      <article class="doc-entry" id="doc-setbufline">
+        <h3><a class="doc-anchor" href="#doc-setbufline">#</a> <code>setbufline</code></h3>
+        <pre><code class="lang-vim">setbufline({buf}, {lnum}, {text})
+</code></pre>
+        <p>Set line {lnum} of buffer {buf} to {text}.</p>
+      </article>
+      <article class="doc-entry" id="doc-setbufvar">
+        <h3><a class="doc-anchor" href="#doc-setbufvar">#</a> <code>setbufvar</code></h3>
+        <pre><code class="lang-vim">setbufvar({buf}, {varname}, {val})
+</code></pre>
+        <p>Set buffer-local variable/option {varname} in buffer {buf} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-setfperm">
+        <h3><a class="doc-anchor" href="#doc-setfperm">#</a> <code>setfperm</code></h3>
+        <pre><code class="lang-vim">setfperm({fname}, {mode})
+</code></pre>
+        <p>Set permissions of {fname} from a 9-character &#39;rwxrwxrwx&#39; {mode}.</p>
+      </article>
+      <article class="doc-entry" id="doc-setline">
+        <h3><a class="doc-anchor" href="#doc-setline">#</a> <code>setline</code></h3>
+        <pre><code class="lang-vim">setline({lnum}, {text})
+</code></pre>
+        <p>Set line {lnum} to {text} (String or List of lines); 0 on success.</p>
+      </article>
+      <article class="doc-entry" id="doc-simplify">
+        <h3><a class="doc-anchor" href="#doc-simplify">#</a> <code>simplify</code></h3>
+        <pre><code class="lang-vim">simplify({filename})
+</code></pre>
+        <p>Simplify {filename} by resolving &#39;.&#39;, &#39;..&#39; and doubled separators (no disk access).</p>
+      </article>
+      <article class="doc-entry" id="doc-swapfilelist">
+        <h3><a class="doc-anchor" href="#doc-swapfilelist">#</a> <code>swapfilelist</code></h3>
+        <pre><code class="lang-vim">swapfilelist()
+</code></pre>
+        <p>List of swap files found in the &#39;directory&#39; directories.</p>
+      </article>
+      <article class="doc-entry" id="doc-swapinfo">
+        <h3><a class="doc-anchor" href="#doc-swapinfo">#</a> <code>swapinfo</code></h3>
+        <pre><code class="lang-vim">swapinfo({fname})
+</code></pre>
+        <p>Dict of information read from swap file {fname}.</p>
+      </article>
+      <article class="doc-entry" id="doc-swapname">
+        <h3><a class="doc-anchor" href="#doc-swapname">#</a> <code>swapname</code></h3>
+        <pre><code class="lang-vim">swapname({buf})
+</code></pre>
+        <p>Swap-file name of buffer {buf}, or empty if none (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-tempname">
+        <h3><a class="doc-anchor" href="#doc-tempname">#</a> <code>tempname</code></h3>
+        <pre><code class="lang-vim">tempname()
+</code></pre>
+        <p>Name of a unique, not-yet-existing temporary file.</p>
+      </article>
+      <article class="doc-entry" id="doc-undofile">
+        <h3><a class="doc-anchor" href="#doc-undofile">#</a> <code>undofile</code></h3>
+        <pre><code class="lang-vim">undofile({name})
+</code></pre>
+        <p>Undo-file path Vim would use for file {name}.</p>
+      </article>
+      <article class="doc-entry" id="doc-undotree">
+        <h3><a class="doc-anchor" href="#doc-undotree">#</a> <code>undotree</code></h3>
+        <pre><code class="lang-vim">undotree([{buf}])
+</code></pre>
+        <p>Dict describing the undo tree of the buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-virtcol">
+        <h3><a class="doc-anchor" href="#doc-virtcol">#</a> <code>virtcol</code></h3>
+        <pre><code class="lang-vim">virtcol({expr} [, {list} [, {winid}]])
+</code></pre>
+        <p>Screen (virtual) column of position {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-virtcol2col">
+        <h3><a class="doc-anchor" href="#doc-virtcol2col">#</a> <code>virtcol2col</code></h3>
+        <pre><code class="lang-vim">virtcol2col({winid}, {lnum}, {col})
+</code></pre>
+        <p>Byte index in line {lnum} of screen column {col} in window {winid}.</p>
+      </article>
+      <article class="doc-entry" id="doc-winbufnr">
+        <h3><a class="doc-anchor" href="#doc-winbufnr">#</a> <code>winbufnr</code></h3>
+        <pre><code class="lang-vim">winbufnr({nr})
+</code></pre>
+        <p>Buffer number of window {nr}, else -1 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-writefile">
+        <h3><a class="doc-anchor" href="#doc-writefile">#</a> <code>writefile</code></h3>
+        <pre><code class="lang-vim">writefile({object}, {fname} [, {flags}])
+</code></pre>
+        <p>Write List of lines or Blob {object} to file {fname}; 0 on success.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-system-environment">
+      <h2>System &amp; Environment</h2>
+      <p class="chapter-meta">44 entries</p>
+      <article class="doc-entry" id="doc-chanclose">
+        <h3><a class="doc-anchor" href="#doc-chanclose">#</a> <code>chanclose</code></h3>
+        <pre><code class="lang-vim">chanclose({id} [, {stream}])
+</code></pre>
+        <p>Close channel {id} (or one of its streams) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-chansend">
+        <h3><a class="doc-anchor" href="#doc-chansend">#</a> <code>chansend</code></h3>
+        <pre><code class="lang-vim">chansend({id}, {data})
+</code></pre>
+        <p>Send {data} to channel {id}; returns bytes written (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-environ">
+        <h3><a class="doc-anchor" href="#doc-environ">#</a> <code>environ</code></h3>
+        <pre><code class="lang-vim">environ()
+</code></pre>
+        <p>Dict of all environment variables and their values.</p>
+      </article>
+      <article class="doc-entry" id="doc-getenv">
+        <h3><a class="doc-anchor" href="#doc-getenv">#</a> <code>getenv</code></h3>
+        <pre><code class="lang-vim">getenv({name})
+</code></pre>
+        <p>Value of environment variable {name}, or v:null if unset.</p>
+      </article>
+      <article class="doc-entry" id="doc-getpid">
+        <h3><a class="doc-anchor" href="#doc-getpid">#</a> <code>getpid</code></h3>
+        <pre><code class="lang-vim">getpid()
+</code></pre>
+        <p>Process ID of the Vim process.</p>
+      </article>
+      <article class="doc-entry" id="doc-hostname">
+        <h3><a class="doc-anchor" href="#doc-hostname">#</a> <code>hostname</code></h3>
+        <pre><code class="lang-vim">hostname()
+</code></pre>
+        <p>Name of the host Vim is running on.</p>
+      </article>
+      <article class="doc-entry" id="doc-jobpid">
+        <h3><a class="doc-anchor" href="#doc-jobpid">#</a> <code>jobpid</code></h3>
+        <pre><code class="lang-vim">jobpid({id})
+</code></pre>
+        <p>Process ID of job {id} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-jobresize">
+        <h3><a class="doc-anchor" href="#doc-jobresize">#</a> <code>jobresize</code></h3>
+        <pre><code class="lang-vim">jobresize({id}, {width}, {height})
+</code></pre>
+        <p>Resize the pseudo-terminal of job {id} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-jobstart">
+        <h3><a class="doc-anchor" href="#doc-jobstart">#</a> <code>jobstart</code></h3>
+        <pre><code class="lang-vim">jobstart({cmd} [, {opts}])
+</code></pre>
+        <p>Start job running {cmd}; returns a job id (or &lt;=0 on failure) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-jobstop">
+        <h3><a class="doc-anchor" href="#doc-jobstop">#</a> <code>jobstop</code></h3>
+        <pre><code class="lang-vim">jobstop({id})
+</code></pre>
+        <p>Stop job {id} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-jobwait">
+        <h3><a class="doc-anchor" href="#doc-jobwait">#</a> <code>jobwait</code></h3>
+        <pre><code class="lang-vim">jobwait({ids} [, {timeout}])
+</code></pre>
+        <p>Wait for the jobs {ids} to finish; List of exit codes.</p>
+      </article>
+      <article class="doc-entry" id="doc-json-decode">
+        <h3><a class="doc-anchor" href="#doc-json-decode">#</a> <code>json_decode</code></h3>
+        <pre><code class="lang-vim">json_decode({string})
+</code></pre>
+        <p>Vim value decoded from JSON text {string}.</p>
+      </article>
+      <article class="doc-entry" id="doc-json-encode">
+        <h3><a class="doc-anchor" href="#doc-json-encode">#</a> <code>json_encode</code></h3>
+        <pre><code class="lang-vim">json_encode({expr})
+</code></pre>
+        <p>JSON text encoding of {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-libcall">
+        <h3><a class="doc-anchor" href="#doc-libcall">#</a> <code>libcall</code></h3>
+        <pre><code class="lang-vim">libcall({lib}, {func}, {arg})
+</code></pre>
+        <p>Call function {func} in dynamic library {lib} (String result) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-libcallnr">
+        <h3><a class="doc-anchor" href="#doc-libcallnr">#</a> <code>libcallnr</code></h3>
+        <pre><code class="lang-vim">libcallnr({lib}, {func}, {arg})
+</code></pre>
+        <p>Call function {func} in dynamic library {lib} (Number result) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-localtime">
+        <h3><a class="doc-anchor" href="#doc-localtime">#</a> <code>localtime</code></h3>
+        <pre><code class="lang-vim">localtime()
+</code></pre>
+        <p>Current time as seconds since the Unix epoch.</p>
+      </article>
+      <article class="doc-entry" id="doc-luaeval">
+        <h3><a class="doc-anchor" href="#doc-luaeval">#</a> <code>luaeval</code></h3>
+        <pre><code class="lang-vim">luaeval({expr} [, {expr}])
+</code></pre>
+        <p>Evaluate Lua expression {expr} and return the result.</p>
+      </article>
+      <article class="doc-entry" id="doc-msgpackdump">
+        <h3><a class="doc-anchor" href="#doc-msgpackdump">#</a> <code>msgpackdump</code></h3>
+        <pre><code class="lang-vim">msgpackdump({list} [, {type}])
+</code></pre>
+        <p>msgpack byte representation of the items in {list}.</p>
+      </article>
+      <article class="doc-entry" id="doc-msgpackparse">
+        <h3><a class="doc-anchor" href="#doc-msgpackparse">#</a> <code>msgpackparse</code></h3>
+        <pre><code class="lang-vim">msgpackparse({data})
+</code></pre>
+        <p>List of Vim values parsed from msgpack {data}.</p>
+      </article>
+      <article class="doc-entry" id="doc-perleval">
+        <h3><a class="doc-anchor" href="#doc-perleval">#</a> <code>perleval</code></h3>
+        <pre><code class="lang-vim">perleval({expr})
+</code></pre>
+        <p>Evaluate Perl expression {expr} and return the result.</p>
+      </article>
+      <article class="doc-entry" id="doc-py3eval">
+        <h3><a class="doc-anchor" href="#doc-py3eval">#</a> <code>py3eval</code></h3>
+        <pre><code class="lang-vim">py3eval({expr})
+</code></pre>
+        <p>Evaluate Python 3 expression {expr} and return the result.</p>
+      </article>
+      <article class="doc-entry" id="doc-pyeval">
+        <h3><a class="doc-anchor" href="#doc-pyeval">#</a> <code>pyeval</code></h3>
+        <pre><code class="lang-vim">pyeval({expr})
+</code></pre>
+        <p>Evaluate Python (2) expression {expr} and return the result.</p>
+      </article>
+      <article class="doc-entry" id="doc-pyxeval">
+        <h3><a class="doc-anchor" href="#doc-pyxeval">#</a> <code>pyxeval</code></h3>
+        <pre><code class="lang-vim">pyxeval({expr})
+</code></pre>
+        <p>Evaluate Python (pyx) expression {expr} and return the result.</p>
+      </article>
+      <article class="doc-entry" id="doc-reltime">
+        <h3><a class="doc-anchor" href="#doc-reltime">#</a> <code>reltime</code></h3>
+        <pre><code class="lang-vim">reltime([{start} [, {end}]])
+</code></pre>
+        <p>High-resolution time value, or an elapsed interval.</p>
+      </article>
+      <article class="doc-entry" id="doc-reltimefloat">
+        <h3><a class="doc-anchor" href="#doc-reltimefloat">#</a> <code>reltimefloat</code></h3>
+        <pre><code class="lang-vim">reltimefloat({time})
+</code></pre>
+        <p>reltime() value as a Float number of seconds.</p>
+      </article>
+      <article class="doc-entry" id="doc-reltimestr">
+        <h3><a class="doc-anchor" href="#doc-reltimestr">#</a> <code>reltimestr</code></h3>
+        <pre><code class="lang-vim">reltimestr({time})
+</code></pre>
+        <p>reltime() value formatted as a &#39;seconds.microseconds&#39; String.</p>
+      </article>
+      <article class="doc-entry" id="doc-rpcnotify">
+        <h3><a class="doc-anchor" href="#doc-rpcnotify">#</a> <code>rpcnotify</code></h3>
+        <pre><code class="lang-vim">rpcnotify({channel}, {event} [, {args} ...])
+</code></pre>
+        <p>Send an RPC notification {event} to {channel} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-rpcrequest">
+        <h3><a class="doc-anchor" href="#doc-rpcrequest">#</a> <code>rpcrequest</code></h3>
+        <pre><code class="lang-vim">rpcrequest({channel}, {method} [, {args} ...])
+</code></pre>
+        <p>Send a blocking RPC request {method} to {channel} and return the result (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-rpcstart">
+        <h3><a class="doc-anchor" href="#doc-rpcstart">#</a> <code>rpcstart</code></h3>
+        <pre><code class="lang-vim">rpcstart({prog} [, {argv}])
+</code></pre>
+        <p>Deprecated: start an RPC channel to {prog} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-rpcstop">
+        <h3><a class="doc-anchor" href="#doc-rpcstop">#</a> <code>rpcstop</code></h3>
+        <pre><code class="lang-vim">rpcstop({channel})
+</code></pre>
+        <p>Deprecated: close RPC channel {channel} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-rubyeval">
+        <h3><a class="doc-anchor" href="#doc-rubyeval">#</a> <code>rubyeval</code></h3>
+        <pre><code class="lang-vim">rubyeval({expr})
+</code></pre>
+        <p>Evaluate Ruby expression {expr} and return the result.</p>
+      </article>
+      <article class="doc-entry" id="doc-serverlist">
+        <h3><a class="doc-anchor" href="#doc-serverlist">#</a> <code>serverlist</code></h3>
+        <pre><code class="lang-vim">serverlist()
+</code></pre>
+        <p>Newline-separated list of server addresses Vim is listening on.</p>
+      </article>
+      <article class="doc-entry" id="doc-serverstart">
+        <h3><a class="doc-anchor" href="#doc-serverstart">#</a> <code>serverstart</code></h3>
+        <pre><code class="lang-vim">serverstart([{address}])
+</code></pre>
+        <p>Start an RPC server, returning its listen address (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-serverstop">
+        <h3><a class="doc-anchor" href="#doc-serverstop">#</a> <code>serverstop</code></h3>
+        <pre><code class="lang-vim">serverstop({address})
+</code></pre>
+        <p>Stop the RPC server listening on {address} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-setenv">
+        <h3><a class="doc-anchor" href="#doc-setenv">#</a> <code>setenv</code></h3>
+        <pre><code class="lang-vim">setenv({name}, {val})
+</code></pre>
+        <p>Set environment variable {name} to {val} (v:null unsets it).</p>
+      </article>
+      <article class="doc-entry" id="doc-sockconnect">
+        <h3><a class="doc-anchor" href="#doc-sockconnect">#</a> <code>sockconnect</code></h3>
+        <pre><code class="lang-vim">sockconnect({mode}, {address} [, {opts}])
+</code></pre>
+        <p>Connect a socket to {address} (tcp/pipe); returns a channel id (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-stdioopen">
+        <h3><a class="doc-anchor" href="#doc-stdioopen">#</a> <code>stdioopen</code></h3>
+        <pre><code class="lang-vim">stdioopen({opts})
+</code></pre>
+        <p>Open a channel on Vim&#39;s own stdin/stdout (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-stdpath">
+        <h3><a class="doc-anchor" href="#doc-stdpath">#</a> <code>stdpath</code></h3>
+        <pre><code class="lang-vim">stdpath({what})
+</code></pre>
+        <p>Standard config/data/cache/state path(s) for {what}.</p>
+      </article>
+      <article class="doc-entry" id="doc-strftime">
+        <h3><a class="doc-anchor" href="#doc-strftime">#</a> <code>strftime</code></h3>
+        <pre><code class="lang-vim">strftime({format} [, {time}])
+</code></pre>
+        <p>Format time {time} (default now) with strftime() {format}.</p>
+      </article>
+      <article class="doc-entry" id="doc-strptime">
+        <h3><a class="doc-anchor" href="#doc-strptime">#</a> <code>strptime</code></h3>
+        <pre><code class="lang-vim">strptime({format}, {timestring})
+</code></pre>
+        <p>Parse {timestring} per {format} into seconds since the epoch.</p>
+      </article>
+      <article class="doc-entry" id="doc-system">
+        <h3><a class="doc-anchor" href="#doc-system">#</a> <code>system</code></h3>
+        <pre><code class="lang-vim">system({cmd} [, {input}])
+</code></pre>
+        <p>Run shell {cmd}, returning its output as a String.</p>
+      </article>
+      <article class="doc-entry" id="doc-systemlist">
+        <h3><a class="doc-anchor" href="#doc-systemlist">#</a> <code>systemlist</code></h3>
+        <pre><code class="lang-vim">systemlist({cmd} [, {input}])
+</code></pre>
+        <p>Run shell {cmd}, returning its output as a List of lines.</p>
+      </article>
+      <article class="doc-entry" id="doc-termopen">
+        <h3><a class="doc-anchor" href="#doc-termopen">#</a> <code>termopen</code></h3>
+        <pre><code class="lang-vim">termopen({cmd} [, {opts}])
+</code></pre>
+        <p>Open a terminal running {cmd} in the current buffer (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-windowsversion">
+        <h3><a class="doc-anchor" href="#doc-windowsversion">#</a> <code>windowsversion</code></h3>
+        <pre><code class="lang-vim">windowsversion()
+</code></pre>
+        <p>Microsoft Windows version string (&#39;&#39; on other systems) (stub in standalone).</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-functional-misc">
+      <h2>Functional &amp; Misc</h2>
+      <p class="chapter-meta">210 entries</p>
+      <article class="doc-entry" id="doc-api-info">
+        <h3><a class="doc-anchor" href="#doc-api-info">#</a> <code>api_info</code></h3>
+        <pre><code class="lang-vim">api_info()
+</code></pre>
+        <p>Dict describing the Nvim API (version, functions, types).</p>
+      </article>
+      <article class="doc-entry" id="doc-argc">
+        <h3><a class="doc-anchor" href="#doc-argc">#</a> <code>argc</code></h3>
+        <pre><code class="lang-vim">argc([{winid}])
+</code></pre>
+        <p>Number of files in the argument list.</p>
+      </article>
+      <article class="doc-entry" id="doc-argidx">
+        <h3><a class="doc-anchor" href="#doc-argidx">#</a> <code>argidx</code></h3>
+        <pre><code class="lang-vim">argidx()
+</code></pre>
+        <p>Current index into the argument list.</p>
+      </article>
+      <article class="doc-entry" id="doc-arglistid">
+        <h3><a class="doc-anchor" href="#doc-arglistid">#</a> <code>arglistid</code></h3>
+        <pre><code class="lang-vim">arglistid([{winnr} [, {tabnr}]])
+</code></pre>
+        <p>Identifier of the argument list used by a window.</p>
+      </article>
+      <article class="doc-entry" id="doc-argv">
+        <h3><a class="doc-anchor" href="#doc-argv">#</a> <code>argv</code></h3>
+        <pre><code class="lang-vim">argv([{nr} [, {winid}]])
+</code></pre>
+        <p>Argument-list entry {nr} (or the whole List).</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-equal">
+        <h3><a class="doc-anchor" href="#doc-assert-equal">#</a> <code>assert_equal</code></h3>
+        <pre><code class="lang-vim">assert_equal({expected}, {actual} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless {expected} == {actual}.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-equalfile">
+        <h3><a class="doc-anchor" href="#doc-assert-equalfile">#</a> <code>assert_equalfile</code></h3>
+        <pre><code class="lang-vim">assert_equalfile({fname1}, {fname2} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless the two files have equal contents.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-exception">
+        <h3><a class="doc-anchor" href="#doc-assert-exception">#</a> <code>assert_exception</code></h3>
+        <pre><code class="lang-vim">assert_exception({error} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless v:exception contains {error}.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-false">
+        <h3><a class="doc-anchor" href="#doc-assert-false">#</a> <code>assert_false</code></h3>
+        <pre><code class="lang-vim">assert_false({actual} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless {actual} is false.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-inrange">
+        <h3><a class="doc-anchor" href="#doc-assert-inrange">#</a> <code>assert_inrange</code></h3>
+        <pre><code class="lang-vim">assert_inrange({lower}, {upper}, {actual} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless {lower} &lt;= {actual} &lt;= {upper}.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-match">
+        <h3><a class="doc-anchor" href="#doc-assert-match">#</a> <code>assert_match</code></h3>
+        <pre><code class="lang-vim">assert_match({pat}, {actual} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless {pat} matches {actual}.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-notequal">
+        <h3><a class="doc-anchor" href="#doc-assert-notequal">#</a> <code>assert_notequal</code></h3>
+        <pre><code class="lang-vim">assert_notequal({expected}, {actual} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless {expected} != {actual}.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-notmatch">
+        <h3><a class="doc-anchor" href="#doc-assert-notmatch">#</a> <code>assert_notmatch</code></h3>
+        <pre><code class="lang-vim">assert_notmatch({pat}, {actual} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless {pat} does not match {actual}.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-report">
+        <h3><a class="doc-anchor" href="#doc-assert-report">#</a> <code>assert_report</code></h3>
+        <pre><code class="lang-vim">assert_report({msg})
+</code></pre>
+        <p>Add {msg} to v:errors unconditionally.</p>
+      </article>
+      <article class="doc-entry" id="doc-assert-true">
+        <h3><a class="doc-anchor" href="#doc-assert-true">#</a> <code>assert_true</code></h3>
+        <pre><code class="lang-vim">assert_true({actual} [, {msg}])
+</code></pre>
+        <p>Add an error to v:errors unless {actual} is true.</p>
+      </article>
+      <article class="doc-entry" id="doc-call">
+        <h3><a class="doc-anchor" href="#doc-call">#</a> <code>call</code></h3>
+        <pre><code class="lang-vim">call({func}, {arglist} [, {dict}])
+</code></pre>
+        <p>Call {func} with the List {arglist} as its arguments (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-clearmatches">
+        <h3><a class="doc-anchor" href="#doc-clearmatches">#</a> <code>clearmatches</code></h3>
+        <pre><code class="lang-vim">clearmatches([{win}])
+</code></pre>
+        <p>Clear all matches added with matchadd()/matchaddpos().</p>
+      </article>
+      <article class="doc-entry" id="doc-cmdcomplete-info">
+        <h3><a class="doc-anchor" href="#doc-cmdcomplete-info">#</a> <code>cmdcomplete_info</code></h3>
+        <pre><code class="lang-vim">cmdcomplete_info([{what}])
+</code></pre>
+        <p>Dict of information about the current command-line completion.</p>
+      </article>
+      <article class="doc-entry" id="doc-complete">
+        <h3><a class="doc-anchor" href="#doc-complete">#</a> <code>complete</code></h3>
+        <pre><code class="lang-vim">complete({startcol}, {matches})
+</code></pre>
+        <p>Set the Insert-mode completion list to {matches} starting at {startcol} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-complete-add">
+        <h3><a class="doc-anchor" href="#doc-complete-add">#</a> <code>complete_add</code></h3>
+        <pre><code class="lang-vim">complete_add({expr})
+</code></pre>
+        <p>Add {expr} to the completion list during a &#39;completefunc&#39;.</p>
+      </article>
+      <article class="doc-entry" id="doc-complete-check">
+        <h3><a class="doc-anchor" href="#doc-complete-check">#</a> <code>complete_check</code></h3>
+        <pre><code class="lang-vim">complete_check()
+</code></pre>
+        <p>1 if completion was aborted by typed input.</p>
+      </article>
+      <article class="doc-entry" id="doc-complete-info">
+        <h3><a class="doc-anchor" href="#doc-complete-info">#</a> <code>complete_info</code></h3>
+        <pre><code class="lang-vim">complete_info([{what}])
+</code></pre>
+        <p>Dict of information about the current Insert-mode completion.</p>
+      </article>
+      <article class="doc-entry" id="doc-confirm">
+        <h3><a class="doc-anchor" href="#doc-confirm">#</a> <code>confirm</code></h3>
+        <pre><code class="lang-vim">confirm({msg} [, {choices} [, {default} [, {type}]]])
+</code></pre>
+        <p>Show dialog {msg} with {choices}; return the chosen button number.</p>
+      </article>
+      <article class="doc-entry" id="doc-ctxget">
+        <h3><a class="doc-anchor" href="#doc-ctxget">#</a> <code>ctxget</code></h3>
+        <pre><code class="lang-vim">ctxget([{index}])
+</code></pre>
+        <p>Dict for the {index}&#39;th entry on the context stack.</p>
+      </article>
+      <article class="doc-entry" id="doc-ctxpop">
+        <h3><a class="doc-anchor" href="#doc-ctxpop">#</a> <code>ctxpop</code></h3>
+        <pre><code class="lang-vim">ctxpop()
+</code></pre>
+        <p>Pop and restore the top editor context from the stack (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-ctxpush">
+        <h3><a class="doc-anchor" href="#doc-ctxpush">#</a> <code>ctxpush</code></h3>
+        <pre><code class="lang-vim">ctxpush([{types}])
+</code></pre>
+        <p>Push the editor context (of {types}) onto the context stack (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-ctxset">
+        <h3><a class="doc-anchor" href="#doc-ctxset">#</a> <code>ctxset</code></h3>
+        <pre><code class="lang-vim">ctxset({context} [, {index}])
+</code></pre>
+        <p>Set the {index}&#39;th context-stack entry from {context} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-ctxsize">
+        <h3><a class="doc-anchor" href="#doc-ctxsize">#</a> <code>ctxsize</code></h3>
+        <pre><code class="lang-vim">ctxsize()
+</code></pre>
+        <p>Number of entries on the context stack (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-cursor">
+        <h3><a class="doc-anchor" href="#doc-cursor">#</a> <code>cursor</code></h3>
+        <pre><code class="lang-vim">cursor({lnum}, {col} [, {off}])
+</code></pre>
+        <p>Move the cursor to line {lnum}, column {col}.</p>
+      </article>
+      <article class="doc-entry" id="doc-debugbreak">
+        <h3><a class="doc-anchor" href="#doc-debugbreak">#</a> <code>debugbreak</code></h3>
+        <pre><code class="lang-vim">debugbreak({pid})
+</code></pre>
+        <p>Interrupt process {pid} (MS-Windows debugging helper) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-did-filetype">
+        <h3><a class="doc-anchor" href="#doc-did-filetype">#</a> <code>did_filetype</code></h3>
+        <pre><code class="lang-vim">did_filetype()
+</code></pre>
+        <p>1 if a FileType autocommand has run for the current buffer (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-diff-filler">
+        <h3><a class="doc-anchor" href="#doc-diff-filler">#</a> <code>diff_filler</code></h3>
+        <pre><code class="lang-vim">diff_filler({lnum})
+</code></pre>
+        <p>Number of filler lines above diff line {lnum}.</p>
+      </article>
+      <article class="doc-entry" id="doc-diff-hlid">
+        <h3><a class="doc-anchor" href="#doc-diff-hlid">#</a> <code>diff_hlID</code></h3>
+        <pre><code class="lang-vim">diff_hlID({lnum}, {col})
+</code></pre>
+        <p>Diff highlight ID at line {lnum}, column {col}.</p>
+      </article>
+      <article class="doc-entry" id="doc-eval">
+        <h3><a class="doc-anchor" href="#doc-eval">#</a> <code>eval</code></h3>
+        <pre><code class="lang-vim">eval({string})
+</code></pre>
+        <p>Evaluate {string} as a Vim expression (inverse of string()) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-eventhandler">
+        <h3><a class="doc-anchor" href="#doc-eventhandler">#</a> <code>eventhandler</code></h3>
+        <pre><code class="lang-vim">eventhandler()
+</code></pre>
+        <p>1 if Vim is inside an event handler (e.g. processing a callback) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-execute">
+        <h3><a class="doc-anchor" href="#doc-execute">#</a> <code>execute</code></h3>
+        <pre><code class="lang-vim">execute({command} [, {silent}])
+</code></pre>
+        <p>Execute Ex {command}(s) and return their captured output (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-feedkeys">
+        <h3><a class="doc-anchor" href="#doc-feedkeys">#</a> <code>feedkeys</code></h3>
+        <pre><code class="lang-vim">feedkeys({string} [, {mode}])
+</code></pre>
+        <p>Push {string} into the typeahead buffer as if typed (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-filter">
+        <h3><a class="doc-anchor" href="#doc-filter">#</a> <code>filter</code></h3>
+        <pre><code class="lang-vim">filter({expr1}, {expr2})
+</code></pre>
+        <p>Keep items of {expr1} for which {expr2} is non-zero; in place.</p>
+      </article>
+      <article class="doc-entry" id="doc-foldclosed">
+        <h3><a class="doc-anchor" href="#doc-foldclosed">#</a> <code>foldclosed</code></h3>
+        <pre><code class="lang-vim">foldclosed({lnum})
+</code></pre>
+        <p>First line of the closed fold at {lnum}, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-foldclosedend">
+        <h3><a class="doc-anchor" href="#doc-foldclosedend">#</a> <code>foldclosedend</code></h3>
+        <pre><code class="lang-vim">foldclosedend({lnum})
+</code></pre>
+        <p>Last line of the closed fold at {lnum}, else -1.</p>
+      </article>
+      <article class="doc-entry" id="doc-foldlevel">
+        <h3><a class="doc-anchor" href="#doc-foldlevel">#</a> <code>foldlevel</code></h3>
+        <pre><code class="lang-vim">foldlevel({lnum})
+</code></pre>
+        <p>Fold nesting level of line {lnum}.</p>
+      </article>
+      <article class="doc-entry" id="doc-foldtext">
+        <h3><a class="doc-anchor" href="#doc-foldtext">#</a> <code>foldtext</code></h3>
+        <pre><code class="lang-vim">foldtext()
+</code></pre>
+        <p>Text Vim shows for the closed fold on the current line.</p>
+      </article>
+      <article class="doc-entry" id="doc-foldtextresult">
+        <h3><a class="doc-anchor" href="#doc-foldtextresult">#</a> <code>foldtextresult</code></h3>
+        <pre><code class="lang-vim">foldtextresult({lnum})
+</code></pre>
+        <p>The &#39;foldtext&#39; string for the fold at {lnum}.</p>
+      </article>
+      <article class="doc-entry" id="doc-foreground">
+        <h3><a class="doc-anchor" href="#doc-foreground">#</a> <code>foreground</code></h3>
+        <pre><code class="lang-vim">foreground()
+</code></pre>
+        <p>Bring the Vim window to the foreground (GUI/clients) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-fullcommand">
+        <h3><a class="doc-anchor" href="#doc-fullcommand">#</a> <code>fullcommand</code></h3>
+        <pre><code class="lang-vim">fullcommand({name} [, {vim9}])
+</code></pre>
+        <p>Full Ex-command name for the abbreviation {name}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcellwidths">
+        <h3><a class="doc-anchor" href="#doc-getcellwidths">#</a> <code>getcellwidths</code></h3>
+        <pre><code class="lang-vim">getcellwidths()
+</code></pre>
+        <p>List of [low, high, width] cell-width overrides set with setcellwidths().</p>
+      </article>
+      <article class="doc-entry" id="doc-getchar">
+        <h3><a class="doc-anchor" href="#doc-getchar">#</a> <code>getchar</code></h3>
+        <pre><code class="lang-vim">getchar([{expr} [, {opts}]])
+</code></pre>
+        <p>Get one character of user input as a Number or special-key String.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcharmod">
+        <h3><a class="doc-anchor" href="#doc-getcharmod">#</a> <code>getcharmod</code></h3>
+        <pre><code class="lang-vim">getcharmod()
+</code></pre>
+        <p>Bitmask of modifier keys held for the last getchar().</p>
+      </article>
+      <article class="doc-entry" id="doc-getcharpos">
+        <h3><a class="doc-anchor" href="#doc-getcharpos">#</a> <code>getcharpos</code></h3>
+        <pre><code class="lang-vim">getcharpos({expr})
+</code></pre>
+        <p>Like getpos() but the column is a character index.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcharsearch">
+        <h3><a class="doc-anchor" href="#doc-getcharsearch">#</a> <code>getcharsearch</code></h3>
+        <pre><code class="lang-vim">getcharsearch()
+</code></pre>
+        <p>Dict describing the last character search (f/t/F/T).</p>
+      </article>
+      <article class="doc-entry" id="doc-getcharstr">
+        <h3><a class="doc-anchor" href="#doc-getcharstr">#</a> <code>getcharstr</code></h3>
+        <pre><code class="lang-vim">getcharstr([{expr} [, {opts}]])
+</code></pre>
+        <p>Like getchar() but always returns the character as a String.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcmdcomplpat">
+        <h3><a class="doc-anchor" href="#doc-getcmdcomplpat">#</a> <code>getcmdcomplpat</code></h3>
+        <pre><code class="lang-vim">getcmdcomplpat()
+</code></pre>
+        <p>Pattern used for completion of the current command line.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcmdcompltype">
+        <h3><a class="doc-anchor" href="#doc-getcmdcompltype">#</a> <code>getcmdcompltype</code></h3>
+        <pre><code class="lang-vim">getcmdcompltype()
+</code></pre>
+        <p>Completion type of the current command line.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcmdline">
+        <h3><a class="doc-anchor" href="#doc-getcmdline">#</a> <code>getcmdline</code></h3>
+        <pre><code class="lang-vim">getcmdline()
+</code></pre>
+        <p>Current command-line contents.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcmdpos">
+        <h3><a class="doc-anchor" href="#doc-getcmdpos">#</a> <code>getcmdpos</code></h3>
+        <pre><code class="lang-vim">getcmdpos()
+</code></pre>
+        <p>1-based byte position of the cursor in the command line.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcmdprompt">
+        <h3><a class="doc-anchor" href="#doc-getcmdprompt">#</a> <code>getcmdprompt</code></h3>
+        <pre><code class="lang-vim">getcmdprompt()
+</code></pre>
+        <p>Prompt string of the current input()/command line.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcmdscreenpos">
+        <h3><a class="doc-anchor" href="#doc-getcmdscreenpos">#</a> <code>getcmdscreenpos</code></h3>
+        <pre><code class="lang-vim">getcmdscreenpos()
+</code></pre>
+        <p>Screen cursor position within the command line.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcmdtype">
+        <h3><a class="doc-anchor" href="#doc-getcmdtype">#</a> <code>getcmdtype</code></h3>
+        <pre><code class="lang-vim">getcmdtype()
+</code></pre>
+        <p>Type of the current command line (&#39;:&#39;, &#39;/&#39;, &#39;?&#39;, &#39;@&#39;, &#39;-&#39;, &#39;=&#39;).</p>
+      </article>
+      <article class="doc-entry" id="doc-getcmdwintype">
+        <h3><a class="doc-anchor" href="#doc-getcmdwintype">#</a> <code>getcmdwintype</code></h3>
+        <pre><code class="lang-vim">getcmdwintype()
+</code></pre>
+        <p>Type of the command-line window, or empty if none (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-getcompletion">
+        <h3><a class="doc-anchor" href="#doc-getcompletion">#</a> <code>getcompletion</code></h3>
+        <pre><code class="lang-vim">getcompletion({pat}, {type} [, {filtered}])
+</code></pre>
+        <p>List of command-line completion candidates for {pat} of {type}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcompletiontype">
+        <h3><a class="doc-anchor" href="#doc-getcompletiontype">#</a> <code>getcompletiontype</code></h3>
+        <pre><code class="lang-vim">getcompletiontype({pat})
+</code></pre>
+        <p>Completion type Vim would use for command line {pat}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcurpos">
+        <h3><a class="doc-anchor" href="#doc-getcurpos">#</a> <code>getcurpos</code></h3>
+        <pre><code class="lang-vim">getcurpos([{winid}])
+</code></pre>
+        <p>Cursor position of a window including curswant.</p>
+      </article>
+      <article class="doc-entry" id="doc-getcursorcharpos">
+        <h3><a class="doc-anchor" href="#doc-getcursorcharpos">#</a> <code>getcursorcharpos</code></h3>
+        <pre><code class="lang-vim">getcursorcharpos([{winid}])
+</code></pre>
+        <p>Like getcurpos() but the column is a character index.</p>
+      </article>
+      <article class="doc-entry" id="doc-getjumplist">
+        <h3><a class="doc-anchor" href="#doc-getjumplist">#</a> <code>getjumplist</code></h3>
+        <pre><code class="lang-vim">getjumplist([{winnr} [, {tabnr}]])
+</code></pre>
+        <p>[jumplist, index] for a window.</p>
+      </article>
+      <article class="doc-entry" id="doc-getloclist">
+        <h3><a class="doc-anchor" href="#doc-getloclist">#</a> <code>getloclist</code></h3>
+        <pre><code class="lang-vim">getloclist({nr} [, {what}])
+</code></pre>
+        <p>List of location-list entries for window {nr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getmarklist">
+        <h3><a class="doc-anchor" href="#doc-getmarklist">#</a> <code>getmarklist</code></h3>
+        <pre><code class="lang-vim">getmarklist([{buf}])
+</code></pre>
+        <p>List of marks (global, or local to buffer {buf}).</p>
+      </article>
+      <article class="doc-entry" id="doc-getmatches">
+        <h3><a class="doc-anchor" href="#doc-getmatches">#</a> <code>getmatches</code></h3>
+        <pre><code class="lang-vim">getmatches([{win}])
+</code></pre>
+        <p>List of matches added with matchadd()/setmatches().</p>
+      </article>
+      <article class="doc-entry" id="doc-getmousepos">
+        <h3><a class="doc-anchor" href="#doc-getmousepos">#</a> <code>getmousepos</code></h3>
+        <pre><code class="lang-vim">getmousepos()
+</code></pre>
+        <p>Dict with the last known mouse position.</p>
+      </article>
+      <article class="doc-entry" id="doc-getpos">
+        <h3><a class="doc-anchor" href="#doc-getpos">#</a> <code>getpos</code></h3>
+        <pre><code class="lang-vim">getpos({expr})
+</code></pre>
+        <p>Position [bufnum, lnum, col, off] of {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getqflist">
+        <h3><a class="doc-anchor" href="#doc-getqflist">#</a> <code>getqflist</code></h3>
+        <pre><code class="lang-vim">getqflist([{what}])
+</code></pre>
+        <p>List of quickfix entries (or info per {what}).</p>
+      </article>
+      <article class="doc-entry" id="doc-getreg">
+        <h3><a class="doc-anchor" href="#doc-getreg">#</a> <code>getreg</code></h3>
+        <pre><code class="lang-vim">getreg([{regname} [, {list} [, {opts}]]])
+</code></pre>
+        <p>Contents of register {regname}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getreginfo">
+        <h3><a class="doc-anchor" href="#doc-getreginfo">#</a> <code>getreginfo</code></h3>
+        <pre><code class="lang-vim">getreginfo([{regname}])
+</code></pre>
+        <p>Dict describing register {regname} (value, type, width).</p>
+      </article>
+      <article class="doc-entry" id="doc-getregion">
+        <h3><a class="doc-anchor" href="#doc-getregion">#</a> <code>getregion</code></h3>
+        <pre><code class="lang-vim">getregion({pos1}, {pos2} [, {opts}])
+</code></pre>
+        <p>List of text lines for the region between {pos1} and {pos2}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getregionpos">
+        <h3><a class="doc-anchor" href="#doc-getregionpos">#</a> <code>getregionpos</code></h3>
+        <pre><code class="lang-vim">getregionpos({pos1}, {pos2} [, {opts}])
+</code></pre>
+        <p>List of [start, end] position pairs for each line of a region.</p>
+      </article>
+      <article class="doc-entry" id="doc-getregtype">
+        <h3><a class="doc-anchor" href="#doc-getregtype">#</a> <code>getregtype</code></h3>
+        <pre><code class="lang-vim">getregtype([{regname}])
+</code></pre>
+        <p>Type of register {regname}: &#39;v&#39;, &#39;V&#39;, or blockwise.</p>
+      </article>
+      <article class="doc-entry" id="doc-getscriptinfo">
+        <h3><a class="doc-anchor" href="#doc-getscriptinfo">#</a> <code>getscriptinfo</code></h3>
+        <pre><code class="lang-vim">getscriptinfo([{opts}])
+</code></pre>
+        <p>List of dicts describing the sourced Vim scripts.</p>
+      </article>
+      <article class="doc-entry" id="doc-getstacktrace">
+        <h3><a class="doc-anchor" href="#doc-getstacktrace">#</a> <code>getstacktrace</code></h3>
+        <pre><code class="lang-vim">getstacktrace()
+</code></pre>
+        <p>List describing the current Vimscript call stack.</p>
+      </article>
+      <article class="doc-entry" id="doc-gettabinfo">
+        <h3><a class="doc-anchor" href="#doc-gettabinfo">#</a> <code>gettabinfo</code></h3>
+        <pre><code class="lang-vim">gettabinfo([{tabnr}])
+</code></pre>
+        <p>List of dicts with information about tab pages.</p>
+      </article>
+      <article class="doc-entry" id="doc-gettabvar">
+        <h3><a class="doc-anchor" href="#doc-gettabvar">#</a> <code>gettabvar</code></h3>
+        <pre><code class="lang-vim">gettabvar({tabnr}, {varname} [, {def}])
+</code></pre>
+        <p>Tab-local variable {varname} of tab {tabnr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-gettabwinvar">
+        <h3><a class="doc-anchor" href="#doc-gettabwinvar">#</a> <code>gettabwinvar</code></h3>
+        <pre><code class="lang-vim">gettabwinvar({tabnr}, {winnr}, {varname} [, {def}])
+</code></pre>
+        <p>Window-local variable in window {winnr} of tab {tabnr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-gettagstack">
+        <h3><a class="doc-anchor" href="#doc-gettagstack">#</a> <code>gettagstack</code></h3>
+        <pre><code class="lang-vim">gettagstack([{winnr}])
+</code></pre>
+        <p>Dict describing the tag stack of window {winnr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-getwininfo">
+        <h3><a class="doc-anchor" href="#doc-getwininfo">#</a> <code>getwininfo</code></h3>
+        <pre><code class="lang-vim">getwininfo([{winid}])
+</code></pre>
+        <p>List of dicts with information about windows.</p>
+      </article>
+      <article class="doc-entry" id="doc-getwinpos">
+        <h3><a class="doc-anchor" href="#doc-getwinpos">#</a> <code>getwinpos</code></h3>
+        <pre><code class="lang-vim">getwinpos([{timeout}])
+</code></pre>
+        <p>[x, y] pixel position of the Vim window.</p>
+      </article>
+      <article class="doc-entry" id="doc-getwinposx">
+        <h3><a class="doc-anchor" href="#doc-getwinposx">#</a> <code>getwinposx</code></h3>
+        <pre><code class="lang-vim">getwinposx()
+</code></pre>
+        <p>X pixel position of the left of the Vim window, else -1 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-getwinposy">
+        <h3><a class="doc-anchor" href="#doc-getwinposy">#</a> <code>getwinposy</code></h3>
+        <pre><code class="lang-vim">getwinposy()
+</code></pre>
+        <p>Y pixel position of the top of the Vim window, else -1 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-getwinvar">
+        <h3><a class="doc-anchor" href="#doc-getwinvar">#</a> <code>getwinvar</code></h3>
+        <pre><code class="lang-vim">getwinvar({nr}, {varname} [, {def}])
+</code></pre>
+        <p>Window-local variable/option {varname} of window {nr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-has">
+        <h3><a class="doc-anchor" href="#doc-has">#</a> <code>has</code></h3>
+        <pre><code class="lang-vim">has({feature} [, {check}])
+</code></pre>
+        <p>1 if Vim supports {feature}, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-hasmapto">
+        <h3><a class="doc-anchor" href="#doc-hasmapto">#</a> <code>hasmapto</code></h3>
+        <pre><code class="lang-vim">hasmapto({what} [, {mode} [, {abbr}]])
+</code></pre>
+        <p>1 if a mapping exists whose rhs contains {what}.</p>
+      </article>
+      <article class="doc-entry" id="doc-highlight-exists">
+        <h3><a class="doc-anchor" href="#doc-highlight-exists">#</a> <code>highlight_exists</code></h3>
+        <pre><code class="lang-vim">highlight_exists({name})
+</code></pre>
+        <p>1 if highlight group {name} is defined (alias of hlexists()).</p>
+      </article>
+      <article class="doc-entry" id="doc-histadd">
+        <h3><a class="doc-anchor" href="#doc-histadd">#</a> <code>histadd</code></h3>
+        <pre><code class="lang-vim">histadd({history}, {item})
+</code></pre>
+        <p>Add {item} to the {history} list (cmd/search/expr/input).</p>
+      </article>
+      <article class="doc-entry" id="doc-histdel">
+        <h3><a class="doc-anchor" href="#doc-histdel">#</a> <code>histdel</code></h3>
+        <pre><code class="lang-vim">histdel({history} [, {item}])
+</code></pre>
+        <p>Delete entries from the {history} list.</p>
+      </article>
+      <article class="doc-entry" id="doc-histget">
+        <h3><a class="doc-anchor" href="#doc-histget">#</a> <code>histget</code></h3>
+        <pre><code class="lang-vim">histget({history} [, {index}])
+</code></pre>
+        <p>Entry {index} from the {history} list.</p>
+      </article>
+      <article class="doc-entry" id="doc-histnr">
+        <h3><a class="doc-anchor" href="#doc-histnr">#</a> <code>histnr</code></h3>
+        <pre><code class="lang-vim">histnr({history})
+</code></pre>
+        <p>Index of the most recent entry in the {history} list.</p>
+      </article>
+      <article class="doc-entry" id="doc-hlid">
+        <h3><a class="doc-anchor" href="#doc-hlid">#</a> <code>hlID</code></h3>
+        <pre><code class="lang-vim">hlID({name})
+</code></pre>
+        <p>Numeric ID of highlight group {name} (0 if undefined).</p>
+      </article>
+      <article class="doc-entry" id="doc-hlexists">
+        <h3><a class="doc-anchor" href="#doc-hlexists">#</a> <code>hlexists</code></h3>
+        <pre><code class="lang-vim">hlexists({name})
+</code></pre>
+        <p>1 if highlight group {name} is defined, else 0 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-id">
+        <h3><a class="doc-anchor" href="#doc-id">#</a> <code>id</code></h3>
+        <pre><code class="lang-vim">id({expr})
+</code></pre>
+        <p>Unique String identifier for the container or value {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-input">
+        <h3><a class="doc-anchor" href="#doc-input">#</a> <code>input</code></h3>
+        <pre><code class="lang-vim">input({prompt} [, {text} [, {completion}]])
+</code></pre>
+        <p>Prompt for and return a line of input from the user.</p>
+      </article>
+      <article class="doc-entry" id="doc-inputdialog">
+        <h3><a class="doc-anchor" href="#doc-inputdialog">#</a> <code>inputdialog</code></h3>
+        <pre><code class="lang-vim">inputdialog({prompt} [, {text} [, {cancelreturn}]])
+</code></pre>
+        <p>Like input() but using a GUI dialog when available.</p>
+      </article>
+      <article class="doc-entry" id="doc-inputlist">
+        <h3><a class="doc-anchor" href="#doc-inputlist">#</a> <code>inputlist</code></h3>
+        <pre><code class="lang-vim">inputlist({textlist})
+</code></pre>
+        <p>Prompt the user to pick a numbered entry from {textlist}.</p>
+      </article>
+      <article class="doc-entry" id="doc-inputrestore">
+        <h3><a class="doc-anchor" href="#doc-inputrestore">#</a> <code>inputrestore</code></h3>
+        <pre><code class="lang-vim">inputrestore()
+</code></pre>
+        <p>Restore typeahead previously saved with inputsave() (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-inputsave">
+        <h3><a class="doc-anchor" href="#doc-inputsave">#</a> <code>inputsave</code></h3>
+        <pre><code class="lang-vim">inputsave()
+</code></pre>
+        <p>Save and clear pending typeahead so input() can be used (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-inputsecret">
+        <h3><a class="doc-anchor" href="#doc-inputsecret">#</a> <code>inputsecret</code></h3>
+        <pre><code class="lang-vim">inputsecret({prompt} [, {text}])
+</code></pre>
+        <p>Like input() but the typed text is hidden.</p>
+      </article>
+      <article class="doc-entry" id="doc-interrupt">
+        <h3><a class="doc-anchor" href="#doc-interrupt">#</a> <code>interrupt</code></h3>
+        <pre><code class="lang-vim">interrupt()
+</code></pre>
+        <p>Interrupt script execution as if CTRL-C were pressed (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-map">
+        <h3><a class="doc-anchor" href="#doc-map">#</a> <code>map</code></h3>
+        <pre><code class="lang-vim">map({expr1}, {expr2})
+</code></pre>
+        <p>Replace each item of List/Dict/Blob/String {expr1} with {expr2}; in place.</p>
+      </article>
+      <article class="doc-entry" id="doc-maparg">
+        <h3><a class="doc-anchor" href="#doc-maparg">#</a> <code>maparg</code></h3>
+        <pre><code class="lang-vim">maparg({name} [, {mode} [, {abbr} [, {dict}]]])
+</code></pre>
+        <p>rhs (or Dict) of the mapping of {name} in {mode}.</p>
+      </article>
+      <article class="doc-entry" id="doc-mapcheck">
+        <h3><a class="doc-anchor" href="#doc-mapcheck">#</a> <code>mapcheck</code></h3>
+        <pre><code class="lang-vim">mapcheck({name} [, {mode} [, {abbr}]])
+</code></pre>
+        <p>rhs of a mapping that {name} could match, else empty.</p>
+      </article>
+      <article class="doc-entry" id="doc-maplist">
+        <h3><a class="doc-anchor" href="#doc-maplist">#</a> <code>maplist</code></h3>
+        <pre><code class="lang-vim">maplist([{abbr}])
+</code></pre>
+        <p>List of dicts describing all mappings.</p>
+      </article>
+      <article class="doc-entry" id="doc-mapset">
+        <h3><a class="doc-anchor" href="#doc-mapset">#</a> <code>mapset</code></h3>
+        <pre><code class="lang-vim">mapset({mode}, {abbr}, {dict})
+</code></pre>
+        <p>Restore a mapping from a maparg() dict.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchadd">
+        <h3><a class="doc-anchor" href="#doc-matchadd">#</a> <code>matchadd</code></h3>
+        <pre><code class="lang-vim">matchadd({group}, {pattern} [, {priority} [, {id} [, {dict}]]])
+</code></pre>
+        <p>Highlight {pattern} with {group}; returns the match id.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchaddpos">
+        <h3><a class="doc-anchor" href="#doc-matchaddpos">#</a> <code>matchaddpos</code></h3>
+        <pre><code class="lang-vim">matchaddpos({group}, {pos} [, {priority} [, {id} [, {dict}]]])
+</code></pre>
+        <p>Highlight positions {pos} with {group}; returns the match id.</p>
+      </article>
+      <article class="doc-entry" id="doc-matcharg">
+        <h3><a class="doc-anchor" href="#doc-matcharg">#</a> <code>matcharg</code></h3>
+        <pre><code class="lang-vim">matcharg({nr})
+</code></pre>
+        <p>[&#39;pattern&#39;, &#39;group&#39;] for the {nr}&#39;th :match command.</p>
+      </article>
+      <article class="doc-entry" id="doc-matchdelete">
+        <h3><a class="doc-anchor" href="#doc-matchdelete">#</a> <code>matchdelete</code></h3>
+        <pre><code class="lang-vim">matchdelete({id} [, {win}])
+</code></pre>
+        <p>Delete the match with {id}.</p>
+      </article>
+      <article class="doc-entry" id="doc-menu-get">
+        <h3><a class="doc-anchor" href="#doc-menu-get">#</a> <code>menu_get</code></h3>
+        <pre><code class="lang-vim">menu_get({path} [, {modes}])
+</code></pre>
+        <p>List of dicts describing the menus under {path}.</p>
+      </article>
+      <article class="doc-entry" id="doc-menu-info">
+        <h3><a class="doc-anchor" href="#doc-menu-info">#</a> <code>menu_info</code></h3>
+        <pre><code class="lang-vim">menu_info({name} [, {mode}])
+</code></pre>
+        <p>Dict of information about menu {name}.</p>
+      </article>
+      <article class="doc-entry" id="doc-mode">
+        <h3><a class="doc-anchor" href="#doc-mode">#</a> <code>mode</code></h3>
+        <pre><code class="lang-vim">mode([{expr}])
+</code></pre>
+        <p>Current mode as a short String (&#39;n&#39;, &#39;i&#39;, &#39;v&#39;, ...).</p>
+      </article>
+      <article class="doc-entry" id="doc-preinserted">
+        <h3><a class="doc-anchor" href="#doc-preinserted">#</a> <code>preinserted</code></h3>
+        <pre><code class="lang-vim">preinserted()
+</code></pre>
+        <p>Text inserted by the current &#39;completefunc&#39;/preinsert, if any.</p>
+      </article>
+      <article class="doc-entry" id="doc-prompt-appendbuf">
+        <h3><a class="doc-anchor" href="#doc-prompt-appendbuf">#</a> <code>prompt_appendbuf</code></h3>
+        <pre><code class="lang-vim">prompt_appendbuf({buf}, {expr})
+</code></pre>
+        <p>Append {expr} to prompt-buffer {buf} above the prompt (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-prompt-getinput">
+        <h3><a class="doc-anchor" href="#doc-prompt-getinput">#</a> <code>prompt_getinput</code></h3>
+        <pre><code class="lang-vim">prompt_getinput({buf})
+</code></pre>
+        <p>Current input line in prompt-buffer {buf} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-prompt-getprompt">
+        <h3><a class="doc-anchor" href="#doc-prompt-getprompt">#</a> <code>prompt_getprompt</code></h3>
+        <pre><code class="lang-vim">prompt_getprompt({buf})
+</code></pre>
+        <p>Prompt string of prompt-buffer {buf} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-prompt-setcallback">
+        <h3><a class="doc-anchor" href="#doc-prompt-setcallback">#</a> <code>prompt_setcallback</code></h3>
+        <pre><code class="lang-vim">prompt_setcallback({buf}, {expr})
+</code></pre>
+        <p>Set the callback invoked on Enter in prompt-buffer {buf} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-prompt-setinterrupt">
+        <h3><a class="doc-anchor" href="#doc-prompt-setinterrupt">#</a> <code>prompt_setinterrupt</code></h3>
+        <pre><code class="lang-vim">prompt_setinterrupt({buf}, {expr})
+</code></pre>
+        <p>Set the callback invoked on CTRL-C in prompt-buffer {buf} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-prompt-setprompt">
+        <h3><a class="doc-anchor" href="#doc-prompt-setprompt">#</a> <code>prompt_setprompt</code></h3>
+        <pre><code class="lang-vim">prompt_setprompt({buf}, {text})
+</code></pre>
+        <p>Set the prompt of prompt-buffer {buf} to {text} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-pum-getpos">
+        <h3><a class="doc-anchor" href="#doc-pum-getpos">#</a> <code>pum_getpos</code></h3>
+        <pre><code class="lang-vim">pum_getpos()
+</code></pre>
+        <p>Dict describing the popup menu position, or empty if hidden.</p>
+      </article>
+      <article class="doc-entry" id="doc-pumvisible">
+        <h3><a class="doc-anchor" href="#doc-pumvisible">#</a> <code>pumvisible</code></h3>
+        <pre><code class="lang-vim">pumvisible()
+</code></pre>
+        <p>1 if the Insert-mode popup menu is visible, else 0 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-reg-executing">
+        <h3><a class="doc-anchor" href="#doc-reg-executing">#</a> <code>reg_executing</code></h3>
+        <pre><code class="lang-vim">reg_executing()
+</code></pre>
+        <p>Name of the register being executed (replayed), or empty (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-reg-recorded">
+        <h3><a class="doc-anchor" href="#doc-reg-recorded">#</a> <code>reg_recorded</code></h3>
+        <pre><code class="lang-vim">reg_recorded()
+</code></pre>
+        <p>Name of the register last recorded into, or empty (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-reg-recording">
+        <h3><a class="doc-anchor" href="#doc-reg-recording">#</a> <code>reg_recording</code></h3>
+        <pre><code class="lang-vim">reg_recording()
+</code></pre>
+        <p>Name of the register being recorded into, or empty (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-screenattr">
+        <h3><a class="doc-anchor" href="#doc-screenattr">#</a> <code>screenattr</code></h3>
+        <pre><code class="lang-vim">screenattr({row}, {col})
+</code></pre>
+        <p>Highlight attribute id of the screen cell at {row},{col} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-screenchar">
+        <h3><a class="doc-anchor" href="#doc-screenchar">#</a> <code>screenchar</code></h3>
+        <pre><code class="lang-vim">screenchar({row}, {col})
+</code></pre>
+        <p>Codepoint of the character on the screen at {row},{col} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-screenchars">
+        <h3><a class="doc-anchor" href="#doc-screenchars">#</a> <code>screenchars</code></h3>
+        <pre><code class="lang-vim">screenchars({row}, {col})
+</code></pre>
+        <p>List of codepoints (incl. composing) at screen cell {row},{col}.</p>
+      </article>
+      <article class="doc-entry" id="doc-screencol">
+        <h3><a class="doc-anchor" href="#doc-screencol">#</a> <code>screencol</code></h3>
+        <pre><code class="lang-vim">screencol()
+</code></pre>
+        <p>Current cursor screen column (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-screenpos">
+        <h3><a class="doc-anchor" href="#doc-screenpos">#</a> <code>screenpos</code></h3>
+        <pre><code class="lang-vim">screenpos({winid}, {lnum}, {col})
+</code></pre>
+        <p>Screen position of buffer position {lnum},{col}.</p>
+      </article>
+      <article class="doc-entry" id="doc-screenrow">
+        <h3><a class="doc-anchor" href="#doc-screenrow">#</a> <code>screenrow</code></h3>
+        <pre><code class="lang-vim">screenrow()
+</code></pre>
+        <p>Current cursor screen row (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-screenstring">
+        <h3><a class="doc-anchor" href="#doc-screenstring">#</a> <code>screenstring</code></h3>
+        <pre><code class="lang-vim">screenstring({row}, {col})
+</code></pre>
+        <p>String of the character(s) at screen cell {row},{col} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-search">
+        <h3><a class="doc-anchor" href="#doc-search">#</a> <code>search</code></h3>
+        <pre><code class="lang-vim">search({pattern} [, {flags} [, {stopline} [, {timeout} [, {skip}]]]])
+</code></pre>
+        <p>Search for {pattern}; returns the matching line number, else 0.</p>
+      </article>
+      <article class="doc-entry" id="doc-searchcount">
+        <h3><a class="doc-anchor" href="#doc-searchcount">#</a> <code>searchcount</code></h3>
+        <pre><code class="lang-vim">searchcount([{options}])
+</code></pre>
+        <p>Dict of search match counts for the last/used pattern.</p>
+      </article>
+      <article class="doc-entry" id="doc-searchdecl">
+        <h3><a class="doc-anchor" href="#doc-searchdecl">#</a> <code>searchdecl</code></h3>
+        <pre><code class="lang-vim">searchdecl({name} [, {global} [, {thisblock}]])
+</code></pre>
+        <p>Move to the declaration of {name}; 0 if found (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-searchpair">
+        <h3><a class="doc-anchor" href="#doc-searchpair">#</a> <code>searchpair</code></h3>
+        <pre><code class="lang-vim">searchpair({start}, {middle}, {end} [, {flags} ...])
+</code></pre>
+        <p>Search for the matching {end} of a nested {start}/{end} pair.</p>
+      </article>
+      <article class="doc-entry" id="doc-searchpairpos">
+        <h3><a class="doc-anchor" href="#doc-searchpairpos">#</a> <code>searchpairpos</code></h3>
+        <pre><code class="lang-vim">searchpairpos({start}, {middle}, {end} [, {flags} ...])
+</code></pre>
+        <p>Like searchpair() but returns the [line, col] of the match.</p>
+      </article>
+      <article class="doc-entry" id="doc-searchpos">
+        <h3><a class="doc-anchor" href="#doc-searchpos">#</a> <code>searchpos</code></h3>
+        <pre><code class="lang-vim">searchpos({pattern} [, {flags} [, {stopline} [, {timeout} [, {skip}]]]])
+</code></pre>
+        <p>Like search() but returns the [line, col] of the match.</p>
+      </article>
+      <article class="doc-entry" id="doc-setcellwidths">
+        <h3><a class="doc-anchor" href="#doc-setcellwidths">#</a> <code>setcellwidths</code></h3>
+        <pre><code class="lang-vim">setcellwidths({list})
+</code></pre>
+        <p>Override the display cell width of character ranges from {list}.</p>
+      </article>
+      <article class="doc-entry" id="doc-setcharpos">
+        <h3><a class="doc-anchor" href="#doc-setcharpos">#</a> <code>setcharpos</code></h3>
+        <pre><code class="lang-vim">setcharpos({expr}, {list})
+</code></pre>
+        <p>Like setpos() but the column in {list} is a character index.</p>
+      </article>
+      <article class="doc-entry" id="doc-setcharsearch">
+        <h3><a class="doc-anchor" href="#doc-setcharsearch">#</a> <code>setcharsearch</code></h3>
+        <pre><code class="lang-vim">setcharsearch({dict})
+</code></pre>
+        <p>Set the last character-search state from {dict} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-setcmdline">
+        <h3><a class="doc-anchor" href="#doc-setcmdline">#</a> <code>setcmdline</code></h3>
+        <pre><code class="lang-vim">setcmdline({str} [, {pos}])
+</code></pre>
+        <p>Set the command line to {str} with the cursor at {pos}.</p>
+      </article>
+      <article class="doc-entry" id="doc-setcmdpos">
+        <h3><a class="doc-anchor" href="#doc-setcmdpos">#</a> <code>setcmdpos</code></h3>
+        <pre><code class="lang-vim">setcmdpos({pos})
+</code></pre>
+        <p>Set the cursor position in the command line to {pos}.</p>
+      </article>
+      <article class="doc-entry" id="doc-setcursorcharpos">
+        <h3><a class="doc-anchor" href="#doc-setcursorcharpos">#</a> <code>setcursorcharpos</code></h3>
+        <pre><code class="lang-vim">setcursorcharpos({lnum}, {col} [, {off}])
+</code></pre>
+        <p>Move the cursor to character position {lnum},{col}.</p>
+      </article>
+      <article class="doc-entry" id="doc-setloclist">
+        <h3><a class="doc-anchor" href="#doc-setloclist">#</a> <code>setloclist</code></h3>
+        <pre><code class="lang-vim">setloclist({nr}, {list} [, {action} [, {what}]])
+</code></pre>
+        <p>Set the location list for window {nr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-setmatches">
+        <h3><a class="doc-anchor" href="#doc-setmatches">#</a> <code>setmatches</code></h3>
+        <pre><code class="lang-vim">setmatches({list} [, {win}])
+</code></pre>
+        <p>Restore matches from a List produced by getmatches().</p>
+      </article>
+      <article class="doc-entry" id="doc-setpos">
+        <h3><a class="doc-anchor" href="#doc-setpos">#</a> <code>setpos</code></h3>
+        <pre><code class="lang-vim">setpos({expr}, {list})
+</code></pre>
+        <p>Set cursor/mark position {expr} from [bufnum, lnum, col, off].</p>
+      </article>
+      <article class="doc-entry" id="doc-setqflist">
+        <h3><a class="doc-anchor" href="#doc-setqflist">#</a> <code>setqflist</code></h3>
+        <pre><code class="lang-vim">setqflist({list} [, {action} [, {what}]])
+</code></pre>
+        <p>Set the quickfix list.</p>
+      </article>
+      <article class="doc-entry" id="doc-setreg">
+        <h3><a class="doc-anchor" href="#doc-setreg">#</a> <code>setreg</code></h3>
+        <pre><code class="lang-vim">setreg({regname}, {value} [, {options}])
+</code></pre>
+        <p>Set register {regname} to {value} with optional type {options}.</p>
+      </article>
+      <article class="doc-entry" id="doc-settabvar">
+        <h3><a class="doc-anchor" href="#doc-settabvar">#</a> <code>settabvar</code></h3>
+        <pre><code class="lang-vim">settabvar({tabnr}, {varname}, {val})
+</code></pre>
+        <p>Set tab-local variable {varname} of tab {tabnr} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-settabwinvar">
+        <h3><a class="doc-anchor" href="#doc-settabwinvar">#</a> <code>settabwinvar</code></h3>
+        <pre><code class="lang-vim">settabwinvar({tabnr}, {winnr}, {varname}, {val})
+</code></pre>
+        <p>Set a window-local variable in window {winnr} of tab {tabnr} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-settagstack">
+        <h3><a class="doc-anchor" href="#doc-settagstack">#</a> <code>settagstack</code></h3>
+        <pre><code class="lang-vim">settagstack({winnr}, {dict} [, {action}])
+</code></pre>
+        <p>Set the tag stack of window {winnr} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-setwinvar">
+        <h3><a class="doc-anchor" href="#doc-setwinvar">#</a> <code>setwinvar</code></h3>
+        <pre><code class="lang-vim">setwinvar({nr}, {varname}, {val})
+</code></pre>
+        <p>Set window-local variable/option {varname} of window {nr} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-shiftwidth">
+        <h3><a class="doc-anchor" href="#doc-shiftwidth">#</a> <code>shiftwidth</code></h3>
+        <pre><code class="lang-vim">shiftwidth([{col}])
+</code></pre>
+        <p>Effective &#39;shiftwidth&#39; value (resolving 0 to &#39;tabstop&#39;).</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-define">
+        <h3><a class="doc-anchor" href="#doc-sign-define">#</a> <code>sign_define</code></h3>
+        <pre><code class="lang-vim">sign_define({name} [, {dict}])
+</code></pre>
+        <p>Define sign {name} with attributes; 0 on success.</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-getdefined">
+        <h3><a class="doc-anchor" href="#doc-sign-getdefined">#</a> <code>sign_getdefined</code></h3>
+        <pre><code class="lang-vim">sign_getdefined([{name}])
+</code></pre>
+        <p>List of defined signs (or just {name}).</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-getplaced">
+        <h3><a class="doc-anchor" href="#doc-sign-getplaced">#</a> <code>sign_getplaced</code></h3>
+        <pre><code class="lang-vim">sign_getplaced([{buf} [, {dict}]])
+</code></pre>
+        <p>List of signs placed in a buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-jump">
+        <h3><a class="doc-anchor" href="#doc-sign-jump">#</a> <code>sign_jump</code></h3>
+        <pre><code class="lang-vim">sign_jump({id}, {group}, {buf})
+</code></pre>
+        <p>Jump to sign {id} of {group} in buffer {buf}.</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-place">
+        <h3><a class="doc-anchor" href="#doc-sign-place">#</a> <code>sign_place</code></h3>
+        <pre><code class="lang-vim">sign_place({id}, {group}, {name}, {buf} [, {dict}])
+</code></pre>
+        <p>Place sign {name} in buffer {buf}; returns the sign id.</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-placelist">
+        <h3><a class="doc-anchor" href="#doc-sign-placelist">#</a> <code>sign_placelist</code></h3>
+        <pre><code class="lang-vim">sign_placelist({list})
+</code></pre>
+        <p>Place a List of signs at once; List of ids.</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-undefine">
+        <h3><a class="doc-anchor" href="#doc-sign-undefine">#</a> <code>sign_undefine</code></h3>
+        <pre><code class="lang-vim">sign_undefine([{name}])
+</code></pre>
+        <p>Undefine sign {name} (or all signs).</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-unplace">
+        <h3><a class="doc-anchor" href="#doc-sign-unplace">#</a> <code>sign_unplace</code></h3>
+        <pre><code class="lang-vim">sign_unplace({group} [, {dict}])
+</code></pre>
+        <p>Remove placed sign(s) in {group}.</p>
+      </article>
+      <article class="doc-entry" id="doc-sign-unplacelist">
+        <h3><a class="doc-anchor" href="#doc-sign-unplacelist">#</a> <code>sign_unplacelist</code></h3>
+        <pre><code class="lang-vim">sign_unplacelist({list})
+</code></pre>
+        <p>Remove a List of placed signs.</p>
+      </article>
+      <article class="doc-entry" id="doc-spellbadword">
+        <h3><a class="doc-anchor" href="#doc-spellbadword">#</a> <code>spellbadword</code></h3>
+        <pre><code class="lang-vim">spellbadword([{sentence}])
+</code></pre>
+        <p>[badword, type] of the first misspelled word at/after the cursor.</p>
+      </article>
+      <article class="doc-entry" id="doc-spellsuggest">
+        <h3><a class="doc-anchor" href="#doc-spellsuggest">#</a> <code>spellsuggest</code></h3>
+        <pre><code class="lang-vim">spellsuggest({word} [, {max} [, {capital}]])
+</code></pre>
+        <p>List of spelling suggestions for {word}.</p>
+      </article>
+      <article class="doc-entry" id="doc-state">
+        <h3><a class="doc-anchor" href="#doc-state">#</a> <code>state</code></h3>
+        <pre><code class="lang-vim">state([{what}])
+</code></pre>
+        <p>String of characters describing Vim&#39;s current busy/blocking state (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-synid">
+        <h3><a class="doc-anchor" href="#doc-synid">#</a> <code>synID</code></h3>
+        <pre><code class="lang-vim">synID({lnum}, {col}, {trans})
+</code></pre>
+        <p>Syntax ID at line {lnum}, column {col} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-synidattr">
+        <h3><a class="doc-anchor" href="#doc-synidattr">#</a> <code>synIDattr</code></h3>
+        <pre><code class="lang-vim">synIDattr({synID}, {what} [, {mode}])
+</code></pre>
+        <p>Attribute {what} of syntax ID {synID} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-synidtrans">
+        <h3><a class="doc-anchor" href="#doc-synidtrans">#</a> <code>synIDtrans</code></h3>
+        <pre><code class="lang-vim">synIDtrans({synID})
+</code></pre>
+        <p>Translated (effective) syntax ID for {synID} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-synconcealed">
+        <h3><a class="doc-anchor" href="#doc-synconcealed">#</a> <code>synconcealed</code></h3>
+        <pre><code class="lang-vim">synconcealed({lnum}, {col})
+</code></pre>
+        <p>Info about concealed text at line {lnum}, column {col}.</p>
+      </article>
+      <article class="doc-entry" id="doc-synstack">
+        <h3><a class="doc-anchor" href="#doc-synstack">#</a> <code>synstack</code></h3>
+        <pre><code class="lang-vim">synstack({lnum}, {col})
+</code></pre>
+        <p>List of syntax IDs stacked at line {lnum}, column {col}.</p>
+      </article>
+      <article class="doc-entry" id="doc-tabpagebuflist">
+        <h3><a class="doc-anchor" href="#doc-tabpagebuflist">#</a> <code>tabpagebuflist</code></h3>
+        <pre><code class="lang-vim">tabpagebuflist([{arg}])
+</code></pre>
+        <p>List of buffer numbers shown in a tab page (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-tabpagenr">
+        <h3><a class="doc-anchor" href="#doc-tabpagenr">#</a> <code>tabpagenr</code></h3>
+        <pre><code class="lang-vim">tabpagenr([{arg}])
+</code></pre>
+        <p>Number of the current (or last) tab page (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-tabpagewinnr">
+        <h3><a class="doc-anchor" href="#doc-tabpagewinnr">#</a> <code>tabpagewinnr</code></h3>
+        <pre><code class="lang-vim">tabpagewinnr({tabnr} [, {arg}])
+</code></pre>
+        <p>Number of the current window in tab {tabnr} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-tagfiles">
+        <h3><a class="doc-anchor" href="#doc-tagfiles">#</a> <code>tagfiles</code></h3>
+        <pre><code class="lang-vim">tagfiles()
+</code></pre>
+        <p>List of tags files used by the current buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-taglist">
+        <h3><a class="doc-anchor" href="#doc-taglist">#</a> <code>taglist</code></h3>
+        <pre><code class="lang-vim">taglist({expr} [, {filename}])
+</code></pre>
+        <p>List of tags matching the regexp {expr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-test-garbagecollect-now">
+        <h3><a class="doc-anchor" href="#doc-test-garbagecollect-now">#</a> <code>test_garbagecollect_now</code></h3>
+        <pre><code class="lang-vim">test_garbagecollect_now()
+</code></pre>
+        <p>Test helper: run the garbage collector immediately (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-test-write-list-log">
+        <h3><a class="doc-anchor" href="#doc-test-write-list-log">#</a> <code>test_write_list_log</code></h3>
+        <pre><code class="lang-vim">test_write_list_log({fname})
+</code></pre>
+        <p>Test helper: write the internal list-allocation log to {fname} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-timer-info">
+        <h3><a class="doc-anchor" href="#doc-timer-info">#</a> <code>timer_info</code></h3>
+        <pre><code class="lang-vim">timer_info([{id}])
+</code></pre>
+        <p>List of dicts describing active timers.</p>
+      </article>
+      <article class="doc-entry" id="doc-timer-pause">
+        <h3><a class="doc-anchor" href="#doc-timer-pause">#</a> <code>timer_pause</code></h3>
+        <pre><code class="lang-vim">timer_pause({timer}, {paused})
+</code></pre>
+        <p>Pause or unpause timer {timer} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-timer-start">
+        <h3><a class="doc-anchor" href="#doc-timer-start">#</a> <code>timer_start</code></h3>
+        <pre><code class="lang-vim">timer_start({time}, {callback} [, {options}])
+</code></pre>
+        <p>Start a timer firing {callback} after {time} ms; returns its id (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-timer-stop">
+        <h3><a class="doc-anchor" href="#doc-timer-stop">#</a> <code>timer_stop</code></h3>
+        <pre><code class="lang-vim">timer_stop({timer})
+</code></pre>
+        <p>Stop timer {timer} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-timer-stopall">
+        <h3><a class="doc-anchor" href="#doc-timer-stopall">#</a> <code>timer_stopall</code></h3>
+        <pre><code class="lang-vim">timer_stopall()
+</code></pre>
+        <p>Stop all timers (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-visualmode">
+        <h3><a class="doc-anchor" href="#doc-visualmode">#</a> <code>visualmode</code></h3>
+        <pre><code class="lang-vim">visualmode([{expr}])
+</code></pre>
+        <p>Last Visual mode used (&#39;v&#39;, &#39;V&#39;, or CTRL-V) (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-wait">
+        <h3><a class="doc-anchor" href="#doc-wait">#</a> <code>wait</code></h3>
+        <pre><code class="lang-vim">wait({timeout}, {condition} [, {interval}])
+</code></pre>
+        <p>Wait until {condition} is true or {timeout} ms elapse (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-wildmenumode">
+        <h3><a class="doc-anchor" href="#doc-wildmenumode">#</a> <code>wildmenumode</code></h3>
+        <pre><code class="lang-vim">wildmenumode()
+</code></pre>
+        <p>1 if the wildmenu command-line completion menu is active (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-wildtrigger">
+        <h3><a class="doc-anchor" href="#doc-wildtrigger">#</a> <code>wildtrigger</code></h3>
+        <pre><code class="lang-vim">wildtrigger()
+</code></pre>
+        <p>Trigger command-line (&#39;wildchar&#39;) completion programmatically (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-win-execute">
+        <h3><a class="doc-anchor" href="#doc-win-execute">#</a> <code>win_execute</code></h3>
+        <pre><code class="lang-vim">win_execute({id}, {command} [, {silent}])
+</code></pre>
+        <p>Execute {command} as if in window {id}, returning its output (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-win-findbuf">
+        <h3><a class="doc-anchor" href="#doc-win-findbuf">#</a> <code>win_findbuf</code></h3>
+        <pre><code class="lang-vim">win_findbuf({bufnr})
+</code></pre>
+        <p>List of window-IDs that display buffer {bufnr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-win-getid">
+        <h3><a class="doc-anchor" href="#doc-win-getid">#</a> <code>win_getid</code></h3>
+        <pre><code class="lang-vim">win_getid([{win} [, {tab}]])
+</code></pre>
+        <p>window-ID of window {win} in tab {tab} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-win-gettype">
+        <h3><a class="doc-anchor" href="#doc-win-gettype">#</a> <code>win_gettype</code></h3>
+        <pre><code class="lang-vim">win_gettype([{nr}])
+</code></pre>
+        <p>Type of window {nr} (&#39;popup&#39;, &#39;command&#39;, &#39;autocmd&#39;, ...).</p>
+      </article>
+      <article class="doc-entry" id="doc-win-gotoid">
+        <h3><a class="doc-anchor" href="#doc-win-gotoid">#</a> <code>win_gotoid</code></h3>
+        <pre><code class="lang-vim">win_gotoid({id})
+</code></pre>
+        <p>Go to the window with window-ID {id}; 1 on success (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-win-id2tabwin">
+        <h3><a class="doc-anchor" href="#doc-win-id2tabwin">#</a> <code>win_id2tabwin</code></h3>
+        <pre><code class="lang-vim">win_id2tabwin({id})
+</code></pre>
+        <p>[tabnr, winnr] of window-ID {id}.</p>
+      </article>
+      <article class="doc-entry" id="doc-win-id2win">
+        <h3><a class="doc-anchor" href="#doc-win-id2win">#</a> <code>win_id2win</code></h3>
+        <pre><code class="lang-vim">win_id2win({id})
+</code></pre>
+        <p>Window number of window-ID {id}, else 0 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-win-move-separator">
+        <h3><a class="doc-anchor" href="#doc-win-move-separator">#</a> <code>win_move_separator</code></h3>
+        <pre><code class="lang-vim">win_move_separator({nr}, {offset})
+</code></pre>
+        <p>Move the vertical separator of window {nr} by {offset} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-win-move-statusline">
+        <h3><a class="doc-anchor" href="#doc-win-move-statusline">#</a> <code>win_move_statusline</code></h3>
+        <pre><code class="lang-vim">win_move_statusline({nr}, {offset})
+</code></pre>
+        <p>Move the status line of window {nr} by {offset} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-win-screenpos">
+        <h3><a class="doc-anchor" href="#doc-win-screenpos">#</a> <code>win_screenpos</code></h3>
+        <pre><code class="lang-vim">win_screenpos({nr})
+</code></pre>
+        <p>[row, col] screen position of the top-left of window {nr}.</p>
+      </article>
+      <article class="doc-entry" id="doc-win-splitmove">
+        <h3><a class="doc-anchor" href="#doc-win-splitmove">#</a> <code>win_splitmove</code></h3>
+        <pre><code class="lang-vim">win_splitmove({nr}, {target} [, {options}])
+</code></pre>
+        <p>Move window {nr} to split alongside window {target} (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-wincol">
+        <h3><a class="doc-anchor" href="#doc-wincol">#</a> <code>wincol</code></h3>
+        <pre><code class="lang-vim">wincol()
+</code></pre>
+        <p>Cursor&#39;s screen column within its window (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-winheight">
+        <h3><a class="doc-anchor" href="#doc-winheight">#</a> <code>winheight</code></h3>
+        <pre><code class="lang-vim">winheight({nr})
+</code></pre>
+        <p>Height (in lines) of window {nr}, else -1 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-winlayout">
+        <h3><a class="doc-anchor" href="#doc-winlayout">#</a> <code>winlayout</code></h3>
+        <pre><code class="lang-vim">winlayout([{tabnr}])
+</code></pre>
+        <p>Nested List describing the window layout of a tab page.</p>
+      </article>
+      <article class="doc-entry" id="doc-winline">
+        <h3><a class="doc-anchor" href="#doc-winline">#</a> <code>winline</code></h3>
+        <pre><code class="lang-vim">winline()
+</code></pre>
+        <p>Cursor&#39;s screen row within its window (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-winnr">
+        <h3><a class="doc-anchor" href="#doc-winnr">#</a> <code>winnr</code></h3>
+        <pre><code class="lang-vim">winnr([{arg}])
+</code></pre>
+        <p>Number of the current (or related) window (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-winrestcmd">
+        <h3><a class="doc-anchor" href="#doc-winrestcmd">#</a> <code>winrestcmd</code></h3>
+        <pre><code class="lang-vim">winrestcmd()
+</code></pre>
+        <p>Ex command string that restores the current window sizes (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-winrestview">
+        <h3><a class="doc-anchor" href="#doc-winrestview">#</a> <code>winrestview</code></h3>
+        <pre><code class="lang-vim">winrestview({dict})
+</code></pre>
+        <p>Restore the window view from a winsaveview() dict (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-winsaveview">
+        <h3><a class="doc-anchor" href="#doc-winsaveview">#</a> <code>winsaveview</code></h3>
+        <pre><code class="lang-vim">winsaveview()
+</code></pre>
+        <p>Dict capturing the current window view (cursor, scroll).</p>
+      </article>
+      <article class="doc-entry" id="doc-winwidth">
+        <h3><a class="doc-anchor" href="#doc-winwidth">#</a> <code>winwidth</code></h3>
+        <pre><code class="lang-vim">winwidth({nr})
+</code></pre>
+        <p>Width (in columns) of window {nr}, else -1 (stub in standalone).</p>
+      </article>
+      <article class="doc-entry" id="doc-wordcount">
+        <h3><a class="doc-anchor" href="#doc-wordcount">#</a> <code>wordcount</code></h3>
+        <pre><code class="lang-vim">wordcount()
+</code></pre>
+        <p>Dict of byte/char/word counts for the buffer and cursor.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-ex-commands">
+      <h2>Ex Commands</h2>
+      <p class="chapter-meta">6 entries</p>
+      <article class="doc-entry" id="doc-echo">
+        <h3><a class="doc-anchor" href="#doc-echo">#</a> <code>echo</code></h3>
+        <p>:echo {expr} — evaluate and display {expr} (space-separated).</p>
+      </article>
+      <article class="doc-entry" id="doc-echon">
+        <h3><a class="doc-anchor" href="#doc-echon">#</a> <code>echon</code></h3>
+        <p>:echon {expr} — like :echo but without a trailing newline.</p>
+      </article>
+      <article class="doc-entry" id="doc-echomsg">
+        <h3><a class="doc-anchor" href="#doc-echomsg">#</a> <code>echomsg</code></h3>
+        <p>:echomsg {expr} — display {expr} and save it in the message history.</p>
+      </article>
+      <article class="doc-entry" id="doc-let">
+        <h3><a class="doc-anchor" href="#doc-let">#</a> <code>let</code></h3>
+        <p>:let {var} = {expr} — assign the value of {expr} to {var}.</p>
+      </article>
+      <article class="doc-entry" id="doc-call">
+        <h3><a class="doc-anchor" href="#doc-call">#</a> <code>call</code></h3>
+        <p>:call {func}({args}) — call a function and discard its return value.</p>
+      </article>
+      <article class="doc-entry" id="doc-eval">
+        <h3><a class="doc-anchor" href="#doc-eval">#</a> <code>eval</code></h3>
+        <p>:eval {expr} — evaluate {expr} for its side effects.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-options">
+      <h2>Options</h2>
+      <p class="chapter-meta">15 entries</p>
+      <article class="doc-entry" id="doc-ignorecase">
+        <h3><a class="doc-anchor" href="#doc-ignorecase">#</a> <code>ignorecase</code></h3>
+        <pre><code class="lang-vim">:set ignorecase (ic) — Bool, default 0
+</code></pre>
+        <p>Ignore case in search patterns.</p>
+      </article>
+      <article class="doc-entry" id="doc-smartcase">
+        <h3><a class="doc-anchor" href="#doc-smartcase">#</a> <code>smartcase</code></h3>
+        <pre><code class="lang-vim">:set smartcase (scs) — Bool, default 0
+</code></pre>
+        <p>Override &#39;ignorecase&#39; when the pattern has uppercase letters.</p>
+      </article>
+      <article class="doc-entry" id="doc-magic">
+        <h3><a class="doc-anchor" href="#doc-magic">#</a> <code>magic</code></h3>
+        <pre><code class="lang-vim">:set magic (magic) — Bool, default 1
+</code></pre>
+        <p>Use &#39;magic&#39; regexp special-character meanings.</p>
+      </article>
+      <article class="doc-entry" id="doc-expandtab">
+        <h3><a class="doc-anchor" href="#doc-expandtab">#</a> <code>expandtab</code></h3>
+        <pre><code class="lang-vim">:set expandtab (et) — Bool, default 0
+</code></pre>
+        <p>Insert spaces instead of a &lt;Tab&gt;.</p>
+      </article>
+      <article class="doc-entry" id="doc-number">
+        <h3><a class="doc-anchor" href="#doc-number">#</a> <code>number</code></h3>
+        <pre><code class="lang-vim">:set number (nu) — Bool, default 0
+</code></pre>
+        <p>Show line numbers in the left margin.</p>
+      </article>
+      <article class="doc-entry" id="doc-relativenumber">
+        <h3><a class="doc-anchor" href="#doc-relativenumber">#</a> <code>relativenumber</code></h3>
+        <pre><code class="lang-vim">:set relativenumber (rnu) — Bool, default 0
+</code></pre>
+        <p>Show line numbers relative to the cursor.</p>
+      </article>
+      <article class="doc-entry" id="doc-wrap">
+        <h3><a class="doc-anchor" href="#doc-wrap">#</a> <code>wrap</code></h3>
+        <pre><code class="lang-vim">:set wrap (wrap) — Bool, default 1
+</code></pre>
+        <p>Wrap long lines to fit the window width.</p>
+      </article>
+      <article class="doc-entry" id="doc-hlsearch">
+        <h3><a class="doc-anchor" href="#doc-hlsearch">#</a> <code>hlsearch</code></h3>
+        <pre><code class="lang-vim">:set hlsearch (hls) — Bool, default 0
+</code></pre>
+        <p>Highlight all matches of the last search pattern.</p>
+      </article>
+      <article class="doc-entry" id="doc-incsearch">
+        <h3><a class="doc-anchor" href="#doc-incsearch">#</a> <code>incsearch</code></h3>
+        <pre><code class="lang-vim">:set incsearch (is) — Bool, default 0
+</code></pre>
+        <p>Show the match for the search pattern as it is typed.</p>
+      </article>
+      <article class="doc-entry" id="doc-autoindent">
+        <h3><a class="doc-anchor" href="#doc-autoindent">#</a> <code>autoindent</code></h3>
+        <pre><code class="lang-vim">:set autoindent (ai) — Bool, default 0
+</code></pre>
+        <p>Copy the indent of the current line to a new line.</p>
+      </article>
+      <article class="doc-entry" id="doc-tabstop">
+        <h3><a class="doc-anchor" href="#doc-tabstop">#</a> <code>tabstop</code></h3>
+        <pre><code class="lang-vim">:set tabstop (ts) — Number, default 8
+</code></pre>
+        <p>Number of spaces a &lt;Tab&gt; counts for.</p>
+      </article>
+      <article class="doc-entry" id="doc-shiftwidth">
+        <h3><a class="doc-anchor" href="#doc-shiftwidth">#</a> <code>shiftwidth</code></h3>
+        <pre><code class="lang-vim">:set shiftwidth (sw) — Number, default 8
+</code></pre>
+        <p>Number of spaces used for each step of (auto)indent.</p>
+      </article>
+      <article class="doc-entry" id="doc-softtabstop">
+        <h3><a class="doc-anchor" href="#doc-softtabstop">#</a> <code>softtabstop</code></h3>
+        <pre><code class="lang-vim">:set softtabstop (sts) — Number, default 0
+</code></pre>
+        <p>Number of spaces a &lt;Tab&gt; counts for while editing.</p>
+      </article>
+      <article class="doc-entry" id="doc-textwidth">
+        <h3><a class="doc-anchor" href="#doc-textwidth">#</a> <code>textwidth</code></h3>
+        <pre><code class="lang-vim">:set textwidth (tw) — Number, default 0
+</code></pre>
+        <p>Maximum text width; longer lines are broken (0 = off).</p>
+      </article>
+      <article class="doc-entry" id="doc-scrolloff">
+        <h3><a class="doc-anchor" href="#doc-scrolloff">#</a> <code>scrolloff</code></h3>
+        <pre><code class="lang-vim">:set scrolloff (so) — Number, default 0
+</code></pre>
+        <p>Minimum lines kept above and below the cursor.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-special-v-variables">
+      <h2>Special v: Variables</h2>
+      <p class="chapter-meta">3 entries</p>
+      <article class="doc-entry" id="doc-v-true">
+        <h3><a class="doc-anchor" href="#doc-v-true">#</a> <code>v:true</code></h3>
+        <p>Boolean true; numeric value 1, string value &quot;v:true&quot;.</p>
+      </article>
+      <article class="doc-entry" id="doc-v-false">
+        <h3><a class="doc-anchor" href="#doc-v-false">#</a> <code>v:false</code></h3>
+        <p>Boolean false; numeric value 0, string value &quot;v:false&quot;.</p>
+      </article>
+      <article class="doc-entry" id="doc-v-null">
+        <h3><a class="doc-anchor" href="#doc-v-null">#</a> <code>v:null</code></h3>
+        <p>Null value; behaves like an empty string in most contexts.</p>
+      </article>
+    </section>
+  </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

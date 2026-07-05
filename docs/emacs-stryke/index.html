@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="emacs-stryke — Emacs major mode (stryke-mode) for the stryke language. Filetype detection for *.stk and stryke shebangs, font-lock generated from the stryke binary (all 10,409 builtins via hash-table matcher), brace-aware indentation, and LSP via stryke --lsp (eglot + lsp-mode).">
+  <title>emacs-stryke — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line { margin: 0.35rem 0 0; font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em; max-width: 42rem; opacity: 0.75; }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px; }
+    .parity-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.6rem; margin: 0.7rem 0; }
+    .cat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.6rem 0.8rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .cat-card h4 { font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan); margin: 0 0 0.35rem; }
+    .cat-card p { margin: 0; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// EMACS-STRYKE — EMACS MAJOR MODE FOR THE STRYKE LANGUAGE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/emacs-stryke" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p class="docs-build-line">filetype detection (*.stk + stryke shebang) · font-lock generated from the stryke binary (all 10,409 builtins, hash-table matcher) · brace-aware indent · LSP via stryke --lsp</p>
+          <p class="docs-build-line">eglot + lsp-mode · settings stryke-executable / stryke-indent-offset · Package-Requires emacs 27.1</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/emacs-stryke" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EMACS-STRYKE &mdash; STRYKE IN EMACS</h2>
+      <p class="tutorial-subtitle"><strong>Open a <code>.stk</code> file and the whole language lights up.</strong> stryke is a highly parallel Perl 5 superset interpreter written in Rust. <code>stryke-mode</code> derives from <code>prog-mode</code>, font-locks the <strong>complete</strong> language surface (all <strong>10,409</strong> builtins, 90 keywords, 39 parallel primitives) from the binary's own reflection tables, indents brace blocks, and wires <code>stryke --lsp</code> into both eglot and lsp-mode.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>The <code>stryke</code> binary must be on <code>$PATH</code> for the language server (<code>brew install stryke</code> or build <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>).</p>
+<pre>;; manual
+(add-to-list 'load-path "/path/to/emacs-stryke")
+(require 'stryke-mode)
+
+;; use-package + built-in VC
+(use-package stryke-mode
+  :mode "\\.stk\\'"
+  :vc (:url "https://github.com/MenkeTechnologies/emacs-stryke"))</pre>
+        <p>With eglot: <code>M-x eglot</code> in a <code>.stk</code> buffer, or <code>(add-hook 'stryke-mode-hook #'eglot-ensure)</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What you get</h2>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>Filetype detection</h4><p>Every <code>*.stk</code> file uses <code>stryke-mode</code> (<code>auto-mode-alist</code>); stryke shebangs are detected via <code>interpreter-mode-alist</code>.</p></div>
+          <div class="cat-card"><h4>Complete font-lock</h4><p>All <strong>10,409</strong> builtins highlighted — not a curated subset, not a perl reskin.</p></div>
+          <div class="cat-card"><h4>Generated from the binary</h4><p><code>scripts/gen-stdlib.sh</code> dumps <code>%b</code> / <code>%k</code> / <code>$c{parallel}</code> from stryke and writes <code>stryke-stdlib.el</code>, so it never drifts.</p></div>
+          <div class="cat-card"><h4>Hash-table matcher</h4><p>A single <code>regexp-opt</code> over 10,409 names overflows Emacs' regexp compiler, so builtins live in hash tables matched by a font-lock function in O(1) per identifier.</p></div>
+          <div class="cat-card"><h4>Language server</h4><p>Registers <code>stryke --lsp</code> for <strong>eglot</strong> (built in since Emacs 29) and <strong>lsp-mode</strong>, both loaded lazily.</p></div>
+          <div class="cat-card"><h4>Verified</h4><p><code>scripts/face-test.el</code> byte-compiles the package and asserts the face at each probe token — proven to load and classify correctly.</p></div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Faces</h2>
+        <table class="parity-table">
+          <thead><tr><th>Token group</th><th>Face</th></tr></thead>
+          <tbody>
+            <tr><td>Declarations / fn-intro / control / concurrency / word-ops</td><td class="ok">font-lock-keyword-face</td></tr>
+            <tr><td>Phase hooks (<code>BEGIN</code> <code>END</code> <code>INIT</code>)</td><td class="ok">font-lock-preprocessor-face</td></tr>
+            <tr><td>Parallel builtins (39)</td><td class="ok">stryke-parallel-face</td></tr>
+            <tr><td>Builtins (10,409)</td><td class="ok">font-lock-builtin-face</td></tr>
+            <tr><td>Types (<code>Int</code> <code>Str</code> <code>Hash</code>)</td><td class="ok">font-lock-type-face</td></tr>
+            <tr><td>Booleans / undef / magic constants</td><td class="ok">font-lock-constant-face</td></tr>
+            <tr><td>Sigil variables, <code>$_</code> topic</td><td class="ok">font-lock-variable-name-face</td></tr>
+            <tr><td>Strings / comments</td><td class="ok">via syntax table</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Language server &amp; config</h2>
+        <table class="parity-table">
+          <thead><tr><th>Setting / command</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>stryke-executable</code></td><td><code>"stryke"</code> &mdash; path to the executable used for the server</td></tr>
+            <tr><td><code>stryke-indent-offset</code></td><td><code>4</code> &mdash; spaces per indent level</td></tr>
+            <tr><td><code>M-x eglot</code></td><td>start the server via eglot (Emacs 29+)</td></tr>
+            <tr><td><code>M-x lsp</code></td><td>start the server via lsp-mode</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compatibility</h2>
+        <table class="parity-table">
+          <thead><tr><th>Target</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Emacs 27.1+</td><td class="ok">Mode + font-lock + indent</td></tr>
+            <tr><td>eglot</td><td class="ok">Built in since Emacs 29; works on 27/28 if installed</td></tr>
+            <tr><td>lsp-mode</td><td class="ok">Registered client</td></tr>
+            <tr><td>Syntax highlighting</td><td class="ok">No binary required</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

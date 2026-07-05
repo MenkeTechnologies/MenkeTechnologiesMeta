@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>zpwrchrome — browser power-tool (pass · downloads · tabs · history)</title>
+  <meta name="description" content="Chrome extension: UNIX `pass` integration, segmented download manager (Chrome default takeover), JetBrains-style tab switcher, fzf history search, Tampermonkey-equivalent userscripts, full-page screenshot, Wappalyzer tech detection, cyberpunk page theme, Turn Off the Lights, JSON viewer, XML viewer, UA switcher, ModHeader-style header manager, find-in-all-tabs. 54 keyboard commands. Cyberpunk HUD by MenkeTechnologies.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* Palette + animations lifted from strykelang docs/hud-static.css. */
+    html { color-scheme: dark; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    ::selection { background: rgba(5, 217, 232, 0.3); color: #fff; }
+    :root {
+      --bg-primary: #05050a; --bg-secondary: #0a0a14; --bg-card: #0d0d1a;
+      --bg-hover: #12122a;
+      --accent: #ff2a6d; --accent-light: #ff6b9d; --accent-glow: rgba(255, 42, 109, 0.4);
+      --cyan: #05d9e8; --cyan-glow: rgba(5, 217, 232, 0.4); --cyan-dim: rgba(5, 217, 232, 0.15);
+      --magenta: #d300c5; --magenta-glow: rgba(211, 0, 197, 0.3);
+      --green: #39ff14; --red: #ff073a;
+      --text: #e0f0ff; --text-dim: #7a8ba8; --text-muted: #3d4f6a;
+      --border: #1a1a3e;
+      --cyber-grid-line: rgba(5, 217, 232, 0.042);
+      --cyber-grid-cross: rgba(5, 217, 232, 0.034);
+    }
+    body {
+      font-family: 'Share Tech Mono', 'SF Mono', 'Fira Code', monospace;
+      background-color: var(--bg-primary);
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(5, 217, 232, 0.045) 0%, transparent 52%),
+        radial-gradient(ellipse at 80% 20%, rgba(211, 0, 197, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 82%, rgba(255, 42, 109, 0.035) 0%, transparent 48%),
+        linear-gradient(var(--cyber-grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--cyber-grid-cross) 1px, transparent 1px);
+      background-size: auto, auto, auto, 52px 52px, 52px 52px;
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+    .crt::after {
+      content: ''; position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(5,217,232,.015) 2px, rgba(5,217,232,.015) 4px);
+      pointer-events: none; z-index: 9999;
+    }
+    .crt::before {
+      content: ''; position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.5) 100%);
+      pointer-events: none; z-index: 9998;
+    }
+    .scanline {
+      position: fixed; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent 0%, rgba(5,217,232,.03) 20%, rgba(5,217,232,.08) 50%, rgba(5,217,232,.03) 80%, transparent 100%);
+      box-shadow: 0 0 15px 5px rgba(5,217,232,.04);
+      pointer-events: none; z-index: 9997;
+      animation: hscan 12s linear infinite;
+    }
+    @keyframes hscan { 0% { top: -2px; opacity: 0; } 5%, 95% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(5,5,10,.5); }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, var(--cyan), var(--magenta));
+      border-radius: 4px; box-shadow: 0 0 8px var(--cyan-glow);
+    }
+
+    header.hero {
+      padding: 60px 24px 40px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #070714 0%, #0d0d22 42%, var(--bg-secondary) 100%);
+      position: relative;
+      text-align: center;
+      box-shadow: 0 4px 28px rgba(0,0,0,.55), 0 1px 0 rgba(5,217,232,.1), inset 0 1px 0 rgba(5,217,232,.06);
+    }
+    header.hero::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), var(--accent), var(--cyan), transparent);
+      opacity: .6;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.6rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), #fff, var(--accent), var(--cyan));
+      background-size: 300% 100%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      filter: drop-shadow(0 0 12px var(--cyan-glow));
+      animation: shimmer 6s linear infinite;
+      margin-bottom: 14px;
+    }
+    @keyframes shimmer { 0% { background-position: 0% 0%; } 100% { background-position: 300% 0%; } }
+    .tagline { color: var(--text-dim); font-size: 14px; letter-spacing: .5px; max-width: 56rem; margin: 0 auto 26px; }
+    .stat-row {
+      display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+      margin: 28px auto 0; max-width: 64rem;
+    }
+    .stat {
+      padding: 14px 22px;
+      background: var(--bg-card); border: 1px solid var(--cyan); border-radius: 2px;
+      box-shadow: 0 0 16px var(--cyan-glow);
+      min-width: 9rem;
+    }
+    .stat .n { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 900; color: var(--cyan); letter-spacing: 2px; }
+    .stat .l { font-size: 10px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+    .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+    .btn {
+      padding: 10px 18px; border-radius: 2px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+      transition: all .2s;
+      background-image: linear-gradient(180deg, rgba(255,255,255,.12) 0%, rgba(255,255,255,.02) 40%, transparent 60%);
+    }
+    .btn-primary { background: transparent; color: var(--accent); border: 1px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+    .btn-primary:hover { background: rgba(255,42,109,.08); box-shadow: 0 0 18px var(--accent-glow); transform: translateY(-1px); }
+    .btn-secondary { background: transparent; color: var(--cyan); border: 1px solid var(--cyan); box-shadow: 0 0 8px var(--cyan-dim); }
+    .btn-secondary:hover { background: rgba(5,217,232,.08); box-shadow: 0 0 15px var(--cyan-glow); transform: translateY(-1px); }
+
+    main { max-width: 80rem; margin: 0 auto; padding: 36px 20px 60px; position: relative; z-index: 1; }
+    section.card {
+      background-color: var(--bg-card);
+      background-image: linear-gradient(180deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.02) 30%, transparent 50%);
+      border: 1px solid var(--cyan);
+      border-radius: 2px;
+      padding: 22px 26px;
+      margin: 22px 0;
+      position: relative;
+      box-shadow: 0 0 30px var(--cyan-glow);
+      backdrop-filter: blur(12px) saturate(1.4);
+      animation: glow 3.5s ease-in-out infinite;
+    }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px var(--cyan-glow), 0 0 4px var(--cyan-glow); border-color: var(--cyan); }
+      50%      { box-shadow: 0 0 40px var(--cyan-glow), 0 0 12px var(--magenta-glow); border-color: var(--accent); }
+    }
+    h2 {
+      font-family: 'Orbitron', sans-serif; font-size: 14px; color: var(--cyan);
+      text-transform: uppercase; letter-spacing: 2.5px;
+      padding-bottom: 12px; margin-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .features { display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 14px; }
+    .feature {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      background: var(--bg-secondary);
+      font-size: 12px;
+      color: var(--text);
+    }
+    .feature strong { color: var(--accent-light); display: block; font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+
+    .install ol { margin: 0 0 0 1.2rem; }
+    .install li { margin: 6px 0; font-size: 13px; }
+    .install code { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1px 6px; border-radius: 2px; color: var(--cyan); font-size: 12px; }
+
+    .table-wrap { overflow-x: auto; margin-top: 10px; }
+    table { border-collapse: collapse; width: 100%; min-width: 50rem; }
+    th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; font-size: 12px; }
+    th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+    td code { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1px 6px; border-radius: 2px; font-size: 11px; color: var(--text); }
+    kbd {
+      display: inline-block;
+      padding: 2px 8px;
+      font-family: 'Share Tech Mono', monospace; font-size: 11px;
+      color: var(--accent); background: var(--bg-secondary);
+      border: 1px solid var(--accent); border-radius: 2px;
+      box-shadow: 0 0 6px var(--accent-glow);
+    }
+    tr.user-set kbd, .muted { color: var(--text-muted); }
+    .muted { font-style: italic; font-size: 11px; }
+
+    .prose { color: var(--text-dim); font-size: 13px; line-height: 1.7; }
+    .prose code { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1px 6px; border-radius: 2px; color: var(--cyan); font-size: 12px; }
+    .prose strong { color: var(--text); }
+    .prose + .prose { margin-top: 10px; }
+
+    .cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 8px; }
+    .cat {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 8px 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent);
+      background: var(--bg-secondary); border-radius: 2px; font-size: 12px;
+    }
+    .cat .lbl { color: var(--text); }
+    .cat .key { color: var(--text-muted); font-size: 11px; letter-spacing: 1px; }
+
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .pill {
+      display: inline-block; padding: 3px 9px; font-size: 11px;
+      border: 1px solid var(--cyan); color: var(--cyan); border-radius: 2px;
+      background: rgba(5,217,232,0.06); letter-spacing: .3px;
+    }
+
+    .defs { list-style: none; margin: 6px 0 0; }
+    .defs li { margin: 0 0 12px; font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+    .defs li strong { color: var(--accent-light); display: block; font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 1px; margin-bottom: 3px; text-transform: uppercase; }
+    .defs li code { background: var(--bg-secondary); border: 1px solid var(--border); padding: 1px 6px; border-radius: 2px; color: var(--cyan); font-size: 11px; }
+
+    footer { text-align: center; padding: 24px 16px 40px; color: var(--text-muted); font-size: 11px; letter-spacing: .5px; }
+    footer a { color: var(--cyan); text-decoration: none; }
+    footer a:hover { color: var(--accent-light); text-shadow: 0 0 8px var(--cyan-glow); }
+  </style>
+</head>
+<body class="crt">
+  <div class="scanline"></div>
+
+  <header class="hero">
+    <h1>zpwrchrome // recent tabs</h1>
+    <p class="tagline">Browser power-tool. UNIX <code>pass</code> &middot; segmented download manager (default Chrome takeover) &middot; JetBrains-style tab switcher &middot; fzf history &middot; Tampermonkey-equivalent userscripts &middot; full-page screenshot &middot; Wappalyzer-compatible tech detection &middot; cyberpunk page theme &middot; Turn Off the Lights &middot; JSON viewer &middot; UA switcher &middot; ModHeader &middot; find-in-all-tabs. 54 keyboard commands.<br>Cyberpunk HUD palette by MenkeTechnologies.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="n">54</div><div class="l">commands</div></div>
+      <div class="stat"><div class="n">4</div><div class="l">default-keyed</div></div>
+      <div class="stat"><div class="n">50</div><div class="l">user-bound</div></div>
+    </div>
+    <div class="ctas">
+      <a class="btn btn-primary"   href="https://github.com/MenkeTechnologies/zpwrchrome">▸ source on github</a>
+      <a class="btn btn-secondary" href="#install">▸ install</a>
+      <a class="btn btn-secondary" href="#commands">▸ commands</a>
+      <a class="btn btn-secondary" href="#categories">▸ categories</a>
+      <a class="btn btn-secondary" href="#host">▸ native host</a>
+      <a class="btn btn-secondary" href="#permissions">▸ permissions</a>
+      <a class="btn btn-secondary" href="#theme">▸ theme</a>
+      <a class="btn btn-secondary" href="report.html">▸ engineering report</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>features</h2>
+      <div class="features">
+        <div class="feature"><strong>MRU tracking</strong>Cross-window most-recently-used stack. Survives service-worker restarts.</div>
+        <div class="feature"><strong>Cmd+Y history</strong>Replaces Chrome's chrome://history with an fzf-fuzzy search over up to 5000 URLs. Backspace deletes.</div>
+        <div class="feature"><strong>Cmd+E modal</strong>JetBrains-style Recent Files overlay injected into the active page.</div>
+        <div class="feature"><strong>UNIX <code>pass</code> integration</strong>Replaces browserpass via a Rust native host. Walks <code>~/.password-store</code>, autofills active-tab login forms, copies user / pw / OTP with 45 s clipboard auto-clear (matches <code>pass -c</code>). React/Vue/Lit-safe autofill.</div>
+        <div class="feature"><strong>Segmented download accelerator</strong>Multi-connection HTTP/HTTPS download accelerator (IDM / aria2 / axel class). Splits each file into N byte-range segments fetched over N concurrent <code>Range</code> connections to beat single-stream throughput, with retry / resume, Chrome cookies + User-Agent forwarded for logged-in URLs. Live queue UI, right-click <em>Download with zpwrchrome</em>. Pure-Rust, ureq + rustls, no <code>aria2</code> binary.</div>
+        <div class="feature"><strong>Filtered popup</strong>Live filter over open + closed tabs, ↑↓/Enter/Del nav.</div>
+        <div class="feature"><strong>Batch tab ops</strong>close-others, close-right, close-duplicates, reload-all, sort-by-URL, group-by-domain.</div>
+        <div class="feature"><strong>Single-tab ops</strong>duplicate, pin, mute, detach, bookmark, copy URL, copy Markdown link.</div>
+        <div class="feature"><strong>Numeric jumps</strong>jump-to-1..9 (1-8 nth tab, 9 = last).</div>
+        <div class="feature"><strong>Save to zcite</strong>Page right-click extracts bibliographic metadata (Highwire <code>citation_*</code> / Dublin Core / Open Graph / schema.org JSON-LD) into CSL-JSON; the native host's <code>zcite.save</code> drops it into the <a href="https://github.com/MenkeTechnologies/zcite">zcite</a> reference manager's inbox. The Zotero-Connector role — handed off as a plain file, no link to the proprietary engine.</div>
+        <div class="feature"><strong>50 configurable shortcuts</strong>Bind anything you want at <code>chrome://extensions/shortcuts</code>.</div>
+      </div>
+    </section>
+
+    <section class="card install" id="install">
+      <h2>install (unpacked)</h2>
+      <ol>
+        <li><code>git clone https://github.com/MenkeTechnologies/zpwrchrome.git</code></li>
+        <li>Open <code>chrome://extensions</code> and enable <strong>Developer mode</strong></li>
+        <li>Click <strong>Load unpacked</strong>, pick the cloned directory</li>
+        <li>For <code>pass</code>, downloads, and screenshots, install the native host from crates.io and register it for this extension: <code>cargo install zpwrchrome-host &amp;&amp; zpwrchrome-host --install &lt;ext-id&gt;</code>. Get the ext-id at <code>chrome://extensions</code> (Developer mode). <code>pass</code> support also requires GPG configured locally.</li>
+        <li>Open <code>chrome://extensions/shortcuts</code> to bind any of the 50 user-configurable commands (incl. <code>pass-fill</code>, <code>pass-fill-profile</code>, <code>pass-fill-cc</code>, <code>pass-copy-pw</code>, <code>pass-copy-otp</code>, <code>dl-paste-url</code>, <code>dl-show-queue</code>)</li>
+        <li>Optional: <strong>Load unpacked</strong> the <code>theme/</code> subdirectory for the matching browser theme</li>
+      </ol>
+    </section>
+
+    <section class="card" id="commands">
+      <h2>keyboard commands</h2>
+      <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 8px;">
+        Chrome caps default-suggested shortcuts at 4. The remaining 50 commands are bound by the user
+        in <code style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 1px 6px; border-radius: 2px; color: var(--cyan);">chrome://extensions/shortcuts</code>.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>command</th><th>default</th><th>description</th></tr></thead>
+          <tbody>
+        <tr class="default">
+          <td><code>_execute_action</code></td>
+          <td><kbd>Alt+T</kbd></td>
+          <td>Open zpwrchrome popup</td>
+        </tr>
+        <tr class="default">
+          <td><code>switch-previous-tab</code></td>
+          <td><kbd>Ctrl+E</kbd></td>
+          <td>Switch to the previously active tab (MRU)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>restore-last-closed</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Restore the most recently closed tab</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>recent-modal</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Open the recent-tabs popup (same as Alt+T — user-bindable)</td>
+        </tr>
+        <tr class="default">
+          <td><code>open-history</code></td>
+          <td><kbd>Ctrl+Y</kbd></td>
+          <td>Open the popup focused on the History category (fzf-search browsing history)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>search-tabs</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Open popup focused on the tab search box</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>mru-next</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Cycle forward through MRU stack</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>mru-prev</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Cycle backward through MRU stack</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-1</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to tab #1 in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-2</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to tab #2 in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-3</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to tab #3 in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-4</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to tab #4 in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-5</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to tab #5 in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-6</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to tab #6 in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-7</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to tab #7 in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-8</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to tab #8 in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>jump-to-9</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Jump to last tab in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>duplicate-tab</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Duplicate the active tab</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pin-tab</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Toggle pin on the active tab</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>mute-tab</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Toggle mute on the active tab</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>move-to-new-window</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Detach active tab to a new window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>close-others</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Close all other tabs in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>close-right</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Close all tabs to the right of the active tab</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>close-duplicates</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Close tabs with duplicate URLs (keeps leftmost)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>reload-all</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Reload every tab in current window</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>sort-by-url</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Sort tabs in current window by URL</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>group-by-domain</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Group tabs in current window by domain (Chrome tab groups)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>copy-url</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Copy active tab URL to clipboard</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>copy-title-md</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Copy active tab as Markdown link</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>bookmark-tab</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Bookmark active tab to Other Bookmarks</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>manage-scripts</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Open the userscript manager (Tampermonkey-style)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>save-scene-prompt</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Open popup focused on save-scene input</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>restore-scene-1</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Restore scene #1 (newest) — opens a new window with saved tabs</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>restore-scene-2</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Restore scene #2</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>restore-scene-3</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Restore scene #3</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>restore-scene-4</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Restore scene #4</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>restore-scene-5</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Restore scene #5</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pass-open-popup</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Open popup focused on the PASS category (matches credentials for the active tab from ~/.password-store via the zpwrchrome native host)</td>
+        </tr>
+        <tr class="default">
+          <td><code>pass-fill</code></td>
+          <td><kbd>Ctrl+Shift+L</kbd></td>
+          <td>Autofill the best-matching `pass` credential into the active tab&#39;s login form (requires the native host) — customize at chrome://extensions/shortcuts</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pass-copy-pw</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Copy the best-matching `pass` password for the active tab to the clipboard (auto-clears after 45 s)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pass-copy-user</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Copy the best-matching `pass` username for the active tab to the clipboard</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pass-copy-otp</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Copy the TOTP code for the best-matching `pass` entry to the clipboard</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pass-open-url</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Navigate the active tab to the URL stored in the best-matching `pass` entry (parses url/link/website/web/site keys)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pass-fill-identity</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Fill whatever identity fields the active tab has — profile (name/address/email/phone/…) AND credit-card (cc-number/cc-exp/cc-csc/cardholder/…) in one keystroke. Picks the best-matching profile/* and creditcard/* entries (picker if multiple, last-used cached per host).</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pass-fill-profile</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Fill profile fields only (name, address, email, phone, …) on the active tab from a `profile/*` entry in `pass`. Quick-pick overlay when multiple profiles exist.</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>pass-fill-cc</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Fill credit-card fields only (cc-number, cc-exp, cc-csc, cardholder, …) on the active tab from a `creditcard/*` entry in `pass`. Quick-pick overlay when multiple cards exist.</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>find-in-all-tabs</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Full-text search across every open tab — opens a search UI, scrapes innerText from every http(s) tab in parallel, fuzzy-filters as you type, Enter activates the chosen tab and scrolls to the match (no DevTools required)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>lights-off</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Turn off the lights — dim the entire active page with a near-black overlay while lifting any video elements above it (cinema-mode for YouTube and beyond). Click the overlay or press Esc to undim</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>reader-mode</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Reader mode — strip the active page to its main article and render it in a strykelang HUD overlay with adjustable typography. Click × in the top bar or press Esc to close</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>screenshot-full-page</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Full-page screenshot — scrolls the active tab in viewport-sized steps and stitches into one PNG (no extra permissions required; customize at chrome://extensions/shortcuts)</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>dl-paste-url</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Download the URL currently on the clipboard via the zpwrchrome segmented downloader</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>dl-show-queue</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Open the zpwrchrome download manager queue view</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>dl-pause-all</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Pause every active download in the zpwrchrome download manager</td>
+        </tr>
+        <tr class="user-set">
+          <td><code>dl-resume-all</code></td>
+          <td><span class="muted">user-set</span></td>
+          <td>Resume every paused download in the zpwrchrome download manager</td>
+        </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="categories">
+      <h2>popup categories</h2>
+      <p class="prose">
+        The toolbar popup (<code>popup.html</code> / <code>popup.css</code> / <code>popup.js</code>)
+        renders <strong>12</strong> categories, each fzf-scored against
+        tab title + host. Jump straight to a category with <code>Cmd+1</code>..<code>Cmd+0</code>
+        (the digit shown beside each row); <code>Cmd+P</code> and <code>Cmd+K</code> jump to the
+        Pass and Tech categories. Type to fuzzy-filter, <kbd>↑</kbd>/<kbd>↓</kbd> to move,
+        <kbd>Enter</kbd> to activate, <kbd>Del</kbd> to close/forget the highlighted row.
+      </p>
+      <div class="cats">
+        <div class="cat"><span class="lbl">All Tabs</span><span class="key">⌘1</span></div>
+        <div class="cat"><span class="lbl">Current Window</span><span class="key">⌘2</span></div>
+        <div class="cat"><span class="lbl">Pinned</span><span class="key">⌘3</span></div>
+        <div class="cat"><span class="lbl">Audible</span><span class="key">⌘4</span></div>
+        <div class="cat"><span class="lbl">Muted</span><span class="key">⌘5</span></div>
+        <div class="cat"><span class="lbl">Recently Closed</span><span class="key">⌘6</span></div>
+        <div class="cat"><span class="lbl">Scenes</span><span class="key">⌘7</span></div>
+        <div class="cat"><span class="lbl">Tree (by opener)</span><span class="key">⌘8</span></div>
+        <div class="cat"><span class="lbl">Minimap</span><span class="key">⌘9</span></div>
+        <div class="cat"><span class="lbl">History</span><span class="key">⌘0</span></div>
+        <div class="cat"><span class="lbl">Pass</span><span class="key">⌘P</span></div>
+        <div class="cat"><span class="lbl">Tech</span><span class="key">⌘K</span></div>
+      </div>
+    </section>
+
+    <section class="card" id="how">
+      <h2>how it works</h2>
+      <p class="prose">
+        zpwrchrome is a <strong>Manifest V3</strong> extension. The service worker
+        (<code>background.js</code>) tracks tab activation across every window in
+        <code>chrome.storage.session</code> so the MRU stack survives service-worker
+        restarts, dispatches the 54 keyboard commands, answers the
+        <strong>19</strong> message kinds the popup / modal / managers send,
+        registers userscripts, and bridges to the native host for <code>pass</code> and
+        segmented downloads.
+      </p>
+      <p class="prose">
+        On-page features ship as content scripts rather than DevTools panels:
+        a <strong>page-theme injector</strong> (<code>modal/cyber-theme.js</code>) paints
+        arbitrary pages with the HUD palette at <code>document_start</code>;
+        <strong>reader mode</strong> (<code>modal/reader-mode.js</code>) extracts the main
+        article into a sanitized overlay; <strong>Turn Off the Lights</strong>
+        (<code>modal/lights-off.js</code>) dims the page while lifting <code>&lt;video&gt;</code>
+        elements above the overlay; a <strong>JSON viewer</strong>
+        (<code>modal/json-viewer.js</code>) and <strong>XML viewer</strong>
+        (<code>modal/xml-viewer.js</code>) replace raw structured-data pages with
+        collapsible trees (RFC 6901 pointer / XPath copy). The
+        <strong>find-in-all-tabs</strong> page scrapes <code>innerText</code> from every
+        open http(s) tab in parallel (capped at 200&nbsp;KB / tab) and fuzzy-filters
+        across them, scrolling the chosen tab to the match via <code>window.find()</code>.
+      </p>
+      <p class="prose">
+        Pure helpers live in <code>lib/util.js</code> and <code>lib/fzf.js</code> with zero
+        <code>chrome.*</code> references, so they unit-test headless in plain Node and can be
+        inlined into the shadow-DOM modal by <code>scripts/build-modal.mjs</code>. The fzf
+        scorer matches the constants used across the MenkeTechnologies tools (boundary&nbsp;9,
+        camel&nbsp;7, gap-start&nbsp;−3, match&nbsp;16).
+      </p>
+    </section>
+
+    <section class="card" id="host">
+      <h2>native host (<code>zpwrchrome-host</code>)</h2>
+      <p class="prose">
+        <code>pass</code>, GPG, and segmented downloads can't run inside an MV3 service
+        worker, so a small Rust binary handles them over Chrome native messaging
+        (length-prefixed JSON on stdio). It is a strict 1:1 port of
+        <code>browserpass-native</code> with the zpwrchrome extension actions layered on top.
+        Install and register it for your extension ID:
+      </p>
+      <ol class="install" style="margin-top:8px;">
+        <li><code>cargo install zpwrchrome-host</code></li>
+        <li><code>zpwrchrome-host --install &lt;ext-id&gt;</code> &mdash; writes the native-messaging manifest (host name <code>com.menketechnologies.zpwrchrome</code>) into every detected Chromium-family browser config dir on macOS/Linux. Find the ext-id at <code>chrome://extensions</code> (Developer mode).</li>
+        <li><code>zpwrchrome-host --version</code> / <code>-V</code> &mdash; print version and exit. <code>-v</code> logs verbosely to stderr. <code>--help</code> / <code>-h</code> prints usage.</li>
+      </ol>
+      <p class="prose" style="margin-top:10px;">
+        With no flags the host reads one framed JSON request on stdin, dispatches it, and
+        exits &mdash; one process per request, mirroring upstream. It handles the upstream
+        browserpass actions <code>configure</code>, <code>list</code>, <code>tree</code>,
+        <code>fetch</code>, <code>save</code>, <code>delete</code>, <code>echo</code>; the
+        extension actions <code>otp</code> and <code>search</code>; and the download-manager
+        actions <code>dl.add</code> / <code>dl.list</code> / <code>dl.pause</code> /
+        <code>dl.resume</code> / <code>dl.cancel</code> / <code>dl.remove</code> /
+        <code>dl.clear</code> / <code>dl.openDir</code> / <code>dl.openFile</code> /
+        <code>dl.writeFile</code> / <code>dl.writeFileChunk</code>. Downloads run in
+        <strong>detached worker processes</strong> (<code>--dl-worker &lt;gid&gt;</code>,
+        one per download) that <code>setsid</code> away from the parent, fetch N parallel
+        <code>Range</code> segments with <code>ureq</code> + <code>rustls</code> (no
+        <code>aria2</code> binary), and persist authoritative state under
+        <code>~/.cache/zpwrchrome/dl/</code> so the queue survives browser restarts.
+        <code>pass</code> support also requires GPG configured locally.
+      </p>
+    </section>
+
+    <section class="card" id="userscripts">
+      <h2>userscripts (Tampermonkey-equivalent)</h2>
+      <p class="prose">
+        The userscript engine (<code>lib/userscript.js</code> + <code>lib/gm-shim.js</code>)
+        runs scripts in Chrome's native <code>USER_SCRIPT</code> world via
+        <code>chrome.userScripts</code>. It parses the <code>// ==UserScript==</code> metadata
+        block (<code>@match</code> / <code>@include</code> / <code>@exclude</code>,
+        <code>@run-at</code>, <code>@name</code>, …), validates match patterns, and exposes a
+        Greasemonkey-style API. Manage, edit, enable/disable, and watch the injection fire-log
+        in the dashboard at <code>scripts-manager/manager.html</code> (open with the
+        <code>manage-scripts</code> command). Supported GM calls:
+      </p>
+      <div class="pills">
+        <span class="pill">GM_getValue</span>
+        <span class="pill">GM_setValue</span>
+        <span class="pill">GM_deleteValue</span>
+        <span class="pill">GM_listValues</span>
+        <span class="pill">GM_setClipboard</span>
+        <span class="pill">GM_openInTab</span>
+        <span class="pill">GM_notification</span>
+        <span class="pill">GM_addStyle</span>
+        <span class="pill">GM_addElement</span>
+        <span class="pill">GM_info</span>
+      </div>
+      <p class="prose" style="margin-top:8px;">
+        Each is also available in promise form (<code>GM.getValue</code>, <code>GM.setValue</code>,
+        …). Per-script values are stored in an isolated <code>chrome.storage.local</code> bag,
+        keyed by script, and dropped when the script is deleted.
+      </p>
+    </section>
+
+    <section class="card" id="permissions">
+      <h2>permissions</h2>
+      <p class="prose">
+        19 permissions are declared in <code>manifest.json</code>.
+        <code>tests/static.test.js</code> enforces that every declared permission is actually
+        referenced in <code>background.js</code> or <code>popup.js</code> &mdash; no dead
+        permissions ship.
+      </p>
+      <div class="pills">
+        <span class="pill">tabs</span>
+        <span class="pill">tabGroups</span>
+        <span class="pill">sessions</span>
+        <span class="pill">bookmarks</span>
+        <span class="pill">history</span>
+        <span class="pill">storage</span>
+        <span class="pill">scripting</span>
+        <span class="pill">userScripts</span>
+        <span class="pill">webNavigation</span>
+        <span class="pill">clipboardWrite</span>
+        <span class="pill">nativeMessaging</span>
+        <span class="pill">contextMenus</span>
+        <span class="pill">notifications</span>
+        <span class="pill">cookies</span>
+        <span class="pill">webRequest</span>
+        <span class="pill">webRequestAuthProvider</span>
+        <span class="pill">downloads</span>
+        <span class="pill">alarms</span>
+        <span class="pill">declarativeNetRequestWithHostAccess</span>
+      </div>
+    </section>
+
+    <section class="card" id="config">
+      <h2>configuration &amp; storage</h2>
+      <p class="prose">
+        No options file and no build step &mdash; runtime state lives in
+        <code>chrome.storage</code>. <code>chrome.storage.session</code> holds the cross-window
+        MRU stack (survives service-worker restart, cleared on browser restart);
+        <code>chrome.storage.local</code> holds scenes, installed userscripts, per-script GM
+        bags, the userscript fire-log ring buffer, download settings / rules / queue snapshot,
+        page-theme injector knobs, ModHeader profiles, and pass settings. Browsing history and
+        recently-closed tabs come from the Chrome-managed <code>chrome.history</code> and
+        <code>chrome.sessions</code> APIs. The download host keeps its own authoritative state
+        on disk under <code>~/.cache/zpwrchrome/dl/</code>.
+      </p>
+    </section>
+
+    <section class="card" id="troubleshooting">
+      <h2>troubleshooting</h2>
+      <ul class="defs">
+        <li>
+          <strong>pass / downloads do nothing</strong>
+          The native host isn't registered. Run
+          <code>cargo install zpwrchrome-host &amp;&amp; zpwrchrome-host --install &lt;ext-id&gt;</code>
+          with your extension's ID (from <code>chrome://extensions</code>, Developer mode), then
+          restart the browser. Chrome reports "Native host has exited" when the manifest is
+          missing or points at a stale binary path.
+        </li>
+        <li>
+          <strong>pass entries don't decrypt</strong>
+          <code>pass</code> support needs GPG configured locally — the host shells out to your
+          GPG agent to decrypt <code>~/.password-store/*.gpg</code>. Verify
+          <code>pass show &lt;entry&gt;</code> works in a terminal first.
+        </li>
+        <li>
+          <strong>only 4 commands have default shortcuts</strong>
+          Chrome MV3 caps default-suggested keys at 4. Bind any of the remaining
+          50 commands yourself at <code>chrome://extensions/shortcuts</code>.
+        </li>
+        <li>
+          <strong>a shortcut doesn't fire</strong>
+          The key is reserved by the OS or another extension, or collides with an existing
+          binding. Pick a different chord at <code>chrome://extensions/shortcuts</code>.
+        </li>
+        <li>
+          <strong>downloads behind a login fail</strong>
+          The host forwards Chrome cookies + User-Agent on every request; if a URL still
+          401/403s, the session cookie may have expired — reload the source page so Chrome
+          refreshes the cookie, then retry the download.
+        </li>
+      </ul>
+    </section>
+
+    <section class="card" id="theme">
+      <h2>companion theme</h2>
+      <p style="color: var(--text-dim); font-size: 13px;">
+        The <code>theme/</code> directory ships a separate Chrome theme that paints the
+        browser frame, toolbar, and new-tab page with the same cyberpunk palette
+        (<code>#05050a</code> bg / <code>#05d9e8</code> cyan / <code>#ff2a6d</code> accent).
+        Themes cannot be bundled with action extensions, so load it as its own
+        unpacked extension.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    zpwrchrome v0.22.17 · MIT · MenkeTechnologies ·
+    <a href="https://github.com/MenkeTechnologies/zpwrchrome">github.com/MenkeTechnologies/zpwrchrome</a>
+  </footer>
+</body>
+</html>

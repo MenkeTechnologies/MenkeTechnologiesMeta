@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-postgres — engineering report. POSTGRESQL CLIENT FOR STRYKE // OPT-IN PACKAGE. Architecture, FFI layer, scope, dependencies.">
+  <title>stryke-postgres — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-POSTGRES &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_postgres.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use Postgres</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-postgres</strong> is one of the opt-in connector packages in the stryke ecosystem. PostgreSQL client for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim.</p>
+      <p class="tutorial-subtitle">Sync <code>postgres</code> crate. Designed for shell pipelines + scripts, not as an ORM layer.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>Thin <code>.stk</code> wrapper (<code>Postgres</code>); exposes typed helpers that serialize args to JSON and parse the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_postgres.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn pg__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Postgres</code>; a <code>postgres::Client</code> cache keyed by connection URL is held in <code>OnceCell</code>; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/postgres@&lt;version&gt;/</code> after <code>make install</code>; <code>use Postgres</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>Sync <code>postgres</code> crate. Designed for shell pipelines + scripts, not as an ORM layer.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>Postgres::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>pg__*</code> symbol resolved out of <code>libstryke_postgres.{dylib,so}</code>; the cdylib returns a JSON <code>CString</code> the wrapper parses. JSON binds map to wire values via the cdylib's <code>json_to_param</code> (null → NULL, bool → bool, int → <code>i64</code>, float → <code>f64</code>, string → text, array/object → jsonb). The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>.</p>
+<pre># request shape (built by the .stk wrapper)
+{"verb": "&lt;op&gt;", "...": ...}
+
+# response shape
+{"result": ...}            # success — per-fn shape
+{"error": "&lt;msg&gt;"}        # failure — wrapper die()s with the message</pre>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>CONNECTION RESOLUTION</h2>
+      <p>Every connecting wrapper threads its <code>%opts</code> through one builder (<code>Postgres::_req</code> in <code>lib/Postgres.stk</code>), which collects the connection keys and falls back to the environment. Resolution order:</p>
+      <table class="arch-table">
+        <thead><tr><th>Priority</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>url =&gt; "postgres://user:pass@host:port/db"</code> named arg</td></tr>
+          <tr><td>2</td><td>individual named args: <code>host</code>, <code>port</code>, <code>user</code>, <code>password</code>, <code>database</code></td></tr>
+          <tr><td>3</td><td><code>$ENV{DATABASE_URL}</code> (or <code>$ENV{POSTGRES_URL}</code>) when neither <code>url</code> nor <code>host</code> is given</td></tr>
+        </tbody>
+      </table>
+      <p>Statements sharing the same resolved connection key reuse the same cached <code>postgres::Client</code> (connection affinity), which is what lets <code>begin</code>/<code>commit</code>, savepoints, and <code>LISTEN</code>/<code>NOTIFY</code> stay on one backend with no extra socket setup.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>PUBLIC SURFACE</h2>
+      <p>The package is intentionally narrower than the underlying <code>postgres</code> driver &mdash; the goal is "useful from a shell pipeline", not "complete API coverage". The surface groups into the categories below; the authoritative per-function reference is the <a href="https://github.com/MenkeTechnologies/stryke-postgres#0x04-api-reference">README "API reference"</a> and the rendered <a href="index.html">Docs</a> page.</p>
+      <table class="arch-table">
+        <thead><tr><th>Category</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Read paths</td><td><code>query</code>, <code>query_stream</code>, <code>query_one</code>, <code>query_col</code>, <code>query_scalar</code>, <code>dump</code></td></tr>
+          <tr><td>Write paths</td><td><code>execute</code>, <code>exec_file</code>, <code>insert_many</code>, <code>upsert</code>, <code>update</code>, <code>delete</code>, <code>truncate</code></td></tr>
+          <tr><td>Bulk transfer (COPY)</td><td><code>copy_in</code>, <code>copy_out</code></td></tr>
+          <tr><td>LISTEN / NOTIFY</td><td><code>notify</code>, <code>listen</code></td></tr>
+          <tr><td>Transactions</td><td><code>begin</code>, <code>commit</code>, <code>rollback</code>, <code>transaction</code>, <code>savepoint</code>, <code>release_savepoint</code>, <code>rollback_to</code></td></tr>
+          <tr><td>Metadata</td><td><code>ping</code>, <code>tables</code>, <code>databases</code>, <code>schema</code>, <code>count</code>, <code>exists</code>, <code>table_exists</code>, <code>views</code>, <code>functions</code>, <code>indexes</code>, <code>roles</code>, <code>explain</code>, <code>db_size</code>, <code>table_size</code>, <code>activity</code>, <code>locks</code>, <code>sequences</code>, <code>extensions</code>, <code>triggers</code>, <code>cancel_backend</code></td></tr>
+          <tr><td>Schema discovery</td><td><code>describe</code>, <code>current</code>, <code>schemas</code>, <code>matviews</code>, <code>server_settings</code>, <code>server_encoding</code>, <code>constraints</code>, <code>foreign_keys</code>, <code>primary_key</code>, <code>column_defaults</code>, <code>table_stats</code></td></tr>
+          <tr><td>Server admin / maintenance</td><td><code>uptime</code>, <code>replication</code>, <code>current_setting</code>, <code>set_config</code>, <code>analyze</code>, <code>vacuum</code>, <code>reindex</code></td></tr>
+          <tr><td>Pure helpers (no socket)</td><td><code>parse_dsn</code>, <code>parse_keyword_dsn</code>, <code>build_dsn</code>, <code>build_keyword_dsn</code>, <code>quote_ident</code>, <code>unquote_ident</code>, <code>quote_qualified_ident</code>, <code>parse_qualified_ident</code>, <code>quote_literal</code>, <code>unquote_literal</code>, <code>quote_nullable</code>, <code>escape_like</code>, <code>unescape_like</code>, <code>dollar_quote</code>, <code>unquote_dollar</code>, <code>format_array</code>, <code>parse_array</code>, <code>format_in_list</code>, <code>parse_in_list</code>, <code>parse_range</code>, <code>split_statements</code></td></tr>
+          <tr><td>Versions</td><td><code>version</code>, <code>server_version</code></td></tr>
+        </tbody>
+      </table>
+      <p>Injection-safety invariants hold across the surface: table, column, conflict, returning, savepoint, and maintenance-target names are identifier-validated/quoted; values are bound as positional parameters. Where a clause is interpolated rather than bound (<code>update</code>/<code>delete</code> <code>$where</code>, <code>analyze</code>/<code>vacuum</code>/<code>reindex</code> targets), the README documents it explicitly so the caller passes trusted input.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>TYPE ENCODING</h2>
+      <p>Result columns are encoded Postgres &rarr; JSON before crossing the FFI boundary:</p>
+      <table class="arch-table">
+        <thead><tr><th>Postgres type</th><th>JSON</th></tr></thead>
+        <tbody>
+          <tr><td><code>bool</code></td><td>bool</td></tr>
+          <tr><td><code>int2</code>, <code>int4</code>, <code>int8</code></td><td>number</td></tr>
+          <tr><td><code>float4</code>, <code>float8</code></td><td>number</td></tr>
+          <tr><td><code>text</code>, <code>varchar</code>, <code>bpchar</code>, <code>name</code></td><td>string</td></tr>
+          <tr><td><code>date</code></td><td><code>"YYYY-MM-DD"</code></td></tr>
+          <tr><td><code>timestamp</code></td><td><code>"YYYY-MM-DD HH:MM:SS[.ffffff]"</code></td></tr>
+          <tr><td><code>timestamptz</code></td><td>RFC 3339</td></tr>
+          <tr><td><code>uuid</code></td><td>string</td></tr>
+          <tr><td><code>json</code>, <code>jsonb</code></td><td>preserved as JSON</td></tr>
+          <tr><td>other</td><td>string (text fallback; null when no text conversion exists)</td></tr>
+          <tr><td><code>NULL</code></td><td>null</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-postgres">github.com/MenkeTechnologies/stryke-postgres</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-postgres/issues">github.com/MenkeTechnologies/stryke-postgres/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

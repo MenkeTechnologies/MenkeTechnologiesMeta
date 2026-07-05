@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vscode-awk — VS Code / VSCodium support for the AWK language, driven by the awkrs Rust implementation. Filetype detection for *.awk and AWK shebangs, a standalone TextMate grammar (source.awk), language-server integration via awkrs --lsp, and debugging via awkrs --dap.">
+  <title>vscode-awk — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px; }
+    .parity-table th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; text-align: left;
+      padding: 6px 10px; border: 1px solid var(--border);
+    }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.6rem; margin: 0.7rem 0; }
+    .cat-card {
+      border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px;
+    }
+    .cat-card h4 {
+      font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan); margin: 0 0 0.35rem;
+    }
+    .cat-card p { margin: 0; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VSCODE-AWK — VS CODE SUPPORT FOR THE AWK LANGUAGE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vscode-awk" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vscode-stryke" target="_blank" rel="noopener noreferrer">vscode-stryke</a>
+          </nav>
+          <p class="docs-build-line">filetype detection (*.awk + awk shebang) · standalone TextMate grammar (source.awk) · LSP via awkrs --lsp · DAP via awkrs --dap</p>
+          <p class="docs-build-line">settings awk.path / awk.lsp.enabled / awk.lsp.args · run AWK: Run File (Ctrl+F5) · debug F5</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/vscode-awk" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip" style="border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;">
+      <div class="hub-scheme-strip-inner" style="max-width:68rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem;">
+        <span class="hud-scheme-label" style="flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid" style="flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>VSCODE-AWK &mdash; AWK IN VS CODE</h2>
+      <p class="tutorial-subtitle"><strong>Open a <code>.awk</code> file and the whole language lights up.</strong> AWK is a pattern/action text-processing language; <strong>awkrs</strong> is its Rust implementation (POSIX / gawk / mawk-style union CLI). vscode-awk registers the <code>awk</code> language for <code>*.awk</code> files and AWK shebangs, highlights with a <strong>standalone TextMate grammar</strong> (<code>source.awk</code>) covering the <code>BEGIN</code> / <code>END</code> special patterns, control keywords, built-in variables and functions, field references, and <code>/.../</code> regex literals, starts the <code>awkrs --lsp</code> language server via vscode-languageclient, and debugs through <code>awkrs --dap</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>The <code>awkrs</code> binary must be on <code>$PATH</code> for the language server and debugging (<code>cargo install awkrs</code>). Build and install the <code>.vsix</code> locally:</p>
+<pre>git clone https://github.com/MenkeTechnologies/vscode-awk
+cd vscode-awk
+npm install
+npx @vscode/vsce package          # vscode-awk-&lt;version&gt;.vsix
+code --install-extension vscode-awk-*.vsix</pre>
+        <p>Or clone straight into your extensions dir for development: <code>~/.vscode/extensions/vscode-awk</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What you get</h2>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>Filetype detection</h4><p>Every <code>*.awk</code> file becomes the <code>awk</code> language. Files with a <code>#!/usr/bin/awk -f</code> or <code>#!/usr/bin/env awk</code> shebang are detected via <code>firstLine</code>.</p></div>
+          <div class="cat-card"><h4>Standalone grammar</h4><p>A TextMate grammar (<code>source.awk</code>) — special patterns, keywords, built-in variables and functions, field refs, regex literals, strings, numbers, operators.</p></div>
+          <div class="cat-card"><h4>Language server</h4><p>Launches <code>awkrs --lsp</code> (stdio JSON-RPC) through vscode-languageclient — diagnostics, hover, completion as the server provides.</p></div>
+          <div class="cat-card"><h4>Run</h4><p><code>AWK: Run File</code> (Ctrl+F5 / editor-title &#9654;) saves and runs the active file as <code>awkrs -f &lt;file&gt;</code> in an integrated terminal.</p></div>
+          <div class="cat-card"><h4>Debugging</h4><p>Breakpoints, step over/into/out, call stack, scopes, variables, watch / hover, and run-without-debugging via the native debug adapter (<code>awkrs --dap</code>).</p></div>
+          <div class="cat-card"><h4>Verified</h4><p>A <code>vscode-textmate</code> + <code>vscode-oniguruma</code> test tokenizes a sample and asserts the scopes, so the grammar is proven to load and classify correctly.</p></div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Scopes</h2>
+        <table class="parity-table">
+          <thead><tr><th>Token group</th><th>Scope</th></tr></thead>
+          <tbody>
+            <tr><td>Special patterns (<code>BEGIN</code> <code>END</code>)</td><td class="ok">keyword.other.special-pattern.awk</td></tr>
+            <tr><td>Control flow (<code>if</code> <code>while</code> <code>for</code> <code>next</code> <code>exit</code>)</td><td class="ok">keyword.control.awk</td></tr>
+            <tr><td>I/O statements (<code>print</code> <code>printf</code> <code>getline</code>)</td><td class="ok">keyword.other.io.awk</td></tr>
+            <tr><td>Function intro (<code>function</code>)</td><td class="ok">storage.type.function.awk</td></tr>
+            <tr><td>Built-in variables (<code>NR</code> <code>NF</code> <code>FS</code> <code>OFS</code> <code>RS</code>)</td><td class="ok">variable.language.awk</td></tr>
+            <tr><td>String functions (<code>split</code> <code>gsub</code> <code>substr</code> <code>sprintf</code>)</td><td class="ok">support.function.string.awk</td></tr>
+            <tr><td>Math functions (<code>sqrt</code> <code>atan2</code> <code>rand</code>)</td><td class="ok">support.function.math.awk</td></tr>
+            <tr><td>I/O functions (<code>system</code> <code>close</code> <code>fflush</code>)</td><td class="ok">support.function.io.awk</td></tr>
+            <tr><td>Field references (<code>$0</code> <code>$1</code> <code>$NF</code>)</td><td class="ok">variable.language.field.awk</td></tr>
+            <tr><td>Match operators (<code>~</code> <code>!~</code>)</td><td class="ok">keyword.operator.match.awk</td></tr>
+          </tbody>
+        </table>
+        <p>Strings (double-quoted with escapes), <code>/.../</code> regex literals, numbers (integer / float / scientific / hex), comments (<code>#</code>), and the operator set (assignment, comparison, logical, arithmetic, ternary, pipe) are scoped too.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Language server settings</h2>
+        <table class="parity-table">
+          <thead><tr><th>Setting</th><th>Default &amp; effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>awk.path</code></td><td><code>awkrs</code> &mdash; path to the executable</td></tr>
+            <tr><td><code>awk.lsp.enabled</code></td><td><code>true</code> &mdash; start the server; set <code>false</code> for highlighting only</td></tr>
+            <tr><td><code>awk.lsp.args</code></td><td><code>["--lsp"]</code> &mdash; args to start the server</td></tr>
+          </tbody>
+        </table>
+        <p>The transport is omitted so the client spawns bare <code>awkrs --lsp</code> and never appends <code>--stdio</code>. If the binary is missing, the extension shows one non-fatal warning and highlighting keeps working.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compatibility</h2>
+        <table class="parity-table">
+          <thead><tr><th>Target</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>VS Code 1.75+</td><td class="ok">Grammar + LSP + DAP</td></tr>
+            <tr><td>VSCodium / OSS builds</td><td class="ok">Same extension</td></tr>
+            <tr><td>Syntax highlighting</td><td class="ok">No binary required</td></tr>
+            <tr><td>Language server &amp; debug</td><td class="ok">Requires <code>awkrs</code> on PATH</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

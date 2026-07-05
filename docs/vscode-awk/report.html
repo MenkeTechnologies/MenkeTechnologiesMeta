@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vscode-awk — engineering report. Standalone TextMate grammar (source.awk) for the AWK language, filetype detection, language-server integration via awkrs --lsp, debugging via awkrs --dap, and how the grammar is verified with vscode-textmate.">
+  <title>vscode-awk — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+    .stat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.65rem 0.85rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .stat-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-val.accent { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 0.2rem; }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12px; }
+    .parity-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VSCODE-AWK &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vscode-awk" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            VS Code / VSCodium support for AWK &middot; standalone TextMate grammar (source.awk) &middot; LSP via awkrs --lsp &middot; DAP via awkrs --dap &middot; verified with vscode-textmate
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>vscode-awk</strong> is the VS Code / VSCodium extension for <strong>AWK</strong>, backed by the <strong>awkrs</strong> interpreter &mdash; a pattern/action engine written in Rust (POSIX / gawk / mawk-style union CLI). It ships a declarative language contribution (filetype, grammar, editor config), an LSP client that launches <code>awkrs --lsp</code>, a debug adapter that launches <code>awkrs --dap</code>, and a TextMate grammar (<code>source.awk</code>) covering the AWK surface.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> mirror the proven vscode-stryke runtime wiring. The LSP transport is omitted so the client spawns bare <code>awkrs --lsp</code> and never appends <code>--stdio</code> (the arg-rejection / &ldquo;connection got disposed&rdquo; failure mode learned from vscode-stryke). The binary is resolved to an absolute path through <code>$PATH</code> plus common install dirs (<code>~/.cargo/bin</code>, <code>/opt/homebrew/bin</code>, &hellip;), so it works even when the editor is launched from the macOS Dock and doesn&rsquo;t inherit the shell <code>$PATH</code>.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">22</div><div class="stat-label">Built-in functions scoped</div></div>
+        <div class="stat-card"><div class="stat-val accent">21</div><div class="stat-label">Built-in variables</div></div>
+        <div class="stat-card"><div class="stat-val">16</div><div class="stat-label">Keyword tokens</div></div>
+        <div class="stat-card"><div class="stat-val accent">2</div><div class="stat-label">Special patterns (BEGIN / END)</div></div>
+        <div class="stat-card"><div class="stat-val green">1</div><div class="stat-label">TextMate grammar</div></div>
+        <div class="stat-card"><div class="stat-val accent">2</div><div class="stat-label">Detection paths (ext + shebang)</div></div>
+        <div class="stat-card"><div class="stat-val">13</div><div class="stat-label">Tokenizer assertions</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Runtime channels (LSP + DAP)</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>COMPONENTS</h2>
+      <table class="parity-table">
+        <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr><td><code>package.json</code></td><td>Extension manifest &mdash; <code>contributes.languages</code> (id <code>awk</code>, <code>*.awk</code>, shebang <code>firstLine</code>), <code>contributes.grammars</code> (<code>source.awk</code>), <code>contributes.configuration</code> (LSP settings), <code>contributes.commands</code> (run / debug), <code>contributes.debuggers</code> (type <code>awk</code>), and the <code>vscode-languageclient</code> dependency.</td></tr>
+          <tr><td><code>language-configuration.json</code></td><td>Line comment <code>#</code>, brackets, auto-closing / surrounding pairs, word pattern, and brace-based <code>indentationRules</code>.</td></tr>
+          <tr><td><code>extension.js</code></td><td>Activates on <code>onLanguage:awk</code>. Starts a <code>LanguageClient</code> running <code>awkrs --lsp</code> over stdio, registers the run command (terminal <code>awkrs -f &lt;file&gt;</code>), and registers a <code>DebugAdapterDescriptorFactory</code> launching <code>awkrs --dap</code>. Missing binary &rarr; one non-fatal warning; highlighting still works.</td></tr>
+          <tr><td><code>lib/resolveBinary.js</code></td><td>Pure (vscode-free) resolver that turns the <code>awk.path</code> setting into an absolute, executable path &mdash; searching <code>$PATH</code> then the GUI-missed fallback dirs. Unit-tested in CI.</td></tr>
+          <tr><td><code>syntaxes/awk.tmLanguage.json</code></td><td>TextMate grammar &mdash; comments, shebang, strings, <code>/.../</code> regex, numbers, special patterns, keywords, built-in functions / variables, field references, function definitions, and operators.</td></tr>
+          <tr><td><code>scripts/tokenize_test.js</code></td><td>Loads the grammar under <code>vscode-textmate</code> + <code>vscode-oniguruma</code> (the engine VS Code itself uses) and asserts the scope of 13 sample tokens.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SCOPE MAP</h2>
+      <table class="parity-table">
+        <thead><tr><th>Token group</th><th>TextMate scope</th><th>Sample</th></tr></thead>
+        <tbody>
+          <tr><td>Special patterns</td><td class="ok">keyword.other.special-pattern.awk</td><td><code>BEGIN</code> <code>END</code></td></tr>
+          <tr><td>Control flow</td><td class="ok">keyword.control.awk</td><td><code>if</code> <code>else</code> <code>while</code> <code>for</code> <code>next</code> <code>exit</code> <code>return</code></td></tr>
+          <tr><td>I/O statements</td><td class="ok">keyword.other.io.awk</td><td><code>print</code> <code>printf</code> <code>getline</code></td></tr>
+          <tr><td>Function intro</td><td class="ok">storage.type.function.awk</td><td><code>function</code> <code>func</code></td></tr>
+          <tr><td>Built-in variables</td><td class="ok">variable.language.awk</td><td><code>NR</code> <code>NF</code> <code>FS</code> <code>OFS</code> <code>ORS</code> <code>RS</code> <code>FILENAME</code> <code>SUBSEP</code></td></tr>
+          <tr><td>String functions</td><td class="ok">support.function.string.awk</td><td><code>length</code> <code>substr</code> <code>split</code> <code>sub</code> <code>gsub</code> <code>match</code> <code>sprintf</code></td></tr>
+          <tr><td>Math functions</td><td class="ok">support.function.math.awk</td><td><code>sin</code> <code>cos</code> <code>atan2</code> <code>exp</code> <code>log</code> <code>sqrt</code> <code>int</code> <code>rand</code></td></tr>
+          <tr><td>I/O functions</td><td class="ok">support.function.io.awk</td><td><code>system</code> <code>close</code> <code>fflush</code></td></tr>
+          <tr><td>Field references</td><td class="ok">variable.language.field.awk</td><td><code>$0</code> <code>$1</code> <code>$NF</code> <code>$(NF-1)</code></td></tr>
+          <tr><td>Match operators</td><td class="ok">keyword.operator.match.awk</td><td><code>~</code> <code>!~</code></td></tr>
+          <tr><td>Literals</td><td class="ok">string.* / constant.numeric / string.regexp</td><td>strings, numbers, <code>/.../</code> regex</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">The grammar is loaded under the exact engine VS Code uses at runtime &mdash; <code>vscode-textmate</code> driving <code>vscode-oniguruma</code> &mdash; and a sample is tokenized with the resulting scopes asserted. This proves the grammar compiles under oniguruma and classifies AWK tokens correctly, including the tricky cases: a <code>/.../</code> regex literal distinguished from division, a field reference such as <code>$1</code> against the <code>NF</code> built-in, and the <code>function</code> name capture.</p>
+      <table class="parity-table">
+        <thead><tr><th>Sample token</th><th>Asserted scope</th></tr></thead>
+        <tbody>
+          <tr><td><code>BEGIN</code></td><td class="ok">keyword.other.special-pattern.awk</td></tr>
+          <tr><td><code>FS</code></td><td class="ok">variable.language.awk</td></tr>
+          <tr><td><code>/^error/</code></td><td class="ok">string.regexp.awk</td></tr>
+          <tr><td><code>$1</code></td><td class="ok">variable.language.field.awk</td></tr>
+          <tr><td><code>gsub</code></td><td class="ok">support.function.string.awk</td></tr>
+          <tr><td><code>function</code> / <code>trim</code></td><td class="ok">storage.type.function.awk / entity.name.function.awk</td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

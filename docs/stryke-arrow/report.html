@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-arrow — engineering report. APACHE ARROW + PARQUET + FEATHER + ARROW-CSV/JSON FOR STRYKE. Architecture, FFI layer, scope, dependencies.">
+  <title>stryke-arrow — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-ARROW &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_arrow.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use Arrow</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-arrow</strong> is one of the opt-in connector packages in the stryke ecosystem. Apache Arrow + Parquet + Arrow IPC + Feather + arrow-CSV + arrow-JSON for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The heavy arrow-rs / parquet code ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Arrow</code>.</p>
+      <p class="tutorial-subtitle">Core stays small on purpose &mdash; most one-liner / awk-replacement work doesn't need 200 transitive crates of columnar data infrastructure. arrow-rs + parquet hit a different scale, so they ship as an opt-in package.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">v0.19.0</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val cyan">52</div><div class="stat-label">FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val green">58</div><div class="stat-label">Arrow:: fns</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+        <div class="stat-card"><div class="stat-val green">5</div><div class="stat-label">Formats</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>Thin <code>.stk</code> wrappers (<code>Arrow</code>, <code>Arrow::Parquet</code>, <code>Arrow::IPC</code>, <code>Arrow::Feather</code>, <code>Arrow::CSV</code>, <code>Arrow::JSON</code>, <code>Arrow::DataFrame</code>); each exposes typed helpers that serialize args to JSON and parse the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_arrow.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn arrow__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Arrow</code>; stateless &mdash; arrow operations are pure file transforms with no process-level cache; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/arrow@&lt;version&gt;/</code> after <code>make install</code>; <code>use Arrow</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>Core stays small on purpose &mdash; most one-liner / awk-replacement work doesn't need 200 transitive crates of columnar data infrastructure. arrow-rs + parquet hit a different scale, so they ship as an opt-in package.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>Arrow::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>arrow__*</code> symbol resolved out of <code>libstryke_arrow.{dylib,so}</code>; the cdylib returns a JSON <code>CString</code> the wrapper parses. The cdylib exposes 52 <code>arrow__*</code> entry points (the <code>[ffi].exports</code> list in <code>stryke.toml</code>) across four roles &mdash; read (<code>version</code>, <code>read</code>, <code>read_columnar</code>, <code>schema</code>, <code>stats</code>), write (<code>write</code>), conversion (<code>convert</code>), and compute / aggregation / numeric transforms (<code>filter</code>, <code>filter_in</code>, <code>filter_not_in</code>, <code>filter_str</code>, <code>select</code>, <code>drop</code>, <code>distinct</code>, <code>drop_nulls</code>, <code>keep_nulls</code>, <code>fill_null</code>, <code>sort</code>, <code>reverse</code>, <code>gather</code>, <code>top_k</code>, <code>value_counts</code>, <code>slice</code>, <code>head</code>, <code>tail</code>, <code>with_row_index</code>, <code>count</code>, <code>null_counts</code>, <code>shape</code>, <code>concat</code>, <code>hstack</code>, <code>rename</code>, <code>cast</code>, <code>sum</code>, <code>mean</code>, <code>min_max</code>, <code>std</code>, <code>median</code>, <code>quantile</code>, <code>corr</code>, <code>describe</code>, <code>aggregate</code>, <code>unique</code>, <code>clip</code>, <code>scale</code>, <code>add_const</code>, <code>abs</code>, <code>round</code>, <code>add_column</code>, <code>sample</code>, <code>fold_case</code>, <code>metadata</code>). Each is an <code>extern "C" fn arrow__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code>; the returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>.</p>
+<pre># request shape (built by the .stk wrapper)
+{"path": "&lt;file&gt;", "format": ..., "...": ...}
+
+# success — per-verb shape:
+#   read            → {"columns": [...], "rows": [{col: val, ...}, ...]}
+#   read_columnar   → {"columns": [...], "num_rows": N, "data": {col: [...]}}
+#   schema          → {"fields": [{name, type, nullable}, ...]}
+#   stats (parquet) → {"num_rows", "num_row_groups", "columns": [{name, null_count, min, max}, ...]}
+#   write / convert → {"path": ..., "rows": N}
+#   compute (filter/sort/select/…) → {"dst": ..., "rows": N}
+#   count           → {"src": ..., "rows": N}
+
+# failure
+{"error": "&lt;msg&gt;"}        # wrapper die()s with the message</pre>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-arrow#readme">"Why this is a package"</a> + <a href="https://github.com/MenkeTechnologies/stryke-arrow#0x04-api-reference">"API reference"</a> sections for the authoritative scope. The package is intentionally narrower than its underlying SDK / driver &mdash; the goal is "useful from a shell pipeline", not "complete API coverage". The 58-function <code>Arrow::*</code> surface breaks down as follows:</p>
+      <table class="arch-table">
+        <thead><tr><th>Role</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Read &amp; inspect</td><td><code>read</code>, <code>read_stream</code>, <code>read_columnar</code>, <code>schema</code>, <code>stats</code>, <code>row_count</code>, <code>column_names</code>, <code>column_count</code>, <code>is_empty</code>, <code>null_counts</code>, <code>shape</code>, <code>metadata</code>, <code>count</code>, <code>version</code></td></tr>
+          <tr><td>Write &amp; convert</td><td><code>write</code>, <code>write_iter</code>, <code>convert</code></td></tr>
+          <tr><td>Compute (file &rarr; file)</td><td><code>filter</code>, <code>filter_in</code>, <code>filter_not_in</code>, <code>filter_str</code>, <code>select</code>, <code>drop</code>, <code>distinct</code>, <code>drop_nulls</code>, <code>keep_nulls</code>, <code>fill_null</code>, <code>sort</code>, <code>reverse</code>, <code>gather</code>, <code>top_k</code>, <code>value_counts</code>, <code>head</code>, <code>tail</code>, <code>slice</code>, <code>sample</code>, <code>with_row_index</code>, <code>concat</code>, <code>hstack</code>, <code>rename</code>, <code>cast</code>, <code>unique</code>, <code>add_column</code>, <code>fold_case</code></td></tr>
+          <tr><td>Aggregation &amp; numeric</td><td><code>sum</code>, <code>mean</code>, <code>min_max</code>, <code>std</code>, <code>median</code>, <code>quantile</code>, <code>corr</code>, <code>describe</code>, <code>aggregate</code>, <code>clip</code>, <code>scale</code>, <code>add_const</code>, <code>abs</code>, <code>round</code></td></tr>
+          <tr><td>Formats</td><td>Parquet, Arrow IPC, Feather (IPC v2 alias), CSV, NDJSON &mdash; each with an explicit <code>Arrow::&lt;Format&gt;</code> sublibrary plus extension auto-detection; <code>Arrow::DataFrame</code> bridges into stryke's columnar value</td></tr>
+        </tbody>
+      </table>
+      <p>Read the full per-signature reference in the <a href="index.html">Docs page</a> or the README. Every function above is either an <code>arrow__*</code> cdylib export or a pure-stryke helper layered over one; none round-trips bulk data through the stryke process except the row-returning readers.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Version</td><td>0.19.0</td></tr>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Core deps</td><td><code>arrow</code> 58, <code>arrow-csv/ipc/json/schema</code> 58, <code>parquet</code> 58 (snap/brotli/flate2/lz4/zstd), <code>serde</code>, <code>serde_json</code>, <code>anyhow</code>, <code>once_cell</code></td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-arrow">github.com/MenkeTechnologies/stryke-arrow</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-arrow/issues">github.com/MenkeTechnologies/stryke-arrow/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

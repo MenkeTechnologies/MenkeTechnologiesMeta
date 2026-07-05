@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-clickhouse — ClickHouse client for stryke. Query, bulk insert (JSONEachRow), DDL, schema introspection over the HTTP interface. Opt-in package — a Rust cdylib dlopened in-process on first `use Clickhouse`.">
+  <title>stryke-clickhouse — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td { padding: 6px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+    .example-tbl td:first-child { width: 30%; white-space: nowrap; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .ref-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .ref-tbl th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .ref-tbl td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .ref-tbl td:first-child { white-space: nowrap; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .ref-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-CLICKHOUSE &mdash; CLICKHOUSE CLIENT FOR STRYKE // QUERY + INSERT + DDL + INTROSPECTION</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package &middot; namespace <code>Clickhouse</code> &middot; cdylib <code>libstryke_clickhouse</code> &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-clickhouse/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-CLICKHOUSE</h2>
+      <p class="tutorial-subtitle"><strong>Columnar OLAP, one stryke pipe at a time.</strong> ClickHouse client for stryke &mdash; SELECTs, bulk insert via JSONEachRow, DDL, and schema introspection against any ClickHouse server over its HTTP interface (default port 8123). Transport is <a href="https://docs.rs/ureq" target="_blank" rel="noopener noreferrer">ureq</a> over rustls &mdash; synchronous, pure-Rust, no tokio, no OpenSSL. A keep-alive connection pool is cached per <code>(base_url, auth, database)</code>. An opt-in package, kept out of the stryke core binary so the daily-driver install stays slim.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre>s add github.com/MenkeTechnologies/stryke-clickhouse</pre>
+        <p>On first <code>use Clickhouse</code>, stryke dlopens the cdylib in-process and registers every <code>clickhouse__*</code> export.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start</h2>
+<pre>use Clickhouse
+
+var %conn
+$conn{url} = "http://127.0.0.1:8123"
+
+Clickhouse::create_table("events", columns =&gt; "ts DateTime, user UInt64, kind String", order_by =&gt; "(ts, user)", %conn)
+Clickhouse::insert("events", [{ ts =&gt; "2026-06-20 12:00:00", user =&gt; 1, kind =&gt; "click" }], %conn)
+
+p Clickhouse::count("events", %conn)
+p Clickhouse::query_value("SELECT uniqExact(user) FROM events", %conn)
+val @rows = Clickhouse::query_rows("SELECT kind, count() c FROM events GROUP BY kind", %conn)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connecting</h2>
+        <p>Connection params come from the <code>%conn</code> opts hash on every call (or <code>$CLICKHOUSE_URL</code> when neither <code>url</code> nor <code>host</code> is given).</p>
+        <table class="example-tbl">
+          <tr><td>url</td><td>Full base URL, e.g. <code>https://ch.example.com:8443</code></td></tr>
+          <tr><td>host / port</td><td><code>127.0.0.1</code> / <code>8123</code> &mdash; used with <code>tls</code> when <code>url</code> is absent</td></tr>
+          <tr><td>tls</td><td><code>false</code>; <code>true</code> selects the <code>https</code> scheme</td></tr>
+          <tr><td>username / password</td><td>HTTP Basic auth (default user <code>default</code>, empty password)</td></tr>
+          <tr><td>database</td><td><code>default</code> &mdash; sent as <code>?database=</code> on every request</td></tr>
+          <tr><td>params</td><td>Extra ClickHouse settings as URL query params</td></tr>
+        </table>
+        <p>Connection params can be passed inline per call or kept in a hash and splatted into every call:</p>
+<pre>var %conn
+$conn{host}     = "ch.internal"
+$conn{port}     = 8123
+$conn{tls}      = 0
+$conn{username} = "reader"
+$conn{password} = $ENV{CH_PASS}
+$conn{database} = "analytics"
+
+p Clickhouse::ping(%conn)
+val @rows = Clickhouse::query_rows("SELECT now()", %conn)</pre>
+        <p>When neither <code>url</code> nor <code>host</code> is present, the client falls back to the <code>$CLICKHOUSE_URL</code> environment variable, so a script can run unchanged across hosts:</p>
+<pre>export CLICKHOUSE_URL="https://default:secret@ch.example.com:8443/analytics"
+s run report.stk     # no %conn needed</pre>
+        <p>A <code>ureq::Agent</code> (HTTP keep-alive pool) is cached per <code>(base_url, auth, database)</code> tuple for the life of the stryke process, so repeated calls to the same target reuse the underlying connection. The database rides on the query string as <code>?database=</code>, and credentials travel as HTTP Basic (default user <code>default</code>, empty password).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API surface</h2>
+        <table class="example-tbl">
+          <tr><td>Liveness</td><td><code>version</code>, <code>ping</code>, <code>server_version</code></td></tr>
+          <tr><td>Query</td><td><code>query</code>, <code>query_rows</code>, <code>query_row</code>, <code>query_value</code>, <code>exec</code>, <code>insert</code>, <code>delete_where</code>, <code>raw</code></td></tr>
+          <tr><td>Introspection</td><td><code>databases</code>, <code>tables</code>, <code>describe</code>, <code>columns</code>, <code>count</code>, <code>table_exists</code>, <code>database_exists</code>, <code>settings</code>, <code>parts</code>, <code>disk_usage</code>, <code>mutations</code>, <code>processes</code></td></tr>
+          <tr><td>DDL</td><td><code>create_database</code>, <code>drop_database</code>, <code>create_table</code>, <code>drop_table</code>, <code>truncate_table</code>, <code>rename_table</code>, <code>add_column</code>, <code>drop_column</code>, <code>optimize</code></td></tr>
+          <tr><td>Pure helpers</td><td><code>escape</code>, <code>escape_like</code>, <code>quote_literal</code>, <code>quote_ident</code>, <code>valid_identifier</code>, <code>format_value</code>, <code>format_in_list</code>, <code>format_array</code>, <code>build_url</code>, <code>parse_url</code>, <code>redact_url</code></td></tr>
+        </table>
+        <p>43 functions in the <code>Clickhouse</code> namespace. Every call (except the pure helpers) takes the trailing <code>%opts</code> connection hash. <code>query</code> returns the full result object; <code>query_rows</code> / <code>query_row</code> / <code>query_value</code> peel off the array / first row / first scalar. <code>exec</code> is for statements that return no rows.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; liveness</h2>
+        <table class="ref-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td>version()</td><td>Package version string (from the cdylib, no server).</td></tr>
+            <tr><td>ping(%opts)</td><td>Connectivity probe (<code>GET /ping</code>) &mdash; <code>1</code> on success, <code>0</code> otherwise.</td></tr>
+            <tr><td>server_version(%opts)</td><td>Server version string (<code>SELECT version()</code>).</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; query &amp; write</h2>
+        <table class="ref-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td>query($sql, %opts)</td><td>Run a SELECT; returns the full <code>{ meta, data, rows, statistics }</code> object.</td></tr>
+            <tr><td>query_rows($sql, %opts)</td><td>Run a SELECT; returns just the array of row objects.</td></tr>
+            <tr><td>query_row($sql, %opts)</td><td>Run a SELECT; returns the first row object (or undef).</td></tr>
+            <tr><td>query_value($sql, %opts)</td><td>Run a SELECT; returns the first column of the first row (a scalar).</td></tr>
+            <tr><td>exec($sql, %opts)</td><td>Run a no-row statement (CREATE/INSERT/ALTER/DROP/&hellip;). Returns truthy on ok.</td></tr>
+            <tr><td>insert($table, $rows, %opts)</td><td>Bulk insert an arrayref of hashrefs into <code>$table</code> via JSONEachRow. Returns the number of rows sent.</td></tr>
+            <tr><td>delete_where($table, $where, %opts)</td><td>Lightweight delete: <code>DELETE FROM $table WHERE $where</code> (ClickHouse 22.8+).</td></tr>
+            <tr><td>raw($sql, %opts)</td><td>Escape hatch: run arbitrary <code>$sql</code>. <code>json</code> opt (default true) parses a SELECT result; pass <code>json =&gt; 0</code> for a no-row statement.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; introspection</h2>
+        <table class="ref-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td>databases(%opts)</td><td>Array of database names (<code>system.databases</code>).</td></tr>
+            <tr><td>tables(%opts)</td><td>Array of table names in <code>%opts{database}</code> (default <code>default</code>).</td></tr>
+            <tr><td>describe($table, %opts)</td><td><code>DESCRIBE TABLE $table</code> &mdash; array of column descriptors.</td></tr>
+            <tr><td>columns($table, %opts)</td><td>Per-column metadata from <code>system.columns</code>: name, type, default kind/expression, compressed/uncompressed bytes, comment.</td></tr>
+            <tr><td>count($table, %opts)</td><td>Row count of <code>$table</code>.</td></tr>
+            <tr><td>table_exists($table, %opts)</td><td>True when <code>$table</code> exists in <code>%opts{database}</code>.</td></tr>
+            <tr><td>database_exists($name, %opts)</td><td>True when database <code>$name</code> exists (<code>system.databases</code>).</td></tr>
+            <tr><td>settings(%opts)</td><td>All server settings (<code>system.settings</code>): name, value, changed, description.</td></tr>
+            <tr><td>parts($table, %opts)</td><td>Active parts from <code>system.parts</code>: partition, rows, on-disk + compressed/uncompressed bytes, modification time.</td></tr>
+            <tr><td>disk_usage($table, %opts)</td><td>Aggregate storage of active parts: rows, on-disk + compressed + uncompressed bytes, and compression ratio. One hashref.</td></tr>
+            <tr><td>mutations($table, %opts)</td><td>Pending/recent mutations from <code>system.mutations</code>: mutation_id, command, create_time, parts_to_do, is_done, latest_fail_reason.</td></tr>
+            <tr><td>processes(%opts)</td><td>Currently executing queries from <code>system.processes</code>: query_id, user, query, elapsed, read_rows, read_bytes, memory_usage.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; DDL</h2>
+        <table class="ref-tbl">
+          <thead><tr><th>Function</th><th>Emitted statement</th></tr></thead>
+          <tbody>
+            <tr><td>create_database($name, %opts)</td><td><code>CREATE DATABASE IF NOT EXISTS $name</code>.</td></tr>
+            <tr><td>drop_database($name, %opts)</td><td><code>DROP DATABASE IF EXISTS $name</code>.</td></tr>
+            <tr><td>create_table($name, %opts)</td><td>Either <code>%opts{sql}</code> (full CREATE) or <code>$name</code> + <code>columns</code> (&quot;col Type, &hellip;&quot;) + <code>engine</code> (default <code>MergeTree</code>) + <code>order_by</code>.</td></tr>
+            <tr><td>drop_table($table, %opts)</td><td><code>DROP TABLE IF EXISTS $table</code>.</td></tr>
+            <tr><td>truncate_table($table, %opts)</td><td><code>TRUNCATE TABLE IF EXISTS $table</code>.</td></tr>
+            <tr><td>rename_table($from, $to, %opts)</td><td><code>RENAME TABLE $from TO $to</code>.</td></tr>
+            <tr><td>add_column($table, $name, $type, %opts)</td><td><code>ALTER TABLE $table ADD COLUMN IF NOT EXISTS $name $type</code>; <code>%opts{default}</code> appends a <code>DEFAULT</code> expression.</td></tr>
+            <tr><td>drop_column($table, $name, %opts)</td><td><code>ALTER TABLE $table DROP COLUMN IF EXISTS $name</code>.</td></tr>
+            <tr><td>optimize($table, %opts)</td><td><code>OPTIMIZE TABLE $table</code>; <code>%opts{final}</code> appends <code>FINAL</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; pure helpers</h2>
+        <p>These take no connection and are unit-tested in-crate, so they validate in CI with no server present. Use them to build SQL safely.</p>
+        <table class="ref-tbl">
+          <thead><tr><th>Function</th><th>Behaviour</th></tr></thead>
+          <tbody>
+            <tr><td>escape($value)</td><td>Escape <code>$value</code> for a single-quoted SQL literal (backslash + single-quote escaped).</td></tr>
+            <tr><td>escape_like($value)</td><td>Escape <code>\</code>, <code>%</code>, <code>_</code> so <code>$value</code> matches literally inside a <code>LIKE</code> pattern.</td></tr>
+            <tr><td>quote_literal($value)</td><td>Wrap <code>$value</code> as a single-quoted, backslash-escaped string literal.</td></tr>
+            <tr><td>quote_ident($value)</td><td>Backtick-quote <code>$value</code> as an identifier (embedded backticks escaped).</td></tr>
+            <tr><td>valid_identifier($value)</td><td>True when <code>$value</code> is a valid unquoted identifier (<code>[A-Za-z_][A-Za-z0-9_]*</code>).</td></tr>
+            <tr><td>format_value($value)</td><td>Format a value as a ClickHouse literal: string&rarr;<code>'&hellip;'</code>, number&rarr;as-is, bool&rarr;<code>true</code>/<code>false</code>, null&rarr;<code>NULL</code>, array&rarr;<code>[&hellip;]</code>.</td></tr>
+            <tr><td>format_in_list($values)</td><td>Render an arrayref into an <code>IN (&hellip;)</code> list (empty&rarr;<code>(NULL)</code>, matches nothing).</td></tr>
+            <tr><td>format_array($values)</td><td>Render an arrayref into a ClickHouse array literal <code>[&hellip;]</code>.</td></tr>
+            <tr><td>build_url(%opts)</td><td>Resolve the base URL these opts connect to.</td></tr>
+            <tr><td>parse_url($url)</td><td>Decompose <code>$url</code> into scheme/host/port/username/password/database/tls.</td></tr>
+            <tr><td>redact_url($url)</td><td>Replace userinfo in <code>$url</code> with <code>***</code> for safe logging.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Safe parameterization with the escape helper:</p>
+<pre>val $name = Clickhouse::escape($user_input)
+val @hits = Clickhouse::query_rows("SELECT * FROM events WHERE kind = '$name'", %conn)</pre>
+        <p>Build an <code>IN (&hellip;)</code> list and a <code>LIKE</code> pattern without hand-escaping:</p>
+<pre>val $ids = Clickhouse::format_in_list([1, 2, 3])          # (1, 2, 3)
+val @rows = Clickhouse::query_rows("SELECT * FROM events WHERE user IN $ids", %conn)
+
+val $needle = Clickhouse::escape_like($q)
+val @found = Clickhouse::query_rows("SELECT * FROM events WHERE kind LIKE '%$needle%'", %conn)</pre>
+        <p>Introspect storage and schema:</p>
+<pre>p Clickhouse::table_exists("events", %conn)
+val @cols = Clickhouse::columns("events", %conn)
+val $usage = Clickhouse::disk_usage("events", %conn)
+p $usage-&gt;{compression_ratio}
+
+for val $proc (Clickhouse::processes(%conn)) {
+    p "$proc-&gt;{query_id}: $proc-&gt;{elapsed}s"
+}</pre>
+        <p>DDL and lightweight delete:</p>
+<pre>Clickhouse::add_column("events", "session", "String", default =&gt; "''", %conn)
+Clickhouse::optimize("events", final =&gt; 1, %conn)
+Clickhouse::delete_where("events", "kind = 'spam'", %conn)
+Clickhouse::rename_table("events", "events_old", %conn)</pre>
+        <p>Redact a URL before logging it:</p>
+<pre>p Clickhouse::redact_url("https://user:pw@ch.example.com:8443")   # https://***@ch.example.com:8443</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Build &amp; test</h2>
+<pre>make debug       # cargo build
+make test        # cargo test, then `s test t/`
+make install     # s pkg install -g .</pre>
+        <p><code>cargo test</code> runs the in-crate unit tests (string/identifier escaping, URL parse/redact, connection key, result extraction) with no server required. <code>t/test_stryke_clickhouse_surface.stk</code> pins the wrapper surface and exercises the pure helpers; <code>t/test_clickhouse.stk</code> runs end-to-end DDL + insert + query against a live server (needs <code>$CLICKHOUSE_URL</code> or <code>127.0.0.1:8123</code>) and short-circuits when none answers.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>The HTTP + TLS transport (<code>ureq</code>, rustls) ships once, on demand, as an opt-in package &mdash; stryke core is never linked against it. On first <code>use Clickhouse</code>, stryke dlopens the cdylib in-process and registers every <code>clickhouse__*</code> export. The cdylib caches a <code>ureq::Agent</code> keep-alive pool per <code>(base_url, auth, database)</code>, so repeated queries reuse the connection.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="iftoprs — neon-drenched terminal UI for real-time bandwidth monitoring. Built in Rust with ratatui + crossterm + libpcap. 31 cyberpunk themes, native process attribution (no external tools), JSON streaming, BPF filters, mouse + sparklines, auto-restart capture, hover tooltips.">
+  <title>iftoprs — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .reflection-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0 0.2rem;
+      font-size: 12px;
+    }
+    .reflection-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .reflection-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .reflection-table td code { color: var(--accent-light); background: var(--bg); }
+
+    .oneliner {
+      margin: 0.4rem 0;
+      padding: 0.55rem 0.8rem;
+      border-left: 2px solid var(--cyan);
+      background: var(--bg);
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .oneliner .comment { color: var(--text-muted); }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+    }
+    .cat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .cat-card h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 0 0 0.35rem;
+    }
+    .cat-card p {
+      margin: 0;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.4rem;
+      margin: 0.7rem 0;
+    }
+    .theme-chip {
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      padding: 0.4rem 0.6rem;
+      background: var(--bg-card);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      border-radius: 2px;
+    }
+    .theme-chip code { color: var(--accent-light); font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// IFTOPRS &mdash; REAL-TIME PACKET INTERCEPT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/iftoprs" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://crates.io/crates/iftoprs" target="_blank" rel="noopener noreferrer">crates.io</a>
+            <span class="sep">/</span>
+            <a href="https://docs.rs/iftoprs" target="_blank" rel="noopener noreferrer">docs.rs</a>
+          </nav>
+          <p class="docs-build-line">iftoprs v2.22.9 &middot; ratatui 0.30 + crossterm 0.29 + pcap 2.4 &middot; 31 cyberpunk themes &middot; per-flow process attribution &middot; JSON streaming &middot; mouse + sparklines &middot; auto-restart capture</p>
+          <p class="docs-build-line"><span id="iftoprsLoc">21,891 production Rust src &middot; 6,672 integration-test src &middot; 2,275 test functions</span></p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/iftoprs" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/iftoprs/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>IFTOPRS &mdash; JACK INTO THE PACKET STREAM</h2>
+      <p class="tutorial-subtitle"><strong>A neon-drenched terminal UI for real-time bandwidth monitoring.</strong> Live <code>libpcap</code> capture with BPF filters, per-flow sliding-window averages (2&nbsp;s / 10&nbsp;s / 40&nbsp;s), reverse-DNS + port-name resolution, native per-flow process attribution (no external tools), hover + right-click tooltips, mouse + keyboard navigation, 31 cyberpunk color themes, <code>--json</code> NDJSON stream for headless pipelines, configurable bandwidth alerts, sparkline history per flow, and auto-restart on transient capture errors. macOS &amp; Linux. Built in Rust with <a href="https://github.com/ratatui/ratatui">ratatui</a> + <a href="https://github.com/crossterm-rs/crossterm">crossterm</a> + <a href="https://docs.rs/pcap">pcap</a>.</p>
+
+      <section class="tutorial-section">
+        <h2>Quickstart</h2>
+        <p>Install from crates.io or build from source. Raw packet capture needs root or <code>cap_net_raw</code>:</p>
+<pre># install from crates.io
+cargo install iftoprs
+
+# from source
+git clone https://github.com/MenkeTechnologies/iftoprs
+cd iftoprs &amp;&amp; cargo build --release
+
+# launch (needs root for raw capture)
+sudo iftoprs                        # auto-detect default interface
+sudo iftoprs -i en0                 # specific interface
+sudo iftoprs -f "tcp port 443"      # BPF filter — HTTPS only
+sudo iftoprs -F 10.0.0.0/8 -B       # filter private net, show bytes
+sudo iftoprs -Z                     # show process names per flow
+
+# headless / pipelines
+sudo iftoprs --json                 # NDJSON stream to stdout
+sudo iftoprs --json | jq '.flows[0]'
+
+# shell completions
+iftoprs --completions zsh &gt; _iftoprs
+iftoprs --completions bash &gt; iftoprs.bash
+iftoprs --completions fish &gt; iftoprs.fish</pre>
+        <p>Full install + dependency matrix lives in the <a href="https://github.com/MenkeTechnologies/iftoprs#readme">README</a>. On Linux <code>apt install libpcap-dev</code> before <code>cargo build</code>. On macOS <code>libpcap</code> ships with the system &mdash; no install needed.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why iftoprs &mdash; against the classic tool</h2>
+        <table class="reflection-table">
+          <thead>
+            <tr><th>Feature</th><th>iftoprs</th><th>iftop (C, 2002)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Memory safety</td><td style="color:var(--green);">Rust &mdash; no UB, no leaks</td><td>raw C</td></tr>
+            <tr><td>Async capture loop</td><td style="color:var(--green);">tokio + <code>mpsc</code></td><td>blocking <code>pcap_loop</code></td></tr>
+            <tr><td>Per-flow process attribution</td><td style="color:var(--green);">PID + name, native (<code>libproc</code> / <code>/proc</code>)</td><td>none</td></tr>
+            <tr><td>Mouse support</td><td style="color:var(--green);">left/right/middle, scroll, hover tooltips</td><td>none</td></tr>
+            <tr><td>Tooltips on hover &amp; right-click</td><td style="color:var(--green);">10 segment tooltips + flow drill-down</td><td>none</td></tr>
+            <tr><td>Per-flow sparkline (40&nbsp;s)</td><td style="color:var(--green);">inline ▁▂▃▅▇█ + tooltip</td><td>none</td></tr>
+            <tr><td>Color themes</td><td style="color:var(--green);"><strong>31</strong> &mdash; live chooser</td><td>4 hardcoded colors</td></tr>
+            <tr><td>JSON / NDJSON output</td><td style="color:var(--green);"><code>--json</code> to stdout</td><td>none</td></tr>
+            <tr><td>Bandwidth alerts</td><td style="color:var(--green);">configurable threshold + bell + flash</td><td>none</td></tr>
+            <tr><td>Auto-restart on transient errors</td><td style="color:var(--green);">exponential backoff</td><td>none</td></tr>
+            <tr><td>Pinned / bookmarked flows</td><td style="color:var(--green);"><code>F</code> &mdash; ★ floats to top</td><td>none</td></tr>
+            <tr><td>Live filter (hostname/IP)</td><td style="color:var(--green);"><code>/</code> &mdash; substring match</td><td>none</td></tr>
+            <tr><td>Clipboard export</td><td style="color:var(--green);"><code>y</code> &mdash; selected flow</td><td>none</td></tr>
+            <tr><td>NDJSON-pipeable export</td><td style="color:var(--green);"><code>e</code> &mdash; full snapshot to file</td><td>none</td></tr>
+            <tr><td>Shell completions</td><td style="color:var(--green);">zsh / bash / fish / elvish / powershell</td><td>none</td></tr>
+            <tr><td>TOML config + auto-save</td><td style="color:var(--green);"><code>~/.iftoprs.conf</code></td><td>readline-style settings</td></tr>
+            <tr><td>Single static binary</td><td style="color:var(--green);"><code>cargo install</code> &mdash; one binary</td><td>autotools build</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Capture engine</h2>
+        <p>The capture pipeline is built around three concerns &mdash; <strong>read packets</strong>, <strong>parse to flow tuples</strong>, <strong>survive transient errors</strong>:</p>
+        <ul>
+          <li><strong>libpcap</strong> &mdash; <code>pcap::Capture</code> opens the device with the configured BPF filter, snaplen, and promiscuous flag. The capture thread lives in <code>src/capture/sniffer.rs</code>.</li>
+          <li><strong>async hand-off</strong> &mdash; raw packets flow over a <code>tokio::sync::mpsc</code> channel to the parser task; the UI thread reads parsed flow updates from a second channel. Lossy capture (kernel drop) is logged but never panics.</li>
+          <li><strong>parser</strong> &mdash; <code>src/capture/parser.rs</code> walks Ethernet/IPv4/IPv6/TCP/UDP/ICMP headers, tracks 5-tuples, classifies protocol, and folds bytes into the per-flow counters.</li>
+          <li><strong>auto-restart</strong> &mdash; transient pcap errors trigger an exponential-backoff reopen instead of crash. v2.22.2 release notes (<code>76f42105bd</code>) wired this in.</li>
+          <li><strong>sliding windows</strong> &mdash; bandwidth is tracked over 2&nbsp;s / 10&nbsp;s / 40&nbsp;s averages with a per-flow ring buffer in <code>src/data/history.rs</code>. Cumulative + peak counters live alongside.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Flow tracker</h2>
+        <p>The flow model lives in <code>src/data/flow.rs</code> and the tracker in <code>src/data/tracker.rs</code>. Every flow is keyed by <code>(src, dst, src_port, dst_port, protocol)</code>; counters split into <code>tx</code> and <code>rx</code> directions based on the configured interface IP / network filter.</p>
+        <ul>
+          <li><strong>5-tuple keys</strong> &mdash; protocols cover TCP / UDP / ICMP / Other (ARP, raw IP, etc.).</li>
+          <li><strong>three windows</strong> &mdash; 2&nbsp;s yellow, 10&nbsp;s green, 40&nbsp;s cyan; sort cycles through them with <code>1</code>/<code>2</code>/<code>3</code>.</li>
+          <li><strong>peak + cumulative</strong> &mdash; toggle the cumulative row with <code>U</code>.</li>
+          <li><strong>process attribution</strong> &mdash; an opt-out background poller in <code>src/util/procinfo.rs</code> reads the kernel socket table natively (<code>libproc</code> on macOS, <code>/proc</code> on Linux) and maps socket → PID + process name. Joined into the flow on render.</li>
+          <li><strong>DNS resolution</strong> &mdash; async reverse-DNS cache in <code>src/util/resolver.rs</code>; failed lookups never block the UI.</li>
+          <li><strong>port names</strong> &mdash; <code>/etc/services</code>-style mapping from the same resolver.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>CLI flags</h2>
+        <p>Defined in <code>src/config/cli.rs</code> via clap derive macros. Generate shell completions with <code>--completions SHELL</code>.</p>
+
+        <h3>// CAPTURE</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>-i, --interface NAME</code></td><td>Network interface to monitor (auto-detect default gateway interface if absent).</td></tr>
+            <tr><td><code>-f, --filter EXPR</code></td><td>BPF filter expression, e.g. <code>"tcp port 80"</code>, <code>"host 10.0.0.1"</code>.</td></tr>
+            <tr><td><code>-F, --net-filter CIDR</code></td><td>IPv4 network filter, e.g. <code>192.168.1.0/24</code>. Auto-detected from interface if omitted.</td></tr>
+            <tr><td><code>-p, --promiscuous</code></td><td>Enable promiscuous mode &mdash; capture all traffic on the segment.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// DISPLAY</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>-n, --no-dns</code></td><td>Disable DNS hostname resolution &mdash; raw IPs only.</td></tr>
+            <tr><td><code>-N, --no-port-names</code></td><td>Disable port-to-service resolution &mdash; numeric ports only.</td></tr>
+            <tr><td><code>-b, --no-bars</code></td><td>Disable bar graph display.</td></tr>
+            <tr><td><code>-B, --bytes</code></td><td>Display bandwidth in bytes instead of bits.</td></tr>
+            <tr><td><code>-P, --hide-ports</code></td><td>Hide ports alongside hosts.</td></tr>
+            <tr><td><code>-Z, --no-processes</code></td><td>Hide the process column (shown by default).</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// OUTPUT</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--json</code></td><td>Stream NDJSON snapshots to stdout instead of running the TUI. Pipe to <code>jq</code>, append to log, feed into a dashboard.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// SYSTEM</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>-l, --list-interfaces</code></td><td>List available capture interfaces and exit.</td></tr>
+            <tr><td><code>--list-colors</code></td><td>Preview all 31 color themes with swatches and exit.</td></tr>
+            <tr><td><code>--completions SHELL</code></td><td>Generate shell completions: <code>zsh</code> / <code>bash</code> / <code>fish</code> / <code>elvish</code> / <code>powershell</code>.</td></tr>
+            <tr><td><code>-h, --help</code></td><td>Display help and exit.</td></tr>
+            <tr><td><code>-V, --version</code></td><td>Display version and exit.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// EXAMPLES</h3>
+        <div class="oneliner">sudo iftoprs -i en0                    <span class="comment"># monitor specific interface</span></div>
+        <div class="oneliner">sudo iftoprs -f "tcp port 443"         <span class="comment"># HTTPS only</span></div>
+        <div class="oneliner">sudo iftoprs -F 10.0.0.0/8 -B          <span class="comment"># private net, bytes mode</span></div>
+        <div class="oneliner">sudo iftoprs -n -N -b                  <span class="comment"># raw IPs, no bars, minimal</span></div>
+        <div class="oneliner">sudo iftoprs -Z                        <span class="comment"># show process column</span></div>
+        <div class="oneliner">sudo iftoprs -p                        <span class="comment"># promiscuous mode</span></div>
+        <div class="oneliner">iftoprs --completions zsh &gt; _iftoprs   <span class="comment"># dump zsh completions</span></div>
+        <div class="oneliner">sudo iftoprs --json                    <span class="comment"># NDJSON stream</span></div>
+        <div class="oneliner">sudo iftoprs --json | jq '.flows[0]'   <span class="comment"># pipe through jq</span></div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Keybind matrix</h2>
+        <p>Defined in <code>src/ui/app.rs</code>. Every toggle that changes display state writes through to <code>~/.iftoprs.conf</code> immediately &mdash; preferences survive across runs without explicit save.</p>
+
+        <h3>// DISPLAY MODS</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>Tab</code></td><td>Switch view &mdash; Flows / Processes.</td></tr>
+            <tr><td><code>n</code></td><td>Toggle DNS resolution.</td></tr>
+            <tr><td><code>N</code></td><td>Toggle service-name resolution.</td></tr>
+            <tr><td><code>t</code></td><td>Cycle line display &mdash; two-line / one-line / sent-only / recv-only.</td></tr>
+            <tr><td><code>p</code></td><td>Toggle port display.</td></tr>
+            <tr><td><code>Z</code></td><td>Toggle process display.</td></tr>
+            <tr><td><code>b</code></td><td>Cycle bar style &mdash; gradient / solid / thin / ascii.</td></tr>
+            <tr><td><code>B</code></td><td>Toggle bytes / bits.</td></tr>
+            <tr><td><code>T</code></td><td>Toggle hover tooltips (right-click still works).</td></tr>
+            <tr><td><code>U</code></td><td>Toggle cumulative totals row.</td></tr>
+            <tr><td><code>P</code></td><td>Pause / resume display &mdash; shows overlay.</td></tr>
+            <tr><td><code>x</code></td><td>Toggle border chrome.</td></tr>
+            <tr><td><code>g</code></td><td>Toggle column header.</td></tr>
+            <tr><td><code>f</code></td><td>Cycle refresh rate &mdash; 1&nbsp;s / 2&nbsp;s / 5&nbsp;s / 10&nbsp;s.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// SORT</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>1</code></td><td>Sort by 2&nbsp;s average.</td></tr>
+            <tr><td><code>2</code></td><td>Sort by 10&nbsp;s average.</td></tr>
+            <tr><td><code>3</code></td><td>Sort by 40&nbsp;s average.</td></tr>
+            <tr><td><code>&lt;</code></td><td>Sort by source name.</td></tr>
+            <tr><td><code>&gt;</code></td><td>Sort by destination name.</td></tr>
+            <tr><td><code>o</code></td><td>Freeze current sort order.</td></tr>
+            <tr><td><code>r</code></td><td>Reverse sort order.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// NAVIGATION</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>j</code> <code>↓</code></td><td>Select next flow.</td></tr>
+            <tr><td><code>k</code> <code>↑</code></td><td>Select previous flow.</td></tr>
+            <tr><td><code>Ctrl+D</code></td><td>Half-page down.</td></tr>
+            <tr><td><code>Ctrl+U</code></td><td>Half-page up.</td></tr>
+            <tr><td><code>G</code> <code>End</code></td><td>Jump to last.</td></tr>
+            <tr><td><code>Home</code></td><td>Jump to first.</td></tr>
+            <tr><td><code>Esc</code></td><td>Deselect / clear process filter / close overlay.</td></tr>
+            <tr><td><code>Enter</code></td><td>Drill into selected process (Processes tab).</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// FILTER</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>/</code></td><td>Enter filter mode &mdash; live substring match on hostname / IP.</td></tr>
+            <tr><td><code>0</code></td><td>Clear filter.</td></tr>
+            <tr><td><code>Enter</code></td><td>Confirm filter.</td></tr>
+            <tr><td><code>Esc</code></td><td>Cancel filter.</td></tr>
+            <tr><td><code>Ctrl+W</code></td><td>Delete word in filter prompt.</td></tr>
+            <tr><td><code>Ctrl+K</code></td><td>Kill to end of line in filter prompt.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// CHOOSERS</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>c</code></td><td>Open color-theme chooser &mdash; live preview, <code>j</code>/<code>k</code> navigates, scroll cycles, <code>Enter</code> confirms, <code>Esc</code>/<code>q</code>/<code>c</code> cancels.</td></tr>
+            <tr><td><code>C</code></td><td>Open custom-theme editor &mdash; 6 palette slots, <code>j</code>/<code>k</code> select slot, <code>h</code>/<code>l</code> &plusmn;1 color, <code>H</code>/<code>L</code> &plusmn;10, <code>s</code>/<code>Enter</code> name + save, <code>Esc</code>/<code>q</code> cancel.</td></tr>
+            <tr><td><code>i</code></td><td>Open interface chooser &mdash; <code>j</code>/<code>k</code> navigates, <code>Enter</code> saves to config (restart to apply), <code>Esc</code>/<code>q</code> cancels.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// ACTIONS</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>y</code></td><td>Copy selected flow to clipboard.</td></tr>
+            <tr><td><code>F</code></td><td>Pin / unpin selected flow &mdash; ★ floats to top.</td></tr>
+            <tr><td><code>e</code></td><td>Export all flows to <code>~/.iftoprs.export.txt</code>.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// MOUSE</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Input</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>Left click</td><td>Select flow row.</td></tr>
+            <tr><td>Right click (flow)</td><td>Tooltip &mdash; TX / RX rates, totals, process, sparkline.</td></tr>
+            <tr><td>Right click (header)</td><td>Instant segment tooltip &mdash; persistent until dismissed.</td></tr>
+            <tr><td>Middle click</td><td>Pin / unpin flow.</td></tr>
+            <tr><td>Mouse move</td><td>Dismiss flow tooltip.</td></tr>
+            <tr><td>Scroll up / down</td><td>Navigate flows; cycles themes in chooser.</td></tr>
+            <tr><td>Hover header bar</td><td>Segment tooltip after 1&nbsp;s delay; auto-hides after 3&nbsp;s.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// GENERAL</h3>
+        <table class="reflection-table">
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>h</code> <code>?</code></td><td>Toggle help HUD.</td></tr>
+            <tr><td><code>q</code></td><td>Disconnect &mdash; saves preferences.</td></tr>
+            <tr><td><code>Ctrl+C</code></td><td>Force disconnect.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Display modes</h2>
+        <p>Three display dimensions cycle through fixed sets of values; each cycle key writes the new value through to <code>~/.iftoprs.conf</code> immediately. The enums live in <code>src/ui/app.rs</code> (<code>LineDisplay</code>, <code>BarStyle</code>) and the refresh ladder in the input handler.</p>
+
+        <h3>// LINE DISPLAY &mdash; <code>t</code></h3>
+        <table class="reflection-table">
+          <thead><tr><th>Mode</th><th>What it shows</th></tr></thead>
+          <tbody>
+            <tr><td><code>TwoLine</code></td><td>Send row and receive row stacked per flow (default).</td></tr>
+            <tr><td><code>OneLine</code></td><td>Send + receive condensed onto a single row per flow.</td></tr>
+            <tr><td><code>SentOnly</code></td><td>Only the transmit direction.</td></tr>
+            <tr><td><code>RecvOnly</code></td><td>Only the receive direction.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// BAR STYLE &mdash; <code>b</code></h3>
+        <table class="reflection-table">
+          <thead><tr><th>Style</th><th>Glyph set</th></tr></thead>
+          <tbody>
+            <tr><td><code>Gradient</code></td><td>Color-graded fill (default).</td></tr>
+            <tr><td><code>Solid</code></td><td>Solid block fill.</td></tr>
+            <tr><td><code>Thin</code></td><td>Thin-line fill.</td></tr>
+            <tr><td><code>Ascii</code></td><td>Plain ASCII fill for terminals without box-drawing glyphs.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>// REFRESH RATE &mdash; <code>f</code></h3>
+        <p>Cycles <code>1s &rarr; 2s &rarr; 5s &rarr; 10s</code> and wraps. The refresh interval also sets the sparkline cadence, so the visible sparkline window is <code>40 &times; refresh_rate</code> seconds. Persisted as <code>refresh_rate</code> in the config.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Color themes &mdash; <strong>31</strong> built-in</h2>
+        <p>Defined in <code>src/config/theme.rs</code>. Press <code>c</code> in the TUI for the live chooser with side-by-side swatch preview. Selection is persisted to <code>~/.iftoprs.conf</code>. Outside the TUI: <code>iftoprs --list-colors</code> prints every theme with swatches.</p>
+        <div class="theme-grid">
+          <div class="theme-chip"><code>NeonSprawl</code> &mdash; default</div>
+          <div class="theme-chip"><code>AcidRain</code></div>
+          <div class="theme-chip"><code>IceBreaker</code></div>
+          <div class="theme-chip"><code>SynthWave</code></div>
+          <div class="theme-chip"><code>RustBelt</code></div>
+          <div class="theme-chip"><code>GhostWire</code></div>
+          <div class="theme-chip"><code>RedSector</code></div>
+          <div class="theme-chip"><code>SakuraDen</code></div>
+          <div class="theme-chip"><code>DataStream</code></div>
+          <div class="theme-chip"><code>SolarFlare</code></div>
+          <div class="theme-chip"><code>NeonNoir</code></div>
+          <div class="theme-chip"><code>ChromeHeart</code></div>
+          <div class="theme-chip"><code>BladeRunner</code></div>
+          <div class="theme-chip"><code>VoidWalker</code></div>
+          <div class="theme-chip"><code>ToxicWaste</code></div>
+          <div class="theme-chip"><code>CyberFrost</code></div>
+          <div class="theme-chip"><code>PlasmaCore</code></div>
+          <div class="theme-chip"><code>SteelNerve</code></div>
+          <div class="theme-chip"><code>DarkSignal</code></div>
+          <div class="theme-chip"><code>GlitchPop</code></div>
+          <div class="theme-chip"><code>HoloShift</code></div>
+          <div class="theme-chip"><code>NightCity</code></div>
+          <div class="theme-chip"><code>DeepNet</code></div>
+          <div class="theme-chip"><code>LaserGrid</code></div>
+          <div class="theme-chip"><code>QuantumFlux</code></div>
+          <div class="theme-chip"><code>BioHazard</code></div>
+          <div class="theme-chip"><code>Darkwave</code></div>
+          <div class="theme-chip"><code>Overlock</code></div>
+          <div class="theme-chip"><code>Megacorp</code></div>
+          <div class="theme-chip"><code>Zaibatsu</code></div>
+          <div class="theme-chip"><code>Iftopcolor</code> &mdash; classic</div>
+        </div>
+        <h3>// CUSTOM THEME EDITOR &mdash; <code>C</code></h3>
+        <p>Beyond the 31 builtins, press <code>C</code> in the TUI to open the custom-theme editor (handled in <code>src/main.rs</code> / <code>src/ui/app.rs</code>). A theme is six 256-color palette indices; the editor seeds them from the active theme (or the active custom theme if one is selected):</p>
+        <ul>
+          <li><strong><code>j</code> / <code>k</code></strong> &mdash; move between the six color slots.</li>
+          <li><strong><code>h</code> / <code>l</code></strong> &mdash; decrement / increment the selected slot by 1 (wrapping); the palette applies live so you see the change immediately.</li>
+          <li><strong><code>H</code> / <code>L</code></strong> &mdash; decrement / increment by 10 for coarse jumps.</li>
+          <li><strong><code>s</code> / <code>S</code> / <code>Enter</code></strong> &mdash; switch to naming mode, type a name (up to 20 chars, with <code>Left</code>/<code>Right</code>/<code>Backspace</code> editing), then <code>Enter</code> to save.</li>
+          <li><strong><code>Esc</code> / <code>q</code></strong> &mdash; cancel the editor and restore the previous theme.</li>
+        </ul>
+        <p>Saved themes are written to <code>~/.iftoprs.conf</code> under <code>custom_themes</code> with the active one tracked in <code>active_custom_theme</code> (serialized in <code>src/config/prefs.rs</code>), so they survive restarts alongside the builtin selection.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Configuration &mdash; <code>~/.iftoprs.conf</code></h2>
+        <p>TOML file at <code>~/.iftoprs.conf</code>. Auto-created on first run; every TUI toggle writes through immediately. The repo ships <a href="https://github.com/MenkeTechnologies/iftoprs/blob/main/iftoprs.default.conf"><code>iftoprs.default.conf</code></a> as a documented reference.</p>
+<pre># Color theme (see --list-colors for all 31 options)
+theme = "NeonSprawl"
+
+# Network interface to capture on (overridden by -i flag)
+# interface = "en0"
+
+# DNS and port resolution
+dns_resolution = true
+port_resolution = true
+
+# Display toggles
+show_ports = true
+show_bars = true
+show_border = true
+show_header = true
+show_processes = true
+show_cumulative = false
+use_bytes = false
+
+# Hover tooltips on header segments (right-click always works)
+hover_tooltips = true
+
+# Bar style: Gradient, Solid, Thin, Ascii
+bar_style = "Gradient"
+
+# Refresh rate in seconds (1, 2, 5, or 10)
+refresh_rate = 1
+
+# Alert threshold in bytes/sec (0.0 = disabled)
+# 125000.0    = 1 Mbit/s
+# 1250000.0   = 10 Mbit/s
+# 125000000.0 = 1 Gbit/s
+alert_threshold = 0.0
+
+# Pinned flows — persisted automatically when you press F
+pinned = []
+
+# Custom themes (six 256-color indices) — written when you save with C.
+# Omitted entirely until at least one custom theme exists.
+# [custom_themes.mytheme]
+# c1 = 51
+# c2 = 201
+# active_custom_theme = "mytheme"</pre>
+        <p>Serialization lives in <code>src/config/prefs.rs</code>. Every key carries a <code>serde</code> default, so missing keys fall back to sane values and old configs keep working across upgrades. The <code>interface</code>, <code>custom_themes</code>, and <code>active_custom_theme</code> keys are skipped when empty (<code>skip_serializing_if</code>), so a fresh config never writes them.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>JSON streaming &mdash; <code>--json</code></h2>
+        <p>Runs the capture engine headless and writes one JSON snapshot per refresh interval to stdout (the <code>run_json_mode</code> path in <code>src/main.rs</code>). Pipe to <code>jq</code>, log to a file, ship to a dashboard. No TUI is started, no terminal control bytes are emitted. Each line is one complete <code>JsonSnapshot</code> object:</p>
+<pre>{
+  "timestamp":   "2026-06-21T12:00:00-04:00",   // RFC 3339, chrono::Local
+  "flow_count":  3,
+  "total_sent":  123456,    // cumulative bytes, all flows
+  "total_recv":  654321,
+  "peak_sent":   98765.0,   // peak rate, bytes/sec
+  "peak_recv":   54321.0,
+  "flows": [
+    {
+      "src":        "host.example.com:443",  // resolved host:port string
+      "dst":        "10.0.0.5:51234",
+      "src_port":   443,
+      "dst_port":   51234,
+      "protocol":   "TCP",                    // TCP / UDP / ICMP / Other
+      "sent_2s":    81234.0,  "recv_2s":  4096.0,
+      "sent_10s":   72100.0,  "recv_10s": 3800.0,
+      "sent_40s":   65000.0,  "recv_40s": 3500.0,
+      "total_sent": 1048576,  "total_recv": 65536,
+      "process_name": "firefox",  // omitted if unknown
+      "pid":          4821        // omitted if unknown
+    }
+  ]
+}</pre>
+        <p>The <code>sent_*</code> / <code>recv_*</code> rate fields are emitted in <strong>bits/sec</strong> by default (each byte rate is multiplied by 8); pass <code>-B</code> / <code>--bytes</code> to emit them in bytes/sec instead. <code>process_name</code> and <code>pid</code> are skipped when attribution is unavailable (<code>serde</code> <code>skip_serializing_if</code>), so consumers must treat them as optional. The capture engine, parser, and tracker are identical to TUI mode &mdash; only the renderer is replaced.</p>
+<pre>sudo iftoprs --json | jq -c '.flows[] | select(.sent_2s &gt; 1000000)'
+sudo iftoprs --json &gt; /var/log/iftoprs.ndjson &amp;
+sudo iftoprs --json -f "tcp port 443" | head -n 1 | jq .
+sudo iftoprs --json -B | jq '.flows[] | {dst, recv_2s}'   # byte rates</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Process attribution &mdash; <code>Tab</code> view</h2>
+        <p>Shown by default; toggle off with <code>-Z</code> at launch or in the TUI. Background poller in <code>src/util/procinfo.rs</code> reads the kernel socket table natively &mdash; <code>libproc</code> (<code>proc_listpids</code> + <code>proc_pidfdinfo</code>) on macOS, <code>/proc/net</code> + <code>/proc/[pid]/fd</code> on Linux &mdash; and builds a <code>(local_port, proto) → (pid, name)</code> map cached in <code>Arc&lt;Mutex&lt;...&gt;&gt;</code>. No external binary is spawned. The flow renderer joins against the cache on every paint.</p>
+        <ul>
+          <li><strong>Flows tab (default)</strong> &mdash; per-flow process column.</li>
+          <li><strong>Processes tab</strong> &mdash; press <code>Tab</code> &mdash; aggregates bandwidth per process across all of that process's flows.</li>
+          <li><strong>Drill-down</strong> &mdash; press <code>Enter</code> on a process row to filter the Flows tab to that process. <code>Esc</code> clears the filter.</li>
+          <li><strong>Cost</strong> &mdash; the poller runs at the refresh-rate interval, not per-packet; even on busy hosts the overhead stays measurable but small.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tooltips &mdash; 10 header segments + flow drill-down</h2>
+        <p>The status header bar is split into pipe-delimited segments; each one carries a rich contextual tooltip built by <code>header_segment_tooltip</code> in <code>src/ui/app.rs</code>. Hover triggers after 1&nbsp;s with a 3&nbsp;s auto-hide; right-click triggers instantly and persists until dismissed. Disable hover (right-click still works) with <code>T</code>. The cards below describe the actual fields each segment emits &mdash; live values, not placeholders.</p>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>App (iftoprs)</h4><p>Version (<code>v2.22.9</code>), description, author, repo, crate, license, install command, runtime platform (OS + arch), build stack, config path, tracked-flow count.</p></div>
+          <div class="cat-card"><h4>Interface</h4><p>Selected interface (or <em>auto-detected</em>), mode (auto gateway vs <code>-i</code> manual), DNS / port-name / port-display state, promisc note, active-connection count, <code>i</code> chooser hint, <code>pcap::Device::list()</code> source.</p></div>
+          <div class="cat-card"><h4>Flows</h4><p>Total / visible / hidden / pinned / unique-process counts, total + combined TX/RX, peak TX/RX + peak total, cumulative TX/RX, current view tab, <code>j/k</code> &middot; <code>/</code> &middot; <code>F</code> key hints.</p></div>
+          <div class="cat-card"><h4>Clock</h4><p>Local time, date + weekday, timezone + UTC offset, Unix epoch seconds, refresh interval, <code>chrono::Local::now()</code> source.</p></div>
+          <div class="cat-card"><h4>Sort</h4><p>Active sort key (2s / 10s / 40s / src / dst), direction (normal vs reversed), freeze status, first + last flow, sorted-flow count, rate / host key hints, <code>r</code> reverse hint.</p></div>
+          <div class="cat-card"><h4>Refresh rate</h4><p>Current interval, description, next (<code>f</code>) / prev rate, cycle order <code>1s&rarr;2s&rarr;5s&rarr;10s</code>, ~30&nbsp;fps render note, paused state, capture-thread source, prefs key.</p></div>
+          <div class="cat-card"><h4>Theme</h4><p>Active theme display name, <strong>31</strong> builtin palette count, custom-theme count, total available, bar style, <code>c</code> chooser + <code>C</code> editor hints, <code>--list-colors</code> hint, prefs keys.</p></div>
+          <div class="cat-card"><h4>Filter</h4><p>Active substring filter, length, matched / hidden counts, match type (case-insensitive host/IP), cursor position, nav keys, edit keys (<code>Ctrl+a/e/b/f</code>), delete keys (<code>Ctrl+w/u/k</code>), <code>0</code> clear hint.</p></div>
+          <div class="cat-card"><h4>Pause state</h4><p>Paused vs live, effect (stats frozen), refresh rate, tracked-flow count, <code>P</code> resume / pause hint &mdash; layout differs depending on whether capture is paused.</p></div>
+          <div class="cat-card"><h4>Help</h4><p>Open / close keys (<code>h</code> / <code>H</code> / <code>?</code> / <code>Esc</code>), 3-column keybind layout, category list, mouse hint, <code>e</code> export, <code>y</code> copy, <code>q</code> quit.</p></div>
+        </div>
+        <p>Any other segment text falls through to a generic <code>▶ Header</code> tooltip that echoes the raw segment label. Flow rows themselves carry a separate right-click tooltip: TX / RX rates across the three windows, cumulative totals, attributed process, and a 40-sample sparkline of recent bandwidth (▁▂▃▅▇█).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sparkline history</h2>
+        <p>Per-flow rolling ring buffer of 40 samples in <code>src/data/history.rs</code>. Rendered two ways:</p>
+        <ul>
+          <li>Inline below the selected row when sparkline display is enabled (40&nbsp;s window, ▁▂▃▅▇█ block characters).</li>
+          <li>Inside the right-click tooltip for any flow &mdash; not only the selected one.</li>
+        </ul>
+        <p>Samples are folded at the refresh-rate cadence, so the visible window is <code>40 × refresh_rate</code> seconds. At default 1&nbsp;s refresh that's a 40&nbsp;s window; at 10&nbsp;s refresh it stretches to 400&nbsp;s.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Bandwidth alerts</h2>
+        <p>Set <code>alert_threshold</code> in <code>~/.iftoprs.conf</code> (bytes / sec, <code>0.0</code> disables). When any flow's instantaneous rate crosses the threshold:</p>
+        <ul>
+          <li>Border flashes red for a beat.</li>
+          <li>Terminal bell (<code>\x07</code>) fires.</li>
+          <li>Status bar shows <code>⚠ ALERT: hostname rate/s</code>.</li>
+        </ul>
+<pre># in ~/.iftoprs.conf
+alert_threshold = 1250000.0     # 10 Mbit/s
+alert_threshold = 125000000.0   # 1 Gbit/s</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests &amp; CI</h2>
+        <p>2,275 test functions across the production crate and integration suite. CI runs on every push and PR to <code>main</code> via <a href="https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml">GitHub Actions</a>.</p>
+        <table class="reflection-table">
+          <thead><tr><th>Job</th><th>Command</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Format</td><td><code>cargo --locked fmt --all --check</code></td><td>No <code>pcap</code> link &mdash; no <code>libpcap-dev</code> needed.</td></tr>
+            <tr><td>Clippy</td><td><code>cargo clippy --all-targets --locked -- -D warnings</code></td><td>Linux installs <code>libpcap-dev</code> via <code>apt</code>.</td></tr>
+            <tr><td>Test</td><td><code>cargo build --locked &amp;&amp; cargo test --locked</code></td><td>Ubuntu + macOS matrix, <code>fail-fast: false</code>.</td></tr>
+          </tbody>
+        </table>
+        <p>Integration tests in <code>tests/integration.rs</code> launch the built binary via the <code>CARGO_BIN_EXE_iftoprs</code> environment variable &mdash; not <code>cargo run</code> &mdash; so CLI output is read directly from the process and stays reliable in CI. The toolchain is pinned through <code>rust-toolchain.toml</code> with <code>stable</code> + <code>rustfmt</code> + <code>clippy</code> so local and CI runs share the same compiler.</p>
+        <p>Local checks &mdash; identical to CI:</p>
+<pre>cargo --locked fmt --all --check
+cargo clippy --all-targets --locked -- -D warnings
+cargo test --locked</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Crate layout</h2>
+        <p>Single binary, eight modules, ~21k lines of production Rust:</p>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>src/main.rs</h4><p>Entry point: CLI parse, capture spawn, TUI bootstrap, signal handling. 1,135 lines.</p></div>
+          <div class="cat-card"><h4>src/capture/</h4><p><code>sniffer.rs</code> &mdash; pcap loop + restart. <code>parser.rs</code> &mdash; Ethernet/IP/TCP/UDP/ICMP decode. ~3.1k lines.</p></div>
+          <div class="cat-card"><h4>src/data/</h4><p><code>flow.rs</code> 5-tuple model + counters. <code>tracker.rs</code> &mdash; flow store. <code>history.rs</code> sparkline ring. ~3.5k lines.</p></div>
+          <div class="cat-card"><h4>src/ui/</h4><p><code>app.rs</code> &mdash; TUI state + input. <code>render.rs</code> &mdash; ratatui paint. ~6.3k lines.</p></div>
+          <div class="cat-card"><h4>src/config/</h4><p><code>cli.rs</code> &mdash; clap derive. <code>theme.rs</code> &mdash; 31 themes. <code>prefs.rs</code> &mdash; TOML auto-save. ~4.5k lines.</p></div>
+          <div class="cat-card"><h4>src/util/</h4><p><code>format.rs</code> &mdash; rate/byte formatters. <code>resolver.rs</code> &mdash; async DNS + port names. <code>procinfo.rs</code> &mdash; native socket→PID poll. ~2.8k lines.</p></div>
+          <div class="cat-card"><h4>tests/integration.rs</h4><p>479 binary-driven integration tests. 5,258 lines.</p></div>
+          <div class="cat-card"><h4>completions/</h4><p>Shipped zsh completion file (<code>_iftoprs</code>). Other shells generated on demand.</p></div>
+        </div>
+        <p>Full per-file breakdown is in the <a href="report.html">engineering report</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Dependencies &mdash; 15 direct</h2>
+        <table class="reflection-table">
+          <thead><tr><th>Crate</th><th>Version</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td><code>ratatui</code></td><td>0.30</td><td>TUI rendering framework.</td></tr>
+            <tr><td><code>crossterm</code></td><td>0.29</td><td>Terminal events + manipulation, mouse capture.</td></tr>
+            <tr><td><code>pcap</code></td><td>2.4</td><td>Packet capture via libpcap (system).</td></tr>
+            <tr><td><code>tokio</code></td><td>1.51</td><td>Async runtime, mpsc channels.</td></tr>
+            <tr><td><code>clap</code></td><td>4.6</td><td>CLI argument parsing (derive).</td></tr>
+            <tr><td><code>clap_complete</code></td><td>4</td><td>Shell completion generation.</td></tr>
+            <tr><td><code>dns-lookup</code></td><td>3.0</td><td>Reverse DNS resolution.</td></tr>
+            <tr><td><code>regex</code></td><td>1.12</td><td>Pattern matching for filters.</td></tr>
+            <tr><td><code>chrono</code></td><td>0.4</td><td>Time operations, clock segment.</td></tr>
+            <tr><td><code>anyhow</code></td><td>1.0</td><td>Error handling.</td></tr>
+            <tr><td><code>serde</code></td><td>1.0</td><td>Config + JSON serialization.</td></tr>
+            <tr><td><code>serde_json</code></td><td>1.0</td><td>NDJSON streaming output.</td></tr>
+            <tr><td><code>toml</code></td><td>1.1</td><td>Config file format.</td></tr>
+            <tr><td><code>dirs</code></td><td>6.0</td><td>Home-directory detection for config / export paths.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Platform support</h2>
+        <ul>
+          <li><strong>macOS</strong> &mdash; <code>libpcap</code> ships with the system; <code>sudo iftoprs</code> works out of the box.</li>
+          <li><strong>Linux</strong> &mdash; install <code>libpcap-dev</code> (Debian / Ubuntu) or <code>libpcap-devel</code> (Fedora / RHEL). Run as root or grant <code>cap_net_raw,cap_net_admin</code>:
+<pre>sudo setcap cap_net_raw,cap_net_admin=eip $(which iftoprs)</pre></li>
+          <li><strong>Rust toolchain</strong> &mdash; pinned to stable, Rust 1.85+ (edition 2024).</li>
+          <li><strong>Architectures</strong> &mdash; x86_64 + aarch64 verified on both macOS and Linux.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Repository &amp; links</h2>
+        <ul>
+          <li><strong>Source</strong> &mdash; <a href="https://github.com/MenkeTechnologies/iftoprs">GitHub repo</a>.</li>
+          <li><strong>Crate</strong> &mdash; <a href="https://crates.io/crates/iftoprs">crates.io</a> (<code>cargo install iftoprs</code>).</li>
+          <li><strong>Rust API docs</strong> &mdash; <a href="https://docs.rs/iftoprs">docs.rs</a>.</li>
+          <li><strong>Issues</strong> &mdash; <a href="https://github.com/MenkeTechnologies/iftoprs/issues">issue tracker</a>.</li>
+          <li><strong>CI status</strong> &mdash; <a href="https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml">GitHub Actions</a>.</li>
+          <li><strong>Engineering report</strong> &mdash; <a href="report.html">report.html</a> (LOC breakdown, subsystem map, dependency table, test surface).</li>
+          <li><strong>README</strong> &mdash; <a href="https://github.com/MenkeTechnologies/iftoprs#readme">full README on GitHub</a>.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

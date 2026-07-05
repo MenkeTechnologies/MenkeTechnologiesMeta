@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-office — engineering report. Native Office/OpenDocument/PDF I/O for stryke: architecture, format-to-crate mapping, FFI protocol, scope.">
+  <title>stryke-office — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+    .stat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.65rem 0.85rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .stat-val { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 700; color: var(--accent); }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 0.2rem; }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .arch-table td:first-child { color: var(--cyan); font-family: 'Share Tech Mono', monospace; white-space: nowrap; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-OFFICE &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke package &middot; cdylib <code>libstryke_office</code> &middot; loaded on <code>use Office</code> &middot; JSON-over-FFI &middot; zero external binaries
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-office</strong> is an opt-in package giving stryke native read+write across the office document landscape — Microsoft OOXML (xlsx/docx/pptx), OpenDocument (ods/odt/odp), PDF, and a full PIL-style raster image surface — with no LibreOffice/soffice subprocess.</p>
+      <p class="tutorial-subtitle">Every format maps to a vendored Rust crate statically linked into the cdylib, so the artifact is self-contained: scp it and it runs.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">Office</div><div class="stat-label">use namespace</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier 2</div></div>
+        <div class="stat-card"><div class="stat-val">465</div><div class="stat-label">public functions</div></div>
+        <div class="stat-card"><div class="stat-val">5+img</div><div class="stat-label">document families</div></div>
+        <div class="stat-card"><div class="stat-val green">0</div><div class="stat-label">external binaries</div></div>
+        <div class="stat-card"><div class="stat-val cyan">426</div><div class="stat-label">Rust tests</div></div>
+        <div class="stat-card"><div class="stat-val">21</div><div class="stat-label">doc / readme gates</div></div>
+        <div class="stat-card"><div class="stat-val green">v0.18.0</div><div class="stat-label">release</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>FORMAT &rarr; CRATE</h2>
+      <p>Every format maps to a vendored, statically-linked Rust crate. There is no <code>soffice</code> / LibreOffice / pandoc / zint / ImageMagick subprocess anywhere in the chain.</p>
+      <table class="arch-table">
+        <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>spreadsheet read (xlsx / xls)</td><td><code>calamine</code> (pure Rust)</td></tr>
+          <tr><td>spreadsheet read (ods)</td><td>native <code>zip</code> + <code>quick-xml</code> (calamine's ODS parser rejects pretty-printed content.xml)</td></tr>
+          <tr><td>xlsx write</td><td><code>rust_xlsxwriter</code></td></tr>
+          <tr><td>ods / odt / odp write</td><td><code>lo_odf</code> (OpenDocument serializers)</td></tr>
+          <tr><td>docx write</td><td><code>docx-rs</code></td></tr>
+          <tr><td>docx / odt / pptx / odp read</td><td>native <code>zip</code> + <code>quick-xml</code> paragraph + structure extraction</td></tr>
+          <tr><td>pptx write</td><td>native <code>zip</code> + hand-built OOXML part set</td></tr>
+          <tr><td>pdf read + write</td><td><code>lo_core</code> (self-contained, no font files)</td></tr>
+          <tr><td>pdf merge / split / rotate / info / encrypt / decrypt / compress</td><td><code>lopdf</code> (pure-Rust core, <code>default-features = false</code>)</td></tr>
+          <tr><td>image read + write (all formats)</td><td><code>image</code></td></tr>
+          <tr><td>image drawing (shapes)</td><td><code>imageproc</code></td></tr>
+          <tr><td>image text drawing</td><td><code>ab_glyph</code> + vendored <code>assets/DejaVuSans.ttf</code></td></tr>
+          <tr><td>QR-code generation</td><td><code>qrcode</code> (matrix only)</td></tr>
+          <tr><td>1D barcode generation</td><td><code>barcoders</code> (<code>default-features = false</code>, <code>std</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>FUNCTION FAMILIES</h2>
+      <p>The <code>Office</code> namespace exposes 465 public functions. Each maps to a JSON-in/JSON-out export in the cdylib; the stryke wrapper (<code>lib/Office.stk</code>) serializes arguments and decodes responses.</p>
+      <table class="arch-table">
+        <thead><tr><th>Family</th><th>Count</th><th>Surface</th></tr></thead>
+        <tbody>
+          <tr><td>sheet_*</td><td>175</td><td>read/write + a dataframe-style analytics layer (group-by, pivot, join, stats, time-series, finance, sampling, type-coercion, export to csv/json/sql/latex/html)</td></tr>
+          <tr><td>img_*</td><td>111</td><td>PIL-complete handle-based image surface — open/save/convert, resize/crop/rotate, draw, filters, color science, distortions, animation, byte I/O</td></tr>
+          <tr><td>pdf_*</td><td>47</td><td>build/merge/split/rotate, encrypt/decrypt, forms, outline/bookmarks, annotations, attachments, stamps, search, stats</td></tr>
+          <tr><td>doc_*</td><td>30</td><td>read/write, structured blocks, tables, links, stats, readability, summary, diff, convert (md/html/pdf/slides/sheet)</td></tr>
+          <tr><td>slides_*</td><td>26</td><td>read/write, add image/text/notes, reorder, merge, stats, convert (doc/pdf/md/html/sheet)</td></tr>
+          <tr><td>text_*</td><td>20</td><td>plain-text toolkit — grep/sort/uniq/sed/cut/wrap/tr/paste/comm/join/shuf/base64/hash/redact/template</td></tr>
+          <tr><td>range_* / a1_* / r1c1_* / parse_* / *_to_*</td><td>20</td><td>A1 / R1C1 / range math — no workbook opened</td></tr>
+          <tr><td>chart_*</td><td>5</td><td>render/svg/save/from_sheet/grid — 60+ chart types, raster + vector</td></tr>
+          <tr><td>barcode_*</td><td>4</td><td>QR + 1D (code128/39/93/11, codabar, ean13/8, upca, itf, std2of5) &rarr; image handle</td></tr>
+          <tr><td>md_* / html_* / csv_* / *_to_sheet</td><td>~15</td><td>cross-format converters between csv/md/html/xml/json/ndjson and sheets/docs</td></tr>
+          <tr><td>meta_* / color_* / extract_images / mail_merge / info</td><td>~10</td><td>document metadata read/write/strip, color science, media extraction, mail-merge, universal file inspector</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>ARCHITECTURE</h2>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>stryke library</td><td><code>lib/Office.stk</code> — 465 <code>Office::*</code> wrappers that serialize args to JSON, decode responses, map <code>{error}</code> to <code>die</code></td></tr>
+          <tr><td>cdylib</td><td><code>libstryke_office.{dylib,so}</code> — 465 <code>office__*</code> JSON-in/out exports, <code>catch_unwind</code> at the boundary, <code>stryke_free_cstring</code> for the return buffer</td></tr>
+          <tr><td>dispatch</td><td>format chosen from the path extension (override via <code>format</code>); reader/writer selected per kind</td></tr>
+          <tr><td>image handles</td><td>image ops return a numeric <code>handle</code> into an in-process table — open once, transform many times, then <code>img_save</code> / <code>img_close</code> (PIL-style)</td></tr>
+          <tr><td>build</td><td>Cargo cdylib, all deps pure Rust — no cmake, no system libraries, no soffice</td></tr>
+          <tr><td>tests</td><td>426 Rust round-trip + contract tests (write then read back over a temp file) + a stryke assertion suite in <code>t/</code> + 21 docs/readme lint gates in <code>tests/</code></td></tr>
+          <tr><td>CI</td><td><code>.github/workflows/ci.yml</code> — fmt + clippy <code>-D warnings</code> + test on Linux/macOS, doc, release matrix</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE &amp; LIMITS</h2>
+      <p>v0.18.0 covers structured read + write across the office document landscape plus PDF text generation, a dataframe-style spreadsheet analytics layer, a PIL-complete image surface, native chart rendering (raster + SVG), barcodes/QR, and cross-format conversion. The deliberate limit of the no-external-binary rule: there is no generic render-conversion (docx&rarr;pdf laid out like Word, xlsx&rarr;pdf), which fundamentally requires a layout/render engine. Conversions are intra-model (e.g. xlsx&rarr;ods via the shared cell model) and PDF is generated from a content model, not rasterized from a Word document.</p>
+      <p>Two further documented limitations — both crate limits, not faked: ODF (ods/odt) and PDF are written unstyled because the <code>lo_odf</code> / <code>lo_core</code> serializers do not expose per-run styling; and spreadsheet formula <em>strings</em> read back via <code>formulas =&gt; 1</code> but are not <em>evaluated</em> (values are whatever the writing app computed). See the project Roadmap for the in-flight items (PowerPoint speaker-notes write, ODF per-run styling, legacy xls write).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SOURCE MAP</h2>
+      <table class="arch-table">
+        <thead><tr><th>File</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>src/lib.rs</td><td><code>office__*</code> exports + spreadsheet / doc / slides / pdf handlers</td></tr>
+          <tr><td>src/tests.rs</td><td>426 Rust round-trip + contract tests</td></tr>
+          <tr><td>src/doc_formats.rs</td><td>csv/tsv + html/md/rtf/txt readers + writers</td></tr>
+          <tr><td>src/doc_struct.rs</td><td>structured document reads (tables, blocks, links, stats) + merge/convert</td></tr>
+          <tr><td>src/pptx_write.rs</td><td>minimal OOXML PowerPoint writer</td></tr>
+          <tr><td>src/image_ops.rs</td><td>PIL-complete image I/O + manipulation</td></tr>
+          <tr><td>src/chart_render.rs</td><td>raster chart renderer (all chart types)</td></tr>
+          <tr><td>src/chart_svg.rs</td><td>vector (SVG / PDF) chart renderer</td></tr>
+          <tr><td>src/barcode.rs</td><td>QR + 1D barcode generation</td></tr>
+          <tr><td>src/meta_ops.rs</td><td>document metadata read / write (OOXML / ODF / PDF)</td></tr>
+          <tr><td>src/extract.rs</td><td>embedded media extraction (&rarr; image handles)</td></tr>
+          <tr><td>src/textops.rs</td><td>template text search/replace (run-coalescing)</td></tr>
+          <tr><td>src/pdf_build.rs</td><td>multi-element paginated PDF document builder</td></tr>
+          <tr><td>src/pdf_ops.rs</td><td>PDF merge/split/rotate/info/encrypt/decrypt/compress (lopdf)</td></tr>
+          <tr><td>src/pdf_attach.rs / pdf_form.rs / pdf_outline.rs</td><td>PDF attachments, AcroForm fill, outline/bookmarks (lopdf)</td></tr>
+          <tr><td>lib/Office.stk</td><td>stryke wrapper (<code>use Office</code>) — 465 functions</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-office">github.com/MenkeTechnologies/stryke-office</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

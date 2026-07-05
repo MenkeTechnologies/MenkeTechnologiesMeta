@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-kafka — APACHE KAFKA CLIENT FOR STRYKE // PRODUCER + CONSUMER + ADMIN + CONSUMER-GROUP LAG. Apache Kafka client for stryke — producer, consumer, admin, and consumer-group lag. Opt-in package backed by rdkafka (librdkafka bindings); ships as a Rust cdylib that stryke dlopens in-process on first `use Kafka`.">
+  <title>stryke-kafka — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-KAFKA &mdash; APACHE KAFKA CLIENT FOR STRYKE // PRODUCER + CONSUMER + ADMIN + CONSUMER-GROUP LAG</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_kafka.{dylib,so}</code> · dlopen'd in-process on <code>use Kafka</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-kafka/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-KAFKA</h2>
+      <p class="tutorial-subtitle"><strong>Streams without the JVM.</strong> Apache Kafka client for stryke &mdash; producer (keys, headers, partitions, binary payloads), consumer (offset commit, headers), consumer-group lag / watermarks / time-based offsets, and topic / cluster / config admin. Opt-in package backed by <code>rdkafka</code> (librdkafka bindings); ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Kafka</code>. The cdylib statically links librdkafka via <code>rdkafka</code>'s <code>cmake-build</code> feature, so it is portable across glibc / musl / macOS without a system <code>librdkafka.so</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Contents</h2>
+        <ul>
+          <li><a href="#install">Install</a></li>
+          <li><a href="#quick-start">Quick start</a></li>
+          <li><a href="#config">Configuration &amp; brokers</a></li>
+          <li><a href="#api-producer">API &mdash; Producer</a></li>
+          <li><a href="#api-consumer">API &mdash; Consumer</a></li>
+          <li><a href="#api-offsets">API &mdash; Consumer offsets</a></li>
+          <li><a href="#api-admin">API &mdash; Admin</a></li>
+          <li><a href="#api-plumbing">API &mdash; Plumbing</a></li>
+          <li><a href="#api-pure">API &mdash; Pure helpers (no broker)</a></li>
+          <li><a href="#why">Why a package, not a builtin</a></li>
+          <li><a href="#ffi">FFI layer</a></li>
+          <li><a href="#tests">Tests</a></li>
+          <li><a href="#dev">Dev workflow</a></li>
+          <li><a href="#roadmap">Roadmap</a></li>
+          <li><a href="#layout">Layout</a></li>
+          <li><a href="#siblings">Sibling packages</a></li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section" id="install">
+        <h2>Install</h2>
+<pre># from a release (no rustc + librdkafka build on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-kafka
+
+# from a local checkout
+cd ~/projects/stryke-kafka
+cargo build --release            # first build compiles librdkafka via cmake (~3-5 min); produces libstryke_kafka.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/kafka@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use Kafka</code> &mdash; no helper-binary fork per call. A shared tokio runtime + <code>FutureProducer</code> cache per brokers tuple is held in <code>OnceCell</code>, so producer batching/compression works as designed. Any stryke script that declares <code>use Kafka</code> resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section" id="quick-start">
+        <h2>Quick start: <code>use Kafka</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>set brokers</td><td><code>$ENV{KAFKA_BROKERS} = "localhost:9092"</code></td></tr>
+            <tr><td>ping (metadata fetch)</td><td><code>p Kafka::ping() ? "alive" : "down"</code></td></tr>
+            <tr><td>produce</td><td><code>val $r = Kafka::produce "events", "hello stryke", key =&gt; "k1"</code></td></tr>
+            <tr><td>bulk produce</td><td><code>Kafka::produce_many [{ value =&gt; "a", key =&gt; "1" }], topic =&gt; "events"</code></td></tr>
+            <tr><td>snapshot consume</td><td><code>val @msgs = Kafka::consume "events", group =&gt; "stryke-demo", limit =&gt; 100, timeout_ms =&gt; 5_000</code></td></tr>
+            <tr><td>callback per msg</td><td><code>Kafka::consume_stream "events", callback =&gt; fn { p "$_-&gt;{partition}.$_-&gt;{offset}: $_-&gt;{value}" }</code></td></tr>
+            <tr><td>list topics</td><td><code>p $_ for Kafka::topics()</code></td></tr>
+            <tr><td>create a topic</td><td><code>Kafka::create_topic "new-topic", partitions =&gt; 6, replication =&gt; 1</code></td></tr>
+            <tr><td>describe a topic</td><td><code>val $info = Kafka::describe "new-topic"</code></td></tr>
+            <tr><td>consumer-group lag</td><td><code>val $l = Kafka::lag "my-group", topic =&gt; "events"</code></td></tr>
+          </tbody>
+        </table>
+        <p>A fuller end-to-end script &mdash; ping, produce, bulk produce, snapshot consume, list/create/describe topics:</p>
+<pre>use Kafka
+
+$ENV{KAFKA_BROKERS} = "localhost:9092"
+
+# Ping (metadata fetch).
+p Kafka::ping() ? "alive" : "down"
+
+# Produce one record.
+val $r = Kafka::produce "events", "hello stryke", key =&gt; "k1"
+p "wrote $r-&gt;{topic}/$r-&gt;{partition}@$r-&gt;{offset}"
+
+# Bulk produce — array of { value, key? } hashrefs; topic is a named arg.
+Kafka::produce_many [
+    { value =&gt; "a", key =&gt; "1" },
+    { value =&gt; "b", key =&gt; "2" },
+    { value =&gt; "c", key =&gt; "3" },
+], topic =&gt; "events"
+
+# Snapshot consume — up to `limit` messages within `timeout_ms`.
+val @msgs = Kafka::consume "events",
+    group      =&gt; "stryke-demo",
+    limit      =&gt; 100,
+    timeout_ms =&gt; 5_000
+@msgs |&gt; ep
+
+# Admin / metadata.
+p $_ for Kafka::topics()
+Kafka::create_topic "new-topic", partitions =&gt; 6, replication =&gt; 1
+val $info = Kafka::describe "new-topic"
+p to_json $info</pre>
+        <p><code>Kafka::lag $group, topic =&gt; "..."</code> reports per-partition lag (committed offset vs. high watermark). <code>Kafka::watermarks</code> and <code>Kafka::offsets_for_times</code> cover raw offset introspection. The full reference is below and in the <a href="https://github.com/MenkeTechnologies/stryke-kafka#0x04-api-reference">README "API reference" section</a>.</p>
+      </section>
+
+      <section class="tutorial-section" id="config">
+        <h2>Configuration &amp; brokers</h2>
+        <p>Brokers can be passed on every call <em>or</em> set once via the <code>KAFKA_BROKERS</code> env var. The default is <code>localhost:9092</code>.</p>
+<pre>$ENV{KAFKA_BROKERS} = "localhost:9092"          # default
+
+# per-call override (named arg on any broker op)
+Kafka::topics(brokers =&gt; "kafka-1:9094,kafka-2:9094") |&gt; ep</pre>
+        <p><code>brokers</code> is the only per-call connection option in v0.2.x &mdash; SASL / SSL connection options are deferred. Payload framing is controlled per call by the <code>encoding</code> option (<code>utf8</code> default, plus <code>base64</code> and <code>hex</code> for binary keys/values), accepted by <code>produce</code>, <code>produce_many</code>, and <code>consume</code>.</p>
+      </section>
+
+      <section class="tutorial-section" id="api-producer">
+        <h2>API &mdash; Producer</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Kafka::produce</td><td><code>$topic, $value, %opts &rarr; { topic, partition, offset }</code></td></tr>
+            <tr><td>Kafka::produce_many</td><td><code>\@rows, %opts &rarr; $sent</code> &mdash; requires <code>topic =&gt; $name</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>produce</code> opts: <code>key</code>, <code>partition</code>, <code>timestamp</code> (epoch millis), <code>headers =&gt; { k =&gt; v }</code>, <code>encoding</code> (<code>utf8</code> default, <code>base64</code>, <code>hex</code>). <code>produce_many</code> rows are <code>{ value, key?, partition?, headers?, encoding? }</code> hashrefs; the target topic is the required <code>topic =&gt; "..."</code> named arg, and an <code>encoding</code> opt sets the default for all rows. <code>produce_many</code> returns the count of records sent.</p>
+      </section>
+
+      <section class="tutorial-section" id="api-consumer">
+        <h2>API &mdash; Consumer</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Kafka::consume</td><td><code>$topic, %opts &rarr; @messages</code></td></tr>
+            <tr><td>Kafka::consume_stream</td><td><code>$topic, %opts &rarr; $count</code> &mdash; fires <code>callback</code> per message</td></tr>
+          </tbody>
+        </table>
+        <p>Opts: <code>group</code>, <code>limit</code> (default 10), <code>timeout_ms</code> (default 5000), <code>encoding</code> (<code>utf8</code>/<code>base64</code>/<code>hex</code>), <code>commit</code> (commit offsets after the drain &mdash; needs <code>group</code>). Snapshot-style: subscribe, poll up to <code>limit</code> messages or until <code>timeout_ms</code> runs out. <code>consume_stream</code> pulls the same snapshot and fires <code>callback</code> per message, returning the message count.</p>
+        <p>Message shape:</p>
+<pre>{
+  topic, partition, offset, timestamp,
+  key,                         # framed per `encoding` (null if missing)
+  value,                       # framed per `encoding` (utf8 lossy by default)
+  headers,                     # { k =&gt; v } object
+}</pre>
+      </section>
+
+      <section class="tutorial-section" id="api-offsets">
+        <h2>API &mdash; Consumer offsets</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Kafka::lag</td><td><code>$group, %opts &rarr; { group, topic, partitions, total_lag }</code> &mdash; opts: <code>topic</code> (required)</td></tr>
+            <tr><td>Kafka::watermarks</td><td><code>$topic, %opts &rarr; { topic, partitions, total }</code> &mdash; partitions: <code>[{partition, low, high, count}]</code></td></tr>
+            <tr><td>Kafka::offsets_for_times</td><td><code>$topic, $ts_ms, %opts &rarr; { topic, timestamp, partitions }</code></td></tr>
+            <tr><td>Kafka::committed</td><td><code>$group, %opts &rarr; { group, topic, partitions }</code> &mdash; opts: <code>topic</code> (required), <code>partition</code> (optional)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="api-admin">
+        <h2>API &mdash; Admin</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Kafka::topics</td><td><code>%opts &rarr; @names</code></td></tr>
+            <tr><td>Kafka::describe</td><td><code>$topic, %opts &rarr; { topic, partition_count, partitions }</code> &mdash; partitions: <code>[{id, leader, replicas, isr}]</code></td></tr>
+            <tr><td>Kafka::groups</td><td><code>%opts &rarr; @groups</code> &mdash; <code>[{name, state, ...}]</code></td></tr>
+            <tr><td>Kafka::describe_group</td><td><code>$group, %opts &rarr; { name, state, protocol, protocol_type, member_count, members }</code></td></tr>
+            <tr><td>Kafka::cluster</td><td><code>%opts &rarr; { brokers, topic_count }</code> &mdash; brokers: <code>[{id, host, port}]</code></td></tr>
+            <tr><td>Kafka::create_topic</td><td><code>$name, %opts &rarr; { created, errors }</code> &mdash; opts: <code>partitions</code>, <code>replication</code>, <code>config</code></td></tr>
+            <tr><td>Kafka::delete_topic</td><td><code>$name, %opts &rarr; { deleted, errors }</code></td></tr>
+            <tr><td>Kafka::create_partitions</td><td><code>$name, $partitions, %opts &rarr; { topic, altered, errors }</code></td></tr>
+            <tr><td>Kafka::describe_configs</td><td><code>%opts &rarr; { resources, errors }</code> &mdash; <code>resource_type</code>, <code>resource_name</code></td></tr>
+            <tr><td>Kafka::alter_configs</td><td><code>%opts &rarr; { altered, errors }</code> &mdash; + <code>entries =&gt; { k =&gt; v }</code></td></tr>
+            <tr><td>Kafka::delete_groups</td><td><code>\@groups, %opts &rarr; { deleted, errors }</code></td></tr>
+            <tr><td>Kafka::delete_records</td><td><code>$topic, $partition, $before, %opts &rarr; { topic, partition, results }</code> &mdash; truncate a partition to <code>$before</code> (offset or <code>latest</code>)</td></tr>
+            <tr><td>Kafka::ping</td><td><code>%opts &rarr; 1 | 0</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="api-plumbing">
+        <h2>API &mdash; Plumbing</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Kafka::version</td><td><code>() &rarr; $version_string</code> &mdash; cdylib's <code>CARGO_PKG_VERSION</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="api-pure">
+        <h2>API &mdash; Pure helpers (no broker)</h2>
+        <p>Offline functions that compute Kafka semantics client-side &mdash; no broker round trip. Useful for partition prediction, rebalance planning, config validation, and topic-name hygiene.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Kafka::valid_topic_name</td><td><code>$name &rarr; { name, valid, reason }</code> &mdash; 1-249 chars of <code>[a-zA-Z0-9._-]</code>, not <code>.</code> / <code>..</code></td></tr>
+            <tr><td>Kafka::sanitize_topic_name</td><td><code>$name, $replacement? &rarr; { name, sanitized, changed }</code> &mdash; coerce input into a valid topic name (illegal &rarr; <code>_</code>, truncate 249, reserved/empty &rarr; replacement)</td></tr>
+            <tr><td>Kafka::is_internal_topic</td><td><code>$name &rarr; 1 | ""</code> &mdash; <code>__</code> prefix</td></tr>
+            <tr><td>Kafka::topics_collide</td><td><code>$a, $b &rarr; 1 | ""</code> &mdash; metric-namespace collision: equal after <code>.</code>&rarr;<code>_</code></td></tr>
+            <tr><td>Kafka::parse_brokers</td><td><code>$str &rarr; @{ {host, port} }</code> &mdash; bootstrap.servers list</td></tr>
+            <tr><td>Kafka::build_brokers</td><td><code>\@brokers &rarr; $str</code> &mdash; inverse of parse_brokers</td></tr>
+            <tr><td>Kafka::normalize_brokers</td><td><code>$str, %opts &rarr; $str</code> &mdash; fill default <code>:9092</code> (opt <code>default_port</code>), trim, dedupe</td></tr>
+            <tr><td>Kafka::partition_for_key</td><td><code>$key, $partitions &rarr; { partition, hash }</code> &mdash; JVM default partitioner: <code>toPositive(murmur2(key)) % partitions</code></td></tr>
+            <tr><td>Kafka::partition_for_key_crc32</td><td><code>$key, $partitions &rarr; { partition, crc32 }</code> &mdash; librdkafka <code>consistent</code>: <code>crc32(key) % partitions</code></td></tr>
+            <tr><td>Kafka::partition_for_key_fnv1a</td><td><code>$key, $partitions &rarr; { partition, fnv1a }</code> &mdash; librdkafka <code>fnv1a</code>: <code>fnv1a(key) % partitions</code></td></tr>
+            <tr><td>Kafka::group_coordinator_partition</td><td><code>$group, $partitions=50 &rarr; { group, partition, hash, partitions }</code> &mdash; __consumer_offsets partition: <code>abs(groupId.hashCode()) % 50</code></td></tr>
+            <tr><td>Kafka::transaction_coordinator_partition</td><td><code>$transactional_id, $partitions=50 &rarr; { transactional_id, partition, hash, partitions }</code> &mdash; __transaction_state partition</td></tr>
+            <tr><td>Kafka::range_assignment</td><td><code>$partitions, @consumers &rarr; { assignment, partitions, consumers }</code> &mdash; default RangeAssignor</td></tr>
+            <tr><td>Kafka::roundrobin_assignment</td><td><code>$partitions, @consumers &rarr; { assignment, partitions, consumers }</code> &mdash; RoundRobinAssignor (partition p &rarr; member p%N)</td></tr>
+            <tr><td>Kafka::sticky_assignment</td><td><code>$partitions, \@consumers, \%previous? &rarr; { assignment, partitions, consumers }</code> &mdash; StickyAssignor (KIP-54)</td></tr>
+            <tr><td>Kafka::replica_assignment</td><td><code>$partitions, $replication_factor, \@brokers, %opts &rarr; { assignment, partitions, replication_factor }</code> &mdash; rack-unaware partition&rarr;broker placement; opts: <code>start_index</code>, <code>start_partition</code></td></tr>
+            <tr><td>Kafka::assignment_by_broker</td><td><code>\@assignment &rarr; { brokers }</code> &mdash; invert a partition&rarr;broker assignment to a per-broker view; inverse of replica_assignment</td></tr>
+            <tr><td>Kafka::assignment_diff</td><td><code>\%previous, \%current &rarr; { revoked, assigned, moved }</code> &mdash; rebalance plan; <code>revoked</code> = cooperative give-up set</td></tr>
+            <tr><td>Kafka::format_offset</td><td><code>$n|$name &rarr; { offset, name }</code> &mdash; <code>-1</code> &harr; latest, <code>-2</code> &harr; earliest</td></tr>
+            <tr><td>Kafka::topic_metric_name</td><td><code>$name &rarr; { name, metric_name, has_collision_chars }</code> &mdash; metric-namespace mangling (<code>.</code> &rarr; <code>_</code>)</td></tr>
+            <tr><td>Kafka::parse_topic_partition</td><td><code>$value &rarr; { topic, partition }</code> &mdash; split <code>topic-N</code> / <code>topic:N</code></td></tr>
+            <tr><td>Kafka::format_topic_partition</td><td><code>$topic, $partition, $separator? &rarr; $str</code> &mdash; build <code>topic-N</code> (separator default <code>-</code>)</td></tr>
+            <tr><td>Kafka::compression_codec</td><td><code>$value &rarr; { value, valid, canonical }</code> &mdash; validate compression.type (<code>none|gzip|snappy|lz4|zstd|producer</code>)</td></tr>
+            <tr><td>Kafka::cleanup_policy</td><td><code>$value &rarr; { value, valid, canonical, policies }</code> &mdash; validate cleanup.policy (<code>delete|compact|both</code>)</td></tr>
+            <tr><td>Kafka::acks_value</td><td><code>$value &rarr; { value, acks, all }</code> &mdash; canonicalize producer acks (<code>0|1|all/-1</code>); dies on other values</td></tr>
+            <tr><td>Kafka::parse_duration_ms</td><td><code>$value &rarr; $ms</code> &mdash; parse a duration (number or <code>ms|s|m|h|d|w</code> suffix) to millis; <code>-1</code> passes through</td></tr>
+            <tr><td>Kafka::isr_health</td><td><code>\@replicas, \@isr, $min_isr? &rarr; { replicas, isr, min_isr, under_replicated, under_min_isr, healthy }</code> &mdash; <code>$min_isr</code> default 1</td></tr>
+            <tr><td>Kafka::offset_lag</td><td><code>\@partitions &rarr; { partitions, total_lag }</code> &mdash; offline lag from <code>[{partition, committed, high}]</code></td></tr>
+            <tr><td>Kafka::security_protocol</td><td><code>$value &rarr; { value, valid, canonical }</code> &mdash; validate security.protocol (<code>PLAINTEXT|SSL|SASL_PLAINTEXT|SASL_SSL</code>); canonical uppercase</td></tr>
+            <tr><td>Kafka::auto_offset_reset</td><td><code>$value &rarr; { value, valid, canonical }</code> &mdash; validate auto.offset.reset (<code>earliest|latest|none|by_duration:&lt;dur&gt;</code>)</td></tr>
+            <tr><td>Kafka::isolation_level</td><td><code>$value &rarr; { value, valid, canonical, read_committed }</code> &mdash; validate isolation.level (<code>read_uncommitted|read_committed</code>)</td></tr>
+            <tr><td>Kafka::timestamp_type</td><td><code>$value &rarr; { value, valid, canonical }</code> &mdash; validate message.timestamp.type (<code>CreateTime|LogAppendTime</code>)</td></tr>
+            <tr><td>Kafka::humanize_duration_ms</td><td><code>$ms &rarr; { ms, human, unit }</code> &mdash; inverse of parse_duration_ms (<code>1w</code>, <code>3d</code>, <code>90s</code>); <code>-1</code> &rarr; "infinite"</td></tr>
+            <tr><td>Kafka::partition_distribution</td><td><code>\@keys, $partitions, %opts &rarr; { partitions, partitioner, total, counts, used, empty, max, min, spread }</code> &mdash; offline key-skew tally (opt <code>partitioner</code>: <code>murmur2|crc32|fnv1a</code>)</td></tr>
+          </tbody>
+        </table>
+        <p><code>partition_for_key</code> is a faithful port of Kafka's <code>Utils.murmur2</code> (seed <code>0x9747b28c</code>) plus the default partitioner's <code>toPositive(hash) % partitions</code>, so it predicts a keyed record's partition offline &mdash; no broker round trip.</p>
+      </section>
+
+      <section class="tutorial-section" id="why">
+        <h2>Why a package, not a builtin</h2>
+        <p>librdkafka is the canonical native Kafka client. Bundled here as an opt-in stryke package so workflows that need it don't bloat the core binary.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>kafka__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_kafka.{dylib,so}</code>, which statically links librdkafka via <code>rdkafka</code>'s <code>cmake-build</code> feature and is dlopened in-process on first <code>use Kafka</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section" id="ffi">
+        <h2>FFI layer</h2>
+        <p>Each <code>Kafka::*</code> wrapper builds a JSON args dict and calls a sibling <code>kafka__*</code> symbol resolved out of <code>libstryke_kafka.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use Kafka</code> (via stryke's <code>pkg::commands::try_load_ffi_for</code> resolver hook); a shared tokio runtime + a <code>FutureProducer</code> + admin-client cache per brokers tuple is held in <code>OnceCell</code> &mdash; no fork-per-call, so producer batching/compression works as designed. Responses are JSON; errors come back as a <code>{error}</code> payload and the wrapper dies with <code>Kafka::&lt;op&gt;: &lt;reason&gt;</code>. The authoritative export list is <code>[ffi].exports</code> in <code>stryke.toml</code>.</p>
+      </section>
+
+      <section class="tutorial-section" id="tests">
+        <h2>Tests</h2>
+<pre>cargo test                                          # compiles, no live calls
+KAFKA_BROKERS=localhost:9092 s test t/              # live round-trip</pre>
+        <p>The end-to-end suite creates a temp topic, produces single + bulk messages, consumes them back, checks the count, and deletes the topic. It skips cleanly when <code>$KAFKA_BROKERS</code> isn't set or the broker isn't reachable. A local KRaft-mode broker (no ZooKeeper) via <code>bitnami/kafka</code> is documented in the README for round-trip testing.</p>
+      </section>
+
+      <section class="tutorial-section" id="dev">
+        <h2>Dev workflow</h2>
+<pre>make             # release build (first time: ~3-5 min for librdkafka)
+make debug
+make test
+make install
+make clean</pre>
+      </section>
+
+      <section class="tutorial-section" id="roadmap">
+        <h2>Roadmap</h2>
+        <p><strong>Shipped:</strong> produce with keys/headers/partitions/timestamps + binary framing, consume with headers/binary/offset-commit, consumer-group lag, watermarks, time-based offset lookup, topic config on create, create_partitions, describe/alter configs, delete_groups, describe_group, committed offsets, and delete_records (truncate to offset).</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Open</td><td>SASL / SSL connection options; long-running consumer daemon (callback streaming); consumer <code>seek</code> / <code>position</code> (needs a persistent consumer handle)</td></tr>
+            <tr><td>Later</td><td>Schema Registry (Avro / Protobuf) value modes; Streams DSL (joins, windowed agg); transactional producer (EOS)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="layout">
+        <h2>Layout</h2>
+<pre>stryke-kafka/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — kafka__* extern "C" exports
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use Kafka`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest ([ffi] exports table)
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section" id="siblings">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

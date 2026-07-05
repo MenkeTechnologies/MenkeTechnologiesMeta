@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-mssql — Microsoft SQL Server client for stryke. Parametrized query/execute, transaction batches, scalar/exists helpers, schema introspection, over tiberius (pure-Rust TDS). Opt-in Rust cdylib.">
+  <title>stryke-mssql — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td { padding: 6px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+    .example-tbl td:first-child { width: 30%; white-space: nowrap; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-MSSQL &mdash; MICROSOFT SQL SERVER CLIENT FOR STRYKE // QUERY + EXECUTE + PARAMS + TRANSACTIONS + INTROSPECTION</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package <code>v0.7.0</code> &middot; namespace <code>Mssql</code> &middot; cdylib <code>libstryke_mssql</code> &middot; 36 exported functions &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-mssql/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-MSSQL</h2>
+      <p class="tutorial-subtitle"><strong>Microsoft SQL Server / Azure SQL client for stryke.</strong> Parametrized query and execute, transaction batches, scalar/exists helpers, and schema introspection &mdash; over <a href="https://docs.rs/tiberius" target="_blank" rel="noopener noreferrer">tiberius</a>, the pure-Rust TDS driver. No FreeTDS, no ODBC. The cdylib owns one tokio runtime and presents a blocking facade, caching a client per <code>(host, db, auth, encrypt)</code>. An opt-in package, kept out of the stryke core binary so the daily-driver install stays slim.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>Add the package, then <code>use Mssql</code>. On first use, stryke dlopens the cdylib in-process and registers every <code>mssql__*</code> export via <code>rust_ffi::load_cdylib</code> &mdash; only the symbols declared in <code>stryke.toml</code>'s <code>[ffi].exports</code> are resolved.</p>
+<pre>s add github.com/MenkeTechnologies/stryke-mssql</pre>
+        <p>The minimum target is SQL Server 2012 or any Azure SQL instance. The transport is <a href="https://docs.rs/tiberius" target="_blank" rel="noopener noreferrer">tiberius</a> (pure-Rust TDS) &mdash; there is no FreeTDS, ODBC, or system client library to install.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start</h2>
+<pre>use Mssql
+
+var %conn = ( host =&gt; "localhost", database =&gt; "app",
+              username =&gt; "sa", password =&gt; $ENV{MSSQL_PASS}, trust_cert =&gt; 1 )
+
+# parametrized query — @P1, @P2, … bound from params (never interpolated)
+val @users = Mssql::query("SELECT id, name FROM users WHERE active = @P1", params =&gt; [1], %conn)
+p len(@users)
+
+# scalar (first column of first row) + exists (at least one row?)
+p Mssql::scalar("SELECT COUNT(*) FROM users", %conn)
+p Mssql::exists("SELECT 1 FROM users WHERE id = @P1", params =&gt; [42], %conn)
+
+# write — returns rows affected
+Mssql::execute("UPDATE users SET name = @P1 WHERE id = @P2", params =&gt; ["Ada", 42], %conn)
+
+# transaction batch — commit on success, roll back if any statement fails
+Mssql::batch(
+    ["INSERT INTO audit (msg) VALUES ('x')", "UPDATE users SET seen = 1 WHERE id = 42"],
+    %conn,
+)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connecting</h2>
+        <p>Every <code>Mssql::*</code> call that touches the server takes connection params as a trailing <code>%opts</code> hash. When neither <code>url</code> nor <code>host</code> is given and <code>$MSSQL_URL</code> is set, that ADO connection string is used as a fallback. A <code>tiberius</code> <code>Client</code> is cached per <code>(host, port, database, auth, encrypt)</code>; a connection that errors is evicted and reopened on the next call.</p>
+        <table class="example-tbl">
+          <tr><td>url</td><td>ADO string, e.g. <code>Server=db;Database=app;User Id=sa;Password=…</code>. Overrides the discrete keys below.</td></tr>
+          <tr><td>host</td><td>Server host. Default <code>127.0.0.1</code>.</td></tr>
+          <tr><td>port</td><td>TDS port. Default <code>1433</code>.</td></tr>
+          <tr><td>database</td><td>Initial database. Default is the server's default for the login.</td></tr>
+          <tr><td>username</td><td>SQL auth user.</td></tr>
+          <tr><td>password</td><td>SQL auth password.</td></tr>
+          <tr><td>encrypt</td><td><code>required</code> (default), <code>off</code>, or <code>not_supported</code> &mdash; maps to the TDS <code>EncryptionLevel</code>.</td></tr>
+          <tr><td>trust_cert</td><td>When truthy, accepts a self-signed server certificate (dev only). Default off.</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API surface</h2>
+        <p>The <code>Mssql</code> package exposes 36 functions across seven groups. Parametrized statements use <code>@P1</code>, <code>@P2</code>, … placeholders bound from <code>params</code> (an arrayref of null / bool / integer / float / string). Identifiers (table/column names) can't be parameterized &mdash; use the SQL helpers below for those.</p>
+        <table class="example-tbl">
+          <tr><td>Liveness</td><td><code>version</code>, <code>ping</code>, <code>server_version</code></td></tr>
+          <tr><td>Query</td><td><code>query</code>, <code>query_one</code>, <code>scalar</code>, <code>exists</code>, <code>simple_query</code></td></tr>
+          <tr><td>Write</td><td><code>execute</code>, <code>insert</code> (multi-row), <code>batch</code> (transaction)</td></tr>
+          <tr><td>DDL</td><td><code>create_table</code>, <code>drop_table</code>, <code>truncate</code></td></tr>
+          <tr><td>Introspection</td><td><code>databases</code>, <code>tables</code>, <code>columns</code>, <code>views</code>, <code>schemas</code>, <code>primary_keys</code>, <code>foreign_keys</code>, <code>indexes</code>, <code>table_exists</code>, <code>current_database</code>, <code>count</code>, <code>row_count</code></td></tr>
+          <tr><td>SQL helpers</td><td><code>quote_ident</code>, <code>quote_literal</code>, <code>valid_identifier</code>, <code>escape_like</code>, <code>format_value</code>, <code>format_in_list</code>, <code>split_batch</code></td></tr>
+          <tr><td>URL helpers</td><td><code>parse_url</code>, <code>redact_url</code>, <code>build_url</code></td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Liveness</h2>
+        <table class="example-tbl">
+          <tr><td>version()</td><td>The package version string. No connection.</td></tr>
+          <tr><td>ping(%conn)</td><td>Connectivity probe (<code>SELECT 1</code>). Returns 1 on success.</td></tr>
+          <tr><td>server_version(%conn)</td><td><code>SELECT @@VERSION</code> &mdash; the server version banner string.</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Query</h2>
+        <table class="example-tbl">
+          <tr><td>query($sql, %conn)</td><td>Run a SELECT. Returns an array of row hashrefs. <code>params</code> binds <code>@P1</code>… placeholders.</td></tr>
+          <tr><td>query_one($sql, %conn)</td><td>The first row hashref, or undef.</td></tr>
+          <tr><td>scalar($sql, %conn)</td><td>The first column of the first row (a scalar), or undef.</td></tr>
+          <tr><td>exists($sql, %conn)</td><td>True when the query returns at least one row.</td></tr>
+          <tr><td>simple_query($sql, %conn)</td><td>Non-parametrized statement (may contain several <code>;</code>-separated statements). Returns the first result set as rows.</td></tr>
+        </table>
+<pre>val @rows  = Mssql::query("SELECT id, name FROM users WHERE active = @P1", params =&gt; [1], %conn)
+val $u     = Mssql::query_one("SELECT * FROM users WHERE id = @P1", params =&gt; [42], %conn)
+val $total = Mssql::scalar("SELECT COUNT(*) FROM users", %conn)
+val $has   = Mssql::exists("SELECT 1 FROM users WHERE id = @P1", params =&gt; [42], %conn)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Write</h2>
+        <table class="example-tbl">
+          <tr><td>execute($sql, %conn)</td><td>Run an INSERT / UPDATE / DELETE / DDL. Returns rows affected. <code>params</code> binds placeholders.</td></tr>
+          <tr><td>insert($table, $rows, %conn)</td><td>Multi-row insert from an arrayref of row hashrefs. Columns are the sorted keys of the first row; a missing key in a later row becomes <code>NULL</code>. Values are emitted as T-SQL literals. Returns rows affected.</td></tr>
+          <tr><td>batch($statements, %conn)</td><td>Run an arrayref of statements inside one transaction &mdash; <code>BEGIN TRANSACTION</code> … <code>COMMIT</code> on success, roll back if any statement fails. Returns total rows affected.</td></tr>
+        </table>
+<pre>Mssql::execute("UPDATE users SET name = @P1 WHERE id = @P2", params =&gt; ["Ada", 42], %conn)
+
+Mssql::insert("dbo.users",
+    [ { id =&gt; 1, name =&gt; "Ada" }, { id =&gt; 2, name =&gt; "Linus" } ],
+    %conn)
+
+Mssql::batch(
+    ["INSERT INTO audit (msg) VALUES ('x')", "UPDATE users SET seen = 1 WHERE id = 42"],
+    %conn)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>DDL</h2>
+        <table class="example-tbl">
+          <tr><td>create_table($table, $columns, %conn)</td><td><code>CREATE TABLE</code> from an ordered arrayref of <code>{ name, type }</code> hashrefs. Names are bracket-quoted; the type string (e.g. <code>INT NOT NULL</code>, <code>NVARCHAR(100)</code>) is passed through verbatim.</td></tr>
+          <tr><td>drop_table($table, %conn)</td><td><code>DROP TABLE IF EXISTS</code> (schema-qualified name bracket-quoted).</td></tr>
+          <tr><td>truncate($table, %conn)</td><td><code>TRUNCATE TABLE</code> (schema-qualified name bracket-quoted).</td></tr>
+        </table>
+<pre>Mssql::create_table("dbo.users",
+    [ { name =&gt; "id",   type =&gt; "INT PRIMARY KEY" },
+      { name =&gt; "name", type =&gt; "NVARCHAR(100) NOT NULL" } ],
+    %conn)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Introspection</h2>
+        <table class="example-tbl">
+          <tr><td>databases(%conn)</td><td>List databases (<code>sys.databases</code>). Array of <code>{ name }</code> rows.</td></tr>
+          <tr><td>tables(%conn)</td><td>List tables (<code>INFORMATION_SCHEMA.TABLES</code>). Rows of <code>{ TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE }</code>.</td></tr>
+          <tr><td>columns($table, %conn)</td><td>Column metadata for a table (<code>INFORMATION_SCHEMA.COLUMNS</code>).</td></tr>
+          <tr><td>views(%conn)</td><td>User views (<code>INFORMATION_SCHEMA.VIEWS</code>). Rows of <code>{ TABLE_SCHEMA, TABLE_NAME }</code>.</td></tr>
+          <tr><td>schemas(%conn)</td><td>User schemas (<code>sys.schemas</code>, built-in role/system schemas excluded). Rows of <code>{ name }</code>.</td></tr>
+          <tr><td>primary_keys($table, %conn)</td><td>Primary-key columns in key order: <code>{ COLUMN_NAME, ORDINAL_POSITION }</code> rows.</td></tr>
+          <tr><td>foreign_keys($table, %conn)</td><td>Foreign-key relationships on the table (<code>sys.foreign_keys</code>): constraint name, source column, referenced table/column.</td></tr>
+          <tr><td>indexes($table, %conn)</td><td>Indexes on the table (<code>sys.indexes</code>): index name, uniqueness, whether it backs the PK, type description.</td></tr>
+          <tr><td>table_exists($table, %conn)</td><td>True when the table exists. A schema-qualified name (<code>dbo.users</code>) matches on both schema and name; unqualified matches in any schema.</td></tr>
+          <tr><td>current_database(%conn)</td><td>The database the connection is using (<code>SELECT DB_NAME()</code>).</td></tr>
+          <tr><td>count($table, $where = undef, %conn)</td><td>Exact row count (<code>SELECT COUNT(*)</code>). Optional <code>$where</code> is caller-owned T-SQL; use <code>@P1</code>… with <code>params</code>, or pass undef for the whole table.</td></tr>
+          <tr><td>row_count($table, %conn)</td><td>Fast row-count estimate from <code>sys.dm_db_partition_stats</code> &mdash; the engine-maintained count. Cheaper than <code>count</code> on large tables, but an estimate.</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>SQL helpers</h2>
+        <p>Pure functions for the cases that can't be parameterized (identifiers, <code>LIKE</code> patterns, <code>IN</code> lists, dynamic SQL). They take no connection and are unit-tested in-crate.</p>
+        <table class="example-tbl">
+          <tr><td>quote_ident($name)</td><td>Quote a T-SQL identifier as <code>[name]</code>, doubling any <code>]</code>.</td></tr>
+          <tr><td>quote_literal($value)</td><td>Wrap a value as a single-quoted T-SQL literal, doubling any <code>'</code>.</td></tr>
+          <tr><td>valid_identifier($value)</td><td>True when the value is a safe unquoted identifier (<code>[A-Za-z_][A-Za-z0-9_]*</code>).</td></tr>
+          <tr><td>escape_like($value)</td><td>Escape <code>%</code>, <code>_</code>, <code>[</code> as <code>[%]</code> / <code>[_]</code> / <code>[[]</code> character classes so the value matches literally inside a <code>LIKE</code> pattern &mdash; no <code>ESCAPE</code> clause needed.</td></tr>
+          <tr><td>format_value($value)</td><td>Format a scalar as a T-SQL literal: string→<code>'…'</code>, number→as-is, bool→<code>1</code>/<code>0</code> (T-SQL <code>bit</code>), null→<code>NULL</code>.</td></tr>
+          <tr><td>format_in_list($values)</td><td>Render an arrayref of scalars into a T-SQL <code>IN (…)</code> list. Empty → <code>(NULL)</code> (matches nothing).</td></tr>
+          <tr><td>split_batch($script)</td><td>Split a T-SQL script into batches on lines containing only <code>GO</code> (the SSMS batch separator, case-insensitive). Empty batches are dropped. Returns an array of strings.</td></tr>
+        </table>
+<pre># a column name that can't be a parameter
+val $col = Mssql::quote_ident("user name")          # → [user name]
+
+# match a literal substring inside LIKE
+val $pat = Mssql::escape_like("100%_off")            # → 100[%][_]off
+Mssql::query("SELECT * FROM promo WHERE code LIKE @P1", params =&gt; ["%" . $pat . "%"], %conn)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>URL helpers</h2>
+        <table class="example-tbl">
+          <tr><td>parse_url($url)</td><td>Parse an ADO <code>key=value;…</code> connection string into a hashref (keys lowercased; <code>password</code>/<code>pwd</code> redacted to <code>***</code>).</td></tr>
+          <tr><td>redact_url($url)</td><td>Return the same connection string with the password value replaced by <code>***</code>, structure preserved.</td></tr>
+          <tr><td>build_url($parts)</td><td>Build an ADO connection string from a parts hashref. Known keys (<code>server</code>, <code>database</code>, <code>user_id</code>, <code>password</code>, <code>encrypt</code>, <code>trust_server_certificate</code>) are emitted in a stable order; unknown keys pass through, sorted, after the known set.</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Typed rows</h2>
+        <p>SQL Server result sets are dynamically typed at the wire level. Rather than match every TDS column type, each cell is converted to JSON by trying the candidate Rust types in order &mdash; bool, integer, float, string, decimal, uuid, datetime, date, time, binary &mdash; and taking the first the driver accepts. Decimals serialize as strings to keep full precision, binary is base64, and datetimes are ISO-8601. Arbitrary queries round-trip without the caller declaring a schema.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Build &amp; test</h2>
+        <p>The <code>Makefile</code> wraps the cargo + stryke commands:</p>
+        <table class="example-tbl">
+          <tr><td>make debug</td><td><code>cargo build</code> (debug cdylib).</td></tr>
+          <tr><td>make test</td><td><code>cargo test</code>, then <code>s test t/</code> (live path needs <code>$MSSQL_HOST</code>).</td></tr>
+          <tr><td>make install</td><td><code>s pkg install -g .</code></td></tr>
+        </table>
+        <p><code>cargo test</code> runs the in-crate unit tests (ADO parse/redact, connection-key defaults, the pure SQL helpers) with no database. Point <code>$MSSQL_HOST</code> (plus <code>$MSSQL_USER</code> / <code>$MSSQL_PASS</code>) at a throwaway SQL Server container to exercise the query path.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Troubleshooting</h2>
+        <table class="example-tbl">
+          <tr><td>TLS / certificate errors</td><td>Encryption defaults to <code>required</code>. Against a dev server with a self-signed certificate, set <code>trust_cert =&gt; 1</code>, or <code>encrypt =&gt; "off"</code> where the server permits it.</td></tr>
+          <tr><td>Stale connection after an error</td><td>A call that errors evicts its cached <code>Client</code>; the next call reconnects. No manual reset is needed.</td></tr>
+          <tr><td>Quoting identifiers</td><td>Table/column names can't be bound as <code>@P1</code> parameters &mdash; use <code>quote_ident</code> / <code>valid_identifier</code> to build dynamic SQL safely.</td></tr>
+          <tr><td>Errors surface as exceptions</td><td>An <code>{ error }</code> JSON payload from the cdylib is raised as <code>Mssql::&lt;fn&gt;: &lt;reason&gt;</code> by the stryke wrapper.</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>The TDS + TLS stack (<code>tiberius</code>, tokio, rustls) ships once, on demand, as an opt-in package &mdash; stryke core is never linked against it. On first <code>use Mssql</code>, stryke dlopens the cdylib in-process and registers every <code>mssql__*</code> export. The cdylib owns one tokio runtime and presents a blocking facade, so from stryke's perspective every <code>Mssql::*</code> function is an ordinary blocking call.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

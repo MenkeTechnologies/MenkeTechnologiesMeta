@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-k8s — KUBERNETES CLIENT FOR STRYKE // GET + APPLY + DELETE + SCALE + LOGS + WATCH + EXEC. Kubernetes client for stryke. Get / apply / delete / scale / logs / watch / exec against any kubeconfig-reachable cluster (kind, k3s, minikube, EKS, GKE, AKS, OpenShift, vanilla). Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim; ships as a Rust cdylib that stryke dlopens in-process on first `use K8s`.">
+  <title>stryke-k8s — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .api-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .api-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .api-tbl td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .api-tbl td:first-child {
+      width: 34%;
+      color: var(--cyan);
+      font-family: 'Share Tech Mono', monospace;
+      white-space: nowrap;
+    }
+    .api-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; font-size: 11.5px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-K8S &mdash; KUBERNETES CLIENT FOR STRYKE // GET + APPLY + DELETE + SCALE + LOGS + WATCH + EXEC</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_k8s.{dylib,so}</code> · dlopen'd in-process on <code>use K8s</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-k8s/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-K8S</h2>
+      <p class="tutorial-subtitle"><strong>Any kubeconfig-reachable cluster, no kubectl.</strong> Kubernetes client for stryke. Get / apply / delete / scale / logs / watch / exec against any kubeconfig-reachable cluster (kind, k3s, minikube, EKS, GKE, AKS, OpenShift, vanilla). Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim; ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use K8s</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-k8s
+
+# from a local checkout
+cd ~/projects/stryke-k8s
+cargo build --release            # produces target/release/libstryke_k8s.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/k8s@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use K8s</code> &mdash; no helper-binary fork per call. A shared tokio runtime + <code>kube::Client</code> cache keyed by kubeconfig context is held in <code>OnceCell</code> for the life of the process. Any stryke script that declares <code>use K8s</code> resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use K8s</code></h2>
+        <p>Connection is implicit &mdash; <code>$KUBECONFIG</code>, <code>~/.kube/config</code>, or an in-cluster service account, in that resolution order, with no setup call. Every public fn accepts the same per-call connection overrides (see <a href="#connection-overrides">Per-call overrides</a>).</p>
+<pre>use K8s
+
+# Connection: $KUBECONFIG / ~/.kube/config / in-cluster SA — no setup.
+p K8s::current_context()
+p K8s::version()-&gt;{gitVersion}
+
+# List — `kind` accepts short forms or strict GVK.
+val @pods   = K8s::get "pods",  namespace =&gt; "default"
+val @deploy = K8s::get "apps/v1/Deployment", namespace =&gt; "kube-system"
+
+# Get one.
+val $pod = K8s::get_one "pod", "echo-7d9f", namespace =&gt; "default"
+
+# Server-side apply (full doc; idempotent).
+K8s::apply {
+    apiVersion =&gt; "v1",
+    kind       =&gt; "ConfigMap",
+    metadata   =&gt; { name =&gt; "cfg", namespace =&gt; "ci" },
+    data       =&gt; { hello =&gt; "world" },
+}
+
+# Scale.
+K8s::scale "deploy", "echo", 5, namespace =&gt; "ci"
+
+# Logs (buffered).
+val $text = K8s::logs "echo-7d9f", namespace =&gt; "ci", tail =&gt; 100
+
+# Delete (cascading on Namespace).
+K8s::delete_resource "namespace", "ci"</pre>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>current context</td><td><code>p K8s::current_context()</code></td></tr>
+            <tr><td>server version</td><td><code>p K8s::version()-&gt;{gitVersion}</code></td></tr>
+            <tr><td>list pods</td><td><code>val @pods = K8s::get "pods", namespace =&gt; "default"</code></td></tr>
+            <tr><td>strict GVK</td><td><code>val @d = K8s::get "apps/v1/Deployment", namespace =&gt; "kube-system"</code></td></tr>
+            <tr><td>get one</td><td><code>val $pod = K8s::get_one "pod", "echo-7d9f", namespace =&gt; "default"</code></td></tr>
+            <tr><td>server-side apply</td><td><code>K8s::apply { apiVersion =&gt; "v1", kind =&gt; "ConfigMap", metadata =&gt; { name =&gt; "cfg", namespace =&gt; "ci" }, data =&gt; { hello =&gt; "world" } }</code></td></tr>
+            <tr><td>scale</td><td><code>K8s::scale "deploy", "echo", 5, namespace =&gt; "ci"</code></td></tr>
+            <tr><td>logs (buffered)</td><td><code>val $text = K8s::logs "echo-7d9f", namespace =&gt; "ci", tail =&gt; 100</code></td></tr>
+            <tr><td>delete (cascading on Namespace)</td><td><code>K8s::delete_resource "namespace", "ci"</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="connection-overrides">
+        <h2>Per-call connection overrides</h2>
+        <p>Every public fn takes the same connection options at the tail of its <code>%opts</code>. Pass a context for a single call without changing the ambient kubeconfig:</p>
+<pre>val %prod = (context =&gt; "prod-eks")
+K8s::get "pods", namespace =&gt; "payments", %prod</pre>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>context</code></td><td>kubeconfig context to use ($KUBE_CONTEXT)</td></tr>
+            <tr><td><code>kubeconfig</code></td><td>explicit kubeconfig file path ($KUBECONFIG)</td></tr>
+            <tr><td><code>namespace</code></td><td>target namespace; <code>all_namespaces =&gt; 1</code> on list reads spans the cluster</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>GVK shortcuts</h2>
+        <p>Anywhere a <code>kind</code> is accepted, the helper resolves the input against the cluster's discovery API. All of the following work for Pods:</p>
+<pre>pod        pods        po        v1/Pod        /v1/Pod</pre>
+        <p>For namespaced typed kinds you can use the strict triple:</p>
+<pre>apps/v1/Deployment            batch/v1/Job
+networking.k8s.io/v1/Ingress  rbac.authorization.k8s.io/v1/Role</pre>
+        <p>Custom resources work the same way once installed:</p>
+<pre>example.com/v1/Widget</pre>
+      </section>
+
+      <hr class="section-rule">
+      <section class="tutorial-section">
+        <h2>API reference</h2>
+        <p>The package exposes <strong>74</strong> public <code>K8s::*</code> functions, backed by <strong>70</strong> <code>k8s__*</code> FFI symbols on the cdylib (the authoritative export list is <code>[ffi].exports</code> in <code>stryke.toml</code>). They split into cluster operations (which dispatch over FFI to <code>kube</code>) and pure helpers (which compute locally, no cluster contact). Streaming-only ops (<code>watch</code>, <code>logs_follow</code>, <code>exec</code>) are deferred &mdash; calling them dies with a message until the callback FFI ships.</p>
+
+        <h3>Read paths</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / opts</th></tr></thead>
+          <tbody>
+            <tr><td>K8s::get $kind, %opts</td><td>&rarr; @objects. opts: <code>namespace</code>, <code>label_selector</code>, <code>field_selector</code>, <code>limit</code>, <code>all_namespaces</code></td></tr>
+            <tr><td>K8s::get_one $kind, $name, %opts</td><td>&rarr; \%doc | undef</td></tr>
+            <tr><td>K8s::get_yaml $kind, $name, %opts</td><td>&rarr; $yaml &mdash; one resource as a YAML manifest string</td></tr>
+            <tr><td>K8s::exists $kind, $name, %opts</td><td>&rarr; 1 | 0 &mdash; presence probe, no object body fetched</td></tr>
+            <tr><td>K8s::namespaces %opts</td><td>&rarr; @{ {name, status, labels} }</td></tr>
+            <tr><td>K8s::nodes %opts</td><td>&rarr; @{ {name, ready, schedulable, roles, version} } &mdash; <code>kubectl get nodes</code> columns</td></tr>
+            <tr><td>K8s::api_resources %opts</td><td>&rarr; @{ {group, version, kind, plural, namespaced, verbs} }</td></tr>
+            <tr><td>K8s::watch $kind, %opts</td><td>&rarr; $count &mdash; <em>deferred; dies</em></td></tr>
+          </tbody>
+        </table>
+        <p>Events for one resource are reachable as <code>K8s::get "events", field_selector =&gt; "involvedObject.name=$name"</code>.</p>
+
+        <h3>Write paths</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / opts</th></tr></thead>
+          <tbody>
+            <tr><td>K8s::apply \%doc, %opts</td><td>&rarr; \%applied &mdash; server-side apply; namespace from <code>doc.metadata</code></td></tr>
+            <tr><td>K8s::create \%doc, %opts</td><td>&rarr; \%created</td></tr>
+            <tr><td>K8s::replace \%doc, %opts</td><td>&rarr; \%replaced (resource must already exist)</td></tr>
+            <tr><td>K8s::patch $kind, $name, \%patch, %opts</td><td>&rarr; \%patched. opts: <code>type</code> (merge|strategic, default merge), <code>namespace</code></td></tr>
+            <tr><td>K8s::delete_resource $kind, $name, %opts</td><td>&rarr; \%result. opts: <code>namespace</code></td></tr>
+            <tr><td>K8s::delete_collection $kind, %opts</td><td>&rarr; { deleted, pending }. opts: <code>label_selector</code>, <code>field_selector</code>, <code>namespace</code></td></tr>
+            <tr><td>K8s::scale $kind, $name, $replicas, %opts</td><td>&rarr; \%scale</td></tr>
+            <tr><td>K8s::get_scale $name, %opts</td><td>&rarr; { name, replicas, current_replicas, selector } &mdash; reads /scale. opts: <code>kind</code> (default Deployment), <code>namespace</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Rollouts + workload ops</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / opts</th></tr></thead>
+          <tbody>
+            <tr><td>K8s::set_image $name, $container, $image, %opts</td><td>&rarr; \%obj. opts: <code>kind</code>, <code>namespace</code></td></tr>
+            <tr><td>K8s::rollout_restart $name, %opts</td><td>&rarr; \%obj. opts: <code>kind</code> (default Deployment), <code>namespace</code></td></tr>
+            <tr><td>K8s::rollout_status $name, %opts</td><td>&rarr; \%status &mdash; replicas / readyReplicas / conditions</td></tr>
+            <tr><td>K8s::rollout_history $name, %opts</td><td>&rarr; @revisions &mdash; owned ReplicaSets, newest first</td></tr>
+            <tr><td>K8s::autoscale $target_name, $max, %opts</td><td>&rarr; \%hpa &mdash; create HPA. opts: <code>min</code>, <code>cpu_percent</code>, <code>target_kind</code></td></tr>
+            <tr><td>K8s::label $kind, $name, \%labels, %opts</td><td>&rarr; \%obj &mdash; merge-patch labels; <code>key =&gt; undef</code> removes</td></tr>
+            <tr><td>K8s::annotate $kind, $name, \%annotations, %opts</td><td>&rarr; \%obj</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Nodes + scheduling + eviction</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / opts</th></tr></thead>
+          <tbody>
+            <tr><td>K8s::cordon $name, %opts</td><td>&rarr; \%node &mdash; <code>spec.unschedulable = true</code></td></tr>
+            <tr><td>K8s::uncordon $name, %opts</td><td>&rarr; \%node &mdash; <code>spec.unschedulable = false</code></td></tr>
+            <tr><td>K8s::taint $node, $key, %opts</td><td>&rarr; \%node. opts: <code>value</code>, <code>effect</code> (default NoSchedule)</td></tr>
+            <tr><td>K8s::untaint $node, $key, %opts</td><td>&rarr; \%node &mdash; remove taint by key</td></tr>
+            <tr><td>K8s::evict $name, %opts</td><td>&rarr; \%result &mdash; graceful pod eviction; namespace required</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Events + metrics + wait</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / opts</th></tr></thead>
+          <tbody>
+            <tr><td>K8s::events %opts</td><td>&rarr; @events. opts: <code>namespace</code>, <code>name</code> (one object), <code>limit</code></td></tr>
+            <tr><td>K8s::top_pods %opts</td><td>&rarr; @podmetrics &mdash; metrics.k8s.io; needs metrics-server</td></tr>
+            <tr><td>K8s::top_nodes %opts</td><td>&rarr; @nodemetrics</td></tr>
+            <tr><td>K8s::wait $kind, $name, %opts</td><td>&rarr; \%ok. opts: <code>condition</code> (default Ready, or "delete"), <code>timeout</code> (s, default 300), <code>namespace</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Logs + exec</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / opts</th></tr></thead>
+          <tbody>
+            <tr><td>K8s::logs $pod, %opts</td><td>&rarr; $text. opts: <code>namespace</code> (required), <code>container</code>, <code>tail</code></td></tr>
+            <tr><td>K8s::logs_follow $pod, %opts</td><td>&rarr; $count &mdash; <em>deferred; dies</em></td></tr>
+            <tr><td>K8s::exec $pod, \@cmd, %opts</td><td>&rarr; $count &mdash; <em>deferred; dies</em></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Connection + plumbing</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / opts</th></tr></thead>
+          <tbody>
+            <tr><td>K8s::version %opts</td><td>&rarr; \%info &mdash; gitVersion, platform, etc.</td></tr>
+            <tr><td>K8s::ping %opts</td><td>&rarr; 1 | ""</td></tr>
+            <tr><td>K8s::contexts %opts</td><td>&rarr; @{ {name, cluster, user, namespace, current} }</td></tr>
+            <tr><td>K8s::current_context %opts</td><td>&rarr; $name</td></tr>
+            <tr><td>K8s::healthz %opts</td><td>&rarr; { ok, path, body } &mdash; probe /livez|/readyz|/healthz. opts: <code>path</code> (default readyz); ok=false (not die) on failure</td></tr>
+            <tr><td>K8s::raw $path, %opts</td><td>&rarr; { path, method, status, body, json } &mdash; raw GET|DELETE against any apiserver path. opts: <code>method</code> (default GET)</td></tr>
+            <tr><td>K8s::pkg_version()</td><td>&rarr; $version_string &mdash; the cdylib's CARGO_PKG_VERSION</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Pure helpers (no cluster contact)</h3>
+        <p>These compute locally. Validation and quantity math mirror apimachinery rules; selector and reference helpers come in parse/build inverse pairs.</p>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / behavior</th></tr></thead>
+          <tbody>
+            <tr><td>K8s::valid_name $name, %opts</td><td>&rarr; { name, mode, valid, reason }. opts: <code>mode =&gt; subdomain|label</code></td></tr>
+            <tr><td>K8s::valid_label_value $value</td><td>&rarr; { value, valid, reason } &mdash; empty ok, &le;63, alnum start/end, -_. + uppercase</td></tr>
+            <tr><td>K8s::valid_label_key $key</td><td>&rarr; { key, prefix, name, valid, reason } &mdash; IsQualifiedName: optional DNS-subdomain prefix + / + &le;63 name</td></tr>
+            <tr><td>K8s::parse_selector $selector</td><td>&rarr; @{ {key, op, value?, values?} } &mdash; =, ==, !=, in, notin, exists</td></tr>
+            <tr><td>K8s::build_selector $reqs</td><td>&rarr; $selector &mdash; inverse of parse_selector</td></tr>
+            <tr><td>K8s::parse_field_selector $selector</td><td>&rarr; @{ {field, operator, value} } &mdash; =, ==, != only; == normalizes to =</td></tr>
+            <tr><td>K8s::build_field_selector $reqs</td><td>&rarr; $selector &mdash; inverse of parse_field_selector</td></tr>
+            <tr><td>K8s::selector_matches \%labels, $selector</td><td>&rarr; bool &mdash; AND semantics; absent key matches NotIn/NotEqual</td></tr>
+            <tr><td>K8s::field_selector_matches \%fields, $selector</td><td>&rarr; bool &mdash; =, ==, != only; absent field compares as empty string; ANDed</td></tr>
+            <tr><td>K8s::parse_resource_ref $ref</td><td>&rarr; { kind, name } &mdash; kind/name</td></tr>
+            <tr><td>K8s::build_resource_ref $kind, $name?</td><td>&rarr; { ref, kind, name } &mdash; bare kind when no name</td></tr>
+            <tr><td>K8s::parse_gvk $gvk</td><td>&rarr; { gvk, group, version, kind, core } &mdash; apps/v1/Deployment, v1/Pod, or bare Pod</td></tr>
+            <tr><td>K8s::build_gvk $kind, $version?, $group?</td><td>&rarr; { gvk, group, version, kind, core } &mdash; a group requires a version</td></tr>
+            <tr><td>K8s::parse_api_version $apiVersion</td><td>&rarr; { api_version, group, version, core } &mdash; v1 &rarr; core; apps/v1 &rarr; group=apps</td></tr>
+            <tr><td>K8s::build_api_version $group, $version</td><td>&rarr; { api_version, group, version, core } &mdash; ("","v1")&rarr;v1; ("apps","v1")&rarr;apps/v1</td></tr>
+            <tr><td>K8s::parse_image_ref $image</td><td>&rarr; { image, registry, repository, tag, digest } &mdash; registry only when host-like</td></tr>
+            <tr><td>K8s::build_image_ref $repo, %opts</td><td>&rarr; { image, registry, repository, tag, digest }. opts: <code>registry</code>, <code>tag</code>, <code>digest</code></td></tr>
+            <tr><td>K8s::parse_quantity $qty</td><td>&rarr; { quantity, number, suffix, value } &mdash; 100Mi&rarr;bytes, 500m&rarr;0.5 cores</td></tr>
+            <tr><td>K8s::format_quantity $value, $suffix?</td><td>&rarr; { quantity, number, suffix, value } &mdash; bytes&rarr;100Mi; inverse of parse_quantity</td></tr>
+            <tr><td>K8s::normalize_quantity $qty</td><td>&rarr; { input, quantity, value } &mdash; 1024Mi&rarr;1Gi, 0.5&rarr;500m, 1500m&rarr;1.5</td></tr>
+            <tr><td>K8s::compare_quantity $a, $b</td><td>&rarr; { a, b, a_value, b_value, cmp } &mdash; cmp -1/0/1 across units</td></tr>
+            <tr><td>K8s::sum_quantities @quantities</td><td>&rarr; { count, value, quantity } &mdash; 100Mi+256Mi+128Mi&rarr;484Mi</td></tr>
+            <tr><td>K8s::sub_quantity $a, $b, $suffix?</td><td>&rarr; { quantity, number, suffix, value, negative } &mdash; 8Gi-2Gi&rarr;6Gi; negative reported, not clamped</td></tr>
+            <tr><td>K8s::scale_quantity $quantity, $factor, $suffix?</td><td>&rarr; { quantity, number, suffix, value, factor } &mdash; 256Mi&times;3&rarr;768Mi, keeps the unit</td></tr>
+            <tr><td>K8s::resource_ratio $used, $total</td><td>&rarr; { used, total, used_value, total_value, ratio, percent } &mdash; 512Mi of 1Gi &rarr; 50%</td></tr>
+            <tr><td>K8s::pod_status $pod</td><td>&rarr; { phase, ready, ready_containers, total_containers, restarts }</td></tr>
+            <tr><td>K8s::container_images $object</td><td>&rarr; { containers, images } &mdash; init first, dedup; spec.containers or spec.template.spec.containers</td></tr>
+            <tr><td>K8s::condition $object, $type</td><td>&rarr; { type, status, reason, message, found, is_true } &mdash; found=false when absent</td></tr>
+            <tr><td>K8s::age_seconds $object</td><td>&rarr; { timestamp, age_seconds } &mdash; from metadata.creationTimestamp; future clamps to 0</td></tr>
+            <tr><td>K8s::owner_refs $object</td><td>&rarr; { owners, controller } &mdash; metadata.ownerReferences; controller undef if none</td></tr>
+            <tr><td>K8s::diff_merge_patch $from, $to</td><td>&rarr; \%patch &mdash; RFC 7386 merge patch; removed keys &rarr; null</td></tr>
+            <tr><td>K8s::drain_filter @pods</td><td>&rarr; { evictable, skipped } &mdash; skips mirror/DaemonSet/terminated pods</td></tr>
+          </tbody>
+        </table>
+        <p><code>parse_quantity</code> resolves a resource quantity to its base-unit <code>value</code>: binary suffixes (<code>Ki</code>/<code>Mi</code>/<code>Gi</code>/<code>Ti</code>/<code>Pi</code>/<code>Ei</code>) are powers of 1024, decimal suffixes (<code>n</code>/<code>u</code>/<code>m</code>/<code>k</code>/<code>M</code>/<code>G</code>/<code>T</code>/<code>P</code>/<code>E</code>) powers of 1000 &mdash; so <code>100Mi</code> &rarr; <code>104857600</code> bytes and <code>500m</code> &rarr; <code>0.5</code> cores.</p>
+      </section>
+
+      <hr class="section-rule">
+      <section class="tutorial-section">
+        <h2>Selectors + quantity math (examples)</h2>
+        <p>Pure helpers run with no cluster &mdash; safe to use anywhere, including CI without a kubeconfig:</p>
+<pre># label-selector round trip
+val @reqs = K8s::parse_selector("app=web,tier in (db,cache)")
+val $sel  = K8s::build_selector(\@reqs)        # inverse
+
+# does a label map satisfy the selector?
+val $ok = K8s::selector_matches({ app =&gt; "web", tier =&gt; "db" }, "app=web")
+
+# total container memory requests across units
+val $r = K8s::sum_quantities("100Mi", "256Mi", "128Mi")
+p $r-&gt;{quantity}                                # 484Mi
+
+# headroom: allocatable - requested
+val $free = K8s::sub_quantity("8Gi", "2Gi")
+p $free-&gt;{quantity}                             # 6Gi
+
+# utilization across units
+p K8s::resource_ratio("512Mi", "1Gi")-&gt;{percent}   # 50
+
+# readiness summary from a Pod object
+val $st = K8s::pod_status($pod)
+p "$st-&gt;{ready_containers}/$st-&gt;{total_containers}"</pre>
+      </section>
+
+      <hr class="section-rule">
+      <section class="tutorial-section">
+        <h2>Deferred streaming ops</h2>
+        <p><code>K8s::watch</code>, <code>K8s::logs_follow</code>, and <code>K8s::exec</code> are deferred in the current cdylib &mdash; they <code>die</code> with a clear message until the callback FFI ships. Streaming-only ops need a callback FFI shape that the v1 <code>FfiSig::StrToStr</code> envelope does not model. Buffered logs (<code>K8s::logs</code>) work today.</p>
+      </section>
+
+      <hr class="section-rule">
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>Built on the <code>kube</code> crate (kube-client + kube-runtime) with <code>k8s-openapi</code> typed APIs. Drop-in replacement for kubectl one-liners that pipe through jq / yq / awk.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>k8s__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_k8s.{dylib,so}</code>, dlopened in-process on first <code>use K8s</code>. Core stryke is never linked against this package's deps, so the daily-driver install stays slim.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>K8s::*</code> wrapper builds a JSON args dict and calls a sibling <code>k8s__*</code> symbol resolved out of <code>libstryke_k8s.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use K8s</code> (via stryke's <code>pkg::commands::try_load_ffi_for</code> resolver hook); a shared tokio <code>RUNTIME</code> + a <code>kube::Client</code> cache keyed by kubeconfig context is held in <code>OnceCell</code> &mdash; no fork-per-call, no fresh TLS+auth handshake each time. Responses are JSON; errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with the message.</p>
+        <p>The exports cover version/discovery, get/list (get / get_one / get_yaml / exists / nodes), write paths (create / replace / apply / delete / delete_collection / scale / get_scale / patch), rollouts (set_image / rollout_restart / rollout_status / rollout_history / autoscale / label / annotate), node scheduling (cordon / uncordon / taint / untaint / evict), events, metrics (top_pods / top_nodes), wait, snapshot logs, raw HTTP (raw / healthz), plus the cluster-free helper set. The authoritative list is <code>[ffi].exports</code> in <code>stryke.toml</code> &mdash; 70 symbols.</p>
+        <p><strong>Persistent state:</strong> <code>RUNTIME</code> is one shared tokio multi-thread runtime driving every async call; <code>CLIENTS</code> is the <code>kube::Client</code> cache keyed by kubeconfig context, reusing the same client + underlying HTTP pool across calls rather than rebuilding the TLS+auth handshake each time.</p>
+      </section>
+
+      <hr class="section-rule">
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+<pre>cargo test                                   # compiles, no live cluster
+KUBECONFIG=~/.kube/config s test t/          # live round-trip</pre>
+        <p>Tests use a unique <code>stryke-test-$$</code> namespace and tear it down at exit. A local test cluster works fine:</p>
+<pre># kind
+kind create cluster --name stryke
+
+# or k3s in docker
+docker run --rm --name k3s -p 6443:6443 \
+    -v $PWD/k3s-data:/output rancher/k3s:latest \
+    server --disable=traefik --tls-san=127.0.0.1</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Dev workflow</h2>
+<pre>make             # release build
+make debug
+make test
+make install
+make clean</pre>
+      </section>
+
+      <hr class="section-rule">
+      <section class="tutorial-section">
+        <h2>Roadmap</h2>
+        <table class="api-tbl">
+          <thead><tr><th>Today (helper era)</th><th>Future</th></tr></thead>
+          <tbody>
+            <tr><td>Generic dynamic resources via discovery</td><td>Typed wrappers for top-N kinds (zero-alloc Pod/Deployment/Service)</td></tr>
+            <tr><td>Server-side apply</td><td><code>kubectl diff</code> equivalent (dry-run + server-side three-way)</td></tr>
+            <tr><td>Logs (buffered)</td><td>Streaming logs (<code>--follow</code>) once callback FFI ships</td></tr>
+            <tr><td>Exec / watch surface defined (deferred)</td><td>Stdin attach + interactive TTY; informer-style cache with resync</td></tr>
+            <tr><td>kubeconfig + in-cluster SA</td><td>OIDC / EKS-token / GKE-gcloud exec plugins parity; port-forward (TCP tunnel)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-k8s/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — k8s__* extern "C" exports
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use K8s`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest ([ffi] exports table)
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

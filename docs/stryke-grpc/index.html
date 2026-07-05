@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-grpc — REFLECTION-BASED gRPC CLIENT FOR STRYKE // LIKE grpcurl, AS A PACKAGE. Generic, reflection-based gRPC client for stryke — list services, describe methods, call unary and streaming RPCs with JSON in/out. Like grpcurl but as a stryke package. Ships as a Rust cdylib that stryke dlopens in-process on first `use Grpc`.">
+  <title>stryke-grpc — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-GRPC &mdash; REFLECTION-BASED gRPC CLIENT FOR STRYKE // LIKE grpcurl, AS A PACKAGE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_grpc.{dylib,so}</code> · dlopen'd in-process on <code>use Grpc</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-grpc/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-GRPC</h2>
+      <p class="tutorial-subtitle"><strong>Describe, call, decode.</strong> Generic, reflection-based gRPC client for stryke &mdash; list services, describe methods, call unary and streaming RPCs with JSON in/out. Like <a href="https://github.com/fullstorydev/grpcurl">grpcurl</a> but as a stryke package: it ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Grpc</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-grpc
+
+# from a local checkout
+cd ~/projects/stryke-grpc
+cargo build --release            # produces target/release/libstryke_grpc.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/grpc@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use Grpc</code> &mdash; no helper-binary fork per call. A shared tokio runtime + <code>tonic::Channel</code> cache per endpoint + <code>DescriptorPool</code> cache per (endpoint, symbol) are held in <code>OnceCell</code>, so back-to-back calls reuse the same multiplexed HTTP/2 connection. Any stryke script that declares <code>use Grpc</code> resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use Grpc</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>list services</td><td><code>my @services = Grpc::list target =&gt; "localhost:50051", plaintext =&gt; 1</code></td></tr>
+            <tr><td>describe a service</td><td><code>p to_json Grpc::describe "helloworld.Greeter", target =&gt; "localhost:50051", plaintext =&gt; 1</code></td></tr>
+            <tr><td>describe a method</td><td><code>p to_json Grpc::describe "helloworld.Greeter/SayHello", target =&gt; "localhost:50051", plaintext =&gt; 1</code></td></tr>
+            <tr><td>unary call</td><td><code>my $reply = Grpc::call "helloworld.Greeter/SayHello", { name =&gt; "stryke" }, target =&gt; "localhost:50051", plaintext =&gt; 1</code></td></tr>
+            <tr><td>auth headers / metadata</td><td><code>Grpc::call "myapi.v1.Service/Auth", { token =&gt; "x" }, target =&gt; "api.example.com:443", headers =&gt; { "authorization" =&gt; "Bearer $ENV{JWT}" }</code></td></tr>
+            <tr><td>liveness probe</td><td><code>Grpc::ping target =&gt; "localhost:50051", plaintext =&gt; 1</code></td></tr>
+          </tbody>
+        </table>
+        <p>The full API lives in the <a href="https://github.com/MenkeTechnologies/stryke-grpc#0x04-api-reference">README "API reference" section</a>, and is mirrored below.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connection options</h2>
+        <p>Every public function accepts these connection keys in its <code>%opts</code> trailer. <code>target</code> is required; the rest are optional.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>target</code></td><td><code>host:port</code> (required) &mdash; also accepts <code>http://...</code> / <code>https://...</code></td></tr>
+            <tr><td><code>plaintext</code></td><td><code>1</code> to force HTTP/2 cleartext (no TLS)</td></tr>
+            <tr><td><code>authority</code></td><td>override the SNI hostname used during TLS validation</td></tr>
+            <tr><td><code>headers</code></td><td>hashref <code>{k =&gt; v}</code> or arrayref <code>["k:v", ...]</code> &mdash; sent as gRPC metadata</td></tr>
+            <tr><td><code>timeout_s</code></td><td>connection timeout, seconds (default 30)</td></tr>
+          </tbody>
+        </table>
+        <p>RPC calls (<code>call</code> and the three stream verbs) understand additional per-call keys: <code>deadline_ms</code> (per-call <code>grpc-timeout</code>), <code>send_compression</code> / <code>accept_compression</code> (<code>gzip</code> | <code>zstd</code> | <code>deflate</code>), <code>max_recv_mb</code> / <code>max_send_mb</code> (message-size caps), <code>ca_cert</code> (custom CA root, PEM), <code>client_cert</code> + <code>client_key</code> (mTLS identity, PEM), <code>with_metadata =&gt; 1</code> (wrap the result as <code>{ response, metadata }</code>), the JSON-shaping flags <code>emit_defaults</code> / <code>proto_names</code> / <code>enum_numbers</code> / <code>stringify_64bit</code>, and <code>max_messages</code> (cap a server / bidi stream drain).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: RPC verbs</h2>
+        <p>Eight functions open a channel. <code>describe</code>'s <code>$symbol</code> is one of <code>"pkg.Service"</code> (service + method list), <code>"pkg.Service/Method"</code> (method + input fields), or <code>"pkg.MessageType"</code> (message + field list). <code>call</code>'s <code>$request</code> is any stryke value the cdylib decodes against the method's resolved input <code>MessageDescriptor</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Grpc::version()</code></td><td>cdylib's <code>CARGO_PKG_VERSION</code> string</td></tr>
+            <tr><td><code>Grpc::ping(%opts)</code></td><td>connectivity probe &mdash; <code>1</code> on success, <code>0</code> on failure</td></tr>
+            <tr><td><code>Grpc::list(%opts)</code></td><td><code>@services</code> &mdash; <code>[{ service =&gt; "pkg.Name" }, ...]</code></td></tr>
+            <tr><td><code>Grpc::describe($symbol, %opts)</code></td><td><code>\%info</code> &mdash; kind + fields for a service / method / message</td></tr>
+            <tr><td><code>Grpc::call($method, $request, %opts)</code></td><td>unary &mdash; decoded <code>\%response</code> (or scalar / arrayref)</td></tr>
+            <tr><td><code>Grpc::server_stream($method, $request, %opts)</code></td><td><code>\%{ messages, count }</code> &mdash; response stream drained into an array</td></tr>
+            <tr><td><code>Grpc::client_stream($method, \@requests, %opts)</code></td><td><code>\%response</code> &mdash; arrayref of requests streamed, single reply</td></tr>
+            <tr><td><code>Grpc::bidi_stream($method, \@requests, %opts)</code></td><td><code>\%{ messages, count }</code> &mdash; arrayref in, replies drained out</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Streaming.</strong> Bounded streams are modelled as JSON arrays, so they fit the blocking FFI with no callback bridge: <code>server_stream</code> drains the response stream into <code>messages</code>; <code>client_stream</code> sends an arrayref of requests and returns the single reply; <code>bidi_stream</code> sends an arrayref and drains the replies. <code>max_messages</code> caps a drain; <code>with_metadata =&gt; 1</code> wraps the result with captured response metadata. <code>client_stream</code> and <code>bidi_stream</code> <code>die</code> if <code>$requests</code> is not an arrayref.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference: wire helpers</h2>
+        <p>38 connection-free functions parse, build, and validate gRPC HTTP/2 primitives &mdash; no socket is opened. Every <code>parse_*</code> has a matching <code>build_*</code> inverse.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Grpc::status_code($name_or_code)</code></td><td><code>{ code, name }</code> &mdash; <code>"NOT_FOUND"</code> &harr; <code>5</code> (codes from tonic)</td></tr>
+            <tr><td><code>Grpc::status_description($name_or_code)</code></td><td><code>{ code, name, description }</code> &mdash; canonical one-line description</td></tr>
+            <tr><td><code>Grpc::status_codes()</code></td><td><code>@{ {code, name} }</code> &mdash; the full 17-code enum, numeric order</td></tr>
+            <tr><td><code>Grpc::parse_grpc_status($code)</code></td><td><code>{ code, name, valid }</code> &mdash; out-of-range stays <code>valid =&gt; 0</code> (no die)</td></tr>
+            <tr><td><code>Grpc::build_grpc_trailer($n_or_c, $message?)</code></td><td><code>{ code, name, grpc_status, grpc_message }</code> &mdash; trailer pair, message percent-encoded</td></tr>
+            <tr><td><code>Grpc::http_status_for($n_or_c)</code></td><td><code>{ code, name, http_status }</code> &mdash; gRPC &rarr; HTTP (grpc-gateway map)</td></tr>
+            <tr><td><code>Grpc::grpc_status_for_http($http)</code></td><td><code>{ http_status, code, name }</code> &mdash; HTTP &rarr; gRPC (spec table, distinct)</td></tr>
+            <tr><td><code>Grpc::retriable_status($n_or_c)</code></td><td><code>{ code, name, retriable, transient }</code> &mdash; gRPC retry design A6 set</td></tr>
+            <tr><td><code>Grpc::health_status($n_or_c)</code></td><td><code>{ status, name }</code> &mdash; <code>grpc.health.v1.Health</code> serving status</td></tr>
+            <tr><td><code>Grpc::encode_status_message($message)</code></td><td>percent-encode for the <code>grpc-message</code> trailer (space NOT encoded)</td></tr>
+            <tr><td><code>Grpc::decode_status_message($encoded)</code></td><td>inverse &mdash; <code>%XX</code> &rarr; byte, UTF-8 lossy</td></tr>
+            <tr><td><code>Grpc::parse_method($method)</code></td><td><code>{ full_service, package, service, method }</code> from <code>/pkg.Service/Method</code></td></tr>
+            <tr><td><code>Grpc::build_method(%opts)</code></td><td>inverse &mdash; parts &rarr; <code>/pkg.Service/Method</code></td></tr>
+            <tr><td><code>Grpc::split_full_method($method)</code></td><td>permissive split &mdash; accepts slash OR dotted <code>pkg.Service.Method</code></td></tr>
+            <tr><td><code>Grpc::parse_target($target)</code></td><td>gRPC channel target URI &mdash; dns / unix / unix-abstract / ipv4 / ipv6</td></tr>
+            <tr><td><code>Grpc::build_target(%opts)</code></td><td>inverse &mdash; <code>{scheme, endpoint, authority, addresses}</code> &rarr; target string</td></tr>
+            <tr><td><code>Grpc::parse_authority($authority)</code></td><td><code>{ authority, host, port }</code> from HTTP/2 <code>:authority</code> (bracketed IPv6)</td></tr>
+            <tr><td><code>Grpc::build_authority(%opts)</code></td><td>inverse &mdash; <code>host[+port]</code> &rarr; <code>host:port</code> (IPv6 literal bracketed)</td></tr>
+            <tr><td><code>Grpc::is_binary_key($key)</code></td><td><code>1 | ""</code> &mdash; the <code>-bin</code> metadata suffix convention</td></tr>
+            <tr><td><code>Grpc::is_reserved_key($key)</code></td><td><code>{ key, reserved, reason }</code> &mdash; pseudo / content-type / te / user-agent / <code>grpc-</code></td></tr>
+            <tr><td><code>Grpc::is_pseudo_header($key)</code></td><td><code>{ key, pseudo, known }</code> &mdash; leading <code>:</code> HTTP/2 pseudo-header</td></tr>
+            <tr><td><code>Grpc::valid_metadata_key($key)</code></td><td><code>{ key, valid, reason, binary }</code> &mdash; Custom-Metadata grammar</td></tr>
+            <tr><td><code>Grpc::normalize_metadata_key($key)</code></td><td><code>{ key, normalized, changed, binary }</code> &mdash; lowercase wire form</td></tr>
+            <tr><td><code>Grpc::valid_metadata_value($key, $value)</code></td><td><code>{ key, value, binary, valid, reason }</code> &mdash; rule by key (-bin &rarr; base64)</td></tr>
+            <tr><td><code>Grpc::encode_bin_value($value)</code></td><td>base64-encode bytes for a <code>-bin</code> key</td></tr>
+            <tr><td><code>Grpc::decode_bin_value($base64)</code></td><td>inverse &mdash; padded / un-padded base64, UTF-8 lossy</td></tr>
+            <tr><td><code>Grpc::parse_content_type($ct)</code></td><td><code>{ content_type, valid, type, codec, default, reason }</code> &mdash; rejects grpc-web</td></tr>
+            <tr><td><code>Grpc::build_content_type(%opts)</code></td><td>inverse &mdash; <code>{codec, default}</code> &rarr; <code>application/grpc[+codec]</code></td></tr>
+            <tr><td><code>Grpc::parse_timeout($timeout)</code></td><td><code>{ value, unit, unit_name, nanos, seconds }</code> &mdash; units H/M/S/m/u/n (case-sensitive)</td></tr>
+            <tr><td><code>Grpc::build_timeout($nanos)</code></td><td>inverse &mdash; finest unit &le; 8 digits, rounds up; <code>0 &rarr; "0n"</code></td></tr>
+            <tr><td><code>Grpc::parse_user_agent($ua)</code></td><td><code>{ user_agent, grpc_impl, grpc_version, custom }</code></td></tr>
+            <tr><td><code>Grpc::build_user_agent(%opts)</code></td><td>inverse &mdash; <code>impl[/version]</code> + optional custom prefix</td></tr>
+            <tr><td><code>Grpc::compression_codecs()</code></td><td><code>@codecs</code> &mdash; <code>identity</code>, <code>gzip</code>, <code>deflate</code>, <code>zstd</code></td></tr>
+            <tr><td><code>Grpc::valid_compression($enc)</code></td><td><code>{ encoding, valid, identity, supported }</code> &mdash; identity always valid</td></tr>
+            <tr><td><code>Grpc::parse_accept_encoding($h)</code></td><td><code>{ header, encodings, unknown, valid }</code> &mdash; order kept, unknowns flagged</td></tr>
+            <tr><td><code>Grpc::build_accept_encoding(\@codecs)</code></td><td>inverse &mdash; validate + lowercase + de-dup; unsupported codec dies</td></tr>
+            <tr><td><code>Grpc::frame_message($payload, %opts)</code></td><td><code>{ frame, length, compressed }</code> &mdash; LPM framing: flag + BE length + bytes (base64)</td></tr>
+            <tr><td><code>Grpc::unframe_message($frame)</code></td><td>inverse &mdash; parse a base64 LPM frame, validate the length prefix</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>How reflection works</h2>
+        <p>No <code>.proto</code> files live on the client &mdash; the descriptor graph is fetched at call time. On each <code>list</code> / <code>describe</code> / <code>call</code>, the cdylib (<code>src/reflection.rs</code>):</p>
+        <ol>
+          <li>Opens a bidi stream to <code>grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo</code>.</li>
+          <li>Sends <code>ListServices</code> (for <code>list</code>) or <code>FileContainingSymbol</code> (for the requested symbol).</li>
+          <li>Follows import chains via <code>FileByFilename</code> until the full <code>FileDescriptorProto</code> graph is loaded.</li>
+          <li>Builds a <code>prost-reflect</code> <code>DescriptorPool</code>, looks up the method, decodes the JSON request into a <code>DynamicMessage</code>, encodes it, fires the call via tonic's low-level <code>Grpc::unary</code> + a passthrough <code>BytesCodec</code>, then decodes the response back to JSON.</li>
+        </ol>
+        <p>The reflection client is generated at build time by <code>build.rs</code> (<code>tonic-prost-build</code> compiling <code>proto/reflection.proto</code>, client-only). If a server hides reflection in production, enable it on a dev / canary box &mdash; one builder line for tonic, similar for grpc-go / grpc-java.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Runnable scripts ship under <code>examples/</code>; each takes the target as <code>@ARGV</code>.</p>
+<pre># list services via reflection
+s examples/list_services.stk localhost:50051 --plaintext
+
+# show a service's methods + input fields
+s examples/describe_service.stk localhost:50051 helloworld.Greeter
+
+# unary call with a JSON payload
+s examples/call_unary.stk localhost:50051 helloworld.Greeter/SayHello '{"name":"stryke"}'
+
+# minimum-viable tour (eval-guarded — runs even with no server)
+GRPC_HOST=localhost:50051 s examples/discover.stk
+
+# enumerate every service + method
+GRPC_HOST=localhost:50051 s examples/reflect.stk</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Scope</h2>
+        <p>The package is intentionally narrower than tonic itself &mdash; "useful from a shell pipeline", not "complete API coverage".</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>list / describe / unary call (JSON in/out)</td><td>shipped</td></tr>
+            <tr><td>server-, client-, and bidi-streaming (bounded &rarr; JSON arrays)</td><td>shipped</td></tr>
+            <tr><td>TLS + native-roots; mTLS (client cert) + custom CA root</td><td>shipped</td></tr>
+            <tr><td>ASCII + binary (<code>-bin</code>) metadata; per-call deadline (<code>grpc-timeout</code>)</td><td>shipped</td></tr>
+            <tr><td>gzip / zstd / deflate compression; message-size caps; response-metadata capture</td><td>shipped</td></tr>
+            <tr><td>connection-free wire helpers (38 functions)</td><td>shipped</td></tr>
+            <tr><td><code>--proto FILE</code> fallback when reflection is off</td><td>open</td></tr>
+            <tr><td>unbounded / callback-style streaming for infinite streams</td><td>open</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+        <p>The compile + surface tests run without a server; the live round-trip is opt-in via env vars.</p>
+<pre>cargo test                                          # compiles, no live calls
+STRYKE_GRPC_TEST_TARGET=localhost:50051 \
+STRYKE_GRPC_TEST_PLAINTEXT=1 \
+s test t/                                           # live round-trip</pre>
+        <p>Opt-in env vars: <code>STRYKE_GRPC_TEST_TARGET</code> (<code>host:port</code>, required for the live suite), <code>STRYKE_GRPC_TEST_PLAINTEXT</code> (truthy &rarr; <code>--plaintext</code>), <code>STRYKE_GRPC_TEST_METHOD</code> (<code>pkg.Service/Method</code> for the optional call test), <code>STRYKE_GRPC_TEST_DATA</code> (JSON payload, default <code>{}</code>). CI brings up a tonic-based reflection-enabled echo server and exercises list / describe / call against it.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>Reflection-driven means no <code>.proto</code> files needed on the client side. Targets that expose the gRPC reflection service work out of the box. Every gRPC client pulls in tonic + prost + tokio + hyper + rustls + a file-descriptor reflection stack (~30+ transitive crates) &mdash; useful when you need it, off the daily-driver path otherwise.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>grpc__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_grpc.{dylib,so}</code>, dlopened in-process on first <code>use Grpc</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>Grpc::*</code> wrapper builds a JSON args dict and calls a sibling <code>grpc__*</code> symbol resolved out of <code>libstryke_grpc.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use Grpc</code>. It exports 46 <code>grpc__*</code> symbols &mdash; 8 RPC verbs (<code>grpc__pkg_version</code>, <code>grpc__ping</code>, <code>grpc__list</code>, <code>grpc__describe</code>, <code>grpc__call</code>, <code>grpc__server_stream</code>, <code>grpc__client_stream</code>, <code>grpc__bidi_stream</code>) plus 38 connection-free wire helpers (<code>grpc__status_code</code>, <code>grpc__status_codes</code>, <code>grpc__parse_method</code>, <code>grpc__parse_target</code>, <code>grpc__valid_metadata_key</code>, <code>grpc__frame_message</code>, &hellip;); the authoritative list is <code>[ffi].exports</code> in <code>stryke.toml</code>. A shared tokio runtime + <code>tonic::Channel</code> cache per endpoint + <code>DescriptorPool</code> cache per (endpoint, symbol) are held in <code>OnceCell</code> &mdash; no fork-per-call. Responses are JSON; errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with <code>Grpc::&lt;op&gt;: &lt;reason&gt;</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-grpc/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — grpc__* extern "C" exports
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use Grpc`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest ([ffi] exports table)
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

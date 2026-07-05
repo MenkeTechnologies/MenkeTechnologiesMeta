@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="emacs-zsh — engineering report. font-lock generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars via regexp-opt), why the small surface uses plain regexp-opt instead of hash tables, lint via zshrs -n, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
+  <title>emacs-zsh — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+    .stat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.65rem 0.85rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .stat-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-val.accent { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 0.2rem; }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12px; }
+    .parity-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// EMACS-ZSH &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/emacs-zsh" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zshrs" target="_blank" rel="noopener noreferrer">zshrs</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Emacs major mode for zshrs &middot; font-lock generated from the binary (137 builtins, 113 extensions, 245 special vars) &middot; lint via zshrs -n &middot; LSP via zshrs --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>emacs-zsh</strong> is the Emacs major mode for <strong>zshrs</strong> &mdash; the first-ever Rust rewrite of the zsh shell. <code>zshrs-mode</code> derives from <code>prog-mode</code> and provides font-lock, a syntax table, shell-block-aware indentation, filetype detection, a buffer linter (<code>zshrs -n</code>), and an LSP client that launches <code>zshrs --lsp</code>. It does not clobber the built-in <code>sh-mode</code>.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is generated, not hand-picked. <code>scripts/gen-stdlib.sh</code> dumps <code>.builtins</code>, <code>.extensions</code>, and <code>.special_vars</code> from <code>zshrs --dump-reflection</code> and writes <code>zshrs-stdlib.el</code> &mdash; 137 builtins, 113 zshrs extensions, 245 special vars. Regenerate after a zshrs upgrade and it stays in sync.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">137</div><div class="stat-label">Builtins font-locked</div></div>
+        <div class="stat-card"><div class="stat-val accent">113</div><div class="stat-label">zshrs extensions</div></div>
+        <div class="stat-card"><div class="stat-val">245</div><div class="stat-label">Special variables</div></div>
+        <div class="stat-card"><div class="stat-val">34</div><div class="stat-label">Control + decl keywords</div></div>
+        <div class="stat-card"><div class="stat-val green">2</div><div class="stat-label">LSP clients (eglot + lsp-mode)</div></div>
+        <div class="stat-card"><div class="stat-val accent">2</div><div class="stat-label">Detection paths (ext + shebang)</div></div>
+        <div class="stat-card"><div class="stat-val">10</div><div class="stat-label">Face assertions</div></div>
+        <div class="stat-card"><div class="stat-val">27.1</div><div class="stat-label">Min Emacs version</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>WHY PLAIN REGEXP-OPT, NOT HASH TABLES</h2>
+      <p class="tutorial-subtitle">emacs-stryke stores its 10,450 builtins as <strong>hash tables</strong> because a single <code>(regexp-opt names 'symbols)</code> over that many names overflows Emacs' regexp compiler (<code>invalid-regexp "Regular expression too big"</code>). zshrs is different: the surface is <strong>small</strong> &mdash; 137 builtins, 113 extensions, 245 special vars. Each category fits comfortably under the limit, so the generator emits one precomputed <code>regexp-opt</code> alternation per category (<code>zshrs-builtins-regexp</code>, <code>zshrs-extensions-regexp</code>, <code>zshrs-special-vars-regexp</code>). The font-lock keyword list references those regexps directly &mdash; no matcher function, no hash lookup. Extensions are listed before builtins so the zshrs-specific names win their own bold <code>zshrs-extension-face</code>; the categories are disjoint by construction (builtins exclude keyword + extension names).</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td><code>zshrs-mode.el</code></td><td>Major mode &mdash; syntax table (<code>#</code> comments, string quotes, sigils as punctuation), font-lock keyword list, <code>zshrs-indent-line</code>, <code>zshrs-lint-buffer</code>, eglot + lsp-mode registration, <code>auto-mode-alist</code> + <code>interpreter-mode-alist</code>.</td></tr>
+          <tr><td><code>zshrs-stdlib.el</code></td><td>Generated data &mdash; three <code>regexp-opt</code> alternations. Byte-compiles cleanly; loads instantly.</td></tr>
+          <tr><td><code>scripts/gen-stdlib.sh</code> + <code>gen-stdlib.el</code></td><td>Dump <code>.builtins</code> / <code>.extensions</code> / <code>.special_vars</code> from the binary; build the regexps entirely inside Emacs (no shell escaping touches the data).</td></tr>
+          <tr><td><code>scripts/face-test.el</code></td><td>Fontify a sample buffer and assert the face at each probe token.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">CI byte-compiles the package with <code>byte-compile-error-on-warn</code> (warnings are errors) and runs the batch face test. Each probe asserts the actual <code>face</code> text-property after <code>font-lock-ensure</code>.</p>
+      <table class="parity-table">
+        <thead><tr><th>Sample token</th><th>Asserted face</th></tr></thead>
+        <tbody>
+          <tr><td><code>typeset</code> / <code>for</code> / <code>do</code> / <code>done</code> / <code>local</code></td><td class="ok">font-lock-keyword-face</td></tr>
+          <tr><td><code>bindkey</code> (builtin)</td><td class="ok">font-lock-builtin-face</td></tr>
+          <tr><td><code>base64</code> (zshrs extension)</td><td class="ok">zshrs-extension-face</td></tr>
+          <tr><td><code>$PATH</code> (special var)</td><td class="ok">font-lock-variable-name-face</td></tr>
+          <tr><td>double-quoted string</td><td class="ok">font-lock-string-face</td></tr>
+          <tr><td><code>#</code> comment</td><td class="ok">font-lock-comment-face</td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

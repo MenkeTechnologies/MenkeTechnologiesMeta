@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="elisprs full reference — every special form and builtin subr with its LSP hover doc rendered as a static page.">
+  <title>elisprs — Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 72rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px; color: var(--text-dim);
+      letter-spacing: 0.03em; max-width: 42rem; opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem; position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 72rem; margin: 0 auto;
+      display: flex; align-items: center; gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .chapter-index {
+      list-style: none; padding: 0; margin: 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+      gap: 0.3rem;
+    }
+    .chapter-index li {
+      border: 1px solid var(--border); padding: 0.45rem 0.65rem; border-radius: 2px;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .chapter-index li a {
+      color: var(--cyan); text-decoration: none; font-size: 13px;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+    }
+    .chapter-index li a:hover { color: var(--accent-light); }
+    .chapter-count {
+      font-size: 10px; color: var(--text-muted);
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+    }
+    .chapter-meta {
+      font-size: 11px; color: var(--text-muted); margin: -0.3rem 0 0.8rem;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+    }
+
+    .doc-entry {
+      margin: 1rem 0 1.4rem;
+      padding: 0.75rem 0.9rem 0.5rem;
+      border-left: 2px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg) 94%, transparent);
+      border-radius: 2px;
+    }
+    .doc-entry h3 {
+      margin: 0 0 0.45rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--cyan);
+    }
+    .doc-entry h3 code {
+      color: var(--accent-light); background: transparent; border: none;
+      padding: 0; font-size: 1em; letter-spacing: 0.5px;
+    }
+    .doc-entry .doc-anchor {
+      color: var(--text-muted); font-size: 0.85em; margin-right: 0.25rem;
+      text-decoration: none;
+    }
+    .doc-entry .doc-anchor:hover { color: var(--accent); }
+    .doc-entry h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--accent-light);
+      margin: 0.8rem 0 0.3rem;
+    }
+    .doc-entry p {
+      font-size: 13px; line-height: 1.6; color: var(--text-dim);
+      margin: 0.35rem 0;
+    }
+    .doc-entry p code, .doc-entry li code {
+      color: var(--accent-light); font-size: 12px;
+    }
+    .doc-entry ul { margin: 0.3rem 0 0.5rem; padding-left: 1.25rem; }
+    .doc-entry li { font-size: 13px; color: var(--text-dim); line-height: 1.55; margin: 0.2rem 0; }
+    .doc-entry pre {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.7rem 0.9rem; overflow-x: auto;
+      color: var(--text); margin: 0.5rem 0;
+      box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.35);
+    }
+    .doc-entry pre code { color: var(--text); background: transparent; border: none; padding: 0; }
+    [data-theme="light"] .doc-entry pre { box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05); }
+
+    kbd {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      padding: 1px 6px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 3px;
+      color: var(--cyan);
+    }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+  <header class="tutorial-header">
+    <div class="tutorial-header-inner">
+      <div>
+        <h1 class="tutorial-brand">// ELISPRS — FULL REFERENCE</h1>
+        <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+          <a href="index.html">Docs</a>
+          <span class="sep">/</span>
+          <span class="current">Reference</span>
+          <span class="sep">/</span>
+          <a href="https://github.com/MenkeTechnologies/elisprs" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+        <p class="docs-build-line">elisprs v0.1.1 · 263 builtins &amp; special forms · 10 chapters · generated from <code>elisprs/lsp.rs</code></p>
+      </div>
+      <div class="tutorial-toolbar">
+        <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+        <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+        <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        <a class="btn btn-secondary" href="index.html">Hub</a>
+        <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/elisprs" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="hub-scheme-strip">
+    <div class="hub-scheme-strip-inner">
+      <span class="hud-scheme-label">// Color scheme</span>
+      <div class="scheme-grid" id="hudSchemeGrid"></div>
+    </div>
+  </div>
+
+  <main class="tutorial-main">
+    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>LANGUAGE REFERENCE</h2>
+    <p class="tutorial-subtitle">Every special form and builtin subr with an LSP hover doc — rendered from the exact metadata that <code>elisp --lsp</code> serves on hover and completion. Jump via the chapter index, or <kbd>Ctrl+F</kbd> for a specific name.</p>
+    <section class="tutorial-section">
+      <h2>Chapters</h2>
+      <ul class="chapter-index">
+        <li><a href="#ch-special-forms">Special Forms</a> <span class="chapter-count">18</span></li>
+        <li><a href="#ch-arithmetic-numbers">Arithmetic &amp; Numbers</a> <span class="chapter-count">46</span></li>
+        <li><a href="#ch-predicates-type-tests">Predicates &amp; Type Tests</a> <span class="chapter-count">27</span></li>
+        <li><a href="#ch-cons-lists-sequences">Cons, Lists &amp; Sequences</a> <span class="chapter-count">18</span></li>
+        <li><a href="#ch-symbols-cells-binding">Symbols, Cells &amp; Binding</a> <span class="chapter-count">12</span></li>
+        <li><a href="#ch-strings-characters">Strings &amp; Characters</a> <span class="chapter-count">27</span></li>
+        <li><a href="#ch-i-o-print-format">I/O, Print &amp; Format</a> <span class="chapter-count">11</span></li>
+        <li><a href="#ch-control-functional">Control &amp; Functional</a> <span class="chapter-count">11</span></li>
+        <li><a href="#ch-association-lists-hash-tables">Association Lists &amp; Hash Tables</a> <span class="chapter-count">11</span></li>
+        <li><a href="#ch-other">Other</a> <span class="chapter-count">82</span></li>
+      </ul>
+    </section>
+    <section class="tutorial-section" id="ch-special-forms">
+      <h2>Special Forms</h2>
+      <p class="chapter-meta">18 entries</p>
+      <article class="doc-entry" id="doc-quote">
+        <h3><a class="doc-anchor" href="#doc-quote">#</a> <code>quote</code></h3>
+        <pre><code class="lang-elisp">(quote OBJECT)
+</code></pre>
+        <p>Return OBJECT, unevaluated.</p>
+      </article>
+      <article class="doc-entry" id="doc-function">
+        <h3><a class="doc-anchor" href="#doc-function">#</a> <code>function</code></h3>
+        <pre><code class="lang-elisp">(function OBJECT)
+</code></pre>
+        <p>Like quote, but for functions (<code>#&#39;</code>).</p>
+      </article>
+      <article class="doc-entry" id="doc-lambda">
+        <h3><a class="doc-anchor" href="#doc-lambda">#</a> <code>lambda</code></h3>
+        <pre><code class="lang-elisp">(lambda ARGLIST BODY...)
+</code></pre>
+        <p>An anonymous function.</p>
+      </article>
+      <article class="doc-entry" id="doc-progn">
+        <h3><a class="doc-anchor" href="#doc-progn">#</a> <code>progn</code></h3>
+        <pre><code class="lang-elisp">(progn BODY...)
+</code></pre>
+        <p>Evaluate BODY in order; return the last value.</p>
+      </article>
+      <article class="doc-entry" id="doc-if">
+        <h3><a class="doc-anchor" href="#doc-if">#</a> <code>if</code></h3>
+        <pre><code class="lang-elisp">(if COND THEN ELSE...)
+</code></pre>
+        <p>If COND is non-nil, eval THEN, else the ELSE forms.</p>
+      </article>
+      <article class="doc-entry" id="doc-when">
+        <h3><a class="doc-anchor" href="#doc-when">#</a> <code>when</code></h3>
+        <pre><code class="lang-elisp">(when COND BODY...)
+</code></pre>
+        <p>If COND is non-nil, eval BODY.</p>
+      </article>
+      <article class="doc-entry" id="doc-unless">
+        <h3><a class="doc-anchor" href="#doc-unless">#</a> <code>unless</code></h3>
+        <pre><code class="lang-elisp">(unless COND BODY...)
+</code></pre>
+        <p>If COND is nil, eval BODY.</p>
+      </article>
+      <article class="doc-entry" id="doc-and">
+        <h3><a class="doc-anchor" href="#doc-and">#</a> <code>and</code></h3>
+        <pre><code class="lang-elisp">(and CONDITIONS...)
+</code></pre>
+        <p>Eval forms until one is nil; return the last value.</p>
+      </article>
+      <article class="doc-entry" id="doc-or">
+        <h3><a class="doc-anchor" href="#doc-or">#</a> <code>or</code></h3>
+        <pre><code class="lang-elisp">(or CONDITIONS...)
+</code></pre>
+        <p>Eval forms until one is non-nil; return it.</p>
+      </article>
+      <article class="doc-entry" id="doc-setq">
+        <h3><a class="doc-anchor" href="#doc-setq">#</a> <code>setq</code></h3>
+        <pre><code class="lang-elisp">(setq SYM VAL SYM VAL...)
+</code></pre>
+        <p>Set each SYM&#39;s value cell to VAL.</p>
+      </article>
+      <article class="doc-entry" id="doc-let">
+        <h3><a class="doc-anchor" href="#doc-let">#</a> <code>let</code></h3>
+        <pre><code class="lang-elisp">(let BINDINGS BODY...)
+</code></pre>
+        <p>Bind variables in parallel, then eval BODY.</p>
+      </article>
+      <article class="doc-entry" id="doc-let">
+        <h3><a class="doc-anchor" href="#doc-let">#</a> <code>let*</code></h3>
+        <pre><code class="lang-elisp">(let* BINDINGS BODY...)
+</code></pre>
+        <p>Bind variables sequentially, then eval BODY.</p>
+      </article>
+      <article class="doc-entry" id="doc-while">
+        <h3><a class="doc-anchor" href="#doc-while">#</a> <code>while</code></h3>
+        <pre><code class="lang-elisp">(while COND BODY...)
+</code></pre>
+        <p>While COND is non-nil, eval BODY.</p>
+      </article>
+      <article class="doc-entry" id="doc-cond">
+        <h3><a class="doc-anchor" href="#doc-cond">#</a> <code>cond</code></h3>
+        <pre><code class="lang-elisp">(cond CLAUSES...)
+</code></pre>
+        <p>Try each (TEST BODY...) clause; eval the first whose TEST is non-nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-defun">
+        <h3><a class="doc-anchor" href="#doc-defun">#</a> <code>defun</code></h3>
+        <pre><code class="lang-elisp">(defun NAME ARGLIST BODY...)
+</code></pre>
+        <p>Define NAME as a function.</p>
+      </article>
+      <article class="doc-entry" id="doc-defmacro">
+        <h3><a class="doc-anchor" href="#doc-defmacro">#</a> <code>defmacro</code></h3>
+        <pre><code class="lang-elisp">(defmacro NAME ARGLIST BODY...)
+</code></pre>
+        <p>Define NAME as a macro.</p>
+      </article>
+      <article class="doc-entry" id="doc-defvar">
+        <h3><a class="doc-anchor" href="#doc-defvar">#</a> <code>defvar</code></h3>
+        <pre><code class="lang-elisp">(defvar NAME &amp;optional INIT DOC)
+</code></pre>
+        <p>Define a special (dynamic) variable.</p>
+      </article>
+      <article class="doc-entry" id="doc-defconst">
+        <h3><a class="doc-anchor" href="#doc-defconst">#</a> <code>defconst</code></h3>
+        <pre><code class="lang-elisp">(defconst NAME INIT &amp;optional DOC)
+</code></pre>
+        <p>Define a constant special variable.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-arithmetic-numbers">
+      <h2>Arithmetic &amp; Numbers</h2>
+      <p class="chapter-meta">46 entries</p>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>+</code></h3>
+        <pre><code class="lang-elisp">(+ &amp;rest NUMBERS)
+</code></pre>
+        <p>Sum of the arguments.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>-</code></h3>
+        <pre><code class="lang-elisp">(- &amp;rest NUMBERS)
+</code></pre>
+        <p>Negation, or subtraction from the first.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>*</code></h3>
+        <pre><code class="lang-elisp">(* &amp;rest NUMBERS)
+</code></pre>
+        <p>Product of the arguments.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>/</code></h3>
+        <pre><code class="lang-elisp">(/ DIVIDEND &amp;rest DIVISORS)
+</code></pre>
+        <p>Quotient of the arguments.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>%</code></h3>
+        <pre><code class="lang-elisp">(% X Y)
+</code></pre>
+        <p>Integer remainder of X divided by Y.</p>
+      </article>
+      <article class="doc-entry" id="doc-1">
+        <h3><a class="doc-anchor" href="#doc-1">#</a> <code>1+</code></h3>
+        <pre><code class="lang-elisp">(1+ NUMBER)
+</code></pre>
+        <p>NUMBER plus one.</p>
+      </article>
+      <article class="doc-entry" id="doc-1">
+        <h3><a class="doc-anchor" href="#doc-1">#</a> <code>1-</code></h3>
+        <pre><code class="lang-elisp">(1- NUMBER)
+</code></pre>
+        <p>NUMBER minus one.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>=</code></h3>
+        <pre><code class="lang-elisp">(= &amp;rest NUMBERS)
+</code></pre>
+        <p>Non-nil if all numbers are equal.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>&lt;</code></h3>
+        <pre><code class="lang-elisp">(&lt; &amp;rest NUMBERS)
+</code></pre>
+        <p>Non-nil if numbers strictly increase.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>&gt;</code></h3>
+        <pre><code class="lang-elisp">(&gt; &amp;rest NUMBERS)
+</code></pre>
+        <p>Non-nil if numbers strictly decrease.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>&lt;=</code></h3>
+        <pre><code class="lang-elisp">(&lt;= &amp;rest NUMBERS)
+</code></pre>
+        <p>Non-nil if numbers are non-decreasing.</p>
+      </article>
+      <article class="doc-entry" id="doc-">
+        <h3><a class="doc-anchor" href="#doc-">#</a> <code>&gt;=</code></h3>
+        <pre><code class="lang-elisp">(&gt;= &amp;rest NUMBERS)
+</code></pre>
+        <p>Non-nil if numbers are non-increasing.</p>
+      </article>
+      <article class="doc-entry" id="doc-mod">
+        <h3><a class="doc-anchor" href="#doc-mod">#</a> <code>mod</code></h3>
+        <pre><code class="lang-elisp">(mod X Y)
+</code></pre>
+        <p>X modulo Y, the remainder taking the sign of the divisor Y.</p>
+      </article>
+      <article class="doc-entry" id="doc-floor">
+        <h3><a class="doc-anchor" href="#doc-floor">#</a> <code>floor</code></h3>
+        <pre><code class="lang-elisp">(floor ARG &amp;optional DIVISOR)
+</code></pre>
+        <p>Largest integer less than or equal to ARG (or ARG/DIVISOR).</p>
+      </article>
+      <article class="doc-entry" id="doc-ceiling">
+        <h3><a class="doc-anchor" href="#doc-ceiling">#</a> <code>ceiling</code></h3>
+        <pre><code class="lang-elisp">(ceiling ARG &amp;optional DIVISOR)
+</code></pre>
+        <p>Smallest integer greater than or equal to ARG (or ARG/DIVISOR).</p>
+      </article>
+      <article class="doc-entry" id="doc-round">
+        <h3><a class="doc-anchor" href="#doc-round">#</a> <code>round</code></h3>
+        <pre><code class="lang-elisp">(round ARG &amp;optional DIVISOR)
+</code></pre>
+        <p>ARG (or ARG/DIVISOR) rounded to the nearest integer.</p>
+      </article>
+      <article class="doc-entry" id="doc-truncate">
+        <h3><a class="doc-anchor" href="#doc-truncate">#</a> <code>truncate</code></h3>
+        <pre><code class="lang-elisp">(truncate ARG &amp;optional DIVISOR)
+</code></pre>
+        <p>ARG (or ARG/DIVISOR) truncated toward zero to an integer.</p>
+      </article>
+      <article class="doc-entry" id="doc-float">
+        <h3><a class="doc-anchor" href="#doc-float">#</a> <code>float</code></h3>
+        <pre><code class="lang-elisp">(float ARG)
+</code></pre>
+        <p>Convert ARG to a floating-point number.</p>
+      </article>
+      <article class="doc-entry" id="doc-logand">
+        <h3><a class="doc-anchor" href="#doc-logand">#</a> <code>logand</code></h3>
+        <pre><code class="lang-elisp">(logand &amp;rest INTS)
+</code></pre>
+        <p>Bitwise AND of the integer arguments.</p>
+      </article>
+      <article class="doc-entry" id="doc-logior">
+        <h3><a class="doc-anchor" href="#doc-logior">#</a> <code>logior</code></h3>
+        <pre><code class="lang-elisp">(logior &amp;rest INTS)
+</code></pre>
+        <p>Bitwise inclusive OR of the integer arguments.</p>
+      </article>
+      <article class="doc-entry" id="doc-logxor">
+        <h3><a class="doc-anchor" href="#doc-logxor">#</a> <code>logxor</code></h3>
+        <pre><code class="lang-elisp">(logxor &amp;rest INTS)
+</code></pre>
+        <p>Bitwise exclusive OR of the integer arguments.</p>
+      </article>
+      <article class="doc-entry" id="doc-lognot">
+        <h3><a class="doc-anchor" href="#doc-lognot">#</a> <code>lognot</code></h3>
+        <pre><code class="lang-elisp">(lognot NUMBER)
+</code></pre>
+        <p>Bitwise NOT (one&#39;s complement) of NUMBER.</p>
+      </article>
+      <article class="doc-entry" id="doc-ash">
+        <h3><a class="doc-anchor" href="#doc-ash">#</a> <code>ash</code></h3>
+        <pre><code class="lang-elisp">(ash VALUE COUNT)
+</code></pre>
+        <p>Arithmetic shift VALUE left COUNT bits (right if COUNT is negative).</p>
+      </article>
+      <article class="doc-entry" id="doc-lsh">
+        <h3><a class="doc-anchor" href="#doc-lsh">#</a> <code>lsh</code></h3>
+        <pre><code class="lang-elisp">(lsh VALUE COUNT)
+</code></pre>
+        <p>Logical shift VALUE left COUNT bits (right if COUNT is negative).</p>
+      </article>
+      <article class="doc-entry" id="doc-expt">
+        <h3><a class="doc-anchor" href="#doc-expt">#</a> <code>expt</code></h3>
+        <pre><code class="lang-elisp">(expt BASE EXPONENT)
+</code></pre>
+        <p>Return BASE raised to the power EXPONENT.</p>
+      </article>
+      <article class="doc-entry" id="doc-sqrt">
+        <h3><a class="doc-anchor" href="#doc-sqrt">#</a> <code>sqrt</code></h3>
+        <pre><code class="lang-elisp">(sqrt ARG)
+</code></pre>
+        <p>Return the square root of ARG.</p>
+      </article>
+      <article class="doc-entry" id="doc-exp">
+        <h3><a class="doc-anchor" href="#doc-exp">#</a> <code>exp</code></h3>
+        <pre><code class="lang-elisp">(exp ARG)
+</code></pre>
+        <p>Return e (the base of natural logarithms) raised to ARG.</p>
+      </article>
+      <article class="doc-entry" id="doc-log">
+        <h3><a class="doc-anchor" href="#doc-log">#</a> <code>log</code></h3>
+        <pre><code class="lang-elisp">(log ARG &amp;optional BASE)
+</code></pre>
+        <p>Natural logarithm of ARG, or the logarithm base BASE.</p>
+      </article>
+      <article class="doc-entry" id="doc-sin">
+        <h3><a class="doc-anchor" href="#doc-sin">#</a> <code>sin</code></h3>
+        <pre><code class="lang-elisp">(sin ARG)
+</code></pre>
+        <p>Return the sine of ARG (in radians).</p>
+      </article>
+      <article class="doc-entry" id="doc-cos">
+        <h3><a class="doc-anchor" href="#doc-cos">#</a> <code>cos</code></h3>
+        <pre><code class="lang-elisp">(cos ARG)
+</code></pre>
+        <p>Return the cosine of ARG (in radians).</p>
+      </article>
+      <article class="doc-entry" id="doc-tan">
+        <h3><a class="doc-anchor" href="#doc-tan">#</a> <code>tan</code></h3>
+        <pre><code class="lang-elisp">(tan ARG)
+</code></pre>
+        <p>Return the tangent of ARG (in radians).</p>
+      </article>
+      <article class="doc-entry" id="doc-asin">
+        <h3><a class="doc-anchor" href="#doc-asin">#</a> <code>asin</code></h3>
+        <pre><code class="lang-elisp">(asin ARG)
+</code></pre>
+        <p>Return the inverse sine of ARG, in radians.</p>
+      </article>
+      <article class="doc-entry" id="doc-acos">
+        <h3><a class="doc-anchor" href="#doc-acos">#</a> <code>acos</code></h3>
+        <pre><code class="lang-elisp">(acos ARG)
+</code></pre>
+        <p>Return the inverse cosine of ARG, in radians.</p>
+      </article>
+      <article class="doc-entry" id="doc-atan">
+        <h3><a class="doc-anchor" href="#doc-atan">#</a> <code>atan</code></h3>
+        <pre><code class="lang-elisp">(atan Y &amp;optional X)
+</code></pre>
+        <p>Arc tangent of Y, or of Y/X using both signs to choose the quadrant.</p>
+      </article>
+      <article class="doc-entry" id="doc-ldexp">
+        <h3><a class="doc-anchor" href="#doc-ldexp">#</a> <code>ldexp</code></h3>
+        <pre><code class="lang-elisp">(ldexp SGNFCAND EXPONENT)
+</code></pre>
+        <p>Return SGNFCAND * 2**EXPONENT, as a float.</p>
+      </article>
+      <article class="doc-entry" id="doc-copysign">
+        <h3><a class="doc-anchor" href="#doc-copysign">#</a> <code>copysign</code></h3>
+        <pre><code class="lang-elisp">(copysign X1 X2)
+</code></pre>
+        <p>Return X1 with the sign of X2.</p>
+      </article>
+      <article class="doc-entry" id="doc-frexp">
+        <h3><a class="doc-anchor" href="#doc-frexp">#</a> <code>frexp</code></h3>
+        <pre><code class="lang-elisp">(frexp X)
+</code></pre>
+        <p>Return (SIGNIFICAND . EXPONENT) with X = SIGNIFICAND * 2**EXPONENT and 0.5 &lt;= |SIGNIFICAND| &lt; 1.</p>
+      </article>
+      <article class="doc-entry" id="doc-fround">
+        <h3><a class="doc-anchor" href="#doc-fround">#</a> <code>fround</code></h3>
+        <pre><code class="lang-elisp">(fround X)
+</code></pre>
+        <p>Round X to the nearest integer, returned as a float.</p>
+      </article>
+      <article class="doc-entry" id="doc-ffloor">
+        <h3><a class="doc-anchor" href="#doc-ffloor">#</a> <code>ffloor</code></h3>
+        <pre><code class="lang-elisp">(ffloor X)
+</code></pre>
+        <p>Largest integer value not greater than X, returned as a float.</p>
+      </article>
+      <article class="doc-entry" id="doc-fceiling">
+        <h3><a class="doc-anchor" href="#doc-fceiling">#</a> <code>fceiling</code></h3>
+        <pre><code class="lang-elisp">(fceiling X)
+</code></pre>
+        <p>Smallest integer value not less than X, returned as a float.</p>
+      </article>
+      <article class="doc-entry" id="doc-ftruncate">
+        <h3><a class="doc-anchor" href="#doc-ftruncate">#</a> <code>ftruncate</code></h3>
+        <pre><code class="lang-elisp">(ftruncate X)
+</code></pre>
+        <p>Truncate X toward zero to an integer value, returned as a float.</p>
+      </article>
+      <article class="doc-entry" id="doc-abs">
+        <h3><a class="doc-anchor" href="#doc-abs">#</a> <code>abs</code></h3>
+        <pre><code class="lang-elisp">(abs ARG)
+</code></pre>
+        <p>Return the absolute value of ARG.</p>
+      </article>
+      <article class="doc-entry" id="doc-logcount">
+        <h3><a class="doc-anchor" href="#doc-logcount">#</a> <code>logcount</code></h3>
+        <pre><code class="lang-elisp">(logcount VALUE)
+</code></pre>
+        <p>Number of one bits in VALUE (or zero bits if VALUE is negative).</p>
+      </article>
+      <article class="doc-entry" id="doc-logb">
+        <h3><a class="doc-anchor" href="#doc-logb">#</a> <code>logb</code></h3>
+        <pre><code class="lang-elisp">(logb ARG)
+</code></pre>
+        <p>Return the binary exponent of ARG: the floor of log base 2 of |ARG|.</p>
+      </article>
+      <article class="doc-entry" id="doc-random">
+        <h3><a class="doc-anchor" href="#doc-random">#</a> <code>random</code></h3>
+        <pre><code class="lang-elisp">(random &amp;optional LIMIT)
+</code></pre>
+        <p>Pseudo-random integer; if LIMIT is a positive integer, in the range [0, LIMIT).</p>
+      </article>
+      <article class="doc-entry" id="doc-string-to-number">
+        <h3><a class="doc-anchor" href="#doc-string-to-number">#</a> <code>string-to-number</code></h3>
+        <pre><code class="lang-elisp">(string-to-number STRING &amp;optional BASE)
+</code></pre>
+        <p>Parse the number at the front of STRING (radix BASE, default 10).</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-predicates-type-tests">
+      <h2>Predicates &amp; Type Tests</h2>
+      <p class="chapter-meta">27 entries</p>
+      <article class="doc-entry" id="doc-eq">
+        <h3><a class="doc-anchor" href="#doc-eq">#</a> <code>eq</code></h3>
+        <pre><code class="lang-elisp">(eq A B)
+</code></pre>
+        <p>Non-nil if A and B are the same object.</p>
+      </article>
+      <article class="doc-entry" id="doc-eql">
+        <h3><a class="doc-anchor" href="#doc-eql">#</a> <code>eql</code></h3>
+        <pre><code class="lang-elisp">(eql A B)
+</code></pre>
+        <p>Like eq, but compares numbers by value.</p>
+      </article>
+      <article class="doc-entry" id="doc-equal">
+        <h3><a class="doc-anchor" href="#doc-equal">#</a> <code>equal</code></h3>
+        <pre><code class="lang-elisp">(equal A B)
+</code></pre>
+        <p>Non-nil if A and B are structurally equal.</p>
+      </article>
+      <article class="doc-entry" id="doc-null">
+        <h3><a class="doc-anchor" href="#doc-null">#</a> <code>null</code></h3>
+        <pre><code class="lang-elisp">(null OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-not">
+        <h3><a class="doc-anchor" href="#doc-not">#</a> <code>not</code></h3>
+        <pre><code class="lang-elisp">(not OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-consp">
+        <h3><a class="doc-anchor" href="#doc-consp">#</a> <code>consp</code></h3>
+        <pre><code class="lang-elisp">(consp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a cons cell.</p>
+      </article>
+      <article class="doc-entry" id="doc-listp">
+        <h3><a class="doc-anchor" href="#doc-listp">#</a> <code>listp</code></h3>
+        <pre><code class="lang-elisp">(listp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a list (cons or nil).</p>
+      </article>
+      <article class="doc-entry" id="doc-atom">
+        <h3><a class="doc-anchor" href="#doc-atom">#</a> <code>atom</code></h3>
+        <pre><code class="lang-elisp">(atom OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is not a cons cell.</p>
+      </article>
+      <article class="doc-entry" id="doc-symbolp">
+        <h3><a class="doc-anchor" href="#doc-symbolp">#</a> <code>symbolp</code></h3>
+        <pre><code class="lang-elisp">(symbolp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a symbol.</p>
+      </article>
+      <article class="doc-entry" id="doc-stringp">
+        <h3><a class="doc-anchor" href="#doc-stringp">#</a> <code>stringp</code></h3>
+        <pre><code class="lang-elisp">(stringp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a string.</p>
+      </article>
+      <article class="doc-entry" id="doc-numberp">
+        <h3><a class="doc-anchor" href="#doc-numberp">#</a> <code>numberp</code></h3>
+        <pre><code class="lang-elisp">(numberp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a number.</p>
+      </article>
+      <article class="doc-entry" id="doc-integerp">
+        <h3><a class="doc-anchor" href="#doc-integerp">#</a> <code>integerp</code></h3>
+        <pre><code class="lang-elisp">(integerp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is an integer.</p>
+      </article>
+      <article class="doc-entry" id="doc-floatp">
+        <h3><a class="doc-anchor" href="#doc-floatp">#</a> <code>floatp</code></h3>
+        <pre><code class="lang-elisp">(floatp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a float.</p>
+      </article>
+      <article class="doc-entry" id="doc-vectorp">
+        <h3><a class="doc-anchor" href="#doc-vectorp">#</a> <code>vectorp</code></h3>
+        <pre><code class="lang-elisp">(vectorp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a vector.</p>
+      </article>
+      <article class="doc-entry" id="doc-zerop">
+        <h3><a class="doc-anchor" href="#doc-zerop">#</a> <code>zerop</code></h3>
+        <pre><code class="lang-elisp">(zerop NUMBER)
+</code></pre>
+        <p>Non-nil if NUMBER is zero.</p>
+      </article>
+      <article class="doc-entry" id="doc-isnan">
+        <h3><a class="doc-anchor" href="#doc-isnan">#</a> <code>isnan</code></h3>
+        <pre><code class="lang-elisp">(isnan X)
+</code></pre>
+        <p>Non-nil if the float X is a NaN.</p>
+      </article>
+      <article class="doc-entry" id="doc-type-of">
+        <h3><a class="doc-anchor" href="#doc-type-of">#</a> <code>type-of</code></h3>
+        <pre><code class="lang-elisp">(type-of OBJECT)
+</code></pre>
+        <p>Return a symbol naming the primitive type of OBJECT.</p>
+      </article>
+      <article class="doc-entry" id="doc-recordp">
+        <h3><a class="doc-anchor" href="#doc-recordp">#</a> <code>recordp</code></h3>
+        <pre><code class="lang-elisp">(recordp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a record.</p>
+      </article>
+      <article class="doc-entry" id="doc-cl-struct-p">
+        <h3><a class="doc-anchor" href="#doc-cl-struct-p">#</a> <code>cl-struct-p</code></h3>
+        <pre><code class="lang-elisp">(cl-struct-p OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a record (a cl-defstruct instance).</p>
+      </article>
+      <article class="doc-entry" id="doc-functionp">
+        <h3><a class="doc-anchor" href="#doc-functionp">#</a> <code>functionp</code></h3>
+        <pre><code class="lang-elisp">(functionp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is callable as a function.</p>
+      </article>
+      <article class="doc-entry" id="doc-char-or-string-p">
+        <h3><a class="doc-anchor" href="#doc-char-or-string-p">#</a> <code>char-or-string-p</code></h3>
+        <pre><code class="lang-elisp">(char-or-string-p OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a character (integer) or a string.</p>
+      </article>
+      <article class="doc-entry" id="doc-subrp">
+        <h3><a class="doc-anchor" href="#doc-subrp">#</a> <code>subrp</code></h3>
+        <pre><code class="lang-elisp">(subrp OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a built-in (primitive) function.</p>
+      </article>
+      <article class="doc-entry" id="doc-macrop">
+        <h3><a class="doc-anchor" href="#doc-macrop">#</a> <code>macrop</code></h3>
+        <pre><code class="lang-elisp">(macrop OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a macro.</p>
+      </article>
+      <article class="doc-entry" id="doc-special-form-p">
+        <h3><a class="doc-anchor" href="#doc-special-form-p">#</a> <code>special-form-p</code></h3>
+        <pre><code class="lang-elisp">(special-form-p OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a special form.</p>
+      </article>
+      <article class="doc-entry" id="doc-char-uppercase-p">
+        <h3><a class="doc-anchor" href="#doc-char-uppercase-p">#</a> <code>char-uppercase-p</code></h3>
+        <pre><code class="lang-elisp">(char-uppercase-p CHAR)
+</code></pre>
+        <p>Non-nil if CHAR is an uppercase character.</p>
+      </article>
+      <article class="doc-entry" id="doc-special-variable-p">
+        <h3><a class="doc-anchor" href="#doc-special-variable-p">#</a> <code>special-variable-p</code></h3>
+        <pre><code class="lang-elisp">(special-variable-p SYMBOL)
+</code></pre>
+        <p>Non-nil if SYMBOL is a special (dynamically scoped) variable.</p>
+      </article>
+      <article class="doc-entry" id="doc-char-equal">
+        <h3><a class="doc-anchor" href="#doc-char-equal">#</a> <code>char-equal</code></h3>
+        <pre><code class="lang-elisp">(char-equal C1 C2)
+</code></pre>
+        <p>Non-nil if characters C1 and C2 are equal (case-insensitive when case-fold-search).</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-cons-lists-sequences">
+      <h2>Cons, Lists &amp; Sequences</h2>
+      <p class="chapter-meta">18 entries</p>
+      <article class="doc-entry" id="doc-cons">
+        <h3><a class="doc-anchor" href="#doc-cons">#</a> <code>cons</code></h3>
+        <pre><code class="lang-elisp">(cons CAR CDR)
+</code></pre>
+        <p>Create a new cons cell.</p>
+      </article>
+      <article class="doc-entry" id="doc-car">
+        <h3><a class="doc-anchor" href="#doc-car">#</a> <code>car</code></h3>
+        <pre><code class="lang-elisp">(car LIST)
+</code></pre>
+        <p>Return the first element of LIST.</p>
+      </article>
+      <article class="doc-entry" id="doc-cdr">
+        <h3><a class="doc-anchor" href="#doc-cdr">#</a> <code>cdr</code></h3>
+        <pre><code class="lang-elisp">(cdr LIST)
+</code></pre>
+        <p>Return the rest of LIST after the first element.</p>
+      </article>
+      <article class="doc-entry" id="doc-setcar">
+        <h3><a class="doc-anchor" href="#doc-setcar">#</a> <code>setcar</code></h3>
+        <pre><code class="lang-elisp">(setcar CELL VALUE)
+</code></pre>
+        <p>Set the car of CELL to VALUE.</p>
+      </article>
+      <article class="doc-entry" id="doc-setcdr">
+        <h3><a class="doc-anchor" href="#doc-setcdr">#</a> <code>setcdr</code></h3>
+        <pre><code class="lang-elisp">(setcdr CELL VALUE)
+</code></pre>
+        <p>Set the cdr of CELL to VALUE.</p>
+      </article>
+      <article class="doc-entry" id="doc-list">
+        <h3><a class="doc-anchor" href="#doc-list">#</a> <code>list</code></h3>
+        <pre><code class="lang-elisp">(list &amp;rest OBJECTS)
+</code></pre>
+        <p>Return a newly created list of OBJECTS.</p>
+      </article>
+      <article class="doc-entry" id="doc-append">
+        <h3><a class="doc-anchor" href="#doc-append">#</a> <code>append</code></h3>
+        <pre><code class="lang-elisp">(append &amp;rest SEQUENCES)
+</code></pre>
+        <p>Concatenate lists into one.</p>
+      </article>
+      <article class="doc-entry" id="doc-reverse">
+        <h3><a class="doc-anchor" href="#doc-reverse">#</a> <code>reverse</code></h3>
+        <pre><code class="lang-elisp">(reverse SEQUENCE)
+</code></pre>
+        <p>Return a reversed copy of SEQUENCE.</p>
+      </article>
+      <article class="doc-entry" id="doc-length">
+        <h3><a class="doc-anchor" href="#doc-length">#</a> <code>length</code></h3>
+        <pre><code class="lang-elisp">(length SEQUENCE)
+</code></pre>
+        <p>Return the length of SEQUENCE.</p>
+      </article>
+      <article class="doc-entry" id="doc-nth">
+        <h3><a class="doc-anchor" href="#doc-nth">#</a> <code>nth</code></h3>
+        <pre><code class="lang-elisp">(nth N LIST)
+</code></pre>
+        <p>Return the Nth element of LIST.</p>
+      </article>
+      <article class="doc-entry" id="doc-vector">
+        <h3><a class="doc-anchor" href="#doc-vector">#</a> <code>vector</code></h3>
+        <pre><code class="lang-elisp">(vector &amp;rest OBJECTS)
+</code></pre>
+        <p>Return a vector of OBJECTS.</p>
+      </article>
+      <article class="doc-entry" id="doc-make-vector">
+        <h3><a class="doc-anchor" href="#doc-make-vector">#</a> <code>make-vector</code></h3>
+        <pre><code class="lang-elisp">(make-vector LENGTH INIT)
+</code></pre>
+        <p>Return a vector of LENGTH elements, all INIT.</p>
+      </article>
+      <article class="doc-entry" id="doc-aref">
+        <h3><a class="doc-anchor" href="#doc-aref">#</a> <code>aref</code></h3>
+        <pre><code class="lang-elisp">(aref ARRAY IDX)
+</code></pre>
+        <p>Return the IDX&#39;th element of ARRAY.</p>
+      </article>
+      <article class="doc-entry" id="doc-aset">
+        <h3><a class="doc-anchor" href="#doc-aset">#</a> <code>aset</code></h3>
+        <pre><code class="lang-elisp">(aset ARRAY IDX VALUE)
+</code></pre>
+        <p>Set the IDX&#39;th element of ARRAY to VALUE.</p>
+      </article>
+      <article class="doc-entry" id="doc-fillarray">
+        <h3><a class="doc-anchor" href="#doc-fillarray">#</a> <code>fillarray</code></h3>
+        <pre><code class="lang-elisp">(fillarray ARRAY ITEM)
+</code></pre>
+        <p>Set every element of ARRAY to ITEM; return ARRAY.</p>
+      </article>
+      <article class="doc-entry" id="doc-vconcat">
+        <h3><a class="doc-anchor" href="#doc-vconcat">#</a> <code>vconcat</code></h3>
+        <pre><code class="lang-elisp">(vconcat &amp;rest SEQUENCES)
+</code></pre>
+        <p>Concatenate the SEQUENCES into a single new vector.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-to-vector">
+        <h3><a class="doc-anchor" href="#doc-string-to-vector">#</a> <code>string-to-vector</code></h3>
+        <pre><code class="lang-elisp">(string-to-vector STRING)
+</code></pre>
+        <p>Return a vector of the character codes in STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-to-list">
+        <h3><a class="doc-anchor" href="#doc-string-to-list">#</a> <code>string-to-list</code></h3>
+        <pre><code class="lang-elisp">(string-to-list STRING)
+</code></pre>
+        <p>Return a list of the character codes in STRING.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-symbols-cells-binding">
+      <h2>Symbols, Cells &amp; Binding</h2>
+      <p class="chapter-meta">12 entries</p>
+      <article class="doc-entry" id="doc-symbol-name">
+        <h3><a class="doc-anchor" href="#doc-symbol-name">#</a> <code>symbol-name</code></h3>
+        <pre><code class="lang-elisp">(symbol-name SYMBOL)
+</code></pre>
+        <p>Return SYMBOL&#39;s name as a string.</p>
+      </article>
+      <article class="doc-entry" id="doc-intern">
+        <h3><a class="doc-anchor" href="#doc-intern">#</a> <code>intern</code></h3>
+        <pre><code class="lang-elisp">(intern NAME)
+</code></pre>
+        <p>Return the interned symbol named NAME.</p>
+      </article>
+      <article class="doc-entry" id="doc-make-symbol">
+        <h3><a class="doc-anchor" href="#doc-make-symbol">#</a> <code>make-symbol</code></h3>
+        <pre><code class="lang-elisp">(make-symbol NAME)
+</code></pre>
+        <p>Return a fresh symbol named NAME.</p>
+      </article>
+      <article class="doc-entry" id="doc-set">
+        <h3><a class="doc-anchor" href="#doc-set">#</a> <code>set</code></h3>
+        <pre><code class="lang-elisp">(set SYMBOL VALUE)
+</code></pre>
+        <p>Set SYMBOL&#39;s value cell to VALUE.</p>
+      </article>
+      <article class="doc-entry" id="doc-symbol-value">
+        <h3><a class="doc-anchor" href="#doc-symbol-value">#</a> <code>symbol-value</code></h3>
+        <pre><code class="lang-elisp">(symbol-value SYMBOL)
+</code></pre>
+        <p>Return SYMBOL&#39;s value.</p>
+      </article>
+      <article class="doc-entry" id="doc-boundp">
+        <h3><a class="doc-anchor" href="#doc-boundp">#</a> <code>boundp</code></h3>
+        <pre><code class="lang-elisp">(boundp SYMBOL)
+</code></pre>
+        <p>Non-nil if SYMBOL has a value.</p>
+      </article>
+      <article class="doc-entry" id="doc-fboundp">
+        <h3><a class="doc-anchor" href="#doc-fboundp">#</a> <code>fboundp</code></h3>
+        <pre><code class="lang-elisp">(fboundp SYMBOL)
+</code></pre>
+        <p>Non-nil if SYMBOL has a function definition.</p>
+      </article>
+      <article class="doc-entry" id="doc-fset">
+        <h3><a class="doc-anchor" href="#doc-fset">#</a> <code>fset</code></h3>
+        <pre><code class="lang-elisp">(fset SYMBOL DEFINITION)
+</code></pre>
+        <p>Set SYMBOL&#39;s function cell to DEFINITION.</p>
+      </article>
+      <article class="doc-entry" id="doc-makunbound">
+        <h3><a class="doc-anchor" href="#doc-makunbound">#</a> <code>makunbound</code></h3>
+        <pre><code class="lang-elisp">(makunbound SYMBOL)
+</code></pre>
+        <p>Make SYMBOL&#39;s value cell void; return SYMBOL.</p>
+      </article>
+      <article class="doc-entry" id="doc-intern-soft">
+        <h3><a class="doc-anchor" href="#doc-intern-soft">#</a> <code>intern-soft</code></h3>
+        <pre><code class="lang-elisp">(intern-soft NAME)
+</code></pre>
+        <p>Return the interned symbol named NAME, or nil if none exists.</p>
+      </article>
+      <article class="doc-entry" id="doc-symbol-function">
+        <h3><a class="doc-anchor" href="#doc-symbol-function">#</a> <code>symbol-function</code></h3>
+        <pre><code class="lang-elisp">(symbol-function SYMBOL)
+</code></pre>
+        <p>Return SYMBOL&#39;s function definition, or nil if it has none.</p>
+      </article>
+      <article class="doc-entry" id="doc-indirect-function">
+        <h3><a class="doc-anchor" href="#doc-indirect-function">#</a> <code>indirect-function</code></h3>
+        <pre><code class="lang-elisp">(indirect-function OBJECT &amp;optional NOERROR)
+</code></pre>
+        <p>Chase symbol function cells from OBJECT to the underlying function.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-strings-characters">
+      <h2>Strings &amp; Characters</h2>
+      <p class="chapter-meta">27 entries</p>
+      <article class="doc-entry" id="doc-concat">
+        <h3><a class="doc-anchor" href="#doc-concat">#</a> <code>concat</code></h3>
+        <pre><code class="lang-elisp">(concat &amp;rest STRINGS)
+</code></pre>
+        <p>Concatenate STRINGS into one string.</p>
+      </article>
+      <article class="doc-entry" id="doc-number-to-string">
+        <h3><a class="doc-anchor" href="#doc-number-to-string">#</a> <code>number-to-string</code></h3>
+        <pre><code class="lang-elisp">(number-to-string NUMBER)
+</code></pre>
+        <p>Return NUMBER rendered as a string.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-match">
+        <h3><a class="doc-anchor" href="#doc-string-match">#</a> <code>string-match</code></h3>
+        <pre><code class="lang-elisp">(string-match REGEXP STRING &amp;optional START)
+</code></pre>
+        <p>Search STRING for REGEXP from START; set match data, return match index or nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-match-p">
+        <h3><a class="doc-anchor" href="#doc-string-match-p">#</a> <code>string-match-p</code></h3>
+        <pre><code class="lang-elisp">(string-match-p REGEXP STRING &amp;optional START)
+</code></pre>
+        <p>Like string-match but preserve the existing match data.</p>
+      </article>
+      <article class="doc-entry" id="doc-match-beginning">
+        <h3><a class="doc-anchor" href="#doc-match-beginning">#</a> <code>match-beginning</code></h3>
+        <pre><code class="lang-elisp">(match-beginning N)
+</code></pre>
+        <p>Char position where the Nth subexpression of the last match began.</p>
+      </article>
+      <article class="doc-entry" id="doc-match-end">
+        <h3><a class="doc-anchor" href="#doc-match-end">#</a> <code>match-end</code></h3>
+        <pre><code class="lang-elisp">(match-end N)
+</code></pre>
+        <p>Char position where the Nth subexpression of the last match ended.</p>
+      </article>
+      <article class="doc-entry" id="doc-match-string">
+        <h3><a class="doc-anchor" href="#doc-match-string">#</a> <code>match-string</code></h3>
+        <pre><code class="lang-elisp">(match-string N &amp;optional STRING)
+</code></pre>
+        <p>Text matched by the Nth subexpression of the last match.</p>
+      </article>
+      <article class="doc-entry" id="doc-match-data">
+        <h3><a class="doc-anchor" href="#doc-match-data">#</a> <code>match-data</code></h3>
+        <pre><code class="lang-elisp">(match-data)
+</code></pre>
+        <p>Last match&#39;s positions as a flat list (beg0 end0 beg1 end1 …).</p>
+      </article>
+      <article class="doc-entry" id="doc-set-match-data">
+        <h3><a class="doc-anchor" href="#doc-set-match-data">#</a> <code>set-match-data</code></h3>
+        <pre><code class="lang-elisp">(set-match-data LIST)
+</code></pre>
+        <p>Restore match positions from a match-data list.</p>
+      </article>
+      <article class="doc-entry" id="doc-replace-regexp-in-string">
+        <h3><a class="doc-anchor" href="#doc-replace-regexp-in-string">#</a> <code>replace-regexp-in-string</code></h3>
+        <pre><code class="lang-elisp">(replace-regexp-in-string REGEXP REP STRING &amp;optional FIXEDCASE LITERAL)
+</code></pre>
+        <p>Replace every match of REGEXP in STRING with REP (\&amp; / \N templates unless LITERAL).</p>
+      </article>
+      <article class="doc-entry" id="doc-regexp-quote">
+        <h3><a class="doc-anchor" href="#doc-regexp-quote">#</a> <code>regexp-quote</code></h3>
+        <pre><code class="lang-elisp">(regexp-quote STRING)
+</code></pre>
+        <p>Return STRING with regexp metacharacters escaped to match literally.</p>
+      </article>
+      <article class="doc-entry" id="doc-save-match-data">
+        <h3><a class="doc-anchor" href="#doc-save-match-data">#</a> <code>save-match-data</code></h3>
+        <pre><code class="lang-elisp">(save-match-data &amp;rest BODY)
+</code></pre>
+        <p>Eval BODY, preserving the caller&#39;s regexp match data.</p>
+      </article>
+      <article class="doc-entry" id="doc-substring">
+        <h3><a class="doc-anchor" href="#doc-substring">#</a> <code>substring</code></h3>
+        <pre><code class="lang-elisp">(substring STRING &amp;optional FROM TO)
+</code></pre>
+        <p>Return the substring of STRING from index FROM to TO (negative indices count from the end).</p>
+      </article>
+      <article class="doc-entry" id="doc-split-string">
+        <h3><a class="doc-anchor" href="#doc-split-string">#</a> <code>split-string</code></h3>
+        <pre><code class="lang-elisp">(split-string STRING &amp;optional SEPARATORS OMIT-NULLS TRIM)
+</code></pre>
+        <p>Split STRING into a list of substrings around matches of SEPARATORS.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-prefix-p">
+        <h3><a class="doc-anchor" href="#doc-string-prefix-p">#</a> <code>string-prefix-p</code></h3>
+        <pre><code class="lang-elisp">(string-prefix-p PREFIX STRING &amp;optional IGNORE-CASE)
+</code></pre>
+        <p>Non-nil if PREFIX is a prefix of STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-suffix-p">
+        <h3><a class="doc-anchor" href="#doc-string-suffix-p">#</a> <code>string-suffix-p</code></h3>
+        <pre><code class="lang-elisp">(string-suffix-p SUFFIX STRING &amp;optional IGNORE-CASE)
+</code></pre>
+        <p>Non-nil if SUFFIX is a suffix of STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-empty-p">
+        <h3><a class="doc-anchor" href="#doc-string-empty-p">#</a> <code>string-empty-p</code></h3>
+        <pre><code class="lang-elisp">(string-empty-p STRING)
+</code></pre>
+        <p>Non-nil if STRING is the empty string.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-join">
+        <h3><a class="doc-anchor" href="#doc-string-join">#</a> <code>string-join</code></h3>
+        <pre><code class="lang-elisp">(string-join STRINGS &amp;optional SEPARATOR)
+</code></pre>
+        <p>Concatenate the list STRINGS, inserting SEPARATOR between elements.</p>
+      </article>
+      <article class="doc-entry" id="doc-char-to-string">
+        <h3><a class="doc-anchor" href="#doc-char-to-string">#</a> <code>char-to-string</code></h3>
+        <pre><code class="lang-elisp">(char-to-string CHAR)
+</code></pre>
+        <p>Return a one-character string containing CHAR.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-to-char">
+        <h3><a class="doc-anchor" href="#doc-string-to-char">#</a> <code>string-to-char</code></h3>
+        <pre><code class="lang-elisp">(string-to-char STRING)
+</code></pre>
+        <p>Return the first character of STRING as an integer (0 if empty).</p>
+      </article>
+      <article class="doc-entry" id="doc-make-string">
+        <h3><a class="doc-anchor" href="#doc-make-string">#</a> <code>make-string</code></h3>
+        <pre><code class="lang-elisp">(make-string COUNT CHARACTER &amp;optional MULTIBYTE)
+</code></pre>
+        <p>Return a string of COUNT copies of CHARACTER.</p>
+      </article>
+      <article class="doc-entry" id="doc-string">
+        <h3><a class="doc-anchor" href="#doc-string">#</a> <code>string</code></h3>
+        <pre><code class="lang-elisp">(string &amp;rest CHARACTERS)
+</code></pre>
+        <p>Return a string made from the character arguments.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-search">
+        <h3><a class="doc-anchor" href="#doc-string-search">#</a> <code>string-search</code></h3>
+        <pre><code class="lang-elisp">(string-search NEEDLE HAYSTACK &amp;optional START-POS)
+</code></pre>
+        <p>Index of the first occurrence of NEEDLE in HAYSTACK (from START-POS), or nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-downcase">
+        <h3><a class="doc-anchor" href="#doc-downcase">#</a> <code>downcase</code></h3>
+        <pre><code class="lang-elisp">(downcase OBJ)
+</code></pre>
+        <p>Return OBJ (a string or character) converted to lower case.</p>
+      </article>
+      <article class="doc-entry" id="doc-upcase">
+        <h3><a class="doc-anchor" href="#doc-upcase">#</a> <code>upcase</code></h3>
+        <pre><code class="lang-elisp">(upcase OBJ)
+</code></pre>
+        <p>Return OBJ (a string or character) converted to upper case.</p>
+      </article>
+      <article class="doc-entry" id="doc-compare-strings">
+        <h3><a class="doc-anchor" href="#doc-compare-strings">#</a> <code>compare-strings</code></h3>
+        <pre><code class="lang-elisp">(compare-strings STR1 START1 END1 STR2 START2 END2 &amp;optional IGNORE-CASE)
+</code></pre>
+        <p>Compare the specified substrings; t if equal, else a signed mismatch position.</p>
+      </article>
+      <article class="doc-entry" id="doc-string-distance">
+        <h3><a class="doc-anchor" href="#doc-string-distance">#</a> <code>string-distance</code></h3>
+        <pre><code class="lang-elisp">(string-distance STRING1 STRING2 &amp;optional BYTECOMPARE)
+</code></pre>
+        <p>Levenshtein edit distance between STRING1 and STRING2.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-i-o-print-format">
+      <h2>I/O, Print &amp; Format</h2>
+      <p class="chapter-meta">11 entries</p>
+      <article class="doc-entry" id="doc-format">
+        <h3><a class="doc-anchor" href="#doc-format">#</a> <code>format</code></h3>
+        <pre><code class="lang-elisp">(format STRING &amp;rest ARGS)
+</code></pre>
+        <p>Format ARGS per the %-directives in STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-message">
+        <h3><a class="doc-anchor" href="#doc-message">#</a> <code>message</code></h3>
+        <pre><code class="lang-elisp">(message FORMAT &amp;rest ARGS)
+</code></pre>
+        <p>Print a formatted message (to stderr).</p>
+      </article>
+      <article class="doc-entry" id="doc-princ">
+        <h3><a class="doc-anchor" href="#doc-princ">#</a> <code>princ</code></h3>
+        <pre><code class="lang-elisp">(princ OBJECT)
+</code></pre>
+        <p>Output OBJECT (no quoting).</p>
+      </article>
+      <article class="doc-entry" id="doc-prin1">
+        <h3><a class="doc-anchor" href="#doc-prin1">#</a> <code>prin1</code></h3>
+        <pre><code class="lang-elisp">(prin1 OBJECT)
+</code></pre>
+        <p>Output OBJECT in read syntax.</p>
+      </article>
+      <article class="doc-entry" id="doc-read">
+        <h3><a class="doc-anchor" href="#doc-read">#</a> <code>read</code></h3>
+        <pre><code class="lang-elisp">(read STRING)
+</code></pre>
+        <p>Read and return one Lisp object from STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-read-from-string">
+        <h3><a class="doc-anchor" href="#doc-read-from-string">#</a> <code>read-from-string</code></h3>
+        <pre><code class="lang-elisp">(read-from-string STRING &amp;optional START END)
+</code></pre>
+        <p>Read one object from STRING; return (OBJECT . NEXT-INDEX).</p>
+      </article>
+      <article class="doc-entry" id="doc-terpri">
+        <h3><a class="doc-anchor" href="#doc-terpri">#</a> <code>terpri</code></h3>
+        <pre><code class="lang-elisp">(terpri &amp;optional STREAM)
+</code></pre>
+        <p>Output a newline.</p>
+      </article>
+      <article class="doc-entry" id="doc-print">
+        <h3><a class="doc-anchor" href="#doc-print">#</a> <code>print</code></h3>
+        <pre><code class="lang-elisp">(print OBJECT &amp;optional STREAM)
+</code></pre>
+        <p>Output OBJECT in read syntax, surrounded by newlines; return OBJECT.</p>
+      </article>
+      <article class="doc-entry" id="doc-prin1-to-string">
+        <h3><a class="doc-anchor" href="#doc-prin1-to-string">#</a> <code>prin1-to-string</code></h3>
+        <pre><code class="lang-elisp">(prin1-to-string OBJECT)
+</code></pre>
+        <p>Return a string of OBJECT printed in read syntax.</p>
+      </article>
+      <article class="doc-entry" id="doc-push-output-capture">
+        <h3><a class="doc-anchor" href="#doc-push-output-capture">#</a> <code>--push-output-capture--</code></h3>
+        <pre><code class="lang-elisp">(--push-output-capture--)
+</code></pre>
+        <p>Internal: start redirecting princ/prin1/print output into a capture buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-pop-output-capture">
+        <h3><a class="doc-anchor" href="#doc-pop-output-capture">#</a> <code>--pop-output-capture--</code></h3>
+        <pre><code class="lang-elisp">(--pop-output-capture--)
+</code></pre>
+        <p>Internal: stop capturing output and return the captured string.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-control-functional">
+      <h2>Control &amp; Functional</h2>
+      <p class="chapter-meta">11 entries</p>
+      <article class="doc-entry" id="doc-eval">
+        <h3><a class="doc-anchor" href="#doc-eval">#</a> <code>eval</code></h3>
+        <pre><code class="lang-elisp">(eval FORM &amp;optional LEXICAL)
+</code></pre>
+        <p>Evaluate FORM and return its value.</p>
+      </article>
+      <article class="doc-entry" id="doc-funcall">
+        <h3><a class="doc-anchor" href="#doc-funcall">#</a> <code>funcall</code></h3>
+        <pre><code class="lang-elisp">(funcall FUNCTION &amp;rest ARGS)
+</code></pre>
+        <p>Call FUNCTION with ARGS.</p>
+      </article>
+      <article class="doc-entry" id="doc-apply">
+        <h3><a class="doc-anchor" href="#doc-apply">#</a> <code>apply</code></h3>
+        <pre><code class="lang-elisp">(apply FUNCTION &amp;rest ARGS LIST)
+</code></pre>
+        <p>Call FUNCTION with ARGS and the elements of LIST.</p>
+      </article>
+      <article class="doc-entry" id="doc-identity">
+        <h3><a class="doc-anchor" href="#doc-identity">#</a> <code>identity</code></h3>
+        <pre><code class="lang-elisp">(identity ARG)
+</code></pre>
+        <p>Return ARG unchanged.</p>
+      </article>
+      <article class="doc-entry" id="doc-pcase">
+        <h3><a class="doc-anchor" href="#doc-pcase">#</a> <code>pcase</code></h3>
+        <pre><code class="lang-elisp">(pcase EXPR (PATTERN BODY...)...)
+</code></pre>
+        <p>Structural dispatch: _, literals, &#39;x, binders, (pred FN), (guard E), (and …), (or …).</p>
+      </article>
+      <article class="doc-entry" id="doc-func-arity">
+        <h3><a class="doc-anchor" href="#doc-func-arity">#</a> <code>func-arity</code></h3>
+        <pre><code class="lang-elisp">(func-arity FUNCTION)
+</code></pre>
+        <p>Return (MIN . MAX) giving FUNCTION&#39;s minimum and maximum argument counts (MAX may be `many&#39;).</p>
+      </article>
+      <article class="doc-entry" id="doc-subr-arity">
+        <h3><a class="doc-anchor" href="#doc-subr-arity">#</a> <code>subr-arity</code></h3>
+        <pre><code class="lang-elisp">(subr-arity SUBR)
+</code></pre>
+        <p>Return (MIN . MAX), the minimum and maximum argument counts of built-in SUBR.</p>
+      </article>
+      <article class="doc-entry" id="doc-throw">
+        <h3><a class="doc-anchor" href="#doc-throw">#</a> <code>throw</code></h3>
+        <pre><code class="lang-elisp">(throw TAG VALUE)
+</code></pre>
+        <p>Throw to the `catch&#39; for TAG, returning VALUE from it.</p>
+      </article>
+      <article class="doc-entry" id="doc-error">
+        <h3><a class="doc-anchor" href="#doc-error">#</a> <code>error</code></h3>
+        <pre><code class="lang-elisp">(error FORMAT &amp;rest ARGS)
+</code></pre>
+        <p>Signal an error whose message is FORMAT formatted with ARGS.</p>
+      </article>
+      <article class="doc-entry" id="doc-user-error">
+        <h3><a class="doc-anchor" href="#doc-user-error">#</a> <code>user-error</code></h3>
+        <pre><code class="lang-elisp">(user-error FORMAT &amp;rest ARGS)
+</code></pre>
+        <p>Signal a user error (a mistake, not a bug) with a formatted message.</p>
+      </article>
+      <article class="doc-entry" id="doc-signal">
+        <h3><a class="doc-anchor" href="#doc-signal">#</a> <code>signal</code></h3>
+        <pre><code class="lang-elisp">(signal ERROR-SYMBOL DATA)
+</code></pre>
+        <p>Signal the error named ERROR-SYMBOL with associated DATA.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-association-lists-hash-tables">
+      <h2>Association Lists &amp; Hash Tables</h2>
+      <p class="chapter-meta">11 entries</p>
+      <article class="doc-entry" id="doc-make-hash-table">
+        <h3><a class="doc-anchor" href="#doc-make-hash-table">#</a> <code>make-hash-table</code></h3>
+        <pre><code class="lang-elisp">(make-hash-table &amp;rest KEYWORD-ARGS)
+</code></pre>
+        <p>Create and return a new empty hash table (accepts :test, :size, etc.).</p>
+      </article>
+      <article class="doc-entry" id="doc-gethash">
+        <h3><a class="doc-anchor" href="#doc-gethash">#</a> <code>gethash</code></h3>
+        <pre><code class="lang-elisp">(gethash KEY TABLE &amp;optional DEFAULT)
+</code></pre>
+        <p>Return the value for KEY in TABLE, or DEFAULT if absent.</p>
+      </article>
+      <article class="doc-entry" id="doc-puthash">
+        <h3><a class="doc-anchor" href="#doc-puthash">#</a> <code>puthash</code></h3>
+        <pre><code class="lang-elisp">(puthash KEY VALUE TABLE)
+</code></pre>
+        <p>Associate KEY with VALUE in TABLE; return VALUE.</p>
+      </article>
+      <article class="doc-entry" id="doc-remhash">
+        <h3><a class="doc-anchor" href="#doc-remhash">#</a> <code>remhash</code></h3>
+        <pre><code class="lang-elisp">(remhash KEY TABLE)
+</code></pre>
+        <p>Remove KEY and its value from TABLE.</p>
+      </article>
+      <article class="doc-entry" id="doc-clrhash">
+        <h3><a class="doc-anchor" href="#doc-clrhash">#</a> <code>clrhash</code></h3>
+        <pre><code class="lang-elisp">(clrhash TABLE)
+</code></pre>
+        <p>Remove all entries from TABLE; return it.</p>
+      </article>
+      <article class="doc-entry" id="doc-hash-table-count">
+        <h3><a class="doc-anchor" href="#doc-hash-table-count">#</a> <code>hash-table-count</code></h3>
+        <pre><code class="lang-elisp">(hash-table-count TABLE)
+</code></pre>
+        <p>Return the number of entries in TABLE.</p>
+      </article>
+      <article class="doc-entry" id="doc-hash-table-test">
+        <h3><a class="doc-anchor" href="#doc-hash-table-test">#</a> <code>hash-table-test</code></h3>
+        <pre><code class="lang-elisp">(hash-table-test TABLE)
+</code></pre>
+        <p>Return the test function symbol used by TABLE.</p>
+      </article>
+      <article class="doc-entry" id="doc-hash-table-p">
+        <h3><a class="doc-anchor" href="#doc-hash-table-p">#</a> <code>hash-table-p</code></h3>
+        <pre><code class="lang-elisp">(hash-table-p OBJECT)
+</code></pre>
+        <p>Non-nil if OBJECT is a hash table.</p>
+      </article>
+      <article class="doc-entry" id="doc-hash-table-keys">
+        <h3><a class="doc-anchor" href="#doc-hash-table-keys">#</a> <code>hash-table-keys</code></h3>
+        <pre><code class="lang-elisp">(hash-table-keys TABLE)
+</code></pre>
+        <p>Return a list of all keys in TABLE.</p>
+      </article>
+      <article class="doc-entry" id="doc-hash-table-values">
+        <h3><a class="doc-anchor" href="#doc-hash-table-values">#</a> <code>hash-table-values</code></h3>
+        <pre><code class="lang-elisp">(hash-table-values TABLE)
+</code></pre>
+        <p>Return a list of all values in TABLE.</p>
+      </article>
+      <article class="doc-entry" id="doc-copy-hash-table">
+        <h3><a class="doc-anchor" href="#doc-copy-hash-table">#</a> <code>copy-hash-table</code></h3>
+        <pre><code class="lang-elisp">(copy-hash-table TABLE)
+</code></pre>
+        <p>Return a shallow copy of TABLE.</p>
+      </article>
+    </section>
+    <section class="tutorial-section" id="ch-other">
+      <h2>Other</h2>
+      <p class="chapter-meta">82 entries</p>
+      <article class="doc-entry" id="doc-format-time-string">
+        <h3><a class="doc-anchor" href="#doc-format-time-string">#</a> <code>format-time-string</code></h3>
+        <pre><code class="lang-elisp">(format-time-string FORMAT &amp;optional TIME ZONE)
+</code></pre>
+        <p>Format TIME (default now) per FORMAT. ZONE nil=local, t=UTC, integer=offset secs.</p>
+      </article>
+      <article class="doc-entry" id="doc-float-time">
+        <h3><a class="doc-anchor" href="#doc-float-time">#</a> <code>float-time</code></h3>
+        <pre><code class="lang-elisp">(float-time &amp;optional TIME)
+</code></pre>
+        <p>Return TIME (default now) as seconds since the epoch, a float.</p>
+      </article>
+      <article class="doc-entry" id="doc-current-time">
+        <h3><a class="doc-anchor" href="#doc-current-time">#</a> <code>current-time</code></h3>
+        <pre><code class="lang-elisp">(current-time)
+</code></pre>
+        <p>Return the current time as (HIGH LOW USEC PSEC).</p>
+      </article>
+      <article class="doc-entry" id="doc-current-time-string">
+        <h3><a class="doc-anchor" href="#doc-current-time-string">#</a> <code>current-time-string</code></h3>
+        <pre><code class="lang-elisp">(current-time-string &amp;optional TIME ZONE)
+</code></pre>
+        <p>Return TIME (default now) as a string like &quot;Sun Jun 29 12:00:00 2025&quot;.</p>
+      </article>
+      <article class="doc-entry" id="doc-decode-time">
+        <h3><a class="doc-anchor" href="#doc-decode-time">#</a> <code>decode-time</code></h3>
+        <pre><code class="lang-elisp">(decode-time &amp;optional TIME ZONE)
+</code></pre>
+        <p>Decompose TIME into (SEC MIN HOUR DAY MON YEAR DOW DST UTCOFF).</p>
+      </article>
+      <article class="doc-entry" id="doc-encode-time">
+        <h3><a class="doc-anchor" href="#doc-encode-time">#</a> <code>encode-time</code></h3>
+        <pre><code class="lang-elisp">(encode-time TIME) or (encode-time SEC MIN HOUR DAY MON YEAR &amp;optional ZONE)
+</code></pre>
+        <p>Inverse of decode-time: turn decoded components into a (HIGH LOW) time value.</p>
+      </article>
+      <article class="doc-entry" id="doc-sha1">
+        <h3><a class="doc-anchor" href="#doc-sha1">#</a> <code>sha1</code></h3>
+        <pre><code class="lang-elisp">(sha1 OBJECT &amp;optional START END BINARY)
+</code></pre>
+        <p>Return the SHA-1 hash of OBJECT (a string or buffer) as a hex string.</p>
+      </article>
+      <article class="doc-entry" id="doc-md5">
+        <h3><a class="doc-anchor" href="#doc-md5">#</a> <code>md5</code></h3>
+        <pre><code class="lang-elisp">(md5 OBJECT &amp;optional START END CODING-SYSTEM NOERROR)
+</code></pre>
+        <p>Return the MD5 hash of OBJECT as a hex string.</p>
+      </article>
+      <article class="doc-entry" id="doc-secure-hash">
+        <h3><a class="doc-anchor" href="#doc-secure-hash">#</a> <code>secure-hash</code></h3>
+        <pre><code class="lang-elisp">(secure-hash ALGORITHM OBJECT &amp;optional START END BINARY)
+</code></pre>
+        <p>Return the ALGORITHM (md5/sha1/sha224/sha256/sha384/sha512) hash of OBJECT.</p>
+      </article>
+      <article class="doc-entry" id="doc-base64-encode-string">
+        <h3><a class="doc-anchor" href="#doc-base64-encode-string">#</a> <code>base64-encode-string</code></h3>
+        <pre><code class="lang-elisp">(base64-encode-string STRING &amp;optional NO-LINE-BREAK)
+</code></pre>
+        <p>Return the base64 encoding of STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-base64-decode-string">
+        <h3><a class="doc-anchor" href="#doc-base64-decode-string">#</a> <code>base64-decode-string</code></h3>
+        <pre><code class="lang-elisp">(base64-decode-string STRING &amp;optional BASE64URL IGNORE-INVALID)
+</code></pre>
+        <p>Return the contents of base64-encoded STRING decoded.</p>
+      </article>
+      <article class="doc-entry" id="doc-base64url-encode-string">
+        <h3><a class="doc-anchor" href="#doc-base64url-encode-string">#</a> <code>base64url-encode-string</code></h3>
+        <pre><code class="lang-elisp">(base64url-encode-string STRING &amp;optional NO-PAD)
+</code></pre>
+        <p>Return the base64url (URL-safe) encoding of STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-base64url-decode-string">
+        <h3><a class="doc-anchor" href="#doc-base64url-decode-string">#</a> <code>base64url-decode-string</code></h3>
+        <pre><code class="lang-elisp">(base64url-decode-string STRING &amp;optional IGNORE-INVALID)
+</code></pre>
+        <p>Decode a base64url (URL-safe) encoded STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-url-hexify-string">
+        <h3><a class="doc-anchor" href="#doc-url-hexify-string">#</a> <code>url-hexify-string</code></h3>
+        <pre><code class="lang-elisp">(url-hexify-string STRING &amp;optional ALLOWED-CHARS)
+</code></pre>
+        <p>Percent-encode (URL-escape) the characters of STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-url-unhex-string">
+        <h3><a class="doc-anchor" href="#doc-url-unhex-string">#</a> <code>url-unhex-string</code></h3>
+        <pre><code class="lang-elisp">(url-unhex-string STRING &amp;optional ALLOW-NEWLINES)
+</code></pre>
+        <p>Decode the %-escaped sequences in STRING.</p>
+      </article>
+      <article class="doc-entry" id="doc-sxhash">
+        <h3><a class="doc-anchor" href="#doc-sxhash">#</a> <code>sxhash</code></h3>
+        <pre><code class="lang-elisp">(sxhash OBJ)
+</code></pre>
+        <p>Return an `equal&#39;-based hash code for OBJ (alias of sxhash-equal).</p>
+      </article>
+      <article class="doc-entry" id="doc-sxhash-equal">
+        <h3><a class="doc-anchor" href="#doc-sxhash-equal">#</a> <code>sxhash-equal</code></h3>
+        <pre><code class="lang-elisp">(sxhash-equal OBJ)
+</code></pre>
+        <p>Return a hash code for OBJ such that `equal&#39; objects hash alike.</p>
+      </article>
+      <article class="doc-entry" id="doc-sxhash-eq">
+        <h3><a class="doc-anchor" href="#doc-sxhash-eq">#</a> <code>sxhash-eq</code></h3>
+        <pre><code class="lang-elisp">(sxhash-eq OBJ)
+</code></pre>
+        <p>Return a hash code for OBJ such that `eq&#39; objects hash alike.</p>
+      </article>
+      <article class="doc-entry" id="doc-sxhash-eql">
+        <h3><a class="doc-anchor" href="#doc-sxhash-eql">#</a> <code>sxhash-eql</code></h3>
+        <pre><code class="lang-elisp">(sxhash-eql OBJ)
+</code></pre>
+        <p>Return a hash code for OBJ such that `eql&#39; objects hash alike.</p>
+      </article>
+      <article class="doc-entry" id="doc-getenv">
+        <h3><a class="doc-anchor" href="#doc-getenv">#</a> <code>getenv</code></h3>
+        <pre><code class="lang-elisp">(getenv VARIABLE &amp;optional FRAME)
+</code></pre>
+        <p>Return the value of environment VARIABLE as a string, or nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-setenv">
+        <h3><a class="doc-anchor" href="#doc-setenv">#</a> <code>setenv</code></h3>
+        <pre><code class="lang-elisp">(setenv VARIABLE &amp;optional VALUE SUBSTITUTE-ENV-VARS)
+</code></pre>
+        <p>Set environment VARIABLE to VALUE (unset it if VALUE is nil).</p>
+      </article>
+      <article class="doc-entry" id="doc-current-directory">
+        <h3><a class="doc-anchor" href="#doc-current-directory">#</a> <code>--current-directory--</code></h3>
+        <pre><code class="lang-elisp">(--current-directory--)
+</code></pre>
+        <p>Internal: the process working directory as a string (backs `default-directory&#39;).</p>
+      </article>
+      <article class="doc-entry" id="doc-file-exists-p">
+        <h3><a class="doc-anchor" href="#doc-file-exists-p">#</a> <code>file-exists-p</code></h3>
+        <pre><code class="lang-elisp">(file-exists-p FILENAME)
+</code></pre>
+        <p>Non-nil if FILENAME names an existing file.</p>
+      </article>
+      <article class="doc-entry" id="doc-file-directory-p">
+        <h3><a class="doc-anchor" href="#doc-file-directory-p">#</a> <code>file-directory-p</code></h3>
+        <pre><code class="lang-elisp">(file-directory-p FILENAME)
+</code></pre>
+        <p>Non-nil if FILENAME names an existing directory.</p>
+      </article>
+      <article class="doc-entry" id="doc-file-regular-p">
+        <h3><a class="doc-anchor" href="#doc-file-regular-p">#</a> <code>file-regular-p</code></h3>
+        <pre><code class="lang-elisp">(file-regular-p FILENAME)
+</code></pre>
+        <p>Non-nil if FILENAME names a regular file.</p>
+      </article>
+      <article class="doc-entry" id="doc-file-readable-p">
+        <h3><a class="doc-anchor" href="#doc-file-readable-p">#</a> <code>file-readable-p</code></h3>
+        <pre><code class="lang-elisp">(file-readable-p FILENAME)
+</code></pre>
+        <p>Non-nil if FILENAME names a file you can read.</p>
+      </article>
+      <article class="doc-entry" id="doc-file-writable-p">
+        <h3><a class="doc-anchor" href="#doc-file-writable-p">#</a> <code>file-writable-p</code></h3>
+        <pre><code class="lang-elisp">(file-writable-p FILENAME)
+</code></pre>
+        <p>Non-nil if FILENAME names a file you can write (or create).</p>
+      </article>
+      <article class="doc-entry" id="doc-file-symlink-p">
+        <h3><a class="doc-anchor" href="#doc-file-symlink-p">#</a> <code>file-symlink-p</code></h3>
+        <pre><code class="lang-elisp">(file-symlink-p FILENAME)
+</code></pre>
+        <p>If FILENAME is a symbolic link, return its target; else nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-directory-files">
+        <h3><a class="doc-anchor" href="#doc-directory-files">#</a> <code>--directory-files--</code></h3>
+        <pre><code class="lang-elisp">(--directory-files-- DIRECTORY &amp;optional MATCH-REGEXP NOSORT)
+</code></pre>
+        <p>Internal primitive behind `directory-files&#39;: names in DIRECTORY, optionally MATCH-filtered and sorted.</p>
+      </article>
+      <article class="doc-entry" id="doc-write-region">
+        <h3><a class="doc-anchor" href="#doc-write-region">#</a> <code>write-region</code></h3>
+        <pre><code class="lang-elisp">(write-region START END FILENAME &amp;optional APPEND VISIT LOCKNAME MUSTBENEW)
+</code></pre>
+        <p>Write the buffer text between START and END to FILENAME.</p>
+      </article>
+      <article class="doc-entry" id="doc-delete-file">
+        <h3><a class="doc-anchor" href="#doc-delete-file">#</a> <code>delete-file</code></h3>
+        <pre><code class="lang-elisp">(delete-file FILENAME &amp;optional TRASH)
+</code></pre>
+        <p>Delete the file named FILENAME.</p>
+      </article>
+      <article class="doc-entry" id="doc-make-directory">
+        <h3><a class="doc-anchor" href="#doc-make-directory">#</a> <code>make-directory</code></h3>
+        <pre><code class="lang-elisp">(make-directory DIR &amp;optional PARENTS)
+</code></pre>
+        <p>Create the directory DIR (and parents when PARENTS is non-nil).</p>
+      </article>
+      <article class="doc-entry" id="doc-rename-file">
+        <h3><a class="doc-anchor" href="#doc-rename-file">#</a> <code>rename-file</code></h3>
+        <pre><code class="lang-elisp">(rename-file FILE NEWNAME &amp;optional OK-IF-ALREADY-EXISTS)
+</code></pre>
+        <p>Rename FILE to NEWNAME.</p>
+      </article>
+      <article class="doc-entry" id="doc-copy-file">
+        <h3><a class="doc-anchor" href="#doc-copy-file">#</a> <code>copy-file</code></h3>
+        <pre><code class="lang-elisp">(copy-file FILE NEWNAME &amp;optional OK-IF-ALREADY-EXISTS KEEP-TIME PRESERVE-UID-GID PRESERVE-PERMISSIONS)
+</code></pre>
+        <p>Copy FILE to NEWNAME.</p>
+      </article>
+      <article class="doc-entry" id="doc-insert-file-contents">
+        <h3><a class="doc-anchor" href="#doc-insert-file-contents">#</a> <code>insert-file-contents</code></h3>
+        <pre><code class="lang-elisp">(insert-file-contents FILENAME &amp;optional VISIT BEG END REPLACE)
+</code></pre>
+        <p>Insert the contents of FILENAME into the current buffer at point.</p>
+      </article>
+      <article class="doc-entry" id="doc-shell-command-to-string">
+        <h3><a class="doc-anchor" href="#doc-shell-command-to-string">#</a> <code>shell-command-to-string</code></h3>
+        <pre><code class="lang-elisp">(shell-command-to-string COMMAND)
+</code></pre>
+        <p>Run shell COMMAND and return its standard output as a string.</p>
+      </article>
+      <article class="doc-entry" id="doc-call-process">
+        <h3><a class="doc-anchor" href="#doc-call-process">#</a> <code>call-process</code></h3>
+        <pre><code class="lang-elisp">(call-process PROGRAM &amp;optional INFILE DESTINATION DISPLAY &amp;rest ARGS)
+</code></pre>
+        <p>Run PROGRAM synchronously with ARGS; return its exit status.</p>
+      </article>
+      <article class="doc-entry" id="doc-process-lines">
+        <h3><a class="doc-anchor" href="#doc-process-lines">#</a> <code>process-lines</code></h3>
+        <pre><code class="lang-elisp">(process-lines PROGRAM &amp;rest ARGS)
+</code></pre>
+        <p>Run PROGRAM with ARGS and return its output as a list of lines.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-push">
+        <h3><a class="doc-anchor" href="#doc-buffer-push">#</a> <code>--buffer-push--</code></h3>
+        <pre><code class="lang-elisp">(--buffer-push--)
+</code></pre>
+        <p>Internal: push a fresh edit buffer onto the buffer stack.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-pop">
+        <h3><a class="doc-anchor" href="#doc-buffer-pop">#</a> <code>--buffer-pop--</code></h3>
+        <pre><code class="lang-elisp">(--buffer-pop--)
+</code></pre>
+        <p>Internal: pop the current edit buffer off the buffer stack.</p>
+      </article>
+      <article class="doc-entry" id="doc-insert">
+        <h3><a class="doc-anchor" href="#doc-insert">#</a> <code>insert</code></h3>
+        <pre><code class="lang-elisp">(insert &amp;rest ARGS)
+</code></pre>
+        <p>Insert the ARGS (strings or characters) into the buffer at point.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-string">
+        <h3><a class="doc-anchor" href="#doc-buffer-string">#</a> <code>buffer-string</code></h3>
+        <pre><code class="lang-elisp">(buffer-string)
+</code></pre>
+        <p>Return the entire contents of the current buffer as a string.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-size">
+        <h3><a class="doc-anchor" href="#doc-buffer-size">#</a> <code>buffer-size</code></h3>
+        <pre><code class="lang-elisp">(buffer-size &amp;optional BUFFER)
+</code></pre>
+        <p>Return the number of characters in the current buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-point">
+        <h3><a class="doc-anchor" href="#doc-point">#</a> <code>point</code></h3>
+        <pre><code class="lang-elisp">(point)
+</code></pre>
+        <p>Return the value of point, as an integer (1-based).</p>
+      </article>
+      <article class="doc-entry" id="doc-point-min">
+        <h3><a class="doc-anchor" href="#doc-point-min">#</a> <code>point-min</code></h3>
+        <pre><code class="lang-elisp">(point-min)
+</code></pre>
+        <p>Return the minimum accessible buffer position.</p>
+      </article>
+      <article class="doc-entry" id="doc-point-max">
+        <h3><a class="doc-anchor" href="#doc-point-max">#</a> <code>point-max</code></h3>
+        <pre><code class="lang-elisp">(point-max)
+</code></pre>
+        <p>Return the maximum accessible buffer position.</p>
+      </article>
+      <article class="doc-entry" id="doc-goto-char">
+        <h3><a class="doc-anchor" href="#doc-goto-char">#</a> <code>goto-char</code></h3>
+        <pre><code class="lang-elisp">(goto-char POSITION)
+</code></pre>
+        <p>Set point to POSITION in the current buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-erase-buffer">
+        <h3><a class="doc-anchor" href="#doc-erase-buffer">#</a> <code>erase-buffer</code></h3>
+        <pre><code class="lang-elisp">(erase-buffer)
+</code></pre>
+        <p>Delete the entire contents of the current buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-char-after">
+        <h3><a class="doc-anchor" href="#doc-char-after">#</a> <code>char-after</code></h3>
+        <pre><code class="lang-elisp">(char-after &amp;optional POS)
+</code></pre>
+        <p>Return the character after POS (point by default), or nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-substring">
+        <h3><a class="doc-anchor" href="#doc-buffer-substring">#</a> <code>buffer-substring</code></h3>
+        <pre><code class="lang-elisp">(buffer-substring START END)
+</code></pre>
+        <p>Return the buffer text between positions START and END as a string.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-substring-no-properties">
+        <h3><a class="doc-anchor" href="#doc-buffer-substring-no-properties">#</a> <code>buffer-substring-no-properties</code></h3>
+        <pre><code class="lang-elisp">(buffer-substring-no-properties START END)
+</code></pre>
+        <p>Return the buffer text between START and END, with no text properties.</p>
+      </article>
+      <article class="doc-entry" id="doc-delete-region">
+        <h3><a class="doc-anchor" href="#doc-delete-region">#</a> <code>delete-region</code></h3>
+        <pre><code class="lang-elisp">(delete-region START END)
+</code></pre>
+        <p>Delete the buffer text between positions START and END.</p>
+      </article>
+      <article class="doc-entry" id="doc-forward-char">
+        <h3><a class="doc-anchor" href="#doc-forward-char">#</a> <code>forward-char</code></h3>
+        <pre><code class="lang-elisp">(forward-char &amp;optional N)
+</code></pre>
+        <p>Move point N characters forward (default 1).</p>
+      </article>
+      <article class="doc-entry" id="doc-backward-char">
+        <h3><a class="doc-anchor" href="#doc-backward-char">#</a> <code>backward-char</code></h3>
+        <pre><code class="lang-elisp">(backward-char &amp;optional N)
+</code></pre>
+        <p>Move point N characters backward (default 1).</p>
+      </article>
+      <article class="doc-entry" id="doc-beginning-of-line">
+        <h3><a class="doc-anchor" href="#doc-beginning-of-line">#</a> <code>beginning-of-line</code></h3>
+        <pre><code class="lang-elisp">(beginning-of-line &amp;optional N)
+</code></pre>
+        <p>Move point to the beginning of the current line.</p>
+      </article>
+      <article class="doc-entry" id="doc-end-of-line">
+        <h3><a class="doc-anchor" href="#doc-end-of-line">#</a> <code>end-of-line</code></h3>
+        <pre><code class="lang-elisp">(end-of-line &amp;optional N)
+</code></pre>
+        <p>Move point to the end of the current line.</p>
+      </article>
+      <article class="doc-entry" id="doc-line-beginning-position">
+        <h3><a class="doc-anchor" href="#doc-line-beginning-position">#</a> <code>line-beginning-position</code></h3>
+        <pre><code class="lang-elisp">(line-beginning-position &amp;optional N)
+</code></pre>
+        <p>Return the position of the beginning of the current line.</p>
+      </article>
+      <article class="doc-entry" id="doc-line-end-position">
+        <h3><a class="doc-anchor" href="#doc-line-end-position">#</a> <code>line-end-position</code></h3>
+        <pre><code class="lang-elisp">(line-end-position &amp;optional N)
+</code></pre>
+        <p>Return the position of the end of the current line.</p>
+      </article>
+      <article class="doc-entry" id="doc-pos-bol">
+        <h3><a class="doc-anchor" href="#doc-pos-bol">#</a> <code>pos-bol</code></h3>
+        <pre><code class="lang-elisp">(pos-bol &amp;optional N)
+</code></pre>
+        <p>Return the position of the beginning of the current line (like line-beginning-position).</p>
+      </article>
+      <article class="doc-entry" id="doc-pos-eol">
+        <h3><a class="doc-anchor" href="#doc-pos-eol">#</a> <code>pos-eol</code></h3>
+        <pre><code class="lang-elisp">(pos-eol &amp;optional N)
+</code></pre>
+        <p>Return the position of the end of the current line (like line-end-position).</p>
+      </article>
+      <article class="doc-entry" id="doc-bolp">
+        <h3><a class="doc-anchor" href="#doc-bolp">#</a> <code>bolp</code></h3>
+        <pre><code class="lang-elisp">(bolp)
+</code></pre>
+        <p>Non-nil if point is at the beginning of a line.</p>
+      </article>
+      <article class="doc-entry" id="doc-eolp">
+        <h3><a class="doc-anchor" href="#doc-eolp">#</a> <code>eolp</code></h3>
+        <pre><code class="lang-elisp">(eolp)
+</code></pre>
+        <p>Non-nil if point is at the end of a line.</p>
+      </article>
+      <article class="doc-entry" id="doc-bobp">
+        <h3><a class="doc-anchor" href="#doc-bobp">#</a> <code>bobp</code></h3>
+        <pre><code class="lang-elisp">(bobp)
+</code></pre>
+        <p>Non-nil if point is at the beginning of the buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-eobp">
+        <h3><a class="doc-anchor" href="#doc-eobp">#</a> <code>eobp</code></h3>
+        <pre><code class="lang-elisp">(eobp)
+</code></pre>
+        <p>Non-nil if point is at the end of the buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-forward-line">
+        <h3><a class="doc-anchor" href="#doc-forward-line">#</a> <code>forward-line</code></h3>
+        <pre><code class="lang-elisp">(forward-line &amp;optional N)
+</code></pre>
+        <p>Move point N lines forward; return the count of lines left unmoved.</p>
+      </article>
+      <article class="doc-entry" id="doc-search-forward">
+        <h3><a class="doc-anchor" href="#doc-search-forward">#</a> <code>search-forward</code></h3>
+        <pre><code class="lang-elisp">(search-forward STRING &amp;optional BOUND NOERROR COUNT)
+</code></pre>
+        <p>Search forward for STRING, leaving point after it; return the new point.</p>
+      </article>
+      <article class="doc-entry" id="doc-re-search-forward">
+        <h3><a class="doc-anchor" href="#doc-re-search-forward">#</a> <code>re-search-forward</code></h3>
+        <pre><code class="lang-elisp">(re-search-forward REGEXP &amp;optional BOUND NOERROR COUNT)
+</code></pre>
+        <p>Search forward for a match of REGEXP, leaving point after it.</p>
+      </article>
+      <article class="doc-entry" id="doc-looking-at">
+        <h3><a class="doc-anchor" href="#doc-looking-at">#</a> <code>looking-at</code></h3>
+        <pre><code class="lang-elisp">(looking-at REGEXP &amp;optional INHIBIT-MODIFY)
+</code></pre>
+        <p>Non-nil if text after point matches REGEXP; sets the match data.</p>
+      </article>
+      <article class="doc-entry" id="doc-looking-at-p">
+        <h3><a class="doc-anchor" href="#doc-looking-at-p">#</a> <code>looking-at-p</code></h3>
+        <pre><code class="lang-elisp">(looking-at-p REGEXP)
+</code></pre>
+        <p>Non-nil if text after point matches REGEXP, without changing the match data.</p>
+      </article>
+      <article class="doc-entry" id="doc-replace-match">
+        <h3><a class="doc-anchor" href="#doc-replace-match">#</a> <code>replace-match</code></h3>
+        <pre><code class="lang-elisp">(replace-match NEWTEXT &amp;optional FIXEDCASE LITERAL STRING SUBEXP)
+</code></pre>
+        <p>Replace the text matched by the last search with NEWTEXT.</p>
+      </article>
+      <article class="doc-entry" id="doc-char-before">
+        <h3><a class="doc-anchor" href="#doc-char-before">#</a> <code>char-before</code></h3>
+        <pre><code class="lang-elisp">(char-before &amp;optional POS)
+</code></pre>
+        <p>Return the character before POS (point by default), or nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-delete-char">
+        <h3><a class="doc-anchor" href="#doc-delete-char">#</a> <code>delete-char</code></h3>
+        <pre><code class="lang-elisp">(delete-char N &amp;optional KILLFLAG)
+</code></pre>
+        <p>Delete N characters forward from point (backward if N is negative).</p>
+      </article>
+      <article class="doc-entry" id="doc-insert-char">
+        <h3><a class="doc-anchor" href="#doc-insert-char">#</a> <code>insert-char</code></h3>
+        <pre><code class="lang-elisp">(insert-char CHARACTER &amp;optional COUNT INHERIT)
+</code></pre>
+        <p>Insert COUNT copies of CHARACTER at point.</p>
+      </article>
+      <article class="doc-entry" id="doc-count-lines">
+        <h3><a class="doc-anchor" href="#doc-count-lines">#</a> <code>count-lines</code></h3>
+        <pre><code class="lang-elisp">(count-lines START END)
+</code></pre>
+        <p>Return the number of lines between positions START and END.</p>
+      </article>
+      <article class="doc-entry" id="doc-line-number-at-pos">
+        <h3><a class="doc-anchor" href="#doc-line-number-at-pos">#</a> <code>line-number-at-pos</code></h3>
+        <pre><code class="lang-elisp">(line-number-at-pos &amp;optional POS ABSOLUTE)
+</code></pre>
+        <p>Return the line number of POS (point by default) in the current buffer.</p>
+      </article>
+      <article class="doc-entry" id="doc-current-column">
+        <h3><a class="doc-anchor" href="#doc-current-column">#</a> <code>current-column</code></h3>
+        <pre><code class="lang-elisp">(current-column)
+</code></pre>
+        <p>Return the horizontal column position of point.</p>
+      </article>
+      <article class="doc-entry" id="doc-search-backward">
+        <h3><a class="doc-anchor" href="#doc-search-backward">#</a> <code>search-backward</code></h3>
+        <pre><code class="lang-elisp">(search-backward STRING &amp;optional BOUND NOERROR COUNT)
+</code></pre>
+        <p>Search backward for STRING, leaving point before it.</p>
+      </article>
+      <article class="doc-entry" id="doc-re-search-backward">
+        <h3><a class="doc-anchor" href="#doc-re-search-backward">#</a> <code>re-search-backward</code></h3>
+        <pre><code class="lang-elisp">(re-search-backward REGEXP &amp;optional BOUND NOERROR COUNT)
+</code></pre>
+        <p>Search backward for a match of REGEXP, leaving point before it.</p>
+      </article>
+      <article class="doc-entry" id="doc-skip-chars-forward">
+        <h3><a class="doc-anchor" href="#doc-skip-chars-forward">#</a> <code>skip-chars-forward</code></h3>
+        <pre><code class="lang-elisp">(skip-chars-forward STRING &amp;optional LIM)
+</code></pre>
+        <p>Move point forward over characters in the set STRING; return the distance moved.</p>
+      </article>
+      <article class="doc-entry" id="doc-skip-chars-backward">
+        <h3><a class="doc-anchor" href="#doc-skip-chars-backward">#</a> <code>skip-chars-backward</code></h3>
+        <pre><code class="lang-elisp">(skip-chars-backward STRING &amp;optional LIM)
+</code></pre>
+        <p>Move point backward over characters in the set STRING; return the distance moved.</p>
+      </article>
+      <article class="doc-entry" id="doc-forward-word">
+        <h3><a class="doc-anchor" href="#doc-forward-word">#</a> <code>forward-word</code></h3>
+        <pre><code class="lang-elisp">(forward-word &amp;optional N)
+</code></pre>
+        <p>Move point forward N words (default 1).</p>
+      </article>
+      <article class="doc-entry" id="doc-backward-word">
+        <h3><a class="doc-anchor" href="#doc-backward-word">#</a> <code>backward-word</code></h3>
+        <pre><code class="lang-elisp">(backward-word &amp;optional N)
+</code></pre>
+        <p>Move point backward N words (default 1).</p>
+      </article>
+    </section>
+  </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

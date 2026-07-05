@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-kafka — engineering report. APACHE KAFKA CLIENT FOR STRYKE // PRODUCER + CONSUMER + ADMIN + CONSUMER-GROUP LAG. Architecture, FFI layer, scope, dependencies.">
+  <title>stryke-kafka — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-KAFKA &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_kafka.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use Kafka</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-kafka</strong> is one of the opt-in connector packages in the stryke ecosystem. Apache Kafka client for stryke &mdash; producer, consumer, admin, and consumer-group lag. Opt-in package backed by <code>rdkafka</code> (librdkafka bindings); ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Kafka</code>.</p>
+      <p class="tutorial-subtitle">librdkafka is the canonical native Kafka client. Bundled here as an opt-in stryke package so workflows that need it don't bloat the core binary.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+        <div class="stat-card"><div class="stat-val green">56</div><div class="stat-label">Public Kafka:: fns</div></div>
+        <div class="stat-card"><div class="stat-val green">55</div><div class="stat-label">kafka__* FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val">34</div><div class="stat-label">Pure (no-broker) helpers</div></div>
+        <div class="stat-card"><div class="stat-val cyan">0.18.0</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val">rdkafka 0.39</div><div class="stat-label">librdkafka binding</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">License</div></div>
+      </div>
+      <p class="tutorial-subtitle">Counts: 56 public <code>Kafka::*</code> functions in <code>lib/Kafka.stk</code> (2 producer, 2 consumer, 4 consumer-offset, 13 admin/metadata, 1 plumbing, 34 pure no-broker helpers), exposed over 55 <code>kafka__*</code> <code>extern "C"</code> exports in <code>src/lib.rs</code> &mdash; <code>version</code> reuses <code>kafka__pkg_version</code> and <code>consume_stream</code> reuses <code>kafka__consume</code>, so the public surface is one wider than the export list.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>Thin <code>.stk</code> wrapper (<code>Kafka</code>); exposes typed helpers that serialize args to JSON and parse the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_kafka.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate (statically links librdkafka via <code>rdkafka</code>'s <code>cmake-build</code>); every public surface fn is an <code>extern "C" fn kafka__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Kafka</code>; a shared tokio runtime + a <code>FutureProducer</code> + admin-client cache per brokers tuple held in <code>OnceCell</code>; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/kafka@&lt;version&gt;/</code> after <code>make install</code>; <code>use Kafka</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo check / fmt / clippy / test (ubuntu + macOS) / doc, a cross-target release build (linux-gnu, x86_64 + aarch64 darwin) uploading the cdylib artifact, plus docs / polish / semantic / newline / structure gate jobs</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>librdkafka is the canonical native Kafka client. Bundled here as an opt-in stryke package so workflows that need it don't bloat the core binary.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>Kafka::*</code> wrapper builds a per-call args hash, <code>to_json</code>s it, and calls the matching <code>kafka__*</code> symbol on the dlopen'd cdylib &mdash; the operation is encoded in the symbol name (e.g. <code>kafka__produce</code>), not a field in the payload. The cdylib returns a JSON string; the wrapper's <code>Kafka::_decode</code> runs <code>from_json</code>, and if the result is a hash carrying an <code>error</code> key it dies with <code>Kafka::&lt;op&gt;: &lt;reason&gt;</code>, otherwise it returns the decoded value directly.</p>
+<pre># request shape — the per-fn args hash the .stk wrapper builds,
+# merged with the caller's connection opts (brokers)
+{"topic": "events", "value": "hi", "key": "k1"}     # e.g. kafka__produce
+
+# response shape
+{ ...per-fn result... }       # success — returned to the caller as-is
+{"error": "&lt;msg&gt;"}            # failure — wrapper dies with Kafka::&lt;op&gt;: &lt;reason&gt;</pre>
+      <p>Connection options are merged by <code>Kafka::_req</code>, which copies the caller's <code>brokers</code> opt into the request when present; the cdylib otherwise falls back to <code>$KAFKA_BROKERS</code> (default <code>localhost:9092</code>).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">[]</span>SURFACE BY FAMILY</h2>
+      <p>The public surface in <code>lib/Kafka.stk</code> groups into six families. Broker-bound families issue real metadata / produce / consume / admin requests; the pure family computes Kafka semantics offline (partition prediction, rebalance planning, config validation, topic-name hygiene) with no broker round trip.</p>
+      <table class="arch-table">
+        <thead><tr><th>Family</th><th>Count</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Producer</td><td>2</td><td><code>produce</code>, <code>produce_many</code></td></tr>
+          <tr><td>Consumer</td><td>2</td><td><code>consume</code>, <code>consume_stream</code></td></tr>
+          <tr><td>Consumer offsets</td><td>4</td><td><code>lag</code>, <code>watermarks</code>, <code>offsets_for_times</code>, <code>committed</code></td></tr>
+          <tr><td>Admin / metadata</td><td>13</td><td><code>ping</code>, <code>cluster</code>, <code>topics</code>, <code>describe</code>, <code>groups</code>, <code>describe_group</code>, <code>create_topic</code>, <code>delete_topic</code>, <code>create_partitions</code>, <code>describe_configs</code>, <code>alter_configs</code>, <code>delete_groups</code>, <code>delete_records</code></td></tr>
+          <tr><td>Plumbing</td><td>1</td><td><code>version</code></td></tr>
+          <tr><td>Pure (no broker)</td><td>34</td><td>topic-name (<code>valid_topic_name</code>, <code>sanitize_topic_name</code>, <code>is_internal_topic</code>, <code>topics_collide</code>, <code>topic_metric_name</code>), brokers (<code>parse_brokers</code>, <code>build_brokers</code>, <code>normalize_brokers</code>), partitioners (<code>partition_for_key</code>, <code>partition_for_key_crc32</code>, <code>partition_for_key_fnv1a</code>, <code>partition_distribution</code>), coordinators (<code>group_coordinator_partition</code>, <code>transaction_coordinator_partition</code>), assignors (<code>range_assignment</code>, <code>roundrobin_assignment</code>, <code>sticky_assignment</code>, <code>replica_assignment</code>, <code>assignment_by_broker</code>, <code>assignment_diff</code>), offsets / config (<code>format_offset</code>, <code>parse_topic_partition</code>, <code>format_topic_partition</code>, <code>compression_codec</code>, <code>cleanup_policy</code>, <code>acks_value</code>, <code>parse_duration_ms</code>, <code>humanize_duration_ms</code>, <code>isr_health</code>, <code>offset_lag</code>, <code>security_protocol</code>, <code>auto_offset_reset</code>, <code>isolation_level</code>, <code>timestamp_type</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>DEPENDENCIES</h2>
+      <p>The cdylib is self-contained: <code>rdkafka</code>'s <code>cmake-build</code> feature compiles librdkafka from source rather than linking a system <code>.so</code>, adding ~3-5 minutes to a first build (subsequent builds reuse the cached static archive).</p>
+      <table class="arch-table">
+        <thead><tr><th>Crate</th><th>Version</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>rdkafka</code></td><td>0.39 (<code>cmake-build</code>, <code>libz</code>, <code>tokio</code>)</td><td>librdkafka binding &mdash; producer, consumer, admin client</td></tr>
+          <tr><td><code>tokio</code></td><td>1 (multi-thread rt)</td><td>shared async runtime held in <code>OnceCell</code></td></tr>
+          <tr><td><code>serde</code> / <code>serde_json</code></td><td>1 (<code>preserve_order</code>)</td><td>JSON envelope (de)serialization</td></tr>
+          <tr><td><code>indexmap</code></td><td>2</td><td>order-preserving maps for JSON output</td></tr>
+          <tr><td><code>futures</code></td><td>0.3</td><td>async combinators for batched produce</td></tr>
+          <tr><td><code>once_cell</code> / <code>parking_lot</code></td><td>1 / 0.12</td><td>runtime + per-brokers client cache</td></tr>
+          <tr><td><code>anyhow</code></td><td>1</td><td>error context inside the cdylib</td></tr>
+        </tbody>
+      </table>
+      <p>Release profile: <code>opt-level = 3</code>, <code>lto = "thin"</code>, <code>codegen-units = 1</code>, <code>strip = true</code>, <code>panic = "abort"</code>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-kafka#readme">"Why this is a package"</a> + "API reference" sections for the authoritative scope. The package is intentionally narrower than its underlying SDK / driver &mdash; the goal is "useful from a shell pipeline", not "complete API coverage". <strong>Shipped:</strong> produce with keys/headers/partitions/timestamps + binary framing, consume with headers/binary/offset-commit, consumer-group lag, watermarks, time-based offset lookup, topic config on create, create_partitions, describe/alter configs, delete_groups, describe_group, committed offsets, and delete_records (truncate to offset). <strong>Deferred:</strong> SASL / SSL connection options, a long-running consumer daemon (callback streaming), consumer <code>seek</code> / <code>position</code>, Schema Registry value modes, a Streams DSL, and a transactional producer (EOS).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-kafka">github.com/MenkeTechnologies/stryke-kafka</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-kafka/issues">github.com/MenkeTechnologies/stryke-kafka/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

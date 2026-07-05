@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-mcpd — MCP servers without a runtime. Validated tool specs, crash-isolated serving, a root-jailed stock tool pack, and result helpers over stryke's mcp_* builtins. Pure stryke — no cdylib, no helper binary.">
+  <title>stryke-mcpd — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .sub-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .sub-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .sub-tbl td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .sub-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; font-size: 11.5px; }
+    .sub-tbl td.mod-name { color: var(--green); font-weight: 700; font-family: 'Share Tech Mono', monospace; }
+    .sub-tbl td.cnt { color: var(--yellow); text-align: right; font-family: 'Share Tech Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-MCPD &mdash; MCP SERVERS, NATIVE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">4 sublibraries &middot; validated tool specs &middot; crash-isolated serving &middot; root-jailed stock pack &middot; <code>s build --release</code> &rarr; one native binary &middot; <code>use Mcpd</code> pulls everything</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-mcpd/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-MCPD</h2>
+      <p class="tutorial-subtitle"><strong>MCP servers without a runtime.</strong> Every MCP server in the wild drags a Node runtime or a Python venv to the target machine. A stryke server is a few lines of <code>.stk</code> &mdash; and <code>s build --release</code> turns it into a single static native binary with no interpreter on the target. stryke-mcpd is the policy layer over the core <code>mcp_*</code> builtins: validated tool specs with named diagnostics (<code>Mcpd::Schema</code>), crash-isolated serving that keeps stdout protocol-clean (<code>Mcpd::Server</code>), a root-jailed filesystem/shell tool pack (<code>Mcpd::Tools</code>), and result-envelope helpers (<code>Mcpd::Client</code>). Pure stryke: no <code>[ffi]</code> table, no cdylib, no helper binary.</p>
+
+      <section class="tutorial-section">
+        <h2>The 4 sublibraries</h2>
+        <table class="sub-tbl">
+          <thead>
+            <tr><th>#</th><th>Module</th><th>File</th><th>Fns</th><th>Highlights</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td class="mod-name">Mcpd::Schema</td><td><code>lib/Schema.stk</code></td><td class="cnt">21</td><td><code>tool</code> (validated spec constructor) &middot; <code>check_args</code> (declared-type arg checking) &middot; <code>validate_all</code> (full specs, unique names) &middot; <code>is_valid</code> (non-dying boolean form) &middot; <code>types</code> &middot; <code>param_names</code> &middot; <code>param_count</code> &middot; <code>has_param</code> &middot; <code>param_type</code> &middot; <code>params_of_type</code> &middot; <code>tool_names</code> (sorted names of a local set) &middot; <code>find</code> (named-spec lookup) &middot; <code>to_json_schema</code> (MCP inputSchema) &middot; <code>from_json_schema</code> (inputSchema &rarr; params, inverse) &middot; <code>to_tool_list</code> (MCP tools/list payload) &middot; <code>from_tool_list</code> (tools/list &rarr; descriptors, inverse) &middot; <code>tool_map</code> (name &rarr; spec dispatch index) &middot; <code>tool_summary</code> &middot; <code>summaries</code> (per-tool list) &middot; <code>describe</code> (catalog) &middot; <code>rename</code></td></tr>
+            <tr><td>2</td><td class="mod-name">Mcpd::Server</td><td><code>lib/Server.stk</code></td><td class="cnt">9</td><td><code>serve</code> (validate + wrap + <code>mcp_server_start</code>) &middot; <code>wrap</code> (die &rarr; <code>ERROR:</code> envelope, server survives) &middot; <code>wrap_all</code> &middot; <code>checked</code> (arg-check before body) &middot; <code>wrap_all_checked</code> (strict serving) &middot; <code>audit</code> (log successful calls) &middot; <code>log_to</code>/<code>log</code>/<code>log_path</code> (file-only diagnostics)</td></tr>
+            <tr><td>3</td><td class="mod-name">Mcpd::Tools</td><td><code>lib/Tools.stk</code></td><td class="cnt">35</td><td><code>fs_read</code> &middot; <code>fs_list</code> &middot; <code>fs_glob</code> (shell-glob filter) &middot; <code>fs_count</code> (entry count) &middot; <code>fs_grep</code> &middot; <code>fs_grep_count</code> (match count) &middot; <code>fs_first_match</code> (first hit + line no.) &middot; <code>fs_find</code> (recursive, capped) &middot; <code>fs_stat</code> &middot; <code>fs_readlink</code> (symlink target) &middot; <code>fs_realpath</code> (jailed path resolution) &middot; <code>fs_du</code> &middot; <code>fs_head</code> &middot; <code>fs_tail</code> &middot; <code>fs_slice</code> (line range) &middot; <code>fs_hash</code> (checksum) &middot; <code>fs_exists</code> &middot; <code>fs_lines</code> (wc) &middot; <code>fs_write</code> &middot; <code>fs_append</code> &middot; <code>fs_replace</code> (regex s///) &middot; <code>fs_chmod</code> (octal mode) &middot; <code>fs_mkdir</code> &middot; <code>fs_touch</code> (empty file / mtime) &middot; <code>fs_rmdir</code> &middot; <code>fs_delete</code> &middot; <code>fs_copy</code> &middot; <code>fs_move</code> &middot; <code>sh_exec</code> (allowlist) &middot; <code>env_get</code> &middot; <code>time_now</code> &middot; <code>sys_info</code> &middot; <code>all</code> (<code>readonly</code> mode) &middot; <code>jail</code> (root confinement) &middot; <code>names</code></td></tr>
+            <tr><td>4</td><td class="mod-name">Mcpd::Client</td><td><code>lib/Client.stk</code></td><td class="cnt">16</td><td><code>text</code> (envelope &rarr; string) &middot; <code>texts</code> (unjoined blocks) &middot; <code>text_lines</code> (split into lines) &middot; <code>content_types</code> &middot; <code>content_of_type</code> (full blocks of a type) &middot; <code>block_count</code> &middot; <code>call_text</code> (call + extract) &middot; <code>call_lines</code> (call + line split) &middot; <code>call_texts</code> (call + unjoined blocks) &middot; <code>is_error</code> &middot; <code>error_message</code> (strip prefix) &middot; <code>tool_names</code> &middot; <code>tool_count</code> &middot; <code>tool_descriptions</code> (name &rarr; desc) &middot; <code>has_tool</code> &middot; <code>tool_schema</code> (a tool's advertised inputSchema)</td></tr>
+          </tbody>
+        </table>
+        <p>Color legend: <span style="color:var(--green);font-weight:700">green = module name</span> &middot; <span style="color:var(--yellow)">yellow = function count</span>. Tools are root-jailed: paths resolve under the configured root and escapes die &mdash; which <code>Server::wrap</code> turns into an ERROR result, not a dead server.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; Mcpd::Schema</h2>
+        <p>Validated tool specs. <code>mcp_server_start</code> accepts any <code>+{name, description, parameters, run}</code> hashref and errors one tool at a time at serve time; Schema front-loads that into construction time with named diagnostics, so a malformed spec dies where it was written, not where it was served. A <em>spec</em> is the hashref <code>tool</code> returns; a <em>set</em> is an arrayref of specs.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Signature</th><th>Returns / behavior</th></tr></thead>
+          <tbody>
+            <tr><td class="mod-name">tool</td><td><code>tool($name, $desc, $params, $run)</code></td><td>Validated spec hashref. Dies with the field name if <code>$name</code> is not an identifier (<code>/^[A-Za-z_][A-Za-z0-9_]*$/</code>), <code>$desc</code> is empty, <code>$params</code> is not a hashref, a param type is not one of <code>types</code>, or <code>$run</code> is not a coderef.</td></tr>
+            <tr><td class="mod-name">types</td><td><code>types()</code></td><td>The five wire param types: <code>string number boolean array object</code>.</td></tr>
+            <tr><td class="mod-name">check_args</td><td><code>check_args($spec, $args)</code></td><td>Returns <code>1</code>, or dies: every declared param must be present, no undeclared extras, and <code>number</code>/<code>array</code>/<code>object</code> are type-checked. Designed for the top of a run coderef.</td></tr>
+            <tr><td class="mod-name">validate_all</td><td><code>validate_all($tools)</code></td><td>Returns the tool count, or dies: <code>$tools</code> must be an arrayref of full specs (all four keys) with unique names.</td></tr>
+            <tr><td class="mod-name">is_valid</td><td><code>is_valid($tools)</code></td><td><code>1</code>/<code>0</code> &mdash; non-dying boolean form of <code>validate_all</code> (wraps it in <code>eval</code>).</td></tr>
+            <tr><td class="mod-name">param_names</td><td><code>param_names($spec)</code></td><td>Sorted arrayref of the spec's parameter names.</td></tr>
+            <tr><td class="mod-name">param_count</td><td><code>param_count($spec)</code></td><td>Scalar count of declared parameters &mdash; the scalar companion of <code>param_names</code>.</td></tr>
+            <tr><td class="mod-name">has_param</td><td><code>has_param($spec, $name)</code></td><td><code>1</code>/<code>0</code> &mdash; whether the spec declares a parameter named <code>$name</code>.</td></tr>
+            <tr><td class="mod-name">param_type</td><td><code>param_type($spec, $name)</code></td><td>The declared wire type of <code>$name</code>, or <code>undef</code> when there is no such parameter.</td></tr>
+            <tr><td class="mod-name">params_of_type</td><td><code>params_of_type($spec, $type)</code></td><td>Sorted arrayref of the parameter names of a given wire type; empty when none match.</td></tr>
+            <tr><td class="mod-name">tool_names</td><td><code>tool_names($tools)</code></td><td>Sorted arrayref of the names in a local set (validates first) &mdash; the offline companion of <code>Client::tool_names</code>.</td></tr>
+            <tr><td class="mod-name">find</td><td><code>find($tools, $name)</code></td><td>The spec named <code>$name</code> from a set, or <code>undef</code> (validates first) &mdash; single-lookup companion of <code>tool_map</code>.</td></tr>
+            <tr><td class="mod-name">to_json_schema</td><td><code>to_json_schema($spec)</code></td><td>The spec's params as an MCP <code>inputSchema</code>: <code>+{ type =&gt; "object", properties =&gt; {...}, required =&gt; [...] }</code>. Every declared param is required.</td></tr>
+            <tr><td class="mod-name">from_json_schema</td><td><code>from_json_schema($schema)</code></td><td>Inverse of <code>to_json_schema</code>: an <code>inputSchema</code> back into a <code>parameters</code> hashref. Dies if not an object schema or a property has no type.</td></tr>
+            <tr><td class="mod-name">to_tool_list</td><td><code>to_tool_list($tools)</code></td><td>The MCP <code>tools/list</code> payload: arrayref of <code>{name, description, inputSchema}</code> descriptors (validates first).</td></tr>
+            <tr><td class="mod-name">from_tool_list</td><td><code>from_tool_list($list)</code></td><td>Inverse of <code>to_tool_list</code>: descriptors back into <code>{name, description, parameters}</code> hashrefs. The wire format carries no executable, so there is no <code>run</code>.</td></tr>
+            <tr><td class="mod-name">tool_map</td><td><code>tool_map($tools)</code></td><td>A <code>{name =&gt; spec}</code> index for O(1) dispatch of a <code>tools/call</code> by name (validates first).</td></tr>
+            <tr><td class="mod-name">tool_summary</td><td><code>tool_summary($spec)</code></td><td>One-line signature: <code>name(a:number, b:string) - description</code>.</td></tr>
+            <tr><td class="mod-name">summaries</td><td><code>summaries($tools)</code></td><td>Arrayref of one <code>tool_summary</code> per tool, roster order (validates first) &mdash; array form of <code>describe</code>.</td></tr>
+            <tr><td class="mod-name">describe</td><td><code>describe($tools)</code></td><td>The whole set as a catalog &mdash; one <code>tool_summary</code> per line, newline-joined (validates first).</td></tr>
+            <tr><td class="mod-name">rename</td><td><code>rename($spec, $new_name)</code></td><td>A copy of the spec under a new name, re-validated; description / parameters / run preserved.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; Mcpd::Server</h2>
+        <p>Validated serving with crash isolation. Two rules of stdio MCP servers, both enforced here: stdout belongs to the JSON-RPC protocol (diagnostics go to a log file), and a dying tool must not kill the server (every run coderef is wrapped so a <code>die</code> returns an <code>ERROR:</code> result instead of an EOF).</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Signature</th><th>Returns / behavior</th></tr></thead>
+          <tbody>
+            <tr><td class="mod-name">serve</td><td><code>serve($name, $tools)</code></td><td>Validate every spec, <code>wrap_all</code>, then <code>mcp_server_start</code> the stdio transport. Blocks for the life of the server &mdash; call it last.</td></tr>
+            <tr><td class="mod-name">wrap</td><td><code>wrap($name, $run)</code></td><td>A new coderef wrapping <code>$run</code>: a <code>die</code> inside the tool returns <code>"ERROR: &lt;message&gt;"</code> to the client (the <code>at FILE line N.</code> location is stripped) and is logged; the server keeps serving.</td></tr>
+            <tr><td class="mod-name">wrap_all</td><td><code>wrap_all($tools)</code></td><td>A copy of the set with every run coderef <code>wrap</code>ped; spec metadata preserved. Pure &mdash; builds new specs, never serves.</td></tr>
+            <tr><td class="mod-name">checked</td><td><code>checked($spec)</code></td><td>A copy of the spec whose run coderef calls <code>Schema::check_args</code> before the real body &mdash; a missing or mistyped arg dies before reaching the body.</td></tr>
+            <tr><td class="mod-name">wrap_all_checked</td><td><code>wrap_all_checked($tools)</code></td><td>A copy of the set with every run coderef arg-checked (<code>checked</code>) <em>and</em> error-wrapped (<code>wrap</code>) &mdash; the strict serving variant of <code>wrap_all</code> (validates first).</td></tr>
+            <tr><td class="mod-name">audit</td><td><code>audit($name, $run)</code></td><td>Like <code>wrap</code> but also logs successful calls (tool name + result byte length) &mdash; an audit trail.</td></tr>
+            <tr><td class="mod-name">log_to</td><td><code>log_to($path)</code></td><td>Route diagnostics to <code>$path</code> (appended, one line per event). Never logs to stdout.</td></tr>
+            <tr><td class="mod-name">log</td><td><code>log($msg)</code></td><td>Append a timestamped, newline-terminated line to the configured log file. No-op until <code>log_to</code> is called.</td></tr>
+            <tr><td class="mod-name">log_path</td><td><code>log_path()</code></td><td>The configured log path, or <code>undef</code> when <code>log_to</code> was never called.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; Mcpd::Tools</h2>
+        <p>The root-jailed stock tool pack. Every tool that takes a path resolves it under the configured <code>root</code> via <code>jail</code>; an escape dies, and <code>Server::wrap</code> turns that into an <code>ERROR: path escapes root</code> result rather than a dead server. Each tool is a <code>Schema::tool</code> generator that takes the same <code>$opts</code> hashref (carrying <code>root</code>); call them directly, or assemble the whole pack with <code>all</code>.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Tool</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td class="mod-name">fs_read</td><td>Read a file's contents (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_list</td><td>List a directory's entries (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_glob</td><td>List entries matching a shell glob (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_count</td><td>Count entries in a directory (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_grep</td><td>Grep a file for a pattern (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_grep_count</td><td>Count matching lines for a pattern (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_first_match</td><td>First hit for a pattern plus its line number (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_find</td><td>Recursive file find, depth-capped (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_stat</td><td>File metadata (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_readlink</td><td>The target of a symlink (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_realpath</td><td>Resolve a path within the jail.</td></tr>
+            <tr><td class="mod-name">fs_du</td><td>Recursive size of a path (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_head</td><td>First N lines of a file (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_tail</td><td>Last N lines of a file (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_slice</td><td>A line range of a file (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_hash</td><td>Checksum of a file (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_exists</td><td>Whether a path exists (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_lines</td><td>Line count of a file (jailed path).</td></tr>
+            <tr><td class="mod-name">fs_write</td><td>Write content to a file (jailed path). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_append</td><td>Append content to a file (jailed path). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_replace</td><td>Regex <code>s///</code> over a file (jailed path). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_chmod</td><td>Set an octal file mode (jailed path). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_mkdir</td><td>Create a directory (jailed path). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_touch</td><td>Create an empty file / bump mtime (jailed path). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_rmdir</td><td>Remove a directory (jailed path). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_delete</td><td>Delete a file (jailed path). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_copy</td><td>Copy a file (jailed paths). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">fs_move</td><td>Move/rename a file (jailed paths). <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">sh_exec</td><td>Run a shell command with an optional first-word allowlist. <em>Mutating.</em></td></tr>
+            <tr><td class="mod-name">env_get</td><td>Read an environment variable.</td></tr>
+            <tr><td class="mod-name">time_now</td><td>The current time.</td></tr>
+            <tr><td class="mod-name">sys_info</td><td>System information.</td></tr>
+            <tr><td class="mod-name">all</td><td>The whole pack as one arrayref. <code>all(+{root =&gt; ..., readonly =&gt; 1})</code> drops every mutating tool.</td></tr>
+            <tr><td class="mod-name">jail</td><td><code>jail($root, $path)</code> &mdash; the lexical path resolver every fs tool runs input through; escapes die.</td></tr>
+            <tr><td class="mod-name">names</td><td>The names of every stock tool this sublib ships (full, non-readonly pack).</td></tr>
+          </tbody>
+        </table>
+        <p>The full pack (<code>all(+{root =&gt; ...})</code>) is 32 tool specs; <code>all(+{root =&gt; ..., readonly =&gt; 1})</code> is 21 &mdash; it omits the 11 mutating tools (<code>fs_write</code>, <code>fs_append</code>, <code>fs_replace</code>, <code>fs_chmod</code>, <code>fs_mkdir</code>, <code>fs_touch</code>, <code>fs_rmdir</code>, <code>fs_delete</code>, <code>fs_copy</code>, <code>fs_move</code>, <code>sh_exec</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; Mcpd::Client</h2>
+        <p>Result-envelope helpers for the client side. <code>mcp_connect</code>, <code>mcp_tools</code>, <code>mcp_call</code>, <code>mcp_close</code> are builtins &mdash; none re-wrapped here. What this sublib adds is unpacking the MCP result envelope (<code>+{content =&gt; [+{type =&gt; "text", text =&gt; ...}, ...]}</code>) and the call-then-unpack composites that round-trip tests live on. <code>$h</code> is a connection handle; <code>$result</code> is an <code>mcp_call</code> result.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Function</th><th>Signature</th><th>Returns / behavior</th></tr></thead>
+          <tbody>
+            <tr><td class="mod-name">text</td><td><code>text($result)</code></td><td>The result's text blocks joined into one string; <code>""</code> when there is no text content.</td></tr>
+            <tr><td class="mod-name">texts</td><td><code>texts($result)</code></td><td>Every text block as a list (unjoined), in envelope order; empty list when none.</td></tr>
+            <tr><td class="mod-name">text_lines</td><td><code>text_lines($result)</code></td><td>The joined text split into lines; empty list for an empty result.</td></tr>
+            <tr><td class="mod-name">content_types</td><td><code>content_types($result)</code></td><td>The distinct content-block types present, sorted (e.g. <code>["image","text"]</code>).</td></tr>
+            <tr><td class="mod-name">content_of_type</td><td><code>content_of_type($result, $type)</code></td><td>All content blocks of <code>$type</code> as full block hashrefs (keeping data/mimeType/resource); the general form of <code>texts</code>.</td></tr>
+            <tr><td class="mod-name">block_count</td><td><code>block_count($result)</code></td><td>The number of content blocks of every type; <code>0</code> for an empty result.</td></tr>
+            <tr><td class="mod-name">call_text</td><td><code>call_text($h, $name, $args)</code></td><td><code>mcp_call</code> + <code>text</code> in one step &mdash; the round-trip primitive.</td></tr>
+            <tr><td class="mod-name">call_lines</td><td><code>call_lines($h, $name, $args)</code></td><td><code>mcp_call</code> + <code>text_lines</code> &mdash; for tools whose result is a list of rows.</td></tr>
+            <tr><td class="mod-name">call_texts</td><td><code>call_texts($h, $name, $args)</code></td><td><code>mcp_call</code> + <code>texts</code> &mdash; the multi-block round-trip primitive.</td></tr>
+            <tr><td class="mod-name">is_error</td><td><code>is_error($result)</code></td><td><code>1</code>/<code>0</code> &mdash; whether the result is an <code>ERROR:</code> envelope (a tool that died behind <code>Server::wrap</code>).</td></tr>
+            <tr><td class="mod-name">error_message</td><td><code>error_message($result)</code></td><td>The error text without the <code>ERROR: </code> prefix, or <code>undef</code> when not an error envelope.</td></tr>
+            <tr><td class="mod-name">tool_names</td><td><code>tool_names($h)</code></td><td>The tool names a connected server exposes, sorted.</td></tr>
+            <tr><td class="mod-name">tool_count</td><td><code>tool_count($h)</code></td><td>How many tools a connected server exposes &mdash; scalar companion of <code>tool_names</code>.</td></tr>
+            <tr><td class="mod-name">tool_descriptions</td><td><code>tool_descriptions($h)</code></td><td>A <code>{name =&gt; description}</code> map of every exposed tool; no-description tools map to <code>""</code>.</td></tr>
+            <tr><td class="mod-name">has_tool</td><td><code>has_tool($h, $name)</code></td><td><code>1</code>/<code>0</code> &mdash; whether a connected server exposes a tool named <code>$name</code>.</td></tr>
+            <tr><td class="mod-name">tool_schema</td><td><code>tool_schema($h, $name)</code></td><td>The advertised JSON <code>inputSchema</code> of the tool named <code>$name</code>, or <code>undef</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Configuration</h2>
+        <p>Two knobs drive the stock pack and serving discipline; everything else is the spec you pass to <code>serve</code>.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Setting</th><th>Where</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>root</code></td><td><code>Mcpd::Tools::all(+{ root =&gt; ... })</code> (and every <code>fs_*</code> generator)</td><td>The jail root. Relative tool paths anchor under it; <code>..</code> resolves but dies the moment it would climb above root; absolute paths outside root die.</td></tr>
+            <tr><td><code>readonly</code></td><td><code>Mcpd::Tools::all(+{ root =&gt; ..., readonly =&gt; 1 })</code></td><td>Drops the 11 mutating tools, leaving 21 read-only tools &mdash; for exposing a filesystem to a model without write/exec.</td></tr>
+            <tr><td>log path</td><td><code>Mcpd::Server::log_to($path)</code></td><td>Append-only diagnostics file. Without it, <code>log</code>/<code>audit</code> are no-ops and stdout stays clean by default.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Four runnable scripts in <code>examples/</code>, each self-contained:</p>
+        <table class="sub-tbl">
+          <thead><tr><th>File</th><th>Shows</th></tr></thead>
+          <tbody>
+            <tr><td><code>examples/calc_server.stk</code></td><td>A minimal server: <code>add</code>, <code>reverse_text</code>, and <code>always_fails</code> (which <code>die</code>s to demonstrate the error envelope). The exact shape the round-trip test drives.</td></tr>
+            <tr><td><code>examples/round_trip.stk</code></td><td>The client side: <code>mcp_connect</code> to <code>calc_server.stk</code> over stdio, list tools, call <code>add</code>/<code>reverse_text</code>, call the dying tool, and prove the server survived.</td></tr>
+            <tr><td><code>examples/stock_server.stk</code></td><td>The stock pack jailed to the current directory, served on stdio &mdash; point any MCP client at it with <code>{ "command": "stryke", "args": ["examples/stock_server.stk"] }</code>.</td></tr>
+            <tr><td><code>examples/jailed_fs.stk</code></td><td>A live stdio round trip against the stock pack jailed to a temp dir: write a file, read it back, list it, then watch a <code>../../etc/passwd</code> escape come back as a blocked error envelope.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Troubleshooting</h2>
+        <table class="sub-tbl">
+          <thead><tr><th>Symptom</th><th>Cause / fix</th></tr></thead>
+          <tbody>
+            <tr><td>Client sees a corrupted JSON-RPC stream</td><td>Something wrote to stdout. In this package nothing in <code>lib/</code> prints to stdout (CI pins it); route your own diagnostics through <code>Mcpd::Server::log_to</code>, never <code>p</code>/<code>print</code> to stdout in a served tool.</td></tr>
+            <tr><td>A tool returns <code>ERROR: path escapes root</code></td><td>The requested path resolved outside the jail root. This is the jail working as designed; the server stays up. Pass a path under <code>root</code>, or widen <code>root</code>.</td></tr>
+            <tr><td>A tool returns <code>ERROR: ...</code> instead of a value</td><td>The tool <code>die</code>d; <code>Server::wrap</code> converted it to a result so the connection survives. Use <code>Mcpd::Client::error_message</code> to read the message; check the server log if <code>log_to</code> is configured.</td></tr>
+            <tr><td>A malformed spec dies at startup</td><td><code>Schema::tool</code>/<code>validate_all</code> front-load validation. Read the named diagnostic (it carries the offending tool and field) and fix the spec where it was written.</td></tr>
+            <tr><td>Diagnostics aren't being written</td><td><code>log</code>/<code>audit</code> are no-ops until <code>Mcpd::Server::log_to($path)</code> is called. Set it before <code>serve</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># From a release:
+s pkg install -g github.com/MenkeTechnologies/stryke-mcpd
+
+# From a local checkout:
+git clone https://github.com/MenkeTechnologies/stryke-mcpd
+cd stryke-mcpd
+s pkg install -g .              # installs into ~/.stryke/store/stryke-mcpd@&lt;version&gt;/
+
+# Or via Makefile:
+make install</pre>
+        <p>No cargo step. No cdylib. The installed store directory contains only <code>stryke.toml</code> + <code>lib/*.stk</code> &mdash; no compiled artifacts, fully portable across platforms.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick Start</h2>
+<pre>use Mcpd
+
+# A server is one call: validated specs in, stdio JSON-RPC out.
+Mcpd::Server::log_to("$ENV{HOME}/.cache/calc.log")   # stdout stays clean
+Mcpd::Server::serve("calc", [
+    Mcpd::Schema::tool("add", "Add two numbers",
+        +{ a =&gt; "number", b =&gt; "number" },
+        fn { val $args = shift; $args-&gt;{a} + $args-&gt;{b} }),
+
+    @{ Mcpd::Tools::all(+{ root =&gt; getcwd() }) },     # stock pack, jailed
+])
+
+# Client side &mdash; round trip any server over stdio:
+val $h = mcp_connect("stdio:stryke calc_server.stk")
+p join(", ", @{ Mcpd::Client::tool_names($h) })
+p Mcpd::Client::call_text($h, "add", +{ a =&gt; 2, b =&gt; 40 })   # 42
+p Mcpd::Client::is_error(mcp_call($h, "always_fails", +{}))  # 1 &mdash; server still alive
+mcp_close($h)
+
+# Ship it: AOT-compile the server to a single static native binary.
+# s build --release            # target/release/&lt;name&gt; &mdash; no interpreter on target</pre>
+        <p>Pull only what you need with explicit sub-imports: <code>use Mcpd::Schema</code>, <code>use Mcpd::Client</code>, etc. The umbrella <code>use Mcpd</code> is just for convenience.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What's NOT in Here</h2>
+        <p>By design &mdash; these are stryke builtins, so we don't re-wrap them. If a function in this library can be replaced with one builtin call, it's a bug.</p>
+        <table class="sub-tbl">
+          <thead><tr><th>Category</th><th>Builtins (call directly)</th></tr></thead>
+          <tbody>
+            <tr><td>Server plumbing</td><td><code>mcp_server_start</code> &middot; <code>mcp_serve_registered_tools</code> &middot; <code>ai_register_tool</code> and the <code>tool fn</code> / <code>mcp_server "name" { ... }</code> source-level desugar</td></tr>
+            <tr><td>Client plumbing</td><td><code>mcp_connect</code> &middot; <code>mcp_tools</code> &middot; <code>mcp_resources</code> &middot; <code>mcp_prompts</code> &middot; <code>mcp_call</code> &middot; <code>mcp_resource</code> &middot; <code>mcp_prompt</code> &middot; <code>mcp_close</code></td></tr>
+            <tr><td>AI attachment</td><td><code>mcp_attach_to_ai</code> &middot; <code>mcp_detach_from_ai</code> &middot; <code>mcp_attached</code></td></tr>
+            <tr><td>File / process</td><td><code>slurp</code> &middot; <code>spurt</code> &middot; <code>getcwd</code> &middot; <code>qx(...)</code> &middot; <code>opendir</code>/<code>readdir</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>CLI</h2>
+<pre>s bin/mcpd.stk new myserver            # write ./myserver.stk skeleton (validated, logged, ready)
+s bin/mcpd.stk serve-stock /srv/data   # stock pack jailed to /srv/data, served on stdio
+s bin/mcpd.stk tools                   # list the stock tool pack
+s bin/mcpd.stk version
+s bin/mcpd.stk help</pre>
+        <p>Wire a server into any MCP client config as <code>{ "command": "stryke", "args": ["server.stk"] }</code> &mdash; or build it and point at the binary with no args at all.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+<pre>s test t/                       # assertions across every public function</pre>
+        <p><code>t/test_mcpd.stk</code> asserts Schema/Tools/Client as pure functions (spec validation, arg checking, jail escapes, envelope parsing), then runs a live round trip: generate a server script, serve it over stdio via <code>mcp_connect</code>, list tools, call one, kill one, prove the server survived. Headless-CI safe. Exits TAP-style via <code>test_run</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-mcpd/
+&#9500;&#9472;&#9472; stryke.toml                # pure-stryke package manifest (no [ffi])
+&#9500;&#9472;&#9472; Makefile                   # test / install / clean
+&#9500;&#9472;&#9472; LICENSE                    # MIT
+&#9500;&#9472;&#9472; lib/
+&#9474;   &#9500;&#9472;&#9472; Mcpd.stk               # `use Mcpd` &mdash; pulls all four sublibs
+&#9474;   &#9500;&#9472;&#9472; Schema.stk             # `use Mcpd::Schema` &mdash; validated tool specs
+&#9474;   &#9500;&#9472;&#9472; Server.stk             # `use Mcpd::Server` &mdash; crash-isolated serving
+&#9474;   &#9500;&#9472;&#9472; Tools.stk              # `use Mcpd::Tools`  &mdash; root-jailed stock pack
+&#9474;   &#9492;&#9472;&#9472; Client.stk             # `use Mcpd::Client` &mdash; result-envelope helpers
+&#9500;&#9472;&#9472; bin/
+&#9474;   &#9492;&#9472;&#9472; mcpd.stk               # CLI front-end (new / serve-stock / tools)
+&#9500;&#9472;&#9472; t/
+&#9474;   &#9492;&#9472;&#9472; test_mcpd.stk          # pure asserts + live stdio round trip
+&#9500;&#9472;&#9472; examples/
+&#9474;   &#9500;&#9472;&#9472; calc_server.stk        # minimal server (the round-trip target shape)
+&#9474;   &#9500;&#9472;&#9472; round_trip.stk         # client: list, call, error envelope, survival
+&#9474;   &#9500;&#9472;&#9472; stock_server.stk       # stock pack jailed to cwd
+&#9474;   &#9492;&#9472;&#9472; jailed_fs.stk          # live write/read + a blocked jail escape over stdio
+&#9500;&#9472;&#9472; tests/                     # shell gate scripts (CI lints)
+&#9492;&#9472;&#9472; docs/                      # this site (GitHub Pages)</pre>
+      </section>
+
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

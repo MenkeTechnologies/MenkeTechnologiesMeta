@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-mssql engineering report — tiberius over a blocking tokio facade, the connection cache, type-by-type row conversion, and parametrized binding.">
+  <title>stryke-mssql — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-MSSQL &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package <code>v0.7.0</code> &middot; cdylib <code>libstryke_mssql</code> &middot; namespace <code>Mssql</code> &middot; 36 functions &middot; JSON-in/JSON-out FFI over dlopen
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-mssql</strong> is an opt-in connector package in the stryke ecosystem &mdash; a Microsoft SQL Server / Azure SQL client. It exposes parametrized query and execute, transaction batches, scalar/exists helpers, and schema introspection as the <code>Mssql</code> package, against any SQL Server 2012+ or Azure SQL.</p>
+      <p class="tutorial-subtitle">The client is <code>tiberius</code>, the pure-Rust TDS protocol implementation &mdash; no FreeTDS, no ODBC, no system driver. The cdylib owns one tokio runtime and presents a blocking facade, and ships once on demand rather than being linked into stryke core.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">Mssql</div><div class="stat-label">stryke namespace</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Load model (dlopen)</div></div>
+        <div class="stat-card"><div class="stat-val green">TDS</div><div class="stat-label">Driver (tiberius, rustls)</div></div>
+        <div class="stat-card"><div class="stat-val cyan">36</div><div class="stat-label">Exported functions</div></div>
+        <div class="stat-card"><div class="stat-val">v0.7.0</div><div class="stat-label">Package version</div></div>
+        <div class="stat-card"><div class="stat-val green">2012+</div><div class="stat-label">Min SQL Server / Azure SQL</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DRIVER + BLOCKING FACADE</h2>
+      <p>The client is <code>tiberius</code>, the pure-Rust TDS protocol implementation &mdash; no FreeTDS, no ODBC, no system driver. tiberius is async, so the cdylib owns one multi-thread tokio runtime and <code>block_on</code>s each call. From stryke's perspective every <code>Mssql::*</code> function is an ordinary blocking call; the async machinery is entirely internal.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>CONNECTION CACHE</h2>
+      <p>One <code>Client</code> is cached per <code>(host, port, database, auth, encrypt)</code> tuple behind an async mutex, so repeated queries reuse the authenticated TDS session. A call that returns an error evicts its connection from the cache, so the next call reconnects cleanly instead of reusing a poisoned stream.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>ROW CONVERSION</h2>
+      <p>SQL Server result sets are dynamically typed at the wire level. Rather than match every TDS column type, each cell is converted to JSON by trying the candidate Rust types in order &mdash; bool, i32, i64, f32, f64, string, decimal, uuid, datetime, date, time, binary &mdash; and taking the first that the driver accepts. Decimals serialize as strings to keep full precision, binary as base64, and datetimes as ISO-8601. Arbitrary queries round-trip without the caller declaring a schema.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>PARAMETERS + TRANSACTIONS</h2>
+      <p>Parametrized statements use <code>@P1</code>, <code>@P2</code>, … placeholders; JSON params (null / bool / integer / float / string) are bound positionally, so values never enter the SQL text &mdash; no string interpolation, no injection surface. <code>batch</code> wraps a list of statements in <code>BEGIN TRANSACTION</code> … <code>COMMIT</code> on a single connection, rolling back if any statement fails.</p>
+      <table class="arch-table">
+        <thead><tr><th>Group</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Liveness</td><td><code>version</code>, <code>ping</code>, <code>server_version</code></td></tr>
+          <tr><td>Query</td><td><code>query</code>, <code>query_one</code>, <code>scalar</code>, <code>exists</code>, <code>simple_query</code></td></tr>
+          <tr><td>Write</td><td><code>execute</code>, <code>insert</code> (multi-row), <code>batch</code> (transaction)</td></tr>
+          <tr><td>DDL</td><td><code>create_table</code>, <code>drop_table</code>, <code>truncate</code></td></tr>
+          <tr><td>Introspection</td><td><code>databases</code>, <code>tables</code>, <code>columns</code>, <code>views</code>, <code>schemas</code>, <code>primary_keys</code>, <code>foreign_keys</code>, <code>indexes</code>, <code>table_exists</code>, <code>current_database</code>, <code>count</code>, <code>row_count</code></td></tr>
+          <tr><td>SQL helpers</td><td><code>quote_ident</code>, <code>quote_literal</code>, <code>valid_identifier</code>, <code>escape_like</code>, <code>format_value</code>, <code>format_in_list</code>, <code>split_batch</code></td></tr>
+          <tr><td>URL helpers</td><td><code>parse_url</code>, <code>redact_url</code>, <code>build_url</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>CONNECTION RESOLUTION</h2>
+      <p>Connection params arrive as a JSON hash on each call. Discrete keys are read with documented defaults; when neither <code>url</code> nor <code>host</code> is supplied and <code>$MSSQL_URL</code> is set, that ADO connection string is used as the fallback. The resolved tuple <code>(host, port, database, auth, encrypt)</code> is the cache key.</p>
+      <table class="arch-table">
+        <thead><tr><th>Key</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>host</code></td><td><code>127.0.0.1</code></td><td>Server host.</td></tr>
+          <tr><td><code>port</code></td><td><code>1433</code></td><td>TDS port.</td></tr>
+          <tr><td><code>database</code></td><td>login default</td><td>Initial database for the session.</td></tr>
+          <tr><td><code>username</code> / <code>password</code></td><td>&mdash;</td><td>SQL authentication.</td></tr>
+          <tr><td><code>encrypt</code></td><td><code>required</code></td><td><code>required</code> / <code>off</code> / <code>not_supported</code> → TDS <code>EncryptionLevel</code>.</td></tr>
+          <tr><td><code>trust_cert</code></td><td>off</td><td>Truthy accepts a self-signed server certificate (dev).</td></tr>
+          <tr><td><code>url</code></td><td>&mdash;</td><td>ADO string; overrides the discrete keys. Falls back to <code>$MSSQL_URL</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>LOAD MODEL (FFI)</h2>
+      <p>Each export is a <code>#[no_mangle] extern "C" fn mssql__*</code> taking a JSON string and returning a JSON string. The <code>lib/Mssql.stk</code> wrapper builds the request hash, calls the symbol, and decodes the reply &mdash; an <code>{ error }</code> payload becomes a <code>Mssql::&lt;fn&gt;: &lt;reason&gt;</code> exception. On first <code>use Mssql</code>, stryke dlopens the cdylib and registers the symbols declared in <code>stryke.toml</code>'s <code>[ffi].exports</code> via <code>rust_ffi::load_cdylib</code>; only declared symbols resolve.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">=</span>PURE HELPERS (UNIT-TESTED)</h2>
+      <p>The SQL- and URL-shaping helpers take no connection and are exercised by the in-crate test suite, so the injection-safety logic runs without a database.</p>
+      <table class="arch-table">
+        <thead><tr><th>Helper</th><th>Behavior</th></tr></thead>
+        <tbody>
+          <tr><td><code>quote_ident</code></td><td><code>name</code> → <code>[name]</code>, doubling any <code>]</code>. Schema-qualified names quote each dot segment.</td></tr>
+          <tr><td><code>quote_literal</code></td><td><code>v</code> → <code>'v'</code>, doubling any <code>'</code>.</td></tr>
+          <tr><td><code>valid_identifier</code></td><td>True for <code>[A-Za-z_][A-Za-z0-9_]*</code>.</td></tr>
+          <tr><td><code>escape_like</code></td><td><code>%</code>/<code>_</code>/<code>[</code> → <code>[%]</code>/<code>[_]</code>/<code>[[]</code> classes (no <code>ESCAPE</code> clause).</td></tr>
+          <tr><td><code>format_value</code></td><td>string→<code>'…'</code>, number→as-is, bool→<code>1</code>/<code>0</code>, null→<code>NULL</code>; arrays/objects error.</td></tr>
+          <tr><td><code>format_in_list</code></td><td>scalars → <code>(a, b, …)</code>; empty → <code>(NULL)</code>.</td></tr>
+          <tr><td><code>split_batch</code></td><td>Splits on lines that are only <code>GO</code> (case-insensitive); drops empties.</td></tr>
+          <tr><td><code>parse_url</code> / <code>redact_url</code> / <code>build_url</code></td><td>ADO string ↔ map; <code>password</code>/<code>pwd</code> redacted to <code>***</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>DEPENDENCIES</h2>
+      <p><code>tiberius</code> (TDS, rustls TLS), <code>tokio</code> + <code>tokio-util</code> (runtime + compat), <code>chrono</code> / <code>rust_decimal</code> / <code>uuid</code> for typed values, <code>serde_json</code> for the FFI payloads. Pure-Rust throughout &mdash; no native client library.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Version</td><td>0.7.0</td></tr>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-mssql</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-mssql/issues" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-mssql/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

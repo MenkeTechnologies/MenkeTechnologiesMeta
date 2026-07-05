@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vimlrs — Engineering report. A standalone VimL (Vimscript) interpreter in Rust, ported faithfully from Neovim's C eval engine and hosted on the fusevm bytecode VM with a three-tier Cranelift JIT. Architecture, port methodology, roadmap, and dependency posture. MIT licensed, early stage.">
+  <title>vimlrs &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;position:relative; }
+    .hub-scheme-strip-inner { max-width:76rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-align:left; }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch}.hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    .docs-build-line { margin:0.35rem 0 0;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;max-width:42rem;opacity:0.75; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VIMLRS — ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vimlrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">vimlrs v0.1.1 · standalone VimL interpreter · faithful Neovim eval port · fusevm + Cranelift JIT · MIT · early / in development</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/vimlrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
+      <p class="tutorial-subtitle">vimlrs is a standalone interpreter for VimL (Vimscript), ported faithfully from Neovim's C eval engine and hosted on the <code>fusevm</code> bytecode VM. This report describes the architecture, the porting methodology, the current state of the tree, and the dependency posture. The project is early; numbers below are facts about the design and the manifest, not aspirational metrics.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">4th</div><div class="stat-label">fusevm language host</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Cranelift JIT tiers</div></div>
+        <div class="stat-card"><div class="stat-val">v0.1.1</div><div class="stat-label">version · early</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">license · free / OSS</div></div>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>Summary</h2>
+        <p>Vimscript has historically been inseparable from its host editor. vimlrs separates the two: it ports the language semantics out of Neovim's C <code>eval/*</code> tree and runs them on a compiled VM, so <code>.vim</code> scripts execute as standalone programs. It is the fourth consumer of <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a> — after <code>zshrs</code>, <code>stryke</code>, and <code>awkrs</code> — and reuses that shared bytecode VM and three-tier Cranelift JIT rather than shipping its own.</p>
+        <p>The current tree has the Vim-native value layer ported (<code>typval</code>, <code>list</code>, insertion-ordered <code>dict</code>, <code>blob</code>); the lexer/parser, AST-to-bytecode lowering, and builtin surface are implemented (and the builtin surface keeps growing); and the standalone binary, rkyv bytecode cache, AOT native compiler, DAP debugger, and LSP server are implemented.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Hosting on fusevm</h2>
+        <p>vimlrs contains no virtual machine or JIT of its own. The execution path is:</p>
+<pre>VimL source  →  lexer  →  parser → AST  →  lower to fusevm bytecode  →  fusevm VM + Cranelift JIT</pre>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Shared engine</h4><p>fusevm is pulled from crates.io with the <code>jit</code> and <code>jit-disk-cache</code> features. JIT and VM improvements land once and benefit zshrs, stryke, awkrs, and vimlrs together.</p></div>
+          <div class="feature-card"><h4>Persistent native code</h4><p><code>jit-disk-cache</code> persists compiled machine code across runs, so warm starts skip recompilation.</p></div>
+          <div class="feature-card"><h4>Portable bytecode</h4><p>The bytecode is architecture-portable; the Cranelift JIT covers x86-64 and aarch64 (macOS + Linux) today.</p></div>
+          <div class="feature-card"><h4>Same pattern as zshrs</h4><p>vimlrs hosts VimL the way zshrs hosts zsh — lower to bytecode, run on the shared VM — rather than re-implementing an interpreter loop.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Port methodology</h2>
+        <p>The semantics are ported faithfully from Neovim's C eval engine — the C source is the specification, not a starting point for an ad-hoc re-implementation. The vendored Neovim sources live under <code>vendor/</code> (the <code>eval/*</code> tree in <code>vendor/eval/</code>, plus the supporting translation units it depends on) and are the porting reference; they carry no build role and are excluded from the crate via <code>exclude = ["/vendor/", …]</code>. Every ported <code>fn</code> under <code>src/ported/</code> traces back to a real C name in that tree — a drift-gate test (<code>tests/ported_fn_names_match_c.rs</code>) fails the build on any invented helper that has no <code>vendor/</code> origin and no sanctioned allowlist entry.</p>
+        <p>The Vim-native runtime values were ported first so the rest of the engine has a faithful substrate to build on: <code>list</code> and <code>blob</code> behave as in Vim, and <code>dict</code> preserves insertion order to match Vim's observable hashtab iteration and keep <code>echo</code> / <code>string()</code> output deterministic.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Component status</h2>
+        <table class="file-table">
+          <thead><tr><th>Component</th><th>State</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>typval / list / dict / blob</td><td>Ported</td><td>Insertion-ordered dict; deterministic string output.</td></tr>
+            <tr><td>lexer / parser → AST</td><td>Implemented</td><td>Ported from the Neovim eval engine.</td></tr>
+            <tr><td>AST → fusevm bytecode</td><td>Implemented</td><td>Targets the shared fusevm opcode set; no local VM.</td></tr>
+            <tr><td>builtin functions</td><td>Implemented</td><td>Ported from <code>eval/funcs.c</code>; the surface keeps growing.</td></tr>
+            <tr><td>standalone <code>vimlrs</code> binary</td><td>Implemented</td><td>Run <code>.vim</code> scripts from the CLI (<code>src/main.rs</code>).</td></tr>
+            <tr><td>rkyv bytecode cache</td><td>Implemented</td><td>Versioned, migration-safe on-disk format (<code>src/script_cache.rs</code>).</td></tr>
+            <tr><td>DAP debugger (<code>--dap</code>)</td><td>Implemented</td><td>Breakpoints, stepping, variables (<code>src/dap.rs</code>).</td></tr>
+            <tr><td>LSP server (<code>--lsp</code>)</td><td>Implemented</td><td>Diagnostics, hover, completion (<code>src/lsp.rs</code>).</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Dependency posture</h2>
+        <p>Dependencies are kept foundational and durable — the goal is a crate that still builds cleanly years from now. Direct dependencies from <code>Cargo.toml</code>:</p>
+        <table class="file-table">
+          <thead><tr><th>Crate</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>fusevm</td><td>Language-agnostic bytecode VM + three-tier Cranelift JIT (<code>jit</code>, <code>jit-disk-cache</code>)</td></tr>
+            <tr><td>clap</td><td>CLI argument parsing (<code>derive</code>, <code>cargo</code>)</td></tr>
+            <tr><td>thiserror</td><td>Error type derivation</td></tr>
+            <tr><td>rustc-hash</td><td>Fast hashing for interner / maps</td></tr>
+            <tr><td>indexmap</td><td>Insertion-ordered dict storage (matches Vim hashtab iteration)</td></tr>
+            <tr><td>rkyv</td><td>Zero-copy bytecode script cache (versioned from day one)</td></tr>
+            <tr><td>memmap2</td><td>mmap hot path for the script cache</td></tr>
+            <tr><td>dirs</td><td>Platform cache / config directories</td></tr>
+            <tr><td>lsp-server / lsp-types</td><td>LSP transport + protocol types (<code>--lsp</code> server)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Compatibility &amp; longevity</h2>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Versioned caches</h4><p>The rkyv script-cache format is versioned from the first release so an old cached <code>.vim</code> upgrades or rebuilds silently rather than breaking.</p></div>
+          <div class="feature-card"><h4>Faithful semantics</h4><p>Behaviour tracks the Neovim reference, so scripts that run there are the compatibility target.</p></div>
+          <div class="feature-card"><h4>Cross-architecture</h4><p>macOS aarch64 and Linux x86_64 / aarch64 via the Cranelift JIT; portable bytecode underneath.</p></div>
+          <div class="feature-card"><h4>Standalone crate</h4><p>An explicit empty <code>[workspace]</code> keeps vimlrs buildable on its own, independent of the meta repo.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Links</h2>
+        <ul>
+          <li><strong>Docs</strong> — <a href="index.html">index.html</a></li>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/vimlrs">github.com/MenkeTechnologies/vimlrs</a></li>
+          <li><strong>Issues</strong> — <a href="https://github.com/MenkeTechnologies/vimlrs/issues">github.com/MenkeTechnologies/vimlrs/issues</a></li>
+          <li><strong>fusevm</strong> — <a href="https://github.com/MenkeTechnologies/fusevm">github.com/MenkeTechnologies/fusevm</a> (the shared VM)</li>
+          <li><strong>License</strong> — MIT (<a href="https://github.com/MenkeTechnologies/vimlrs/blob/main/LICENSE">LICENSE</a>)</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

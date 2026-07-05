@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-azure — Azure client for stryke. Blob Storage, Storage Queues, Cosmos DB, Key Vault Secrets + Keys, Entra identity, and an Azure Resource Manager management plane (VMs, Storage accounts, Service Bus, Monitor, Container Instances/AKS, Resource Groups, Subscriptions). A cdylib dlopened in-process by the stryke runtime over the official Azure SDK for Rust (GA 1.0.0; Cosmos 0.35.0 preview).">
+  <title>stryke-azure — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 38%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-AZURE &mdash; AZURE CLIENT FOR STRYKE // BLOB + QUEUE + COSMOS + KEY VAULT + IDENTITY + ARM MANAGEMENT PLANE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package &middot; namespace <code>Azure</code> &middot; cdylib <code>libstryke_azure</code> &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-azure/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-AZURE</h2>
+      <p class="tutorial-subtitle"><strong>The cloud, one stryke pipe away.</strong> Azure client for stryke &mdash; Blob Storage, Storage Queues, Cosmos DB, Key Vault Secrets and Keys, Entra identity, plus an Azure Resource Manager management plane: Virtual Machines, Storage-account management, Service Bus, Monitor, Container Instances / AKS, Resource Groups, and Subscriptions. An opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The Azure SDK pulls in tokio, hyper, rustls, and reqwest &mdash; far too heavy to bake into stryke core.</p>
+      <p class="tutorial-subtitle">It holds one shared tokio runtime and one Entra credential (<code>DeveloperToolsCredential</code> &mdash; the Azure CLI / <code>azd</code> chain), reused across every service client. No per-call fork, no per-call credential rebuild. The typed data-plane clients come from the GA Azure SDK for Rust; the management plane reaches Azure Resource Manager over REST using the <em>same</em> shared credential and the <em>same</em> <code>azure_core</code> HTTP stack &mdash; one auth path, one runtime, one HTTP client.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">89</div><div class="stat-label">FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val cyan">13</div><div class="stat-label">Packages (Azure + 12)</div></div>
+        <div class="stat-card"><div class="stat-val green">v0.18.0</div><div class="stat-label">Package version</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Load model (dlopen)</div></div>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># build the cdylib, install as a stryke package
+cd ~/projects/stryke-azure
+cargo build --release
+s pkg install -g .
+
+# one-liner
+make install
+
+# sign in first (DeveloperToolsCredential uses the az / azd chain)
+az login</pre>
+        <p>The release build produces <code>target/release/libstryke_azure.{dylib,so}</code>; <code>s pkg install -g .</code> places it in <code>~/.stryke/store/azure@&lt;ver&gt;/</code>. The cdylib is dlopened in-process on first <code>use Azure</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Service map</h2>
+        <p>stryke-azure mirrors the surface of <a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a>, mapped onto Azure's GA Rust SDK.</p>
+        <table class="example-tbl">
+          <thead><tr><th>AWS service</th><th>Azure service / backing crate</th></tr></thead>
+          <tbody>
+            <tr><td>S3</td><td>Blob Storage &mdash; <code>azure_storage_blob</code></td></tr>
+            <tr><td>SQS</td><td>Storage Queues &mdash; <code>azure_storage_queue</code></td></tr>
+            <tr><td>DynamoDB</td><td>Cosmos DB (NoSQL) &mdash; <code>azure_data_cosmos</code> (preview)</td></tr>
+            <tr><td>Secrets Manager / SSM Parameter Store</td><td>Key Vault Secrets &mdash; <code>azure_security_keyvault_secrets</code></td></tr>
+            <tr><td>KMS</td><td>Key Vault Keys &mdash; <code>azure_security_keyvault_keys</code></td></tr>
+            <tr><td>STS</td><td>Entra identity token &mdash; <code>azure_identity</code></td></tr>
+            <tr><td>EC2</td><td>Virtual Machines &mdash; ARM REST</td></tr>
+            <tr><td>ECS / EKS</td><td>Container Instances / AKS &mdash; ARM REST</td></tr>
+            <tr><td>SNS / SQS (enterprise)</td><td>Service Bus &mdash; ARM + data-plane REST</td></tr>
+            <tr><td>CloudWatch</td><td>Azure Monitor metrics &mdash; ARM REST</td></tr>
+            <tr><td>(account mgmt)</td><td>Storage account management &mdash; ARM REST</td></tr>
+            <tr><td>(resource mgmt)</td><td>Resource Groups &mdash; ARM REST</td></tr>
+          </tbody>
+        </table>
+        <p>The typed data-plane services (Blob, Queue, Cosmos, Secrets, Keys, identity) come from the GA Azure SDK for Rust. The management plane has no GA typed Rust SDK crate, so those ops reach Azure Resource Manager over REST &mdash; using the same shared credential and the same <code>azure_core</code> HTTP client the typed clients use under the hood.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Usage &mdash; data plane</h2>
+<pre>use Azure
+use Azure::Blob
+use Azure::Cosmos
+use Azure::Queue
+use Azure::Secrets
+use Azure::Keys
+
+# Connectivity probe (Entra token; the token value is never returned).
+val $tok = Azure::identity_token()
+p "expires: $tok->{expires_on}"
+
+# Blob Storage — az://container/blob URIs.
+Azure::Blob::create_container("data", account => "mystorage")
+val @containers = Azure::Blob::containers(account => "mystorage")
+Azure::Blob::put("az://data/hello.txt", data => "hi", account => "mystorage")
+val $body = Azure::Blob::get("az://data/hello.txt", account => "mystorage")
+Azure::Blob::delete_container("data", account => "mystorage")
+
+# Storage Queues.
+Azure::Queue::create("jobs", account => "mystorage")
+Azure::Queue::send("jobs", "payload", account => "mystorage")
+val @msgs = Azure::Queue::receive("jobs", max => 10, account => "mystorage")
+Azure::Queue::drop("jobs", account => "mystorage")   # delete the whole queue
+
+# Cosmos DB (single-partition).
+Azure::Cosmos::create_database("appdb", account => "mycosmos")
+Azure::Cosmos::create_container("appdb", "users", "/tenant", account => "mycosmos")
+Azure::Cosmos::put("appdb", "users", "acme",
+    { id => "u1", name => "ada", tier => "gold" })
+val $u = Azure::Cosmos::get("appdb", "users", "acme", "u1")
+
+# Key Vault Secrets.
+val $pw = Azure::Secrets::get("db-password", vault => "my-kv")
+val @vers = Azure::Secrets::versions("db-password", vault => "my-kv")
+
+# Key Vault Keys — RSA encrypt/decrypt (KMS analog) + list/get.
+val $enc = Azure::Keys::encrypt("wrap-key", "secret data", vault => "my-kv")
+val $clear = Azure::Keys::decrypt("wrap-key", $version, $enc->{ciphertext}, vault => "my-kv")
+val @keys = Azure::Keys::ls(vault => "my-kv")
+val $jwk = Azure::Keys::get("wrap-key", vault => "my-kv")->{jwk}</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Usage &mdash; management plane (Azure Resource Manager)</h2>
+        <p>These take a subscription from the <code>subscription =&gt;</code> opt or <code>AZURE_SUBSCRIPTION_ID</code>; scoped ops add <code>resource_group =&gt; "&lt;rg&gt;"</code>. The management plane reaches ARM over REST on the shared credential and HTTP stack.</p>
+<pre>use Azure::ResourceGroups
+use Azure::Compute
+use Azure::Storage
+use Azure::ServiceBus
+use Azure::Monitor
+use Azure::Containers
+use Azure::Subscriptions
+
+# Subscriptions + regions — tenant-scoped discovery (no subscription opt for ls).
+val @subs = Azure::Subscriptions::ls()
+val @regions = Azure::Subscriptions::locations(subscription => $sub)
+
+# Resource Groups + provider-agnostic inventory.
+val @rgs = Azure::ResourceGroups::ls(subscription => $sub)
+Azure::ResourceGroups::create("app-rg", "eastus", subscription => $sub)
+val @stores = Azure::ResourceGroups::resources(subscription => $sub,
+    filter => "resourceType eq 'Microsoft.Storage/storageAccounts'")
+
+# Virtual Machines — list, get, power actions (long-running), live state + SKUs.
+val @vms = Azure::Compute::ls(subscription => $sub, resource_group => "app-rg")
+Azure::Compute::start("web1", subscription => $sub, resource_group => "app-rg")
+val $st = Azure::Compute::status("web1", subscription => $sub, resource_group => "app-rg")
+p "power: $st->{power_state}"                          # running / stopped / deallocated
+val @sizes = Azure::Compute::skus(subscription => $sub, location => "eastus")
+
+# Storage account management (distinct from data-plane Blob/Queue).
+val @accts = Azure::Storage::ls(subscription => $sub)
+val $keys = Azure::Storage::keys("mystorage", subscription => $sub, resource_group => "app-rg")
+
+# Service Bus — queues/topics/namespaces listing (mgmt) + send/receive (data plane).
+val @queues = Azure::ServiceBus::queues("myns", subscription => $sub, resource_group => "app-rg")
+val @topics = Azure::ServiceBus::topics("myns", subscription => $sub, resource_group => "app-rg")
+val @namespaces = Azure::ServiceBus::namespaces(subscription => $sub)
+Azure::ServiceBus::send("myns", "orders", "payload")
+val $msg = Azure::ServiceBus::receive("myns", "orders")
+
+# Monitor — metrics for any resource by its ARM id.
+val $m = Azure::Monitor::metrics($vm_resource_id, metrics => "Percentage CPU")
+
+# Container Instances + AKS (incl. live node pools).
+val @groups = Azure::Containers::groups(subscription => $sub)
+val @clusters = Azure::Containers::clusters(subscription => $sub)
+val @pools = Azure::Containers::node_pools("mycluster", subscription => $sub, resource_group => "app-rg")</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Pure helpers (no Azure)</h2>
+        <p>These open no client &mdash; credential-free string parsing, building, and validation usable from any pipeline:</p>
+<pre>Azure::parse_resource_id($id)            # /subscriptions/.../providers/... → { subscription, resource_group, provider, types, resource_type, name }
+Azure::resource_id_parent($id)           # RBAC-scope "dirname" → { id, parent, has_parent }
+Azure::build_resource_id(%opts)          # inverse of parse_resource_id (canonical ARM casing)
+Azure::parse_connection_string($cs)      # Key=Value;... → { pairs => { Key => Value } }
+Azure::build_connection_string(%pairs)   # inverse of parse_connection_string (byte-identical round-trip)
+Azure::redact_connection_string($cs)     # mask AccountKey / SharedAccessSignature → { redacted, masked_count }
+Azure::parse_blob_uri($uri)              # https://&lt;acct&gt;.blob.core.windows.net/&lt;container&gt;/&lt;blob&gt; → { account, service, host, container, blob }
+Azure::build_blob_uri(%opts)             # inverse of parse_blob_uri
+Azure::storage_endpoint(%opts)           # account/service/cloud → { endpoint, url, suffix, … } (public/china/usgov)
+Azure::parse_storage_endpoint($endpoint) # inverse: host/URL → { endpoint, account, service, cloud, suffix, url }
+Azure::valid_storage_account_name($name) # 3-24 lowercase alphanumerics
+Azure::valid_container_name($name)       # Blob container rules
+Azure::valid_blob_name($name)            # 1-1024 chars, ≤254 path segments, no trailing dot/slash
+Azure::valid_keyvault_secret_name($name) # 1-127 chars, alphanumeric + hyphens
+Azure::valid_queue_name($name)           # Queue DNS-label grammar
+Azure::valid_table_name($name)           # ^[A-Za-z][A-Za-z0-9]{2,62}$, "tables" reserved
+Azure::valid_cosmos_id($id)              # ≤255 chars, no / or \
+Azure::valid_guid($guid)                 # 8-4-4-4-12 hex
+Azure::normalize_guid($guid)             # canonical lowercase 8-4-4-4-12
+Azure::format_guid($guid, $format?)      # .NET specifier: N / D / B {…} / P (…)</pre>
+        <p>Each <code>valid_*</code> helper returns <code>{ name, valid, reason }</code> so a pipeline can branch on the boolean and surface the reason.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connection options</h2>
+        <p>Each call takes a trailing <code>%opts</code> hash carrying the target account/vault. Authentication uses <code>DeveloperToolsCredential</code> &mdash; sign in with <code>az login</code> or <code>azd auth login</code> first.</p>
+        <table class="example-tbl">
+          <thead><tr><th>Service</th><th>Options</th></tr></thead>
+          <tbody>
+            <tr><td>Blob / Queue</td><td><code>account =&gt; "&lt;storageacct&gt;"</code> (or <code>AZURE_STORAGE_ACCOUNT</code>), or <code>endpoint =&gt; "https://..."</code></td></tr>
+            <tr><td>Cosmos</td><td><code>account =&gt; "&lt;cosmosacct&gt;"</code> (or <code>AZURE_COSMOS_ACCOUNT</code>), or <code>endpoint</code>, plus <code>region =&gt; "East US"</code></td></tr>
+            <tr><td>Secrets / Keys</td><td><code>vault =&gt; "&lt;kvname&gt;"</code> (or <code>AZURE_KEYVAULT_NAME</code>), or <code>vault_url =&gt; "https://&lt;kv&gt;.vault.azure.net/"</code></td></tr>
+            <tr><td>Management plane (ARM)</td><td><code>subscription =&gt; "&lt;id&gt;"</code> (or <code>AZURE_SUBSCRIPTION_ID</code>); scoped ops add <code>resource_group =&gt; "&lt;rg&gt;"</code>; sovereign clouds via <code>arm_endpoint =&gt; "..."</code></td></tr>
+            <tr><td>Service Bus (data)</td><td><code>namespace =&gt; "&lt;ns&gt;"</code>, or <code>sb_endpoint =&gt; "https://&lt;ns&gt;.servicebus.windows.net"</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Packages</h2>
+        <p>The cdylib exports <strong>89</strong> FFI symbols, surfaced through the flat <code>Azure</code> namespace plus twelve typed sub-packages.</p>
+        <table class="example-tbl">
+          <thead><tr><th>Package</th><th>Surface</th></tr></thead>
+          <tbody>
+            <tr><td>Azure</td><td>Flat API over every export (<code>Azure::blob_*</code>, <code>Azure::queue_*</code>, <code>Azure::cosmos_*</code>, <code>Azure::secrets_*</code>, <code>Azure::keys_*</code>, <code>Azure::vm_*</code>, <code>Azure::servicebus_*</code>, <code>Azure::identity_token</code>), plus all pure helpers, <code>Azure::version</code>, and <code>Azure::ping</code>.</td></tr>
+            <tr><td>Azure::Blob</td><td><code>az://container/blob</code> URI helpers &mdash; <code>ls</code>, <code>get</code>, <code>put</code>, <code>head</code>, <code>rm</code>, <code>containers</code>, <code>create_container</code>, <code>delete_container</code>, <code>set_metadata</code>.</td></tr>
+            <tr><td>Azure::Queue</td><td><code>ls</code>, <code>send</code>, <code>receive</code>, <code>delete</code>, <code>clear</code>, <code>count</code>, <code>create</code>, <code>drop</code>, and a <code>pump</code> receive→callback→delete loop.</td></tr>
+            <tr><td>Azure::Cosmos</td><td>Document helpers &mdash; <code>databases</code>, <code>containers</code>, <code>put</code>, <code>get</code>, <code>delete</code>, <code>query</code>, <code>replace</code>, <code>create_database</code>, <code>create_container</code>, <code>delete_database</code>, <code>delete_container</code>.</td></tr>
+            <tr><td>Azure::Secrets</td><td>Key Vault &mdash; <code>get</code>, <code>set</code>, <code>ls</code>, <code>rm</code>, <code>versions</code>, <code>backup</code>, plus <code>param_get</code> / <code>param_put</code> / <code>param_delete</code> aliases for parameter-store-style callers.</td></tr>
+            <tr><td>Azure::Keys</td><td>Key Vault keys (KMS analog) &mdash; <code>encrypt</code>, <code>decrypt</code>, <code>ls</code>, <code>get</code>.</td></tr>
+            <tr><td>Azure::Compute</td><td>Virtual Machines &mdash; <code>ls</code>, <code>get</code>, <code>start</code>, <code>stop</code>, <code>deallocate</code>, <code>restart</code>, <code>status</code> (live power state), <code>skus</code> (VM sizes).</td></tr>
+            <tr><td>Azure::Containers</td><td>Container Instances + AKS &mdash; <code>groups</code>, <code>group</code>, <code>clusters</code>, <code>cluster</code>, <code>node_pools</code>.</td></tr>
+            <tr><td>Azure::Storage</td><td>Storage-account management &mdash; <code>ls</code>, <code>get</code>, <code>keys</code>.</td></tr>
+            <tr><td>Azure::ResourceGroups</td><td>Resource-group management &mdash; <code>ls</code>, <code>get</code>, <code>create</code>, <code>rm</code>, <code>resources</code> (provider-agnostic inventory, ARM <code>$filter</code>).</td></tr>
+            <tr><td>Azure::ServiceBus</td><td>Service Bus messaging &mdash; <code>queues</code>, <code>topics</code>, <code>namespaces</code>, <code>send</code>, <code>receive</code>.</td></tr>
+            <tr><td>Azure::Subscriptions</td><td>Tenant/subscription discovery &mdash; <code>ls</code> (all subscriptions), <code>locations</code> (regions).</td></tr>
+            <tr><td>Azure::Monitor</td><td>Azure Monitor metrics (CloudWatch analog) &mdash; <code>metrics</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>The official Azure SDK for Rust crates pull in tokio, hyper, rustls, and reqwest, plus the typespec client-core and per-service generated models. That dependency tree ships once, on demand, as an opt-in package &mdash; stryke core is never linked against it.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper; the heavy code lives in the <code>libstryke_azure</code> cdylib and is dlopened on first <code>use Azure</code>. The cdylib holds one shared tokio runtime and one Entra credential, reused across every service client &mdash; no per-call fork, no per-call credential rebuild.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI contract</h2>
+        <p>Each export is a <code>#[no_mangle] extern "C" fn azure__*</code> taking a JSON request string and returning a JSON response string. stryke's FFI bridge resolves these symbols at load. Handler errors and panics are caught and surfaced as <code>{"error": "..."}</code> &mdash; a panic never crosses the C ABI into the host shell.</p>
+<pre># the .stk wrapper decodes the JSON and dies on an {error} payload
+fn Azure::_decode ($name, $json) {
+    val $o = from_json $json
+    if (ref $o eq "HASH" &amp;&amp; exists $o-&gt;{error}) {
+        die "Azure::$name: $o-&gt;{error}"
+    }
+    $o
+}</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Build &amp; test</h2>
+<pre>make            # release build (default) → target/release/libstryke_azure.{dylib,so}
+make debug      # cargo build
+make test       # cargo test, then `s test t/`
+make install    # cargo build --release && s pkg install -g .
+cargo test      # Rust unit tests (endpoint + FFI-safety pins; offline)</pre>
+        <p>The Rust unit tests are offline endpoint-construction and FFI-safety pins. The <code>t/</code> surface tests run under <code>s test t/</code> and skip without Azure credentials. CI (<code>.github/workflows/ci.yml</code>) runs check, fmt, clippy <code>-D warnings</code>, test on ubuntu + macos, doc with <code>-D warnings</code>, and a release build on three targets.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <p>Runnable <code>.stk</code> scripts under <code>examples/</code>:</p>
+        <ul>
+          <li><code>examples/discover.stk</code> &mdash; credential probe + read-only tour, CI-safe (an eval-guarded <code>identity_token</code> returns undef with no reachable credential, so the script runs end-to-end without Azure).</li>
+          <li><code>examples/blob_browse.stk</code> &mdash; list a container prefix.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-azure/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate (publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # azure__* FFI exports + service ops
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrappers (Azure + namespaces)
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest + ffi exports
+&#9500;&#9472;&#9472; t/                     # offline surface tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

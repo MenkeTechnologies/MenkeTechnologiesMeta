@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-zmq — engineering report. ZEROMQ CLIENT FOR STRYKE // REQ/REP + PUB/SUB + PUSH/PULL + DEALER/ROUTER. Architecture, socket-handle registry, FFI protocol, scope, dependencies.">
+  <title>stryke-zmq — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .arch-table td:first-child { color: var(--cyan); font-family: 'Share Tech Mono', monospace; white-space: nowrap; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-ZMQ &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_zmq</code> (libzmq vendored) &middot; loaded on <code>use Zmq</code> &middot; JSON-over-FFI protocol
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-zmq</strong> is an opt-in connector package in the stryke ecosystem. ZeroMQ client for stryke &mdash; the brokerless messaging library covering request/reply, publish/subscribe, push/pull pipeline, and dealer/router patterns.</p>
+      <p class="tutorial-subtitle">libzmq is the C library every ZeroMQ binding wraps. It (plus libsodium) is vendored into the cdylib from source via <code>zeromq-src</code> and statically linked, so the published artifact has no system shared-library dependency.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">Zmq</div><div class="stat-label">use namespace</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier 2</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">in-process FFI</div></div>
+        <div class="stat-card"><div class="stat-val green">60</div><div class="stat-label">zmq__* FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val cyan">62</div><div class="stat-label">Zmq:: functions</div></div>
+        <div class="stat-card"><div class="stat-val green">55</div><div class="stat-label">Rust tests</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> library; the heavy code is a Rust cdylib <code>dlopen</code>ed on first <code>use Zmq</code>. stryke core never links against libzmq.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke library</td><td><code>lib/Zmq.stk</code> &mdash; thin wrapper; serializes args to JSON, decodes responses, maps <code>{error}</code> to <code>die</code> and <code>{timeout}</code> to <code>undef</code></td></tr>
+          <tr><td>cdylib</td><td><code>libstryke_zmq.{dylib,so}</code> &mdash; 60 <code>#[no_mangle] zmq__*</code> exports, JSON-string-in / JSON-string-out, <code>catch_unwind</code> at the boundary</td></tr>
+          <tr><td>State</td><td>One shared <code>zmq::Context</code> + a socket registry <code>Mutex&lt;HashMap&lt;u64, Socket&gt;&gt;</code> in <code>OnceCell</code>; sockets persist across calls</td></tr>
+          <tr><td>Thread safety</td><td><code>zmq::Socket</code> is <code>Send</code>, not <code>Sync</code>; the mutex gives one-thread-at-a-time access + the cross-thread memory fence libzmq requires</td></tr>
+          <tr><td>Native dependency</td><td>libzmq + libsodium vendored from source via <code>zeromq-src</code> (cmake), statically linked &mdash; no system <code>libzmq</code></td></tr>
+          <tr><td>Build</td><td>Cargo cdylib crate (<code>publish = false</code>); ships via <code>s pkg install -g .</code> or a prebuilt release tarball per host triple</td></tr>
+          <tr><td>Tests</td><td>55 Rust unit + FFI-contract tests over <code>inproc://</code> + 223 stryke assertions (165 functional + 58 surface-completeness) + 21 docs/readme/man/workflow lint gates</td></tr>
+          <tr><td>Public surface</td><td>62 <code>Zmq::*</code> functions in <code>lib/Zmq.stk</code> &mdash; socket ops over the cdylib + pure helpers (validation, endpoint, topic, table) with no FFI socket call</td></tr>
+          <tr><td>CI</td><td><code>.github/workflows/ci.yml</code> &mdash; fmt + clippy <code>-D warnings</code> + test on Linux/macOS, doc, release-build matrix, docs gates</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SOCKET PATTERNS</h2>
+      <table class="arch-table">
+        <thead><tr><th>Pattern</th><th>Socket types</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Request / Reply</td><td>req, rep</td><td>synchronous RPC-style exchange</td></tr>
+          <tr><td>Publish / Subscribe</td><td>pub, sub, xpub, xsub</td><td>topic-filtered fan-out</td></tr>
+          <tr><td>Push / Pull</td><td>push, pull</td><td>load-balanced pipeline / fan-out work</td></tr>
+          <tr><td>Dealer / Router</td><td>dealer, router</td><td>async, identity-addressed routing</td></tr>
+          <tr><td>Exclusive pair</td><td>pair</td><td>1:1 inproc thread coordination</td></tr>
+          <tr><td>Raw stream</td><td>stream</td><td>non-ZMTP TCP peers</td></tr>
+        </tbody>
+      </table>
+      <p>Transports: <code>tcp://</code>, <code>ipc://</code>, <code>inproc://</code>, and multicast <code>pgm://</code> / <code>epgm://</code>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>FUNCTION FAMILIES</h2>
+      <p class="tutorial-subtitle">The 62 <code>Zmq::*</code> functions split into socket ops (require a live handle, cross the FFI boundary to libzmq) and pure helpers (validation/endpoint/topic/table utilities that create no socket).</p>
+      <table class="arch-table">
+        <thead><tr><th>Family</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Introspection</td><td><code>version lib_version has capabilities io_threads</code></td></tr>
+          <tr><td>Lifecycle</td><td><code>socket socket_pair socket_count close bind connect unbind disconnect</code></td></tr>
+          <tr><td>Send / receive</td><td><code>send send_multipart recv recv_multipart recv_more drain sendrecv request</code></td></tr>
+          <tr><td>Pub/sub</td><td><code>subscribe unsubscribe</code></td></tr>
+          <tr><td>Options / readiness</td><td><code>set get poll poll_many events</code></td></tr>
+          <tr><td>Monitor / proxy</td><td><code>monitor monitor_recv proxy</code></td></tr>
+          <tr><td>CURVE / Z85</td><td><code>curve_keypair curve_public valid_curve_key z85_encode z85_decode z85_valid</code></td></tr>
+          <tr><td>Endpoint helpers (pure)</td><td><code>parse_endpoint build_endpoint endpoint_bind_to_connect endpoint_connect_to_bind valid_endpoint</code></td></tr>
+          <tr><td>Topic / subscription (pure)</td><td><code>topic_match topic_match_any topic_overlaps prune_subscriptions subscription_diff build_subscription parse_subscription</code></td></tr>
+          <tr><td>Type / table (pure)</td><td><code>valid_socket_type socket_types socket_type_id socket_peers socket_types_compatible socket_caps socket_caps_all socket_option_names valid_socket_option encoding_names socket_event_names monitor_event_flag parse_monitor_event</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>libzmq is the canonical native ZeroMQ library. Bundled here as an opt-in stryke package so workflows that need it don't bloat the core binary. The trade-off is intentional &mdash; the core <code>stryke</code> binary stays slim precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need ZeroMQ, Kafka, or database drivers linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>FFI PROTOCOL</h2>
+      <p>JSON over the FFI boundary. Each export takes a JSON-encoded args dict (a C string) and returns a JSON object (a C string the caller frees with <code>stryke_free_cstring</code>). Sockets are referenced by an integer handle returned from <code>zmq__socket</code>.</p>
+<pre># create a socket -> handle
+{"type":"rep","bind":"tcp://*:5555"}  ->  {"handle":1,"type":"rep"}
+
+# send / recv
+{"handle":1,"data":"pong"}            ->  {"ok":true,"bytes":4}
+{"handle":2,"timeout_ms":1000}        ->  {"data":"pong","bytes":4}
+
+# timeout (not an error) and error shapes
+{"timeout":true}
+{"error":"unknown socket handle: 99"}</pre>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-zmq#0x00-why-this-is-a-package-not-a-builtin">"Why this is a package"</a> and <a href="https://github.com/MenkeTechnologies/stryke-zmq#0x04-api-reference">API reference</a> for the authoritative scope. v0.17.0 covers socket lifecycle (create/close/bind/connect/unbind/disconnect, <code>socket_pair</code>, <code>socket_count</code>), send/recv (single, multipart, <code>recv_more</code>, non-blocking <code>drain</code>, <code>sendrecv</code>), pub/sub topic filters, the full socket-option table (<code>set</code>/<code>get</code>), <code>poll</code>/<code>poll_many</code>/<code>events</code> readiness, socket-event monitoring (<code>monitor</code>/<code>monitor_recv</code>), a backgrounded <code>proxy</code> device, binary-safe <code>hex</code>/<code>base64</code> payloads, the Z85 codec + CURVE key generation (<code>curve_keypair</code>, <code>curve_public</code>, <code>valid_curve_key</code>; CURVE auth via <code>curve_*</code> options), context <code>io_threads</code> tuning, a one-shot REQ convenience (<code>request</code>), and pure topology/endpoint/table helpers (<code>endpoint_bind_to_connect</code>, <code>endpoint_connect_to_bind</code>, <code>valid_endpoint</code>, <code>build_subscription</code>, <code>parse_subscription</code>, <code>topic_overlaps</code>, <code>prune_subscriptions</code>, <code>subscription_diff</code>, <code>socket_caps_all</code>, <code>parse_monitor_event</code>). Open roadmap: a streaming recv callback loop for long-running SUB/PULL consumers and a higher-level steerable-proxy control helper (PAUSE/RESUME/TERMINATE).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-zmq">github.com/MenkeTechnologies/stryke-zmq</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-zmq/issues">github.com/MenkeTechnologies/stryke-zmq/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

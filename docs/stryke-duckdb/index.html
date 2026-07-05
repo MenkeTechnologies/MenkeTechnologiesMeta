@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-duckdb — EMBEDDED DUCKDB SQL ENGINE FOR STRYKE // DIRECT-QUERY PARQUET / CSV / JSON. Embedded DuckDB SQL engine for stryke. Direct-query parquet / CSV / JSON from disk or URL without loading, persistent .duckdb files when you need them, full standard SQL on top. Opt-in package that ships as a Rust cdylib that stryke dlopens in-process on first `use DuckDB`.">
+  <title>stryke-duckdb — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .api-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .api-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .api-tbl td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .api-tbl td:first-child { color: var(--cyan); font-family: 'Share Tech Mono', monospace; white-space: nowrap; }
+    .api-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-DUCKDB &mdash; EMBEDDED DUCKDB SQL ENGINE FOR STRYKE // DIRECT-QUERY PARQUET / CSV / JSON</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_duckdb.{dylib,so}</code> · dlopen'd in-process on <code>use DuckDB</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-duckdb/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-DUCKDB</h2>
+      <p class="tutorial-subtitle"><strong>No import step. No schema. Just SQL.</strong> Embedded DuckDB SQL engine for stryke. Direct-query parquet / CSV / JSON from disk or URL without loading, persistent <code>.duckdb</code> files when you need them, full standard SQL on top. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim; ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use DuckDB</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc / libduckdb compile on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-duckdb
+
+# from a local checkout (first run compiles libduckdb ~3-5 min)
+cd ~/projects/stryke-duckdb
+cargo build --release            # produces target/release/libstryke_duckdb.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/duckdb@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use DuckDB</code> &mdash; no helper-binary fork per call. Any stryke script that declares <code>use DuckDB</code> resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use DuckDB</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>in-memory query</td><td><code>p DuckDB::query "SELECT 1 + 1 AS two, 'hi' AS s"</code></td></tr>
+            <tr><td>query a parquet file directly</td><td><code>my @rows = DuckDB::query "SELECT id, name FROM 'events.parquet' LIMIT 10"</code></td></tr>
+            <tr><td>aggregate a CSV</td><td><code>my $count = DuckDB::query_scalar "SELECT COUNT(*) FROM read_csv_auto('orders.csv') WHERE total &gt; 100"</code></td></tr>
+            <tr><td>hit remote files</td><td><code>DuckDB::query "SELECT * FROM 'https://example.com/data.parquet' LIMIT 5", extensions =&gt; ["httpfs"]</code></td></tr>
+            <tr><td>persistent file db</td><td><code>DuckDB::execute "CREATE TABLE users (id INT, name VARCHAR)", db =&gt; "app.duckdb"</code></td></tr>
+            <tr><td>bulk load a parquet</td><td><code>DuckDB::import "events.parquet", "events", db =&gt; "app.duckdb", replace =&gt; 1</code></td></tr>
+            <tr><td>stream large results</td><td><code>DuckDB::query_stream "SELECT * FROM events", db =&gt; "app.duckdb", callback =&gt; sub ($row) { process $row }</code></td></tr>
+            <tr><td>describe a table's columns</td><td><code>my @cols = DuckDB::describe "sales", session =&gt; $s</code></td></tr>
+            <tr><td>scalar aggregate over a column</td><td><code>my $total = DuckDB::sum_ "sales", "amount", session =&gt; $s</code></td></tr>
+            <tr><td>frequency by group</td><td><code>my @freq = DuckDB::group_count "sales", "region", session =&gt; $s</code></td></tr>
+            <tr><td>query a parquet file directly</td><td><code>my @rows = DuckDB::read_parquet "events.parquet", limit =&gt; 100</code></td></tr>
+          </tbody>
+        </table>
+        <p>Every <code>DuckDB::*</code> op accepts <code>%opts</code> as its final argument. The full surface is the <a href="#api-reference">API reference</a> below; the same listing is in the <a href="https://github.com/MenkeTechnologies/stryke-duckdb#0x04-api-reference">README "API reference" section</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why this is one of the most useful stryke packages</h2>
+        <p>DuckDB is an in-process analytical SQL engine. With this package, a stryke one-liner gets full SQL over files with no import step and no schema declaration &mdash; DuckDB infers everything, vectorizes the scan, and returns rows:</p>
+<pre>use DuckDB
+p DuckDB::query "SELECT COUNT(*) FROM 's3://my-bucket/events/*.parquet'"</pre>
+        <p>The same SQL surface as PostgreSQL, with the embedded-runtime ergonomics of SQLite. Pairs cleanly with <a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> (data pipeline) and <a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> (file diagnostics) &mdash; it runs SQL on the file you just inspected.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connection options</h2>
+        <p>Every <code>DuckDB::*</code> op accepts <code>%opts</code> as its final argument. Connection fields the cdylib understands (matching the v1 helper-binary flags):</p>
+        <table class="api-tbl">
+          <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>db</td><td>Path to a <code>.duckdb</code> file. Omit for <code>:memory:</code> (default).</td></tr>
+            <tr><td>session</td><td>Name for distinct <code>:memory:</code> instances. Defaults to <code>"_default"</code>; same-session calls share the same in-memory db.</td></tr>
+            <tr><td>read_only</td><td><code>1</code> to open the file db read-only.</td></tr>
+            <tr><td>pragmas</td><td>Arrayref of <code>SET name=value;</code> strings to run on connect.</td></tr>
+            <tr><td>extensions</td><td>Arrayref of names &mdash; <code>INSTALL &lt;name&gt;; LOAD &lt;name&gt;;</code> for each on connect.</td></tr>
+            <tr><td>bind</td><td>Arrayref of values for <code>?</code> placeholders.</td></tr>
+            <tr><td>columnar</td><td>Return column-oriented output (read paths).</td></tr>
+            <tr><td>with_meta</td><td>Return a meta-hashref alongside rows (read paths).</td></tr>
+            <tr><td>limit</td><td>Row cap (read paths).</td></tr>
+            <tr><td>callback</td><td>Per-row sub for <code>query_stream</code>.</td></tr>
+          </tbody>
+        </table>
+        <p>The cdylib caches one <code>duckdb::Connection</code> per <code>(db, session, read_only)</code> tuple &mdash; <code>:memory:</code> databases persist across calls (the v1 helper binary got a fresh empty <code>:memory:</code> every fork). Two calls with the same <code>db =&gt; "app.duckdb"</code> share the same connection object.</p>
+        <p>Common extensions, loaded via <code>extensions =&gt; [...]</code> or <code>install_extension</code> / <code>load_extension</code>:</p>
+        <table class="api-tbl">
+          <thead><tr><th>Extension</th><th>What it adds</th></tr></thead>
+          <tbody>
+            <tr><td>httpfs</td><td>HTTP / HTTPS / S3 file reads</td></tr>
+            <tr><td>aws</td><td>S3 with AWS-SDK auth</td></tr>
+            <tr><td>iceberg</td><td>Iceberg table format</td></tr>
+            <tr><td>delta</td><td>Delta Lake</td></tr>
+            <tr><td>spatial</td><td>Geospatial functions</td></tr>
+            <tr><td>excel</td><td><code>.xlsx</code> reader</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="api-reference">
+        <h2>API reference</h2>
+        <p>The complete public surface. Every function below is defined in <code>lib/DuckDB.stk</code>; the FFI-backed ones call a matching <code>duckdb__*</code> symbol on the cdylib, the rest are pure-stryke helpers composed over <code>query</code> / <code>execute</code>. Each op takes <code>%opts</code> as its final argument unless noted as pure.</p>
+
+        <h3>Read paths</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>query $sql, %opts</td><td>@rows | hashref | meta-hashref</td></tr>
+            <tr><td>query_stream $sql, %opts</td><td>$count &mdash; <code>callback</code> fires per row</td></tr>
+            <tr><td>query_one $sql, %opts</td><td>\%row | undef</td></tr>
+            <tr><td>query_col $sql, %opts</td><td>@values (first column)</td></tr>
+            <tr><td>query_scalar $sql, %opts</td><td>$value | undef</td></tr>
+            <tr><td>dump $source, %opts</td><td>@rows &mdash; source = table | path | URL</td></tr>
+          </tbody>
+        </table>
+
+        <h3>DDL / DML</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>execute $sql, %opts</td><td>{ affected }</td></tr>
+            <tr><td>exec_file $path, %opts</td><td>{ ok: true }</td></tr>
+            <tr><td>explain $sql, %opts</td><td>$plan_text &mdash; <code>analyze =&gt; 1</code> for EXPLAIN ANALYZE</td></tr>
+            <tr><td>insert_many $table, $rows_aref, %opts</td><td>$inserted_count &mdash; single multi-row INSERT, columns inferred from first row's keys</td></tr>
+            <tr><td>appender $table, $rows_aref, %opts</td><td>$appended_count &mdash; native Appender, arrayref of arrayrefs in column order (fastest bulk load)</td></tr>
+            <tr><td>appender_columns $table, $cols_aref, $rows_aref, %opts</td><td>$appended_count &mdash; Appender into a column subset; unnamed cols take DEFAULT/NULL</td></tr>
+            <tr><td>import $path, $table, %opts</td><td>{ table, kind, source, num_rows } &mdash; CREATE TABLE AS; opts: <code>kind</code> (parquet|csv|json|auto), <code>replace</code></td></tr>
+            <tr><td>export $table, $path, %opts</td><td>{ table, kind, path, file_size } &mdash; opts: <code>kind</code> (parquet|csv|json), <code>compression</code> (parquet only)</td></tr>
+            <tr><td>copy_from $table, $file, %opts</td><td>{ table, path, copied } &mdash; COPY … FROM into an existing table; opts: <code>kind</code> (csv|parquet|json|auto)</td></tr>
+            <tr><td>create_index $name, $table, \@columns, %opts</td><td>{ index, table, columns } &mdash; opts: <code>unique</code>, <code>if_not_exists</code></td></tr>
+            <tr><td>drop $name, %opts</td><td>{ dropped, kind } &mdash; opts: <code>kind</code> (table|view|index, default table), <code>if_exists</code> (default 1), <code>cascade</code></td></tr>
+            <tr><td>drop_index $name, %opts</td><td>{ dropped, kind } &mdash; convenience for <code>drop kind =&gt; index</code></td></tr>
+            <tr><td>attach $file, $alias, %opts</td><td>{ alias, attach_path, read_only } &mdash; ATTACH a db file under $alias; opts: <code>attach_read_only</code>, <code>if_not_exists</code></td></tr>
+            <tr><td>detach $alias, %opts</td><td>{ alias, detached } &mdash; opts: <code>if_exists</code></td></tr>
+            <tr><td>update $table, $set_href, $where?, %opts</td><td>$affected &mdash; UPDATE … SET … [WHERE]</td></tr>
+            <tr><td>delete $table, $where?, %opts</td><td>$affected &mdash; DELETE FROM … [WHERE]</td></tr>
+            <tr><td>truncate $table, %opts</td><td>1 &mdash; DELETE FROM (empties the table)</td></tr>
+            <tr><td>upsert $table, $row_href, %opts</td><td>$affected | @rows &mdash; INSERT … ON CONFLICT DO UPDATE; opts: <code>conflict</code> (required), <code>update</code>, <code>returning</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>appender</code> is DuckDB's native bulk-ingest path &mdash; no SQL parse per row &mdash; and is the fastest way to load a large dataset; it takes an arrayref of arrayrefs, each a full row in table column order:</p>
+<pre>DuckDB::appender "events", [[1, "click"], [2, "view"], [3, "scroll"]]</pre>
+        <p><code>insert_many</code> bulk-inserts an arrayref of hashrefs in one multi-row INSERT (columns inferred from the first row's keys, sorted). <code>upsert</code> inserts one row and, on a unique/PK conflict over the <code>conflict</code> columns, updates the <code>update</code> columns from the proposed row (DuckDB <code>excluded.*</code>); an empty <code>update</code> list means DO NOTHING:</p>
+<pre>DuckDB::upsert "kv", { id =&gt; 1, name =&gt; "x", hits =&gt; 9 },
+               conflict =&gt; ["id"], update =&gt; ["hits"]   # only bump hits</pre>
+
+        <h3>Quote / parse helpers (pure)</h3>
+        <p>String-only helpers for building dynamic SQL safely &mdash; no FFI, no connection. Each <code>parse_*</code> is the inverse of its <code>format_*</code> / <code>quote_*</code> partner.</p>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Transform</th></tr></thead>
+          <tbody>
+            <tr><td>quote_ident $name</td><td>ANSI double-quote: <code>my col</code> &rarr; <code>"my col"</code></td></tr>
+            <tr><td>unquote_ident $quoted</td><td>inverse of quote_ident: <code>"we""ird"</code> &rarr; <code>we"ird</code></td></tr>
+            <tr><td>quote_identifier $name</td><td><code>"..."</code> with inner <code>"</code> doubled; safe dynamic-SQL identifier</td></tr>
+            <tr><td>quote_literal $v</td><td>value literal: undef&rarr;NULL, number&rarr;bare, string&rarr;<code>'...'</code> (<code>'</code> doubled)</td></tr>
+            <tr><td>unquote_literal $quoted</td><td>inverse (string form): <code>'O''Brien'</code> &rarr; <code>O'Brien</code></td></tr>
+            <tr><td>quote_like $s</td><td>escape <code>% _ \</code> so $s matches literally in <code>LIKE … ESCAPE '\'</code></td></tr>
+            <tr><td>unquote_like $pattern</td><td>inverse; rejects an unescaped wildcard or dangling backslash</td></tr>
+            <tr><td>quote_qualified_ident $name</td><td><code>main.my table</code> &rarr; <code>"main"."my table"</code></td></tr>
+            <tr><td>parse_qualified_ident $name</td><td><code>"main"."my table"</code> &rarr; <code>["main","my table"]</code></td></tr>
+            <tr><td>format_list \@elements</td><td><code>["a","b"]</code> &rarr; <code>['a', 'b']</code> (DuckDB LIST literal)</td></tr>
+            <tr><td>parse_list $literal</td><td>inverse of format_list (numbers bare, <code>''</code> un-doubles)</td></tr>
+            <tr><td>format_in_list \@values</td><td><code>[1,"a",undef]</code> &rarr; <code>(1, 'a', NULL)</code> for <code>col IN (...)</code>; empty &rarr; <code>(NULL)</code></td></tr>
+            <tr><td>parse_in_list $operand</td><td>inverse of format_in_list</td></tr>
+            <tr><td>format_struct \%fields</td><td><code>{a=&gt;1,b=&gt;2}</code> &rarr; <code>{'a': '1', 'b': '2'}</code> (STRUCT literal, keys sorted)</td></tr>
+            <tr><td>parse_struct $literal</td><td>inverse of format_struct (quote-aware, bare null/number, <code>''</code> un-doubles)</td></tr>
+            <tr><td>format_map \%pairs</td><td><code>{a=&gt;1,b=&gt;2}</code> &rarr; <code>MAP {'a': '1', 'b': '2'}</code> (MAP literal, keys sorted)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Transactions</h3>
+        <p>Statements issued with the same <code>%opts</code> run on the same cached handle, so these ride on that affinity (no extra FFI).</p>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>begin %opts</td><td>1 &mdash; BEGIN TRANSACTION</td></tr>
+            <tr><td>commit %opts</td><td>1 &mdash; COMMIT</td></tr>
+            <tr><td>rollback %opts</td><td>1 &mdash; ROLLBACK</td></tr>
+            <tr><td>transaction $code, %opts</td><td>$code_result &mdash; BEGIN; $code-&gt;(); COMMIT &mdash; or ROLLBACK + re-raise on die</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Metadata</h3>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>version</td><td>$version_string &mdash; the stryke-duckdb package version</td></tr>
+            <tr><td>server_version %opts</td><td>$version_string &mdash; live SELECT version() (e.g. "v1.5.3")</td></tr>
+            <tr><td>ping %opts</td><td>1 | ""</td></tr>
+            <tr><td>inspect %opts</td><td>{ version, file, file_size, databases: [...] }</td></tr>
+            <tr><td>tables %opts</td><td>@{ {name, schema}, … }</td></tr>
+            <tr><td>databases %opts</td><td>@names &mdash; attached + system/temp catalogs</td></tr>
+            <tr><td>views %opts</td><td>@names &mdash; view names in current schema</td></tr>
+            <tr><td>functions %opts</td><td>@names &mdash; distinct function names</td></tr>
+            <tr><td>settings %opts</td><td>@{ {name, value, description} }</td></tr>
+            <tr><td>extensions %opts</td><td>@{ {extension_name, loaded, installed, description} }</td></tr>
+            <tr><td>schema $table, %opts</td><td>{ table, num_rows, columns: [...] }</td></tr>
+            <tr><td>count $table, $where?, %opts</td><td>$row_count &mdash; SELECT count(*) [WHERE $where]</td></tr>
+            <tr><td>exists $table, $where?, %opts</td><td>1 | 0 &mdash; SELECT EXISTS(…), short-circuits</td></tr>
+            <tr><td>table_exists $name, %opts</td><td>1 | 0 &mdash; $name must be a plain identifier</td></tr>
+            <tr><td>table_info $table, %opts</td><td>@{ {cid, name, type, notnull, dflt_value, pk} } &mdash; PRAGMA table_info</td></tr>
+            <tr><td>indexes %opts</td><td>@{ {index_name, table_name, schema_name, is_unique, sql} } &mdash; duckdb_indexes()</td></tr>
+            <tr><td>constraints %opts</td><td>@{ {schema_name, table_name, constraint_type, constraint_text} } &mdash; duckdb_constraints()</td></tr>
+            <tr><td>database_size %opts</td><td>@{ storage stats } &mdash; PRAGMA database_size</td></tr>
+            <tr><td>all_columns %opts</td><td>@{ catalog-wide column rows } &mdash; duckdb_columns(), every schema</td></tr>
+            <tr><td>schemas %opts</td><td>@{ {database_name, schema_name, internal} } &mdash; duckdb_schemas()</td></tr>
+            <tr><td>memory_usage %opts</td><td>@{ {tag, memory_usage_bytes, temporary_storage_bytes} } &mdash; duckdb_memory()</td></tr>
+            <tr><td>describe_query $sql, %opts</td><td>@{ {column_name, column_type, null, …} } &mdash; DESCRIBE &lt;query&gt;, no execution</td></tr>
+          </tbody>
+        </table>
+        <p><code>all_columns</code> is the catalog-wide listing (every schema), where <code>schema</code> covers one table in the current schema and <code>table_info</code> is the engine PRAGMA for one table. <code>describe_query</code> resolves the result schema of an arbitrary query without running it &mdash; the read-shaped counterpart to <code>explain</code>. <code>memory_usage</code> is the runtime-memory companion to <code>database_size</code> (on-disk).</p>
+
+        <h3>Analytics &amp; readers</h3>
+        <p>Pure-SQL helpers composed over <code>query</code> / <code>execute</code> &mdash; identifiers validated as plain identifiers, file paths single-quote escaped. Route connection options through a named <code>session =&gt;</code>.</p>
+        <table class="api-tbl">
+          <thead><tr><th>Function</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>describe $table, %opts</td><td>@{ {column_name, column_type, null, …} }</td></tr>
+            <tr><td>columns $table, %opts</td><td>@names</td></tr>
+            <tr><td>column_types $table, %opts</td><td>{ column_name =&gt; column_type }</td></tr>
+            <tr><td>summarize $table, %opts</td><td>@{ per-column stats } &mdash; SUMMARIZE</td></tr>
+            <tr><td>head $table, $n=10, %opts</td><td>@rows</td></tr>
+            <tr><td>sample $table, $n=10, %opts</td><td>@rows &mdash; USING SAMPLE (reservoir)</td></tr>
+            <tr><td>distinct $table, $column, %opts</td><td>@values</td></tr>
+            <tr><td>aggregate $table, $column, $fn="count", $where?, %opts</td><td>$scalar</td></tr>
+            <tr><td>sum_ / avg_ / min_ / max_ $table, $column, %opts</td><td>$scalar</td></tr>
+            <tr><td>group_count $table, $column, %opts</td><td>@{ {value, n} } &mdash; GROUP BY … ORDER BY n DESC</td></tr>
+            <tr><td>create_table_as $name, $query, %opts</td><td>result &mdash; CTAS; <code>replace =&gt; 1</code> for OR REPLACE</td></tr>
+            <tr><td>read_parquet $path, %opts</td><td>@rows &mdash; read_parquet(); opts: <code>columns</code>, <code>limit</code></td></tr>
+            <tr><td>read_csv $path, %opts</td><td>@rows &mdash; read_csv_auto()</td></tr>
+            <tr><td>read_json $path, %opts</td><td>@rows &mdash; read_json_auto()</td></tr>
+            <tr><td>copy_to $query, $path, %opts</td><td>result &mdash; COPY (…) TO; opts: <code>format</code></td></tr>
+            <tr><td>install_extension / load_extension $name, %opts</td><td>1 &mdash; INSTALL / LOAD</td></tr>
+            <tr><td>pragma $name, %opts</td><td>@rows</td></tr>
+            <tr><td>set $name, $value, %opts</td><td>1 &mdash; SET name = value (name validated, value bound as literal)</td></tr>
+            <tr><td>get_setting $name, %opts</td><td>$value &mdash; current_setting($name) scalar read</td></tr>
+            <tr><td>vacuum %opts</td><td>1 &mdash; VACUUM; <code>analyze =&gt; 1</code> for VACUUM ANALYZE</td></tr>
+            <tr><td>checkpoint %opts</td><td>{ ok, force } &mdash; CHECKPOINT; <code>force =&gt; 1</code> for FORCE CHECKPOINT</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Worked example: analytics over an in-memory table</h2>
+        <p>From <code>examples/analytics.stk</code> &mdash; build a table, run aggregate helpers, group by a column, materialize to parquet, read it back:</p>
+<pre>use DuckDB
+val $s = "analytics_demo_$$"
+
+DuckDB::execute("CREATE TABLE orders (id INT, region TEXT, amount INT)", session =&gt; $s)
+DuckDB::insert_many("orders", [
+    { id =&gt; 1, region =&gt; "east", amount =&gt; 120 },
+    { id =&gt; 2, region =&gt; "east", amount =&gt; 80 },
+    { id =&gt; 3, region =&gt; "west", amount =&gt; 300 },
+], session =&gt; $s)
+
+p "columns: " . join(", ", DuckDB::columns("orders", session =&gt; $s))
+p sprintf("sum=%d avg=%d", DuckDB::sum_("orders", "amount", session =&gt; $s),
+                           DuckDB::avg_("orders", "amount", session =&gt; $s))
+
+for val $g (DuckDB::group_count("orders", "region", session =&gt; $s)) {
+    p sprintf("  %-6s %d", $g-&gt;{value}, $g-&gt;{n})
+}
+
+DuckDB::copy_to("SELECT * FROM orders WHERE amount &gt;= 100", "/tmp/big.parquet",
+                format =&gt; "parquet", session =&gt; $s)
+p scalar(DuckDB::read_parquet("/tmp/big.parquet", session =&gt; $s))</pre>
+        <p>More runnable scripts ship under <code>examples/</code>: <code>aggregate_csv.stk</code>, <code>analytics.stk</code>, <code>crud.stk</code>, <code>discover.stk</code>, <code>parquet_to_db.stk</code>, <code>query_parquet.stk</code>, <code>window.stk</code>. Run any with <code>s examples/&lt;name&gt;.stk</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>DuckDB type encoding</h2>
+        <p>Output JSON is produced via the Arrow result iterator, so types match <a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a>.</p>
+        <table class="api-tbl">
+          <thead><tr><th>DuckDB</th><th>JSON</th></tr></thead>
+          <tbody>
+            <tr><td>BOOLEAN</td><td>bool</td></tr>
+            <tr><td>TINYINT / SMALLINT / INTEGER / BIGINT</td><td>number</td></tr>
+            <tr><td>UTINYINT / … / UBIGINT</td><td>number</td></tr>
+            <tr><td>HUGEINT</td><td>string (precision preserved)</td></tr>
+            <tr><td>FLOAT / DOUBLE</td><td>number</td></tr>
+            <tr><td>DECIMAL</td><td>string</td></tr>
+            <tr><td>VARCHAR / TEXT</td><td>string</td></tr>
+            <tr><td>BLOB</td><td><code>"base64:…"</code> string</td></tr>
+            <tr><td>DATE</td><td><code>"YYYY-MM-DD"</code></td></tr>
+            <tr><td>TIMESTAMP / TIMESTAMP WITH TIME ZONE</td><td>ISO 8601 string</td></tr>
+            <tr><td>INTERVAL</td><td><code>{months, days, nanos}</code></td></tr>
+            <tr><td>LIST&lt;T&gt;</td><td>JSON array</td></tr>
+            <tr><td>STRUCT&lt;…&gt;</td><td>JSON object</td></tr>
+            <tr><td>MAP&lt;K,V&gt;</td><td>JSON object</td></tr>
+            <tr><td>UUID</td><td>string</td></tr>
+            <tr><td>NULL</td><td>null</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests &amp; dev workflow</h2>
+        <p>The Rust cdylib and the <code>.stk</code> wrapper are tested separately. Tests are self-contained &mdash; DuckDB is in-memory, so no external service is required.</p>
+<pre>cargo test          # compiles the cdylib, no live calls
+s test t/           # self-contained assertion tests (in-memory)</pre>
+        <p>The <code>t/</code> suite covers in-memory queries, positional binds, columnar output, persistent-file CTAS round trip, analytics/introspection helpers, and a wrapper-completeness pin (<code>test_duckdb.stk</code>, <code>test_analytics.stk</code>, <code>test_introspection.stk</code>, <code>test_stryke_duckdb_surface.stk</code>). The Makefile wraps the common loop:</p>
+<pre>make             # release build (first time: ~3-5 min for libduckdb)
+make debug
+make test
+make install
+make clean</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>DuckDB is an in-process analytical SQL engine; the <code>duckdb</code> crate with <code>bundled</code> compiles libduckdb from source into one static cdylib &mdash; no system <code>.so</code> dep at runtime. Single-shot opt-in install.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>duckdb__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_duckdb.{dylib,so}</code>, dlopened in-process on first <code>use DuckDB</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>DuckDB::*</code> wrapper builds a JSON args dict and calls a sibling <code>duckdb__*</code> symbol resolved out of <code>libstryke_duckdb.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use DuckDB</code> and caches one <code>duckdb::Connection</code> per <code>(db, session, read_only)</code> tuple in <code>OnceCell</code> for the life of the stryke process &mdash; no fork-per-call, and <code>:memory:</code> databases persist across calls. Responses are JSON; errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with the message.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-duckdb/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — duckdb__* extern "C" exports + persistent conn cache
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use DuckDB`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-polars — engineering report. POLARS + NDARRAY + LINALG + FFT + RANDOM // STRYKE PACKAGE. Architecture (cdylib, dlopen, FFI envelope), surface map, phase plan, backing crates.">
+  <title>stryke-polars — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-POLARS &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            v0.22.0 &middot; 1417 cdylib exports &middot; 46 <code>.stk</code> wrapper packages (1505 fns) &middot; 167 Rust unit tests &middot; <code>dlopen</code>'d in-process on <code>use Polars</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-polars</strong> is one of the opt-in connector packages in the stryke ecosystem. As of <strong>v0.22.0</strong> it ships the full pandas + numpy surface &mdash; DataFrame, Series, Index, IO, Categorical, ndarray, ufuncs, linalg, random, fft, polynomial, masked arrays, datetime64 &mdash; <em>plus</em> a scipy-class extension layer covering signal processing, statistical tests, image filters, ML metrics, graph algorithms, time-series analytics, sparse matrices, distance/clustering, JSON/bit/format helpers. <strong>1417 cdylib exports across 41 verb-prefix families</strong> (plus the standalone <code>polars__version</code>), all in one cdylib that stryke <code>dlopen</code>'s in-process on <code>use Polars</code>.</p>
+      <p class="tutorial-subtitle">Why opt-in: pandas + numpy bring 200+ transitive crates. Linking them into the daily-driver <code>stryke</code> binary would balloon its size and pull in build-time deps that one-liner / awk-replacement users do not need. The linalg path stays pure-Rust (<code>nalgebra</code>) so no OpenBLAS / C toolchain is required to build.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">v0.22.0</div><div class="stat-label">Current release</div></div>
+        <div class="stat-card"><div class="stat-val cyan">1417</div><div class="stat-label">cdylib exports</div></div>
+        <div class="stat-card"><div class="stat-val green">167</div><div class="stat-label">Rust unit tests passing</div></div>
+        <div class="stat-card"><div class="stat-val">46</div><div class="stat-label"><code>.stk</code> wrapper packages</div></div>
+        <div class="stat-card"><div class="stat-val cyan">41</div><div class="stat-label">cdylib prefix families</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+        <div class="stat-card"><div class="stat-val green">0</div><div class="stat-label">clippy warnings (<code>-D warnings</code>)</div></div>
+        <div class="stat-card"><div class="stat-val cyan">0</div><div class="stat-label">missing docs (<code>#![deny]</code>)</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a set of thin <code>.stk</code> wrappers (one per family) that call FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>One <code>.stk</code> file per family (<code>DataFrame</code>, <code>Series</code>, <code>NdArray</code>, <code>Linalg</code>, <code>Random</code>, <code>FFT</code>, &hellip;); each exposes typed helpers that serialize args to JSON and parse the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_polars.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn polars__&lt;family&gt;_&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
+          <tr><td>FFI envelope</td><td>JSON in / JSON out; success = per-fn shape, error = <code>{"error": "&lt;msg&gt;"}</code>; <code>catch_unwind</code> on every call converts panics to JSON errors</td></tr>
+          <tr><td>Memory ownership</td><td>cdylib allocates the returned <code>CString</code>; caller (stryke) must free via cdylib-exported <code>stryke_free_cstring</code> &mdash; wired automatically by <code>rust_ffi::load_cdylib</code></td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Polars</code>; symbols resolved lazily; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/stryke-polars@&lt;ver&gt;/</code> after <code>make install</code> (<code>s pkg install -g .</code>); <code>use Polars</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>Rust unit tests under <code>src/</code>; stryke integration tests under <code>t/</code> (<code>s test t/</code>); contract gates under <code>tests/*.sh</code></td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; <code>cargo fmt --all --check</code>, <code>cargo clippy --all-targets -- -D warnings</code>, <code>cargo doc -D warnings</code>, <code>cargo test --locked</code>, plus the contract-gate test suite</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>The core <code>stryke</code> binary stays small precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need polars + ndarray + nalgebra + rustfft + chrono-tz linked in.</p>
+      <p>Reaching for the full DataFrame + linalg + FFT surface is a deliberate move: the user typed <code>use Polars</code> in their script. The cdylib only loads on that opt-in line; pure-shell scripts pay zero startup or memory cost for it. Parquet / Arrow IO routes through <a href="https://github.com/MenkeTechnologies/stryke-arrow"><code>stryke-arrow</code></a> to share a single <code>arrow-rs</code> link in-process &mdash; <code>stryke-polars</code> does not link <code>arrow-rs</code> directly to avoid <code>dlsym</code> conflicts.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>SURFACE MAP &mdash; PANDAS + NUMPY CORE</h2>
+      <table class="arch-table">
+        <thead><tr><th>Family</th><th>Stryke prefix</th><th>cdylib prefix</th><th>Shipped</th></tr></thead>
+        <tbody>
+          <tr><td>pandas Series (incl. <code>.str.*</code> / <code>.dt.*</code>)</td><td><code>sr_*</code></td><td><code>polars__sr_*</code></td><td>206</td></tr>
+          <tr><td>numpy ndarray</td><td><code>arr_*</code></td><td><code>polars__arr_*</code></td><td>177</td></tr>
+          <tr><td>pandas DataFrame</td><td><code>df_*</code></td><td><code>polars__df_*</code></td><td>119</td></tr>
+          <tr><td>numpy ufuncs</td><td><code>np_*</code></td><td><code>polars__np_*</code></td><td>94</td></tr>
+          <tr><td>pandas Index / MultiIndex / DatetimeIndex</td><td><code>idx_*</code></td><td><code>polars__idx_*</code></td><td>69</td></tr>
+          <tr><td>numpy masked arrays</td><td><code>ma_*</code></td><td><code>polars__ma_*</code></td><td>61</td></tr>
+          <tr><td>numpy random distributions</td><td><code>rand_*</code></td><td><code>polars__rand_*</code></td><td>40</td></tr>
+          <tr><td>numpy linalg</td><td><code>linalg_*</code></td><td><code>polars__linalg_*</code></td><td>37</td></tr>
+          <tr><td>pandas Categorical</td><td><code>cat_*</code></td><td><code>polars__cat_*</code></td><td>35</td></tr>
+          <tr><td>numpy datetime64 / timedelta64</td><td><code>dt64_*</code></td><td><code>polars__dt64_*</code></td><td>32</td></tr>
+          <tr><td>pandas IO (CSV, JSON, JSONL, TSV, HTML, Markdown, records, concat, merge)</td><td><code>pd_*</code></td><td><code>polars__pd_*</code></td><td>29</td></tr>
+          <tr><td>numpy polynomial (Chebyshev T/U, Hermite, Legendre, Laguerre&hellip;)</td><td><code>poly_*</code></td><td><code>polars__poly_*</code></td><td>17</td></tr>
+          <tr><td>pandas DataFrame <code>.str.*</code> accessor</td><td><code>str_*</code></td><td><code>polars__str_*</code></td><td>16</td></tr>
+          <tr><td>numpy fft</td><td><code>fft_*</code></td><td><code>polars__fft_*</code></td><td>13</td></tr>
+          <tr><td>pandas DataFrame <code>.dt.*</code> accessor</td><td><code>dt_*</code></td><td><code>polars__dt_*</code></td><td>13</td></tr>
+          <tr><td>dtype parsing / canonicalization (<code>parse_dtype</code>)</td><td><code>parse_*</code></td><td><code>polars__parse_*</code></td><td>1</td></tr>
+          <tr><td><strong>Pandas + numpy subtotal</strong></td><td></td><td></td><td><strong>959</strong></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>SURFACE MAP &mdash; SCIPY-CLASS EXTENSIONS</h2>
+      <p>Beyond the pandas + numpy parity surface, P5b/P5c shipped a scipy-class extension layer for common analytics workloads. Every entry below is a real Rust implementation (no stubs) and most are exercised by unit tests in <code>src/&lt;module&gt;.rs</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Family</th><th>cdylib prefix</th><th>Shipped</th><th>Scope</th></tr></thead>
+        <tbody>
+          <tr><td>Image filters</td><td><code>polars__img_*</code></td><td>42</td><td>Blur (box / Gaussian), Sobel/Prewitt/Laplacian edges, dilate/erode/open/close morphology, median filter, threshold, rotate (90/180/270), flip, crop, resize (nearest / bilinear), histogram, equalize, contrast, gamma, integral image</td></tr>
+          <tr><td>Distances</td><td><code>polars__dist_*</code></td><td>35</td><td>Euclidean, Manhattan, Chebyshev, Minkowski (param p), Cosine, Canberra, Bray-Curtis, Jaccard, Hamming, Mahalanobis (with explicit Σ&#8315;&sup1;), pdist, cdist, plus distribution PDFs/CDFs (normal, uniform, exp, gamma, chi&sup2;, t, beta, lognormal, Poisson, binomial, geometric, negative binomial)</td></tr>
+          <tr><td>Signal processing</td><td><code>polars__sig_*</code></td><td>35</td><td>convolve / correlate / autocorrelate, detrend, smoothing (box / triangle / Gaussian), zero crossings, peak / valley finding, envelopes, median filter, EMA / DEMA / SMA / WMA, MACD, RSI, Bollinger bands, trapz / Simpson integration, gradient, resample / decimate / upsample, unwrap</td></tr>
+          <tr><td>Bit manipulation</td><td><code>polars__bit_*</code></td><td>31</td><td>popcount, leading/trailing zeros and ones, rotate left/right, reverse bits, swap bytes, MSB / LSB, is/next/prev power-of-two, AND/OR/XOR/NOT, shifts, set/clear/toggle/test bits, base-2/8/16 conversion and parsing</td></tr>
+          <tr><td>Text / NLP</td><td><code>polars__text_*</code></td><td>27</td><td>Tokenize, word/char/byte/line counts, n-grams (word and char), word frequency, Levenshtein, LCS length, Jaccard / cosine on words, sentence split, stopword removal, regex-style replace, number extraction, camel/snake conversion, titlecase, edit-distance ratio</td></tr>
+          <tr><td>Statistical tests</td><td><code>polars__stattest_*</code></td><td>24</td><td>One-sample / two-sample / paired t-tests, z-test, chi&sup2; (with regularized incomplete gamma), Mann-Whitney U, Wilcoxon signed-rank, Kolmogorov-Smirnov, ANOVA, Levene, Kruskal-Wallis, Shapiro-Wilk approx, Jarque-Bera, Durbin-Watson, ACF / PACF (Levinson-Durbin), linregress, proportion z-tests, confidence intervals</td></tr>
+          <tr><td>Statistics convenience</td><td><code>polars__stat_*</code></td><td>24</td><td>Z-score, IQR, MAD, percentile, trimmed mean, harmonic / geometric mean, skewness, kurtosis, Pearson / Spearman correlation, covariance, MAE / MSE / RMSE / R&sup2;, Shannon entropy, KL divergence, Jensen-Shannon distance</td></tr>
+          <tr><td>Misc math</td><td><code>polars__misc_*</code></td><td>23</td><td>Factorial (saturating), C(n,k), P(n,k), Fibonacci, primality test, GCD / LCM, modular exponentiation, digit sum, digit reversal, palindrome check, lerp, smoothstep, range mapping, safe div / log / sqrt, clamp, sign / step functions</td></tr>
+          <tr><td>ML metrics</td><td><code>polars__metric_*</code></td><td>23</td><td>Accuracy, precision, recall, F1, F-beta, confusion matrix, ROC AUC, log loss, hinge loss, Matthews correlation, Cohen kappa, balanced accuracy, MAE / MSE / RMSE / MAPE / SMAPE / R&sup2; / explained variance, Brier score, top-k accuracy, Jaccard score</td></tr>
+          <tr><td>Groupby aggregations</td><td><code>polars__gb_*</code></td><td>21</td><td>Sum, mean, median, min, max, count, first / last, std / var, n_unique, quantile, product, all / any, skew / kurt, head / tail, size, groups</td></tr>
+          <tr><td>Window functions</td><td><code>polars__win_*</code></td><td>17</td><td>Rectangular, Hann, Hamming, Blackman, Blackman-Harris, Bartlett, triangular, Nuttall, flat-top, Kaiser, Tukey, Gaussian, exponential, cosine, Lanczos, Parzen, Bohman</td></tr>
+          <tr><td>JSON helpers</td><td><code>polars__json_*</code></td><td>14</td><td>Parse, stringify (compact / pretty), type, is_null, len, keys, values, get, has, pluck, flatten, merge, dotted-path resolve</td></tr>
+          <tr><td>Formatting</td><td><code>polars__fmt_*</code></td><td>18</td><td>Round / floor / ceil, percent, currency, scientific, comma-grouped, human bytes, human duration, ordinal (1st / 2nd / 11th), Roman numerals, binary string, pad left / right</td></tr>
+          <tr><td>Time-series analytics</td><td><code>polars__ts_*</code></td><td>13</td><td>Lag / lead / diff, log returns / simple returns / cumulative returns, drawdown / max drawdown, volatility, Sharpe / Sortino, VaR / CVaR (historical)</td></tr>
+          <tr><td>Graph algorithms</td><td><code>polars__graph_*</code></td><td>13</td><td>Degree / in-degree / out-degree, BFS / DFS, Dijkstra single-source shortest path, connected components, adjacency matrix, density, average degree, Floyd-Warshall all-pairs, PageRank (power iteration), clustering coefficient</td></tr>
+          <tr><td>Geometric</td><td><code>polars__geo_*</code></td><td>12</td><td>Distance 2-D / 3-D, haversine (great-circle), initial bearing, polygon area (shoelace) / perimeter / centroid / bounding box, point-in-polygon (ray casting), affine rotate / scale / translate</td></tr>
+          <tr><td>Sparse matrices</td><td><code>polars__sparse_*</code></td><td>15</td><td>COO format: dense&lt;-&gt;sparse round trip, nnz, density, transpose, add, scalar scale, matrix-vector multiply, diagonal extract, trace, identity construction</td></tr>
+          <tr><td>Boolean arrays</td><td><code>polars__bool_*</code></td><td>11</td><td>any / all, count true / false, negate, AND / OR / XOR pairwise, to-int conversion, indices where true / false</td></tr>
+          <tr><td>Set ops</td><td><code>polars__set_*</code></td><td>10</td><td>Union, intersection, difference, symmetric difference, subset / superset / disjoint / equality tests, contains, size</td></tr>
+          <tr><td>Encoding</td><td><code>polars__enc_*</code></td><td>8</td><td>One-hot, label encoding, binarize (threshold), target encoding, base64, hex, URL-encode</td></tr>
+          <tr><td>Interpolation</td><td><code>polars__interp_*</code></td><td>6</td><td>Linear, nearest, zero-order hold, cubic natural spline, log-space linear, bilinear grid 2-D</td></tr>
+          <tr><td>Checksums</td><td><code>polars__sum_*</code></td><td>7</td><td>XOR-fold, additive, Adler-32 (RFC 1950), BSD-16, internet 1's-complement</td></tr>
+          <tr><td>Optimization</td><td><code>polars__opt_*</code></td><td>5</td><td>Bisection root-finding, golden-section minimization, Newton-Raphson, secant, gradient descent &mdash; all over polynomial f(x)</td></tr>
+          <tr><td>Hashing</td><td><code>polars__hash_*</code></td><td>18</td><td>djb2 (+xor variant djb2a), sdbm, FNV-1 / FNV-1a (64-bit) / FNV-1a (32-bit), Jenkins one-at-a-time, CRC-32 (ISO-HDLC), MurmurHash3 32-bit, BKDR, RS (Sedgwick), JS (Sobel), AP (Partow), DEK (Knuth), PJW, ELF (System V ABI), shift-add-xor, Fletcher-16</td></tr>
+          <tr><td>Clustering</td><td><code>polars__cluster_*</code></td><td>5</td><td>k-means (Lloyd), silhouette score, point-to-centroid assignment, inertia, DBSCAN neighbors</td></tr>
+          <tr><td><strong>scipy-class subtotal</strong></td><td></td><td><strong>457</strong></td><td></td></tr>
+          <tr><td><strong>Grand total (+ <code>polars__version</code>)</strong></td><td></td><td><strong>1417</strong></td><td></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>PHASE PLAN</h2>
+      <p>Surface ships in numbered phases. Each phase is one git commit / one CI green / one release tag, so the package is always installable at any phase boundary.</p>
+      <table class="arch-table">
+        <thead><tr><th>Phase</th><th>Scope</th><th>Fns added</th></tr></thead>
+        <tbody>
+          <tr><td><code>P0</code></td><td>Scaffold: <code>Cargo.toml</code>, <code>stryke.toml</code>, <code>src/lib.rs</code> (FFI plumbing + <code>polars__version</code>), <code>lib/*.stk</code> wrappers, README, LICENSE, Makefile, CI, contract gates</td><td>1</td></tr>
+          <tr><td><code>P1</code></td><td>DataFrame surface (<code>df_*</code>)</td><td>113</td></tr>
+          <tr><td><code>P2</code>&ndash;<code>P3</code></td><td>numpy ndarray + ufuncs (<code>arr_*</code>, <code>np_*</code>)</td><td>~250</td></tr>
+          <tr><td><code>P4</code></td><td>linalg + random + fft + polynomial + masked arrays + datetime64 (<code>linalg_*</code>, <code>rand_*</code>, <code>fft_*</code>, <code>poly_*</code>, <code>ma_*</code>, <code>dt64_*</code>)</td><td>~110</td></tr>
+          <tr><td><code>P5</code></td><td>pandas Series + Index + IO + Categorical + groupby + scipy-class extensions (signal, stattest, image, distance, graph, metric, text, ts, sparse, bit, JSON, fmt, geo, opt, hash, cluster, encoding)</td><td>~1020</td></tr>
+          <tr><td><code>P5b</code></td><td>Auto-generate 30 new <code>.stk</code> wrappers + hand-write <code>DateTime64.stk</code> + add 1062 missing <code>///</code> doc comments + populate <code>stryke.toml</code> <code>[ffi].exports</code></td><td>0</td></tr>
+          <tr><td><code>P5c</code></td><td>Hand-crafted Rust unit tests (shared <code>ffi_test::call</code> harness exercises the FFI envelope end-to-end). Surfaced and fixed two real bugs along the way; the suite now stands at 167 tests.</td><td>0</td></tr>
+          <tr><td><strong>Total cdylib exports at v0.22.0</strong></td><td></td><td><strong>1417</strong></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">?</span>QUALITY GATES</h2>
+      <p>Every commit on <code>main</code> runs through the CI matrix in <code>.github/workflows/ci.yml</code>; PRs must clear the same gates before they can merge.</p>
+      <table class="arch-table">
+        <thead><tr><th>Gate</th><th>Invariant</th></tr></thead>
+        <tbody>
+          <tr><td><code>cargo fmt --all --check</code></td><td>No drift from rustfmt; every file fmt-clean</td></tr>
+          <tr><td><code>cargo clippy --all-targets --locked -- -D warnings</code></td><td>Zero clippy warnings &mdash; <strong>no module-level <code>#![allow]</code> escape hatches</strong>. When clippy fires, the underlying loop / type / repeat-take pattern gets refactored, not silenced.</td></tr>
+          <tr><td><code>cargo test --locked --no-fail-fast</code> (ubuntu-latest + macos-latest)</td><td>167 hand-crafted unit tests, all green. Tests cover canonical values: F(30)=832,040; Levenshtein(kitten, sitting)=3; Chebyshev L<sub>&infin;</sub> distance = max(|x&minus;y|); Adler-32("Wikipedia")=0x11E60398 (RFC 1950 vector); Haversine NYC→LA &asymp; 3936 km; ROC AUC=1 on perfect ranking, 0 on reversed; gcd&middot;lcm=ab; etc.</td></tr>
+          <tr><td><code>RUSTDOCFLAGS=-D warnings cargo doc --no-deps</code></td><td>Rustdoc clean. <code>#![deny(missing_docs)]</code> in <code>lib.rs</code> &mdash; every <code>pub</code> item carries a <code>///</code> comment, no exceptions.</td></tr>
+          <tr><td>Release build (3 targets)</td><td><code>x86_64-unknown-linux-gnu</code>, <code>x86_64-apple-darwin</code>, <code>aarch64-apple-darwin</code> &mdash; cdylib uploaded as a build artifact for each target.</td></tr>
+          <tr><td>Contract gates</td><td>README newline + badge + h2 + https-link checks; workflow newline + no-tab checks; shell-script shebang + executable-bit checks. Per-file <code>tests/*.sh</code> scripts run in their own CI job and block on any violation.</td></tr>
+        </tbody>
+      </table>
+      <p>The <code>ffi_test::call</code> helper in <code>src/lib.rs</code> drives every test through the production JSON-over-FFI envelope: serialize a <code>serde_json::Value</code> to a <code>CString</code>, hand it to the <code>polars__*</code> extern, parse the returned <code>CString</code>, free via <code>stryke_free_cstring</code>. The harness means tests catch envelope bugs (allocation lifecycle, <code>catch_unwind</code> coverage, JSON-shape regressions) on top of the math.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>TEST SURFACE</h2>
+      <p>The 167 unit tests are distributed across the <code>src/</code> modules they cover (<code>grep -c '#[test]' src/*.rs</code>). The scipy-class extension modules (<code>extras2</code>/<code>extras3</code>/<code>extras4</code>) carry the densest coverage, matching where the most hand-rolled numeric code lives.</p>
+      <table class="arch-table">
+        <thead><tr><th>Module</th><th>Covers</th><th>Tests</th></tr></thead>
+        <tbody>
+          <tr><td><code>src/extras2.rs</code></td><td>distances + distributions, geo, signal helpers, Fletcher-16 vectors</td><td>30</td></tr>
+          <tr><td><code>src/extras4.rs</code></td><td>checksums (Adler-32 RFC vector), misc math (F(30), gcd&middot;lcm), hashing, dtype parsing</td><td>25</td></tr>
+          <tr><td><code>src/extras3.rs</code></td><td>text / NLP (Levenshtein kitten→sitting), ML metrics (ROC AUC), encoding</td><td>22</td></tr>
+          <tr><td><code>src/stattest.rs</code></td><td>statistical tests, distributions, interpolation</td><td>10</td></tr>
+          <tr><td><code>src/signal.rs</code></td><td>signal processing + window functions</td><td>10</td></tr>
+          <tr><td><code>src/more_nd.rs</code></td><td>linalg / random / fft / polynomial (extended ndarray)</td><td>9</td></tr>
+          <tr><td><code>src/df.rs</code></td><td>DataFrame ops + <code>.str</code> / <code>.dt</code> accessors</td><td>9</td></tr>
+          <tr><td><code>src/sr.rs</code></td><td>Series</td><td>7</td></tr>
+          <tr><td><code>src/ma.rs</code></td><td>masked arrays</td><td>6</td></tr>
+          <tr><td><code>src/img.rs</code></td><td>image filters</td><td>6</td></tr>
+          <tr><td><code>src/dt64.rs</code></td><td>datetime64 / timedelta64</td><td>6</td></tr>
+          <tr><td><code>src/lib.rs</code></td><td>FFI envelope + <code>polars__version</code> (via the shared harness)</td><td>5</td></tr>
+          <tr><td><code>src/io.rs</code></td><td>pandas IO (read / write round trips)</td><td>5</td></tr>
+          <tr><td><code>src/idx.rs</code></td><td>Index / MultiIndex / DatetimeIndex</td><td>5</td></tr>
+          <tr><td><code>src/nd.rs</code></td><td>ndarray core + ufuncs</td><td>4</td></tr>
+          <tr><td><code>src/extras.rs</code></td><td>groupby, stat, set, bool, cluster (expansion families)</td><td>4</td></tr>
+          <tr><td><code>src/cat.rs</code></td><td>Categorical</td><td>4</td></tr>
+          <tr><td><strong>Total</strong></td><td></td><td><strong>167</strong></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>BACKING CRATES</h2>
+      <table class="arch-table">
+        <thead><tr><th>Subsystem</th><th>Backing crate(s)</th></tr></thead>
+        <tbody>
+          <tr><td>DataFrame / Series / Index / pandas IO</td><td><code>polars</code> 0.45 (full feature set)</td></tr>
+          <tr><td>ndarray + ufuncs</td><td><code>ndarray</code> 0.16 + <code>rayon</code></td></tr>
+          <tr><td>linalg</td><td><code>nalgebra</code> 0.33 (pure-Rust SVD / QR / LU / Cholesky / Eigen / solve / inv / det &mdash; no OpenBLAS / ndarray-linalg)</td></tr>
+          <tr><td>random</td><td><code>rand</code> + <code>rand_distr</code> + <code>ndarray-rand</code> + <code>rand_chacha</code></td></tr>
+          <tr><td>fft</td><td><code>rustfft</code> + <code>realfft</code></td></tr>
+          <tr><td>polynomial</td><td>hand-rolled on <code>ndarray</code> (recurrence formulas)</td></tr>
+          <tr><td>masked arrays</td><td><code>ndarray</code> (mask vec parallel to data)</td></tr>
+          <tr><td>datetime64 / timedelta64</td><td><code>chrono</code> + <code>chrono-tz</code></td></tr>
+          <tr><td>Decimal dtype</td><td><code>rust_decimal</code></td></tr>
+          <tr><td>FFI envelope</td><td><code>serde_json</code>, <code>anyhow</code>, <code>std::panic::catch_unwind</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>SCOPE</h2>
+      <p>The package targets parity with the public pandas + numpy surfaces, not the underlying polars Rust API. Where polars and pandas disagree on semantics (null handling, group-by ordering, default dtypes), the pandas behavior is the source of truth so muscle memory from Python carries over. Numerical correctness is gated by reference checks against pandas/numpy where possible (numerical tolerance for floats, exact match for ints/bools/strings).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-polars">github.com/MenkeTechnologies/stryke-polars</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-polars/issues">github.com/MenkeTechnologies/stryke-polars/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

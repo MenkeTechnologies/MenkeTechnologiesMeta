@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-mcpd — engineering report. Schema/Server/Tools/Client boundaries, the stdout-discipline and crash-isolation contracts, the root jail, and why MCP policy is a package, not core.">
+  <title>stryke-mcpd — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-val.yellow { color: var(--yellow); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-MCPD &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Four sublibs &middot; stdout discipline &middot; crash isolation &middot; root jail &middot; pure stryke (no <code>[ffi]</code>, no cdylib)
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-mcpd</strong> turns stryke's core MCP plumbing into shippable servers. The artifact story is the point: every mainstream MCP server requires a Node runtime or Python venv on the target machine; a stryke server is a script during development and a single static native binary after <code>s build --release</code>. The package contributes the two disciplines stdio servers live or die by &mdash; a protocol-clean stdout and crash isolation per tool &mdash; plus the parts every server rewrites: spec validation, arg checking, a root-jailed stock tool pack, and client-side envelope extraction for round-trip tests.</p>
+      <p class="tutorial-subtitle">Boundary rule, same as every pure-stryke package: protocol mechanism (JSON-RPC framing, transport, tool registry) is strykelang core (<code>mcp.rs</code>, <code>ai_sugar.rs</code>); policy (what a valid spec is, what happens when a tool dies, where diagnostics go) lives here and versions independently.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">sublibraries</div></div>
+        <div class="stat-card"><div class="stat-val cyan">81</div><div class="stat-label">public fns</div></div>
+        <div class="stat-card"><div class="stat-val green">0</div><div class="stat-label">cdylib / helper binaries</div></div>
+        <div class="stat-card"><div class="stat-val yellow">283</div><div class="stat-label">assertions in t/</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">runnable examples</div></div>
+        <div class="stat-card"><div class="stat-val cyan">22</div><div class="stat-label">CI gate scripts</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SUBLIBRARY BOUNDARIES</h2>
+      <table class="arch-table">
+        <thead><tr><th>Sublib</th><th>Owns</th><th>Doesn't own</th></tr></thead>
+        <tbody>
+          <tr><td><code>Mcpd::Schema</code></td><td>Construction-time validation: identifier names, non-empty descriptions, wire-type params (<code>string/number/boolean/array/object</code>), coderef runs; <code>check_args</code> for declared-type arg checking inside a tool; <code>validate_all</code> for whole-set checks (full specs, unique names); introspection (<code>param_names</code>, <code>tool_summary</code>, <code>describe</code>) and <code>rename</code>.</td><td>Serving. Schema builds and checks hashrefs; it never touches a transport.</td></tr>
+          <tr><td><code>Mcpd::Server</code></td><td>The two disciplines: file-only logging (<code>log_to</code>/<code>log</code>/<code>log_path</code> &mdash; stdout carries JSON-RPC) and crash isolation (<code>wrap</code> converts a tool's <code>die</code> into an <code>ERROR:</code> text result &mdash; with the stryke die location stripped so the client sees only the message &mdash; and the server keeps serving; <code>wrap_all</code> applies it across a set; <code>audit</code> adds a success log). <code>serve</code> = validate + wrap_all + <code>mcp_server_start</code>.</td><td>Protocol framing, transport, request dispatch &mdash; all <code>mcp_server_start</code> (core).</td></tr>
+          <tr><td><code>Mcpd::Tools</code></td><td>The stock pack: <code>fs_read</code>/<code>fs_list</code>/<code>fs_glob</code>/<code>fs_count</code>/<code>fs_grep</code>/<code>fs_grep_count</code>/<code>fs_first_match</code>/<code>fs_find</code>/<code>fs_stat</code>/<code>fs_readlink</code>/<code>fs_realpath</code>/<code>fs_du</code>/<code>fs_head</code>/<code>fs_tail</code>/<code>fs_slice</code>/<code>fs_hash</code>/<code>fs_exists</code>/<code>fs_lines</code>/<code>fs_write</code>/<code>fs_append</code>/<code>fs_replace</code>/<code>fs_chmod</code>/<code>fs_mkdir</code> jailed under a configurable root (lexical <code>..</code> resolution, escapes die), <code>sh_exec</code> with optional command allowlist, <code>env_get</code>/<code>time_now</code>/<code>sys_info</code>. <code>all</code> returns the pack as one list (32 specs); <code>all(+{readonly =&gt; 1})</code> drops the 11 mutating tools (<code>fs_write</code>, <code>fs_append</code>, <code>fs_replace</code>, <code>fs_chmod</code>, <code>fs_mkdir</code>, <code>fs_touch</code>, <code>fs_rmdir</code>, <code>fs_delete</code>, <code>fs_copy</code>, <code>fs_move</code>, <code>sh_exec</code>), leaving 21.</td><td>Anything not generally useful. Domain tools belong in the consumer's server script, composed alongside the stock pack.</td></tr>
+          <tr><td><code>Mcpd::Client</code></td><td>Envelope policy: <code>text</code> joins text blocks from <code>+{content =&gt; [...]}</code>, <code>texts</code> returns them unjoined, <code>content_types</code> lists distinct block types, <code>call_text</code> is the call-then-extract composite, <code>is_error</code>/<code>error_message</code> recognize and unwrap the Server envelope, <code>tool_names</code>/<code>has_tool</code> query the discovery list.</td><td>Connection plumbing &mdash; <code>mcp_connect</code>/<code>mcp_tools</code>/<code>mcp_call</code>/<code>mcp_close</code> are builtins, never re-wrapped.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">=</span>PUBLIC SURFACE</h2>
+      <p class="tutorial-subtitle">81 public functions across four sublibs, plus the <code>bin/mcpd.stk</code> CLI front-end. Every function is a <code>fn Mcpd::&lt;Sublib&gt;::&lt;name&gt;</code> in <code>lib/</code>; counts are the top-level definitions in each file.</p>
+      <table class="arch-table">
+        <thead><tr><th>Sublib</th><th>File</th><th>Fns</th><th>Surface</th></tr></thead>
+        <tbody>
+          <tr><td><code>Mcpd::Schema</code></td><td><code>lib/Schema.stk</code></td><td>21</td><td>Spec builder + validation (<code>tool</code>, <code>check_args</code>, <code>validate_all</code>, <code>is_valid</code>), introspection (<code>types</code>, <code>param_names</code>, <code>param_count</code>, <code>has_param</code>, <code>param_type</code>, <code>params_of_type</code>, <code>tool_names</code>, <code>find</code>), wire-format conversion (<code>to_json_schema</code>/<code>from_json_schema</code>, <code>to_tool_list</code>/<code>from_tool_list</code>, <code>tool_map</code>), catalogs (<code>tool_summary</code>, <code>summaries</code>, <code>describe</code>), <code>rename</code>.</td></tr>
+          <tr><td><code>Mcpd::Server</code></td><td><code>lib/Server.stk</code></td><td>9</td><td><code>serve</code>, <code>wrap</code>, <code>wrap_all</code>, <code>checked</code>, <code>wrap_all_checked</code>, <code>audit</code>, <code>log_to</code>, <code>log</code>, <code>log_path</code>.</td></tr>
+          <tr><td><code>Mcpd::Tools</code></td><td><code>lib/Tools.stk</code></td><td>35</td><td>32 stock tool generators (18 read + 11 mutating + <code>env_get</code>/<code>time_now</code>/<code>sys_info</code> &mdash; 32 specs in the full served pack, 21 read-only) plus <code>all</code>, <code>jail</code>, <code>names</code>.</td></tr>
+          <tr><td><code>Mcpd::Client</code></td><td><code>lib/Client.stk</code></td><td>16</td><td>Envelope unpacking (<code>text</code>, <code>texts</code>, <code>text_lines</code>, <code>content_types</code>, <code>content_of_type</code>, <code>block_count</code>), call composites (<code>call_text</code>, <code>call_lines</code>, <code>call_texts</code>), error handling (<code>is_error</code>, <code>error_message</code>), discovery (<code>tool_names</code>, <code>tool_count</code>, <code>tool_descriptions</code>, <code>has_tool</code>, <code>tool_schema</code>).</td></tr>
+        </tbody>
+      </table>
+      <p>The <code>bin/mcpd.stk</code> CLI front-end is pure stryke (no helper binary): <code>new NAME [DIR]</code> writes a validated server skeleton, <code>serve-stock [ROOT]</code> serves the stock pack jailed to ROOT (default <code>getcwd()</code>) over stdio, <code>tools</code> lists the stock tool names, <code>version</code> prints the package version, <code>help</code> prints usage. Wire a built or scripted server into any MCP client as <code>{ "command": "stryke", "args": ["server.stk"] }</code>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>THE TWO STDIO DISCIPLINES</h2>
+      <table class="arch-table">
+        <thead><tr><th>Discipline</th><th>Mechanism</th><th>Enforcement</th></tr></thead>
+        <tbody>
+          <tr><td>stdout is protocol</td><td><code>Mcpd::Server::log_to(PATH)</code> routes every diagnostic to an append-only file; <code>Mcpd::Server::log</code> is a no-op until configured. Nothing in <code>lib/</code> writes to stdout.</td><td><code>tests/repo-contract.sh</code> greps <code>lib/*.stk</code> for <code>p&nbsp;/print&nbsp;/say&nbsp;</code> (file-handle prints excepted) and fails CI on any hit.</td></tr>
+          <tr><td>a dying tool is a result, not an outage</td><td><code>Mcpd::Server::wrap</code> evals every run coderef: <code>die</code> &rarr; logged + returned as <code>ERROR: &lt;msg&gt;</code> text. The client sees a result; the connection stays up.</td><td>Round-trip assertion in <code>t/</code>: call <code>kaboom</code> (dies), assert error envelope, then call <code>add</code> on the same connection and assert <code>42</code>/<code>2</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>THE ROOT JAIL</h2>
+      <p class="tutorial-subtitle">Stock filesystem tools are exposed to a language model on the other end of the wire; unbounded paths are how an fs_read becomes an exfiltration primitive. <code>Mcpd::Tools::jail($root, $path)</code> is a lexical resolver: relative paths anchor under root, <code>.</code>/<code>//</code> collapse, <code>..</code> resolves but dies the moment it would climb above root, and absolute paths outside root die. The die propagates into <code>Server::wrap</code>'s envelope &mdash; the client gets <code>ERROR: path escapes root</code>, the server keeps serving. <code>sh_exec</code> gets the same treatment via an optional first-word allowlist.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>WHY A PACKAGE, NOT CORE</h2>
+      <ul>
+        <li><strong>Core owns the protocol.</strong> JSON-RPC framing, the stdio transport, tool registration, the <code>tool fn</code> desugar &mdash; <code>mcp.rs</code> + <code>ai_sugar.rs</code>, Rust, stable.</li>
+        <li><strong>The package owns server policy.</strong> Validation strictness, error envelope format, log destination, jail semantics, the stock pack roster &mdash; opinions that should iterate at package speed, not language-release speed.</li>
+        <li><strong>The artifact story needs nothing extra.</strong> <code>s build --release</code> is a strykelang capability; mcpd just makes sure what you build is a disciplined server. No cdylib, no per-triple release matrix &mdash; the package tarball is five <code>.stk</code> files.</li>
+      </ul>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>TEST SURFACE</h2>
+      <p class="tutorial-subtitle"><code>t/test_mcpd.stk</code> uses stryke's native assertions (<code>assert_eq</code>, <code>assert_ok</code>, <code>assert_match</code>, <code>assert_dies</code>) and exits TAP-style via <code>test_run</code>. Headless-CI safe &mdash; the round trip serves a generated script on the same machine over stdio.</p>
+      <table class="arch-table">
+        <thead><tr><th>Area</th><th>Assertion families covered</th></tr></thead>
+        <tbody>
+          <tr><td>Schema</td><td><code>tool</code> accepts a full spec and rejects non-identifier names, empty descriptions, unknown param types, non-coderef runs; <code>check_args</code> accepts exact args and rejects missing / mistyped / extra params; <code>validate_all</code> counts, rejects non-arrayrefs, duplicates, partial specs; <code>param_names</code> sorted, <code>tool_summary</code> signature, <code>describe</code> catalog + validation, <code>rename</code> preserves fields and re-validates.</td></tr>
+          <tr><td>Server</td><td><code>wrap</code> passes results through and converts <code>die</code> to the <code>ERROR:</code> envelope; <code>log_to</code> + <code>log</code> + <code>log_path</code> manage the configured file; <code>wrap_all</code> preserves every spec key while wrapping (pins strykelang BUG-305); <code>audit</code> logs successful calls with a byte count.</td></tr>
+          <tr><td>Tools</td><td><code>jail</code> resolves inside, collapses interior <code>..</code>, dies on dotdot and absolute escapes; stock pack validates as 32 specs (21 in readonly mode); <code>fs_read</code>/<code>fs_list</code>/<code>fs_glob</code>/<code>fs_count</code>/<code>fs_grep</code>/<code>fs_grep_count</code>/<code>fs_first_match</code>/<code>fs_find</code>/<code>fs_stat</code>/<code>fs_readlink</code>/<code>fs_realpath</code>/<code>fs_write</code>/<code>fs_replace</code>/<code>fs_chmod</code> all exercised through the jail incl. escape rejection, depth caps, dotfile listing; <code>sh_exec</code> runs an allowlisted command and rejects everything else.</td></tr>
+          <tr><td>Client</td><td><code>text</code> joins multi-block content and returns "" on empty; <code>texts</code> unjoined; <code>content_types</code> distinct + sorted; <code>is_error</code> detects the wrap envelope; <code>error_message</code> strips the prefix (undef on clean); <code>has_tool</code> queries discovery over the live round trip.</td></tr>
+          <tr><td>Round trip</td><td>Generate server script &rarr; <code>mcp_connect("stdio:stryke ...")</code> &rarr; tool list matches &rarr; <code>add(2,40)</code> returns 42 &rarr; dying tool returns the envelope &rarr; same connection still serves.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>CI GATES</h2>
+      <p>22 shell gate scripts in <code>tests/</code> are wired into <code>.github/workflows/ci.yml</code>, plus a stryke job that installs the latest strykelang release binary, syntax-checks every <code>.stk</code> file, installs the package into the global store, and runs <code>s test t/</code>. Every gate is reproducible locally with <code>bash tests/&lt;gate&gt;.sh</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Bucket</th><th>Gates</th></tr></thead>
+        <tbody>
+          <tr><td>repo-contract</td><td>Pure-stryke (no <code>Cargo.toml</code>, no <code>[ffi]</code>). lib/ has exactly 5 files. Every sublib declares <code>package Mcpd::&lt;Name&gt;</code>. stdout discipline: lib/ never prints to stdout. Examples shebang. <code>bin/mcpd.stk</code> shebang. Makefile has test/install/clean. LICENSE is MIT.</td></tr>
+          <tr><td>docs gates</td><td><code>&lt;h1&gt;</code> present, <code>&lt;body&gt;</code> tag, closing <code>&lt;/html&gt;</code>, no deprecated tags, no inline event handlers, no placeholder hrefs, no plaintext <code>http://</code>, <code>target="_blank"</code> always paired with <code>rel="noopener noreferrer"</code>.</td></tr>
+          <tr><td>README gates</td><td>At least one shields.io badge, at least one h2 section, at least one https link, ends with final newline.</td></tr>
+          <tr><td>polish gates</td><td>Workflow files have no tabs (YAML), every tests/*.sh has +x and a bash shebang, man pages (if any) have synopsis section + final newline + no trailing whitespace.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>EXTENDING</h2>
+      <p>Adding a stock tool means three edits:</p>
+      <ol>
+        <li>Add the <code>fn Mcpd::Tools::name</code> generator to <code>lib/Tools.stk</code> returning a <code>Mcpd::Schema::tool(...)</code> spec; jail any path input, allowlist any exec input. Add it to <code>Mcpd::Tools::names</code> and <code>all</code>.</li>
+        <li>Assert it in <code>t/test_mcpd.stk</code>: spec validates, happy path runs through <code>$spec-&gt;{run}-&gt;(...)</code> directly, every guard dies.</li>
+        <li>Mention it in the README sublib table and <code>docs/index.html</code>.</li>
+      </ol>
+      <p>Custom servers don't touch this repo: <code>mcpd new NAME</code> emits a skeleton that pulls the package from the store.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-mcpd</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-mcpd/issues" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-mcpd/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

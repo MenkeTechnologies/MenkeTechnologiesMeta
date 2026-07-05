@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vscode-zsh — VS Code / VSCodium support for the zshrs shell (the Rust rewrite of zsh). Filetype detection for zsh dotfiles and zsh shebangs, a standalone TextMate grammar generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars), and language-server integration via zshrs --lsp.">
+  <title>vscode-zsh — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px; }
+    .parity-table th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; text-align: left;
+      padding: 6px 10px; border: 1px solid var(--border);
+    }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.6rem; margin: 0.7rem 0; }
+    .cat-card {
+      border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px;
+    }
+    .cat-card h4 {
+      font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan); margin: 0 0 0.35rem;
+    }
+    .cat-card p { margin: 0; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VSCODE-ZSH — VS CODE SUPPORT FOR THE ZSHRS SHELL</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vscode-zsh" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zshrs" target="_blank" rel="noopener noreferrer">zshrs</a>
+          </nav>
+          <p class="docs-build-line">filetype detection (zsh dotfiles + *.zsh + zsh shebang) · standalone TextMate grammar generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars) · LSP via zshrs --lsp</p>
+          <p class="docs-build-line">scopeName source.zshrs · vscode-languageclient · settings zshrs.path / zshrs.lsp.enabled / zshrs.lsp.args</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/vscode-zsh" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip" style="border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;">
+      <div class="hub-scheme-strip-inner" style="max-width:68rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem;">
+        <span class="hud-scheme-label" style="flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid" style="flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>VSCODE-ZSH &mdash; ZSHRS IN VS CODE</h2>
+      <p class="tutorial-subtitle"><strong>Open a <code>.zshrc</code> and the whole shell lights up.</strong> zshrs is the first-ever Rust rewrite of zsh — a compiled, JIT'd, massively parallel shell. vscode-zsh registers the <code>zshrs</code> language for zsh dotfiles, <code>*.zsh</code> files, and zsh shebangs, highlights with a <strong>standalone TextMate grammar</strong> generated from the zshrs binary's own reflection tables (<strong>137</strong> builtins, <strong>113</strong> extensions, <strong>245</strong> special variables), and starts the <code>zshrs --lsp</code> language server via vscode-languageclient.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>The <code>zshrs</code> binary must be on <code>$PATH</code> for the language server (build <a href="https://github.com/MenkeTechnologies/zshrs" target="_blank" rel="noopener noreferrer">zshrs</a> with <code>cargo build</code>). Build and install the <code>.vsix</code> locally:</p>
+<pre>git clone https://github.com/MenkeTechnologies/vscode-zsh
+cd vscode-zsh
+npm install
+npx @vscode/vsce package          # vscode-zsh-&lt;version&gt;.vsix
+code --install-extension vscode-zsh-*.vsix</pre>
+        <p>Or clone straight into your extensions dir for development: <code>~/.vscode/extensions/vscode-zsh</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What you get</h2>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>Filetype detection</h4><p>Zsh dotfiles (<code>.zshrc</code>, <code>.zshenv</code>, <code>.zprofile</code>, …), <code>*.zsh</code> / <code>*.zsh-theme</code> files, and files with a <code>#!/usr/bin/env zsh</code> shebang (via <code>firstLine</code>) become the <code>zshrs</code> language.</p></div>
+          <div class="cat-card"><h4>Own language grammar</h4><p>A standalone TextMate grammar (<code>source.zshrs</code>) with its own language id — <strong>137</strong> builtins, <strong>113</strong> extensions, <strong>245</strong> special vars, not a <code>shellscript</code> reskin.</p></div>
+          <div class="cat-card"><h4>Generated from the binary</h4><p><code>scripts/gen_grammar.sh</code> dumps <code>zshrs --dump-reflection</code> (<code>.builtins</code> / <code>.extensions</code> / <code>.special_vars</code>), so the grammar never drifts from the shell.</p></div>
+          <div class="cat-card"><h4>Language server</h4><p>Launches <code>zshrs --lsp</code> (stdio JSON-RPC) through vscode-languageclient — diagnostics, hover, completion as the server provides.</p></div>
+          <div class="cat-card"><h4>Editor config</h4><p>Comments, brackets, auto-closing pairs, and brace-based indentation via <code>language-configuration.json</code>.</p></div>
+          <div class="cat-card"><h4>Verified</h4><p>A <code>vscode-textmate</code> + <code>vscode-oniguruma</code> test tokenizes a sample and asserts the scopes, so the grammar is proven to load and classify correctly.</p></div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Scopes</h2>
+        <table class="parity-table">
+          <thead><tr><th>Token group</th><th>Scope</th></tr></thead>
+          <tbody>
+            <tr><td>Control flow (<code>if</code> <code>then</code> <code>fi</code> <code>for</code> <code>while</code> <code>case</code> <code>function</code>)</td><td class="ok">keyword.control.zshrs</td></tr>
+            <tr><td>Declarations (<code>typeset</code> <code>local</code> <code>export</code> <code>declare</code> <code>readonly</code> <code>integer</code>)</td><td class="ok">storage.modifier.zshrs</td></tr>
+            <tr><td>Builtins (137)</td><td class="ok">support.function.builtin.zshrs</td></tr>
+            <tr><td>Extensions (113 — zshrs world-first additions)</td><td class="ok">support.function.extension.zshrs</td></tr>
+            <tr><td>Special variables (245)</td><td class="ok">variable.language.zshrs</td></tr>
+            <tr><td>Sigil variables (<code>$foo</code> <code>${bar}</code> <code>$1</code> <code>$?</code> <code>$@</code> <code>$#</code>)</td><td class="ok">variable.other.zshrs</td></tr>
+            <tr><td>Operators / pipes / redirects (<code>|</code> <code>||</code> <code>&amp;&amp;</code> <code>&gt;</code> <code>&gt;&gt;</code> <code>&lt;&lt;</code>)</td><td class="ok">keyword.operator.zshrs</td></tr>
+          </tbody>
+        </table>
+        <p>Strings (single / double / backtick), here-docs (<code>&lt;&lt;EOF</code> / <code>&lt;&lt;-</code> / <code>&lt;&lt;'EOF'</code>), <code>$var</code> / <code>${...}</code> interpolation, escapes, command substitution <code>$(...)</code>, and numbers are scoped too.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Language server settings</h2>
+        <table class="parity-table">
+          <thead><tr><th>Setting</th><th>Default &amp; effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>zshrs.path</code></td><td><code>zshrs</code> &mdash; path to the executable</td></tr>
+            <tr><td><code>zshrs.lsp.enabled</code></td><td><code>true</code> &mdash; start the server; set <code>false</code> for highlighting only</td></tr>
+            <tr><td><code>zshrs.lsp.args</code></td><td><code>["--lsp"]</code> &mdash; args to start the server</td></tr>
+          </tbody>
+        </table>
+        <p>If the binary is missing, the extension shows one non-fatal warning and highlighting keeps working.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compatibility</h2>
+        <table class="parity-table">
+          <thead><tr><th>Target</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>VS Code 1.75+</td><td class="ok">Grammar + LSP</td></tr>
+            <tr><td>VSCodium / OSS builds</td><td class="ok">Same extension</td></tr>
+            <tr><td>Syntax highlighting</td><td class="ok">No binary required</td></tr>
+            <tr><td>Language server</td><td class="ok">Requires <code>zshrs</code> on PATH</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

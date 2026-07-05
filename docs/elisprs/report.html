@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="elisprs — Engineering report. An Emacs Lisp runtime in Rust: a Lisp-2 obarray with lexical &amp; dynamic binding and an elisp-correct reader that lowers to fusevm::Chunk and runs on the fusevm bytecode VM with Cranelift JIT and AOT. No bespoke VM, no rust_lisp. Architecture, the object heap, dependency posture. MIT.">
+  <title>elisprs &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;position:relative; }
+    .hub-scheme-strip-inner { max-width:76rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-align:left; }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch}.hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    .docs-build-line { margin:0.35rem 0 0;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;max-width:46rem;opacity:0.75; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ELISPRS — ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/elisprs" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">elisprs v0.1.1 · Emacs Lisp in Rust · Lisp-2 + lexical &amp; dynamic binding · elisp-correct reader · compiled to fusevm bytecode (JIT/AOT) · MIT</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/elisprs" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
+      <p class="tutorial-subtitle">elisprs is an Emacs Lisp runtime in Rust that runs <code>.el</code> outside Emacs as a <code>fusevm</code> frontend: it lowers elisp to <code>fusevm::Chunk</code> and executes on the shared bytecode VM. This report describes the architecture, the object heap, the lowering pipeline, and the dependency posture. Numbers below are facts about the current tree, not aspirational metrics.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">fusevm</div><div class="stat-label">frontend · lowers to Chunk</div></div>
+        <div class="stat-card"><div class="stat-val">234</div><div class="stat-label">subrs · 22 special forms</div></div>
+        <div class="stat-card"><div class="stat-val">Lisp-2</div><div class="stat-label">value + function cells</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">license · free / OSS</div></div>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>Summary</h2>
+        <p>Emacs Lisp has historically been inseparable from its host editor. elisprs separates the two: it runs <code>.el</code> as standalone programs and is the fifth consumer of <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a> — alongside <code>zshrs</code>, <code>stryke</code>, <code>awkrs</code>, and <code>vimlrs</code>.</p>
+        <p>elisprs is a pure fusevm frontend with no bespoke VM or JIT: an elisp-correct reader, a Lisp-2 obarray with lexical and dynamic binding, 22 compiler-recognized special forms with macros, and a 234-subr standard library plus an elisp prelude. The compiler lowers each form to a <code>fusevm::Chunk</code>; fusevm executes it with its three-tier Cranelift JIT, and <code>--aot</code>/<code>--aot-exe</code> emit native objects/binaries. The elisp object heap rides through the VM as <code>Value::Obj</code> handles. The <code>--lsp</code> and <code>--dap</code> servers, regexp engine, and rkyv bytecode cache are all implemented.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>The value model &amp; object heap</h2>
+        <p>Emacs Lisp is a <strong>Lisp-2</strong> (separate value and function cells per symbol) with both <strong>lexical and dynamic</strong> scope. elisprs owns those semantics directly on top of fusevm's value type — there is no <code>rust_lisp</code> dependency. The cons/symbol/vector/closure/hash-table cells live in an <code>ElispHost</code> arena and travel through the VM as opaque handles:</p>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Value = fusevm::Value</h4><p>elisprs re-exports <code>fusevm::Value</code>. Immediates (ints, floats, strings, bool, nil) are native VM values; every compound elisp object is a heap cell referenced as <code>Value::Obj(u32)</code> into the host arena.</p></div>
+          <div class="feature-card"><h4>The reader</h4><p><code>reader.rs</code> is a hand-written elisp-correct reader: <code>1+</code>/<code>1-</code>, <code>#'</code>, <code>?c</code>, keywords, dotted pairs (<code>a . b</code>), and backquote (<code>`</code>/<code>,</code>/<code>,@</code>) all parse and decompose to ordinary forms.</p></div>
+          <div class="feature-card"><h4>The obarray</h4><p>Every symbol (an <code>Obj::Symbol</code>) gets a value cell and a function cell; resolution follows function-cell aliases. Subrs and user closures are both heap function objects in the function cell.</p></div>
+          <div class="feature-card"><h4>Lexical + dynamic binding</h4><p>Closures capture a chain of <code>Scope</code> frames (lexical, indefinite extent, mutable via <code>setq</code>); symbols marked <code>special</code> via <code>defvar</code>/<code>defconst</code> bind dynamically through a specstack that unwinds on scope exit.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>The lowering pipeline</h2>
+        <p>elisprs compiles, it does not interpret. <code>lib.rs::eval_forms</code> reads, macro-expands, lowers each form with <code>compiler::compile_top</code>, and runs the resulting chunk with <code>host::run_chunk</code>:</p>
+<pre>.el  →  reader  →  Value (Value::Obj heap handles)  →  macroexpand
+                          ↘  compiler.rs → fusevm::Chunk  →  fusevm VM + Cranelift JIT / AOT</pre>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>No fork of the value enum</h4><p>elisp cells are <em>not</em> new <code>fusevm::Value</code> variants. They live in the <code>ElispHost</code> arena and ride through the VM as <code>Value::Obj(u32)</code> handles, resolved by the extension handler — fusevm stays language-agnostic.</p></div>
+          <div class="feature-card"><h4>Extension ops</h4><p>The compiler emits an elisp <code>Op::Extended(id, arg)</code> range (<code>CALL</code>, <code>GETVAR</code>/<code>SETVAR</code>, <code>FSET</code>, <code>SPECBIND</code>/<code>LETBIND</code>/<code>UNBIND</code>, <code>MAKE_CLOSURE</code>, <code>TRUTHY</code>) dispatched into the host for funcall, variable cells, and dynamic binding.</p></div>
+          <div class="feature-card"><h4>Sub-chunks for lambdas</h4><p>Each top-level form lowers through a <code>ChunkBuilder</code>; lambda/closure bodies become their own <code>fusevm::Chunk</code>, so calling a closure runs that chunk on a nested VM. Hot numeric ops lower to native fusevm arithmetic for the JIT.</p></div>
+          <div class="feature-card"><h4>JIT + AOT</h4><p>Lowered elisp inherits fusevm's three-tier Cranelift JIT, the persistent on-disk JIT cache, and <code>aot::compile_object</code> — the same engine vimlrs, zshrs, and awkrs run on. <code>--aot-exe</code> links a standalone native binary.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Component status</h2>
+        <table class="file-table">
+          <thead><tr><th>Component</th><th>State</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>reader.rs</td><td>Working</td><td>Elisp-correct: <code>1+</code>/<code>#'</code>/<code>?c</code>/<code>:kw</code>, dotted pairs, backquote (<code>`</code>/<code>,</code>/<code>,@</code>).</td></tr>
+            <tr><td>obarray + lexical &amp; dynamic binding</td><td>Working</td><td>Value + function cells; <code>Scope</code> frames + specstack unwind.</td></tr>
+            <tr><td>special forms (22) + macros</td><td>Working</td><td><code>let</code>/<code>cond</code>/<code>while</code>/<code>condition-case</code>/<code>defmacro</code>/… lowered in <code>compiler.rs</code>.</td></tr>
+            <tr><td>subr library (234) + elisp prelude</td><td>Working</td><td>Lists, numbers, strings, predicates, IO, functional; <code>prelude.rs</code> for derived surface.</td></tr>
+            <tr><td><code>elisp</code> CLI + REPL</td><td>Working</td><td>File / <code>-e</code> / REPL; <code>--version</code>/<code>--help</code>.</td></tr>
+            <tr><td>compiler.rs → fusevm::Chunk</td><td>Working</td><td><code>compile_top</code>/<code>compile_program</code>; runs via <code>host::run_chunk</code>.</td></tr>
+            <tr><td><code>--aot</code> / <code>--aot-exe</code></td><td>Working</td><td><code>compiler</code> + <code>fusevm::aot::compile_object</code>; native object or standalone exe (<code>aot.rs</code>).</td></tr>
+            <tr><td><code>--lsp</code> / <code>--dap</code></td><td>Working</td><td>Full stdio servers — completion/hover/signature/symbols (<code>lsp.rs</code>); breakpoints/stepping (<code>dap.rs</code>).</td></tr>
+            <tr><td>dotted pairs · backquote · lexical · <code>setcar</code></td><td>Working</td><td>Implemented in the reader / host / builtins.</td></tr>
+            <tr><td>regexp engine · rkyv bytecode cache</td><td>Working</td><td><code>regexp.rs</code> (fancy-regex); <code>cache.rs</code> at <code>~/.elisprs/scripts.rkyv</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Dependency posture</h2>
+        <p>elisprs is a focused frontend over fusevm plus a handful of protocol/support crates — nine direct dependencies, all pulling their weight:</p>
+        <table class="file-table">
+          <thead><tr><th>Crate</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>fusevm</td><td>Language-agnostic bytecode VM + three-tier Cranelift JIT + AOT (<code>jit-disk-cache</code>, <code>aot</code> features); the execution engine elisp lowers onto</td></tr>
+            <tr><td>lsp-server / lsp-types</td><td>LSP transport + protocol types for <code>--lsp</code> (<code>src/lsp.rs</code>)</td></tr>
+            <tr><td>serde / serde_json</td><td>JSON-RPC for LSP/DAP; serialization of the AOT heap image</td></tr>
+            <tr><td>rkyv / bincode</td><td>The <code>~/.elisprs/scripts.rkyv</code> bytecode cache — zero-copy outer shard, bincode per-form chunks</td></tr>
+            <tr><td>fancy-regex</td><td>Backtracking regexp engine behind <code>string-match</code> / <code>replace-regexp-in-string</code> (<code>src/regexp.rs</code>)</td></tr>
+            <tr><td>libc</td><td>DAP debuggee stdout capture (pipe + <code>dup2</code>) so program output streams as <code>output</code> events</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Honesty &amp; longevity</h2>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Loud failures</h4><p>The only unlowered forms — <code>save-excursion</code>/<code>save-current-buffer</code>/<code>save-restriction</code> (the buffer milestone) — error explicitly at compile time rather than silently misbehaving.</p></div>
+          <div class="feature-card"><h4>Real elisp semantics</h4><p>A genuine Lisp-2 with both lexical and dynamic binding, so behaviour tracks Emacs Lisp rather than a Scheme approximation.</p></div>
+          <div class="feature-card"><h4>Shared engine</h4><p>By lowering to <code>fusevm::Chunk</code>, elisprs reuses the same VM, JIT, AOT, and on-disk cache as the sibling languages instead of maintaining a one-off interpreter.</p></div>
+          <div class="feature-card"><h4>Tested</h4><p><code>cargo test</code> covers the reader, the lowering/eval pipeline end-to-end, and error handling, including recursion and macros.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Links</h2>
+        <ul>
+          <li><strong>Docs</strong> — <a href="index.html">index.html</a></li>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/elisprs">github.com/MenkeTechnologies/elisprs</a></li>
+          <li><strong>Issues</strong> — <a href="https://github.com/MenkeTechnologies/elisprs/issues">github.com/MenkeTechnologies/elisprs/issues</a></li>
+          <li><strong>fusevm</strong> — <a href="https://github.com/MenkeTechnologies/fusevm">github.com/MenkeTechnologies/fusevm</a> (the shared VM)</li>
+          <li><strong>License</strong> — MIT OR Apache-2.0 (<a href="https://github.com/MenkeTechnologies/elisprs/blob/main/LICENSE">LICENSE</a>)</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

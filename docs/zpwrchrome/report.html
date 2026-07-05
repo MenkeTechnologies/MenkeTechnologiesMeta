@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwrchrome — engineering report. Manifest V3 Chrome extension. 54 keyboard commands, 12 popup categories, 19 message kinds, 7,428 JS lines, 3,012 tests. Strykelang HUD by MenkeTechnologies.">
+  <title>zpwrchrome &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    html { color-scheme: dark; }
+    :root { --yellow: #ffb800; }
+    .tutorial-main { max-width: 80rem; }
+
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(11rem,1fr)); gap:0.65rem; margin: 18px 0; }
+    .stat-card { border:1px solid var(--border); border-top:3px solid var(--cyan); background:var(--bg-card); padding:0.9rem 1rem; border-radius:2px; text-align:center; }
+    .stat-card .v { font-family:'Orbitron',sans-serif; font-size:26px; font-weight:900; color:var(--cyan); line-height:1.1; text-shadow:0 0 18px var(--cyan-glow); }
+    .stat-card .v.a { color: var(--accent); text-shadow:0 0 18px var(--accent-glow); }
+    .stat-card .v.g { color: var(--green);  text-shadow:0 0 18px rgba(57,255,20,.3); }
+    .stat-card .v.m { color: var(--magenta);text-shadow:0 0 18px var(--magenta-glow); }
+    .stat-card .v.y { color: var(--yellow); text-shadow:0 0 18px rgba(255,184,0,.3); }
+    .stat-card .l { font-family:'Orbitron',sans-serif; font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); margin-top:6px; }
+
+    .bar-wrap { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 2px; height: 22px; position: relative; overflow: hidden; margin: 4px 0 6px; }
+    .bar-fill { height: 100%; transition: width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-cyan { background: linear-gradient(90deg,#05d9e8,#0891b2); box-shadow: 0 0 8px var(--cyan-glow); }
+    .bar-accent { background: linear-gradient(90deg,#ff2a6d,#a01545); box-shadow: 0 0 8px var(--accent-glow); }
+    .bar-magenta { background: linear-gradient(90deg,#d300c5,#a000a0); box-shadow: 0 0 8px var(--magenta-glow); }
+    .bar-green { background: linear-gradient(90deg,#39ff14,#20c00a); box-shadow: 0 0 8px rgba(57,255,20,.4); }
+    .bar-label { position: absolute; right: 8px; top: 0; line-height: 22px; font-size: 11px; font-weight: 700; color:#fff; text-shadow: 0 0 4px #000; font-family:'Orbitron',sans-serif; }
+    .bar-caption { font-size: 10px; color: var(--text-muted); margin-bottom: 12px; }
+
+    .subsystems { display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 10px; }
+    .card { border: 1px solid var(--border); border-left: 3px solid var(--cyan); background: var(--bg-card); padding: 12px 14px; border-radius: 2px; }
+    .card h3 { font-family:'Orbitron',sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan); margin-bottom: 6px; }
+    .card p { font-size: 11.5px; color: var(--text-dim); line-height: 1.6; }
+    .card .files { list-style: none; margin: 4px 0 6px; }
+    .card .files li { font-size: 11px; color: var(--text-muted); margin: 1px 0; }
+    .card code { color: var(--accent-light); background: var(--bg-primary); padding: 1px 4px; border-radius: 2px; font-size: 10.5px; }
+
+    .file-table { width:100%; border-collapse: collapse; font-size: 12px; margin: 6px 0 18px; }
+    .file-table th { background: var(--bg-secondary); color: var(--cyan); font-family:'Orbitron',sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; text-align: left; padding: 7px 10px; border: 1px solid var(--border); }
+    .file-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); }
+    .file-table td.num { text-align: right; font-family: 'Share Tech Mono', monospace; }
+    .file-table td:first-child code { color: var(--accent-light); background: var(--bg-primary); padding: 1px 5px; border-radius: 2px; font-size: 11px; }
+    .file-table tr:hover td { background: var(--bg-hover); }
+
+    .kinds { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr)); gap: 6px; margin: 6px 0 16px; }
+    .kinds li { border: 1px solid var(--border); border-left: 3px solid var(--magenta); background: var(--bg-card); padding: 8px 12px; border-radius: 2px; font-size: 11px; }
+    .kinds li code { color: var(--accent-light); background: var(--bg-primary); padding: 1px 5px; border-radius: 2px; font-size: 11px; display: inline-block; margin-bottom: 4px; }
+    .kinds li span { display: block; color: var(--text-dim); }
+
+    .cat-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 6px; }
+    .cat-list li { border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--bg-card); padding: 8px 12px; border-radius: 2px; font-size: 11.5px; display: flex; justify-content: space-between; align-items: baseline; }
+    .cat-list li .key { color: var(--text-muted); font-size: 10px; letter-spacing: 1px; }
+    .cat-list li .label { color: var(--text); }
+
+    .decisions { display: grid; grid-template-columns: repeat(auto-fill, minmax(28rem, 1fr)); gap: 10px; margin-top: 10px; }
+    .decisions .card { border-left-color: var(--accent); }
+    .decisions .card h3 { color: var(--accent); }
+
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-left: 3px solid var(--cyan); padding: 10px 14px; border-radius: 2px; font-family: 'Share Tech Mono', monospace; font-size: 11.5px; color: var(--text); overflow-x: auto; line-height: 1.55; margin: 8px 0; }
+    pre.code .c { color: var(--text-muted); }
+    pre.code .k { color: var(--cyan); }
+    pre.code .a { color: var(--accent-light); }
+
+    .arch-wrap { background: var(--bg-secondary); border: 1px solid var(--border); border-left: 3px solid var(--magenta); padding: 12px; border-radius: 2px; margin: 8px 0; overflow-x: auto; }
+    .arch-wrap svg.arch { display: block; max-width: 100%; height: auto; }
+
+    .perm-pill { display: inline-block; margin: 2px 4px 2px 0; padding: 3px 8px; font-size: 11px; border: 1px solid var(--cyan); color: var(--cyan); border-radius: 2px; background: rgba(5,217,232,0.06); }
+    .perm-pill.opt { border-color: var(--text-muted); color: var(--text-muted); background: transparent; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWRCHROME &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Landing</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwrchrome" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Manifest V3 Chrome extension &middot; cross-window MRU &middot; 54 keyboard commands &middot; 12-category fzf-scored popup &middot; <code>chrome.userScripts</code> Tampermonkey-equivalent &middot; frecency-ranked history search
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+    <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+    <p class="tutorial-subtitle">
+      zpwrchrome is a single-author Chrome MV3 extension built around the
+      MRU (most-recently-used) tab primitive. The service worker tracks
+      tab activation in <code>chrome.storage.session</code> across windows;
+      the toolbar popup renders 12 categories with
+      fzf fuzzy filtering; a Tampermonkey-equivalent userscript engine
+      runs in Chrome's native <code>USER_SCRIPT</code> world via
+      <code>chrome.userScripts</code>; and a frecency-ranked
+      <code>chrome.history</code> search replaces Chrome's built-in
+      <code>chrome://history</code> page on <code>Cmd+Y</code>.
+      <strong>7,428 JS lines + 1,113 CSS lines + 23,464 test lines &middot; 54 commands &middot; 19 message handlers &middot; 3012 tests passing</strong>.
+    </p>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="v">7,428</div><div class="l">JS Lines</div></div>
+      <div class="stat-card"><div class="v">1,113</div><div class="l">CSS Lines</div></div>
+      <div class="stat-card"><div class="v a">54</div><div class="l">Keyboard Commands</div></div>
+      <div class="stat-card"><div class="v g">3012</div><div class="l">Tests Passing</div></div>
+      <div class="stat-card"><div class="v">12</div><div class="l">Popup Categories</div></div>
+      <div class="stat-card"><div class="v m">19</div><div class="l">Message Kinds</div></div>
+      <div class="stat-card"><div class="v">39</div><div class="l">Dispatch Handlers</div></div>
+      <div class="stat-card"><div class="v">19</div><div class="l">Permissions</div></div>
+      <div class="stat-card"><div class="v">15</div><div class="l">Pure Helpers</div></div>
+      <div class="stat-card"><div class="v">376</div><div class="l">Repo Files</div></div>
+      <div class="stat-card"><div class="v y">4</div><div class="l">Default-Keyed</div></div>
+      <div class="stat-card"><div class="v">v0.22.17</div><div class="l">Version</div></div>
+    </div>
+
+    <div>
+      <p class="bar-caption" style="margin-top:14px;">Source distribution &mdash; 32,295 total lines</p>
+      <div class="bar-wrap"><div class="bar-fill bar-cyan" style="width:23.0%;"></div><span class="bar-label">JS &middot; 7,428 lines &middot; 23.0%</span></div><div class="bar-wrap"><div class="bar-fill bar-green" style="width:72.7%;"></div><span class="bar-label">Tests &middot; 23,464 lines &middot; 72.7%</span></div><div class="bar-wrap"><div class="bar-fill bar-magenta" style="width:3.4%;"></div><span class="bar-label">CSS &middot; 1,113 lines &middot; 3.4%</span></div><div class="bar-wrap"><div class="bar-fill bar-accent" style="width:0.9%;"></div><span class="bar-label">HTML &middot; 290 lines &middot; 0.9%</span></div>
+    </div>
+
+    <h2 class="tutorial-title"><span class="step-hash">~</span>SUBSYSTEM BREAKDOWN</h2>
+    <p class="tutorial-subtitle">Every JS surface in the repo, by role. Pure helpers in <code>lib/util.js</code> + <code>lib/fzf.js</code> carry zero <code>chrome.*</code> references so they unit-test headless and so <code>scripts/build-modal.mjs</code> can inline them into the content-script modal between <code>UTIL_INLINE_START/END</code> and <code>FZF_INLINE_START/END</code> markers.</p>
+    <div class="subsystems">
+        <div class="card">
+          <h3>Service worker</h3>
+          <ul class="files"><li><code>background.js</code> &mdash; 4,110 lines</li></ul>
+          <p>MV3 SW. Cross-window MRU tracker, command dispatcher, popup/modal message API, userscript registration, scenes, history, pass + identity fill, segmented downloads, full-page screenshot.</p>
+        </div>
+        <div class="card">
+          <h3>Popup</h3>
+          <ul class="files"><li><code>popup.html</code> &mdash; 46 lines</li><li><code>popup.css</code> &mdash; 601 lines</li><li><code>popup.js</code> &mdash; 1,266 lines</li></ul>
+          <p>Cyberpunk HUD toolbar action. 12 categories (incl. PASS + TECH), fzf filter, keyboard nav, opens via Alt+T / Cmd+Y (history) / Cmd+P (pass) / Cmd+K (tech).</p>
+        </div>
+        <div class="card">
+          <h3>Modal (content script)</h3>
+          <ul class="files"><li><code>modal/content.template.js</code> &mdash; 959 lines</li></ul>
+          <p>Shadow-DOM overlay matching the popup category set. Dormant by default after v0.4.16 — Cmd+E now opens the toolbar popup directly.</p>
+        </div>
+        <div class="card">
+          <h3>Page-theme injector (content script)</h3>
+          <ul class="files"><li><code>modal/cyber-theme.js</code> &mdash; 0 lines</li><li><code>lib/cyber-theme-css.js</code> &mdash; 0 lines</li><li><code>scripts-manager/theme-injector.html</code> &mdash; 0 lines</li></ul>
+          <p>document_start content script. Reads chrome.storage.local[&quot;theme.injector&quot;]; paints arbitrary pages with the strykelang HUD palette. Knobs: intensity (subtle/medium/full), dark mode (color-scheme + AUI / generic white-card overrides, no filter:invert), forceMono (icon-font carriers exempted), scanlines. Per-host block/allowlist.</p>
+        </div>
+        <div class="card">
+          <h3>Reader mode (on-demand content script)</h3>
+          <ul class="files"><li><code>modal/reader-mode.js</code> &mdash; 0 lines</li><li><code>lib/reader-mode-css.js</code> &mdash; 0 lines</li><li><code>scripts-manager/reader-mode.html</code> &mdash; 0 lines</li></ul>
+          <p>document_idle content script. Heuristic article extraction (largest &lt;article&gt; → &lt;main&gt; → densest paragraph cluster outside noise containers); clone sanitized (script/style/iframe/form/inline-handlers stripped); rendered in a fixed overlay with the strykelang palette. Four themes × three font families; A−/A+ live bumpers; Esc closes.</p>
+        </div>
+        <div class="card">
+          <h3>Turn off the lights (on-demand content script)</h3>
+          <ul class="files"><li><code>modal/lights-off.js</code> &mdash; 0 lines</li><li><code>lib/lights-off-css.js</code> &mdash; 0 lines</li><li><code>scripts-manager/lights-off.html</code> &mdash; 0 lines</li></ul>
+          <p>document_idle content script. Toggle messages from the SW. Full-viewport overlay at z-index 2147483646; every visible &lt;video&gt; + its ancestor chain lifted to z-index 2147483647 + position:relative. Click overlay or Esc undims and restores the original z-index / position values tagged on each touched element.</p>
+        </div>
+        <div class="card">
+          <h3>JSON viewer (content script)</h3>
+          <ul class="files"><li><code>modal/json-viewer.js</code> &mdash; 0 lines</li><li><code>lib/json-format.js</code> &mdash; 0 lines</li></ul>
+          <p>document_end content script. Auto-detects JSON-served pages, replaces &lt;pre&gt; with a collapsible tree. RFC 6901 pointer copy, prettyPrint / minify toggles, clipboard with execCommand fallback for non-secure contexts.</p>
+        </div>
+        <div class="card">
+          <h3>XML viewer (content script)</h3>
+          <ul class="files"><li><code>modal/xml-viewer.js</code> &mdash; 0 lines</li><li><code>lib/xml-format.js</code> &mdash; 0 lines</li></ul>
+          <p>document_end content script. Auto-detects application/xml + +xml MIME families (atom, rss, xhtml, svg, soap, vendor) and .xml/.xsd/.xsl/.rss/.atom/.svg/.plist/.kml/.gpx/.opml/.fxml URLs. DOMParser-driven collapsible tree with attribute coloring, CDATA / comment / PI rendering, XPath copy per node, live filter, prettyPrint / minify / raw toggles, auto-linkified http(s) URLs in text and attribute values.</p>
+        </div>
+        <div class="card">
+          <h3>User-Agent switcher</h3>
+          <ul class="files"><li><code>modal/cyber-theme.js (n/a)</code> &mdash; 0 lines</li><li><code>scripts-manager/ua-switcher.html</code> &mdash; 0 lines</li><li><code>lib/ua-presets.js</code> &mdash; 0 lines</li></ul>
+          <p>16 vendor-shipped UA presets across 6 families plus a custom field. Backed by a single chrome.declarativeNetRequest dynamic rule (id 1001) that rewrites the User-Agent request header.</p>
+        </div>
+        <div class="card">
+          <h3>ModHeader</h3>
+          <ul class="files"><li><code>scripts-manager/modheader.html</code> &mdash; 0 lines</li><li><code>scripts-manager/modheader.js</code> &mdash; 0 lines</li><li><code>scripts-manager/modheader.css</code> &mdash; 0 lines</li></ul>
+          <p>Multi-profile HTTP header manager. Each profile owns N rules; only the active profile&#39;s enabled rules are applied. Rule kinds: request header (set/append/remove), response header (set/append/remove), URL redirect. Backed by chrome.declarativeNetRequest dynamic rules in id range 2000-2999.</p>
+        </div>
+        <div class="card">
+          <h3>Find-in-all-tabs</h3>
+          <ul class="files"><li><code>scripts-manager/find-all.html</code> &mdash; 0 lines</li><li><code>lib/find-snippet.js</code> &mdash; 0 lines</li></ul>
+          <p>Parallel innerText scrape across every open http(s) tab capped at 200 KB / tab. fzf-fuzzy filter; Enter activates the chosen tab and scrolls to the match via window.find().</p>
+        </div>
+        <div class="card">
+          <h3>Pure helpers</h3>
+          <ul class="files"><li><code>lib/util.js</code> &mdash; 208 lines</li><li><code>lib/fzf.js</code> &mdash; 130 lines</li></ul>
+          <p>Zero chrome.* refs. MRU stack semantics, hostname parse, jump-index resolution, scenes, opener-tree, domain-hue, frecency, fzf scorer. Unit-tested headless.</p>
+        </div>
+        <div class="card">
+          <h3>Userscript engine</h3>
+          <ul class="files"><li><code>lib/userscript.js</code> &mdash; 189 lines</li><li><code>lib/gm-shim.js</code> &mdash; 95 lines</li></ul>
+          <p>Tampermonkey-equivalent: @metadata parser, match-pattern validator, GM_* shim (getValue/setValue/openInTab/setClipboard/notification/fire-beacon).</p>
+        </div>
+        <div class="card">
+          <h3>Userscript dashboard</h3>
+          <ul class="files"><li><code>scripts-manager/manager.html</code> &mdash; 244 lines</li><li><code>scripts-manager/manager.js</code> &mdash; 471 lines</li><li><code>scripts-manager/manager.css</code> &mdash; 512 lines</li></ul>
+          <p>Options-page editor — installed/log/settings/utilities/help tabs, sortable table, monaco-free CodeMirror-free plain textarea editor, fire-log ring buffer reader.</p>
+        </div>
+        <div class="card">
+          <h3>Download queue UI</h3>
+          <ul class="files"><li><code>scripts-manager/downloads.html</code> &mdash; 0 lines</li><li><code>scripts-manager/downloads.js</code> &mdash; 0 lines</li><li><code>scripts-manager/downloads.css</code> &mdash; 0 lines</li></ul>
+          <p>Live segmented-download queue. Subscribes to host push events (id=0 dl.progress) for ~5/s updates while active, falls back to polling. Re-hydrates from chrome.storage.local snapshot mirror so the queue paints instantly across SW restarts. Pause / resume / cancel per-row + bulk; speed + ETA + per-job segment count.</p>
+        </div>
+    </div>
+
+    <h2 class="tutorial-title"><span class="step-hash">#</span>TOP FILES BY SIZE</h2>
+    <p class="tutorial-subtitle">Sorted descending. <code>modal/content.template.js</code> is the source; <code>modal/content.js</code> is generated (fonts + fzf + util inlined) and excluded from this table.</p>
+    <table class="file-table">
+      <thead><tr><th>Path</th><th class="num">Lines</th><th class="num">Bytes</th></tr></thead>
+      <tbody>
+        <tr><td><code>background.js</code></td><td class="num">4,110</td><td class="num">169,760</td></tr>
+        <tr><td><code>popup.js</code></td><td class="num">1,266</td><td class="num">52,052</td></tr>
+        <tr><td><code>tests/dl-integration.test.js</code></td><td class="num">1,054</td><td class="num">54,455</td></tr>
+        <tr><td><code>modal/content.template.js</code></td><td class="num">959</td><td class="num">38,713</td></tr>
+        <tr><td><code>popup.css</code></td><td class="num">601</td><td class="num">18,689</td></tr>
+        <tr><td><code>tests/static.test.js</code></td><td class="num">562</td><td class="num">26,280</td></tr>
+        <tr><td><code>tests/logic.test.js</code></td><td class="num">555</td><td class="num">22,613</td></tr>
+        <tr><td><code>scripts-manager/manager.css</code></td><td class="num">512</td><td class="num">16,884</td></tr>
+        <tr><td><code>scripts-manager/manager.js</code></td><td class="num">471</td><td class="num">17,542</td></tr>
+        <tr><td><code>tests/pass-entry-format.test.js</code></td><td class="num">409</td><td class="num">17,942</td></tr>
+        <tr><td><code>tests/userscript.test.js</code></td><td class="num">369</td><td class="num">13,025</td></tr>
+        <tr><td><code>tests/quality.test.js</code></td><td class="num">356</td><td class="num">18,041</td></tr>
+        <tr><td><code>tests/pass-integration.test.js</code></td><td class="num">355</td><td class="num">17,965</td></tr>
+        <tr><td><code>tests/modal.test.js</code></td><td class="num">299</td><td class="num">16,097</td></tr>
+        <tr><td><code>tests/identity-tokens.test.js</code></td><td class="num">280</td><td class="num">14,372</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="tutorial-title"><span class="step-hash">%</span>ARCHITECTURE</h2>
+    <p class="tutorial-subtitle">Three processes, six storage planes. Chrome hosts the extension; the extension's SW (one process) talks to a Rust native messaging host (one process per request, plus detached download worker processes that outlive their parent). All persistent state lives in <code>chrome.storage</code> or on the filesystem under <code>~/.cache/zpwrchrome/</code> — nothing relies on the SW staying alive.</p>
+    <div class="arch-wrap">
+      <svg class="arch" viewBox="0 0 1080 660" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="zpwrchrome process and data flow architecture">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--cyan)" />
+          </marker>
+          <marker id="arrow-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--magenta)" />
+          </marker>
+          <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)" />
+          </marker>
+        </defs>
+        <style>
+          .arch text { font-family: 'Share Tech Mono','SF Mono',monospace; fill: var(--text); font-size: 11px; }
+          .arch .title { font-family: 'Orbitron','Share Tech Mono',monospace; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+          .arch .group { fill: rgba(5,217,232,0.04); stroke: var(--border); stroke-width: 1; rx: 6; }
+          .arch .box   { fill: var(--bg-card); stroke: var(--cyan); stroke-width: 1.5; rx: 4; }
+          .arch .box.host    { stroke: var(--magenta); }
+          .arch .box.fs      { stroke: var(--accent); }
+          .arch .box.user    { stroke: var(--green); }
+          .arch .box.storage { stroke: var(--yellow); }
+          .arch .grpttl { fill: var(--cyan); font-size: 10px; letter-spacing: 2px; }
+          .arch .grpttl.host { fill: var(--magenta); }
+          .arch .grpttl.fs   { fill: var(--accent); }
+          .arch .grpttl.user { fill: var(--green); }
+          .arch .grpttl.storage { fill: var(--yellow); }
+          .arch .lbl  { fill: var(--text); font-weight: 700; font-size: 11px; }
+          .arch .sub  { fill: var(--text-dim); font-size: 9.5px; }
+          .arch .flow { stroke: var(--cyan); stroke-width: 1.5; fill: none; }
+          .arch .flow.m { stroke: var(--magenta); }
+          .arch .flow.a { stroke: var(--accent); }
+          .arch .flow.dashed { stroke-dasharray: 4 3; }
+          .arch .edge { fill: var(--text-dim); font-size: 9.5px; }
+        </style>
+
+        <!-- ─── Browser group ─────────────────────────────────── -->
+        <rect class="group" x="20" y="20" width="700" height="380" />
+        <text class="title grpttl" x="36" y="42">CHROME (host browser)</text>
+
+        <!-- Service worker -->
+        <rect class="box" x="56" y="64" width="220" height="64" />
+        <text class="lbl"  x="68" y="84">Service Worker (MV3)</text>
+        <text class="sub"  x="68" y="100">background.js · 1 process</text>
+        <text class="sub"  x="68" y="114">commands · NM bridge · context menus</text>
+
+        <!-- Popup -->
+        <rect class="box" x="56" y="148" width="220" height="56" />
+        <text class="lbl"  x="68" y="168">Popup (toolbar)</text>
+        <text class="sub"  x="68" y="184">popup.html · 12 categories</text>
+        <text class="sub"  x="68" y="198">downloads strip + clipboard banner</text>
+
+        <!-- Manager pages -->
+        <rect class="box" x="56" y="222" width="220" height="56" />
+        <text class="lbl"  x="68" y="242">Extension pages</text>
+        <text class="sub"  x="68" y="258">scripts-manager/* · pass / manager / dl</text>
+        <text class="sub"  x="68" y="272">theme / lights / ua / find / settings</text>
+
+        <!-- Content scripts -->
+        <rect class="box" x="56" y="296" width="220" height="56" />
+        <text class="lbl"  x="68" y="316">Content scripts</text>
+        <text class="sub"  x="68" y="332">modal/{content,cyber-theme,lights-off,json-viewer,xml-viewer}.js</text>
+        <text class="sub"  x="68" y="346">pass-fill / userscripts / screenshot probe</text>
+
+        <!-- chrome.* APIs -->
+        <rect class="box" x="320" y="64" width="200" height="288" />
+        <text class="lbl"  x="332" y="84">chrome.* APIs</text>
+        <text class="sub"  x="332" y="104">tabs / windows / scripting</text>
+        <text class="sub"  x="332" y="120">downloads / contextMenus</text>
+        <text class="sub"  x="332" y="136">notifications / sessions</text>
+        <text class="sub"  x="332" y="152">history / commands</text>
+        <text class="sub"  x="332" y="168">cookies</text>
+        <text class="sub"  x="332" y="184">webRequest · userScripts</text>
+        <text class="sub"  x="332" y="200">action.setBadgeText</text>
+        <text class="sub"  x="332" y="216">runtime.sendNativeMessage</text>
+
+        <!-- chrome.storage box (inside browser group) -->
+        <rect class="box storage" x="320" y="244" width="200" height="108" />
+        <text class="lbl"  x="332" y="264">chrome.storage</text>
+        <text class="sub"  x="332" y="282">.session  → MRU stack</text>
+        <text class="sub"  x="332" y="298">.local    → dl.settings,</text>
+        <text class="sub"  x="332" y="312">             dl.rules, dl.snapshot,</text>
+        <text class="sub"  x="332" y="326">             scenes, scripts, zpc.diag</text>
+        <text class="sub"  x="332" y="342">.local    → pass.settings</text>
+
+        <!-- User tabs / pages -->
+        <rect class="box user" x="556" y="64" width="146" height="288" />
+        <text class="lbl"  x="568" y="84">Web pages</text>
+        <text class="sub"  x="568" y="104">N user tabs</text>
+        <text class="sub"  x="568" y="120">login forms (pass)</text>
+        <text class="sub"  x="568" y="136">link/media targets</text>
+        <text class="sub"  x="568" y="152">scrollable bodies</text>
+        <text class="sub"  x="568" y="168">(screenshot src)</text>
+
+        <!-- ─── NM host process ────────────────────────────── -->
+        <rect class="group" x="760" y="20" width="300" height="380" />
+        <text class="title grpttl host" x="776" y="42">NATIVE HOST (Rust)</text>
+
+        <rect class="box host" x="780" y="64" width="262" height="80" />
+        <text class="lbl"  x="792" y="84">zpwrchrome-host</text>
+        <text class="sub"  x="792" y="100">crates.io · v0.10.0</text>
+        <text class="sub"  x="792" y="114">one process per NM message</text>
+        <text class="sub"  x="792" y="128">stdio: length-prefixed JSON</text>
+
+        <rect class="box host" x="780" y="164" width="262" height="76" />
+        <text class="lbl"  x="792" y="184">Extension actions</text>
+        <text class="sub"  x="792" y="200">dl.{add,list,pause,resume,cancel}</text>
+        <text class="sub"  x="792" y="214">dl.{clear,openDir,openFile,writeFile}</text>
+        <text class="sub"  x="792" y="228">otp · search · echo</text>
+
+        <rect class="box host" x="780" y="260" width="262" height="76" />
+        <text class="lbl"  x="792" y="280">Detached workers</text>
+        <text class="sub"  x="792" y="296">--dl-worker  (one per gid)</text>
+        <text class="sub"  x="792" y="310">setsid + close FD ≥ 3</text>
+        <text class="sub"  x="792" y="324">ureq+rustls · Range requests</text>
+
+        <!-- ─── FS group (bottom) ─────────────────────────── -->
+        <rect class="group" x="20" y="430" width="1040" height="200" />
+        <text class="title grpttl fs" x="36" y="452">FILESYSTEM (~)</text>
+
+        <rect class="box fs" x="56" y="468" width="280" height="140" />
+        <text class="lbl"  x="68" y="488">~/.cache/zpwrchrome/dl/</text>
+        <text class="sub"  x="68" y="506">gid_NNNNNN.json   (one per download)</text>
+        <text class="sub"  x="68" y="522">next_gid          (monotonic counter)</text>
+        <text class="sub"  x="68" y="538">worker.log        (detached worker out)</text>
+        <text class="sub"  x="68" y="556">host.log          (every NM invocation)</text>
+        <text class="sub"  x="68" y="572">Authoritative download state</text>
+        <text class="sub"  x="68" y="588">— survives SW restart, browser restart</text>
+
+        <rect class="box fs" x="372" y="468" width="280" height="140" />
+        <text class="lbl"  x="384" y="488">~/Downloads/</text>
+        <text class="sub"  x="384" y="506">User-configured (settings.downloadDir)</text>
+        <text class="sub"  x="384" y="522">Falls through: downloadDir → lastDir</text>
+        <text class="sub"  x="384" y="538">→ default_download_dir()  (host)</text>
+        <text class="sub"  x="384" y="558">Per-download bytes (segmented HTTP)</text>
+        <text class="sub"  x="384" y="574">+ screenshots (dl.writeFile)</text>
+
+        <rect class="box fs" x="688" y="468" width="320" height="140" />
+        <text class="lbl"  x="700" y="488">~/.password-store/</text>
+        <text class="sub"  x="700" y="506">browserpass-compatible</text>
+        <text class="sub"  x="700" y="522">GPG-encrypted *.gpg entries</text>
+        <text class="sub"  x="700" y="542">Read by host actions:</text>
+        <text class="sub"  x="700" y="558">  list / fetch / tree / search / otp</text>
+        <text class="sub"  x="700" y="576">Powers pass-fill keystroke + autofill badge</text>
+
+        <!-- Edges (annotated) -->
+        <!-- SW ↔ chrome APIs -->
+        <line class="flow" x1="276" y1="96"  x2="320" y2="96"  marker-end="url(#arrow)" />
+        <line class="flow" x1="276" y1="180" x2="320" y2="180" marker-end="url(#arrow)" />
+        <line class="flow" x1="276" y1="250" x2="320" y2="250" marker-end="url(#arrow)" />
+        <line class="flow" x1="276" y1="324" x2="320" y2="324" marker-end="url(#arrow)" />
+
+        <!-- chrome APIs ↔ user tabs -->
+        <line class="flow" x1="520" y1="200" x2="556" y2="200" marker-end="url(#arrow)" />
+
+        <!-- SW → NM host -->
+        <path class="flow m" d="M 276 110 C 410 24 600 24 780 88" marker-end="url(#arrow-m)" />
+        <text class="edge" x="430" y="56">sendNativeMessage  (stdio framed JSON)</text>
+
+        <!-- NM host → workers -->
+        <line class="flow m dashed" x1="910" y1="240" x2="910" y2="260" marker-end="url(#arrow-m)" />
+
+        <!-- workers → ~/Downloads -->
+        <path class="flow a" d="M 780 320 C 660 380 530 420 512 466" marker-end="url(#arrow-a)" />
+        <text class="edge" x="540" y="416">HTTP segments → file</text>
+
+        <!-- workers ↔ state files -->
+        <path class="flow a dashed" d="M 780 296 C 500 400 340 420 196 466" marker-end="url(#arrow-a)" />
+        <text class="edge" x="380" y="438">state files (read/write/atomic rename)</text>
+
+        <!-- host → pass-store -->
+        <path class="flow m" d="M 910 240 C 940 360 920 420 848 466" marker-end="url(#arrow-m)" />
+        <text class="edge" x="930" y="420">gpg decrypt</text>
+
+        <!-- SW ↔ storage (bottom-left edge) -->
+        <line class="flow" x1="420" y1="352" x2="420" y2="430" marker-end="url(#arrow)" />
+
+      </svg>
+      <p class="tutorial-subtitle" style="margin-top:6px;">
+        <strong>Cyan</strong> edges = in-process chrome.* calls.
+        <strong>Magenta</strong> edges = native messaging RPC (stdio, length-prefixed JSON, one round-trip per process).
+        <strong>Pink</strong> edges = filesystem I/O performed by the detached worker process.
+        Dashed = process-spawn or asynchronous (worker doesn't await parent; SW doesn't await worker).
+      </p>
+    </div>
+
+    <h2 class="tutorial-title"><span class="step-hash">@</span>EXECUTION PIPELINE</h2>
+    <p class="tutorial-subtitle">Three persistence stores: <code>chrome.storage.session</code> for MRU (survives SW restart, not browser restart), <code>chrome.storage.local</code> for scenes / userscripts / GM bags / fire log, and the Chrome-managed <code>chrome.history</code> + <code>chrome.sessions</code> APIs for browsing history and recently-closed tabs.</p>
+    <pre class="code"><span class="c">    chrome.tabs events            background.js (SW)                  chrome.storage</span>
+   onActivated  ────────────▶  <span class="k">pushMru / dropFromMru</span>  ────────▶  <span class="a">.session</span>
+   onRemoved                                                              (MRU array)
+   onReplaced                                                              <span class="a">.local</span>
+                              <span class="k">command dispatcher</span>                       scenes
+                              <span class="k">message API (popup/modal)</span>                userscripts
+                              <span class="k">userscripts registration</span>                 fire-log ring
+                              <span class="k">history-list (frecency)</span>                  GM bags
+                                       │
+                                       │ runtime.sendMessage / tabs.sendMessage
+                                       ▼
+              popup.html/.js                          modal/content.js (shadow DOM)
+              ───────────────                         ─────────────────────────────
+              12 categories                            10 categories (dormant since v0.4.16)
+              fzf filter                              10 categories
+              keyboard nav                            same protocol kinds
+
+              scripts-manager/manager.html
+              ────────────────────────────
+              Tampermonkey-style dashboard
+              4 tabs &middot; sortable table &middot; firelog reader
+</pre>
+
+    <h2 class="tutorial-title"><span class="step-hash">&amp;</span>MESSAGE PROTOCOL</h2>
+    <p class="tutorial-subtitle"><strong>19</strong> message kinds handled by the service worker. Popup sends <strong>18</strong> kinds; modal sends <strong>19</strong>. <code>tests/protocol.test.js</code> guards against orphans on either side.</p>
+    <ul class="kinds">
+
+        <li><code>activate</code><span>popup/modal → SW. Switch to a tab by id + focus its window.</span></li>
+        <li><code>close-tab</code><span>popup/modal → SW. Close an open tab; refresh.</span></li>
+        <li><code>gm:deleteValue</code><span>userscript shim → SW. Per-script chrome.storage.local bag delete.</span></li>
+        <li><code>gm:fire</code><span>userscript shim → SW. Beacon appended to the fire log at script load.</span></li>
+        <li><code>gm:getValue</code><span>userscript shim → SW. Per-script chrome.storage.local bag read.</span></li>
+        <li><code>gm:listValues</code><span>userscript shim → SW. List keys in the per-script bag.</span></li>
+        <li><code>gm:notification</code><span>userscript shim → SW. chrome.notifications.create proxy.</span></li>
+        <li><code>gm:openInTab</code><span>userscript shim → SW. chrome.tabs.create proxy (also used by history-row Enter in the modal).</span></li>
+        <li><code>gm:setClipboard</code><span>userscript shim → SW. Inject navigator.clipboard.writeText() into the active tab.</span></li>
+        <li><code>gm:setValue</code><span>userscript shim → SW. Per-script chrome.storage.local bag write.</span></li>
+        <li><code>history-delete</code><span>popup/modal → SW. chrome.history.deleteUrl for every visit of a URL.</span></li>
+        <li><code>history-list</code><span>popup/modal → SW. chrome.history.search up to 5000 results, frecency-sorted before return.</span></li>
+        <li><code>list</code><span>popup/modal → SW. Returns MRU tab list + 25 most-recently-closed sessions.</span></li>
+        <li><code>open-scripts-manager</code><span>modal → SW. Opens scripts-manager/manager.html in a new tab.</span></li>
+        <li><code>restore</code><span>popup/modal → SW. Restore a closed session by sessionId.</span></li>
+        <li><code>scenes-delete</code><span>popup/modal → SW. Drop a scene by slug.</span></li>
+        <li><code>scenes-list</code><span>popup/modal → SW. Returns persisted scenes from chrome.storage.local.</span></li>
+        <li><code>scenes-restore</code><span>popup/modal → SW. Open a new window populated from a scene by slug.</span></li>
+        <li><code>scenes-save</code><span>popup/modal → SW. Snapshot the active window&#39;s tabs as a named scene.</span></li>
+    </ul>
+
+    <h2 class="tutorial-title"><span class="step-hash">$</span>KEYBOARD COMMANDS</h2>
+    <p class="tutorial-subtitle">Chrome MV3 caps commands with default-suggested keys at <strong>4</strong>; everything else is user-bound at <code>chrome://extensions/shortcuts</code>. Currently <strong>4</strong> default-keyed (<code>_execute_action=Alt+T</code>, <code>switch-previous-tab=Command+E</code>, <code>open-history=Command+Y</code>, <code>pass-fill=Command+Shift+L</code>), <strong>50</strong> user-bound, <strong>54</strong> total.</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="v">7</div><div class="l">Switching / popup</div></div>
+      <div class="stat-card"><div class="v">9</div><div class="l">Jump</div></div>
+      <div class="stat-card"><div class="v">6</div><div class="l">Single-tab ops</div></div>
+      <div class="stat-card"><div class="v">7</div><div class="l">Batch tab ops</div></div>
+      <div class="stat-card"><div class="v">6</div><div class="l">Scenes</div></div>
+      <div class="stat-card"><div class="v">1</div><div class="l">Userscripts</div></div>
+    </div>
+
+    <h2 class="tutorial-title"><span class="step-hash">%</span>POPUP CATEGORIES</h2>
+    <p class="tutorial-subtitle">The popup (<code>popup.html</code>/<code>popup.css</code>/<code>popup.js</code>) renders 12 categories with fzf scoring against title + host. Each category is jumpable via <code>Cmd+1</code>..<code>Cmd+0</code> (where <code>Cmd+0</code> = History, the 10th slot). The modal mirrors the same list since v0.4.15.</p>
+    <ul class="cat-list">
+      <li><span class="label">All Tabs</span><span class="key">⌘1</span></li>
+      <li><span class="label">Current Window</span><span class="key">⌘2</span></li>
+      <li><span class="label">Pinned</span><span class="key">⌘3</span></li>
+      <li><span class="label">Audible</span><span class="key">⌘4</span></li>
+      <li><span class="label">Muted</span><span class="key">⌘5</span></li>
+      <li><span class="label">Recently Closed</span><span class="key">⌘6</span></li>
+      <li><span class="label">Scenes</span><span class="key">⌘7</span></li>
+      <li><span class="label">Tree (by opener)</span><span class="key">⌘8</span></li>
+      <li><span class="label">Minimap</span><span class="key">⌘9</span></li>
+      <li><span class="label">History</span><span class="key">⌘0</span></li>
+      <li><span class="label">Pass</span><span class="key">⌘P</span></li>
+      <li><span class="label">Tech</span><span class="key">⌘K</span></li>
+    </ul>
+
+    <h2 class="tutorial-title"><span class="step-hash">^</span>HISTORY &mdash; FRECENCY FORMULA</h2>
+    <p class="tutorial-subtitle"><code>chrome.history.search({ text: "", maxResults: 5000, startTime: 0 })</code> returns visits in <code>lastVisitTime</code>-desc order, which over-promotes one-off pages. <code>background.js:history-list</code> re-ranks by frecency before returning to popup/modal. Each result carries its <code>frecency</code> field forward so the fzf sort uses it as a tiebreaker.</p>
+    <pre class="code">  <span class="c">// lib/util.js — pure, unit-tested, inlined into modal via UTIL_INLINE</span>
+  <span class="k">export function</span> <span class="a">frecencyScore</span>(item, nowMs = Date.now()) {
+    <span class="k">if</span> (!item) <span class="k">return</span> 0;
+    <span class="k">const</span> visits = (item.visitCount || 0) + 2 * (item.typedCount || 0);
+    <span class="k">if</span> (visits &lt;= 0) <span class="k">return</span> 0;
+    <span class="k">const</span> last = item.lastVisitTime || 0;
+    <span class="k">if</span> (last &lt;= 0) <span class="k">return</span> visits;
+    <span class="k">const</span> hoursAgo = Math.max(0, (nowMs - last) / 3_600_000);
+    <span class="k">return</span> visits / (hoursAgo + 2);
+  }</pre>
+
+    <h2 class="tutorial-title"><span class="step-hash">!</span>PERMISSIONS</h2>
+    <p class="tutorial-subtitle"><strong>19</strong> declared. <code>tests/static.test.js</code> enforces every declared permission is actually used in <code>background.js</code> or <code>popup.js</code> &mdash; no dead permissions.</p>
+    <div>
+      <span class="perm-pill">tabs</span>
+      <span class="perm-pill">tabGroups</span>
+      <span class="perm-pill">sessions</span>
+      <span class="perm-pill">bookmarks</span>
+      <span class="perm-pill">history</span>
+      <span class="perm-pill">storage</span>
+      <span class="perm-pill">scripting</span>
+      <span class="perm-pill">userScripts</span>
+      <span class="perm-pill">webNavigation</span>
+      <span class="perm-pill">clipboardWrite</span>
+      <span class="perm-pill">nativeMessaging</span>
+      <span class="perm-pill">contextMenus</span>
+      <span class="perm-pill">notifications</span>
+      <span class="perm-pill">cookies</span>
+      <span class="perm-pill">webRequest</span>
+      <span class="perm-pill">webRequestAuthProvider</span>
+      <span class="perm-pill">downloads</span>
+      <span class="perm-pill">alarms</span>
+      <span class="perm-pill">declarativeNetRequestWithHostAccess</span>
+
+    </div>
+
+    <h2 class="tutorial-title"><span class="step-hash">*</span>TESTS</h2>
+    <p class="tutorial-subtitle">Plain <code>node:test</code>. Zero dependencies. <strong>3012</strong> cases across <strong>187</strong> files in <strong>~1s</strong>. CI matrix: Node 20 + 22 on ubuntu-latest.</p>
+    <table class="file-table">
+      <thead><tr><th>File</th><th class="num">Tests</th><th class="num">Lines</th></tr></thead>
+      <tbody>
+        <tr><td><code>tests/background.test.js</code></td><td class="num">28</td><td class="num">203</td></tr>
+        <tr><td><code>tests/bp-pass-domain-candidates.test.js</code></td><td class="num">5</td><td class="num">79</td></tr>
+        <tr><td><code>tests/build-scene-restorable.test.js</code></td><td class="num">12</td><td class="num">76</td></tr>
+        <tr><td><code>tests/build.test.js</code></td><td class="num">21</td><td class="num">143</td></tr>
+        <tr><td><code>tests/buildscene-slugify-edge.test.js</code></td><td class="num">15</td><td class="num">88</td></tr>
+        <tr><td><code>tests/buildscene-timing.test.js</code></td><td class="num">11</td><td class="num">98</td></tr>
+        <tr><td><code>tests/ci.test.js</code></td><td class="num">11</td><td class="num">73</td></tr>
+        <tr><td><code>tests/close-tabs-more.test.js</code></td><td class="num">16</td><td class="num">98</td></tr>
+        <tr><td><code>tests/color-schemes.test.js</code></td><td class="num">8</td><td class="num">90</td></tr>
+        <tr><td><code>tests/commands.test.js</code></td><td class="num">22</td><td class="num">161</td></tr>
+        <tr><td><code>tests/configure-world.test.js</code></td><td class="num">12</td><td class="num">93</td></tr>
+        <tr><td><code>tests/copy-helpers.test.js</code></td><td class="num">14</td><td class="num">87</td></tr>
+        <tr><td><code>tests/cyber-theme-css.test.js</code></td><td class="num">26</td><td class="num">246</td></tr>
+        <tr><td><code>tests/dispatch-popup.test.js</code></td><td class="num">16</td><td class="num">97</td></tr>
+        <tr><td><code>tests/dispatch-tab-ops.test.js</code></td><td class="num">12</td><td class="num">65</td></tr>
+        <tr><td><code>tests/dl-batch.test.js</code></td><td class="num">14</td><td class="num">98</td></tr>
+        <tr><td><code>tests/dl-integration.test.js</code></td><td class="num">90</td><td class="num">1,054</td></tr>
+        <tr><td><code>tests/dl-postcommands.test.js</code></td><td class="num">25</td><td class="num">191</td></tr>
+        <tr><td><code>tests/docs-index.test.js</code></td><td class="num">16</td><td class="num">83</td></tr>
+        <tr><td><code>tests/domain-hue-distribution.test.js</code></td><td class="num">11</td><td class="num">115</td></tr>
+        <tr><td><code>tests/domain-hue-unit.test.js</code></td><td class="num">12</td><td class="num">86</td></tr>
+        <tr><td><code>tests/expand-match-unit.test.js</code></td><td class="num">15</td><td class="num">84</td></tr>
+        <tr><td><code>tests/find-snippet.test.js</code></td><td class="num">12</td><td class="num">119</td></tr>
+        <tr><td><code>tests/fire-log-handlers.test.js</code></td><td class="num">12</td><td class="num">78</td></tr>
+        <tr><td><code>tests/firelog-init.test.js</code></td><td class="num">17</td><td class="num">113</td></tr>
+        <tr><td><code>tests/flatten-tree-deep-iterative.test.js</code></td><td class="num">4</td><td class="num">78</td></tr>
+        <tr><td><code>tests/flatten-tree-unit-more.test.js</code></td><td class="num">12</td><td class="num">82</td></tr>
+        <tr><td><code>tests/frecency-edge-unit.test.js</code></td><td class="num">12</td><td class="num">73</td></tr>
+        <tr><td><code>tests/frecency-extremes.test.js</code></td><td class="num">11</td><td class="num">115</td></tr>
+        <tr><td><code>tests/fuzz-adversarial.test.js</code></td><td class="num">17</td><td class="num">217</td></tr>
+        <tr><td><code>tests/fuzz-fzf.test.js</code></td><td class="num">10</td><td class="num">180</td></tr>
+        <tr><td><code>tests/fuzz-monte-carlo-scenes.test.js</code></td><td class="num">7</td><td class="num">161</td></tr>
+        <tr><td><code>tests/fuzz-userscript.test.js</code></td><td class="num">12</td><td class="num">201</td></tr>
+        <tr><td><code>tests/fuzz-util.test.js</code></td><td class="num">12</td><td class="num">214</td></tr>
+        <tr><td><code>tests/fzf-constants.test.js</code></td><td class="num">10</td><td class="num">91</td></tr>
+        <tr><td><code>tests/fzf-highlight-integration.test.js</code></td><td class="num">11</td><td class="num">144</td></tr>
+        <tr><td><code>tests/fzf-highlight-more.test.js</code></td><td class="num">14</td><td class="num">88</td></tr>
+        <tr><td><code>tests/fzf-match-edge.test.js</code></td><td class="num">14</td><td class="num">87</td></tr>
+        <tr><td><code>tests/fzf-more.test.js</code></td><td class="num">14</td><td class="num">96</td></tr>
+        <tr><td><code>tests/fzf-position-more.test.js</code></td><td class="num">12</td><td class="num">64</td></tr>
+        <tr><td><code>tests/fzf-stability.test.js</code></td><td class="num">13</td><td class="num">123</td></tr>
+        <tr><td><code>tests/fzf.test.js</code></td><td class="num">20</td><td class="num">129</td></tr>
+        <tr><td><code>tests/gen-pipeline.test.js</code></td><td class="num">15</td><td class="num">90</td></tr>
+        <tr><td><code>tests/gm-background.test.js</code></td><td class="num">15</td><td class="num">99</td></tr>
+        <tr><td><code>tests/gm-shim-aliases.test.js</code></td><td class="num">14</td><td class="num">125</td></tr>
+        <tr><td><code>tests/gm-shim-open-tab.test.js</code></td><td class="num">12</td><td class="num">55</td></tr>
+        <tr><td><code>tests/gm-shim.test.js</code></td><td class="num">18</td><td class="num">108</td></tr>
+        <tr><td><code>tests/handlers-async.test.js</code></td><td class="num">2</td><td class="num">65</td></tr>
+        <tr><td><code>tests/highlight-bounds.test.js</code></td><td class="num">11</td><td class="num">91</td></tr>
+        <tr><td><code>tests/history-handlers.test.js</code></td><td class="num">17</td><td class="num">105</td></tr>
+        <tr><td><code>tests/identity-tokens.test.js</code></td><td class="num">35</td><td class="num">280</td></tr>
+        <tr><td><code>tests/include-pattern-more.test.js</code></td><td class="num">16</td><td class="num">107</td></tr>
+        <tr><td><code>tests/include-pattern-unit.test.js</code></td><td class="num">15</td><td class="num">76</td></tr>
+        <tr><td><code>tests/init-nav-logger.test.js</code></td><td class="num">12</td><td class="num">80</td></tr>
+        <tr><td><code>tests/json-format.test.js</code></td><td class="num">20</td><td class="num">180</td></tr>
+        <tr><td><code>tests/lib-exports.test.js</code></td><td class="num">3</td><td class="num">59</td></tr>
+        <tr><td><code>tests/lights-off-css.test.js</code></td><td class="num">13</td><td class="num">132</td></tr>
+        <tr><td><code>tests/list-handler-detail.test.js</code></td><td class="num">12</td><td class="num">81</td></tr>
+        <tr><td><code>tests/logic-hostname.test.js</code></td><td class="num">18</td><td class="num">90</td></tr>
+        <tr><td><code>tests/logic-more.test.js</code></td><td class="num">19</td><td class="num">120</td></tr>
+        <tr><td><code>tests/logic-tree-more.test.js</code></td><td class="num">14</td><td class="num">98</td></tr>
+        <tr><td><code>tests/logic.test.js</code></td><td class="num">75</td><td class="num">555</td></tr>
+        <tr><td><code>tests/manager-banner-refresh.test.js</code></td><td class="num">14</td><td class="num">85</td></tr>
+        <tr><td><code>tests/manager-chrome-ext.test.js</code></td><td class="num">11</td><td class="num">58</td></tr>
+        <tr><td><code>tests/manager-css.test.js</code></td><td class="num">18</td><td class="num">94</td></tr>
+        <tr><td><code>tests/manager-editor-keys.test.js</code></td><td class="num">12</td><td class="num">68</td></tr>
+        <tr><td><code>tests/manager-editor-meta.test.js</code></td><td class="num">14</td><td class="num">82</td></tr>
+        <tr><td><code>tests/manager-editor.test.js</code></td><td class="num">22</td><td class="num">119</td></tr>
+        <tr><td><code>tests/manager-firelog.test.js</code></td><td class="num">17</td><td class="num">93</td></tr>
+        <tr><td><code>tests/manager-formatters.test.js</code></td><td class="num">12</td><td class="num">67</td></tr>
+        <tr><td><code>tests/manager-import-export-more.test.js</code></td><td class="num">14</td><td class="num">84</td></tr>
+        <tr><td><code>tests/manager-log-live.test.js</code></td><td class="num">13</td><td class="num">71</td></tr>
+        <tr><td><code>tests/manager-row-actions.test.js</code></td><td class="num">18</td><td class="num">92</td></tr>
+        <tr><td><code>tests/manager-sort-filter.test.js</code></td><td class="num">16</td><td class="num">86</td></tr>
+        <tr><td><code>tests/manager-table.test.js</code></td><td class="num">18</td><td class="num">107</td></tr>
+        <tr><td><code>tests/manager-utilities.test.js</code></td><td class="num">17</td><td class="num">94</td></tr>
+        <tr><td><code>tests/manager.test.js</code></td><td class="num">36</td><td class="num">223</td></tr>
+        <tr><td><code>tests/manifest-commands-meta.test.js</code></td><td class="num">20</td><td class="num">149</td></tr>
+        <tr><td><code>tests/manifest-extended.test.js</code></td><td class="num">19</td><td class="num">106</td></tr>
+        <tr><td><code>tests/manifest-icons-commands.test.js</code></td><td class="num">14</td><td class="num">97</td></tr>
+        <tr><td><code>tests/manifest-permissions-more.test.js</code></td><td class="num">15</td><td class="num">83</td></tr>
+        <tr><td><code>tests/match-pattern-flow.test.js</code></td><td class="num">10</td><td class="num">124</td></tr>
+        <tr><td><code>tests/match-pattern-unit.test.js</code></td><td class="num">15</td><td class="num">84</td></tr>
+        <tr><td><code>tests/matchPatternToRegex-schemes.test.js</code></td><td class="num">15</td><td class="num">111</td></tr>
+        <tr><td><code>tests/modal-built.test.js</code></td><td class="num">22</td><td class="num">127</td></tr>
+        <tr><td><code>tests/modal-close-teardown.test.js</code></td><td class="num">14</td><td class="num">81</td></tr>
+        <tr><td><code>tests/modal-handle-delete.test.js</code></td><td class="num">12</td><td class="num">73</td></tr>
+        <tr><td><code>tests/modal-hold.test.js</code></td><td class="num">23</td><td class="num">138</td></tr>
+        <tr><td><code>tests/modal-html-a11y.test.js</code></td><td class="num">12</td><td class="num">73</td></tr>
+        <tr><td><code>tests/modal-message.test.js</code></td><td class="num">16</td><td class="num">86</td></tr>
+        <tr><td><code>tests/modal-refresh-chain.test.js</code></td><td class="num">14</td><td class="num">78</td></tr>
+        <tr><td><code>tests/modal-template-css.test.js</code></td><td class="num">16</td><td class="num">86</td></tr>
+        <tr><td><code>tests/modal-template.test.js</code></td><td class="num">37</td><td class="num">204</td></tr>
+        <tr><td><code>tests/modal-wire-scene.test.js</code></td><td class="num">11</td><td class="num">66</td></tr>
+        <tr><td><code>tests/modal-wire.test.js</code></td><td class="num">20</td><td class="num">109</td></tr>
+        <tr><td><code>tests/modal.test.js</code></td><td class="num">27</td><td class="num">299</td></tr>
+        <tr><td><code>tests/modheader.test.js</code></td><td class="num">13</td><td class="num">145</td></tr>
+        <tr><td><code>tests/mru-invariants.test.js</code></td><td class="num">12</td><td class="num">123</td></tr>
+        <tr><td><code>tests/mru-realistic-session.test.js</code></td><td class="num">11</td><td class="num">113</td></tr>
+        <tr><td><code>tests/mru-session.test.js</code></td><td class="num">16</td><td class="num">105</td></tr>
+        <tr><td><code>tests/mru-step-large-delta.test.js</code></td><td class="num">7</td><td class="num">56</td></tr>
+        <tr><td><code>tests/mru-step-unit.test.js</code></td><td class="num">14</td><td class="num">70</td></tr>
+        <tr><td><code>tests/mru-switch-step.test.js</code></td><td class="num">14</td><td class="num">96</td></tr>
+        <tr><td><code>tests/mru-wire.test.js</code></td><td class="num">18</td><td class="num">120</td></tr>
+        <tr><td><code>tests/nav-fallback.test.js</code></td><td class="num">20</td><td class="num">103</td></tr>
+        <tr><td><code>tests/package-description-drift.test.js</code></td><td class="num">2</td><td class="num">39</td></tr>
+        <tr><td><code>tests/parity-extended.test.js</code></td><td class="num">16</td><td class="num">115</td></tr>
+        <tr><td><code>tests/parity.test.js</code></td><td class="num">17</td><td class="num">127</td></tr>
+        <tr><td><code>tests/parse-metadata-more.test.js</code></td><td class="num">15</td><td class="num">114</td></tr>
+        <tr><td><code>tests/parseMetadata-duplicate-keys.test.js</code></td><td class="num">13</td><td class="num">131</td></tr>
+        <tr><td><code>tests/pass-entry-format.test.js</code></td><td class="num">50</td><td class="num">409</td></tr>
+        <tr><td><code>tests/pass-integration.test.js</code></td><td class="num">35</td><td class="num">355</td></tr>
+        <tr><td><code>tests/popup-activate.test.js</code></td><td class="num">18</td><td class="num">103</td></tr>
+        <tr><td><code>tests/popup-css.test.js</code></td><td class="num">18</td><td class="num">105</td></tr>
+        <tr><td><code>tests/popup-escape-html.test.js</code></td><td class="num">6</td><td class="num">64</td></tr>
+        <tr><td><code>tests/popup-history-delete-key.test.js</code></td><td class="num">12</td><td class="num">69</td></tr>
+        <tr><td><code>tests/popup-html.test.js</code></td><td class="num">13</td><td class="num">77</td></tr>
+        <tr><td><code>tests/popup-interaction.test.js</code></td><td class="num">18</td><td class="num">100</td></tr>
+        <tr><td><code>tests/popup-keys.test.js</code></td><td class="num">21</td><td class="num">122</td></tr>
+        <tr><td><code>tests/popup-lifecycle.test.js</code></td><td class="num">15</td><td class="num">93</td></tr>
+        <tr><td><code>tests/popup-list.test.js</code></td><td class="num">18</td><td class="num">106</td></tr>
+        <tr><td><code>tests/popup-minimap-render.test.js</code></td><td class="num">14</td><td class="num">77</td></tr>
+        <tr><td><code>tests/popup-minimap.test.js</code></td><td class="num">15</td><td class="num">86</td></tr>
+        <tr><td><code>tests/popup-refresh-first.test.js</code></td><td class="num">14</td><td class="num">82</td></tr>
+        <tr><td><code>tests/popup-render-cats-more.test.js</code></td><td class="num">12</td><td class="num">71</td></tr>
+        <tr><td><code>tests/popup-render-list-more.test.js</code></td><td class="num">18</td><td class="num">109</td></tr>
+        <tr><td><code>tests/popup-render.test.js</code></td><td class="num">21</td><td class="num">111</td></tr>
+        <tr><td><code>tests/popup-scene-form-more.test.js</code></td><td class="num">11</td><td class="num">62</td></tr>
+        <tr><td><code>tests/popup-time-fmt-behavior.test.js</code></td><td class="num">3</td><td class="num">52</td></tr>
+        <tr><td><code>tests/popup-time-static.test.js</code></td><td class="num">12</td><td class="num">75</td></tr>
+        <tr><td><code>tests/popup-tree-kill.test.js</code></td><td class="num">10</td><td class="num">64</td></tr>
+        <tr><td><code>tests/popup-ui.test.js</code></td><td class="num">28</td><td class="num">157</td></tr>
+        <tr><td><code>tests/popup.test.js</code></td><td class="num">20</td><td class="num">123</td></tr>
+        <tr><td><code>tests/processes-api-detect.test.js</code></td><td class="num">3</td><td class="num">31</td></tr>
+        <tr><td><code>tests/processes-handlers.test.js</code></td><td class="num">6</td><td class="num">68</td></tr>
+        <tr><td><code>tests/processes.test.js</code></td><td class="num">4</td><td class="num">41</td></tr>
+        <tr><td><code>tests/protocol-extended.test.js</code></td><td class="num">18</td><td class="num">116</td></tr>
+        <tr><td><code>tests/protocol.test.js</code></td><td class="num">7</td><td class="num">89</td></tr>
+        <tr><td><code>tests/quality.test.js</code></td><td class="num">17</td><td class="num">356</td></tr>
+        <tr><td><code>tests/reader-mode-css.test.js</code></td><td class="num">15</td><td class="num">153</td></tr>
+        <tr><td><code>tests/readme.test.js</code></td><td class="num">11</td><td class="num">98</td></tr>
+        <tr><td><code>tests/report-html.test.js</code></td><td class="num">27</td><td class="num">187</td></tr>
+        <tr><td><code>tests/resolve-boundary.test.js</code></td><td class="num">16</td><td class="num">85</td></tr>
+        <tr><td><code>tests/scene-crud-composition.test.js</code></td><td class="num">11</td><td class="num">124</td></tr>
+        <tr><td><code>tests/scene-restore-open.test.js</code></td><td class="num">12</td><td class="num">75</td></tr>
+        <tr><td><code>tests/scenes-handlers.test.js</code></td><td class="num">18</td><td class="num">116</td></tr>
+        <tr><td><code>tests/scenes-restore.test.js</code></td><td class="num">21</td><td class="num">140</td></tr>
+        <tr><td><code>tests/screenshot.test.js</code></td><td class="num">15</td><td class="num">179</td></tr>
+        <tr><td><code>tests/scripts-save.test.js</code></td><td class="num">22</td><td class="num">136</td></tr>
+        <tr><td><code>tests/scripts-storage.test.js</code></td><td class="num">16</td><td class="num">103</td></tr>
+        <tr><td><code>tests/scripts-toggle-storage.test.js</code></td><td class="num">13</td><td class="num">83</td></tr>
+        <tr><td><code>tests/sessions-restore.test.js</code></td><td class="num">14</td><td class="num">95</td></tr>
+        <tr><td><code>tests/single-tab-ops.test.js</code></td><td class="num">19</td><td class="num">105</td></tr>
+        <tr><td><code>tests/static.test.js</code></td><td class="num">41</td><td class="num">562</td></tr>
+        <tr><td><code>tests/stress-memory-scale.test.js</code></td><td class="num">11</td><td class="num">172</td></tr>
+        <tr><td><code>tests/stress-pathological-fzf.test.js</code></td><td class="num">15</td><td class="num">139</td></tr>
+        <tr><td><code>tests/stress-timing-budgets.test.js</code></td><td class="num">11</td><td class="num">167</td></tr>
+        <tr><td><code>tests/sync-failure-paths.test.js</code></td><td class="num">14</td><td class="num">81</td></tr>
+        <tr><td><code>tests/sync-register.test.js</code></td><td class="num">22</td><td class="num">134</td></tr>
+        <tr><td><code>tests/sync.test.js</code></td><td class="num">30</td><td class="num">189</td></tr>
+        <tr><td><code>tests/tab-batch-extended.test.js</code></td><td class="num">16</td><td class="num">102</td></tr>
+        <tr><td><code>tests/tab-ops.test.js</code></td><td class="num">29</td><td class="num">175</td></tr>
+        <tr><td><code>tests/tabs-mru-listeners.test.js</code></td><td class="num">12</td><td class="num">71</td></tr>
+        <tr><td><code>tests/theme-extended.test.js</code></td><td class="num">14</td><td class="num">85</td></tr>
+        <tr><td><code>tests/theme-images.test.js</code></td><td class="num">14</td><td class="num">80</td></tr>
+        <tr><td><code>tests/theme.test.js</code></td><td class="num">12</td><td class="num">167</td></tr>
+        <tr><td><code>tests/totp.test.js</code></td><td class="num">16</td><td class="num">185</td></tr>
+        <tr><td><code>tests/ua-presets.test.js</code></td><td class="num">12</td><td class="num">99</td></tr>
+        <tr><td><code>tests/userscript-edge.test.js</code></td><td class="num">16</td><td class="num">101</td></tr>
+        <tr><td><code>tests/userscript-id-edge.test.js</code></td><td class="num">15</td><td class="num">86</td></tr>
+        <tr><td><code>tests/userscript-malformed-r4.test.js</code></td><td class="num">8</td><td class="num">94</td></tr>
+        <tr><td><code>tests/userscript-more.test.js</code></td><td class="num">16</td><td class="num">112</td></tr>
+        <tr><td><code>tests/userscript-parse-edge.test.js</code></td><td class="num">12</td><td class="num">116</td></tr>
+        <tr><td><code>tests/userscript-real-world.test.js</code></td><td class="num">14</td><td class="num">215</td></tr>
+        <tr><td><code>tests/userscript-regex-more.test.js</code></td><td class="num">18</td><td class="num">107</td></tr>
+        <tr><td><code>tests/userscript-roundtrip.test.js</code></td><td class="num">12</td><td class="num">144</td></tr>
+        <tr><td><code>tests/userscript.test.js</code></td><td class="num">37</td><td class="num">369</td></tr>
+        <tr><td><code>tests/util-buildtree-edge.test.js</code></td><td class="num">11</td><td class="num">135</td></tr>
+        <tr><td><code>tests/util-flatten-collapsed-shapes.test.js</code></td><td class="num">11</td><td class="num">86</td></tr>
+        <tr><td><code>tests/util-frecency-more.test.js</code></td><td class="num">14</td><td class="num">77</td></tr>
+        <tr><td><code>tests/util-large-scale.test.js</code></td><td class="num">10</td><td class="num">128</td></tr>
+        <tr><td><code>tests/util-mru-cap-edge.test.js</code></td><td class="num">10</td><td class="num">63</td></tr>
+        <tr><td><code>tests/validate-userscript-unit.test.js</code></td><td class="num">13</td><td class="num">87</td></tr>
+        <tr><td><code>tests/wappalyzer-engine.test.js</code></td><td class="num">19</td><td class="num">200</td></tr>
+        <tr><td><code>tests/xml-format.test.js</code></td><td class="num">25</td><td class="num">217</td></tr>
+        <tr><td><code>tests/zcite-extract.test.js</code></td><td class="num">5</td><td class="num">125</td></tr>
+        <tr><td><code>tests/zcite-wiring.test.js</code></td><td class="num">4</td><td class="num">31</td></tr>
+        <tr><td><code>TOTAL</code></td><td class="num"><strong>3012</strong></td><td class="num"><strong>23,464</strong></td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="tutorial-title"><span class="step-hash">?</span>KEY DESIGN DECISIONS</h2>
+    <div class="decisions">
+      <div class="card"><h3>Service worker, not background page</h3><p>MV3 requires an event-driven SW. State lives in chrome.storage.session (MRU) and chrome.storage.local (scenes, userscripts, GM bags, dl.snapshot mirror) — never in module-level globals.</p></div>
+      <div class="card"><h3>No build step</h3><p>Zero npm dependencies at runtime. No bundler, no transpiler. Pure ES modules in the SW; popup ships as a regular extension page; modal pre-builds via scripts/build-modal.sh inlining fonts + lib/fzf.js + lib/util.js into a single content-script file.</p></div>
+      <div class="card"><h3>Native messaging host in Rust, not JS</h3><p><code>pass</code> + <code>gpg</code> can't run inside the SW (MV3 has no shell). One long-lived Rust process per Chrome session multiplexes pass + dl channels over the same length-prefixed JSON port (4-byte LE len, ≤1 MiB/msg per spec). Single install.sh writes the NM manifest for Chrome/Chromium/Brave/Edge on macOS+Linux.</p></div>
+      <div class="card"><h3>Vendored Rust HTTP client, not aria2</h3><p>ureq + rustls compiled into the host gives portable HTTP/HTTPS with Range support — no <code>aria2</code> or curl binary on PATH. Pure-Rust TLS works on macOS aarch64 + Linux x86_64/aarch64 with no system OpenSSL dependency. Future-proof against OS TLS API churn.</p></div>
+      <div class="card"><h3>Segmented download via Range, file pre-allocated</h3><p>HEAD probe + 6-way parallel <code>Range</code> GETs. Destination file pre-allocated to total size via <code>set_len</code> so segment threads never collide on disk writes. <code>downloaded_in_seg</code> counter tracks per-segment progress so a mid-stream connection drop resumes via Range from the correct offset rather than restarting the segment.</p></div>
+      <div class="card"><h3>Cookie + UA forwarded for logged-in URLs</h3><p>chrome.cookies.getAll(url) → Cookie header on every HEAD + GET. Without this, downloads behind a login (paywalls, GitHub private releases, session-piggybacked S3 URLs) silently 401 / 403. UA forwarded too so servers that key on UA (GitHub release filtering, browser-detection paywalls) behave identically to a regular browser download.</p></div>
+      <div class="card"><h3>Clipboard auto-clear matches &lt;code&gt;pass -c&lt;/code&gt;</h3><p>45 s setTimeout on copy. Fail-open: if the SW dies before the timer fires the clipboard stays, which is the conservative direction (worst case the user sees their password longer; never accidentally clobbers a later copy they made).</p></div>
+      <div class="card"><h3>fzf scorer ported from audio-haxor</h3><p>Same constants — boundary=9, camel=7, gap-start=-3, match=16. Visual parity (<mark class="fzf-hl">) across MenkeTechnologies' tools.</p></div>
+      <div class="card"><h3>Closed shadow DOM for the modal</h3><p>Host-page CSS can never leak in. Fonts inlined as base64 data: URIs so strict host-page font-src CSP can't block them.</p></div>
+      <div class="card"><h3>Window-capture keydown for the modal</h3><p>window.addEventListener("keydown", h, true) + stopImmediatePropagation beats Vimium / cVim / any other extension that listens on document.</p></div>
+      <div class="card"><h3>Frecency for History</h3><p>visitCount + 2*typedCount over hoursAgo+2. Typed visits weigh 2x (deliberate). Linear decay: ~57x weight to 1h-ago vs 1w-ago.</p></div>
+      <div class="card"><h3>Default-key ceiling = 4</h3><p>Chrome MV3 hard cap. Currently 4 used (Alt+T _execute_action, Cmd+E switch-previous-tab, Cmd+Y open-history, Cmd+Shift+L pass-fill). Everything else binds at chrome://extensions/shortcuts.</p></div>
+      <div class="card"><h3>Pure helpers in lib/util.js</h3><p>Zero chrome.* refs so they unit-test in plain Node and so they can also be inlined into the content-script modal via UTIL_INLINE_START/END markers + scripts/build-modal.mjs.</p></div>
+      <div class="card"><h3>Pure helpers in zpwrchrome-host/src/extensions/</h3><p>Filename sanitization, unique_dest_path collision handling, subseq search scorer, OTP otpauth extractor — all <code>fn</code>s with no I/O. cargo test exercises them directly. Integration tests stand up a std::net HTTP/1.1 fixture with Range support to drive the detached worker process end-to-end, with cookie-gate + retry-recovery + cancel paths.</p></div>
+    </div>
+
+  </main>
+
+    <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      ZPWRCHROME v0.22.17 &middot; 54 COMMANDS &middot; 3012 TESTS &middot; 7,428 JS LINES &middot; MENKETECHNOLOGIES &middot; <a href="https://github.com/MenkeTechnologies/zpwrchrome" style="color:var(--cyan);text-decoration:none;">github.com/MenkeTechnologies/zpwrchrome</a> &middot; regenerate via <code>scripts/gen.sh</code>
+    </footer>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const btnTheme = document.getElementById('btnTheme');
+    const btnCrt = document.getElementById('btnCrt');
+    const btnNeon = document.getElementById('btnNeon');
+    const crtH = document.getElementById('crtH');
+    const crtV = document.getElementById('crtV');
+    btnTheme?.addEventListener('click', () => {
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+    btnCrt?.addEventListener('click', () => {
+      btnCrt.classList.toggle('active');
+      const on = btnCrt.classList.contains('active');
+      if (crtH) crtH.style.display = on ? '' : 'none';
+      if (crtV) crtV.style.display = on ? '' : 'none';
+    });
+    btnNeon?.addEventListener('click', () => {
+      btnNeon.classList.toggle('active');
+      document.querySelector('.app')?.classList.toggle('neon-off');
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => { requestAnimationFrame(() => { bar.style.width = w; }); });
+      });
+    });
+  </script>
+</body>
+</html>
+

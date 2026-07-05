@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-fleet — engineering report. Session/playbook/recipe/fanout boundaries, the pure-data recipe contract, headless-CI test policy, and why parallel expect is a package, not core.">
+  <title>stryke-fleet — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-val.yellow { color: var(--yellow); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-FLEET &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Four sublibs &middot; transcripted sessions &middot; declarative playbooks &middot; recipe corpus &middot; parallel fan-out &middot; pure stryke (no <code>[ffi]</code>, no cdylib)
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-fleet</strong> is the orchestration layer for interactive automation &mdash; the spawn/expect/send discipline Tcl/Expect defined in 1990, rebuilt on stryke's native PTY builtins and thread pool, with the one capability that lineage never grew: running N sessions in parallel from a single declarative playbook. Four sublibraries split the problem along its natural seams: <code>Session</code> (one transcripted PTY), <code>Playbook</code> (ordered step lists with branch tables and failure semantics), <code>Recipes</code> (login chains and prompt dances as pure data), <code>Fanout</code> (one playbook &times; N targets on <code>pmap</code>).</p>
+      <p class="tutorial-subtitle">The package is intentionally thin: every blocking, polling, regex-matching, PTY-allocating concern lives in strykelang core (<code>perl_pty.rs</code>), where it's threaded, tested, and fast. What lives here is <em>policy</em> &mdash; what a step is, what a failed run returns, what an ssh login looks like &mdash; the part that should version independently of the language.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">sublibraries</div></div>
+        <div class="stat-card"><div class="stat-val cyan">95</div><div class="stat-label">public fns</div></div>
+        <div class="stat-card"><div class="stat-val green">0</div><div class="stat-label">cdylib / helper binaries</div></div>
+        <div class="stat-card"><div class="stat-val yellow">330</div><div class="stat-label">assertions in t/</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">runnable examples</div></div>
+        <div class="stat-card"><div class="stat-val cyan">22</div><div class="stat-label">CI gate scripts</div></div>
+        <div class="stat-card"><div class="stat-val green">24</div><div class="stat-label">Session fns</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Playbook fns</div></div>
+        <div class="stat-card"><div class="stat-val green">49</div><div class="stat-label">Recipes fns</div></div>
+        <div class="stat-card"><div class="stat-val green">18</div><div class="stat-label">Fanout fns</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SUBLIBRARY BOUNDARIES</h2>
+      <p class="tutorial-subtitle">Each sublibrary owns one layer of the stack. Nothing reaches around its neighbor: Fanout only calls Playbook, Playbook only calls Session, Session only calls the <code>pty_*</code> builtins.</p>
+      <table class="arch-table">
+        <thead><tr><th>Sublib</th><th>Owns</th><th>Doesn't own</th></tr></thead>
+        <tbody>
+          <tr><td><code>Fleet::Session</code></td><td>One PTY with a memory: every <code>send</code>, <code>match</code>, <code>timeout</code>, and <code>close</code> is appended to an ordered transcript, so a failed run hands back the full interaction log instead of a stuck process. Transcript readers (<code>events</code>, <code>matches</code>, <code>last_match</code>, <code>timed_out</code>, <code>transcript_text</code>) and the newline-guaranteeing <code>send_line</code> round out the surface.</td><td>Blocking, polling, regex compilation, PTY allocation &mdash; all in the <code>pty_*</code> builtins. Session adds bookkeeping, nothing else.</td></tr>
+          <tr><td><code>Fleet::Playbook</code></td><td>Step semantics: ordered <code>+{expect, send, branches, timeout, optional, send_matched, retries, retry_send, delay}</code> hashrefs; <code>validate</code> rejects malformed steps before anything spawns; first non-optional timeout fails the run with the step's name; <code>dry_run</code> previews the step list without spawning.</td><td>Session lifecycle when handed an already-open session (caller closes); parallelism (Fanout's job).</td></tr>
+          <tr><td><code>Fleet::Recipes</code></td><td>The corpus (48 generators + <code>names</code>): logins (<code>ssh_login</code>, <code>ssh_copy_id</code>, <code>telnet_login</code>, <code>ftp_login</code>, <code>docker_login</code>, <code>npm_login</code>, <code>heroku_login</code>, <code>vault_login</code>, <code>gcloud_auth</code>, <code>op_signin</code>, <code>bw_unlock</code>), copies (<code>scp</code>, <code>sftp</code>, <code>rsync</code>), privilege (<code>sudo</code>, <code>doas</code>, <code>su</code>, <code>passwd_change</code>, <code>cisco_enable</code>), DB shells (<code>psql</code>, <code>pg_dump</code>, <code>mysql</code>, <code>mariadb</code>, <code>mongo</code>, <code>redis_cli</code>, <code>influx</code>, <code>cqlsh</code>, <code>clickhouse_client</code>, <code>sqlplus</code>), crypto/secrets (<code>gpg_decrypt</code>, <code>openssl_pem</code>, <code>ssh_keygen</code>, <code>ssh_add</code>, <code>age</code>, <code>cryptsetup</code>, <code>keytool</code>, <code>htpasswd</code>, <code>ansible_vault</code>, <code>pass_insert</code>, <code>unzip_encrypted</code>), backups (<code>restic</code>, <code>borg</code>), installers (<code>yes_to_all</code>), VCS (<code>git_clone</code>), auth/dir (<code>kinit</code>, <code>ldapsearch</code>, <code>aws_configure</code>), file shares (<code>smbclient</code>) as step-list <em>generators</em>. Pure data &mdash; nothing spawns, so every recipe unit-tests without a network.</td><td>Execution. A recipe that calls <code>pty_spawn</code> is a bug; recipes return arrayrefs and stop.</td></tr>
+          <tr><td><code>Fleet::Fanout</code></td><td>One playbook &times; N targets: one PTY per <code>pmap</code> thread, results in target order. Dispatch: <code>run</code> (all at once), <code>batch</code> (bounded concurrency, K at a time), <code>ssh</code> (host-list convenience). Triage: <code>partition</code> (ok/failed split), <code>count</code>/<code>all_ok</code> (tallies and the boolean fleet gate), <code>summarize</code> (counts + error lines). Slicing: <code>failed_cmds</code>/<code>ok_cmds</code> (target lists), <code>find</code> (first result by cmd pattern), <code>pluck</code>/<code>pluck_ok</code> (project one value per result), <code>group_by</code>/<code>group_by_error</code>/<code>group_by_output</code> (bucket by a key fn, by error, by output for config-drift), <code>grep_transcript</code> (which hosts printed X). Recovery: <code>retry_failed</code> (one re-run of the failures), <code>retry_until</code> (re-run each failure up to N times).</td><td>Non-interactive remote compute &mdash; that's core's <code>cluster([...])</code> + <code>pmap_on</code> persistent SSH worker pools. Fleet is for sessions that prompt back.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>PURE-DATA RECIPE CONTRACT</h2>
+      <p class="tutorial-subtitle">Recipes return playbook arrayrefs and never spawn. This single constraint buys three properties:</p>
+      <table class="arch-table">
+        <thead><tr><th>Property</th><th>Consequence</th></tr></thead>
+        <tbody>
+          <tr><td>Composable</td><td>Splice any recipe into a larger playbook with <code>@{ Fleet::Recipes::ssh_login(...) }</code>, then keep appending steps. Recipes chain: ssh_login + sudo + psql is one flat step list.</td></tr>
+          <tr><td>Testable without targets</td><td><code>t/test_fleet.stk</code> asserts recipe <em>structure</em> (step counts, send payloads, validity under <code>Playbook::validate</code>) with zero hosts, zero containers, zero network. The corpus can grow recipes for hardware nobody in CI owns.</td></tr>
+          <tr><td>Auditable</td><td>A recipe is printable. <code>to_json</code> a step list to see exactly what would be sent before pointing it at a production switch.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>WHY A PACKAGE, NOT CORE</h2>
+      <p>The split follows the mechanism/policy line:</p>
+      <ul>
+        <li><strong>Core owns mechanism.</strong> <code>pty_spawn</code> / <code>pty_expect</code> / <code>pty_expect_table</code> are Rust (<code>perl_pty.rs</code>): PTY allocation, non-blocking reads, byte-regex matching against a live buffer, timeout arithmetic. Performance-critical, platform-touching, rarely changing.</li>
+        <li><strong>The package owns policy.</strong> Step shapes, failure semantics, transcript format, the recipe corpus. These evolve with usage &mdash; a new step key or recipe ships as a package version bump, not a language release.</li>
+        <li><strong>The corpus compounds.</strong> Recipes are where the long tail lives (network gear, vendor installers, database CLIs). A package can absorb contributions at corpus speed; a language can't and shouldn't.</li>
+      </ul>
+      <p>Pure stryke, deliberately: the install is a tarball of five <code>.stk</code> files. Same source as runtime &mdash; debug a playbook by reading the installed file. No per-triple artifacts, no FFI unwind, nothing to build.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>TEST SURFACE</h2>
+      <p class="tutorial-subtitle"><code>t/test_fleet.stk</code> uses stryke's native assertions (<code>assert_eq</code>, <code>assert_ok</code>, <code>assert_match</code>, <code>assert_dies</code>) and exits TAP-style via <code>test_run</code>. Headless-CI safe by contract &mdash; <code>tests/repo-contract.sh</code> greps the test file and fails CI if it ever spawns ssh.</p>
+      <table class="arch-table">
+        <thead><tr><th>Area</th><th>Assertion families covered</th></tr></thead>
+        <tbody>
+          <tr><td>Session</td><td>expect/send round trip against local <code>cat</code>; liveness; transcript ordering (send &rarr; match &rarr; close); branch table picks the matching arm and runs its action coderef; <code>send_line</code> newline guarantee, <code>events</code>/<code>matches</code>/<code>last_match</code> transcript reads, <code>timed_out</code> after a forced timeout, <code>transcript_text</code> newline-escaped dump.</td></tr>
+          <tr><td>Playbook</td><td><code>validate</code> rejects non-arrayrefs, actionless steps, scalar branches, negative retries/delay; ok path runs all steps and records cmd + transcript; non-optional timeout fails with step name and index; <code>optional</code> timeout continues; <code>send_matched</code> echoes the branch result back; <code>retries</code> + <code>retry_send</code> nudge a timed-out expect into a match; <code>delay</code> paces a step (ms clock); <code>dry_run</code> previews without spawning.</td></tr>
+          <tr><td>Recipes</td><td>Structural: step counts with/without passwords, password/passphrase payload shape, ordering (ftp name-then-password, npm email last, openssl verify re-send), required-opt dies (<code>sudo</code>, <code>doas</code>, <code>cisco_enable</code>, <code>scp</code>, <code>gpg_decrypt</code>, <code>ftp_login</code>, <code>openssl_pem</code>, <code>npm_login</code>), every recipe validates under <code>Playbook::validate</code>, roster pinned at 48 via <code>names</code>.</td></tr>
+          <tr><td>Fanout</td><td>Three local sessions in parallel, results in target order, all ok; failure partition (both timeout &rarr; both in <code>failed</code>); scalar cmds rejected; <code>batch</code> bounded concurrency returns the flat list in order; <code>count</code>/<code>all_ok</code> tallies and the empty-set vacuous-pass; <code>summarize</code> counts + error-line format; <code>failed_cmds</code>/<code>ok_cmds</code> target lists; <code>find</code> by cmd pattern; <code>pluck</code>/<code>pluck_ok</code> projections; <code>group_by</code>/<code>group_by_error</code>/<code>group_by_output</code> bucketing; <code>grep_transcript</code> output search; <code>retry_failed</code> re-runs only failures, tags them, leaves ok entries untouched; <code>retry_until</code> per-target attempt cap with <code>attempts</code> tag.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>CI GATES</h2>
+      <p>22 shell gate scripts in <code>tests/</code> are wired into <code>.github/workflows/ci.yml</code>, plus a stryke job that installs the latest strykelang release binary, syntax-checks every <code>.stk</code> file, installs the package into the global store, and runs <code>s test t/</code>. Every gate is reproducible locally with <code>bash tests/&lt;gate&gt;.sh</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Bucket</th><th>Gates</th></tr></thead>
+        <tbody>
+          <tr><td>repo-contract</td><td>Pure-stryke (no <code>Cargo.toml</code>, no <code>[ffi]</code>). lib/ has exactly 5 files. Every sublib declares <code>package Fleet::&lt;Name&gt;</code>. Examples shebang. <code>bin/fleet.stk</code> shebang. Headless guard: t/ must not spawn ssh. Makefile has test/install/clean. LICENSE is MIT.</td></tr>
+          <tr><td>docs gates</td><td><code>&lt;h1&gt;</code> present, <code>&lt;body&gt;</code> tag, closing <code>&lt;/html&gt;</code>, no deprecated tags, no inline event handlers, no placeholder hrefs, no plaintext <code>http://</code>, <code>target="_blank"</code> always paired with <code>rel="noopener noreferrer"</code>.</td></tr>
+          <tr><td>README gates</td><td>At least one shields.io badge, at least one h2 section, at least one https link, ends with final newline.</td></tr>
+          <tr><td>polish gates</td><td>Workflow files have no tabs (YAML), every tests/*.sh has +x and a bash shebang, man pages (if any) have synopsis section + final newline + no trailing whitespace.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>EXTENDING</h2>
+      <p>Adding a recipe means three edits:</p>
+      <ol>
+        <li>Add the <code>fn Fleet::Recipes::name</code> generator to <code>lib/Recipes.stk</code> with a leading <code>##</code> docstring, returning a step arrayref. Add it to <code>Fleet::Recipes::names</code>.</li>
+        <li>Assert its structure in <code>t/test_fleet.stk</code>: step count, payload shape, <code>Playbook::validate</code> acceptance, required-opt dies. No live target needed &mdash; recipes are data.</li>
+        <li>Mention it in the README sublib table and <code>docs/index.html</code>.</li>
+      </ol>
+      <p>Adding a step key (a new behavior in the runner) is a <code>Playbook::run</code> change: implement, document in the lib header, and pin the behavior with both an ok-path and a failure-path assertion.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-fleet</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-fleet/issues" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-fleet/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

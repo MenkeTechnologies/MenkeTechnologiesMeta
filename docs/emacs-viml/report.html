@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="emacs-viml — engineering report. vimlrs-mode font-lock for VimL statement keywords, ex commands, scope-namespaced and special v: variables, built-in functions and function definitions, the command-position quote-comment split, block-keyword indentation, run via vimlrs, eldoc + completion, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
+  <title>emacs-viml — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+    .stat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.65rem 0.85rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .stat-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-val.accent { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 0.2rem; }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12px; }
+    .parity-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// EMACS-VIML &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/emacs-viml" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Emacs major mode for VimL (vimlrs) &middot; font-lock for keywords, ex commands, scope/special vars, builtins, function defs &middot; run via vimlrs &middot; LSP via vimlrs --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>emacs-viml</strong> is the Emacs major mode for <strong>VimL (Vimscript)</strong>, targeting the <strong>vimlrs</strong> standalone interpreter — a Rust port of Neovim's eval engine on fusevm. <code>vimlrs-mode</code> derives from <code>prog-mode</code> and provides font-lock, a syntax table, block-keyword-aware indentation, filetype detection, a buffer runner (<code>vimlrs FILE</code> via <code>compile</code>), eldoc + completion for builtin functions, and an LSP client that launches <code>vimlrs --lsp</code>.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is VimL's actual surface as the interpreter accepts it &mdash; statement keywords, ex commands, scope-namespaced variables, special <code>v:</code> variables, built-in functions, and function definitions. Because <code>vimlrs</code> ports a fixed finite builtin set (unlike the sibling <strong>stryke</strong> with its ~10,450 generated builtins), the lists are plain <code>regexp-opt</code> alternations in <code>vimlrs-mode.el</code>; no generated hash-table stdlib is required. The mode is named <code>vimlrs-mode</code> so it never clashes with Emacs' built-in <code>vimrc-mode</code>.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">94</div><div class="stat-label">Builtin functions</div></div>
+        <div class="stat-card"><div class="stat-val accent">34</div><div class="stat-label">Statement keywords</div></div>
+        <div class="stat-card"><div class="stat-val">29</div><div class="stat-label">Ex commands</div></div>
+        <div class="stat-card"><div class="stat-val accent">18</div><div class="stat-label">Special v: variables</div></div>
+        <div class="stat-card"><div class="stat-val green">2</div><div class="stat-label">LSP clients (eglot + lsp-mode)</div></div>
+        <div class="stat-card"><div class="stat-val accent">3</div><div class="stat-label">Shebangs (vim / nvim / vimlrs)</div></div>
+        <div class="stat-card"><div class="stat-val">19</div><div class="stat-label">Face assertions</div></div>
+        <div class="stat-card"><div class="stat-val">27.1</div><div class="stat-label">Min Emacs version</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>WHY NO GENERATED STDLIB</h2>
+      <p class="tutorial-subtitle">The sibling <code>emacs-stryke</code> generates a 170&nbsp;KB <code>stryke-stdlib.el</code> of hash tables because a single <code>regexp-opt</code> over stryke's ~10,450 builtins overflows Emacs' regexp compiler (<code>invalid-regexp "Regular expression too big"</code>). VimL as ported by <code>vimlrs</code> has no such problem: its surface is fixed &mdash; 34 statement keywords, 29 ex commands, 18 special <code>v:</code> variables, and 94 built-in functions &mdash; comfortably within the regexp-size limit. So <code>vimlrs-mode.el</code> uses plain <code>regexp-opt</code> alternations, and <code>vimlrs-stdlib.el</code> holds only the hand-authored builtin-function signatures used for eldoc and <code>completion-at-point</code>. The command-position <code>"</code> comment (which the in-expression double-quoted string must not be mistaken for) is resolved with a <code>syntax-propertize</code> rule that only fires at line start or after a <code>|</code> bar.</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td><code>vimlrs-mode.el</code></td><td>Major mode &mdash; syntax table (<code>"</code>/<code>'</code> strings, <code>:</code> in scope symbols, command-position <code>"</code> comments), font-lock keyword lists, <code>"</code>-comment <code>syntax-propertize</code>, <code>vimlrs-indent-line</code>, <code>vimlrs-run-buffer</code> (<code>C-c C-c</code>), eldoc + completion, eglot + lsp-mode registration, <code>auto-mode-alist</code> + <code>interpreter-mode-alist</code>.</td></tr>
+          <tr><td><code>vimlrs-stdlib.el</code></td><td>Hand-authored builtin-function signatures (the subset of Vim's <code>funcs.c</code> that vimlrs ports) for eldoc and completion. Byte-compiles cleanly; loads instantly.</td></tr>
+          <tr><td><code>scripts/face-test.el</code></td><td>Fontify a sample buffer and assert the face at each probe token.</td></tr>
+          <tr><td><code>vimlrs --lsp</code></td><td>Launched with <strong>only</strong> <code>--lsp</code>; an appended <code>--stdio</code> is rejected by the binary, so neither client adds one.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">CI byte-compiles the package with <code>byte-compile-error-on-warn</code> (warnings are errors) and runs the batch face test. Each probe asserts the actual <code>face</code> text-property after <code>font-lock-ensure</code>.</p>
+      <table class="parity-table">
+        <thead><tr><th>Sample token</th><th>Asserted face</th></tr></thead>
+        <tbody>
+          <tr><td><code>set</code> / <code>let</code> / <code>function</code> / <code>for</code> / <code>if</code> / <code>return</code> / <code>echo</code> / <code>call</code> / <code>augroup</code> / <code>autocmd</code></td><td class="ok">font-lock-keyword-face</td></tr>
+          <tr><td><code>g:plugin_loaded</code> / <code>s:total</code></td><td class="ok">vimlrs-scope-var-face</td></tr>
+          <tr><td><code>v:true</code> / <code>v:count</code></td><td class="ok">vimlrs-special-var-face</td></tr>
+          <tr><td><code>has_key</code></td><td class="ok">font-lock-builtin-face</td></tr>
+          <tr><td><code>Summarize</code> (user function name)</td><td class="ok">font-lock-function-name-face</td></tr>
+          <tr><td>single-quoted string</td><td class="ok">font-lock-string-face</td></tr>
+          <tr><td>command-position <code>"</code> comment</td><td class="ok">font-lock-comment-face</td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

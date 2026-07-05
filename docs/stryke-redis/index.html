@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-redis — REDIS / VALKEY CLIENT FOR STRYKE // KV + LISTS + SETS + HASHES + ZSETS + PUB/SUB + SCAN. Redis / Valkey client for stryke. KV, lists, sets, hashes, sorted sets, pub/sub publish, scan, server admin. Opt-in package — ships as a Rust cdylib that stryke dlopens in-process on first `use Redis`.">
+  <title>stryke-redis — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .tutorial-section h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 1.1rem 0 0.4rem;
+    }
+    .ref-note {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-REDIS &mdash; REDIS / VALKEY CLIENT FOR STRYKE // KV + LISTS + SETS + HASHES + ZSETS + PUB/SUB + SCAN</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_redis.{dylib,so}</code> · dlopen'd in-process on <code>use Redis</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-redis/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-REDIS</h2>
+      <p class="tutorial-subtitle"><strong>In-memory state, one pipe away.</strong> Redis / Valkey client for stryke. KV, lists, sets, hashes, sorted sets, streams, geospatial, scripting, bitmaps, HyperLogLog, pub/sub, pipeline, scan, server admin. Opt-in package &mdash; <strong>v0.19.0</strong>.</p>
+      <p class="tutorial-subtitle"><strong>184</strong> public <code>Redis::*</code> functions: <strong>166</strong> connection-backed commands (one <code>redis__*</code> FFI symbol each) plus <strong>18</strong> pure helpers that run with no round trip. Backed by the <code>redis</code> Rust crate (sync) with rustls TLS. Works against Redis, Valkey, KeyDB, and Dragonfly.</p>
+
+      <section class="tutorial-section">
+        <h2>Contents</h2>
+        <ul>
+          <li><a href="#install">Install</a></li>
+          <li><a href="#quickstart">Quick start: <code>use Redis</code></a></li>
+          <li><a href="#connection">Connection options</a></li>
+          <li><a href="#reference">API reference (full surface)</a></li>
+          <li><a href="#helpers">Pure helpers (no connection)</a></li>
+          <li><a href="#ffi">FFI layer</a></li>
+          <li><a href="#examples">Examples</a></li>
+          <li><a href="#tests">Tests &amp; dev workflow</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+          <li><a href="#whypkg">Why a package, not a builtin</a></li>
+          <li><a href="#layout">Layout</a></li>
+          <li><a href="#siblings">Sibling packages</a></li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section" id="install">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-redis
+
+# from a local checkout
+cd ~/projects/stryke-redis
+cargo build --release            # produces target/release/libstryke_redis.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/redis@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use Redis</code> &mdash; no helper-binary fork per call. Any stryke script that declares <code>use Redis</code> resolves the package automatically.</p>
+        <p><code>-g</code> installs globally with no project requirement &mdash; it means "no project needed", not a redundant store marker. <code>s pkg install</code> <em>without</em> <code>-g</code> resolves the current project's <code>stryke.toml</code> dependencies and is unrelated to installing this package itself. After install the cdylib lands in <code>~/.stryke/store/redis@&lt;version&gt;/</code>.</p>
+      </section>
+
+      <section class="tutorial-section" id="quickstart">
+        <h2>Quick start: <code>use Redis</code></h2>
+<pre>use Redis
+
+# Connection is read from $REDIS_URL, else defaults to 127.0.0.1:6379.
+$ENV{REDIS_URL} = "redis://localhost:6379/0"
+
+Redis::set "greeting", "hello from stryke"
+p Redis::get "greeting"
+
+Redis::mset { a =&gt; 1, b =&gt; 2, c =&gt; 3 }
+p Redis::mget ["a", "b", "c"]              # ("1","2","3")
+
+# TTL.
+Redis::set "session:42", "...", ex =&gt; 3600
+p Redis::ttl "session:42"
+
+# Counters.
+val $n = Redis::incr "page-views", by =&gt; 5
+
+# Lists / queues.
+Redis::lpush "events", ["a", "b", "c"]
+val @recent = Redis::lrange "events", 0, 9
+val $next   = Redis::rpop  "events"        # FIFO consumption
+
+# Sets / dedup.
+Redis::sadd "seen-users", ["alice", "bob"]
+p Redis::sismember "seen-users", "alice"   # 1
+
+# Hash = JSON-friendly objects.
+Redis::hmset "user:42", { name =&gt; "alice", role =&gt; "admin", score =&gt; 100 }
+val $u = Redis::hgetall "user:42"
+p "$u-&gt;{name} ($u-&gt;{role})"
+
+# Sorted set = leaderboard.
+Redis::zadd "leaderboard", { alice =&gt; 100, bob =&gt; 200 }
+val @top = Redis::zrange "leaderboard", 0, 9, withscores =&gt; 1, rev =&gt; 1
+
+# Pub/sub publish.
+Redis::publish "events", "new user signed up"
+
+# SCAN — non-blocking iteration.
+val @keys = Redis::scan match =&gt; "session:*", count =&gt; 100
+
+# Server.
+p to_json Redis::info section =&gt; "memory"
+p Redis::dbsize
+Redis::flushdb confirm =&gt; 1                # destructive — must pass confirm flag</pre>
+        <p>The complete surface is documented in the <a href="#reference">API reference</a> below. Source of truth: <code>lib/Redis.stk</code> in this repo.</p>
+      </section>
+
+      <section class="tutorial-section" id="connection">
+        <h2>Connection options</h2>
+        <p>Every <code>Redis::*</code> op accepts <code>%opts</code> as its final argument. When <code>%opts</code> carries no connection fields, the connection is read from <code>$REDIS_URL</code>, else it defaults to <code>127.0.0.1:6379</code>, db <code>0</code>. The cdylib caches one <code>redis::Connection</code> per <code>(url, db, tls, username, password)</code> tuple for the life of the process &mdash; back-to-back calls with the same options reuse the same TCP socket, no handshake-per-call.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>url</code></td><td><code>redis://…</code> or <code>rediss://…</code> (TLS). Takes precedence over the host/port parts.</td></tr>
+            <tr><td><code>host</code></td><td>default <code>127.0.0.1</code></td></tr>
+            <tr><td><code>port</code></td><td>default <code>6379</code></td></tr>
+            <tr><td><code>db</code></td><td>default <code>0</code></td></tr>
+            <tr><td><code>username</code></td><td>default <code>""</code> (ACL user)</td></tr>
+            <tr><td><code>password</code></td><td>default <code>""</code></td></tr>
+            <tr><td><code>tls</code></td><td><code>1</code> / <code>0</code> &mdash; force TLS without a <code>redis://</code> &rarr; <code>rediss://</code> rewrite</td></tr>
+          </tbody>
+        </table>
+<pre># inline overrides on any op
+Redis::set "rate-limit:user-42", "1",
+    url =&gt; "rediss://prod:secret@host:6380/0", ex =&gt; 60, nx =&gt; 1
+
+# compose from parts
+val %prod = ( host =&gt; "prod.example.com", port =&gt; 6380, db =&gt; 1, password =&gt; "secret", tls =&gt; 1 )
+Redis::get "foo", %prod
+
+# or set once in the environment
+$ENV{REDIS_URL} = "redis://localhost:6379/0"
+val %conn = ( url =&gt; $ENV{REDIS_URL} )
+Redis::set "k", "v", %conn</pre>
+      </section>
+
+      <section class="tutorial-section" id="reference">
+        <h2>API reference (full surface)</h2>
+        <p>All <strong>166</strong> connection-backed commands, grouped by Redis data type. Each name is a <code>Redis::&lt;name&gt;</code> function whose final argument is an optional <code>%opts</code> dict (connection fields plus per-command flags). Pure helpers that need no connection are listed <a href="#helpers">separately</a>.</p>
+
+        <h3>KV &amp; strings</h3>
+        <p><code>get</code> &middot; <code>set</code> <span class="ref-note">(opts: ex, px, nx, xx)</span> &middot; <code>del</code> &middot; <code>exists</code> &middot; <code>expire</code> &middot; <code>ttl</code> <span class="ref-note">(-2 missing, -1 no ttl)</span> &middot; <code>type</code> &middot; <code>incr</code> / <code>decr</code> <span class="ref-note">(opts: by)</span> &middot; <code>incrbyfloat</code> &middot; <code>mget</code> &middot; <code>mset</code> &middot; <code>keys</code> <span class="ref-note">(blocking)</span> &middot; <code>scan</code> <span class="ref-note">(opts: match, count, limit)</span> &middot; <code>sort</code> <span class="ref-note">(opts: by, get, alpha, desc, limit_*, store)</span> &middot; <code>getset</code> &middot; <code>getdel</code> &middot; <code>getex</code> <span class="ref-note">(opts: ex, px, persist)</span> &middot; <code>append</code> &middot; <code>strlen</code> &middot; <code>setex</code> &middot; <code>setnx</code> &middot; <code>getrange</code> &middot; <code>setrange</code></p>
+
+        <h3>Bitmaps</h3>
+        <p><code>setbit</code> &middot; <code>getbit</code> &middot; <code>bitcount</code> <span class="ref-note">(opts: start, end)</span> &middot; <code>bitop</code> <span class="ref-note">(AND|OR|XOR|NOT)</span> &middot; <code>bitpos</code> &middot; <code>lcs</code> <span class="ref-note">(longest common subsequence; opts: len)</span></p>
+
+        <h3>Lists</h3>
+        <p><code>lpush</code> / <code>rpush</code> &middot; <code>lpop</code> / <code>rpop</code> <span class="ref-note">(opts: count)</span> &middot; <code>lrange</code> &middot; <code>llen</code> &middot; <code>lindex</code> &middot; <code>lset</code> &middot; <code>linsert</code> <span class="ref-note">(opts: before)</span> &middot; <code>lrem</code> &middot; <code>ltrim</code> &middot; <code>rpoplpush</code> &middot; <code>lmove</code> <span class="ref-note">(opts: from, to)</span> &middot; <code>lpos</code> <span class="ref-note">(opts: rank, count)</span> &middot; <code>lmpop</code> <span class="ref-note">(opts: from LEFT|RIGHT, count)</span></p>
+
+        <h3>Sets</h3>
+        <p><code>sadd</code> &middot; <code>srem</code> &middot; <code>smembers</code> &middot; <code>sismember</code> &middot; <code>smismember</code> &middot; <code>scard</code> &middot; <code>spop</code> <span class="ref-note">(opts: count)</span> &middot; <code>srandmember</code> <span class="ref-note">(opts: count)</span> &middot; <code>smove</code> &middot; <code>sinter</code> / <code>sunion</code> / <code>sdiff</code> &middot; <code>sinterstore</code> / <code>sunionstore</code> / <code>sdiffstore</code> &middot; <code>sintercard</code> <span class="ref-note">(opts: limit)</span></p>
+
+        <h3>Hashes</h3>
+        <p><code>hset</code> &middot; <code>hget</code> &middot; <code>hdel</code> &middot; <code>hgetall</code> &middot; <code>hkeys</code> &middot; <code>hvals</code> &middot; <code>hmget</code> &middot; <code>hmset</code> &middot; <code>hexists</code> &middot; <code>hincrby</code> <span class="ref-note">(opts: float)</span> &middot; <code>hincrbyfloat</code> &middot; <code>hlen</code> &middot; <code>hsetnx</code> &middot; <code>hstrlen</code> &middot; <code>hrandfield</code> <span class="ref-note">(opts: count, with_values)</span></p>
+
+        <h3>Sorted sets</h3>
+        <p><code>zadd</code> &middot; <code>zrange</code> <span class="ref-note">(opts: withscores, rev)</span> &middot; <code>zrem</code> &middot; <code>zcard</code> &middot; <code>zscore</code> &middot; <code>zmscore</code> &middot; <code>zincrby</code> &middot; <code>zrank</code> <span class="ref-note">(opts: rev)</span> &middot; <code>zcount</code> <span class="ref-note">(opts: min, max)</span> &middot; <code>zrangebyscore</code> &middot; <code>zrangebylex</code> &middot; <code>zlexcount</code> &middot; <code>zpopmin</code> / <code>zpopmax</code> <span class="ref-note">(opts: count)</span> &middot; <code>zremrangebyrank</code> &middot; <code>zremrangebyscore</code> &middot; <code>zunionstore</code> / <code>zinterstore</code> / <code>zdiffstore</code> <span class="ref-note">(opts: weights, aggregate)</span> &middot; <code>zunion</code> / <code>zinter</code> / <code>zdiff</code> <span class="ref-note">(opts: with_scores)</span> &middot; <code>zrandmember</code> <span class="ref-note">(opts: count, with_scores)</span> &middot; <code>zmpop</code> <span class="ref-note">(opts: from MIN|MAX, count)</span></p>
+
+        <h3>Key management</h3>
+        <p><code>rename</code> &middot; <code>renamenx</code> &middot; <code>persist</code> &middot; <code>pexpire</code> &middot; <code>pttl</code> &middot; <code>expireat</code> &middot; <code>pexpireat</code> &middot; <code>expiretime</code> &middot; <code>randomkey</code> &middot; <code>touch</code> &middot; <code>unlink</code> <span class="ref-note">(async del)</span> &middot; <code>copy</code> <span class="ref-note">(opts: replace, destination_db)</span> &middot; <code>object_encoding</code></p>
+
+        <h3>HyperLogLog</h3>
+        <p><code>pfadd</code> &middot; <code>pfcount</code> &middot; <code>pfmerge</code></p>
+
+        <h3>Streams</h3>
+        <p><code>xadd</code> <span class="ref-note">(opts: id, default "*")</span> &middot; <code>xlen</code> &middot; <code>xrange</code> <span class="ref-note">(opts: start, end, count, rev)</span> &middot; <code>xdel</code> &middot; <code>xtrim</code> <span class="ref-note">(opts: maxlen | minid)</span> &middot; <code>xsetid</code> &middot; <code>xread</code> <span class="ref-note">(opts: count, block)</span> &middot; <code>xgroup_create</code> <span class="ref-note">(opts: id, mkstream)</span> &middot; <code>xack</code> &middot; <code>xinfo_stream</code></p>
+
+        <h3>Geospatial</h3>
+        <p><code>geoadd</code> &middot; <code>geopos</code> &middot; <code>geodist</code> <span class="ref-note">(opts: unit m/km/mi/ft)</span> &middot; <code>geosearch</code> <span class="ref-note">(from_member | lon+lat; radius | width+height)</span></p>
+
+        <h3>Scripting (Lua)</h3>
+        <p><code>eval</code> <span class="ref-note">(opts: keys, args)</span> &middot; <code>evalsha</code> &middot; <code>script_load</code> &middot; <code>script_exists</code></p>
+
+        <h3>Cursor scans (iterate internally, return everything)</h3>
+        <p><code>hscan</code> &middot; <code>sscan</code> &middot; <code>zscan</code> <span class="ref-note">(each: opts match, count)</span></p>
+
+        <h3>Pub/sub</h3>
+        <p><code>publish</code> &middot; <code>pubsub_channels</code> <span class="ref-note">(opts: pattern)</span> &middot; <code>pubsub_numsub</code> &middot; <code>pubsub_numpat</code></p>
+        <p>Streaming <code>SUBSCRIBE</code> is on the roadmap, pending a stryke Unix-socket reader builtin &mdash; only <code>publish</code> ships in this release.</p>
+
+        <h3>Pipeline / transaction</h3>
+        <p><code>pipeline</code> <span class="ref-note">(<code>[[CMD,…],…]</code>; opts: transaction for MULTI/EXEC)</span></p>
+
+        <h3>Server, admin &amp; introspection</h3>
+        <p><code>ping</code> &middot; <code>version</code> &middot; <code>info</code> <span class="ref-note">(opts: section; pair with Redis::parse_info)</span> &middot; <code>dbsize</code> &middot; <code>flushdb</code> <span class="ref-note">(require confirm =&gt; 1)</span> &middot; <code>flushall</code> <span class="ref-note">(opts: async)</span> &middot; <code>raw</code> <span class="ref-note">(arbitrary command argv)</span> &middot; <code>time</code> &middot; <code>config_get</code> / <code>config_set</code> &middot; <code>memory_usage</code> &middot; <code>echo</code> &middot; <code>wait</code> <span class="ref-note">(opts: timeout)</span> &middot; <code>lastsave</code> &middot; <code>slowlog_get</code> <span class="ref-note">(opts: count)</span> &middot; <code>slowlog_reset</code> &middot; <code>client_list</code> &middot; <code>client_info</code> &middot; <code>acl_whoami</code> &middot; <code>acl_list</code> &middot; <code>acl_cat</code> <span class="ref-note">(opts: category)</span> &middot; <code>object_idletime</code> &middot; <code>object_refcount</code> &middot; <code>object_freq</code></p>
+        <p>Full per-argument signatures and return shapes are in the <a href="https://github.com/MenkeTechnologies/stryke-redis#0x04-api-reference-selected" target="_blank" rel="noopener noreferrer">README API reference</a>.</p>
+      </section>
+
+      <section class="tutorial-section" id="helpers">
+        <h2>Pure helpers (no connection)</h2>
+        <p>These <strong>18</strong> functions run entirely client-side &mdash; no TCP round trip. They parse Redis reply text, manipulate connection URLs, match keys against Redis globs, compute cluster key slots, and order stream IDs.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>parse_info($info)</code></td><td>structure an INFO reply into <code>{ sections, fields, names }</code> (values kept raw)</td></tr>
+            <tr><td><code>parse_client_info($info)</code></td><td>structure a CLIENT INFO / CLIENT LIST reply into <code>{ clients:[…] }</code></td></tr>
+            <tr><td><code>parse_cluster_nodes($nodes)</code></td><td>structure a CLUSTER NODES reply (id, host, port, flags, role, slots, …)</td></tr>
+            <tr><td><code>parse_url($url)</code></td><td><code>redis[s]://…</code> &rarr; <code>{ scheme, tls, user, password, host, port, db }</code></td></tr>
+            <tr><td><code>build_url(%opts)</code></td><td>parts &rarr; <code>redis[s]://</code> URL; inverse of <code>parse_url</code></td></tr>
+            <tr><td><code>redact_url($url)</code></td><td>mask the password (<code>user:***@</code>) so a URL is safe to log</td></tr>
+            <tr><td><code>glob_match($pattern, $key)</code></td><td>Redis KEYS/SCAN glob matched client-side (faithful port of <code>stringmatchlen</code>)</td></tr>
+            <tr><td><code>glob_escape($value)</code></td><td>backslash-escape <code>* ? [ ] \</code> so a value matches literally</td></tr>
+            <tr><td><code>glob_unescape($escaped)</code></td><td>inverse of <code>glob_escape</code></td></tr>
+            <tr><td><code>glob_to_regex($pattern)</code></td><td>Redis glob &rarr; anchored regex with the same semantics</td></tr>
+            <tr><td><code>cluster_keyslot($key)</code></td><td>CLUSTER KEYSLOT: <code>crc16(hash_tag(key)) % 16384</code>, honors <code>{…}</code> tags</td></tr>
+            <tr><td><code>same_slot($a, $b)</code></td><td>do two keys co-locate? (avoid CROSSSLOT in multi-key ops)</td></tr>
+            <tr><td><code>parse_stream_id($id)</code></td><td>stream entry id <code>&lt;ms&gt;-&lt;seq&gt;</code> &rarr; <code>{ ms, seq, special }</code></td></tr>
+            <tr><td><code>build_stream_id(%opts)</code></td><td>inverse of <code>parse_stream_id</code></td></tr>
+            <tr><td><code>stream_id_range($start_ms, $end_ms)</code></td><td>inclusive XRANGE window by time</td></tr>
+            <tr><td><code>compare_stream_id($a, $b)</code></td><td>order two stream ids by <code>(ms, seq)</code> &rarr; <code>-1|0|1</code></td></tr>
+            <tr><td><code>next_stream_id($id)</code></td><td>successor entry id (exclusive XRANGE bound)</td></tr>
+            <tr><td><code>prev_stream_id($id)</code></td><td>predecessor entry id (exclusive XREVRANGE bound)</td></tr>
+          </tbody>
+        </table>
+        <p>Use <code>glob_match</code> to filter keys locally without a round trip, and <code>redact_url</code> before logging any connection string.</p>
+      </section>
+
+      <section class="tutorial-section" id="examples">
+        <h2>Examples</h2>
+        <p>Runnable <code>.stk</code> scripts live in <code>examples/</code>. Each is eval-guarded on <code>Redis::ping</code> so it exits 0 in CI even without a live server.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>examples/kv.stk</code></td><td>simple KV demo (set / get)</td></tr>
+            <tr><td><code>examples/structures.stk</code></td><td>lists, sets, hashes, sorted sets</td></tr>
+            <tr><td><code>examples/publish.stk</code></td><td>emit a Pub/Sub message: <code>publish.stk CHANNEL MESSAGE</code></td></tr>
+            <tr><td><code>examples/pipeline.stk</code></td><td>TTL + MSET/MGET + counters (rate-limit-style idioms)</td></tr>
+            <tr><td><code>examples/discover.stk</code></td><td>minimum-viable tour; round-trips on a process-unique key when a server is up</td></tr>
+          </tbody>
+        </table>
+<pre># run any example with a live server
+REDIS_URL=redis://localhost s examples/kv.stk
+REDIS_URL=redis://localhost s examples/structures.stk
+s examples/publish.stk my-channel 'hello'</pre>
+      </section>
+
+      <section class="tutorial-section" id="tests">
+        <h2>Tests &amp; dev workflow</h2>
+<pre>cargo test                                    # compiles the cdylib, no live calls
+REDIS_URL=redis://localhost s test t/         # live round-trip suite</pre>
+        <p>Test keys are scoped under <code>stryke:test:$$:</code> and cleaned at exit, so concurrent CI runs don't collide. Spin up a local server with <code>brew services start redis</code> or <code>docker run --rm -p 6379:6379 redis:7</code>.</p>
+<pre>make             # release build (target/release/libstryke_redis.{dylib,so})
+make debug
+make test
+make install
+make clean</pre>
+      </section>
+
+      <section class="tutorial-section" id="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Connection refused</td><td>No server on the resolved address. Check <code>$REDIS_URL</code>, or start one (<code>brew services start redis</code> / <code>docker run -p 6379:6379 redis:7</code>).</td></tr>
+            <tr><td>Wrong host / db</td><td>Connection comes from <code>%opts</code> first, then <code>$REDIS_URL</code>, then <code>127.0.0.1:6379</code> db 0. Pass <code>url =&gt; …</code> or <code>db =&gt; …</code> on the op, or export <code>REDIS_URL</code>.</td></tr>
+            <tr><td>TLS handshake fails on a <code>redis://</code> URL</td><td>Use a <code>rediss://</code> URL, or pass <code>tls =&gt; 1</code> to force TLS without rewriting the scheme.</td></tr>
+            <tr><td>AUTH required</td><td>Supply <code>password =&gt; …</code> (and <code>username =&gt; …</code> for ACL users) in <code>%opts</code>, or embed them in the URL.</td></tr>
+            <tr><td><code>flushdb</code> / <code>flushall</code> seems to do nothing</td><td><code>flushdb</code> requires <code>confirm =&gt; 1</code> &mdash; a guard against accidental wipes.</td></tr>
+            <tr><td>Op <code>die</code>s with a message</td><td>The cdylib returns <code>{"error": "&lt;msg&gt;"}</code> on failure and the wrapper <code>die</code>s with it; the message is the Redis-side error verbatim.</td></tr>
+            <tr><td>Stale password printed in logs</td><td>Pass any connection URL through <code>Redis::redact_url</code> before logging it.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="whypkg">
+        <h2>Why a package, not a builtin</h2>
+        <p><code>redis</code> Rust crate (sync) with rustls TLS. Single highest-leverage daily-use connector after Postgres / MySQL.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>redis__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_redis.{dylib,so}</code>, dlopened in-process on first <code>use Redis</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section" id="ffi">
+        <h2>FFI layer</h2>
+        <p>Each <code>Redis::*</code> wrapper builds a JSON args dict and calls a sibling <code>redis__*</code> symbol resolved out of <code>libstryke_redis.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use Redis</code> and caches one <code>redis::Connection</code> per <code>(url, db, tls, username, password)</code> tuple in <code>OnceCell&lt;Mutex&lt;HashMap&gt;&gt;</code> for the life of the stryke process &mdash; back-to-back calls reuse the same TCP socket, no handshake-per-call. There are <strong>184</strong> exported <code>redis__*</code> symbols (one per public function), declared in the <code>[ffi]</code> table of <code>stryke.toml</code> and matched exactly by the <code>extern "C"</code> definitions in <code>src/lib.rs</code>.</p>
+        <p>Wire shape &mdash; JSON in, JSON out:</p>
+<pre>scalars                 &rarr; {"value": …}
+lists / sets / values   &rarr; {"values": [...]} | {"members": [...]}
+hashes                  &rarr; {"hash": {...}}
+zset rows with scores   &rarr; {"pairs": [[member, score], ...]}
+errors                  &rarr; {"error": "&lt;msg&gt;"}   # wrapper die()s with it</pre>
+        <p>The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by stryke's <code>rust_ffi::load_cdylib</code> &mdash; closing the returned-allocation leak the inline-FFI v1 had.</p>
+      </section>
+
+      <section class="tutorial-section" id="layout">
+        <h2>Layout</h2>
+<pre>stryke-redis/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — redis__* extern "C" exports + persistent conn cache
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use Redis`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest ([ffi] exports table)
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section" id="siblings">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

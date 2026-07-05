@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-demo — engineering report. Gallery design, service-probing logic in run_all.stk, docker-compose.yml service set, package-manifest layout.">
+  <title>stryke-demo — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-DEMO &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Gallery harness for the 14 stryke-* connectors &middot; one <code>s install</code> pulls all deps &middot; <code>docker-compose.yml</code> hosts 7 live services &middot; <code>run_all.stk</code> pings + runs reachable demos
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-demo</strong> is a meta-package that exercises every connector in the <code>stryke-*</code> family from a single repo. The 14 demos are runnable end-to-end: clone, <code>s install</code>, <code>make up</code>, <code>make all</code>. Each demo is a standalone <code>.stk</code> script (not embedded in test fixtures) so it doubles as living documentation for "how do I actually use this connector?" &mdash; and each is written to call <strong>every public verb</strong> of its connector, printing the function name alongside each line of output.</p>
+      <p class="tutorial-subtitle">The harness is intentionally thin: no test framework, no assertions, no fancy reporting in the demo files. Each demo prints what it's doing as it goes. The orchestration lives in <code>run_all.stk</code>, which calls each connector's <code>::ping()</code> to decide which demos can run in the current environment. A separate <code>t/</code> directory holds cross-connector integration tests that <em>do</em> reconcile results between engines (Arrow&#8596;DuckDB&#8596;Parquet&#8596;Polars).</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">14</div><div class="stat-label">demos / connectors</div></div>
+        <div class="stat-card"><div class="stat-val cyan">7</div><div class="stat-label">live services in compose</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">demos w/ no service needed</div></div>
+        <div class="stat-card"><div class="stat-val">1</div><div class="stat-label">cloud-only demo (GCP w/ ADC)</div></div>
+        <div class="stat-card"><div class="stat-val cyan">34</div><div class="stat-label">cross-connector tests in t/</div></div>
+        <div class="stat-card"><div class="stat-val green">19</div><div class="stat-label">Makefile targets (.PHONY)</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>HARNESS DESIGN</h2>
+      <p class="tutorial-subtitle">Demos live in <code>demos/</code> with <code>NN_pkg.stk</code> naming. Numbering is stable across releases so the README, docs, and <code>run_all.stk</code> can refer to demos by index. Adding a new connector is "drop a new file with the next index, add a row to the README table, update <code>stryke.toml</code>".</p>
+      <table class="arch-table">
+        <thead><tr><th>Component</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>stryke.toml</code></td><td>Package manifest. Declares all 14 <code>stryke-*</code> deps with git refs. <code>s install</code> reads this.</td></tr>
+          <tr><td><code>demos/NN_pkg.stk</code></td><td>One per connector. Imports its package, exercises 3&ndash;5 core verbs, prints progress.</td></tr>
+          <tr><td><code>demos/run_all.stk</code></td><td>Service probe (TCP / UDP / API ping per service) + dispatch + skip-on-unreachable + summary table.</td></tr>
+          <tr><td><code>docker-compose.yml</code></td><td>Seven services: <code>mysql</code>, <code>postgres</code>, <code>redis</code>, <code>mongo</code>, <code>kafka</code> (KRaft, single-node), <code>localstack</code> (S3 / DynamoDB / SQS / Lambda / STS), <code>k3s</code> (single-node Kubernetes for stryke-k8s).</td></tr>
+          <tr><td><code>Makefile</code></td><td>One target per demo (<code>make arrow</code>, <code>make mysql</code>, &hellip;) that sets connection env vars, plus <code>make up</code> / <code>make down</code> (compose), <code>make all</code> (run_all.stk), <code>make install</code>, <code>make clean</code>. 19 targets total, all declared <code>.PHONY</code>.</td></tr>
+          <tr><td><code>t/</code></td><td>34 cross-connector integration tests (Arrow&#8596;DuckDB&#8596;Parquet&#8596;Polars). Standalone <code>.stk</code> files run with <code>s t/&lt;name&gt;.stk</code>.</td></tr>
+          <tr><td>CI</td><td><code>.github/workflows/ci.yml</code> &mdash; validates structure only (manifest deps, demo layout 01..14, Makefile/.PHONY targets, <code>docker compose config</code>, <code>tests/repo-contract.sh</code>, and the docs/README/man-page gates). It does not run the demos live &mdash; the services aren't reproducible in GitHub Actions.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SERVICE PROBE LOGIC</h2>
+      <p class="tutorial-subtitle"><code>run_all.stk</code> <code>use</code>s all 14 connector roots and classifies each demo into three buckets at startup:</p>
+      <table class="arch-table">
+        <thead><tr><th>Bucket</th><th>Behavior</th></tr></thead>
+        <tbody>
+          <tr><td><strong>always-run</strong></td><td>arrow + parquet run unconditionally; duckdb + spark gated on their own <code>DuckDB::ping()</code> / <code>Spark::ping()</code> (embedded, so normally true). No external service.</td></tr>
+          <tr><td><strong>ping-and-run</strong></td><td>mysql, postgres, kafka, redis, mongo, k8s, docker &mdash; each run if its <code>::ping()</code> returns truthy, else skipped with a reason. aws is gated on <code>eval { AWS::sts_caller_identity(); 1 }</code> rather than a port probe.</td></tr>
+          <tr><td><strong>manual</strong></td><td>gcp + grpc need explicit positional args (a bucket/sub/topic, or a <code>host:port</code>), so <code>run_all.stk</code> prints a reminder line for each rather than invoking them.</td></tr>
+        </tbody>
+      </table>
+      <p>Each runnable demo is dispatched via <code>system("s", $path)</code>. Unreachable demos print <code>&#9472;&#9472; NN name: SKIP (service not reachable)</code>; reachable ones print a <code>&#9552;&#9552;&#9552;&#9552; NN name &#9552;&#9552;&#9552;&#9552;</code> banner before their output. The in-process demos always run, so <code>make all</code> exercises a meaningful smoke set even on a bare machine.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>WHY GALLERY-NOT-TEST-SUITE</h2>
+      <p>A test suite asserts. A gallery shows. The <code>demos/*.stk</code> files deliberately do no assertions &mdash; they print what they did and how, so the demo source reads as living documentation for each connector. The per-connector correctness tests live in each <code>stryke-*</code> package's own repo; this repo's job is to demonstrate the surface, not re-test it.</p>
+      <p>The CI workflow in this repo does not run the demos live &mdash; spinning up the full docker-compose stack on every GitHub Actions job is slow and brittle, and the cloud/reflection demos (gcp, grpc) can't run there at all. Instead CI pins the <em>structure</em> the demos depend on: the 14 git deps in <code>stryke.toml</code>, the contiguous 01..14 demo numbering, one Makefile target per demo, a valid <code>docker compose config</code> with the seven services, and the full doc/README/man-page gate set. Live runs happen on the maintainer's box via <code>make all</code>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>DEMO ANATOMY</h2>
+      <p>Every <code>demos/NN_pkg.stk</code> follows the same shape so the files stay scannable:</p>
+      <ol>
+        <li><code>#!/usr/bin/env stryke</code> shebang + a header comment with the run command and any required env vars.</li>
+        <li>A single <code>use Pkg</code> directive (the first non-comment line &mdash; pinned by <code>tests/repo-contract.sh</code>).</li>
+        <li>One <code># &#9472;&#9472; Pkg::verb &#9472;&#9472;</code> banner per public function, then a <code>p "Pkg::verb ..."</code> line that calls it and prints the result &mdash; so the output is a literal transcript of the connector's API.</li>
+        <li>Cleanup at the end (drop temp files, temp tables, created topics / objects / k8s resources / containers).</li>
+      </ol>
+      <p>The connection target comes from the environment (<code>MYSQL_URI</code>, <code>POSTGRES_URI</code>, <code>REDIS_URL</code>, <code>MONGODB_URI</code>, <code>KAFKA_BROKERS</code>, <code>AWS_ENDPOINT_URL</code> &amp; friends, <code>KUBECONFIG</code>, <code>DOCKER_HOST</code>); the <code>make</code> target sets a localhost default that matches <code>docker-compose.yml</code>. A few demos read opt-in flags (<code>STRYKE_DEMO_LAMBDA</code>, <code>STRYKE_DEMO_DOCKER_BUILD</code>, <code>STRYKE_DEMO_DOCKER_PUSH</code>, <code>STRYKE_DEMO_SPARK_SCRIPT</code>) to enable slower or destructive branches; unset, those are skipped.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>EXTENDING</h2>
+      <p>Adding a connector to the family means a set of coordinated edits in stryke-demo, several of which are pinned by <code>tests/repo-contract.sh</code> and the CI layout job:</p>
+      <ol>
+        <li>Add the dep to <code>stryke.toml</code> under <code>[deps]</code> (key must match the demo filename suffix and point at <code>MenkeTechnologies/stryke-&lt;name&gt;</code>).</li>
+        <li>Drop <code>demos/15_newpkg.stk</code> &mdash; first line a <code>use</code> directive &mdash; that exercises the connector's public verbs.</li>
+        <li>Add a <code>make newpkg</code> target (and list it under <code>.PHONY</code>).</li>
+        <li>Add a <code>run_demo "15 newpkg", Newpkg::ping(), "demos/15_newpkg.stk"</code> line in <code>run_all.stk</code> (it dispatches each demo explicitly, not by directory scan).</li>
+        <li>If it needs a live service, add it to <code>docker-compose.yml</code>.</li>
+        <li>Update the count claims in this report and the demo table in <code>index.html</code>.</li>
+      </ol>
+      <p>The numbering must stay contiguous (<code>01..NN</code>, no gaps or duplicates) and the <code>[deps]</code> keys must be a 1:1 match with the demo filenames &mdash; both are enforced by <code>tests/repo-contract.sh</code>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-demo">github.com/MenkeTechnologies/stryke-demo</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-demo/issues">github.com/MenkeTechnologies/stryke-demo/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

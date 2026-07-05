@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vscode-viml — engineering report. Standalone TextMate grammar (source.viml) for the VimL (Vimscript) language, filetype detection, language-server integration via vimlrs --lsp, debugging via vimlrs --dap, and how the grammar is verified with vscode-textmate.">
+  <title>vscode-viml — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+    .stat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.65rem 0.85rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .stat-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-val.accent { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 0.2rem; }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12px; }
+    .parity-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VSCODE-VIML &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vscode-viml" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            VS Code / VSCodium support for VimL &middot; standalone TextMate grammar (source.viml) &middot; LSP via vimlrs --lsp &middot; DAP via vimlrs --dap &middot; verified with vscode-textmate
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>vscode-viml</strong> is the VS Code / VSCodium extension for <strong>VimL (Vimscript)</strong>, backed by the <strong>vimlrs</strong> interpreter &mdash; a standalone Vimscript engine written in Rust (a port of Neovim's eval engine on fusevm). It ships a declarative language contribution (filetype, grammar, editor config), an LSP client that launches <code>vimlrs --lsp</code>, a debug adapter that launches <code>vimlrs --dap</code>, and a TextMate grammar (<code>source.viml</code>) covering the VimL surface.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> mirror the proven vscode-stryke runtime wiring. The LSP transport is omitted so the client spawns bare <code>vimlrs --lsp</code> and never appends <code>--stdio</code> (the arg-rejection / &ldquo;connection got disposed&rdquo; failure mode learned from vscode-stryke). The binary is resolved to an absolute path through <code>$PATH</code> plus common install dirs (<code>~/.cargo/bin</code>, <code>/opt/homebrew/bin</code>, &hellip;), so it works even when the editor is launched from the macOS Dock and doesn&rsquo;t inherit the shell <code>$PATH</code>.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">94</div><div class="stat-label">Built-in functions scoped</div></div>
+        <div class="stat-card"><div class="stat-val accent">29</div><div class="stat-label">Ex commands scoped</div></div>
+        <div class="stat-card"><div class="stat-val">33</div><div class="stat-label">Statement keywords</div></div>
+        <div class="stat-card"><div class="stat-val accent">18</div><div class="stat-label">Special v: variables</div></div>
+        <div class="stat-card"><div class="stat-val green">1</div><div class="stat-label">TextMate grammar</div></div>
+        <div class="stat-card"><div class="stat-val accent">3</div><div class="stat-label">Detection paths (ext + filenames + shebang)</div></div>
+        <div class="stat-card"><div class="stat-val">12</div><div class="stat-label">Tokenizer assertions</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Runtime channels (LSP + DAP)</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>COMPONENTS</h2>
+      <table class="parity-table">
+        <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr><td><code>package.json</code></td><td>Extension manifest &mdash; <code>contributes.languages</code> (id <code>vim</code>, <code>*.vim</code>, config <code>filenames</code>, shebang <code>firstLine</code>), <code>contributes.grammars</code> (<code>source.viml</code>), <code>contributes.configuration</code> (LSP settings), <code>contributes.commands</code> (run / debug), <code>contributes.debuggers</code> (type <code>vim</code>), and the <code>vscode-languageclient</code> dependency.</td></tr>
+          <tr><td><code>language-configuration.json</code></td><td>Line comment <code>"</code>, brackets, auto-closing / surrounding pairs (both quote styles), word pattern, and block-keyword <code>indentationRules</code>.</td></tr>
+          <tr><td><code>extension.js</code></td><td>Activates on <code>onLanguage:vim</code>. Starts a <code>LanguageClient</code> running <code>vimlrs --lsp</code> over stdio, registers the run command (terminal <code>vimlrs &lt;file&gt;</code>), and registers a <code>DebugAdapterDescriptorFactory</code> launching <code>vimlrs --dap</code>. Missing binary &rarr; one non-fatal warning; highlighting still works.</td></tr>
+          <tr><td><code>lib/resolveBinary.js</code></td><td>Pure (vscode-free) resolver that turns the <code>vim.path</code> setting into an absolute, executable path &mdash; searching <code>$PATH</code> then the GUI-missed fallback dirs. Unit-tested in CI.</td></tr>
+          <tr><td><code>syntaxes/vim.tmLanguage.json</code></td><td>TextMate grammar &mdash; comments, shebang, single + double strings, numbers, special <code>v:</code> vars, function definitions, built-in functions, statement keywords, ex commands, scope variables, options, environment, registers, and operators.</td></tr>
+          <tr><td><code>scripts/tokenize_test.js</code></td><td>Loads the grammar under <code>vscode-textmate</code> + <code>vscode-oniguruma</code> (the engine VS Code itself uses) and asserts the scope of 12 sample tokens.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SCOPE MAP</h2>
+      <table class="parity-table">
+        <thead><tr><th>Token group</th><th>TextMate scope</th><th>Sample</th></tr></thead>
+        <tbody>
+          <tr><td>Statement keywords</td><td class="ok">keyword.control.viml</td><td><code>if</code> <code>function</code> <code>let</code> <code>try</code> <code>return</code> <code>echo</code> <code>throw</code></td></tr>
+          <tr><td>Ex commands</td><td class="ok">keyword.other.command.viml</td><td><code>set</code> <code>autocmd</code> <code>augroup</code> <code>nnoremap</code> <code>highlight</code> <code>syntax</code></td></tr>
+          <tr><td>Special <code>v:</code> variables</td><td class="ok">constant.language.viml</td><td><code>v:true</code> <code>v:false</code> <code>v:version</code> <code>v:val</code> <code>v:lnum</code> <code>v:shell_error</code></td></tr>
+          <tr><td>Built-in functions</td><td class="ok">support.function.viml</td><td><code>substitute</code> <code>printf</code> <code>has</code> <code>split</code> <code>matchstr</code> <code>json_encode</code></td></tr>
+          <tr><td>Scope-sigil variables</td><td class="ok">variable.other.viml</td><td><code>g:foo</code> <code>s:bar</code> <code>b:baz</code> <code>l:tmp</code> <code>a:000</code></td></tr>
+          <tr><td>Options</td><td class="ok">variable.other.option.viml</td><td><code>&amp;number</code> <code>&amp;l:shiftwidth</code></td></tr>
+          <tr><td>Registers / environment</td><td class="ok">variable.other.register.viml / variable.other.environment.viml</td><td><code>@a</code> <code>@+</code> <code>$HOME</code></td></tr>
+          <tr><td>Function intro</td><td class="ok">entity.name.function.viml</td><td><code>function! s:Trim</code></td></tr>
+          <tr><td>Literals</td><td class="ok">string.* / constant.numeric</td><td>single / double strings, numbers</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">The grammar is loaded under the exact engine VS Code uses at runtime &mdash; <code>vscode-textmate</code> driving <code>vscode-oniguruma</code> &mdash; and a sample is tokenized with the resulting scopes asserted. This proves the grammar compiles under oniguruma and classifies VimL tokens correctly, including the tricky cases: a <code>function!</code> definition with its name capture, a scope-sigil variable such as <code>g:counter</code> against the <code>v:version</code> special, and a built-in call like <code>substitute(...)</code> distinguished by its trailing paren.</p>
+      <table class="parity-table">
+        <thead><tr><th>Sample token</th><th>Asserted scope</th></tr></thead>
+        <tbody>
+          <tr><td><code>let</code></td><td class="ok">keyword.control.viml</td></tr>
+          <tr><td><code>g:counter</code></td><td class="ok">variable.other.viml</td></tr>
+          <tr><td><code>function!</code> / <code>s:Trim</code></td><td class="ok">keyword.control.viml / entity.name.function.viml</td></tr>
+          <tr><td><code>substitute</code></td><td class="ok">support.function.viml</td></tr>
+          <tr><td><code>v:version</code></td><td class="ok">constant.language.viml</td></tr>
+          <tr><td><code>set</code></td><td class="ok">keyword.other.command.viml</td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

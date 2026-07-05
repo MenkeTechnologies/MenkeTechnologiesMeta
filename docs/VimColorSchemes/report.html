@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="VimColorSchemes — Engineering report. A single hand-curated bundle of 732 Vim colorschemes: 125,715 total lines across colors/*.vim (~6.3 MB), avg 172 lines/scheme. 657 declare GUI colors (guifg), 485 declare 256-color terminal colors (ctermfg); 463 set background=dark, 161 background=light. 11 base16, 12 duotone, 7 colorsbox, 5 Tomorrow family decks plus MenkeTechnologies-authored schemes. 4 CI test scripts (repo-contract, validator, colors-name pins) gate the bundle; vim-load test sources every scheme headless.">
+  <title>VimColorSchemes &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 72rem; }
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));gap:0.7rem;margin:1rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:0.85rem 1rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:26px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 18px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 18px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 18px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--text-muted);margin-top:0.45rem; }
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:1.8rem 0; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VIMCOLORSCHEMES &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/VimColorSchemes" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr" target="_blank" rel="noopener noreferrer">zpwr</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            732 curated Vim colorschemes &middot; pure <code>colors/*.vim</code> &middot; Pathogen / vim-plug / native packages / lazy.nvim &middot; terminal + GUI + Neovim
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">
+        <strong>VimColorSchemes</strong> is a single hand-curated bundle of <strong>732</strong> Vim colorschemes. Every file under <code>colors/</code> is a self-contained <code>.vim</code> highlight script &mdash; a working <code>:colorscheme</code> target as soon as the directory is on <code>runtimepath</code>. There is no runtime, no autoload, no compiled artifact: the entire plugin is <strong>125,715 lines</strong> of <code>.vim</code> across the 732 files (~6.3 MB on disk, avg 172 lines/scheme). It loads under Pathogen, vim-plug, packer, lazy.nvim, native Vim 8 packages, or a bare <code>set rtp+=</code>, in terminal Vim (256-color + truecolor), GUI Vim, and Neovim. The repo ships <strong>4</strong> CI test scripts that pin scheme count, file integrity, name hygiene, and headless load.
+      </p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">732</div><div class="stat-label">Colorschemes (colors/*.vim)</div></div>
+        <div class="stat-card"><div class="stat-val accent">125,715</div><div class="stat-label">Total .vim Lines</div></div>
+        <div class="stat-card"><div class="stat-val">6.3&nbsp;MB</div><div class="stat-label">Bundle Size on Disk</div></div>
+        <div class="stat-card"><div class="stat-val green">172</div><div class="stat-label">Avg Lines / Scheme</div></div>
+        <div class="stat-card"><div class="stat-val">657</div><div class="stat-label">Schemes with GUI Colors (guifg)</div></div>
+        <div class="stat-card"><div class="stat-val">485</div><div class="stat-label">Schemes with Term Colors (ctermfg)</div></div>
+        <div class="stat-card"><div class="stat-val accent">463</div><div class="stat-label">Declare background=dark</div></div>
+        <div class="stat-card"><div class="stat-val">161</div><div class="stat-label">Declare background=light</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">CI Test Scripts</div></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>STRUCTURE</h2>
+      <p class="tutorial-subtitle">The repo is data, not code: a flat <code>colors/</code> directory of self-contained schemes plus a thin test/CI layer. Nothing is sourced at startup except the one scheme the user selects with <code>:colorscheme</code>.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr><th>Path</th><th class="num">Count</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>colors/*.vim</code></td>
+            <td class="num">732</td>
+            <td>The bundle. Each file is a standalone Vim highlight script &mdash; <code>hi clear</code> / <code>syntax reset</code> preamble, <code>let g:colors_name='&hellip;'</code>, then a block of <code>:highlight</code> definitions (most branch on <code>has('gui_running')</code> / <code>&amp;t_Co</code> / <code>&amp;background</code>). 125,715 lines total, ~6.3 MB.</td>
+          </tr>
+          <tr>
+            <td><code>tests/repo-contract.sh</code></td>
+            <td class="num">1</td>
+            <td>No-Vim repo gate. Pins the README <code>schemes-N</code> badge against the live <code>colors/</code> count; rejects empty / sub-10-byte files; rejects filenames with spaces or shell-unsafe characters; rejects duplicate basenames; reports <code>g:colors_name</code>-vs-filename mismatches as INFO.</td>
+          </tr>
+          <tr>
+            <td><code>tests/validate-colorschemes.sh</code></td>
+            <td class="num">1</td>
+            <td>Headless Vim loader. Sources every scheme under <code>try/catch</code> (so <code>E411</code> "highlight group not found" does not abort), verifies no script-level error, and checks <code>g:colors_name</code> matches the basename. Schemes without <code>g:colors_name</code> are counted as INFO, not failed.</td>
+          </tr>
+          <tr>
+            <td><code>tests/colors-name-pinned.sh</code></td>
+            <td class="num">1</td>
+            <td>Pins that the repo's OWN authored schemes (<code>menketech-cyberpunk</code>, <code>zpwr*</code>) declare <code>let g:colors_name = '&lt;basename&gt;'</code> &mdash; vendored upstream mismatches are tolerated, but authored schemes must complete correctly.</td>
+          </tr>
+          <tr>
+            <td><code>tests/colors-name-vendored-walk.sh</code></td>
+            <td class="num">1</td>
+            <td>Walks the vendored schemes and audits their <code>g:colors_name</code> declarations.</td>
+          </tr>
+          <tr>
+            <td><code>license.md</code></td>
+            <td class="num">1</td>
+            <td>MIT for the curation layer. Individual schemes retain their upstream licenses where applicable (see per-file headers).</td>
+          </tr>
+          <tr>
+            <td><code>.github/workflows/ci.yml</code></td>
+            <td class="num">1</td>
+            <td>CI: static audit (non-empty files, count floor at 600, <code>g:colors_name</code> coverage), headless vim-load over every scheme, repo-contract, and the authored-scheme name pins.</td>
+          </tr>
+          <tr class="total-row">
+            <td>Bundle total</td>
+            <td class="num">732</td>
+            <td>colors/*.vim &middot; 125,715 lines &middot; pure Vimscript &middot; zero runtime</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SCHEME FAMILIES</h2>
+      <p class="tutorial-subtitle">The 732 decks include several named families plus the MenkeTechnologies-authored set. Counts below are exact filename-prefix tallies from <code>colors/</code>.</p>
+
+      <table class="file-table">
+        <thead><tr><th>Family / Author</th><th class="num">Count</th><th>Members / notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>base16-*</code></td><td class="num">11</td><td>The Atelier set (cave, dune, estuary, forest, heath, lakeside, plateau, savanna, seaside, sulphurpool) plus <code>base16-railscasts</code>.</td></tr>
+          <tr><td><code>duotone-*</code></td><td class="num">12</td><td>cave, desert, earth, forest, heath, lake, meadow, park, pool, sea, space &mdash; plus the base <code>duotone-dark</code>.</td></tr>
+          <tr><td><code>colorsbox-*</code></td><td class="num">7</td><td>faff, greenish, material, stblue, stbright, steighties, stnight.</td></tr>
+          <tr><td><code>Tomorrow*</code></td><td class="num">5</td><td>Tomorrow, Tomorrow-Night, Tomorrow-Night-Blue, Tomorrow-Night-Bright, Tomorrow-Night-Eighties.</td></tr>
+          <tr><td><code>zpwr*</code> (authored)</td><td class="num">7</td><td>zpwrelise, zpwrelrond, zpwrguardian, zpwrmarklar, zpwrneverness, zpwrpride, zpwrsprinkles &mdash; MenkeTechnologies recolors of base decks.</td></tr>
+          <tr><td><code>menketech*</code> (authored)</td><td class="num">2</td><td><code>menketechnologies</code> and <code>menketech-cyberpunk</code>.</td></tr>
+          <tr><td>Community classics</td><td class="num">&mdash;</td><td>Ports / forks of gruvbox, solarized, molokai, jellybeans, onedark, zenburn, wombat, railscasts, PaperColor, OceanicNext, iceberg, badwolf, and many more.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">=</span>COLOR COVERAGE</h2>
+      <p class="tutorial-subtitle">Each scheme is highlight-group data. The split below is grep-derived from <code>colors/</code> &mdash; the same file can appear in multiple rows (most define both GUI and terminal colors, and many branch on <code>&amp;background</code>).</p>
+
+      <table class="file-table">
+        <thead><tr><th>Dimension</th><th class="num">Schemes</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>GUI colors (<code>guifg</code>)</td><td class="num">657</td><td>Define truecolor hex for GUI Vim / <code>termguicolors</code> terminals.</td></tr>
+          <tr><td>Terminal colors (<code>ctermfg</code>)</td><td class="num">485</td><td>Define 256-color (or 16-color) <code>cterm</code> palettes for non-GUI terminal Vim.</td></tr>
+          <tr><td><code>background=dark</code></td><td class="num">463</td><td>Branch into / declare a dark palette.</td></tr>
+          <tr><td><code>background=light</code></td><td class="num">161</td><td>Branch into / declare a light palette.</td></tr>
+          <tr><td><code>g:colors_name</code> declared</td><td class="num">694</td><td>Match <code>colors_name</code> in some form &mdash; these surface in <code>:colorscheme &lt;Tab&gt;</code> completion. The remainder (~38 per CI) load fine but do not autocomplete.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">#</span>TEST &amp; CI</h2>
+      <p class="tutorial-subtitle">Four shell test scripts under <code>tests/</code>, wired into a four-job GitHub Actions workflow. No live editor needed for three of them; the fourth installs <code>vim-nox</code> and sources every scheme headless.</p>
+
+      <table class="file-table">
+        <thead><tr><th>CI job</th><th>Script</th><th>Pins</th></tr></thead>
+        <tbody>
+          <tr><td>static-checks</td><td><em>(inline)</em></td><td>Every <code>colors/*.vim</code> is non-empty; total count must stay above a catastrophic-shrink floor of 600; <code>g:colors_name</code> coverage audit fails only if more than 60 schemes lack a name declaration.</td></tr>
+          <tr><td>vim-load</td><td><code>validate-colorschemes.sh</code></td><td>Installs <code>vim-nox</code>, sources every scheme under try/catch, verifies no script-level error and that <code>g:colors_name</code> matches the basename. 30-minute timeout for the full walk.</td></tr>
+          <tr><td>repo-contract</td><td><code>repo-contract.sh</code></td><td>README <code>schemes-N</code> badge matches live count; no empty / sub-10-byte / spaced / shell-unsafe / duplicate filenames.</td></tr>
+          <tr><td>colors-name-pinned</td><td><code>colors-name-pinned.sh</code></td><td>The repo's authored schemes (<code>menketech-cyberpunk</code>, <code>zpwr*</code>) declare <code>g:colors_name == basename</code> so they complete correctly.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">/</span>DESIGN DECISIONS</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>Bundle, not a plugin manager</h4>
+          <p>Rather than installing 732 schemes through a manager one at a time, the entire curated set is one <code>git clone</code>. Cost: a larger repo (~6.3 MB). Gain: every palette is available with no per-scheme bookkeeping, and the set is reproducible across machines.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Zero runtime</h4>
+          <p>No <code>autoload/</code>, no <code>plugin/</code>, no startup hook. Only the single scheme the user selects via <code>:colorscheme</code> is ever sourced &mdash; cold startup cost of the bundle is effectively zero, just the <code>runtimepath</code> entry.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Filename = scheme name</h4>
+          <p>Vim's <code>:colorscheme &lt;name&gt;</code> resolves against the file basename. The repo-contract test rejects spaces, shell-unsafe characters, and duplicate basenames precisely because Vim silently shadows duplicates and cannot tab-complete names with spaces.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Tolerate vendored mismatches, pin own schemes</h4>
+          <p>~38 vendored schemes pre-date the <code>g:colors_name</code> convention or declare a mismatched name; they load fine and are tolerated as INFO. The repo's OWN authored schemes (<code>zpwr*</code>, <code>menketech-cyberpunk</code>) are hard-pinned to <code>name == basename</code> so completion works.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Headless validation under try/catch</h4>
+          <p>The CI validator sources each scheme in <code>vim-nox</code> wrapped in try/catch so a missing-plugin highlight group (<code>E411</code>) does not register as a failure &mdash; only true script-level parse errors fail the build.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Shrink guard, not exact pin</h4>
+          <p>CI floors the count at 600 rather than pinning exactly 732 &mdash; adding schemes never breaks the build, but a catastrophic deletion (bad merge, accidental <code>rm</code>) does. The README badge, by contrast, is pinned exactly by <code>repo-contract.sh</code>.</p>
+        </div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">@</span>FOOTPRINT</h2>
+      <ul style="font-size:12px;color:var(--text-dim);line-height:1.7;">
+        <li><strong>Disk</strong>: 732 <code>colors/*.vim</code> files, 125,715 lines, ~6.3 MB. No compiled artifacts.</li>
+        <li><strong>Startup cost</strong>: zero beyond the <code>runtimepath</code> entry &mdash; nothing is sourced until <code>:colorscheme</code> selects one file.</li>
+        <li><strong>Runtime cost</strong>: one scheme file sourced per <code>:colorscheme</code> invocation. Largest single scheme is <code>gryffin.vim</code> at 1,305 lines; smallest is <code>charged-256.vim</code> at 18.</li>
+        <li><strong>Dependencies</strong>: none for the bundle itself. CI's vim-load job installs <code>vim-nox</code>; the no-Vim gates run on a minimal image.</li>
+        <li><strong>Compatibility</strong>: terminal Vim (256-color + truecolor), GUI Vim, Neovim. Any loader honouring <code>runtimepath</code> / <code>:colorscheme &lt;name&gt;</code> &mdash; Pathogen, vim-plug, packer, lazy.nvim, native Vim 8 packages, bare <code>set rtp+=</code>.</li>
+        <li><strong>License</strong>: MIT for the curation layer; individual schemes retain their upstream licenses where applicable.</li>
+      </ul>
+
+    </main>
+
+    <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      VIMCOLORSCHEMES ENGINEERING REPORT &middot; 732 SCHEMES &middot; 125,715 VIM LINES &middot; 6.3 MB &middot; PATHOGEN / VIM-PLUG / LAZY.NVIM &middot; TERMINAL + GUI + NEOVIM &middot; MENKETECHNOLOGIES
+    </footer>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const btnTheme = document.getElementById('btnTheme');
+    const btnCrt = document.getElementById('btnCrt');
+    const btnNeon = document.getElementById('btnNeon');
+    const crtH = document.getElementById('crtH');
+    const crtV = document.getElementById('crtV');
+    btnTheme?.addEventListener('click', () => {
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+    btnCrt?.addEventListener('click', () => {
+      btnCrt.classList.toggle('active');
+      const on = btnCrt.classList.contains('active');
+      if (crtH) crtH.style.display = on ? '' : 'none';
+      if (crtV) crtV.style.display = on ? '' : 'none';
+    });
+    btnNeon?.addEventListener('click', () => {
+      btnNeon.classList.toggle('active');
+      document.querySelector('.app')?.classList.toggle('neon-off');
+    });
+  </script>
+</body>
+</html>

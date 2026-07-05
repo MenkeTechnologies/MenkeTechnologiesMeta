@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-docker — DOCKER CLIENT FOR STRYKE // CONTAINERS + IMAGES + NETWORKS + VOLUMES + LOGS + EXEC + PRUNE. Docker client for stryke. Containers, images, networks, volumes, logs, exec, prune against any reachable Docker daemon (Docker Desktop, Linux daemon, Podman with the docker-API socket, remote DOCKER_HOST). The heavy bollard / tokio code ships as a Rust cdylib that stryke dlopens in-process on first `use Docker`.">
+  <title>stryke-docker — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-DOCKER &mdash; DOCKER CLIENT FOR STRYKE // CONTAINERS + IMAGES + NETWORKS + VOLUMES + LOGS + EXEC + PRUNE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_docker.{dylib,so}</code> · dlopen'd in-process on <code>use Docker</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-docker/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-DOCKER</h2>
+      <p class="tutorial-subtitle"><strong>The docker daemon, scriptable from a one-liner.</strong> Docker client for stryke. Containers, images, networks, volumes, logs, exec, prune against any reachable Docker daemon (Docker Desktop, Linux daemon, Podman with the docker-API socket, remote DOCKER_HOST). The heavy <code>bollard</code> / tokio code ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Docker</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-docker
+
+# from a local checkout
+cd ~/projects/stryke-docker
+cargo build --release            # produces target/release/libstryke_docker.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/docker@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use Docker</code> &mdash; no helper-binary fork per call. A shared tokio runtime + persistent <code>bollard::Docker</code> client is held in <code>OnceCell</code> for the life of the process; any stryke script that declares <code>use Docker</code> resolves the package automatically. The package is versioned <code>0.19.0</code> (<code>stryke.toml</code> / <code>Cargo.toml</code>) and is published with <code>publish = false</code> &mdash; it installs from a GitHub release or a local checkout, not from crates.io. <code>make install</code> wraps the build + <code>s pkg install -g .</code> step.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use Docker</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>daemon version + ping</td><td><code>p Docker::version()-&gt;{Version}; exit 1 unless Docker::ping()</code></td></tr>
+            <tr><td>daemon info</td><td><code>val $i = Docker::info(); p $i-&gt;{Containers}, $i-&gt;{Images}</code></td></tr>
+            <tr><td>list all containers</td><td><code>val @all = Docker::ps(all =&gt; 1); p scalar(@all)</code></td></tr>
+            <tr><td>inspect one</td><td><code>p Docker::inspect("web")-&gt;{State}{Status}</code></td></tr>
+            <tr><td>create + start in one shot</td><td><code>val $r = Docker::run("nginx:alpine", name =&gt; "web")</code></td></tr>
+            <tr><td>buffered logs (last 50 lines)</td><td><code>p Docker::logs("web", tail =&gt; "50")</code></td></tr>
+            <tr><td>exec (captured stdout+stderr)</td><td><code>p Docker::exec("web", ["sh", "-c", "nginx -v"])</code></td></tr>
+            <tr><td>stop (timeout secs) + remove</td><td><code>Docker::stop("web", timeout =&gt; 5); Docker::rm("web")</code></td></tr>
+            <tr><td>networks + volumes</td><td><code>Docker::network_create("appnet"); Docker::volume_create("appdata")</code></td></tr>
+            <tr><td>reclaim space</td><td><code>val $report = Docker::prune(all =&gt; 1)</code></td></tr>
+          </tbody>
+        </table>
+        <p>Every wrapper accepts a trailing <code>host =&gt; "&lt;socket-or-tcp-url&gt;"</code> to override the daemon for that one call (see <a href="#connection">Connection model</a> below); with no override the package targets <code>$DOCKER_HOST</code> or the local socket. The full API surface is enumerated in <a href="#daemon-api">Daemon &amp; container API</a> and <a href="#helpers">Daemon-free helpers</a>, and in the <a href="https://github.com/MenkeTechnologies/stryke-docker#0x02-api-reference" target="_blank" rel="noopener noreferrer">README "API reference" section</a>.</p>
+      </section>
+
+      <section class="tutorial-section" id="connection">
+        <h2>Connection model</h2>
+        <p>There is no client to construct and no login step. The cdylib resolves a daemon endpoint per call: an explicit <code>host =&gt; "&hellip;"</code> option wins, otherwise <code>$DOCKER_HOST</code>, otherwise the platform default socket. A <code>bollard::Docker</code> client is built once per distinct endpoint and cached (keyed by <code>DOCKER_HOST</code>), so repeated calls reuse the same connection + HTTP pool instead of reconnecting.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>local socket (default)</td><td><code>Docker::ps()</code></td></tr>
+            <tr><td>environment override</td><td><code>DOCKER_HOST=tcp://192.168.1.10:2375 s script.stk</code></td></tr>
+            <tr><td>per-call override</td><td><code>Docker::ps(host =&gt; "tcp://docker.example.com:2376")</code></td></tr>
+          </tbody>
+        </table>
+        <p>Works against Docker Desktop, a Linux daemon, Podman exposing the docker-API socket, or a remote <code>DOCKER_HOST</code>. TLS client certs (<code>DOCKER_CERT_PATH</code> / <code>DOCKER_TLS_VERIFY</code>) are on the roadmap, not shipped.</p>
+      </section>
+
+      <section class="tutorial-section" id="daemon-api">
+        <h2>Daemon &amp; container API</h2>
+        <p>These wrappers each build a JSON args dict and call the matching <code>docker__*</code> symbol on the cdylib. A daemon must be reachable; on a daemon error the wrapper <code>die</code>s with <code>Docker::&lt;fn&gt;: &lt;message&gt;</code>. Connection opts (<code>host</code>) may trail any call.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Daemon</td><td><code>version()</code> &middot; <code>ping()</code> &middot; <code>info()</code> &middot; <code>df()</code> &middot; <code>pkg_version()</code></td></tr>
+            <tr><td>List / inspect</td><td><code>ps()</code> &middot; <code>inspect($c)</code> &middot; <code>images()</code> &middot; <code>networks()</code> &middot; <code>volumes()</code> &middot; <code>image_inspect($i)</code> &middot; <code>network_inspect($n)</code> &middot; <code>volume_inspect($v)</code></td></tr>
+            <tr><td>Lifecycle</td><td><code>create($img)</code> &middot; <code>run($img)</code> &middot; <code>start($c)</code> &middot; <code>stop($c, timeout =&gt; N)</code> &middot; <code>restart($c)</code> &middot; <code>kill($c, signal =&gt; "&hellip;")</code> &middot; <code>rm($c, force =&gt; 1, volumes =&gt; 1)</code> &middot; <code>pause($c)</code> &middot; <code>unpause($c)</code> &middot; <code>rename($c, $new)</code> &middot; <code>wait($c)</code></td></tr>
+            <tr><td>Introspect</td><td><code>top($c)</code> &middot; <code>stats($c)</code> &middot; <code>diff($c)</code> &middot; <code>port($c)</code> &middot; <code>update($c)</code> &middot; <code>history($img)</code> &middot; <code>commit($c)</code> &middot; <code>exec_inspect($id)</code></td></tr>
+            <tr><td>Logs &amp; exec</td><td><code>logs($c, tail =&gt; "N")</code> &middot; <code>exec($c, \@cmd)</code> &middot; <code>resize($c, $w, $h)</code> &middot; <code>resize_exec($id, $w, $h)</code></td></tr>
+            <tr><td>Images</td><td><code>pull($img)</code> &middot; <code>rmi($img, force =&gt; 1)</code> &middot; <code>tag($src, $dst)</code> &middot; <code>search($term)</code> &middot; <code>inspect_registry($img)</code></td></tr>
+            <tr><td>Networks</td><td><code>network_create($n)</code> &middot; <code>network_rm($n)</code> &middot; <code>network_connect($n, $c)</code> &middot; <code>network_disconnect($n, $c)</code></td></tr>
+            <tr><td>Volumes</td><td><code>volume_create($n)</code> &middot; <code>volume_rm($n)</code></td></tr>
+            <tr><td>Prune</td><td><code>prune(containers =&gt; 1, images =&gt; 1, volumes =&gt; 1, networks =&gt; 1, all =&gt; 1)</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>create</code>/<code>run</code> forward <code>name</code>, <code>cmd</code> (arrayref) and <code>env</code> (arrayref of <code>KEY=VALUE</code>) to the daemon; <code>run</code> is <code>create</code> with <code>start =&gt; 1</code>. <code>exec</code> requires an arrayref command and returns captured stdout+stderr as a single string. The per-call result shapes (container dicts, inspect documents, prune report) are documented field-by-field in the <a href="https://github.com/MenkeTechnologies/stryke-docker#0x02-api-reference" target="_blank" rel="noopener noreferrer">README API reference</a>.</p>
+      </section>
+
+      <section class="tutorial-section" id="helpers">
+        <h2>Daemon-free helpers (pure, no socket)</h2>
+        <p>A large share of the surface needs no daemon at all: parsers, validators and their inverse builders for Docker's CLI spec grammars. They run anywhere, are deterministic, and are what the test suite exercises without a live socket. Each returns a JSON dict.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>parse an image ref</td><td><code>Docker::parse_image_ref("ghcr.io/o/a:1.2") # =&gt; { registry, namespace, repository, tag, digest, path }</code></td></tr>
+            <tr><td>canonicalize a ref</td><td><code>Docker::normalize_image_ref("nginx") # =&gt; docker.io/library/nginx:latest</code></td></tr>
+            <tr><td>reassemble a ref</td><td><code>Docker::build_image_ref(repository =&gt; "nginx", tag =&gt; "alpine")</code></td></tr>
+            <tr><td>validate a name</td><td><code>Docker::valid_container_name("web") # =&gt; 1; rejects names &lt; 2 chars</code></td></tr>
+            <tr><td>validate a tag / repo / digest / ref</td><td><code>Docker::valid_image_tag("1.0") &middot; valid_repository_name("o/a") &middot; valid_digest("sha256:&hellip;") &middot; valid_image_ref("o/a:1@sha256:&hellip;")</code></td></tr>
+            <tr><td>ports</td><td><code>Docker::parse_port_spec("0.0.0.0:8080:80/tcp") # =&gt; { host_ip, host_port, container_port, protocol }; build_port_spec(&hellip;) is the inverse</code></td></tr>
+            <tr><td>mounts</td><td><code>Docker::parse_mount("/data:/srv:ro") # =&gt; { type, source, target, readonly, options }; build_mount(&hellip;) inverse</code></td></tr>
+            <tr><td>env / label</td><td><code>Docker::parse_env("K=V") &middot; build_env("K","V") &middot; parse_label("K=V") &middot; build_label("K","V")</code></td></tr>
+            <tr><td>devices / tmpfs</td><td><code>Docker::parse_device("/dev/sda:/dev/xvda:rwm") &middot; build_device(&hellip;) &middot; parse_tmpfs("/run:ro") &middot; build_tmpfs(&hellip;)</code></td></tr>
+            <tr><td>restart policy</td><td><code>Docker::parse_restart_policy("on-failure:3") # =&gt; { policy, max_retries }; build_restart_policy(&hellip;) inverse</code></td></tr>
+            <tr><td>memory</td><td><code>Docker::parse_memory("512m") # =&gt; { bytes =&gt; 536870912, &hellip; }; format_memory(536870912) =&gt; "512m"</code></td></tr>
+            <tr><td>duration</td><td><code>Docker::parse_duration("1h30m") # =&gt; nanoseconds; format_duration(5400000000000) =&gt; "1h30m0s"</code></td></tr>
+            <tr><td>cpus / signal / platform / ulimit</td><td><code>Docker::parse_cpus("1.5") # =&gt; 1500000000 NanoCPUs &middot; parse_signal("9") =&gt; SIGKILL &middot; parse_platform("linux/arm64/v8") &middot; parse_ulimit("nofile=1024")</code></td></tr>
+          </tbody>
+        </table>
+        <p>Every parser has a builder inverse where the round-trip is defined (image ref, port, mount, env, label, device, restart policy, platform, memory, duration, tmpfs). The grammar rules each one enforces &mdash; tag ≤128 chars and no leading <code>.</code>/<code>-</code>, lowercase-only repository names, OCI <code>algorithm:hex</code> digests (sha256→64, sha512→128 lowercase hex), go-units base-1024 memory, Go <code>time.ParseDuration</code> durations &mdash; are spelled out per function in the <a href="https://github.com/MenkeTechnologies/stryke-docker#0x02-api-reference" target="_blank" rel="noopener noreferrer">README API reference</a>.</p>
+      </section>
+
+      <section class="tutorial-section" id="deferred">
+        <h2>Deferred operations</h2>
+        <p>Four operations are present in the wrapper but <code>die</code> with a clear message rather than returning partial data &mdash; each needs an FFI shape the current blocking JSON-in/JSON-out boundary doesn't model yet:</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Docker::logs_follow</code></td><td>streaming logs &mdash; needs a callback FFI; use <code>Docker::logs</code> for snapshot reads</td></tr>
+            <tr><td><code>Docker::events</code></td><td>streaming daemon events &mdash; needs a callback FFI</td></tr>
+            <tr><td><code>Docker::push</code></td><td>needs the registry-auth surface designed</td></tr>
+            <tr><td><code>Docker::build</code></td><td>needs the tar + stream surface designed</td></tr>
+          </tbody>
+        </table>
+        <p>One-shot <code>stats</code> (<code>--no-stream</code>) ships; the continuous-stream variants do not. Calling a deferred op raises a <code>die</code> naming the op and the reason, so scripts fail loudly instead of silently mis-behaving.</p>
+      </section>
+
+      <section class="tutorial-section" id="examples">
+        <h2>Runnable examples</h2>
+        <p>The <code>examples/</code> directory ships <code>.stk</code> scripts that are eval-guarded so they exit cleanly when no daemon is reachable:</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>discover.stk</code></td><td>read-only tour: version, info, <code>ps -a</code>, image count</td></tr>
+            <tr><td><code>health.stk</code></td><td>daemon snapshot + per-container status via <code>inspect</code></td></tr>
+            <tr><td><code>run.stk</code></td><td>pull, run, inspect, stop, rm lifecycle</td></tr>
+            <tr><td><code>logs.stk</code></td><td>buffered <code>logs</code> read (the streaming follow path is deferred)</td></tr>
+            <tr><td><code>build.stk</code></td><td>image-build sketch (the <code>build</code> op is deferred)</td></tr>
+          </tbody>
+        </table>
+<pre># run any example
+s examples/discover.stk
+
+# point it at a remote daemon
+DOCKER_HOST=tcp://localhost:2375 s examples/discover.stk</pre>
+      </section>
+
+      <section class="tutorial-section" id="testing">
+        <h2>Testing</h2>
+<pre># compile-only — no live daemon needed (exercises the pure helpers)
+cargo test
+
+# live round-trip against a reachable daemon
+DOCKER_HOST=unix:///var/run/docker.sock s test t/</pre>
+        <p>The live tests under <code>t/</code> pull <code>busybox:latest</code>, run a sleep container under a unique <code>stryke-test-$$</code> name, create networks/volumes with unique names, exec into the container, and clean up at exit. <code>t/test_stryke_docker_surface.stk</code> is a wrapper-completeness pin so the <code>.stk</code> surface can't silently drop a function.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p><code>bollard</code> + tokio for full daemon-API coverage &mdash; opt-in so the stryke core binary stays under 40 MB.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>docker__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_docker.{dylib,so}</code>, dlopened in-process on first <code>use Docker</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section" id="ffi">
+        <h2>FFI layer</h2>
+        <p>Each <code>Docker::*</code> wrapper builds a JSON args dict and calls a sibling <code>docker__*</code> symbol resolved out of <code>libstryke_docker.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use Docker</code> (via stryke's <code>pkg::commands::try_load_ffi_for</code> resolver hook). Dispatch is by symbol name, not by a <code>verb</code> field in the payload &mdash; the wrapper sends the call-specific keys directly (<code>container</code>, <code>image</code>, <code>tail</code>, &hellip;) plus an optional <code>host</code> override. The authoritative export list is <code>[ffi].exports</code> in <code>stryke.toml</code>.</p>
+        <p>Responses are JSON. A success returns the per-function result object directly; a failure returns <code>{"error": "&lt;msg&gt;"}</code> and the wrapper's <code>_decode</code> step raises <code>die "Docker::&lt;fn&gt;: &lt;msg&gt;"</code>. A panic inside the handler is caught and surfaced as the same <code>error</code> shape rather than aborting the process.</p>
+<pre># request (built by the .stk wrapper, dispatched by symbol name)
+docker__stop({"container": "web", "timeout": 5})
+
+# success — the per-fn result object, returned as-is
+{"ok": true}
+{"registry": "ghcr.io", "namespace": "o", "repository": "a", "tag": "1.2", ...}
+
+# failure — wrapper die()s with the message
+{"error": "No such container: web"}</pre>
+        <p><strong>Persistent state.</strong> A single shared <code>tokio</code> multi-thread runtime drives every async call, and a <code>bollard::Docker</code> client cache keyed by <code>DOCKER_HOST</code> reuses the same client + underlying HTTP pool across calls &mdash; no fork-per-call, no fresh connection each time. The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by stryke's cdylib loader.</p>
+      </section>
+
+      <section class="tutorial-section" id="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Docker::ping</code> returns false / version <code>die</code>s</td><td>No daemon at the resolved endpoint. Start Docker Desktop, <code>sudo systemctl start docker</code>, or set <code>DOCKER_HOST</code> to a reachable socket / tcp url.</td></tr>
+            <tr><td><code>die "Docker::&lt;fn&gt;: &lt;msg&gt;"</code></td><td>The daemon returned an error (no such container, image not found, &hellip;). The message is the daemon's, passed through the FFI <code>error</code> envelope.</td></tr>
+            <tr><td>a deferred op <code>die</code>s</td><td><code>logs_follow</code>, <code>events</code>, <code>push</code>, <code>build</code> are not implemented in the <code>0.19.0</code> cdylib &mdash; see <a href="#deferred">Deferred operations</a>.</td></tr>
+            <tr><td><code>Docker::exec: cmd must be arrayref</code></td><td><code>exec</code> takes the command as an arrayref: <code>Docker::exec("web", ["sh","-c","&hellip;"])</code>.</td></tr>
+            <tr><td>helper validators want pure input</td><td>The <code>parse_*</code> / <code>valid_*</code> / <code>build_*</code> helpers never touch a socket &mdash; if they fail it is bad input, not a daemon problem. <code>valid_*</code> returns <code>{ valid, reason }</code> rather than dying.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-docker/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — docker__* extern "C" exports
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper(s) — `use Docker`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

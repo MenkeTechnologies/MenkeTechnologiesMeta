@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-search engineering report — architecture of the Elasticsearch / OpenSearch cdylib: in-process dlopen, cached ureq Agent pool, JSON-in/JSON-out FFI contract, pure query-DSL builders.">
+  <title>stryke-search — Engineering report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+  </style>
+</head>
+<body>
+  <div class="tutorial-wrap">
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <h1 class="tutorial-brand">// STRYKE-SEARCH &mdash; ENGINEERING REPORT</h1>
+        <nav class="tutorial-nav">
+          <a href="index.html">Documentation</a>
+          <a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <section>
+        <h2>Transport</h2>
+        <p>
+          The client talks to the cluster over its REST API using
+          <code>ureq</code> — a synchronous, pure-Rust HTTP client backed by
+          rustls. There is no async runtime and no OpenSSL, which keeps the
+          dependency tree vendorable and the build reproducible. Elasticsearch
+          and OpenSearch expose the same <code>_search</code>, <code>_bulk</code>,
+          <code>_doc</code>, <code>_cat</code>, and <code>_cluster</code>
+          endpoints, so a single client covers both without version-locked SDK
+          types.
+        </p>
+      </section>
+
+      <section>
+        <h2>Connection cache</h2>
+        <p>
+          A <code>ureq::Agent</code> owns an HTTP keep-alive connection pool. One
+          <code>Agent</code> is cached per <code>(base_url, auth)</code> tuple in a
+          <code>OnceCell&lt;Mutex&lt;HashMap&gt;&gt;</code> for the life of the
+          stryke process, so repeated <code>Search::*</code> calls reuse pooled
+          sockets instead of reconnecting. Auth precedence is <code>api_key</code>
+          (sent as <code>ApiKey &lt;key&gt;</code>) over <code>username</code> +
+          <code>password</code> (HTTP Basic), resolved once when the key is built.
+        </p>
+      </section>
+
+      <section>
+        <h2>FFI contract</h2>
+        <p>
+          Each <code>#[no_mangle] extern "C" fn search__*</code> is a
+          JSON-string-in / JSON-string-out wrapper. stryke's FFI bridge resolves
+          the symbols at first <code>use Search</code>, passes a JSON-encoded args
+          dict on each call, and copies the returned JSON into a stryke string;
+          <code>stryke_free_cstring</code> frees the allocation. Handlers run
+          inside <code>catch_unwind</code>, so a panic becomes an
+          <code>{ "error": … }</code> result rather than unwinding across the FFI
+          boundary.
+        </p>
+      </section>
+
+      <section>
+        <h2>Request building</h2>
+        <p>
+          Every network wrapper builds its request hash through one helper,
+          <code>Search::_req</code>. It copies the connection keys
+          (<code>url</code>, <code>host</code>, <code>port</code>,
+          <code>username</code>, <code>password</code>, <code>api_key</code>,
+          <code>tls</code>, <code>params</code>) from the caller's
+          <code>%opts</code>, filtering out undefined values so the cdylib
+          applies its own defaults (<code>127.0.0.1:9200</code>, scheme from
+          <code>tls</code>). When neither <code>url</code> nor <code>host</code>
+          is supplied it falls back to the <code>$SEARCH_URL</code> environment
+          variable. Per-operation fields (index, id, body, query, ops, …) are
+          merged in by each wrapper before the hash is JSON-encoded and handed to
+          the FFI symbol.
+        </p>
+      </section>
+
+      <section>
+        <h2>Error dispatch</h2>
+        <p>
+          Every wrapper routes its FFI return through
+          <code>Search::_decode</code>, which parses the JSON and, when the
+          result is a hash carrying an <code>error</code> key, raises
+          <code>die "Search::&lt;fn&gt;: &lt;reason&gt;"</code>. Callers see a
+          stryke exception instead of a silent error hash. Boolean-style
+          wrappers (<code>ping</code>, <code>index_exists</code>,
+          <code>doc_exists</code>, <code>index_template_exists</code>) unwrap the
+          <code>value</code> field; list wrappers (<code>index_list</code>,
+          <code>cat</code>) dereference the returned array.
+        </p>
+      </section>
+
+      <section>
+        <h2>Pure builders</h2>
+        <p>
+          The query-DSL builders (<code>match</code>, <code>term</code>,
+          <code>range</code>, <code>bool</code>, <code>multi_match</code>,
+          <code>geo_bounding_box</code>, <code>function_score</code>,
+          <code>more_like_this</code>, …), the aggregation builders
+          (<code>agg_terms</code>, <code>agg_date_histogram</code>,
+          <code>agg_top_hits</code>, <code>agg_global</code>, …), the body and
+          field composers (<code>query_body</code>, <code>sort</code>,
+          <code>highlight</code>, <code>bulk_ndjson</code>, <code>escape</code>),
+          and the URL helpers (<code>build_url</code>, <code>parse_url</code>,
+          <code>redact_url</code>, <code>valid_index_name</code>) take no
+          connection. They return bare clauses that nest directly inside other
+          builders. They are unit-tested in the crate and pinned by the surface
+          test, so they validate in CI with no cluster present.
+        </p>
+      </section>
+
+      <section>
+        <h2>Test + build matrix</h2>
+        <p>
+          The crate is <code>cdylib</code>-only, so the integration test asserts
+          only that the crate type-checks and links. The real coverage is in
+          <code>src/lib.rs</code>'s <code>#[cfg(test)]</code> module (NDJSON
+          build, Lucene escaping, URL parse / redact, basic-auth header,
+          percent-encoding), the <code>t/test_stryke_search_surface.stk</code>
+          surface pin (every <code>Search::*</code> wrapper resolves and every
+          builder produces the right shape, no cluster), and
+          <code>t/test_search.stk</code> (end-to-end CRUD + search against a live
+          cluster, short-circuited when none answers). CI runs
+          <code>cargo check</code>, <code>fmt</code>, <code>clippy -D
+          warnings</code>, <code>cargo test</code> on Ubuntu and macOS,
+          <code>cargo doc -D warnings</code>, release builds for the three host
+          triples, and the docs / README gate suite.
+        </p>
+      </section>
+    </main>
+
+    <footer class="tutorial-footer">
+      <p>MIT &middot; MenkeTechnologies</p>
+    </footer>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

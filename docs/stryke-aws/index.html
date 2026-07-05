@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-aws — AWS CLIENT FOR STRYKE // S3 + DYNAMODB + SQS + LAMBDA + STS + SNS + SSM + SECRETS + SES + CLOUDWATCH + LOGS + EC2 + KMS + IAM + KINESIS + ECR + STEP FUNCTIONS. AWS client for stryke across 17 services. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The 17 SDKs combined are too much to bake into stryke core, so they ship as a Rust cdylib that stryke dlopens in-process on first `use AWS`.">
+  <title>stryke-aws — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+    .api-tbl { width: 100%; border-collapse: collapse; margin: 0.5rem 0 0.9rem; font-size: 12px; }
+    .api-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 5px 9px;
+      border: 1px solid var(--border);
+    }
+    .api-tbl td { padding: 5px 9px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .api-tbl td:first-child {
+      width: 42%;
+      color: var(--accent-light);
+      font-family: 'Share Tech Mono', monospace;
+      white-space: nowrap;
+    }
+    .api-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; font-size: 11.5px; }
+    .svc-h { color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 13px; letter-spacing: 0.5px; margin: 1.1rem 0 0.2rem; }
+    .svc-h code { color: var(--accent); background: var(--bg); padding: 1px 6px; font-size: 12px; }
+    .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 4px; margin: 0.5rem 0; }
+    .toc-grid a { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--cyan); text-decoration: none; padding: 3px 6px; border: 1px solid var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-AWS &mdash; AWS CLIENT FOR STRYKE // S3 + DYNAMODB + SQS + LAMBDA + STS + SNS + SSM + SECRETS + SES + CLOUDWATCH + LOGS + EC2 + KMS + IAM + KINESIS + ECR + STEP FUNCTIONS</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_aws.{dylib,so}</code> · dlopen'd in-process on <code>use AWS</code> · opt-in (kept out of stryke core) · 17 services</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-aws/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-AWS</h2>
+      <p class="tutorial-subtitle"><strong>The cloud, one stryke pipe away.</strong> AWS client for stryke across 17 services &mdash; S3, DynamoDB, SQS, Lambda, STS, SNS, SSM Parameter Store, Secrets Manager, SES, CloudWatch, CloudWatch Logs, EC2, KMS, IAM, Kinesis, ECR, and Step Functions. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The 17 SDKs combined are too much to bake into stryke core, so they ship as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use AWS</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Contents</h2>
+        <div class="toc-grid">
+          <a href="#install">Install</a>
+          <a href="#quickstart">Quick start</a>
+          <a href="#config">Configuration</a>
+          <a href="#reference">API reference</a>
+          <a href="#ddb-encoding">DynamoDB encoding</a>
+          <a href="#localstack">LocalStack / MinIO</a>
+          <a href="#helpers">Pure helpers</a>
+          <a href="#tests">Tests</a>
+          <a href="#why">Why a package</a>
+          <a href="#ffi">FFI layer</a>
+          <a href="#layout">Layout</a>
+          <a href="#siblings">Sibling packages</a>
+        </div>
+      </section>
+
+      <section class="tutorial-section" id="install">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-aws
+
+# from a local checkout
+cd ~/projects/stryke-aws
+cargo build --release            # produces target/release/libstryke_aws.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/aws@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use AWS</code> &mdash; no helper-binary fork per call (the v1 helper-binary model was replaced in v0.2.0). Any stryke script that declares <code>use AWS</code> (or a submodule like <code>use AWS::S3</code>) resolves the package automatically. Credentials and region come from the standard AWS chain (env vars, <code>~/.aws/config|credentials</code>, IMDS) &mdash; same as the <code>aws</code> CLI.</p>
+      </section>
+
+      <section class="tutorial-section" id="quickstart">
+        <h2>Quick start: <code>use AWS</code></h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>identity check</td><td><code>p to_json AWS::STS::caller_identity()</code></td></tr>
+            <tr><td>list S3 keys</td><td><code>val @keys = AWS::S3::ls "s3://my-bucket/prefix/", delimiter =&gt; "/"</code></td></tr>
+            <tr><td>get an object</td><td><code>p AWS::S3::get "s3://my-bucket/hello.txt"</code></td></tr>
+            <tr><td>put an object</td><td><code>AWS::S3::put "s3://my-bucket/hello.txt", data =&gt; "hi"</code></td></tr>
+            <tr><td>DynamoDB item</td><td><code>AWS::Dynamo::put "users", { id =&gt; "u-42", name =&gt; "alice" }</code></td></tr>
+            <tr><td>send SQS message</td><td><code>AWS::SQS::send $queue_url, "payload"</code></td></tr>
+            <tr><td>invoke Lambda + capture</td><td><code>val $reply = AWS::Lambda::call "my-fn", { hello =&gt; "world" }</code></td></tr>
+            <tr><td>publish to SNS</td><td><code>AWS::SNS::publish "alert", topic_arn =&gt; $arn</code></td></tr>
+            <tr><td>read a parameter</td><td><code>p AWS::SSM::get "/app/db/url"</code></td></tr>
+            <tr><td>fetch a secret</td><td><code>p AWS::Secrets::get "prod/api-key"</code></td></tr>
+            <tr><td>LocalStack endpoint override</td><td><code>AWS::S3::ls "s3://...", endpoint =&gt; "http://localhost:4566"</code></td></tr>
+          </tbody>
+        </table>
+        <p>Every public fn accepts per-call connection overrides as named options &mdash; <code>region</code>, <code>profile</code>, and <code>endpoint</code> (for LocalStack / MinIO):</p>
+<pre>AWS::S3::ls "s3://...",
+    region   =&gt; "us-west-2",
+    profile  =&gt; "prod",
+    endpoint =&gt; "http://localstack:4566"</pre>
+        <p>The full surface is mirrored below and in the <a href="https://github.com/MenkeTechnologies/stryke-aws#0x03-api-reference" target="_blank" rel="noopener noreferrer">README "API reference" section</a>.</p>
+      </section>
+
+      <section class="tutorial-section" id="config">
+        <h2>Configuration</h2>
+        <table class="api-tbl">
+          <thead><tr><th>Source</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td>standard AWS chain</td><td>Credentials + region from env vars, <code>~/.aws/config|credentials</code>, IMDS &mdash; same resolution order as the <code>aws</code> CLI</td></tr>
+            <tr><td><code>region =&gt; "..."</code></td><td>Per-call region override; a separate <code>SdkConfig</code> is cached per region</td></tr>
+            <tr><td><code>profile =&gt; "..."</code></td><td>Per-call named profile from <code>~/.aws/config</code></td></tr>
+            <tr><td><code>endpoint =&gt; "..."</code></td><td>Per-call endpoint override (LocalStack, MinIO, VPC endpoints)</td></tr>
+            <tr><td><code>$ENV{AWS_ENDPOINT_URL}</code></td><td>Global default endpoint for all calls</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="reference">
+        <h2>API reference</h2>
+        <p>Each row is a public stryke fn. <code>%opts</code> on any fn carries the named connection overrides above plus the per-fn options noted. Responses are plain stryke values (scalars / arrayrefs / hashrefs). Deferred ops <code>die</code> with a message naming the cdylib export that needs adding.</p>
+
+        <p class="svc-h"><code>use AWS</code> &mdash; plumbing</p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>AWS::version()</td><td>cdylib package version string</td></tr>
+            <tr><td>AWS::ping(%opts)</td><td>STS-backed connectivity probe</td></tr>
+          </tbody>
+        </table>
+        <p>Plus the flat <code>AWS::&lt;service&gt;_&lt;op&gt;</code> fns that the namespaced wrappers below delegate to.</p>
+
+        <p class="svc-h"><code>use AWS::S3</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>S3::ls $uri, %opts</td><td>@entries &mdash; <code>{type=&gt;"object", key, size, etag, last_modified, storage_class}</code> or <code>{type=&gt;"prefix", key}</code> when <code>delimiter</code> is set</td></tr>
+            <tr><td>S3::get $uri, %opts</td><td>$body (or $path when <code>output=&gt;"PATH"</code>)</td></tr>
+            <tr><td>S3::put $uri, %opts</td><td>\%resp &mdash; <code>data=&gt;$bytes</code> | <code>input=&gt;"PATH"</code></td></tr>
+            <tr><td>S3::head $uri, %opts</td><td>\%resp (content_length, content_type, etag, …)</td></tr>
+            <tr><td>S3::rm $uri, %opts</td><td>\%resp</td></tr>
+            <tr><td>S3::buckets %opts</td><td>@buckets</td></tr>
+            <tr><td>S3::versions $uri, %opts</td><td>\%resp &mdash; <code>{ versions, delete_markers }</code></td></tr>
+            <tr><td>S3::location $uri, %opts</td><td>\%resp &mdash; <code>{ bucket, location_constraint, region }</code></td></tr>
+            <tr><td>S3::tags $uri, %opts</td><td>\%tags &mdash; <code>{ key =&gt; value }</code></td></tr>
+            <tr><td>S3::mb $uri, %opts</td><td>\%resp &mdash; CreateBucket; <code>{ bucket, location, created }</code></td></tr>
+            <tr><td>S3::rb $uri, %opts</td><td>1 | 0 &mdash; DeleteBucket (bucket must be empty)</td></tr>
+            <tr><td>S3::presign $uri, %opts</td><td>dies &mdash; deferred in the cdylib</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::Dynamo</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>Dynamo::get $table, $key, %opts</td><td>\%item | undef</td></tr>
+            <tr><td>Dynamo::put $table, $item, %opts</td><td><code>{ ok: 1 }</code></td></tr>
+            <tr><td>Dynamo::delete $table, $key, %opts</td><td>1 | 0</td></tr>
+            <tr><td>Dynamo::query $table, %opts</td><td>@items &mdash; opts: key_condition, values, names, filter, index, limit</td></tr>
+            <tr><td>Dynamo::scan $table, %opts</td><td>@items &mdash; opts: filter, values, limit</td></tr>
+            <tr><td>Dynamo::describe $table, %opts</td><td>\%info &mdash; status, item_count, key_schema, arn</td></tr>
+            <tr><td>Dynamo::tables %opts</td><td>@names</td></tr>
+            <tr><td>Dynamo::transact %opts</td><td>$count &mdash; opts: puts, deletes; atomic</td></tr>
+            <tr><td>Dynamo::ttl $table, %opts</td><td>\%info &mdash; <code>{ status, attribute_name }</code></td></tr>
+            <tr><td>Dynamo::create $table, $hash_key, %opts</td><td>\%resp &mdash; CreateTable (on-demand); opts: hash_key_type, range_key, range_key_type</td></tr>
+            <tr><td>Dynamo::drop $table, %opts</td><td>\%resp &mdash; DeleteTable; <code>{ table, status, deleted }</code></td></tr>
+            <tr><td>Dynamo::batch_write $table, $rows, %opts</td><td>dies &mdash; deferred in the cdylib</td></tr>
+            <tr><td>Dynamo::scan_stream $table, %opts</td><td>dies &mdash; deferred in the cdylib</td></tr>
+          </tbody>
+        </table>
+        <p><code>query</code>/<code>scan</code> take a DynamoDB expression plus a <code>values</code> hashref of <code>:placeholder =&gt; value</code> bindings (and optional <code>names</code> for <code>#alias</code>). Nested maps/lists round-trip recursively; binary attributes come back as <code>"base64:…"</code>.</p>
+
+        <p class="svc-h"><code>use AWS::SQS</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>SQS::send $queue, $body, %opts</td><td>\%resp &mdash; opts: delay_seconds, dedup_id, group_id</td></tr>
+            <tr><td>SQS::receive $queue, %opts</td><td>@messages &mdash; opts: max, wait, visibility</td></tr>
+            <tr><td>SQS::delete $queue, $receipt, %opts</td><td><code>{ ok: 1 }</code></td></tr>
+            <tr><td>SQS::list %opts</td><td>@urls (prefix filter deferred)</td></tr>
+            <tr><td>SQS::purge $queue, %opts</td><td>1 | 0 &mdash; delete all messages</td></tr>
+            <tr><td>SQS::attrs $queue, %opts</td><td>\%attributes &mdash; GetQueueAttributes (All)</td></tr>
+            <tr><td>SQS::set_attrs $queue, $attributes, %opts</td><td>\%resp &mdash; SetQueueAttributes</td></tr>
+            <tr><td>SQS::change_visibility $queue, $receipt, $timeout, %opts</td><td>\%resp</td></tr>
+            <tr><td>SQS::pump $queue, %opts</td><td>$count &mdash; callback + auto-delete on success</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::Lambda</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>Lambda::invoke $name, $payload, %opts</td><td>\%resp &mdash; <code>{ function, status_code, result }</code></td></tr>
+            <tr><td>Lambda::call $name, $payload, %opts</td><td>$result &mdash; just <code>.result</code> (undef unless status_code == 200)</td></tr>
+            <tr><td>Lambda::list %opts</td><td>@functions</td></tr>
+            <tr><td>Lambda::get $name, %opts</td><td>\%resp &mdash; GetFunction: <code>{ runtime, handler, arn, memory_size, timeout, … }</code></td></tr>
+          </tbody>
+        </table>
+        <p><code>invocation_type =&gt; "event"</code> (fire-and-forget) is deferred in the cdylib.</p>
+
+        <p class="svc-h"><code>use AWS::STS</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>STS::caller_identity %opts</td><td><code>{ account, arn, user_id }</code></td></tr>
+            <tr><td>STS::assume_role $role_arn, %opts</td><td>\%creds &mdash; opts: session_name; temp credentials</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::SNS</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>SNS::topics %opts</td><td>@topic_arns</td></tr>
+            <tr><td>SNS::create $name, %opts</td><td>$topic_arn</td></tr>
+            <tr><td>SNS::publish $message, %opts</td><td>$message_id &mdash; opts: topic_arn | target_arn | phone_number, subject</td></tr>
+            <tr><td>SNS::subscribe $topic_arn, $protocol, $endpoint, %opts</td><td>$subscription_arn</td></tr>
+            <tr><td>SNS::unsubscribe $subscription_arn, %opts</td><td>1 | 0</td></tr>
+            <tr><td>SNS::subscriptions $topic_arn, %opts</td><td>@{ {subscription_arn, protocol, endpoint, owner} }</td></tr>
+            <tr><td>SNS::delete $topic_arn, %opts</td><td>1 | 0 &mdash; DeleteTopic</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::SSM</code> &mdash; Parameter Store</p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>SSM::get $name, %opts</td><td>$value &mdash; opts: with_decryption</td></tr>
+            <tr><td>SSM::put $name, $value, %opts</td><td>$version &mdash; opts: type (String|StringList|SecureString), overwrite</td></tr>
+            <tr><td>SSM::by_path $path, %opts</td><td>@{ {name, value} } &mdash; opts: recursive, with_decryption</td></tr>
+            <tr><td>SSM::delete $name, %opts</td><td>1 | 0</td></tr>
+            <tr><td>SSM::get_many $names_or_aref, %opts</td><td>\%resp &mdash; GetParameters (≤10): <code>{ parameters, invalid_parameters }</code></td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::Secrets</code> &mdash; Secrets Manager</p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>Secrets::get $secret_id, %opts</td><td>$secret_string</td></tr>
+            <tr><td>Secrets::create $name, $secret_string, %opts</td><td><code>{ arn, name }</code></td></tr>
+            <tr><td>Secrets::put $secret_id, $secret_string, %opts</td><td>$version_id</td></tr>
+            <tr><td>Secrets::list %opts</td><td>@{ {name, arn} }</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::SES</code> &mdash; email (v2)</p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>SES::send $from, $to_or_aref, %opts</td><td>$message_id &mdash; opts: subject, body, html</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::CloudWatch</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>CloudWatch::put $namespace, $metric_name, $value, %opts</td><td>1 &mdash; opts: unit</td></tr>
+            <tr><td>CloudWatch::list %opts</td><td>@{ {namespace, metric_name, dimensions} } &mdash; opts: namespace, metric_name</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::Logs</code> &mdash; CloudWatch Logs</p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>Logs::groups %opts</td><td>@groups &mdash; DescribeLogGroups; opts: prefix</td></tr>
+            <tr><td>Logs::create $name, %opts</td><td>1 &mdash; CreateLogGroup</td></tr>
+            <tr><td>Logs::filter $log_group, %opts</td><td>@events &mdash; opts: filter_pattern, start_time, end_time, limit</td></tr>
+            <tr><td>Logs::events $log_group, $log_stream, %opts</td><td>@events &mdash; opts: limit, start_from_head</td></tr>
+            <tr><td>Logs::put $log_group, $log_stream, $events, %opts</td><td>$next_token &mdash; PutLogEvents; events: [{message, timestamp(ms)}]; opts: sequence_token</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::EC2</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>EC2::instances %opts</td><td>@instances &mdash; DescribeInstances; opts: instance_ids</td></tr>
+            <tr><td>EC2::start $ids, %opts</td><td>@changes &mdash; StartInstances</td></tr>
+            <tr><td>EC2::stop $ids, %opts</td><td>@changes &mdash; StopInstances; opts: force</td></tr>
+            <tr><td>EC2::security_groups %opts</td><td>@groups &mdash; opts: group_ids</td></tr>
+            <tr><td>EC2::vpcs %opts</td><td>@vpcs &mdash; opts: vpc_ids</td></tr>
+            <tr><td>EC2::reboot $ids, %opts</td><td>@ids &mdash; RebootInstances</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::KMS</code> &mdash; Key Management Service</p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>KMS::keys %opts</td><td>@{ {key_id, key_arn} } &mdash; ListKeys</td></tr>
+            <tr><td>KMS::describe $key_id, %opts</td><td>\%info &mdash; DescribeKey</td></tr>
+            <tr><td>KMS::encrypt $key_id, $plaintext, %opts</td><td>$ciphertext (base64)</td></tr>
+            <tr><td>KMS::decrypt $ciphertext, %opts</td><td>$plaintext &mdash; opts: key_id</td></tr>
+            <tr><td>KMS::data_key $key_id, %opts</td><td><code>{ key_id, plaintext, ciphertext }</code> &mdash; opts: key_spec (default AES_256)</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::IAM</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>IAM::users %opts</td><td>@users &mdash; ListUsers</td></tr>
+            <tr><td>IAM::roles %opts</td><td>@roles &mdash; ListRoles</td></tr>
+            <tr><td>IAM::user %opts</td><td>\%user &mdash; GetUser; opts: user_name</td></tr>
+            <tr><td>IAM::role_policies $role_name, %opts</td><td>@{ {policy_name, policy_arn} }</td></tr>
+            <tr><td>IAM::role $role_name, %opts</td><td>\%role &mdash; GetRole; <code>{ role_name, role_id, arn, path, description, max_session_duration }</code></td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::Kinesis</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>Kinesis::list %opts</td><td>@stream_names &mdash; ListStreams</td></tr>
+            <tr><td>Kinesis::describe $stream_name, %opts</td><td>\%info &mdash; DescribeStream</td></tr>
+            <tr><td>Kinesis::put $stream_name, $partition_key, $data, %opts</td><td>\%resp &mdash; PutRecord</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::ECR</code> &mdash; Elastic Container Registry</p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>ECR::repositories %opts</td><td>@repos &mdash; DescribeRepositories; opts: repository_names</td></tr>
+            <tr><td>ECR::images $repository_name, %opts</td><td>@{ {image_digest, image_tag} } &mdash; ListImages</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h"><code>use AWS::StepFunctions</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>StepFunctions::list %opts</td><td>@{ {name, arn, type, creation_date} } &mdash; ListStateMachines</td></tr>
+            <tr><td>StepFunctions::start $state_machine_arn, %opts</td><td><code>{ execution_arn, start_date }</code> &mdash; opts: name, input</td></tr>
+            <tr><td>StepFunctions::describe $execution_arn, %opts</td><td>\%info &mdash; DescribeExecution</td></tr>
+          </tbody>
+        </table>
+
+        <p class="svc-h">Flat extras on <code>use AWS</code></p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
+          <tbody>
+            <tr><td>AWS::s3_copy_object $src_bucket, $src_key, $bucket, $key, %opts</td><td>\%resp</td></tr>
+            <tr><td>AWS::s3_delete_objects $bucket, \@keys, %opts</td><td>@deleted &mdash; batch delete (≤1000)</td></tr>
+            <tr><td>AWS::ddb_update_item $table, \%key, \%updates, %opts</td><td>1 | 0 &mdash; SET each attr</td></tr>
+            <tr><td>AWS::ddb_batch_get_item $table, \@keys, %opts</td><td>@items &mdash; ≤100 keys</td></tr>
+            <tr><td>AWS::ddb_batch_write_item $table, %opts</td><td>$count &mdash; opts: puts (≤25), deletes</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="ddb-encoding">
+        <h2>DynamoDB type encoding</h2>
+        <p>DynamoDB items are plain JSON in and out &mdash; no <code>AttributeValue</code> wrappers. The cdylib maps plain JSON to DynamoDB <code>AttributeValue</code> automatically:</p>
+        <table class="api-tbl">
+          <thead><tr><th>JSON</th><th>AttributeValue</th></tr></thead>
+          <tbody>
+            <tr><td>null</td><td><code>NULL(true)</code></td></tr>
+            <tr><td>bool</td><td><code>BOOL</code></td></tr>
+            <tr><td>number</td><td><code>N</code> (stringified to preserve precision)</td></tr>
+            <tr><td>string</td><td><code>S</code> (or <code>B</code> when the string is <code>"base64:..."</code>)</td></tr>
+            <tr><td>array</td><td><code>L</code> (heterogeneous)</td></tr>
+            <tr><td>object</td><td><code>M</code></td></tr>
+          </tbody>
+        </table>
+        <p>Set types (<code>SS</code> / <code>NS</code> / <code>BS</code>) round-trip <em>out</em> as JSON arrays. On the write path, pass them as an array (stored as <code>L</code>), or extend the cdylib export list if you need a typed set.</p>
+      </section>
+
+      <section class="tutorial-section" id="localstack">
+        <h2>LocalStack / MinIO</h2>
+<pre>val %ls = (endpoint =&gt; "http://localhost:4566", region =&gt; "us-east-1")
+AWS::S3::buckets(%ls) |&gt; ep
+AWS::SQS::list(%ls)   |&gt; ep</pre>
+        <p><code>$ENV{AWS_ENDPOINT_URL}</code> works as a global default endpoint for every call.</p>
+      </section>
+
+      <section class="tutorial-section" id="helpers">
+        <h2>Pure helpers (no AWS calls)</h2>
+        <p>These open no client &mdash; pure string parsing / validation, so they run with no credentials. Available on <code>use AWS</code>.</p>
+        <table class="api-tbl">
+          <thead><tr><th>Fn</th><th>Returns</th></tr></thead>
+          <tbody>
+            <tr><td>AWS::parse_arn($arn)</td><td><code>{ partition, service, region, account_id, resource, resource_type, resource_id }</code></td></tr>
+            <tr><td>AWS::build_arn(%opts)</td><td>$arn &mdash; parts → ARN; inverse of parse_arn</td></tr>
+            <tr><td>AWS::parse_s3_uri($uri)</td><td><code>{ bucket, key }</code></td></tr>
+            <tr><td>AWS::build_s3_uri($b, $k?)</td><td>$uri &mdash; inverse of parse_s3_uri</td></tr>
+            <tr><td>AWS::s3_uri_to_arn($uri, $partition?)</td><td><code>{ arn, bucket, key }</code> &mdash; s3://b/k → arn:aws:s3:::b/k</td></tr>
+            <tr><td>AWS::arn_to_s3_uri($arn)</td><td><code>{ uri, bucket, key }</code> &mdash; inverse of s3_uri_to_arn</td></tr>
+            <tr><td>AWS::valid_bucket_name($n)</td><td><code>{ name, valid, reason }</code></td></tr>
+            <tr><td>AWS::valid_s3_key($key)</td><td><code>{ key, valid, reason, bytes }</code> &mdash; non-empty, ≤1024 UTF-8 bytes</td></tr>
+            <tr><td>AWS::valid_sqs_queue_name($n)</td><td><code>{ name, valid, reason, fifo }</code> &mdash; ≤80 chars, FIFO ends .fifo</td></tr>
+            <tr><td>AWS::valid_account_id($id)</td><td><code>{ account_id, valid, reason }</code> &mdash; exactly 12 decimal digits</td></tr>
+            <tr><td>AWS::valid_arn($arn)</td><td><code>{ arn, valid, reason }</code> &mdash; non-throwing structure check</td></tr>
+            <tr><td>AWS::arn_matches($pattern, $arn)</td><td><code>{ pattern, arn, matches }</code> &mdash; IAM policy resource matching (* / ?)</td></tr>
+            <tr><td>AWS::partition_for_region($r)</td><td><code>{ region, partition }</code> &mdash; cn-*→aws-cn, us-gov-*→aws-us-gov, …</td></tr>
+            <tr><td>AWS::valid_region($r)</td><td><code>{ region, valid, partition, reason }</code> &mdash; botocore regionRegex per partition</td></tr>
+            <tr><td>AWS::dns_suffix_for_partition($p)</td><td><code>{ partition, dns_suffix }</code> &mdash; aws→amazonaws.com, aws-cn→amazonaws.com.cn, …</td></tr>
+            <tr><td>AWS::service_endpoint($svc, $region)</td><td><code>{ service, region, partition, dns_suffix, endpoint, url }</code></td></tr>
+            <tr><td>AWS::parse_service_endpoint($endpoint)</td><td>inverse of service_endpoint; host or URL → parts</td></tr>
+            <tr><td>AWS::s3_object_url($bucket, $region, $key?)</td><td><code>{ url, bucket, region, partition, host }</code> &mdash; virtual-hosted https URL</td></tr>
+            <tr><td>AWS::parse_s3_url($url)</td><td>inverse of s3_object_url; virtual-hosted + path styles</td></tr>
+            <tr><td>AWS::region_for_az($az)</td><td><code>{ az, region, zone_letter }</code> &mdash; us-east-1a → us-east-1</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="tests">
+        <h2>Tests</h2>
+<pre>cargo test                                          # compiles, no live calls
+s test t/                                           # creds-aware end-to-end
+
+# Opt into per-service round-trips with a writable resource:
+export STRYKE_AWS_TEST_BUCKET=my-test-bucket
+export STRYKE_AWS_TEST_TABLE=stryke-aws-demo        # PK `id: S`
+export STRYKE_AWS_TEST_QUEUE=https://sqs.us-east-1.amazonaws.com/.../my-q
+s test t/</pre>
+        <p>The suite skips cleanly when the cdylib isn't installed, when credentials are missing, or when the per-service env vars are unset. The dev workflow targets &mdash; <code>make</code> (release build), <code>make debug</code>, <code>make test</code>, <code>make install</code>, <code>make clean</code> &mdash; wrap the same steps.</p>
+      </section>
+
+      <section class="tutorial-section" id="why">
+        <h2>Why a package, not a builtin</h2>
+        <p>The official <code>aws-sdk-rust</code> crates pull in tokio, hyper, rustls, and a fat chain of smithy / signing / endpoint-resolution support code. The 17 SDKs combined are too much to bake into stryke core. This package ships them once, opt-in.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>aws__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_aws.{dylib,so}</code>, dlopened in-process on first <code>use AWS</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section" id="ffi">
+        <h2>FFI layer</h2>
+        <p>Each <code>AWS::*</code> wrapper builds a JSON args dict and calls a sibling <code>aws__*</code> symbol resolved out of <code>libstryke_aws.{dylib,so}</code>, listed in the <code>[ffi]</code> exports table in <code>stryke.toml</code>. The cdylib is dlopened in-process on first <code>use AWS</code> (via stryke's <code>pkg::commands::try_load_ffi_for</code> resolver hook); a shared tokio runtime + a per-region <code>aws_config::SdkConfig</code> cache is held in <code>OnceCell</code> &mdash; no fork-per-call, no full IMDS/SSO/env creds chain on each call. Responses are JSON; errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with the message.</p>
+      </section>
+
+      <section class="tutorial-section" id="layout">
+        <h2>Layout</h2>
+<pre>stryke-aws/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — aws__* extern "C" exports
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrappers — AWS, AWS::S3, AWS::Dynamo, … (17 services)
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest ([ffi] exports table)
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section" id="siblings">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-polars — POLARS + NDARRAY + LINALG + FFT + RANDOM // STRYKE PACKAGE. Full pandas + numpy surface (DataFrame, Series, Index, IO, ndarray, ufuncs, linalg, random, fft, polynomial, masked arrays, datetime64) in a single cdylib, dlopen'd in-process by stryke on `use Polars`.">
+  <title>stryke-polars — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 38%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-POLARS &mdash; POLARS + NDARRAY + LINALG + FFT + RANDOM // STRYKE PACKAGE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">v0.22.0 &middot; 1417 cdylib exports &middot; 1505 <code>.stk</code> wrapper fns &middot; 46 <code>.stk</code> wrapper packages &middot; 167 Rust unit tests &middot; <code>dlopen</code>'d in-process on <code>use Polars</code> &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-polars/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-POLARS</h2>
+      <p class="tutorial-subtitle"><strong>The full pandas + numpy + scipy-class surface in one cdylib. No core bloat.</strong> pandas DataFrame + Series + Index + IO + Categorical, numpy ndarray + ufuncs + linalg + random + fft + polynomial + masked arrays + datetime64, plus signal processing, statistical tests, image filters, ML metrics, graph algorithms, time-series analytics, sparse matrix, distance / clustering, JSON / bit / format helpers &mdash; all in a single cdylib, <code>dlopen</code>'d in-process by stryke via <code>use Polars</code>.</p>
+
+      <div class="stat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(11rem,1fr));gap:0.5rem;margin:1rem 0;">
+        <div class="stat-card" style="border:1px solid var(--border);border-left:2px solid var(--cyan);padding:0.65rem 0.85rem;background:color-mix(in srgb, var(--bg-card) 92%, transparent);border-radius:2px;"><div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">v0.22.0</div><div style="font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);margin-top:0.2rem;">Current release</div></div>
+        <div class="stat-card" style="border:1px solid var(--border);border-left:2px solid var(--cyan);padding:0.65rem 0.85rem;background:color-mix(in srgb, var(--bg-card) 92%, transparent);border-radius:2px;"><div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--cyan);">1417</div><div style="font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);margin-top:0.2rem;">cdylib exports</div></div>
+        <div class="stat-card" style="border:1px solid var(--border);border-left:2px solid var(--cyan);padding:0.65rem 0.85rem;background:color-mix(in srgb, var(--bg-card) 92%, transparent);border-radius:2px;"><div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">46</div><div style="font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);margin-top:0.2rem;"><code>.stk</code> packages</div></div>
+        <div class="stat-card" style="border:1px solid var(--border);border-left:2px solid var(--cyan);padding:0.65rem 0.85rem;background:color-mix(in srgb, var(--bg-card) 92%, transparent);border-radius:2px;"><div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--green);">167</div><div style="font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);margin-top:0.2rem;">Rust unit tests</div></div>
+        <div class="stat-card" style="border:1px solid var(--border);border-left:2px solid var(--cyan);padding:0.65rem 0.85rem;background:color-mix(in srgb, var(--bg-card) 92%, transparent);border-radius:2px;"><div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--cyan);">0</div><div style="font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);margin-top:0.2rem;">clippy warnings (<code>-D warnings</code>)</div></div>
+        <div class="stat-card" style="border:1px solid var(--border);border-left:2px solid var(--cyan);padding:0.65rem 0.85rem;background:color-mix(in srgb, var(--bg-card) 92%, transparent);border-radius:2px;"><div style="font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--accent);">0</div><div style="font-family:'Share Tech Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);margin-top:0.2rem;">missing-docs (<code>#![deny]</code>)</div></div>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># build the cdylib + install as a stryke package
+git clone https://github.com/MenkeTechnologies/stryke-polars
+cd stryke-polars
+make install        # cargo build --release &amp;&amp; s pkg install -g .
+
+# or from a published GitHub release
+s pkg install -g github:MenkeTechnologies/stryke-polars
+
+# verify
+echo 'use Polars; say Polars::version()->{version}' | stryke</pre>
+        <p>The cdylib (<code>libstryke_polars.dylib</code> on macOS, <code>.so</code> on Linux) lands under <code>~/.stryke/store/stryke-polars@&lt;ver&gt;/</code> (per <code>make install</code>). <code>use Polars</code> resolves the installed package, <code>dlopen</code>'s it once per stryke session, and binds the FFI entry points lazily. Core stryke never links against polars/ndarray/openblas/rustfft.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start</h2>
+        <p>Every wrapper is namespaced under a per-family stryke package: <code>use Polars::DataFrame</code> binds <code>Polars::DataFrame::*</code>, <code>use Polars::NdArray</code> binds <code>Polars::NdArray::*</code>, and so on (one package per <code>lib/*.stk</code> module). DataFrame ops are stateless &mdash; each call takes the raw column hash (a reference, <code>\%cols</code>), not a previously-built handle.</p>
+<pre>use Polars
+use Polars::DataFrame
+
+# version blob: { version, polars, ndarray }
+val $v = Polars::version()
+p "stryke-polars $v-&gt;{version} (polars $v-&gt;{polars}, ndarray $v-&gt;{ndarray})"
+
+# DataFrame from a column dict (key -&gt; array)
+val %cols = (
+    ticker =&gt; ["AAPL", "MSFT", "NVDA"],
+    px     =&gt; [231.4, 422.1, 138.9],
+)
+
+# new() validates the shape and returns a { shape, columns } blob
+val $meta = Polars::DataFrame::new(\%cols)
+
+val ($nrows, $ncols) = @{ Polars::DataFrame::shape(\%cols) }   # =&gt; (3, 2)
+val @columns = @{ Polars::DataFrame::columns(\%cols) }          # =&gt; (ticker, px)
+val @types   = @{ Polars::DataFrame::dtypes(\%cols) }
+val $head    = Polars::DataFrame::head(\%cols, 2)
+val $proj    = Polars::DataFrame::select(\%cols, ["ticker"])</pre>
+        <p>numpy-style ndarray math through the <code>NdArray</code> package:</p>
+<pre>use Polars::NdArray
+
+val $a = Polars::NdArray::arange(0, 12, 1)
+val $b = Polars::NdArray::reshape($a, [3, 4])
+val $s = Polars::NdArray::sum($a)    # =&gt; 66
+val $m = Polars::NdArray::mean($a)   # =&gt; 5.5</pre>
+        <p>group-by aggregations (from <code>examples/groupby.stk</code>):</p>
+<pre>use Polars::DataFrame
+
+val %sales = (
+    region  =&gt; ["east", "east", "west", "west", "north", "north"],
+    revenue =&gt; [100, 150, 90, 130, 60, 85],
+    units   =&gt; [10, 12, 9, 11, 6, 8],
+)
+
+val $by_region   = Polars::DataFrame::groupby_sum(\%sales, ["region"])
+val $by_region_m = Polars::DataFrame::groupby_mean(\%sales, ["region"])
+val $by_region_c = Polars::DataFrame::groupby_count(\%sales, ["region"])</pre>
+        <p>Two self-contained, runnable tours ship in <code>examples/</code>: <a href="https://github.com/MenkeTechnologies/stryke-polars/blob/main/examples/discover.stk"><code>discover.stk</code></a> (shape / head / select / columns / dtypes / to_json) and <a href="https://github.com/MenkeTechnologies/stryke-polars/blob/main/examples/groupby.stk"><code>groupby.stk</code></a> (multi-key aggregations). Run either with <code>s examples/&lt;name&gt;.stk</code>. The full per-family surface is exercised by the suites in <code>t/</code> (<code>s test t/</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Surface — pandas + numpy core</h2>
+        <p>Counts below are the live cdylib export totals per family prefix (<code>grep -c 'pub extern "C" fn polars__&lt;prefix&gt;_' src/*.rs</code>). The <em>cdylib prefix</em> column is the flat FFI symbol prefix; the stryke-side surface is the namespaced <code>Polars::&lt;Family&gt;::&lt;verb&gt;</code> package form (see the <a href="https://github.com/MenkeTechnologies/stryke-polars#0x07-naming-convention">Naming Convention</a>).</p>
+        <table class="example-tbl">
+          <thead><tr><th>Family</th><th>Stryke package</th><th>cdylib prefix</th><th>Shipped</th></tr></thead>
+          <tbody>
+            <tr><td>pandas Series (+ <code>.str.*</code> / <code>.dt.*</code>)</td><td><code>Polars::Series</code></td><td><code>polars__sr_*</code></td><td>206</td></tr>
+            <tr><td>numpy ndarray</td><td><code>Polars::NdArray</code> / <code>NdArrayExt</code></td><td><code>polars__arr_*</code></td><td>177</td></tr>
+            <tr><td>pandas DataFrame</td><td><code>Polars::DataFrame</code> / <code>DataFrameExt</code></td><td><code>polars__df_*</code></td><td>119</td></tr>
+            <tr><td>numpy ufuncs</td><td><code>Polars::Ufunc</code> / <code>UfuncExt</code></td><td><code>polars__np_*</code></td><td>94</td></tr>
+            <tr><td>pandas Index / MultiIndex / DatetimeIndex</td><td><code>Polars::Index</code></td><td><code>polars__idx_*</code></td><td>69</td></tr>
+            <tr><td>numpy masked arrays</td><td><code>Polars::Masked</code></td><td><code>polars__ma_*</code></td><td>61</td></tr>
+            <tr><td>numpy random distributions</td><td><code>Polars::Random</code> / <code>RandomExt</code></td><td><code>polars__rand_*</code></td><td>40</td></tr>
+            <tr><td>numpy linalg</td><td><code>Polars::Linalg</code> / <code>LinalgExt</code></td><td><code>polars__linalg_*</code></td><td>37</td></tr>
+            <tr><td>pandas Categorical</td><td><code>Polars::Categorical</code></td><td><code>polars__cat_*</code></td><td>35</td></tr>
+            <tr><td>numpy datetime64 / timedelta64</td><td><code>Polars::DateTime64</code></td><td><code>polars__dt64_*</code></td><td>32</td></tr>
+            <tr><td>pandas IO (read/write CSV, JSON, JSONL, TSV, HTML, Markdown)</td><td><code>Polars::IO</code></td><td><code>polars__pd_*</code></td><td>29</td></tr>
+            <tr><td>numpy polynomial (Chebyshev, Hermite, Legendre, Laguerre&hellip;)</td><td><code>Polars::Polynomial</code> / <code>PolynomialExt</code></td><td><code>polars__poly_*</code></td><td>17</td></tr>
+            <tr><td>pandas DataFrame <code>.str.*</code> accessor</td><td><code>Polars::Text</code></td><td><code>polars__str_*</code></td><td>16</td></tr>
+            <tr><td>numpy fft</td><td><code>Polars::FFT</code> / <code>FFTExt</code></td><td><code>polars__fft_*</code></td><td>13</td></tr>
+            <tr><td>pandas DataFrame <code>.dt.*</code> accessor</td><td><code>Polars::DateTime64</code></td><td><code>polars__dt_*</code></td><td>13</td></tr>
+            <tr><td>dtype parsing / canonicalization</td><td><code>Polars::DataFrame</code></td><td><code>polars__parse_*</code></td><td>1</td></tr>
+            <tr><td><strong>Pandas + numpy subtotal</strong></td><td></td><td></td><td><strong>959</strong></td></tr>
+          </tbody>
+        </table>
+
+        <h2>Surface — scipy-class extensions</h2>
+        <p>Beyond pandas + numpy parity, the package ships a scipy-class extension layer. Every entry is a real Rust implementation backing the listed <code>.stk</code> package; counts are the live per-prefix export totals.</p>
+        <table class="example-tbl">
+          <thead><tr><th>Family</th><th>Stryke package</th><th>cdylib prefix</th><th>Shipped</th></tr></thead>
+          <tbody>
+            <tr><td>Image filters (blur, Sobel/Prewitt/Laplacian, morphology, rotate, resize)</td><td><code>Polars::Image</code></td><td><code>polars__img_*</code></td><td>42</td></tr>
+            <tr><td>Distances + distribution PDFs/CDFs (Euclidean, Manhattan, Minkowski, Cosine, Jaccard, Mahalanobis, &hellip;)</td><td><code>Polars::Dist</code></td><td><code>polars__dist_*</code></td><td>35</td></tr>
+            <tr><td>Signal processing (convolve, correlate, smoothing, peak finding, MACD, RSI, Bollinger)</td><td><code>Polars::Signal</code></td><td><code>polars__sig_*</code></td><td>35</td></tr>
+            <tr><td>Bit manipulation (popcount, rotate, MSB/LSB, base conversion, &hellip;)</td><td><code>Polars::Bit</code></td><td><code>polars__bit_*</code></td><td>31</td></tr>
+            <tr><td>Text / NLP (tokenize, ngrams, Levenshtein, LCS, camel↔snake)</td><td><code>Polars::Text</code></td><td><code>polars__text_*</code></td><td>27</td></tr>
+            <tr><td>Statistical tests (t-test, chi&sup2;, Mann-Whitney, KS, ANOVA, Levene, ACF/PACF, linregress)</td><td><code>Polars::Stattest</code></td><td><code>polars__stattest_*</code></td><td>24</td></tr>
+            <tr><td>Statistics (zscore, IQR, skew/kurt, pearson/spearman, MAE/MSE/R&sup2;, KL/JS divergence)</td><td><code>Polars::Stat</code></td><td><code>polars__stat_*</code></td><td>24</td></tr>
+            <tr><td>Misc math (factorial, choose, Fibonacci, primes, GCD/LCM, modpow, &hellip;)</td><td><code>Polars::Misc</code></td><td><code>polars__misc_*</code></td><td>23</td></tr>
+            <tr><td>ML metrics (accuracy, precision/recall/F1, ROC AUC, MCC, Cohen kappa, &hellip;)</td><td><code>Polars::Metric</code></td><td><code>polars__metric_*</code></td><td>23</td></tr>
+            <tr><td>Groupby aggregations</td><td><code>Polars::GroupBy</code></td><td><code>polars__gb_*</code></td><td>21</td></tr>
+            <tr><td>Hashing (djb2/djb2a, FNV-1/1a 64+32, Jenkins, CRC32, MurmurHash3-32, BKDR, RS, JS, AP, DEK, PJW, ELF, SAX, Fletcher-16)</td><td><code>Polars::Hash</code></td><td><code>polars__hash_*</code></td><td>18</td></tr>
+            <tr><td>Formatting (round, percent, currency, scientific, commas, human bytes, ordinal, Roman)</td><td><code>Polars::Fmt</code></td><td><code>polars__fmt_*</code></td><td>18</td></tr>
+            <tr><td>Window functions (Hann, Hamming, Blackman, Kaiser, Tukey, Lanczos, Parzen, &hellip;)</td><td><code>Polars::Window</code></td><td><code>polars__win_*</code></td><td>17</td></tr>
+            <tr><td>Sparse matrices (COO format)</td><td><code>Polars::Sparse</code></td><td><code>polars__sparse_*</code></td><td>15</td></tr>
+            <tr><td>JSON helpers (parse, stringify, path, keys/values, pluck, merge)</td><td><code>Polars::Json</code></td><td><code>polars__json_*</code></td><td>14</td></tr>
+            <tr><td>Time-series analytics (lag, diff, log/simple returns, drawdown, Sharpe, Sortino, VaR/CVaR)</td><td><code>Polars::TS</code></td><td><code>polars__ts_*</code></td><td>13</td></tr>
+            <tr><td>Graph algorithms (BFS, DFS, Dijkstra, connected components, Floyd-Warshall, PageRank)</td><td><code>Polars::Graph</code></td><td><code>polars__graph_*</code></td><td>13</td></tr>
+            <tr><td>Geometric (haversine, bearing, polygon area/perimeter, point-in-polygon, rotate/translate)</td><td><code>Polars::Geo</code></td><td><code>polars__geo_*</code></td><td>12</td></tr>
+            <tr><td>Boolean array ops</td><td><code>Polars::Bool</code></td><td><code>polars__bool_*</code></td><td>11</td></tr>
+            <tr><td>Set ops</td><td><code>Polars::Set</code></td><td><code>polars__set_*</code></td><td>10</td></tr>
+            <tr><td>Encoding (one-hot, label, binary, target, base64, hex, URL)</td><td><code>Polars::Encoding</code></td><td><code>polars__enc_*</code></td><td>8</td></tr>
+            <tr><td>Checksums (XOR, simple, Adler-32, BSD-16, internet)</td><td><code>Polars::Checksum</code></td><td><code>polars__sum_*</code></td><td>7</td></tr>
+            <tr><td>Interpolation (linear, nearest, zero-order, cubic-natural, log, bilinear grid)</td><td><code>Polars::Interp</code></td><td><code>polars__interp_*</code></td><td>6</td></tr>
+            <tr><td>Optimization (bisection, golden section, Newton-Raphson, secant, gradient descent)</td><td><code>Polars::Opt</code></td><td><code>polars__opt_*</code></td><td>5</td></tr>
+            <tr><td>Clustering (k-means, silhouette, DBSCAN neighbors)</td><td><code>Polars::Cluster</code></td><td><code>polars__cluster_*</code></td><td>5</td></tr>
+            <tr><td><strong>scipy-class subtotal</strong></td><td></td><td></td><td><strong>457</strong></td></tr>
+            <tr><td><strong>Grand total (+ <code>polars__version</code>)</strong></td><td></td><td></td><td><strong>1417</strong></td></tr>
+          </tbody>
+        </table>
+        <p>Per-family <code>.stk</code> wrappers under <code>lib/</code> expose every cdylib symbol as a typed <code>Polars::&lt;Family&gt;::&lt;verb&gt;</code> stryke fn &mdash; 46 packages, 1505 wrapper fns total. See the <a href="https://github.com/MenkeTechnologies/stryke-polars/tree/main/lib">lib/</a> directory for the wrapper sources and the <a href="https://github.com/MenkeTechnologies/stryke-polars#0x04-api-reference">README API Reference</a> for the package list. The 41 cdylib prefix families map onto these 46 packages (several families split a base + <code>Ext</code> package, e.g. <code>arr_*</code> &rarr; <code>NdArray</code> + <code>NdArrayExt</code>).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>stryke's core stays small on purpose &mdash; most one-liner / awk-replacement work doesn't need 200+ transitive crates of pandas + numpy machinery. The full DataFrame + ndarray + linalg + FFT surface hits a different scale: heavy deps, narrow use cases. The opt-in package tier exists precisely for this shape of code.</p>
+        <p>Parquet / Arrow IO routes through <a href="https://github.com/MenkeTechnologies/stryke-arrow"><code>stryke-arrow</code></a> to share a single arrow-rs link in-process &mdash; <code>stryke-polars</code> does not link <code>arrow-rs</code> directly to avoid <code>dlsym</code> conflicts.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quality gates</h2>
+        <p>Every commit on <code>main</code> runs through the CI matrix in <code>.github/workflows/ci.yml</code>. Pull requests must clear the same gates:</p>
+        <table class="example-tbl">
+          <thead><tr><th>Gate</th><th>Invariant</th></tr></thead>
+          <tbody>
+            <tr><td><code>cargo fmt --all --check</code></td><td>No drift from rustfmt; every file fmt-clean</td></tr>
+            <tr><td><code>cargo clippy --all-targets --locked -- -D warnings</code></td><td>Zero clippy warnings (no module-level <code>#![allow]</code> escape hatches)</td></tr>
+            <tr><td><code>cargo test --locked --no-fail-fast</code></td><td>167 hand-crafted unit tests, all green on macos-latest + ubuntu-latest</td></tr>
+            <tr><td><code>RUSTDOCFLAGS=-D warnings cargo doc --no-deps</code></td><td>Rustdoc clean; <code>#![deny(missing_docs)]</code> in <code>lib.rs</code> means every public item carries a <code>///</code> comment</td></tr>
+            <tr><td>Release build (3 targets)</td><td><code>x86_64-unknown-linux-gnu</code>, <code>x86_64-apple-darwin</code>, <code>aarch64-apple-darwin</code> &mdash; cdylib uploaded as build artifact</td></tr>
+            <tr><td>Contract gates</td><td>README newline + badge + h2 + https-link checks, workflow newline + no-tab checks, shell-script shebang + executable bit checks</td></tr>
+          </tbody>
+        </table>
+        <p>The 167 Rust unit tests assert mathematical correctness against canonical values &mdash; F(30) = 832,040, Levenshtein(kitten, sitting) = 3, Chebyshev L<sub>&infin;</sub> distance = max(|x&minus;y|), Haversine NYC→LA &asymp; 3936 km, Adler-32("Wikipedia") = 0x11E60398 (RFC 1950 vector), and so on. The <code>ffi_test::call</code> harness in <code>lib.rs</code> exercises every test through the production JSON-over-FFI envelope (CString round-trip, <code>catch_unwind</code> on panic, allocation freed via <code>stryke_free_cstring</code>) so the tests cover the FFI seam alongside the math.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>polars__*</code> export takes a single <code>*const c_char</code> (NUL-terminated JSON args) and returns a <code>*mut c_char</code> (NUL-terminated JSON result). The cdylib owns the returned allocation; the stryke side <strong>must</strong> release it via the cdylib-exported <code>stryke_free_cstring</code>. stryke's <code>rust_ffi::load_cdylib</code> wires this automatically.</p>
+        <p>JSON envelope on success is the per-fn shape. JSON envelope on error is <code>{"error": "&lt;message&gt;"}</code>. Panics inside the cdylib are caught via <code>catch_unwind</code> and surfaced as errors &mdash; the stryke runtime never crashes on a cdylib bug.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Naming convention</h2>
+        <p>Stryke-side wrappers are namespaced packages, one per <code>lib/*.stk</code> module: <code>use Polars::DataFrame</code> binds <code>Polars::DataFrame::head</code>, <code>use Polars::Linalg</code> binds <code>Polars::Linalg::*</code>, and so on. The cdylib-side FFI symbols are flat, double-underscore-namespaced <code>polars__</code> plus a per-family verb prefix:</p>
+        <table class="example-tbl">
+          <thead><tr><th>cdylib symbol shape</th><th>Family</th></tr></thead>
+          <tbody>
+            <tr><td><code>polars__df_&lt;verb&gt;</code></td><td>DataFrame</td></tr>
+            <tr><td><code>polars__sr_&lt;verb&gt;</code></td><td>Series</td></tr>
+            <tr><td><code>polars__arr_&lt;verb&gt;</code></td><td>ndarray</td></tr>
+            <tr><td><code>polars__np_&lt;verb&gt;</code></td><td>ufuncs</td></tr>
+            <tr><td><code>polars__idx_&lt;verb&gt;</code></td><td>Index</td></tr>
+            <tr><td><code>polars__linalg_&lt;verb&gt;</code> / <code>polars__rand_&lt;verb&gt;</code> / <code>polars__fft_&lt;verb&gt;</code> / <code>polars__poly_&lt;verb&gt;</code> / <code>polars__ma_&lt;verb&gt;</code> / <code>polars__dt64_&lt;verb&gt;</code></td><td>namespaced numpy families</td></tr>
+            <tr><td><code>polars__pd_read_&lt;fmt&gt;</code> / <code>polars__pd_to_&lt;fmt&gt;</code></td><td>pandas IO</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Backing crates</h2>
+        <p>The heavy numerics live in the cdylib only; core stryke never links any of them.</p>
+        <table class="example-tbl">
+          <thead><tr><th>Subsystem</th><th>Backing crate(s)</th></tr></thead>
+          <tbody>
+            <tr><td>DataFrame / Series / Index / pandas IO</td><td><code>polars</code> 0.45 (full feature set)</td></tr>
+            <tr><td>ndarray + ufuncs</td><td><code>ndarray</code> 0.16 + <code>rayon</code></td></tr>
+            <tr><td>linalg</td><td><code>nalgebra</code> 0.33 (pure-Rust SVD / QR / LU / Cholesky / Eigen / solve / inv / det)</td></tr>
+            <tr><td>random</td><td><code>rand</code> + <code>rand_distr</code> + <code>ndarray-rand</code> + <code>rand_chacha</code></td></tr>
+            <tr><td>fft</td><td><code>rustfft</code> 6.2 + <code>realfft</code> 3.4</td></tr>
+            <tr><td>polynomial</td><td>hand-rolled on <code>ndarray</code> (recurrence formulas)</td></tr>
+            <tr><td>masked arrays</td><td><code>ndarray</code> (mask vec parallel to data)</td></tr>
+            <tr><td>datetime64 / timedelta64</td><td><code>chrono</code> + <code>chrono-tz</code> 0.10</td></tr>
+            <tr><td>Decimal dtype</td><td><code>rust_decimal</code> 1.36</td></tr>
+            <tr><td>FFI envelope</td><td><code>serde_json</code>, <code>anyhow</code>, <code>std::panic::catch_unwind</code></td></tr>
+          </tbody>
+        </table>
+        <p>The linalg subsystem uses pure-Rust <code>nalgebra</code> rather than <code>ndarray-linalg</code> / OpenBLAS to keep the dependency chain vendorable and avoid an <code>openblas-src</code> &rarr; <code>openblas-build</code> toolchain requirement at build time.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-polars/
+&#9500;&#9472;&#9472; Cargo.toml             # crate-type = ["cdylib"]
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9500;&#9472;&#9472; lib.rs            # FFI plumbing + polars__version
+&#9474;   &#9492;&#9472;&#9472; df.rs / sr.rs / nd.rs / linalg.rs / ...  # per-family modules
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrappers (one per family)
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest
+&#9500;&#9472;&#9472; t/                     # stryke-side integration tests (s test t/)
+&#9500;&#9472;&#9472; tests/                 # Rust-side cargo tests + contract gates
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

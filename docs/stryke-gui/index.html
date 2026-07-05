@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-gui — GUI AUTOMATION FOR STRYKE // MOUSE + KEYBOARD + SCREEN + PIXEL + CLIPBOARD. PyAutoGUI-equivalent surface for stryke: mouse motion / buttons / wheel, keyboard press / type / hotkey, screen size + bounds, pixel reads, screenshots, and clipboard. Opt-in package — the native input/display deps (enigo, xcap, arboard) ship as a Rust cdylib that stryke dlopens in-process on first `use GUI`.">
+  <title>stryke-gui — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-GUI &mdash; GUI AUTOMATION FOR STRYKE // MOUSE + KEYBOARD + SCREEN + PIXEL + CLIPBOARD</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_gui.{dylib,so}</code> · dlopen'd in-process on <code>use GUI</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-gui/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-GUI</h2>
+      <p class="tutorial-subtitle"><strong>PyAutoGUI, one <code>use GUI</code> away.</strong> GUI automation for stryke — mouse motion / buttons / wheel, keyboard press / type / hotkey, screen size + bounds, pixel reads, screenshots, and clipboard. A PyAutoGUI-equivalent surface, opt-in as a package so the stryke core binary stays slim and free of X11/Wayland system libraries. It ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use GUI</code>; the native input/display code (<code>enigo</code> + <code>xcap</code> + <code>arboard</code>) lives in <code>libstryke_gui.{dylib,so}</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>From a release (no rustc on the consumer machine) — fetches the prebuilt cdylib for your host triple, verifies its SHA-256, extracts into <code>~/.stryke/store/stryke-gui@&lt;version&gt;/</code>, and registers it for <code>use GUI</code>:</p>
+<pre>s pkg install -g github.com/MenkeTechnologies/stryke-gui</pre>
+        <p>Contributors building the cdylib locally need the Linux system libraries <code>enigo</code> / <code>xcap</code> link against first (macOS and Windows need nothing extra):</p>
+<pre>sudo apt-get install -y libwayland-dev libxkbcommon-dev libxcb1-dev \
+  libxrandr-dev libxi-dev libxcursor-dev libdbus-1-dev pkg-config
+
+cd ~/RustroverProjects/stryke-gui
+cargo build --release            # produces target/release/libstryke_gui.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/stryke-gui@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use GUI</code> &mdash; no subprocess fork per call. The <code>Enigo</code> input handle persists in a process-global <code>OnceCell&lt;Mutex&lt;Enigo&gt;&gt;</code> across calls. Any stryke script that declares <code>use GUI</code> resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start</h2>
+<pre>use GUI
+
+# where is the cursor, how big is the screen?
+my ($x, $y) = GUI::mouse_pos()
+my ($w, $h) = GUI::screen_size()
+p "cursor ($x, $y) on ${w}x${h}"
+
+# move + click + type
+GUI::mouse_move(int($w / 2), int($h / 2), 0.3)   # animated over 0.3s
+GUI::mouse_click()
+GUI::key_type("hello from stryke", 0.05)
+GUI::key_hotkey("cmd", "s")                       # &#x2318;S  (ctrl on Linux/Win)
+
+# read a pixel, grab a screenshot
+my ($r, $g, $b) = GUI::pixel(100, 100)
+my $path = GUI::screenshot("/tmp/shot.png")</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Surface: <code>use GUI</code></h2>
+        <p>Everything lives in the <code>GUI::</code> namespace and becomes available after <code>use GUI</code>. Coordinates use a top-left origin and address the primary display only. The surface splits into two halves: <strong>device</strong> functions (mouse / keyboard / pixel / screenshot / clipboard / displays) that touch the OS input + capture stack, and <strong>pure</strong> helpers (hotkey + color math) that run headless with no display or permission requirement. The tables below enumerate the full public surface; signatures and defaults are taken from <code>lib/GUI.stk</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>cursor position</td><td><code>my ($x, $y) = GUI::mouse_pos()</code></td></tr>
+            <tr><td>primary display size</td><td><code>my ($w, $h) = GUI::screen_size()</code></td></tr>
+            <tr><td>tweened absolute move</td><td><code>GUI::mouse_move(400, 300, 0.5)</code></td></tr>
+            <tr><td>type a string with inter-char delay</td><td><code>GUI::key_type("hello", 0.05)</code></td></tr>
+            <tr><td>chord hotkey</td><td><code>GUI::key_hotkey("ctrl", "t")</code></td></tr>
+            <tr><td>read a single pixel</td><td><code>my ($r, $g, $b) = GUI::pixel(100, 100)</code></td></tr>
+            <tr><td>write a PNG to disk</td><td><code>my $path = GUI::screenshot("/tmp/s.png")</code></td></tr>
+            <tr><td>clipboard read / write</td><td><code>GUI::clipboard_set("hi"); my $t = GUI::clipboard_get()</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; position &amp; size</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::mouse_pos()</code></td><td>returns <code>($x, $y)</code> &mdash; current cursor position</td></tr>
+            <tr><td><code>GUI::screen_size()</code></td><td>returns <code>($w, $h)</code> &mdash; primary display size</td></tr>
+            <tr><td><code>GUI::mouse_size()</code></td><td>alias of <code>screen_size</code> &mdash; returns <code>($w, $h)</code></td></tr>
+            <tr><td><code>GUI::on_screen($x, $y)</code></td><td><code>1</code> / <code>0</code> &mdash; whether the point is inside the primary display bounds</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; mouse motion</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::mouse_move($x, $y, $duration=0)</code></td><td>absolute move; <code>$duration&gt;0</code> tweens at 60&nbsp;fps, otherwise a single-step warp</td></tr>
+            <tr><td><code>GUI::mouse_move_rel($dx, $dy, $duration=0)</code></td><td>relative move from the current position</td></tr>
+            <tr><td><code>GUI::mouse_drag($x, $y, $duration=0, $button="left")</code></td><td>press &rarr; drag to <code>($x,$y)</code> &rarr; release</td></tr>
+            <tr><td><code>GUI::mouse_drag_rel($dx, $dy, $duration=0, $button="left")</code></td><td>relative press-drag-release</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; mouse buttons</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::mouse_click(%opts)</code></td><td>opts: <code>x</code>, <code>y</code>, <code>clicks=1</code>, <code>interval=0</code>, <code>button="left"</code>; omitting <code>x</code>/<code>y</code> clicks in place</td></tr>
+            <tr><td><code>GUI::mouse_right_click($x?, $y?)</code></td><td>single right click; optional point to move there first</td></tr>
+            <tr><td><code>GUI::mouse_middle_click($x?, $y?)</code></td><td>single middle click</td></tr>
+            <tr><td><code>GUI::mouse_double_click($x?, $y?, $button="left")</code></td><td>two clicks</td></tr>
+            <tr><td><code>GUI::mouse_triple_click($x?, $y?, $button="left")</code></td><td>three clicks</td></tr>
+            <tr><td><code>GUI::mouse_down($button="left")</code> / <code>GUI::mouse_up($button="left")</code></td><td>hold / release a button</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; mouse wheel</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::mouse_scroll($clicks, $x?, $y?)</code></td><td>vertical scroll (positive = up); optional point to move there first</td></tr>
+            <tr><td><code>GUI::mouse_hscroll($clicks, $x?, $y?)</code></td><td>horizontal scroll</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; keyboard</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::key_press($name, $presses=1, $interval=0)</code></td><td>discrete key press(es)</td></tr>
+            <tr><td><code>GUI::key_down($name)</code> / <code>GUI::key_up($name)</code></td><td>hold / release a key</td></tr>
+            <tr><td><code>GUI::key_type($text, $interval=0)</code></td><td>type layout-correct literal text, one char at a time</td></tr>
+            <tr><td><code>GUI::key_hotkey(@keys)</code></td><td>chord: press keys in order, release in reverse (e.g. <code>"cmd", "s"</code>)</td></tr>
+            <tr><td><code>GUI::keyboard_keys()</code></td><td>list of every recognized key name (permission-free query)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; pixel &amp; screenshot</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::pixel($x, $y)</code></td><td>returns <code>($r, $g, $b)</code> at the point</td></tr>
+            <tr><td><code>GUI::pixel_matches_color($x, $y, [$r,$g,$b], $tol=0)</code></td><td><code>1</code> / <code>0</code> &mdash; pixel matches within <code>$tol</code> per channel</td></tr>
+            <tr><td><code>GUI::screenshot($path?)</code></td><td>with path: writes a PNG, returns the path; without: returns <code>($w, $h, \@rgba)</code></td></tr>
+            <tr><td><code>GUI::screenshot_region($l, $t, $w, $h, $path?)</code></td><td>same as <code>screenshot</code> but for an <code>($l,$t,$w,$h)</code> region</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; clipboard &amp; displays</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::clipboard_get()</code></td><td>clipboard text (<code>""</code> if none)</td></tr>
+            <tr><td><code>GUI::clipboard_set($text)</code></td><td>set clipboard text; returns <code>1</code></td></tr>
+            <tr><td><code>GUI::displays()</code></td><td>one hash per monitor: <code>{ id, name, x, y, width, height, scale, primary }</code></td></tr>
+            <tr><td><code>GUI::display_screenshot($id, $path?)</code></td><td>capture a specific monitor by id; path/inline semantics mirror <code>screenshot</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; pure hotkey helpers</h2>
+        <p>These touch no device &mdash; accelerator parsing / canonicalization that runs headless with no permission gate.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::parse_hotkey("ctrl+shift+a")</code></td><td><code>{ keys, modifiers, key }</code> &mdash; last segment is the key, the rest are modifiers</td></tr>
+            <tr><td><code>GUI::format_hotkey(\%parts)</code></td><td><code>{ hotkey, modifiers, key }</code> &mdash; inverse of <code>parse_hotkey</code>; canonicalizes W3C modifier names (Control/Alt/Shift/Meta), deduped and ordered; takes <code>{ keys }</code> or <code>{ modifiers, key }</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; color parsing &amp; comparison</h2>
+        <p>The color helpers are pure (no display, no permission). Every input accepts the forms <code>parse_color</code> understands &mdash; <code>#rgb</code>, <code>#rrggbb</code>, <code>rgb(r,g,b)</code>, or a <code>{r,g,b}</code> / <code>[r,g,b]</code> structure. Most return a <code>{ r, g, b, hex }</code> color.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::parse_color("#ff8800")</code></td><td><code>{ r, g, b, hex }</code> &mdash; parse a color string</td></tr>
+            <tr><td><code>GUI::format_color($color, %opts)</code></td><td><code>{ r, g, b, format, formatted }</code> &mdash; inverse of <code>parse_color</code>; <code>format</code> <code>hex</code> (default) or <code>rgb</code>; clamps 0&ndash;255</td></tr>
+            <tr><td><code>GUI::color_distance($a, $b)</code></td><td><code>{ manhattan, euclidean }</code> &mdash; RGB distance for pixel-match tolerance</td></tr>
+            <tr><td><code>GUI::delta_e($a, $b)</code></td><td><code>{ delta_e, lab_a, lab_b }</code> &mdash; perceptual &Delta;E00 (CIEDE2000) via CIELAB/D65</td></tr>
+            <tr><td><code>GUI::contrast_ratio($a, $b)</code></td><td><code>{ ratio, aa_normal, aa_large, aaa_normal, aaa_large }</code> &mdash; WCAG 2.1 contrast (1&ndash;21) + threshold flags</td></tr>
+            <tr><td><code>GUI::relative_luminance($color)</code></td><td><code>0&ndash;1</code> &mdash; WCAG 2.1 relative luminance of one color</td></tr>
+            <tr><td><code>GUI::is_dark($color, $threshold=0.5)</code></td><td><code>{ dark, luminance, threshold, text }</code> &mdash; dark/light test; <code>text</code> is the suggested <code>"white"</code>/<code>"black"</code> foreground</td></tr>
+            <tr><td><code>GUI::name_color($color)</code></td><td><code>{ name, delta_e, r, g, b, hex }</code> &mdash; nearest CSS named color by &Delta;E00</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; color transforms</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::mix($a, $b, $weight=0.5)</code></td><td><code>{ r, g, b, hex }</code> &mdash; blend in linear sRGB (weight = fraction of <code>$b</code>)</td></tr>
+            <tr><td><code>GUI::blend_lab($a, $b, $weight=0.5)</code></td><td><code>{ r, g, b, hex }</code> &mdash; blend in CIELAB (perceptual)</td></tr>
+            <tr><td><code>GUI::blend_oklab($a, $b, $weight=0.5)</code></td><td><code>{ r, g, b, hex }</code> &mdash; blend in Oklab (most perceptually even)</td></tr>
+            <tr><td><code>GUI::gradient($a, $b, $steps=5)</code></td><td><code>{ stops =&gt; [{ r, g, b, hex }, ...], steps }</code> &mdash; evenly-spaced sRGB stops, endpoints inclusive ([2,256])</td></tr>
+            <tr><td><code>GUI::rotate_hue($color, $degrees)</code></td><td><code>{ r, g, b, hex, h }</code> &mdash; rotate hue in HSL; wraps mod 360</td></tr>
+            <tr><td><code>GUI::adjust_lightness($color, $delta)</code></td><td><code>{ r, g, b, hex, l }</code> &mdash; nudge HSL lightness (clamp [0,100])</td></tr>
+            <tr><td><code>GUI::adjust_saturation($color, $delta)</code></td><td><code>{ r, g, b, hex, s }</code> &mdash; nudge HSL saturation (-100 &rarr; greyscale)</td></tr>
+            <tr><td><code>GUI::invert($color)</code></td><td><code>{ r, g, b, hex }</code> &mdash; RGB complement (<code>255 - c</code> per channel)</td></tr>
+            <tr><td><code>GUI::grayscale($color)</code></td><td><code>{ r, g, b, hex, gray }</code> &mdash; Rec.&nbsp;709 luma gray</td></tr>
+            <tr><td><code>GUI::sepia($color)</code></td><td><code>{ r, g, b, hex }</code> &mdash; sepia-tone color matrix</td></tr>
+            <tr><td><code>GUI::posterize($color, $levels=4)</code></td><td><code>{ r, g, b, hex, levels }</code> &mdash; quantize each channel to <code>$levels</code> steps ([2,256])</td></tr>
+            <tr><td><code>GUI::temperature($color, $amount)</code></td><td><code>{ r, g, b, hex }</code> &mdash; warm (<code>+</code>) / cool (<code>-</code>) white-balance nudge</td></tr>
+            <tr><td><code>GUI::alpha_over($fg, $bg, $alpha=1)</code></td><td><code>{ r, g, b, hex }</code> &mdash; source-over composite <code>$fg*$alpha + $bg*(1-$alpha)</code></td></tr>
+            <tr><td><code>GUI::scheme($color, $scheme?)</code></td><td><code>{ scheme, colors =&gt; [...] }</code> &mdash; <code>complementary</code> (default), <code>triadic</code>, <code>analogous</code>, <code>split</code>, <code>tetradic</code>, <code>square</code>; base is first</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reference &mdash; color space conversions</h2>
+        <p>Round-trip conversions between sRGB and the common color models. Each <code>to_*</code> has a matching <code>from_*</code> inverse; out-of-gamut results clamp per channel.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>GUI::to_hsl($color)</code> / <code>GUI::from_hsl($h, $s, $l)</code></td><td><code>{ h, s, l }</code> (CSS spec; h in degrees, s/l in percent)</td></tr>
+            <tr><td><code>GUI::to_hsv($color)</code> / <code>GUI::from_hsv($h, $s, $v)</code></td><td><code>{ h, s, v }</code> (HSV/HSB color-picker model)</td></tr>
+            <tr><td><code>GUI::to_hwb($color)</code> / <code>GUI::from_hwb($h, $w, $b)</code></td><td><code>{ h, w, b }</code> (Hue-Whiteness-Blackness, CSS Color 4)</td></tr>
+            <tr><td><code>GUI::to_cmyk($color)</code> / <code>GUI::from_cmyk($c, $m, $y, $k)</code></td><td><code>{ c, m, y, k }</code> percentages (profile-free)</td></tr>
+            <tr><td><code>GUI::to_lab($color)</code> / <code>GUI::from_lab($l, $a, $b)</code></td><td><code>{ l, a, b }</code> CIELAB (D65); the space <code>delta_e</code> works in</td></tr>
+            <tr><td><code>GUI::to_xyz($color)</code> / <code>GUI::from_xyz($x, $y, $z)</code></td><td><code>{ x, y, z }</code> CIE XYZ (D65) linear tristimulus</td></tr>
+            <tr><td><code>GUI::to_oklab($color)</code> / <code>GUI::from_oklab($l, $a, $b)</code></td><td><code>{ l, a, b }</code> Oklab (Ottosson 2020, CSS Color 4)</td></tr>
+          </tbody>
+        </table>
+        <p>The authoritative list with full per-field notes lives in the <a href="https://github.com/MenkeTechnologies/stryke-gui#0x03-api-reference">README "API reference" section</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>The <code>enigo</code> (input) and <code>xcap</code> (capture) crates link against the platform input/display stack. On Linux that means the X11 <strong>and</strong> Wayland client libraries plus xkb, dbus, and PipeWire &mdash; a stack of <code>-dev</code> packages that would otherwise have to be installed before <code>cargo install strykelang</code> could even build. Baking them into core forces that cost on every user, GUI or not.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>gui__*</code> FFI symbols on the cdylib; the native deps live only in <code>libstryke_gui.{dylib,so}</code>, dlopened in-process on first <code>use GUI</code>. Core stryke is never linked against this package's deps, so the stryke core install needs zero external system libraries.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>GUI::*</code> wrapper builds a JSON args string and calls a sibling <code>gui__*</code> symbol resolved out of <code>libstryke_gui.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use GUI</code>; every export has signature <code>extern "C" fn gui__&lt;verb&gt;(*const c_char) -&gt; *const c_char</code>. The <code>Enigo</code> input handle is held in a process-global <code>OnceCell&lt;Mutex&lt;Enigo&gt;&gt;</code> (<code>src/common.rs::enigo_lock</code>) and reused across calls &mdash; no <code>fork(2)</code>, no <code>exec(2)</code>, no <code>Enigo::new()</code> per invocation. Action calls return a success JSON; errors come back as a <code>{error}</code> JSON payload the wrapper <code>die</code>s on.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Permissions</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>macOS</td><td>First mouse/keyboard call prompts for <strong>Accessibility</strong>; first pixel/screenshot call prompts for <strong>Screen Recording</strong> (System Settings &rarr; Privacy &amp; Security). One-time grants for the terminal app running <code>s</code>.</td></tr>
+            <tr><td>Wayland (Linux)</td><td>Requires the <code>wlroots-virtual-pointer</code> protocol (mouse/keyboard) and the <code>org.freedesktop.portal.Screenshot</code> portal (pixel/screen).</td></tr>
+            <tr><td>X11 (Linux), Windows</td><td>No permission gates.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests</h2>
+        <p><code>make test</code> runs <code>cargo test</code> then <code>s test t/</code>. The Rust unit tests cover the FFI plumbing &mdash; JSON-in/out wrapper, error-on-panic behavior, the free-cstring contract, and region parsing &mdash; all headless and CI-safe. <code>t/test_gui.stk</code> exercises the end-to-end stryke &rarr; FFI &rarr; cdylib call path via the permission-free <code>GUI::keyboard_keys()</code> query. Mouse / keyboard / pixel ops need real OS permissions, so they aren't asserted in CI.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Troubleshooting</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>mouse/keyboard calls do nothing (macOS)</td><td>Grant <strong>Accessibility</strong> to the terminal app running <code>s</code> in System Settings &rarr; Privacy &amp; Security, then restart the terminal.</td></tr>
+            <tr><td>pixel/screenshot returns blank or errors (macOS)</td><td>Grant <strong>Screen Recording</strong> to the same terminal app; this is a separate one-time grant from Accessibility.</td></tr>
+            <tr><td>capture fails on Wayland</td><td>Requires the <code>org.freedesktop.portal.Screenshot</code> portal; input needs <code>wlroots-virtual-pointer</code>. Compositors without these protocols can't be driven.</td></tr>
+            <tr><td>install can't find a prebuilt artifact</td><td>Override the auto-detected host triple, e.g. <code>STRYKE_TARGET=x86_64-unknown-linux-musl s pkg install -g github.com/MenkeTechnologies/stryke-gui</code>.</td></tr>
+            <tr><td>contributor build fails to link (Linux)</td><td>Install the <code>enigo</code>/<code>xcap</code> system <code>-dev</code> libraries listed under Install before <code>cargo build --release</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>read-only display + pointer introspection</td><td><code>s examples/gui_screen_info.stk</code></td></tr>
+            <tr><td>animate the cursor in a circle</td><td><code>s examples/gui_mouse_circle.stk</code></td></tr>
+            <tr><td>typewriter effect via key_type</td><td><code>s examples/gui_typewriter.stk</code></td></tr>
+            <tr><td>chord key combos</td><td><code>s examples/gui_hotkey.stk</code></td></tr>
+            <tr><td>press-drag-release</td><td><code>s examples/gui_drag.stk</code></td></tr>
+            <tr><td>wheel events</td><td><code>s examples/gui_scroll_demo.stk</code></td></tr>
+            <tr><td>sample pixel colors</td><td><code>s examples/gui_pixel_probe.stk</code></td></tr>
+            <tr><td>full + region capture</td><td><code>s examples/gui_screenshot.stk</code></td></tr>
+            <tr><td>keep a session active</td><td><code>s examples/activity_maintainer.stk</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-gui/
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest with [ffi] table
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9500;&#9472;&#9472; lib.rs            # cdylib — gui__* extern "C" exports + ffi_call wrapper
+&#9474;   &#9500;&#9472;&#9472; common.rs          # persistent Enigo via OnceCell + button parser
+&#9474;   &#9500;&#9472;&#9472; mouse.rs           # motion / buttons / wheel / size / pos
+&#9474;   &#9500;&#9472;&#9472; keyboard.rs        # key-name table + press / type / hotkey
+&#9474;   &#9492;&#9472;&#9472; capture.rs         # pixel + screenshot (xcap)
+&#9500;&#9472;&#9472; lib/GUI.stk            # stryke wrappers (JSON args &rarr; FFI symbol &rarr; JSON return)
+&#9500;&#9472;&#9472; examples/              # runnable .stk demos
+&#9500;&#9472;&#9472; t/test_gui.stk         # plumbing tests (permission-free FFI surface)
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

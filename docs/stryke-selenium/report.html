@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-selenium — engineering report. BROWSER AUTOMATION FOR STRYKE: WebDriver / DOM / JS / cookies via thirtyfour + tokio. Architecture, FFI protocol, scope, dependencies, WebDriver server requirements.">
+  <title>stryke-selenium — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-SELENIUM &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_selenium</code> (publish=false) &middot; dlopen'd in-process via stryke FFI loader &middot; persistent <code>WebDriver</code> + <code>WebElement</code> registries
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-selenium</strong> is the browser automation connector in the stryke ecosystem. Chrome / firefox / safari / edge (headless or visible), navigation, element queries (css / xpath / id / name / tag / class / link-text), click / send_keys / clear, attribute / property / CSS reads, JavaScript execution, screenshots (full-page + per-element), window + frame control, and cookie management &mdash; a selenium-python-equivalent surface for stryke. Opt-in package, kept out of the stryke core binary. The stryke side is a thin JSON-over-FFI wrapper; the WebDriver client code (<code>thirtyfour</code> + <code>tokio</code>) lives in the <code>libstryke_selenium</code> cdylib loaded in-process by stryke via <code>dlopen</code>.</p>
+      <p class="tutorial-subtitle">Architecture is shaped by Selenium's session model: a <code>WebDriver</code> is an HTTP keep-alive pool plus a server-side browser process &mdash; both expensive to set up. Re-creating per call would make any non-trivial script unusable. The cdylib holds the <code>WebDriver</code> in a process-global registry so one <code>Selenium::open</code> serves the whole script; element handles get the same treatment.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">Selenium</div><div class="stat-label">stryke namespace</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Loader (dlopen)</div></div>
+        <div class="stat-card"><div class="stat-val green">thirtyfour + tokio</div><div class="stat-label">WebDriver client</div></div>
+        <div class="stat-card"><div class="stat-val cyan">102</div><div class="stat-label">Selenium:: functions</div></div>
+        <div class="stat-card"><div class="stat-val">99</div><div class="stat-label">selenium__* FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Browsers (chrome / firefox / safari / edge)</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Locator strategies</div></div>
+        <div class="stat-card"><div class="stat-val cyan">rustls-tls</div><div class="stat-label">Zero OpenSSL deps</div></div>
+        <div class="stat-card"><div class="stat-val">N</div><div class="stat-label">Concurrent sessions per process</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">cdylib + dlopen design: the stryke side is a thin <code>.stk</code> library that calls into a shared library loaded once per process. Each <code>selenium__*</code> export is a JSON-string-in / JSON-string-out wrapper around the <code>driver</code> / <code>element</code> / <code>script</code> / <code>capture</code> / <code>window</code> modules. A process-global tokio runtime bridges thirtyfour's async API to the sync FFI.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke library (<code>lib/Selenium.stk</code>)</td><td>Thin wrapper exposing typed functions in the <code>Selenium::</code> namespace; builds a JSON args dict, calls the registered FFI symbol, parses the JSON response, dies on <code>{"error":&hellip;}</code> payloads</td></tr>
+          <tr><td>FFI surface (<code>src/lib.rs</code>)</td><td><code>#[no_mangle] extern "C" fn selenium__*(args_json: *const c_char) -&gt; *const c_char</code>; <code>ffi_call</code> wrapper handles JSON parse, panic catch, error serialization; <code>stryke_free_cstring</code> plugs the return-allocation leak</td></tr>
+          <tr><td>Async bridge (<code>src/common.rs::runtime</code>)</td><td>Process-global <code>tokio::runtime::Runtime</code> in <code>OnceCell</code>, built on first FFI entry; every handler is <code>runtime.block_on(async { &hellip; })</code></td></tr>
+          <tr><td>Session registry (<code>src/common.rs</code>)</td><td><code>OnceCell&lt;Mutex&lt;HashMap&lt;u64, WebDriver&gt;&gt;&gt;</code> &mdash; monotonic <code>u64</code> ids keyed to live <code>WebDriver</code> handles; first successful <code>open</code> promotes to active session</td></tr>
+          <tr><td>Element registry (<code>src/common.rs</code>)</td><td><code>OnceCell&lt;Mutex&lt;HashMap&lt;u64, WebElement&gt;&gt;&gt;</code> &mdash; same shape; the cdylib never re-finds an element a script already has a handle to</td></tr>
+          <tr><td>WebDriver client</td><td><code>thirtyfour</code> 0.35 with <code>rustls-tls</code> &mdash; pure-Rust TLS so the cdylib doesn't drag the openssl system library into the build matrix</td></tr>
+          <tr><td>Async runtime</td><td><code>tokio</code> 1.x (multi-thread, <code>rt-multi-thread</code> + <code>macros</code> + <code>time</code>)</td></tr>
+          <tr><td>Install path</td><td><code>s pkg install -g github.com/MenkeTechnologies/stryke-selenium</code> &mdash; fetches prebuilt cdylib tarball for host triple from GitHub Releases, verifies SHA-256, extracts into <code>~/.stryke/store/stryke-selenium@&lt;version&gt;/</code></td></tr>
+          <tr><td>Tests</td><td>Cargo unit tests under <code>src/</code> (FFI plumbing, JSON-shape coverage, registry round-trips) plus <code>t/test_selenium.stk</code> for end-to-end FFI dispatch via permission-free queries (<code>supported_browsers</code>, <code>locator_strategies</code>, <code>sessions</code>)</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo check + clippy (<code>-D warnings</code>) + fmt + test + doc on ubuntu + macos</td></tr>
+          <tr><td>Release</td><td>GitHub Actions <code>.github/workflows/release.yml</code> &mdash; per-triple cdylib build matrix on tag push; uploads <code>.tar.gz</code> + <code>.sha256</code> to GitHub Release</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>The <code>thirtyfour</code> + <code>tokio</code> dependency tree is non-trivial: a full async runtime, HTTP keep-alive pool, rustls TLS stack, and the WebDriver client itself. Baking that into <code>stryke</code> core would inflate the daily-driver install for every user, GUI or not.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays slim precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need a browser session pool linked in.</p>
+      <p>Unlike sidecar-binary connectors (<code>stryke-aws</code> v1, etc.), <code>stryke-selenium</code> can't <code>fork(2) + exec(2)</code> per call &mdash; the WebDriver session is too expensive to re-establish. So it ships as a cdylib that stryke <code>dlopen</code>s once per process, holding session state across calls.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI PROTOCOL</h2>
+      <p>Every <code>selenium__*</code> export takes a JSON-encoded args dict as <code>*const c_char</code> and returns a JSON-encoded result as <code>*const c_char</code>. The stryke FFI bridge copies the return into a stryke string and calls back into <code>stryke_free_cstring</code> to release the allocation. Errors come back as <code>{"error": "&lt;message&gt;"}</code> &mdash; the <code>.stk</code> wrapper recognizes this shape and <code>die</code>s.</p>
+      <table class="arch-table">
+        <thead><tr><th>Export</th><th>Args &rarr; Response</th></tr></thead>
+        <tbody>
+          <tr><td><code>selenium__open</code></td><td><code>{browser, url?, headless} &rarr; {session: u64}</code></td></tr>
+          <tr><td><code>selenium__quit</code></td><td><code>{session?} &rarr; {session, closed: true}</code></td></tr>
+          <tr><td><code>selenium__quit_all</code></td><td><code>{} &rarr; {closed: usize}</code></td></tr>
+          <tr><td><code>selenium__sessions</code></td><td><code>{} &rarr; {sessions: [u64], active: u64?}</code></td></tr>
+          <tr><td><code>selenium__goto</code></td><td><code>{session?, url} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__title</code></td><td><code>{session?} &rarr; {title: string}</code></td></tr>
+          <tr><td><code>selenium__find</code></td><td><code>{session?, by, selector} &rarr; {element: u64}</code></td></tr>
+          <tr><td><code>selenium__find_all</code></td><td><code>{session?, by, selector} &rarr; {elements: [u64]}</code></td></tr>
+          <tr><td><code>selenium__wait_for</code></td><td><code>{session?, by, selector, timeout: f64} &rarr; {element: u64}</code></td></tr>
+          <tr><td><code>selenium__element_click</code></td><td><code>{element} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__element_send_keys</code></td><td><code>{element, text} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__element_text</code></td><td><code>{element} &rarr; {text: string}</code></td></tr>
+          <tr><td><code>selenium__element_attr</code></td><td><code>{element, name} &rarr; {value: string?}</code></td></tr>
+          <tr><td><code>selenium__element_rect</code></td><td><code>{element} &rarr; {x, y, width, height: f64}</code></td></tr>
+          <tr><td><code>selenium__execute_script</code></td><td><code>{session?, script, args: [Value]} &rarr; {value: Value}</code></td></tr>
+          <tr><td><code>selenium__screenshot</code></td><td><code>{session?, output?} &rarr; {path}</code> or <code>{png: [u8]}</code></td></tr>
+          <tr><td><code>selenium__element_screenshot</code></td><td><code>{element, output?} &rarr; {path}</code> or <code>{png: [u8]}</code></td></tr>
+          <tr><td><code>selenium__window_rect</code></td><td><code>{session?} &rarr; {x: i64, y: i64, width: u32, height: u32}</code></td></tr>
+          <tr><td><code>selenium__window_handles</code></td><td><code>{session?} &rarr; {handles: [string]}</code></td></tr>
+          <tr><td><code>selenium__switch_window</code></td><td><code>{session?, handle} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__cookies</code></td><td><code>{session?} &rarr; {cookies: [Value]}</code></td></tr>
+          <tr><td><code>selenium__add_cookie</code></td><td><code>{session?, cookie: {name, value, &hellip;}} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__execute_async_script</code></td><td><code>{session?, script, args: [Value]} &rarr; {value: Value}</code> &mdash; callback-completed</td></tr>
+          <tr><td><code>selenium__action_click</code></td><td><code>{session?, element} &rarr; {}</code> &mdash; pointer move + left-click</td></tr>
+          <tr><td><code>selenium__action_double_click</code></td><td><code>{session?, element} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__action_context_click</code></td><td><code>{session?, element} &rarr; {}</code> &mdash; right-click</td></tr>
+          <tr><td><code>selenium__action_send_keys</code></td><td><code>{session?, text} &rarr; {}</code> &mdash; key-down/up sequence</td></tr>
+          <tr><td><code>selenium__print_page</code></td><td><code>{session?, output} &rarr; {path}</code> &mdash; page to PDF</td></tr>
+          <tr><td><code>selenium__accept_alert</code></td><td><code>{session?} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__dismiss_alert</code></td><td><code>{session?} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__alert_text</code></td><td><code>{session?} &rarr; {text: string}</code></td></tr>
+          <tr><td><code>selenium__send_alert_text</code></td><td><code>{session?, text} &rarr; {}</code></td></tr>
+          <tr><td><code>selenium__get_named_cookie</code></td><td><code>{session?, name} &rarr; {cookie: Value}</code></td></tr>
+          <tr><td><code>selenium__supported_browsers</code></td><td><code>{} &rarr; [string]</code></td></tr>
+          <tr><td><code>selenium__locator_strategies</code></td><td><code>{} &rarr; [string]</code></td></tr>
+        </tbody>
+      </table>
+      <p>To pass a Selenium <code>WebElement</code> as an <code>execute_script</code> arg, wrap it as <code>{ __element__: &lt;id&gt; }</code>. The cdylib detects this shape, resolves the element from the registry, and serializes it with thirtyfour's <code>WebElement</code> serde impl &mdash; which emits the W3C-spec element reference (<code>{"element-6066-11e4-a52e-4f735466cecf": "&lt;id&gt;"}</code>) that the WebDriver server unmarshals back into a real DOM element on the JS side.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>The surface is a selenium-python-equivalent &mdash; the same shape ports directly with <code>Selenium::</code> in place of <code>webdriver.</code>. Coordinates use the WebDriver spec's top-left origin. Locator strategies (<code>css</code>, <code>id</code>, <code>name</code>, <code>xpath</code>, <code>tag</code>, <code>class</code>, <code>link_text</code>, <code>partial_link_text</code>) map 1:1 to thirtyfour's <code>By::*</code> arms.</p>
+      <p><code>wait_for</code> polls every 200 ms &mdash; same default as selenium-python's <code>WebDriverWait</code>. Implicit-wait, page-load, and script timeouts are also exposed (<code>set_implicit_wait</code>, <code>set_page_load_timeout</code>, <code>set_script_timeout</code>) and apply server-side.</p>
+      <p>Multi-browser is first-class: every <code>Selenium::open()</code> returns a fresh integer session id. The first open is set as the active session; subsequent calls without an explicit <code>$sid</code> arg route to it. Cross-session work threads <code>$sid</code> as the trailing argument (mirrors how Python's <code>webdriver.Chrome()</code> instances are passed around).</p>
+      <p>Beyond the basic <code>click</code>/<code>send_keys</code> path, action chains (<code>action_click</code>, <code>action_double_click</code>, <code>action_context_click</code>, <code>action_send_keys</code> in <code>src/actions.rs</code>) drive pointer/keyboard sequences for cases plain element ops can't express &mdash; a pointer move to the element's center before clicking defeats overlay click-interceptors, and right-click opens a native context menu. Alert handling (<code>accept_alert</code> / <code>dismiss_alert</code> / <code>alert_text</code> / <code>send_alert_text</code>) covers <code>alert</code>/<code>confirm</code>/<code>prompt</code> dialogs. Async JavaScript via <code>execute_async_script</code> blocks until the script invokes its injected completion callback or the script timeout elapses.</p>
+      <p>A second surface needs no browser at all: the pure helpers parse / build / validate locators (<code>parse_locator</code>, <code>build_locator</code>, <code>locator_to_w3c</code>, <code>w3c_to_locator</code>, <code>valid_locator_strategy</code>), cookies (<code>parse_cookie</code>, <code>build_cookie</code>, <code>cookie_domain_matches</code> / <code>cookie_path_matches</code> per RFC 6265), CSS selectors (<code>css_escape</code> / <code>css_unescape</code> / <code>css_escape_string</code> / <code>build_css_selector</code> / <code>parse_css_selector</code>), XPath literals (<code>build_xpath</code>, <code>xpath_literal</code>), and WebDriver special-key code points (<code>key_code</code> / <code>key_name</code>). These run without opening a session, so they execute unattended in CI alongside the static-dispatch queries.</p>
+      <p>See the <a href="https://github.com/MenkeTechnologies/stryke-selenium#0x03-api-reference">README API reference</a> for the authoritative function list. The stryke side exposes <strong>102</strong> <code>Selenium::</code> functions over <strong>99</strong> <code>selenium__*</code> cdylib exports (the extra stryke-side functions are aliases such as <code>get</code>&rarr;<code>goto</code> and convenience wrappers like <code>set_window_size</code> / <code>set_window_position</code> that re-shape arguments to a shared export).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>WEBDRIVER SERVER REQUIREMENTS</h2>
+      <p><code>stryke-selenium</code> is a client. The user is responsible for launching the WebDriver server (chromedriver / geckodriver / safaridriver / msedgedriver / selenium-server-standalone) before calling <code>Selenium::open</code>. The cdylib has no opinion on which server &mdash; <code>Selenium::open(url =&gt; "http://&hellip;")</code> connects wherever you point it.</p>
+      <table class="arch-table">
+        <thead><tr><th>Server</th><th>Browser</th><th>Default URL</th></tr></thead>
+        <tbody>
+          <tr><td><code>chromedriver --port=9515</code></td><td>Chrome / Chromium</td><td><code>http://localhost:9515</code> (the <code>Selenium::open()</code> default)</td></tr>
+          <tr><td><code>geckodriver --port 4444</code></td><td>Firefox</td><td><code>http://localhost:4444</code></td></tr>
+          <tr><td><code>safaridriver -p 4444</code></td><td>Safari (macOS only)</td><td><code>http://localhost:4444</code>. One-time <code>safaridriver --enable</code> to opt in.</td></tr>
+          <tr><td><code>msedgedriver --port=9515</code></td><td>Microsoft Edge</td><td><code>http://localhost:9515</code></td></tr>
+          <tr><td><code>selenium-server standalone --port 4444</code></td><td>All of the above through one server</td><td><code>http://localhost:4444</code></td></tr>
+        </tbody>
+      </table>
+      <p>The CI test suite (<code>t/test_selenium.stk</code>) is permission-free &mdash; it exercises only the static-dispatch surface (<code>supported_browsers</code>, <code>locator_strategies</code>, <code>sessions</code>) and the empty-registry shapes, so it runs unattended without a WebDriver server. Live browser ops are exercised by the <code>examples/selenium_*.stk</code> demos against a locally-launched chromedriver.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-selenium">github.com/MenkeTechnologies/stryke-selenium</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Sibling: GUI automation</td><td><a href="https://github.com/MenkeTechnologies/stryke-gui">stryke-gui</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-selenium/issues">github.com/MenkeTechnologies/stryke-selenium/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-mysql — engineering report. MYSQL / MARIADB CLIENT FOR STRYKE // OPT-IN PACKAGE. Architecture (cdylib, dlopen, FFI envelope), scope, dependencies.">
+  <title>stryke-mysql — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-MYSQL &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_mysql.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use MySQL</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-mysql</strong> is one of the opt-in connector packages in the stryke ecosystem. MySQL / MariaDB client for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The <code>mysql</code> driver ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use MySQL</code>.</p>
+      <p class="tutorial-subtitle">The <code>mysql</code> crate pulls in a native libmysql-style protocol stack + TLS chains. Ships once as an opt-in package.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+        <div class="stat-card"><div class="stat-val green">77</div><div class="stat-label"><code>MySQL::*</code> functions</div></div>
+        <div class="stat-card"><div class="stat-val green">66</div><div class="stat-label"><code>mysql__*</code> FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val">v0.21.0</div><div class="stat-label">Package version</div></div>
+        <div class="stat-card"><div class="stat-val cyan">Pool/URL</div><div class="stat-label">Connection cache</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>Thin <code>.stk</code> wrapper (<code>MySQL</code>); exposes typed helpers that serialize args to JSON and parse the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_mysql.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn mysql__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code> (query/introspection verbs + connection-free DSN/quoting helpers; authoritative list in <code>stryke.toml</code>)</td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use MySQL</code>; a <code>mysql::Pool</code> cache keyed by connection URL held in <code>OnceCell</code>; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/mysql@&lt;version&gt;/</code> after <code>make install</code>; <code>use MySQL</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; <code>cargo check</code> + <code>fmt --check</code> + <code>clippy -D warnings</code> + <code>test</code>, plus a Stryke <code>.stk</code> suite job that builds the cdylib, installs the package, and runs <code>t/</code> against a live MySQL service</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>The <code>mysql</code> crate pulls in a native libmysql-style protocol stack + TLS chains. Ships once as an opt-in package.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>MySQL::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>mysql__*</code> symbol on the dlopen'd cdylib; the cdylib returns a JSON <code>CString</code> the wrapper parses. <code>catch_unwind</code> on every call converts panics to JSON errors. The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>. A <code>mysql::Pool</code> cache keyed by connection URL is held in <code>OnceCell</code>, so back-to-back calls reuse the same connection pool.</p>
+<pre># request shape (built by the .stk wrapper)
+{"&lt;arg&gt;": ...}
+
+# response shape
+{"result": ...}            # success — per-fn shape
+{"error": "&lt;msg&gt;"}        # failure — wrapper die()s with the message</pre>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>FUNCTION SURFACE</h2>
+      <p>The stryke side (<code>lib/MySQL.stk</code>) exposes 77 public <code>MySQL::*</code> functions. Most connection-aware verbs map 1:1 to a <code>mysql__*</code> FFI export; the higher-level CRUD helpers and several read shapes are composed on the stryke side, which is why there are more functions (77) than exports (66).</p>
+      <table class="arch-table">
+        <thead><tr><th>Group</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Read</td><td><code>query</code>, <code>query_one</code>, <code>query_col</code>, <code>query_scalar</code>, <code>query_stream</code>, <code>query_multi</code>, <code>call</code>, <code>dump</code></td></tr>
+          <tr><td>Write / CRUD</td><td><code>execute</code>, <code>exec_file</code>, <code>insert_many</code>, <code>upsert</code>, <code>update</code>, <code>delete</code>, <code>truncate</code>, <code>count</code>, <code>exists</code>, <code>table_exists</code></td></tr>
+          <tr><td>Transactions</td><td><code>transaction</code> (one connection, real <code>START TRANSACTION</code>, all-or-nothing)</td></tr>
+          <tr><td>Introspection</td><td><code>databases</code>, <code>tables</code>, <code>views</code>, <code>schema</code>, <code>columns</code>, <code>column_names</code>, <code>indexes</code>, <code>foreign_keys</code>, <code>create_table</code>, <code>procedures</code>, <code>triggers</code>, <code>events</code>, <code>charsets</code>, <code>collations</code>, <code>engines</code></td></tr>
+          <tr><td>Admin / observability</td><td><code>ping</code>, <code>users</code>, <code>grants</code>, <code>status</code>, <code>variables</code>, <code>processlist</code>, <code>kill</code>, <code>db_size</code>, <code>table_size</code>, <code>explain</code>, <code>current_database</code>, <code>create_database</code>, <code>drop_database</code></td></tr>
+          <tr><td>Version</td><td><code>version</code> (cdylib build), <code>server_version</code> (live <code>SELECT VERSION()</code>)</td></tr>
+          <tr><td>Pure helpers (no connection)</td><td>DSN (<code>parse_dsn</code>/<code>build_dsn</code>/<code>redact_dsn</code>), identifiers (<code>quote_ident</code>/<code>unquote_ident</code>/<code>quote_qualified_ident</code>/<code>parse_qualified_ident</code>), literals (<code>quote_literal</code>/<code>unquote_literal</code>/<code>quote</code>/<code>escape_string</code>), LIKE (<code>escape_like</code>/<code>unescape_like</code>/<code>like_pattern</code>), IN lists (<code>format_in_list</code>/<code>parse_in_list</code>), ENUM/SET (<code>parse_enum</code>/<code>build_enum</code>/<code>enum_index</code>/<code>enum_value</code>/<code>set_mask</code>/<code>set_from_mask</code>/<code>parse_set_value</code>), types (<code>parse_column_type</code>/<code>normalize_type</code>), builders (<code>format_assignments</code>/<code>format_placeholders</code>/<code>build_where_eq</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>DEPENDENCIES</h2>
+      <p>The cdylib keeps a deliberately small, foundational dependency set. The release profile is tuned for a compact shippable artifact (<code>opt-level = 3</code>, <code>lto = "thin"</code>, <code>codegen-units = 1</code>, <code>strip = true</code>, <code>panic = "abort"</code>).</p>
+      <table class="arch-table">
+        <thead><tr><th>Crate</th><th>Version</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>mysql</code></td><td>28 (<code>minimal-rust</code>, <code>buffer-pool</code>, <code>client_ed25519</code>)</td><td>MySQL / MariaDB protocol driver + connection pool</td></tr>
+          <tr><td><code>serde</code> / <code>serde_json</code></td><td>1 (<code>preserve_order</code>)</td><td>JSON-over-FFI envelope encode/decode</td></tr>
+          <tr><td><code>chrono</code></td><td>0.4 (<code>clock</code>, <code>std</code>)</td><td>DATE / DATETIME / TIME formatting</td></tr>
+          <tr><td><code>once_cell</code></td><td>1</td><td>process-lifetime <code>mysql::Pool</code> cache</td></tr>
+          <tr><td><code>parking_lot</code></td><td>0.12</td><td>locking for the pool cache</td></tr>
+          <tr><td><code>anyhow</code></td><td>1</td><td>error propagation inside the cdylib</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">^</span>TYPE ENCODING</h2>
+      <p>Result rows cross the FFI boundary as JSON. Integer/float types become JSON numbers; <code>DECIMAL</code> is a string (the protocol sends it as bytes); <code>DATE</code>/<code>DATETIME</code>/<code>TIMESTAMP</code>/<code>TIME</code> become formatted strings; <code>JSON</code> columns are returned as raw JSON text; <code>NULL</code> becomes null. A <code>BLOB</code>/<code>VARBINARY</code> value is a string when it is valid UTF-8, otherwise it is prefixed <code>"base64:"</code> so consumers can detect and decode it. The full table is in the <a href="https://github.com/MenkeTechnologies/stryke-mysql#0x06-type-encoding">README "Type encoding" section</a>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-mysql#readme">"Why this is a package"</a> + "API reference" sections for the authoritative scope. The package is intentionally narrower than its underlying SDK / driver &mdash; the goal is "useful from a shell pipeline", not "complete API coverage". The connector currently exposes 77 stryke functions over 66 FFI exports, covering query, CRUD, transactions, introspection, admin, and connection-free SQL helpers. There is no separate CLI binary &mdash; the surface is the <code>use MySQL</code> package; the historical <code>stryke-mysql-helper</code> fork-per-call binary and its JSON-RPC daemon mode were replaced by the in-process cdylib + pool cache.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-mysql">github.com/MenkeTechnologies/stryke-mysql</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-mysql/issues">github.com/MenkeTechnologies/stryke-mysql/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

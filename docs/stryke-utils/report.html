@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-utils — engineering report. Sublibrary boundaries, builtin-exclusion contract, dot-path conventions, test surface, and how the package stays pure-stryke (no cdylib).">
+  <title>stryke-utils — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-val.yellow { color: var(--yellow); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-UTILS &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Six sublibs &middot; 149 composite fns &middot; zero builtin re-wraps &middot; pure stryke (no <code>[ffi]</code>, no cdylib) &middot; <code>use Utils</code> pulls all
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-utils</strong> is the higher-level standard library for stryke &mdash; the layer sitting above builtins and below domain packages like <code>stryke-arrow</code> / <code>stryke-postgres</code>. Six sublibraries cover the composites every application code path eventually needs: case conversion, slugification, distance metrics, set operations on lists, deep merge and dot-path access on hashes, human-readable byte/duration/percent formatting, and lexical path arithmetic. The package is intentionally pure stryke &mdash; no <code>[ffi]</code> table, no cdylib, no helper binary &mdash; so the install is a copy of seven <code>.stk</code> files and works identically on every target stryke runs on.</p>
+      <p class="tutorial-subtitle">The single contract that drives every design decision is the <strong>no-builtin-rewrap rule</strong>: if a function in this library can be replaced with one builtin call (<code>uc</code>, <code>length</code>, <code>sort</code>, <code>keys</code>, <code>time</code>, <code>mkdir</code>, ...) it's a bug. That keeps the surface focused on real work and prevents the library from accumulating the indistinguishable sub-builtins (<code>str_upper</code>, <code>arr_length</code>, ...) that bloat lodash/underscore-class libraries in other ecosystems.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">sublibraries</div></div>
+        <div class="stat-card"><div class="stat-val cyan">149</div><div class="stat-label">composite fns</div></div>
+        <div class="stat-card"><div class="stat-val green">0</div><div class="stat-label">cdylib / helper binaries</div></div>
+        <div class="stat-card"><div class="stat-val yellow">316</div><div class="stat-label">assertions in t/</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">runnable examples</div></div>
+        <div class="stat-card"><div class="stat-val cyan">22</div><div class="stat-label">CI gate scripts</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SUBLIBRARY BOUNDARIES</h2>
+      <p class="tutorial-subtitle">Each sublibrary owns one shape of input. The split is by primitive type (string / list / hash / number / time / path) rather than by intent (formatting / parsing / validation / ...) so users can find a function from its input type alone.</p>
+      <table class="arch-table">
+        <thead><tr><th>Sublib</th><th>Owns inputs of type</th><th>Doesn't own</th></tr></thead>
+        <tbody>
+          <tr><td><code>Utils::String</code></td><td>Scalar strings &mdash; long-tail composites (asymmetric trim, centred padding, squeeze, whitespace compaction, right-partition, mask, shell-quote, tab-expand, unwrap, visible-width, char-aware ellipsize, word truncation, nth-occurrence index, bounded split, first-letter case, titleize, newline normalization, blank-line collapse, quote stripping, fill-to-width).</td><td>Case/slug/distance/predicates &mdash; absorbed into stryke core (<code>slugify</code>, <code>trim</code>, <code>levenshtein</code>, <code>strip_ansi</code>, <code>pad_left</code>, <code>pad_right</code>, <code>swap_case</code>, <code>truncate</code>, <code>indent</code>, <code>dedent</code>, …). Call them directly.</td></tr>
+          <tr><td><code>Utils::List</code></td><td>Arrayrefs &mdash; the set-op family (<code>difference</code>, <code>intersection</code>, <code>union</code>), sliding <code>windows</code>, 2-list <code>cartesian</code> pairs, <code>rle_encode</code>/<code>rle_decode</code>, and <code>top_n</code>/<code>bottom_n</code> ranking.</td><td>Chunking, deduping, grouping, statistics, projections &mdash; <code>chunk</code>, <code>uniq</code>, <code>group_by</code>, <code>count_by</code>, <code>partition</code>, <code>sort_by</code>, <code>mean</code>, <code>median</code>, <code>zip</code>, etc. are all builtins now.</td></tr>
+          <tr><td><code>Utils::Hash</code></td><td>Hashrefs &mdash; variadic merge (<code>deep_merge_all</code>), dot-path access (<code>deep_get</code>/<code>deep_set</code>/<code>deep_has</code>) and reshaping (<code>rename_keys</code>, <code>flatten_keys</code>/<code>unflatten_keys</code>), plus <code>map_keys</code>/<code>map_values</code>/<code>all_hashes</code>.</td><td>Binary <code>deep_merge</code>, <code>pick</code>, <code>omit</code>, <code>invert</code>, <code>filter</code>, <code>to_pairs</code>/<code>from_pairs</code>, <code>is_empty</code> &mdash; all builtins. Hash iteration (<code>keys</code>/<code>each</code>) always was.</td></tr>
+          <tr><td><code>Utils::Num</code></td><td>Numeric scalars &mdash; the long tail: <code>round_to_multiple</code>, teen-aware <code>ordinal</code>, <code>percent_change</code>, <code>weighted_avg</code>, midrank <code>percentile_of</code>, <code>digit_sum</code>/<code>digit_count</code>, <code>pct_of</code>, <code>mean_abs_dev</code>.</td><td>Clamping, rounding, formatting (<code>format_number</code>/<code>format_bytes</code>/<code>format_percent</code>), <code>sign</code>, parity, <code>gcd</code>/<code>lcm</code> &mdash; all in core.</td></tr>
+          <tr><td><code>Utils::Time</code></td><td>Epoch ints + duration strings &mdash; <code>parse_duration</code>, relative <code>ago</code>, ISO-8601 family (incl. <code>parse_iso8601</code> via the civil-days algorithm), calendar names (<code>day_of_week</code>, <code>format_human</code>, <code>format_clock</code>), duration arithmetic (<code>add_duration</code>/<code>sub_duration</code>), <code>timed</code>.</td><td><code>now_ms</code>/<code>now_us</code>, <code>format_duration</code>, <code>elapsed</code>, <code>weekday_name</code>/<code>month_name</code> &mdash; builtins. Non-UTC timezone arithmetic remains out of scope.</td></tr>
+          <tr><td><code>Utils::Path</code></td><td>Filesystem path <strong>strings</strong> &mdash; extension family (<code>ext</code>, <code>compound_ext</code>, <code>without_ext</code>, <code>set_ext</code>, <code>splitext</code>), variadic <code>join</code>, path-aware <code>normalize</code>, <code>relative</code>, <code>is_absolute</code>/<code>is_bare</code>, filename surgery (<code>with_name</code>, <code>add_suffix</code>), trailing-slash control (<code>strip_trailing_slash</code>, <code>ensure_trailing_slash</code>), segmentation (<code>segments</code>, <code>depth</code>), lexical containment (<code>is_under</code>).</td><td><code>basename</code>, <code>dirname</code>, <code>common_prefix</code> &mdash; builtins. FS I/O &mdash; <code>mkdir</code>, <code>unlink</code>, <code>opendir</code>, <code>-e</code>/<code>-d</code>/<code>-f</code>/<code>-s</code> &mdash; always were. We never touch the disk.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">=</span>FUNCTION INVENTORY</h2>
+      <p class="tutorial-subtitle">The complete public surface per sublibrary &mdash; 149 functions. Names map one-to-one to <code>fn Utils::&lt;Sub&gt;::&lt;name&gt;</code> in <code>lib/&lt;Sub&gt;.stk</code>. The per-function signatures, behaviour notes, and examples live on the <a href="index.html">Docs</a> page; this is the roster.</p>
+      <table class="arch-table">
+        <thead><tr><th>Sublib</th><th>Count</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td><code>Utils::String</code></td><td>33</td><td><code>ltrim</code> &middot; <code>rtrim</code> &middot; <code>pad_center</code> &middot; <code>visible_width</code> &middot; <code>count_occurrences</code> &middot; <code>reverse_chars</code> &middot; <code>squeeze</code> &middot; <code>compact_whitespace</code> &middot; <code>partition</code> &middot; <code>rpartition</code> &middot; <code>mask_middle</code> &middot; <code>escape_shell</code> &middot; <code>expand_tabs</code> &middot; <code>unexpand_tabs</code> &middot; <code>unwrap</code> &middot; <code>ellipsize</code> &middot; <code>truncate_words</code> &middot; <code>nth_index</code> &middot; <code>splitn</code> &middot; <code>capitalize_first</code> &middot; <code>uncapitalize</code> &middot; <code>titleize</code> &middot; <code>normalize_newlines</code> &middot; <code>collapse_blank_lines</code> &middot; <code>strip_quotes</code> &middot; <code>repeat_to</code> &middot; <code>remove_prefix</code> &middot; <code>remove_suffix</code> &middot; <code>ensure_prefix</code> &middot; <code>ensure_suffix</code> &middot; <code>prefix_lines</code> &middot; <code>nth_line</code> &middot; <code>count_lines_nonblank</code></td></tr>
+          <tr><td><code>Utils::List</code></td><td>20</td><td><code>difference</code> &middot; <code>intersection</code> &middot; <code>union</code> &middot; <code>symmetric_difference</code> &middot; <code>is_disjoint</code> &middot; <code>windows</code> &middot; <code>chunk</code> &middot; <code>cartesian</code> &middot; <code>rle_encode</code> &middot; <code>rle_decode</code> &middot; <code>top_n</code> &middot; <code>bottom_n</code> &middot; <code>count_where</code> &middot; <code>transpose</code> &middot; <code>running_sum</code> &middot; <code>running_product</code> &middot; <code>round_robin</code> &middot; <code>deltas</code> &middot; <code>rotate_left</code> &middot; <code>index_of_max</code></td></tr>
+          <tr><td><code>Utils::Hash</code></td><td>26</td><td><code>deep_merge_all</code> &middot; <code>deep_get</code> &middot; <code>deep_set</code> &middot; <code>deep_has</code> &middot; <code>map_keys</code> &middot; <code>map_values</code> &middot; <code>all_hashes</code> &middot; <code>rename_keys</code> &middot; <code>flatten_keys</code> &middot; <code>unflatten_keys</code> &middot; <code>deep_delete</code> &middot; <code>defaults</code> &middot; <code>deep_keys</code> &middot; <code>deep_values</code> &middot; <code>count_values</code> &middot; <code>map_entries</code> &middot; <code>merge_with</code> &middot; <code>pick_by</code> &middot; <code>omit_by</code> &middot; <code>hash_diff</code> &middot; <code>invert_multi</code> &middot; <code>deep_count</code> &middot; <code>pluck_paths</code> &middot; <code>to_query_string</code> &middot; <code>_vstr</code> &middot; <code>_urlenc</code> (last two private)</td></tr>
+          <tr><td><code>Utils::Num</code></td><td>26</td><td><code>round_to_multiple</code> &middot; <code>floor_to_multiple</code> &middot; <code>ceil_to_multiple</code> &middot; <code>ordinal</code> &middot; <code>percent_change</code> &middot; <code>weighted_avg</code> &middot; <code>percentile_of</code> &middot; <code>digit_sum</code> &middot; <code>digit_count</code> &middot; <code>digital_root</code> &middot; <code>pct_of</code> &middot; <code>mean_abs_dev</code> &middot; <code>is_close</code> &middot; <code>to_radians</code> &middot; <code>to_degrees</code> &middot; <code>round_sig</code> &middot; <code>clamp01</code> &middot; <code>remap</code> &middot; <code>wrap</code> &middot; <code>gcd</code> &middot; <code>round_half_even</code> &middot; <code>clamp_to</code> &middot; <code>mod_floor</code> &middot; <code>next_power_of_two</code> &middot; <code>midrange</code> &middot; <code>divisors_of</code></td></tr>
+          <tr><td><code>Utils::Time</code></td><td>18</td><td><code>parse_duration</code> &middot; <code>ago</code> &middot; <code>format_iso8601</code> &middot; <code>format_date</code> &middot; <code>format_time</code> &middot; <code>timed</code> &middot; <code>day_of_week</code> &middot; <code>format_human</code> &middot; <code>format_clock</code> &middot; <code>add_duration</code> &middot; <code>sub_duration</code> &middot; <code>parse_iso8601</code> &middot; <code>quarter</code> &middot; <code>is_same_day</code> &middot; <code>truncate_to_hour</code> &middot; <code>next_weekday</code> &middot; <code>prev_weekday</code> &middot; <code>_days_from_civil</code> (private)</td></tr>
+          <tr><td><code>Utils::Path</code></td><td>26</td><td><code>ext</code> &middot; <code>compound_ext</code> &middot; <code>without_ext</code> &middot; <code>set_ext</code> &middot; <code>splitext</code> &middot; <code>join</code> &middot; <code>normalize</code> &middot; <code>is_absolute</code> &middot; <code>is_bare</code> &middot; <code>relative</code> &middot; <code>with_name</code> &middot; <code>add_suffix</code> &middot; <code>strip_trailing_slash</code> &middot; <code>ensure_trailing_slash</code> &middot; <code>segments</code> &middot; <code>depth</code> &middot; <code>is_under</code> &middot; <code>is_hidden</code> &middot; <code>expand_user</code> &middot; <code>sibling</code> &middot; <code>ancestors</code> &middot; <code>with_stem</code> &middot; <code>common_ancestor</code> &middot; <code>strip_extension_all</code> &middot; <code>is_relative</code> &middot; <code>with_parent</code></td></tr>
+        </tbody>
+      </table>
+      <p>The per-sublib counts come straight from <code>grep -c '^fn Utils::&lt;Sub&gt;' lib/&lt;Sub&gt;.stk</code> &mdash; the same derivation <code>scripts/check-counts.sh</code> runs in CI, so the roster above and the doc totals can never drift from source. Private helpers (<code>_vstr</code>, <code>_urlenc</code>, <code>_days_from_civil</code>) are counted because they are real <code>fn</code> definitions in the module file.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>ALGORITHM NOTES</h2>
+      <p class="tutorial-subtitle">A few functions carry non-obvious implementation choices worth pinning. All are sourced from the function bodies in <code>lib/*.stk</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Function</th><th>Choice</th></tr></thead>
+        <tbody>
+          <tr><td><code>Time::parse_iso8601</code></td><td>Converts the civil date to a day count with Howard Hinnant's days-from-civil algorithm (exact, no lookup table), then adds the time-of-day seconds. Round-trips <code>format_iso8601</code> exactly; dies on a malformed string.</td></tr>
+          <tr><td><code>Num::round_half_even</code></td><td>Banker's rounding (round half to even) &mdash; the IEEE-754 / finance default &mdash; unlike core <code>round</code> which rounds halves away from zero. A value within ~1e-9 of a half is treated as an exact half.</td></tr>
+          <tr><td><code>Num::mod_floor</code></td><td>Floored modulo: the result carries the sign of the DIVISOR, so for a positive modulus it always lands in <code>[0, m)</code> &mdash; what cyclic indices and clock arithmetic want, unlike the <code>%</code> operator.</td></tr>
+          <tr><td><code>Num::is_close</code></td><td>Combines an absolute tolerance and a relative tolerance (against the larger magnitude) so it works near zero and at large magnitudes &mdash; the float-safe replacement for <code>==</code>.</td></tr>
+          <tr><td><code>Num::divisors_of</code></td><td>Walks divisors up to &radic;n, collecting the small factor and its co-factor each step, then concatenates &mdash; O(&radic;n) rather than O(n).</td></tr>
+          <tr><td><code>Hash::to_query_string</code></td><td>Keys sorted for a stable, reproducible string; both key and value percent-encoded keeping the RFC-3986 unreserved set literal; <code>undef</code> values render as an empty value.</td></tr>
+          <tr><td><code>Path::compound_ext</code></td><td>Treats a suffix as compound only when each trailing segment is purely alphanumeric and &le; 4 chars (so <code>tar.gz</code> is compound but <code>config.backup</code> is not).</td></tr>
+          <tr><td><code>List::rotate_left</code></td><td><code>$n</code> is reduced modulo the length with a double-mod so any integer &mdash; including negative (rotate right) &mdash; is valid.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>NO-BUILTIN-REWRAP CONTRACT</h2>
+      <p class="tutorial-subtitle">The single rule that shapes every decision: <strong>if a function here can be replaced with one builtin call, it's a bug.</strong> Enforced mechanically &mdash; every public fn is grepped against <code>%b</code> at build time; collisions fail the gate. The two intentional name overlaps (<code>Utils::Path::join</code>, <code>Utils::Path::normalize</code>) are whitelisted because the lib semantics are genuinely distinct from the builtin's (path join vs array join, path normalize vs vector normalize).</p>
+      <table class="arch-table">
+        <thead><tr><th>Category</th><th>Builtins (formerly in this package, now absorbed)</th></tr></thead>
+        <tbody>
+          <tr><td>String case / slug</td><td><code>trim</code> &middot; <code>slugify</code> &middot; <code>snake_case</code> &middot; <code>kebab_case</code> &middot; <code>camel_case</code> &middot; <code>pascal_case</code> &middot; <code>title_case</code> &middot; <code>swap_case</code> &middot; <code>indent</code> &middot; <code>dedent</code> &middot; <code>rot13</code></td></tr>
+          <tr><td>String predicates / distance</td><td><code>contains</code> &middot; <code>starts_with</code> &middot; <code>ends_with</code> &middot; <code>is_blank</code> &middot; <code>is_palindrome</code> &middot; <code>levenshtein</code> &middot; <code>hamming</code> &middot; <code>dice_coefficient</code> &middot; <code>find_all_indices</code> &middot; <code>common_prefix</code> &middot; <code>common_suffix</code></td></tr>
+          <tr><td>String padding / shaping</td><td><code>pad_left</code> &middot; <code>pad_right</code> &middot; <code>truncate</code> &middot; <code>strip_ansi</code> &middot; <code>word_wrap</code></td></tr>
+          <tr><td>List</td><td><code>chunk</code> &middot; <code>compact</code> &middot; <code>uniq</code>/<code>uniq_by</code> &middot; <code>flatten</code> &middot; <code>group_by</code> &middot; <code>count_by</code> &middot; <code>index_by</code> &middot; <code>partition</code> &middot; <code>pluck</code> &middot; <code>sum</code> &middot; <code>mean</code>/<code>median</code> &middot; <code>min_by</code>/<code>max_by</code>/<code>sort_by</code> &middot; <code>zip</code> &middot; <code>take</code>/<code>drop</code> &middot; <code>range</code></td></tr>
+          <tr><td>Hash</td><td><code>deep_merge</code> (binary) &middot; <code>pick</code> &middot; <code>omit</code> &middot; <code>invert</code> &middot; <code>filter</code> &middot; <code>from_pairs</code>/<code>to_pairs</code> &middot; <code>is_empty</code></td></tr>
+          <tr><td>Num</td><td><code>clamp</code> &middot; <code>between</code> &middot; <code>lerp</code> &middot; <code>round_to</code> &middot; <code>format_number</code> &middot; <code>format_bytes</code> &middot; <code>format_percent</code> &middot; <code>gcd</code> &middot; <code>lcm</code> &middot; <code>sign</code> &middot; <code>is_even</code>/<code>is_odd</code></td></tr>
+          <tr><td>Time</td><td><code>now_ms</code>/<code>now_us</code> &middot; <code>format_duration</code> &middot; <code>elapsed</code></td></tr>
+          <tr><td>Path</td><td><code>basename</code> &middot; <code>dirname</code> &middot; <code>common_prefix</code></td></tr>
+          <tr><td>Core (always was)</td><td><code>uc</code>/<code>lc</code>/<code>length</code>/<code>sprintf</code>/<code>substr</code>/<code>index</code>/<code>rindex</code>/<code>split</code> &middot; <code>push</code>/<code>pop</code>/<code>shift</code>/<code>unshift</code>/<code>splice</code>/<code>sort</code>/<code>reverse</code>/<code>map</code>/<code>grep</code>/<code>join</code> &middot; <code>keys</code>/<code>values</code>/<code>exists</code>/<code>defined</code>/<code>delete</code>/<code>each</code>/<code>scalar</code>/<code>wantarray</code> &middot; <code>abs</code>/<code>int</code>/<code>sqrt</code>/<code>sin</code>/<code>cos</code>/<code>log</code>/<code>exp</code> &middot; <code>time</code>/<code>localtime</code>/<code>gmtime</code>/<code>sleep</code> &middot; <code>mkdir</code>/<code>unlink</code>/<code>rmdir</code>/<code>opendir</code>/<code>readdir</code>/<code>-e</code>/<code>-d</code>/<code>-f</code>/<code>-s</code> &middot; <code>to_json</code>/<code>from_json</code> &middot; <code>..</code> range &middot; <code>x</code> repetition</td></tr>
+        </tbody>
+      </table>
+      <p>The "absorbed" rows reflect actual deletions from this package &mdash; ~74 fns moved into <code>%b</code> over the lifetime of the project. The contract isn't "we'll write these"; it's "we'll delete ours the day stryke ships its own."</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>DOT-PATH CONVENTION</h2>
+      <p class="tutorial-subtitle"><code>Utils::Hash::deep_get</code> / <code>deep_set</code> / <code>deep_has</code> use a dot-path syntax (e.g. <code>"db.pool.max"</code>) for nested traversal. Tradeoffs:</p>
+      <table class="arch-table">
+        <thead><tr><th>Choice</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Strings, not arrayrefs</td><td>Configuration files (YAML/TOML/JSON) read into stryke as nested hashrefs; their access patterns are routinely string-keyed. <code>deep_get(\%cfg, "db.pool.max")</code> reads naturally; <code>deep_get(\%cfg, ["db","pool","max"])</code> is heavier for the common case.</td></tr>
+          <tr><td>Dot as separator</td><td>Matches Lodash, jq, JSONPath, Vue computed-watcher syntax. Period is the universal nested-access separator outside of Perl/Lisp lineage. Users moving between languages don't have to re-learn.</td></tr>
+          <tr><td>No escape for literal dots</td><td>Keeps the implementation a 5-line <code>split /\./</code>. If a key literally contains a dot, the user wants <code>$h-&gt;{"key.with.dots"}</code> directly &mdash; deep_get is for shapes that nest, not flat single-key reads.</td></tr>
+          <tr><td><code>deep_set</code> autovivifies</td><td>Matches <code>$h-&gt;{a}{b}{c} = $v</code> behavior in Perl &mdash; you'd expect a setter to create intermediate hashes if missing. Returns the modified <code>$h</code> for chaining.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>WHY PURE STRYKE (NO CDYLIB)</h2>
+      <p>Compare against <code>stryke-arrow</code>, which ships a Rust cdylib for the arrow-rs FFI. The cost of a cdylib package:</p>
+      <ul>
+        <li>Per-target release artifacts (x86_64-linux, aarch64-linux, x86_64-darwin, aarch64-darwin &mdash; minimum four).</li>
+        <li>A release pipeline that has to build, sign, and upload each.</li>
+        <li>Install-side toolchain (cargo, rustc) when there's no prebuilt for the user's triple.</li>
+        <li>A non-trivial unwind across the FFI boundary on every call &mdash; allocator, error encoding, JSON serialize / deserialize at the wire.</li>
+      </ul>
+      <p>For <code>stryke-utils</code>, that's all dead weight. <code>parse_duration</code> doesn't get faster in Rust because it's already O(n) in a tiny input and the JSON round-trip would dwarf the work. Same for <code>deep_merge_all</code>, <code>compound_ext</code>, path <code>normalize</code>, etc. Pure stryke means:</p>
+      <ul>
+        <li><strong>One install path, every platform.</strong> Tarball with seven <code>.stk</code> files; works on anything stryke runs on.</li>
+        <li><strong>Same source as runtime.</strong> Debug a function by reading the file at the install dir &mdash; no decompile, no inspector, no symbol resolution.</li>
+        <li><strong>Trivial to fork.</strong> Copy a single <code>lib/*.stk</code> into a project; it just works as long as its dependencies (only other Utils:: sublibs, never external) come with it.</li>
+        <li><strong>No release bottleneck.</strong> No matrix build, no per-triple QA, no "the linux-arm tarball broke" support load.</li>
+      </ul>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>TEST SURFACE</h2>
+      <p class="tutorial-subtitle"><code>t/test_utils.stk</code> uses stryke's native assertion library (<code>assert_eq</code>, <code>assert_match</code>, <code>assert_ok</code>, <code>assert_gt</code>) and exits TAP-style via <code>test_run</code>. Coverage shape:</p>
+      <table class="arch-table">
+        <thead><tr><th>Sublib</th><th>Assertion families covered</th></tr></thead>
+        <tbody>
+          <tr><td>String</td><td><code>ltrim</code>/<code>rtrim</code>, <code>pad_center</code> alignment, <code>squeeze</code> (consecutive dups), <code>compact_whitespace</code> (normalize-for-hash), <code>visible_width</code> (ANSI-aware), <code>count_occurrences</code> non-overlap, <code>reverse_chars</code> UTF-8 codepoint, <code>partition</code> first-sep split, <code>rpartition</code> last-sep split, <code>mask_middle</code> head/tail preserve, <code>escape_shell</code> single-quote idempotence, <code>expand_tabs</code> per width, <code>unwrap</code> symmetric/asymmetric, <code>ellipsize</code> char-width cap, <code>truncate_words</code> + whitespace normalize, <code>nth_index</code> non-overlap, <code>splitn</code> bounded + remainder, <code>capitalize_first</code>/<code>uncapitalize</code>/<code>titleize</code>, <code>normalize_newlines</code> (CRLF + CR), <code>collapse_blank_lines</code> (whitespace-only blanks), <code>strip_quotes</code> (matched/unmatched/empty), <code>repeat_to</code> (truncate/zero/empty).</td></tr>
+          <tr><td>List</td><td><code>difference</code> preserves $a's order, <code>intersection</code> dedups, <code>union</code> uses builtin <code>uniq</code>, <code>windows</code> size-1, size=length, oversize. <code>cartesian</code> a-major order + empty input, <code>rle_encode</code>/<code>rle_decode</code> round-trip + run reset, <code>top_n</code>/<code>bottom_n</code> clamp, zero-n, key-fn scoring.</td></tr>
+          <tr><td>Hash</td><td><code>deep_merge_all</code> fold (3+ hashes, right-most wins), <code>deep_get</code> hit + miss, <code>deep_set</code> autovivifies, <code>deep_has</code> differentiates exists-undef from missing, <code>map_keys</code>/<code>map_values</code> identity + transform, <code>all_hashes</code> mixed-shape rejection, <code>rename_keys</code> mapped + passthrough, <code>flatten_keys</code>/<code>unflatten_keys</code> deep nesting, empty-hash leaves, round-trip.</td></tr>
+          <tr><td>Num</td><td><code>round_to_multiple</code> (positive + negative step), <code>ordinal</code> teen cases (11th/12th/13th vs 21st/22nd/23rd), <code>digit_sum</code>/<code>digit_count</code> (abs + truncate), <code>pct_of</code> (+ zero-whole dies), <code>mean_abs_dev</code> (symmetric, constant, single, empty dies).</td></tr>
+          <tr><td>Time</td><td><code>parse_duration</code> multi-unit + ms, <code>ago</code> thresholds at minute/hour/day/week/month/year, ISO-8601 / date / time shape match, <code>timed</code> returns result pair, <code>day_of_week</code>/<code>format_human</code>/<code>format_clock</code> at epoch 0 + noon/midnight, <code>add_duration</code>/<code>sub_duration</code>, <code>parse_iso8601</code> known epochs + round-trip + garbage rejection.</td></tr>
+          <tr><td>Path</td><td><code>ext</code> (none / single / compound), <code>compound_ext</code> tar.gz, <code>without_ext</code> / <code>set_ext</code> / <code>splitext</code> round-trip, variadic <code>join</code> with slash normalization, path <code>normalize</code> abs + rel + walk-above-root, <code>relative</code> descendant + cousin + same-path, <code>is_absolute</code>/<code>is_bare</code> edge cases, <code>with_name</code> + <code>add_suffix</code> (ext-aware), <code>strip_trailing_slash</code> (keeps root) / <code>ensure_trailing_slash</code> idempotent, <code>segments</code>/<code>depth</code>, <code>is_under</code> (normalizes, rejects sibling-prefix).</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>CI GATES</h2>
+      <p>22 shell gate scripts in <code>tests/</code> are wired into <code>.github/workflows/ci.yml</code>. They lint the repo shape independently of stryke itself &mdash; so a CI failure is reproducible by running <code>bash tests/&lt;gate&gt;.sh</code> locally.</p>
+      <table class="arch-table">
+        <thead><tr><th>Bucket</th><th>Gates</th></tr></thead>
+        <tbody>
+          <tr><td>repo-contract</td><td>Pure-stryke (no <code>Cargo.toml</code>, no <code>[ffi]</code>). lib/ has exactly 7 files. Every sublib declares <code>package Utils::&lt;Name&gt;</code>. Examples shebang. <code>bin/utils.stk</code> shebang. Makefile has test/install/clean. LICENSE is MIT.</td></tr>
+          <tr><td>docs gates</td><td><code>&lt;h1&gt;</code> present, <code>&lt;body&gt;</code> tag, closing <code>&lt;/html&gt;</code>, no deprecated tags (<code>&lt;font&gt;</code>, <code>&lt;center&gt;</code>, ...), no inline event handlers, no placeholder hrefs, no plaintext <code>http://</code>, <code>target="_blank"</code> always paired with <code>rel="noopener noreferrer"</code>.</td></tr>
+          <tr><td>README gates</td><td>At least one shields.io badge, at least one h2 section, at least one https link, ends with final newline.</td></tr>
+          <tr><td>polish gates</td><td>Workflow files have no tabs (YAML), every tests/*.sh has +x and a bash shebang, man pages (if any) have synopsis section + final newline + no trailing whitespace.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>EXTENDING</h2>
+      <p>Adding a function to an existing sublib means three edits:</p>
+      <ol>
+        <li>Add the <code>fn Utils::&lt;Sub&gt;::name</code> implementation to <code>lib/&lt;Sub&gt;.stk</code> with a leading <code>##</code> docstring.</li>
+        <li>Add at least one <code>assert_eq</code> / <code>assert_ok</code> in <code>t/test_utils.stk</code>.</li>
+        <li>Mention it in the README sublib table and (if user-facing) <code>docs/index.html</code>'s sublibrary table.</li>
+      </ol>
+      <p>Adding a new sublib means: drop <code>lib/&lt;Name&gt;.stk</code> with <code>package Utils::&lt;Name&gt;</code>, add <code>use Utils::&lt;Name&gt;</code> to <code>lib/Utils.stk</code>, update <code>Utils::modules</code>, extend the README + docs tables, and bump the file count in <code>tests/repo-contract.sh</code>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-utils</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-utils/issues" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-utils/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

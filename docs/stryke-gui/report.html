@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-gui — engineering report. GUI AUTOMATION FOR STRYKE: mouse + keyboard + screen + pixel + clipboard via enigo + xcap + arboard. Ships as a Rust cdylib that stryke dlopens in-process on first `use GUI`. Architecture, FFI layer, scope, dependencies, permissions.">
+  <title>stryke-gui — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-GUI &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_gui.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use GUI</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-gui</strong> is one of the opt-in connector packages in the stryke ecosystem. Mouse motion / buttons / wheel, keyboard press / type / hotkey, screen size + bounds, pixel reads, screenshots, and clipboard &mdash; a PyAutoGUI-equivalent surface for stryke. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim and free of X11/Wayland system libraries. It ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use GUI</code>; the native input/display code (<code>enigo</code> + <code>xcap</code> + <code>arboard</code>) lives in <code>libstryke_gui.{dylib,so}</code>.</p>
+      <p class="tutorial-subtitle">Core stays small on purpose &mdash; most one-liner / awk-replacement work doesn't need a virtual-pointer driver or a screen-capture pipeline. <code>enigo</code> + <code>xcap</code> drag in the platform input/display stack (Wayland + xkb + dbus + PipeWire on Linux; CGEvent + ScreenCaptureKit on macOS), so they ship as an opt-in package.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+        <div class="stat-card"><div class="stat-val green">enigo + xcap + arboard</div><div class="stat-label">Native deps</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Platforms (macOS / Linux / Windows)</div></div>
+        <div class="stat-card"><div class="stat-val cyan">69</div><div class="stat-label">Public GUI:: functions</div></div>
+        <div class="stat-card"><div class="stat-val">31 / 38</div><div class="stat-label">Device fns / pure helpers</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/GUI.stk</code>)</td><td>Thin wrapper exposing typed functions in the <code>GUI::</code> namespace (<code>use GUI</code>); each JSON-encodes args, calls the FFI symbol, and parses the JSON return</td></tr>
+          <tr><td>cdylib (<code>libstryke_gui.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every export is an <code>extern "C" fn gui__&lt;verb&gt;(*const c_char) -&gt; *const c_char</code> wrapping the <code>mouse</code> / <code>keyboard</code> / <code>capture</code> modules</td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use GUI</code>; the <code>Enigo</code> input handle persists in a process-global <code>OnceCell&lt;Mutex&lt;Enigo&gt;&gt;</code> (<code>src/common.rs::enigo_lock</code>) and is reused across calls; macOS reuses the parent terminal's Accessibility / Screen-Recording grant</td></tr>
+          <tr><td>Input synthesis</td><td><code>enigo</code> 0.6 &mdash; macOS CGEvent, X11 XTest, Wayland virtual-pointer, Win32 SendInput</td></tr>
+          <tr><td>Display capture</td><td><code>xcap</code> 0.9 &mdash; macOS ScreenCaptureKit, X11 XGetImage, Wayland portal, Win32 GDI</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code> (or <code>make install</code>)</td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/stryke-gui@&lt;version&gt;/</code> after <code>make install</code>; <code>use GUI</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>Cargo unit tests under <code>src/</code> (FFI plumbing, error-on-panic, free-cstring contract, region parsing &mdash; headless CI-safe) plus zunit-style <code>t/test_gui.stk</code> for the end-to-end stryke &rarr; FFI &rarr; cdylib call path</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>The <code>enigo</code> (input) and <code>xcap</code> (capture) crates link against the platform input/display stack. On Linux that means the X11 <strong>and</strong> Wayland client libraries plus xkb, dbus, and PipeWire &mdash; a stack of <code>-dev</code> packages that would otherwise have to be installed before <code>cargo install strykelang</code> could even build. Baking them into core forces that cost on every user, GUI or not.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays slim precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need a virtual-pointer driver or a screen-capture pipeline linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>GUI::*</code> wrapper serializes its args to a JSON string and calls the matching <code>gui__*</code> symbol resolved out of the dlopen'd cdylib; the cdylib returns a JSON <code>CString</code> the wrapper parses. <strong>Action</strong> calls (<code>gui__mouse_move</code>, <code>gui__mouse_click</code>, <code>gui__key_type</code>, <code>gui__key_hotkey</code>, &hellip;) return a success JSON; <strong>query</strong> calls return a structured payload. <code>catch_unwind</code> on every call converts panics to JSON errors; the returned <code>CString</code> is freed via the cdylib-exported free-cstring symbol, wired automatically by stryke's FFI loader.</p>
+      <table class="arch-table">
+        <thead><tr><th>Query export</th><th>Response shape</th></tr></thead>
+        <tbody>
+          <tr><td><code>gui__mouse_pos</code></td><td><code>{"x":i64,"y":i64}</code></td></tr>
+          <tr><td><code>gui__screen_size</code></td><td><code>{"width":i64,"height":i64}</code></td></tr>
+          <tr><td><code>gui__on_screen</code></td><td><code>{"on_screen":bool}</code></td></tr>
+          <tr><td><code>gui__pixel</code></td><td><code>{"r":u8,"g":u8,"b":u8}</code></td></tr>
+          <tr><td><code>gui__pixel_matches_color</code></td><td><code>{"match":bool}</code></td></tr>
+          <tr><td><code>gui__screenshot</code> (no path)</td><td><code>{"width":u32,"height":u32,"rgba":[u8,&hellip;]}</code></td></tr>
+          <tr><td><code>gui__screenshot</code> (with path)</td><td><code>{"path":"PATH"}</code> (PNG written to disk)</td></tr>
+          <tr><td><code>gui__keyboard_keys</code></td><td>JSON array of recognized key names</td></tr>
+        </tbody>
+      </table>
+      <p>Failures come back as a <code>{"error": "&lt;msg&gt;"}</code> JSON payload and the <code>.stk</code> wrapper <code>die</code>s with the message.</p>
+<pre># request shape (built by the .stk wrapper)
+{"...": ...}
+
+# response shape
+{"result": ...}            # success — per-fn shape
+{"error": "&lt;msg&gt;"}        # failure — wrapper die()s with the message</pre>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>The surface is a PyAutoGUI-equivalent &mdash; mouse motion / buttons / wheel, keyboard press / type / hotkey, screen size + bounds, pixel reads, and full or region screenshots. Coordinates use a top-left origin; the primary display only. Tweened motion runs at 60 fps via linear interpolation; <code>duration &le; 0</code> is a single-step warp.</p>
+      <p>The package exposes <strong>69 public <code>GUI::</code> functions</strong> (counted from <code>lib/GUI.stk</code>), backed by 60 <code>gui__*</code> cdylib exports in <code>src/lib.rs</code> &mdash; the difference is convenience wrappers (<code>mouse_size</code>, the right/middle/double/triple click and relative-drag/hscroll variants) that reuse a shared export. The surface divides into a device half (31 functions) and a pure half (38 functions) that runs headless with no display or permission gate.</p>
+      <table class="arch-table">
+        <thead><tr><th>Category</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Position &amp; size</td><td><code>mouse_pos</code>, <code>screen_size</code>, <code>mouse_size</code>, <code>on_screen</code></td></tr>
+          <tr><td>Mouse motion</td><td><code>mouse_move</code>, <code>mouse_move_rel</code>, <code>mouse_drag</code>, <code>mouse_drag_rel</code></td></tr>
+          <tr><td>Mouse buttons</td><td><code>mouse_click</code>, <code>mouse_right_click</code>, <code>mouse_middle_click</code>, <code>mouse_double_click</code>, <code>mouse_triple_click</code>, <code>mouse_down</code>, <code>mouse_up</code></td></tr>
+          <tr><td>Mouse wheel</td><td><code>mouse_scroll</code>, <code>mouse_hscroll</code></td></tr>
+          <tr><td>Keyboard</td><td><code>key_press</code>, <code>key_down</code>, <code>key_up</code>, <code>key_type</code>, <code>key_hotkey</code>, <code>keyboard_keys</code></td></tr>
+          <tr><td>Pixel &amp; screenshot</td><td><code>pixel</code>, <code>pixel_matches_color</code>, <code>screenshot</code>, <code>screenshot_region</code></td></tr>
+          <tr><td>Clipboard &amp; displays</td><td><code>clipboard_get</code>, <code>clipboard_set</code>, <code>displays</code>, <code>display_screenshot</code></td></tr>
+          <tr><td>Pure hotkey helpers</td><td><code>parse_hotkey</code>, <code>format_hotkey</code></td></tr>
+          <tr><td>Pure color parse / compare</td><td><code>parse_color</code>, <code>format_color</code>, <code>color_distance</code>, <code>delta_e</code>, <code>contrast_ratio</code>, <code>relative_luminance</code>, <code>is_dark</code>, <code>name_color</code></td></tr>
+          <tr><td>Pure color transforms</td><td><code>mix</code>, <code>blend_lab</code>, <code>blend_oklab</code>, <code>gradient</code>, <code>rotate_hue</code>, <code>adjust_lightness</code>, <code>adjust_saturation</code>, <code>invert</code>, <code>grayscale</code>, <code>sepia</code>, <code>posterize</code>, <code>temperature</code>, <code>alpha_over</code>, <code>scheme</code></td></tr>
+          <tr><td>Pure color-space conversions</td><td><code>to_hsl</code>/<code>from_hsl</code>, <code>to_hsv</code>/<code>from_hsv</code>, <code>to_hwb</code>/<code>from_hwb</code>, <code>to_cmyk</code>/<code>from_cmyk</code>, <code>to_lab</code>/<code>from_lab</code>, <code>to_xyz</code>/<code>from_xyz</code>, <code>to_oklab</code>/<code>from_oklab</code></td></tr>
+        </tbody>
+      </table>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-gui#0x03-api-reference">API reference</a> for the authoritative function list with per-field notes. The device half mirrors PyAutoGUI's shape so existing automation scripts port directly with <code>GUI::</code> in place of <code>pyautogui.</code>; the pure color half has no PyAutoGUI counterpart.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>DEPENDENCIES</h2>
+      <p>The cdylib pulls in the native input/display stack plus the JSON envelope crates. The release profile (<code>Cargo.toml</code>) builds with <code>opt-level = 3</code>, thin LTO, a single codegen unit, symbols stripped, and <code>panic = "abort"</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Crate</th><th>Version</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>enigo</code></td><td>0.6</td><td>mouse + keyboard synthesis (CGEvent / XTest / Wayland virtual-pointer / SendInput)</td></tr>
+          <tr><td><code>xcap</code></td><td>0.9</td><td>screen capture + pixel reads (ScreenCaptureKit / XGetImage / portal / GDI)</td></tr>
+          <tr><td><code>arboard</code></td><td>3</td><td>cross-platform clipboard (NSPasteboard / X11+Wayland / Win32)</td></tr>
+          <tr><td><code>image</code></td><td>0.25</td><td>PNG encode for screenshots (<code>png</code> feature only)</td></tr>
+          <tr><td><code>serde</code> / <code>serde_json</code></td><td>1</td><td>JSON-over-FFI envelope (<code>preserve_order</code> on the JSON side)</td></tr>
+          <tr><td><code>anyhow</code></td><td>1</td><td>error handling inside the cdylib</td></tr>
+          <tr><td><code>once_cell</code></td><td>1</td><td>process-global persistent <code>Enigo</code> handle</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>PERMISSIONS</h2>
+      <table class="arch-table">
+        <thead><tr><th>Platform</th><th>Permission gate</th></tr></thead>
+        <tbody>
+          <tr><td>macOS</td><td>First mouse/keyboard call prompts for <strong>Accessibility</strong>; first pixel/screenshot call prompts for <strong>Screen Recording</strong>. One-time grants for the terminal app running <code>s</code>, persisted in System Settings &rarr; Privacy &amp; Security.</td></tr>
+          <tr><td>Wayland (Linux)</td><td>Requires the <code>wlroots-virtual-pointer</code> protocol (mouse/keyboard) and the <code>org.freedesktop.portal.Screenshot</code> portal (pixel/screen). The portal prompts on first capture.</td></tr>
+          <tr><td>X11 (Linux)</td><td>No permission gates. <code>enigo</code> uses XTest; <code>xcap</code> uses XGetImage.</td></tr>
+          <tr><td>Windows</td><td>No permission gates. <code>enigo</code> uses SendInput; <code>xcap</code> uses GDI.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-gui">github.com/MenkeTechnologies/stryke-gui</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-gui/issues">github.com/MenkeTechnologies/stryke-gui/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

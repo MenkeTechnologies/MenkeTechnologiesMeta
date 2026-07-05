@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="nmaprs — Rust-native network scanner with nmap-compatible CLI. Real TCP connect, raw SYN/NULL/FIN/Xmas/ACK/Window/Maimon, UDP, ICMP, SCTP INIT/COOKIE_ECHO, IP protocol scan, idle scan, FTP bounce, IPv6, traceroute, --resume, OS detection via nmap-os-db MatchPoints, version detection via nmap-service-probes. Pipelined raw send/recv, sharded up to 16 concurrent pipelines per family.">
+  <title>nmaprs — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .parity-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0 0.2rem;
+      font-size: 12px;
+    }
+    .parity-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .parity-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok    { color: var(--green); font-weight: 700; }
+    .parity-table td.part  { color: var(--yellow); font-weight: 700; }
+    .parity-table td.miss  { color: var(--text-muted); }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+    }
+    .cat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .cat-card h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 0 0 0.35rem;
+    }
+    .cat-card p {
+      margin: 0;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// NMAPRS — PARALLEL NETWORK SCANNER WITH NMAP-COMPATIBLE CLI</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/nmaprs" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://crates.io/crates/nmaprs" target="_blank" rel="noopener noreferrer">crates.io</a>
+            <span class="sep">/</span>
+            <a href="https://docs.rs/nmaprs" target="_blank" rel="noopener noreferrer">docs.rs</a>
+          </nav>
+          <p class="docs-build-line">nmaprs v0.1.8 · Rust + tokio + pnet · IPv4 + IPv6 raw half-open TCP · pipelined recv + 16-shard send per family · nmap-os-db MatchPoints scoring · nmap-service-probes (TLS via rustls)</p>
+          <p class="docs-build-line">128 CLI options · nmap-compatible XML / -oN / -oG / -oS / -oA · --resume JSON checkpoints · SOCKS4 + HTTP CONNECT proxies · hickory-resolver DNS</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/nmaprs" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/nmaprs/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>NMAPRS &mdash; NMAP, REWRITTEN IN RUST</h2>
+      <p class="tutorial-subtitle"><strong>Speaks <code>nmap</code>'s CLI dialect: every flag, every probe, every output format your scripts already know.</strong> Real TCP connect, raw IPv4 + IPv6 SYN / NULL / FIN / Xmas / ACK / Window / Maimon, UDP with ICMP unreachable listener, SCTP (INIT / COOKIE_ECHO), IP-protocol scan (<code>-sO</code>), idle scan via zombie (<code>-sI</code>), FTP bounce (<code>-b</code>), traceroute, <code>--resume</code> JSON checkpoints, ARP ping on local subnets, custom DNS via <code>hickory-resolver</code>, SOCKS4 + HTTP CONNECT proxies, OS detection scored against <code>nmap-os-db</code> MatchPoints, version detection against <code>nmap-service-probes</code> (TLS via <code>rustls</code>). What it intentionally does <em>not</em> ship: the full NSE Lua runtime.</p>
+
+      <section class="tutorial-section">
+        <h2>Quickstart</h2>
+        <p>Install from crates.io or source. The binary is published twice &mdash; <code>nmaprs</code> (long) and <code>nms</code> (short, quicker to type):</p>
+<pre># install
+cargo install nmaprs
+
+# from source
+git clone https://github.com/MenkeTechnologies/nmaprs
+cd nmaprs &amp;&amp; cargo build --release
+sudo cp target/release/nmaprs /usr/local/sbin/
+
+# everyday scans (privileged forms use sudo)
+nmaprs scanme.nmap.org                   # default TCP connect, top-1000
+sudo nmaprs -sS -F 192.168.1.0/24        # raw SYN, top-100 ports
+sudo nmaprs -A -T4 -oA scan target       # aggressive (-O + -sV + -sC + traceroute)
+sudo nmaprs -sU --top-ports 100 target   # UDP top-100
+sudo nmaprs -sY -p 80,443 sctp-host      # SCTP INIT
+sudo nmaprs -sO target                   # IP protocol scan (0..=255)
+sudo nmaprs -sI zombie.host:65535 target # idle scan
+sudo nmaprs --iL hosts.txt -oG out.gnmap # batch w/ grepable output
+
+# resume after Ctrl-C
+sudo nmaprs --resume nmaprs.checkpoint.json
+
+# nmap-compatible pipelines
+sudo nmaprs -oX - target | xmllint --format -
+sudo nmaprs -oG - target | grep '/open/'</pre>
+        <p>Full reference: <a href="https://github.com/MenkeTechnologies/nmaprs#readme">README</a> or <code>man nmaprsall</code> (1028-line full reference under <code>man/man1/nmaprsall.1</code>). Short form: <code>man nmaprs</code>. Zsh completions ship via <code>nmaprs --completions zsh</code> if built.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Scan techniques &mdash; one card per probe</h2>
+        <div class="cat-grid">
+          <div class="cat-card">
+            <h4>-sT &middot; TCP connect</h4>
+            <p>Default when unprivileged. Async, parallel, timeout-bound. Goes through SOCKS4 / HTTP CONNECT when <code>--proxies</code> is set.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-sS &middot; TCP SYN (raw)</h4>
+            <p>Default when root. Raw IPv4 + IPv6 via <code>pnet</code>. Pipelined recv + main-thread sends; sharded up to <strong>16</strong> concurrent pipelines per family. Falls back to connect on raw failure.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-sN / -sF / -sX / -sM</h4>
+            <p>NULL, FIN, Xmas, Maimon. Same raw sharded pipeline as <code>-sS</code>. Maimon sends FIN+ACK.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-sA / -sW</h4>
+            <p>ACK (firewall mapping: RST &rarr; <code>unfiltered</code>) and Window (RST nonzero-win &rarr; <code>open</code>). No connect fallback.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-sU &middot; UDP</h4>
+            <p>Reply &rarr; <code>open</code>; ICMP port-unreachable &rarr; <code>closed</code>; other unreachable &rarr; <code>filtered</code>. Single <code>poll(2)</code>+burst-recv listener thread on Unix.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-sY / -sZ &middot; SCTP</h4>
+            <p>INIT or COOKIE_ECHO. CRC32c segments; IPv4 layer-3, IPv6 raw SCTP (proto 132). Pipelined + sharded per family. INIT-ACK / COOKIE-ACK &rarr; <code>open</code>, ABORT &rarr; <code>closed</code>.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-sO &middot; IP protocol</h4>
+            <p>Probes 0..=255 (or just <code>nmap-protocols</code> with <code>-F</code>). IPv4: raw IPv4 headers; IPv6: <code>IPPROTO_RAW</code>+<code>IPV6_HDRINCL</code>. ICMPv4 / ICMPv6 <code>protocol-unreachable</code> &rarr; <code>closed</code>.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-sI &middot; Idle scan</h4>
+            <p>Spoofed SYN with source = zombie; sequential IP-ID delta sampling. Delta &ge; 2 &rarr; <code>open</code>. IPv4 only, privileged.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-b &middot; FTP bounce</h4>
+            <p>Parallel <code>buffer_unordered</code> sessions, one control conn per probe. IPv4 only (<code>PORT</code>). Maps 150/125/250 vs 425/426/421 to open/closed.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-sn &middot; Ping scan</h4>
+            <p>Raw ICMP echo via <code>pnet</code>, falls back to system <code>ping</code> / <code>ping6</code>. Output paths (<code>-oN</code> / <code>-oG</code> / <code>-oX</code> / <code>-oS</code>) write host-up lines like the port-scan path.</p>
+          </div>
+          <div class="cat-card">
+            <h4>--traceroute</h4>
+            <p>System <code>traceroute</code>; up to <code>min(parallelism, 32)</code> hosts concurrent. Output stays in target order.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Discovery (-P*)</h4>
+            <p>SYN / ACK / UDP / SCTP / IP-proto / ICMP-echo / timestamp / mask / ARP. Auto ARP on local IPv4 subnets unless <code>--disable-arp-ping</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Selection &amp; port grammar</h2>
+<pre>nmaprs scanme.nmap.org 10.0.0.0/24 2001:db8::/64    # hostnames + CIDR (-6 for IPv6)
+nmaprs --iL targets.txt                              # file (one per line, multiple -iL OK)
+nmaprs --iR 100                                      # 100 random hosts
+nmaprs --exclude 10.0.0.0/16,192.0.2.7               # skip these
+nmaprs --excludefile skip.txt
+nmaprs --resolve-all api.example.com                 # scan every DNS-resolved address
+
+# port spec
+nmaprs -p 22,80,443        # explicit list
+nmaprs -p 1-65535          # range (or -p -)
+nmaprs -p U:53,T:22,8000-9000  # mixed UDP/TCP
+nmaprs -p T:22,U:53 -sS -sU    # SYN scan TCP, UDP scan UDP
+nmaprs -F                   # top-100 (embedded freq list)
+nmaprs --top-ports 1000     # top-N by frequency
+nmaprs --port-ratio 0.001   # all ports with ratio &ge; threshold
+
+# raw TCP flag override (only when scan type is raw TCP)
+nmaprs -sS --scanflags 'SYN ACK URG'    # custom flag set</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Output formats &mdash; nmap-compatible</h2>
+        <div class="cat-grid">
+          <div class="cat-card">
+            <h4>-oN &middot; Normal</h4>
+            <p>Human-readable text (default to stdout). Matches nmap's interactive output shape.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-oG &middot; Grepable</h4>
+            <p>One host per line; easy <code>grep '/open/'</code> / <code>awk '$5 ~ /open/'</code> pipelines.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-oX &middot; XML</h4>
+            <p>Nmap-compatible <code>&lt;nmaprun&gt;</code> root with <code>&lt;scaninfo&gt;</code>, <code>&lt;host&gt;</code>, <code>&lt;status&gt;</code>, <code>&lt;address&gt;</code>, <code>&lt;hostnames&gt;</code>, <code>&lt;ports&gt;</code>, <code>&lt;extraports&gt;</code>, <code>&lt;service&gt;</code>, <code>&lt;runstats&gt;</code>. Existing nmap XML parsers should ingest it.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-oA &middot; All three</h4>
+            <p>Writes <code>BASE.nmap</code> / <code>BASE.gnmap</code> / <code>BASE.xml</code> in one go.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-oS &middot; Script kiddie</h4>
+            <p>1337-speak mirror of <code>-oN</code> lines. Stdout stays normal &mdash; only the file is leet.</p>
+          </div>
+          <div class="cat-card">
+            <h4>-oM / -oH</h4>
+            <p>Partial parity: <code>-oM</code> currently writes the same lines as <code>-oG</code>; <code>-oH</code> is a placeholder for full hex.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Timing &amp; performance dials</h2>
+<pre># timing template (T0..T5: paranoid / sneaky / polite / normal / aggressive / insane)
+nmaprs -T4 target
+
+# global probe-rate caps (one limiter; shared across IPv4+IPv6)
+nmaprs --min-rate 100 --max-rate 5000 target
+
+# parallelism bounds (overrides timing template when set)
+nmaprs --min-parallelism 4 --max-parallelism 256 target
+nmaprs -M 256 target                  # short for --max-parallelism
+
+# host batching (random in [min, max] when both set)
+nmaprs --min-hostgroup 16 --max-hostgroup 64 --iL big-list.txt
+
+# per-probe RTT bounds (adaptive timeout floors/ceilings)
+nmaprs --min-rtt-timeout 50ms --initial-rtt-timeout 200ms --max-rtt-timeout 2s target
+
+# per-host wall clock + retries
+nmaprs --host-timeout 5m --max-retries 2 target
+
+# scan delay (uniform random in [min, max] when both set)
+nmaprs --scan-delay 100ms --max-scan-delay 500ms target
+
+# rate-limit-aware
+nmaprs --defeat-rst-ratelimit --defeat-icmp-ratelimit target
+
+# periodic progress to stderr
+nmaprs -sS --stats-every 30s target</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Evasion (raw scans only)</h2>
+        <p>All flags below are wired <strong>at the packet level</strong> for raw TCP scans (<code>-sS</code>, <code>-sN</code>, <code>-sF</code>, <code>-sX</code>, <code>-sM</code>, <code>-sA</code>, <code>-sW</code>):</p>
+<pre>nmaprs -sS -g 53 target                  # spoofed source port (DNS-friendly)
+nmaprs -sS --ttl 33 target               # custom IP TTL
+nmaprs -sS --badsum target               # bad TCP/UDP/SCTP checksum
+nmaprs -sS -D RND:5,ME,1.2.3.4 target    # decoy cloak (RND:N = N random)
+nmaprs -sS -S 192.0.2.1 -e eth0 target   # spoof source IP (needs --send-eth)
+nmaprs -sS --data DEADBEEFCAFE target    # raw hex payload appended
+nmaprs -sS --data-string 'GET / HTTP/1.0' target
+nmaprs -sS --data-length 64 target       # N random payload bytes
+nmaprs -sS -f target                     # fragment (8-byte chunks)
+nmaprs -sS --mtu 24 target               # custom fragment MTU
+nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP frames</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Host discovery probes &mdash; exact defaults</h2>
+        <p>Discovery runs <strong>before</strong> the port scan unless you pass <code>-Pn</code> / <code>--no-ping</code>. On local IPv4 subnets, <code>-PR</code> ARP ping runs automatically (turn off with <code>--disable-arp-ping</code>). Default discovery (no explicit <code>-P*</code>) runs raw ICMP echo in parallel with raw TCP SYN to ports <strong>443</strong> and <strong>80</strong>, falling back to TCP connect if raw fails.</p>
+        <table class="parity-table">
+          <thead><tr><th>Flag</th><th>Probe &amp; default</th></tr></thead>
+          <tbody>
+            <tr><td><code>-PS</code></td><td>Raw TCP SYN; RST / SYN-ACK &rarr; up. Sharded pipeline + connect fallback.</td></tr>
+            <tr><td><code>-PA</code></td><td>Raw TCP ACK; RST / SYN-ACK &rarr; up. Same pipeline + connect fallback.</td></tr>
+            <tr><td><code>-PU</code></td><td>UDP / ICMP-style socket errors. Default port <strong>40125</strong>.</td></tr>
+            <tr><td><code>-PY</code></td><td>SCTP INIT (default port <strong>80</strong>); INIT-ACK / ABORT &rarr; up. Privileged.</td></tr>
+            <tr><td><code>-PO</code></td><td>IP-protocol ping; default protocols <strong>1,2,4</strong>; open or closed &rarr; up. Privileged.</td></tr>
+            <tr><td><code>-PE</code></td><td>ICMP echo request (the classic ping).</td></tr>
+            <tr><td><code>-PP</code> / <code>-PM</code></td><td>ICMP timestamp / address-mask requests (IPv4 only, Unix raw); reply &rarr; up. Skipped with a warning on non-Unix.</td></tr>
+            <tr><td><code>-PR</code></td><td>ARP ping; auto on local IPv4 subnets. <code>--disable-arp-ping</code> opts out.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Privilege model &amp; troubleshooting</h2>
+        <ul>
+          <li><strong>Auto privilege detect.</strong> nmaprs checks <code>geteuid()</code>. Unprivileged, the default downgrades SYN &rarr; TCP connect (<code>-sT</code>); <code>--privileged</code> forces raw even when not root, <code>--unprivileged</code> forces connect.</li>
+          <li><strong>Raw-only modes need root.</strong> <code>-sO</code>, <code>-sI</code>, and SCTP (<code>-sY</code> / <code>-sZ</code>) are rejected when unprivileged &mdash; run them under <code>sudo</code>.</li>
+          <li><strong>Raw send failures fall back per family.</strong> SYN / NULL / FIN / Xmas / Maimon retry as TCP connect on outright raw-socket failure (PERM, EAFNOSUPPORT). <code>-sA</code> / <code>-sW</code> do <em>not</em> fall back &mdash; connect can't produce ACK/Window states.</li>
+          <li><strong>Windows.</strong> Only TCP connect + UDP via system sockets are built; raw modes are unavailable (no <code>pnet</code> raw).</li>
+          <li><strong>OS / version DB.</strong> <code>-O</code> and <code>-sV</code> read <code>nmap-os-db</code> / <code>nmap-service-probes</code> from <code>--datadir</code> (default <code>./data</code>). Without the DB present, <code>-O</code> falls back to the ICMP-TTL heuristic.</li>
+          <li><strong>OS detection preconditions.</strong> IPv4 raw OS scoring needs both an <strong>open</strong> and a <strong>closed</strong> TCP port in the results (nmap's own requirement); otherwise it degrades to the TTL guess.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Parity matrix vs nmap (abridged)</h2>
+        <table class="parity-table">
+          <thead><tr><th>Area</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>TCP connect (<code>-sT</code>)</td><td class="ok">Implemented</td></tr>
+            <tr><td>TCP SYN raw (<code>-sS</code>, IPv4 + IPv6, sharded pipeline)</td><td class="ok">Implemented</td></tr>
+            <tr><td>NULL / FIN / Xmas / Maimon / ACK / Window</td><td class="ok">Implemented</td></tr>
+            <tr><td>UDP (<code>-sU</code>) with ICMP unreach listener</td><td class="ok">Implemented</td></tr>
+            <tr><td>SCTP INIT / COOKIE-ECHO (<code>-sY</code> / <code>-sZ</code>)</td><td class="ok">Implemented</td></tr>
+            <tr><td>Idle scan (<code>-sI</code>)</td><td class="ok">Implemented (IPv4 only)</td></tr>
+            <tr><td>FTP bounce (<code>-b</code>)</td><td class="ok">Implemented (IPv4 only)</td></tr>
+            <tr><td>IP protocol scan (<code>-sO</code>)</td><td class="ok">Implemented (IPv4 + IPv6 on Unix)</td></tr>
+            <tr><td>Host discovery (<code>-P*</code>, ARP auto)</td><td class="ok">Implemented</td></tr>
+            <tr><td>IPv6 (<code>-6</code>)</td><td class="ok">Implemented</td></tr>
+            <tr><td>Traceroute (system binary, concurrent)</td><td class="ok">Implemented</td></tr>
+            <tr><td><code>--resume</code> JSON checkpoint</td><td class="ok">Implemented</td></tr>
+            <tr><td>Evasion (<code>-g</code>, <code>--ttl</code>, <code>--badsum</code>, <code>-D</code>, <code>-S</code>, <code>--data*</code>, <code>-f</code>/<code>--mtu</code>, <code>--spoof-mac</code>)</td><td class="ok">Implemented (packet-level)</td></tr>
+            <tr><td><code>--proxies</code> / <code>--proxy</code> (SOCKS4 + HTTP CONNECT)</td><td class="ok">Implemented</td></tr>
+            <tr><td><code>--dns-servers</code> (hickory-resolver)</td><td class="ok">Implemented</td></tr>
+            <tr><td>Auto privilege detect (<code>geteuid</code>)</td><td class="ok">Implemented</td></tr>
+            <tr><td>Output: <code>-oN</code> / <code>-oG</code> / <code>-oX</code> / <code>-oA</code> / <code>-oS</code></td><td class="ok">Implemented (nmap-compatible XML)</td></tr>
+            <tr><td>Timing template / rate caps / parallelism / hostgroup / RTT / retries / scan-delay / stats-every</td><td class="ok">Implemented</td></tr>
+            <tr><td>OS detection (<code>-O</code>)</td><td class="part">Partial &mdash; IPv4 raw 2nd-gen probes (SEQ/OPS/WIN/ECN/T1&ndash;T7/U1/IE) + <code>nmap-os-db</code> MatchPoints; IPv6 TTL only; no multi-round retry</td></tr>
+            <tr><td>Service / version (<code>-sV</code>)</td><td class="part">Partial &mdash; no Perl-only regex features; rest implemented</td></tr>
+            <tr><td><code>--script</code> / <code>-sC</code></td><td class="part">Partial &mdash; <code>default</code> + <code>banner</code> builtins only</td></tr>
+            <tr><td><code>-oM</code> / <code>-oH</code></td><td class="part">Partial &mdash; <code>-oM</code> = grepable; <code>-oH</code> placeholder</td></tr>
+            <tr><td>NSE Lua runtime</td><td class="miss">Not implemented (use <a href="https://nmap.org/">nmap</a>)</td></tr>
+          </tbody>
+        </table>
+        <p>Full parity table (50+ rows) lives in the <a href="https://github.com/MenkeTechnologies/nmaprs#0x01-truth-table--read-this">README "TRUTH TABLE"</a> section.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Architecture in one screen</h2>
+<pre>src/                       # flat module tree (30 modules declared in lib.rs)
+&#9500;&#9472;&#9472; main.rs             # binary entry: argv expand, privilege detect, scan loop
+&#9500;&#9472;&#9472; lib.rs              # public API + module roots (re-exports core types)
+&#9500;&#9472;&#9472; bin/nms.rs          # short-name launcher (same code, alias)
+&#9500;&#9472;&#9472; argv_expand.rs      # expand glued nmap short opts (-sS, -PS80, -T4) pre-clap
+&#9500;&#9472;&#9472; cli.rs              # 128 clap args, nmap-compatible long/short option set
+&#9500;&#9472;&#9472; config.rs           # resolve cli::Args into an executable ScanPlan
+&#9500;&#9472;&#9472; scan.rs             # parallel TCP connect + UDP probes (tokio, bounded)
+&#9500;&#9472;&#9472; syn.rs              # raw half-open SYN/NULL/FIN/Xmas/ACK/Window/Maimon (pnet)
+&#9500;&#9472;&#9472; sctp.rs             # raw SCTP -sY INIT / -sZ COOKIE_ECHO (CRC32c)
+&#9500;&#9472;&#9472; ip_proto.rs         # -sO IP protocol scan (IPv4 + IPv6 raw)
+&#9500;&#9472;&#9472; idle.rs             # -sI zombie IP-ID sampling
+&#9500;&#9472;&#9472; ftp_bounce.rs       # -b parallel FTP-bounce control sessions
+&#9500;&#9472;&#9472; ping.rs             # -sn raw ICMP echo discovery (pnet)
+&#9500;&#9472;&#9472; icmp_ping.rs        # -PP timestamp / -PM address-mask discovery
+&#9500;&#9472;&#9472; icmp_listen.rs      # ICMP/ICMPv6 unreach listeners (UDP closed/filtered)
+&#9500;&#9472;&#9472; discovery.rs        # -P* host discovery dispatch (incl. ARP auto)
+&#9500;&#9472;&#9472; ipv6_l4.rs          # locate L4 header inside IPv6 frame (+ ext headers)
+&#9500;&#9472;&#9472; net_util.rs         # cached local-IP lookup, lock-free deadlines
+&#9500;&#9472;&#9472; vscan.rs            # -sV nmap-service-probes matcher (regex + rustls TLS)
+&#9500;&#9472;&#9472; os_scan.rs          # IPv4 2nd-gen OS probes: SEQ/OPS/WIN/ECN/T1-T7/U1/IE
+&#9500;&#9472;&#9472; os_fp_db.rs         # nmap-os-db reference fingerprints + MatchPoints scoring
+&#9500;&#9472;&#9472; fp_match.rs         # expr_match binding (c/expr_match.cpp) for fingerprints
+&#9500;&#9472;&#9472; os_db.rs            # stream-parse nmap-os-db metadata (titles/classes)
+&#9500;&#9472;&#9472; os_detect.rs        # ICMP-TTL OS heuristic fallback
+&#9500;&#9472;&#9472; nse.rs              # built-in Rust "scripts" (banner) for --script / -sC
+&#9500;&#9472;&#9472; scanflags.rs        # parse --scanflags TCP flag names
+&#9500;&#9472;&#9472; ports.rs            # -p / -F / --top-ports resolution + -sO -F protocols
+&#9500;&#9472;&#9472; target.rs           # hostnames, IPv4/IPv6, CIDR, octet ranges, -iL lines
+&#9500;&#9472;&#9472; trace.rs            # --traceroute via system traceroute / tracert
+&#9500;&#9472;&#9472; resume.rs           # --resume JSON checkpoint of completed (host, port)
+&#9500;&#9472;&#9472; output.rs           # -oN normal / -oG grepable / -oX Xml writers
+&#9500;&#9472;&#9472; skiddie.rs          # -oS script-kiddie text transform (nmap skid_output)
+&#9492;&#9472;&#9472; help_tp.rs          # tp-style --help banner / columns / section rules
+c/expr_match.cpp           # upstream nmap fingerprint expr_match (linked via build.rs)
+data/                      # embedded top_ports.txt + nmap_ip_protocols_fast.txt
+man/man1/
+&#9500;&#9472;&#9472; nmaprs.1            # man page &mdash; short reference (506 lines, roff)
+&#9492;&#9472;&#9472; nmaprsall.1         # man page &mdash; full reference (1028 lines)</pre>
+        <p>Two binaries (<code>nmaprs</code> + <code>nms</code> &mdash; same code, short alias), two man pages (<code>man nmaprs</code> short / <code>man nmaprsall</code> full), zsh completions in <code>completions/_nmaprs</code> (completes both names), a Criterion microbenchmark in <code>benches/scan.rs</code>, and a vs-nmap harness in <code>scripts/benchmark_vs_nmap.sh</code>. Dual-licensed <code>MIT OR Apache-2.0</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Pipelined raw I/O &mdash; why this is fast</h2>
+        <p>Per address family (IPv4 + IPv6), raw scans spin up:</p>
+        <ul>
+          <li><strong>Dedicated recv thread</strong> &mdash; one <code>poll(2)</code> blocking on the raw socket, dispatches frames to per-target oneshot channels.</li>
+          <li><strong>Main-thread sends</strong> &mdash; serial within a shard, but up to <strong>16 shards per family</strong> run concurrently (bounded by <code>effective_probe_concurrency()</code>).</li>
+          <li><strong>Mixed v4+v6 targets</strong> run both families concurrently via <code>tokio::join</code>.</li>
+          <li><strong>Recv-key registration before send</strong> &mdash; eliminates the classic "reply landed before we knew to listen" race that ad-hoc raw scanners hit at high parallelism.</li>
+          <li><strong>One ICMP unreach listener thread per scan</strong> (not per batch) for UDP / SCTP / IP-proto.</li>
+          <li><strong>Global rate limiter</strong> shared across IPv4 + IPv6 &mdash; <code>--min-rate</code> / <code>--max-rate</code> behave like nmap, not per-family.</li>
+        </ul>
+        <p>For OS detection, IPv4 raw probes build a subject fingerprint from the Nmap 2nd-gen probe set &mdash; <strong>SEQ / OPS / WIN / ECN / T1&ndash;T7 / U1 / IE</strong> tests (<code>os_scan.rs</code>) &mdash; and score it against <code>nmap-os-db</code> reference fingerprints with the same <strong>MatchPoints + expr_match</strong> algorithm nmap uses (<code>fp_match.rs</code> binding over <code>c/expr_match.cpp</code>). IPv6 OS detection is a TTL heuristic only.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compatibility</h2>
+        <table class="parity-table">
+          <thead><tr><th>Platform</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Linux (x86_64 + aarch64)</td><td class="ok">All scan types, raw + connect</td></tr>
+            <tr><td>macOS (arm64 + x86_64)</td><td class="ok">All scan types; IPv6 <code>-sO</code> requires Unix raw (works)</td></tr>
+            <tr><td>FreeBSD</td><td class="ok">All scan types</td></tr>
+            <tr><td>Windows</td><td class="part">TCP connect + UDP via system socket only; raw modes not built (no <code>pnet</code> raw)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Security &amp; ethics</h2>
+        <p>Run nmaprs <strong>only</strong> against networks and hosts you own or have explicit written permission to scan. Unauthorized scanning is illegal in many jurisdictions. The author and contributors disclaim responsibility for misuse.</p>
+        <p>This tool exists because Rust gives us a memory-safe, parallel-first foundation to rebuild one of the most useful tools in the security community. The CLI parity goal is to let your existing nmap scripts, integrations, and pipelines keep working.</p>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

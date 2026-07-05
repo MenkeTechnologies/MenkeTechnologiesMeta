@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zcolorizer — real-time log file colorizer in Rust. A port of ccze + the pygments regex→token idea: fully customizable rules, 31 swappable cyberpunk themes, 47 format modules, streaming CLI.">
+  <title>zcolorizer — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* Tables (themes / modules / flags) */
+    .doc-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12.5px; }
+    .doc-table th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px;
+      text-transform: uppercase; text-align: left; padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .doc-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .doc-table td:first-child { white-space: nowrap; color: var(--accent-light); font-family: 'Share Tech Mono', monospace; }
+    .doc-table tr:hover td { background: var(--bg-hover); }
+    /* Theme chip swatches */
+    .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 8px; margin: 0.7rem 0; }
+    .theme-chip {
+      border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+      background: var(--bg-card); display: flex; flex-direction: column; gap: 6px;
+    }
+    .theme-chip .name { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text); }
+    .theme-chip .swatch { display: flex; gap: 3px; }
+    .theme-chip .swatch span { width: 18px; height: 10px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZCOLORIZER — REAL-TIME LOG COLORIZER 🎨</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zcolorizer" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://crates.io/crates/zcolorizer" target="_blank" rel="noopener noreferrer">crates.io</a>
+            <span class="sep">/</span>
+            <a href="https://docs.rs/zcolorizer" target="_blank" rel="noopener noreferrer">docs.rs</a>
+          </nav>
+          <p class="docs-build-line" id="zcolorizerBuildLine">zcolorizer v0.2.1 · ccze + pygments port · regex→token engine · 31 cyberpunk themes · 47 format modules · truecolor / 256 / named ANSI</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zcolorizer" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zcolorizer/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZCOLORIZER</h2>
+      <p class="tutorial-subtitle"><strong>Pipe logs in, get cyberpunk-colored logs out.</strong> A Rust port of <a href="https://github.com/cornet/ccze">ccze</a> and the pygments regex→token idea, built on three decoupled pieces: <strong>rules</strong> tag spans of a line with semantic tokens (<code>date</code>, <code>error</code>, <code>host</code>…), a <strong>theme</strong> maps each token to a color, and the <strong>engine</strong> paints the line. Fully customizable rules in TOML, 31 swappable themes, and all 47 format modules (20 classic ccze ports + 27 modern) — cyberpunk by default.</p>
+
+      <section class="tutorial-section">
+        <h2>Quickstart</h2>
+        <p>Install from crates.io or source, then pipe any log through it:</p>
+<pre># install
+cargo install zcolorizer
+
+# from source
+git clone https://github.com/MenkeTechnologies/zcolorizer
+cd zcolorizer &amp;&amp; cargo build --release
+
+# stream logs (line-buffered — tail -f / journalctl -f stay live)
+tail -f /var/log/syslog          | zcolorizer -m syslog
+journalctl -f                    | zcolorizer --theme synth-wave
+zcolorizer access.log            | less -R
+
+# enable a format module (or all of them)
+zcolorizer -m httpd access.log
+zcolorizer -m all mixed.log      # every module; each only fires on matching lines</pre>
+        <p>With no files it reads stdin. Color auto-disables when piped to a non-terminal — use <code>-C/--force-color</code> to keep it (e.g. into a pager).</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>How it works</h2>
+        <p>Three things you can change independently — edit one without disturbing the others:</p>
+        <table class="doc-table">
+          <thead><tr><th>Piece</th><th>Decides</th><th>Lives in</th></tr></thead>
+          <tbody>
+            <tr><td>Rules</td><td><em>which</em> text gets a semantic token (<code>date</code>, <code>error</code>, <code>ip</code>…)</td><td>regexes — fully editable in the config</td></tr>
+            <tr><td>Themes</td><td><em>what each token looks like</em> (color + bold/underline/…)</td><td>a token→style map you swap live</td></tr>
+            <tr><td>Engine</td><td>runs the rules, paints claimed spans with the active theme</td><td><code>src/engine.rs</code></td></tr>
+          </tbody>
+        </table>
+        <p>A rule is a regex whose <strong>named capture groups are tokens</strong> — one pattern can paint several fields:</p>
+<pre>(?P&lt;date&gt;\d{4}-\d\d-\d\d)\s+(?P&lt;host&gt;\S+)\s+(?P&lt;error&gt;ERROR)</pre>
+        <p>Because color lives entirely in the theme, switching themes recolors every log without touching a single rule.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Themes <em>(31 + ccze-classic)</em></h2>
+        <p>The cyberpunk palettes are ported from the shared MenkeTechnologies theme set (<a href="https://github.com/MenkeTechnologies/iftoprs">iftoprs</a> / storageshower). Default is <code>neon-sprawl</code> (alias <code>cyberpunk</code>). Pick with <code>-t/--theme</code>, list with <code>--list-themes</code>, customize or add your own in the config.</p>
+        <div class="theme-grid">
+          <div class="theme-chip"><span class="name">neon-sprawl <em>(default)</em></span><span class="swatch"><span style="background:#5f00ff"></span><span style="background:#00d7ff"></span><span style="background:#af87ff"></span><span style="background:#875fff"></span></span></div>
+          <div class="theme-chip"><span class="name">acid-rain</span><span class="swatch"><span style="background:#008700"></span><span style="background:#00d700"></span><span style="background:#00af00"></span><span style="background:#005f00"></span></span></div>
+          <div class="theme-chip"><span class="name">synth-wave</span><span class="swatch"><span style="background:#8700af"></span><span style="background:#ff00d7"></span><span style="background:#af00ff"></span><span style="background:#d700ff"></span></span></div>
+          <div class="theme-chip"><span class="name">blade-runner</span><span class="swatch"><span style="background:#00d7ff"></span><span style="background:#ff0000"></span><span style="background:#d70087"></span><span style="background:#5fafff"></span></span></div>
+          <div class="theme-chip"><span class="name">red-sector</span><span class="swatch"><span style="background:#d70000"></span><span style="background:#ff5fff"></span><span style="background:#ff00d7"></span><span style="background:#ff0087"></span></span></div>
+          <div class="theme-chip"><span class="name">toxic-waste</span><span class="swatch"><span style="background:#87d700"></span><span style="background:#d7ff00"></span><span style="background:#afff00"></span><span style="background:#ffff00"></span></span></div>
+          <div class="theme-chip"><span class="name">night-city</span><span class="swatch"><span style="background:#d70087"></span><span style="background:#ffd7ff"></span><span style="background:#ff5fff"></span><span style="background:#ffafff"></span></span></div>
+          <div class="theme-chip"><span class="name">megacorp</span><span class="swatch"><span style="background:#ffd700"></span><span style="background:#005fff"></span><span style="background:#ffd7ff"></span><span style="background:#5fafff"></span></span></div>
+        </div>
+        <p style="font-size:12px; opacity:0.8;">…and 23 more: ice-breaker, rust-belt, ghost-wire, sakura-den, data-stream, solar-flare, neon-noir, chrome-heart, void-walker, cyber-frost, plasma-core, steel-nerve, dark-signal, glitch-pop, holo-shift, deep-net, laser-grid, quantum-flux, bio-hazard, darkwave, overlock, zaibatsu, iftopcolor — plus <code>ccze-classic</code> for 16-color parity.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Format modules <em>(ccze plugin ports)</em></h2>
+        <p>The generic ruleset colors any log out of the box. For known formats, enable a <strong>module</strong> — a port of the corresponding ccze plugin — to color structured fields precisely. Modules layer on top of the generic rules (they win on overlap, but a free-text message still flows through the generic word-colorizer — exactly ccze's design). Enable with <code>-m/--module</code> (repeatable) or <code>all</code>.</p>
+        <table class="doc-table">
+          <thead><tr><th>Module</th><th>Colorises</th></tr></thead>
+          <tbody>
+            <tr><td>syslog</td><td>Generic syslog(8): date, host, proc[pid], message</td></tr>
+            <tr><td>httpd</td><td>Apache/nginx access &amp; error logs</td></tr>
+            <tr><td>squid</td><td>squid access, store and cache logs (TCP_HIT/MISS, hierarchy)</td></tr>
+            <tr><td>dpkg</td><td>Debian dpkg status / action / conffile lines</td></tr>
+            <tr><td>postfix</td><td>Postfix queue sub-logs (spoolid, field=value)</td></tr>
+            <tr><td>exim</td><td>Exim MTA: message-id, in/out arrows</td></tr>
+            <tr><td>procmail</td><td>procmail From / Subject / Folder</td></tr>
+            <tr><td>proftpd · vsftpd · ftpstats · xferlog</td><td>FTP access / transfer records</td></tr>
+            <tr><td>php</td><td>PHP error log levels</td></tr>
+            <tr><td>oops · icecast · fetchmail</td><td>proxy stats · streaming · mail retrieval</td></tr>
+            <tr><td>apm · distcc · sulog · super · ulogd</td><td>power · distributed compile · su · privilege · netfilter</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:12px; opacity:0.8;">47 modules total — run <code>zcolorizer --list-modules</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Configuration</h2>
+        <p>Copy <a href="https://github.com/MenkeTechnologies/zcolorizer/blob/main/config.example.toml"><code>config.example.toml</code></a> to <code>~/.config/zcolorizer/config.toml</code>. Everything is optional — a one-liner is valid. Set the active theme, override individual colors, add your own rules, and enable modules:</p>
+<pre>theme = "cyberpunk"            # any builtin, or one you define
+modules = ["syslog", "httpd"] # or ["all"]
+rules_mode = "prepend"        # your rules win over builtins
+
+# override just a few colors of a builtin theme
+[[themes]]
+name = "cyberpunk"
+[themes.styles.error]
+fg = "#ff003c"
+bold = true
+underline = true
+
+# your own rule — named groups ARE tokens; whole-match uses `token`
+[[rules]]
+name = "uuid"
+pattern = '\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b'
+token = "address"
+ignore_case = true</pre>
+        <p>Color forms: <code>"#ff00aa"</code> (truecolor), <code>"bright_cyan"</code> (named ANSI), <code>{ index = 213 }</code> (256-color). Style flags: <code>bold dim italic underline blink reverse</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>CLI reference</h2>
+        <table class="doc-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>-t, --theme NAME</td><td>theme to use (default <code>neon-sprawl</code>, alias <code>cyberpunk</code>)</td></tr>
+            <tr><td>-m, --module NAME</td><td>enable a format module (repeatable; <code>all</code>)</td></tr>
+            <tr><td>-c, --config PATH</td><td>config file (default <code>~/.config/zcolorizer/config.toml</code>)</td></tr>
+            <tr><td>-C, --force-color</td><td>color even when stdout is not a TTY</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--no-color</td><td>never color (passthrough)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--list-themes</td><td>list all themes (active marked with <code>*</code>)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--list-modules</td><td>list the 47 format modules</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--list-rules</td><td>list effective rules after config merge</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--themes-json</td><td>emit every theme as JSON (for tooling)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--dump-config</td><td>print the resolved config as TOML</td></tr>
+            <tr><td>-h, --help</td><td>cyberpunk house-style help</td></tr>
+            <tr><td>-V, --version</td><td>print version</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Repository &amp; links</h2>
+        <ul>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/zcolorizer">GitHub repo</a></li>
+          <li><strong>Crate</strong> — <a href="https://crates.io/crates/zcolorizer">crates.io</a> (<code>cargo install zcolorizer</code>)</li>
+          <li><strong>Rust API docs</strong> — <a href="https://docs.rs/zcolorizer">docs.rs</a></li>
+          <li><strong>Issues</strong> — <a href="https://github.com/MenkeTechnologies/zcolorizer/issues">issue tracker</a></li>
+          <li><strong>Full README</strong> — <a href="https://github.com/MenkeTechnologies/zcolorizer#readme">README on GitHub</a> (install, config, themes, modules, architecture).</li>
+          <li><strong>Upstream</strong> — ported from <a href="https://github.com/cornet/ccze">ccze</a> (the Rust port is original; no GPL code ships in the crate).</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

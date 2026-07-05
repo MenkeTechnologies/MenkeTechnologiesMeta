@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-parquet — engineering report. PARQUET FILE INSPECTOR FOR STRYKE // SCHEMA + STATS + ROW-GROUPS + HEAD/TAIL + RECOMPRESS. Architecture, FFI layer, scope, dependencies.">
+  <title>stryke-parquet — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-PARQUET &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_parquet.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use Parquet</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-parquet</strong> is one of the opt-in connector packages in the stryke ecosystem. Parquet file inspector for stryke &mdash; schema, footer stats, row-group breakdown, head/tail, recompression. Diagnostic counterpart to <code>stryke-arrow</code>.</p>
+      <p class="tutorial-subtitle">Schema + footer / row-group introspection is a different workload from reading parquet into a typed DataFrame. Lightweight tool for ops + debugging.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+        <div class="stat-card"><div class="stat-val green">61</div><div class="stat-label">Public Parquet:: fns</div></div>
+        <div class="stat-card"><div class="stat-val green">57</div><div class="stat-label">parquet__ FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val cyan">6</div><div class="stat-label">Compression codecs</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">License</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>Thin <code>.stk</code> wrapper (<code>Parquet</code>); exposes typed helpers that serialize args to JSON and parse the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_parquet.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn parquet__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Parquet</code>; stateless &mdash; parquet operations are file transforms with no process-level cache; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/parquet@&lt;version&gt;/</code> after <code>make install</code>; <code>use Parquet</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>Schema + footer / row-group introspection is a different workload from reading parquet into a typed DataFrame. Lightweight tool for ops + debugging.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>Parquet::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>parquet__*</code> symbol resolved out of <code>libstryke_parquet.{dylib,so}</code>; the cdylib returns a JSON <code>CString</code> the wrapper parses. The exports span inspection (<code>version</code>, <code>inspect</code>, <code>schema</code>, <code>dtypes</code>, <code>count</code>, <code>rowgroups</code>, <code>row_group_summary</code>, <code>stats</code>, <code>metadata</code>, <code>schema_diff</code>), row read (<code>head</code>, <code>tail</code>, <code>slice</code>, <code>sample</code>, <code>reverse</code>, <code>gather</code>, <code>random_sample</code>, <code>to_json</code>, <code>to_csv</code>, <code>to_ndjson</code>, <code>column</code>), row predicates and reshaping (<code>filter</code>, <code>where_count</code>, <code>filter_to</code>, <code>distinct</code>, <code>sort</code>, <code>top_k</code>, <code>value_counts</code>, <code>group_by</code>), aggregates (<code>sum</code>, <code>min</code>, <code>max</code>, <code>mean</code>, <code>n_unique</code>, <code>quantile</code>, <code>describe</code>), conversion and write (<code>from_csv</code>, <code>from_json</code>, <code>write</code>, <code>write_partitioned</code>, <code>compress</code>, <code>repartition</code>, <code>merge</code>, <code>hstack</code>, <code>select</code>, <code>drop</code>, <code>rename</code>, <code>with_row_index</code>), and diagnostics (<code>validate</code>, <code>column_chunk_stats</code>, <code>size_report</code>, <code>null_summary</code>, <code>encoding_summary</code>, <code>bloom_filter_summary</code>, <code>sorting_columns_summary</code>, <code>features</code>); the authoritative list is <code>[ffi].exports</code> in <code>stryke.toml</code>. The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>.</p>
+<pre># request shape (built by the .stk wrapper)
+{"verb": "&lt;op&gt;", "...": ...}
+
+# response shape
+{"result": ...}            # success — per-fn shape
+{"error": "&lt;msg&gt;"}        # failure — wrapper die()s with the message</pre>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-parquet#readme">"What this is (and what it isn't)"</a> + "API reference" sections for the authoritative scope. The package is intentionally narrower than its underlying SDK / driver &mdash; the goal is "useful from a shell pipeline", not "complete API coverage".</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>PUBLIC SURFACE</h2>
+      <p>61 public <code>Parquet::*</code> functions backed by 57 <code>parquet__*</code> FFI exports (the remainder are pure-stryke composites &mdash; <code>column_names</code>, <code>column_count</code>, <code>is_empty</code>, <code>median</code> &mdash; built over other calls). Grouped by intent below; the full annotated reference with return shapes is the <a href="https://github.com/MenkeTechnologies/stryke-parquet#0x04-api-reference">README "API reference"</a>, and the canonical export list is <code>[ffi].exports</code> in <code>stryke.toml</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Group</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Inspection &amp; schema (footer-only)</td><td><code>version</code> · <code>inspect</code> · <code>schema</code> · <code>dtypes</code> · <code>count</code> · <code>rowgroups</code> · <code>row_group_summary</code> · <code>stats</code> · <code>metadata</code> · <code>schema_diff</code> · <code>column_names</code> · <code>column_count</code> · <code>is_empty</code></td></tr>
+          <tr><td>Reading rows</td><td><code>head</code> · <code>tail</code> · <code>slice</code> · <code>sample</code> · <code>reverse</code> · <code>gather</code> · <code>random_sample</code> · <code>to_json</code> · <code>stream</code> · <code>column</code></td></tr>
+          <tr><td>Predicates &amp; reshaping</td><td><code>filter</code> · <code>where_count</code> · <code>filter_to</code> · <code>distinct</code> · <code>sort</code> · <code>top_k</code> · <code>value_counts</code> · <code>group_by</code></td></tr>
+          <tr><td>Aggregates</td><td><code>sum</code> · <code>min</code> · <code>max</code> · <code>mean</code> · <code>n_unique</code> · <code>quantile</code> · <code>median</code> · <code>describe</code></td></tr>
+          <tr><td>Conversion &amp; writing</td><td><code>to_csv</code> · <code>to_ndjson</code> · <code>from_csv</code> · <code>from_json</code> · <code>write</code> · <code>write_partitioned</code> · <code>compress</code> · <code>repartition</code> · <code>merge</code> · <code>hstack</code> · <code>select</code> · <code>drop</code> · <code>rename</code> · <code>with_row_index</code></td></tr>
+          <tr><td>Diagnostics</td><td><code>validate</code> · <code>column_chunk_stats</code> · <code>size_report</code> · <code>null_summary</code> · <code>encoding_summary</code> · <code>bloom_filter_summary</code> · <code>sorting_columns_summary</code> · <code>features</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>DEPENDENCIES</h2>
+      <p>The cdylib is built on the same <code>parquet</code> + <code>arrow</code> crate family as <code>stryke-arrow</code>; the JSON envelope uses <code>serde_json</code> with <code>preserve_order</code> so column order survives round-trips. Compression backends are compiled into the <code>parquet</code> crate's feature set.</p>
+      <table class="arch-table">
+        <thead><tr><th>Crate</th><th>Version</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>parquet</code></td><td>58</td><td>parquet reader/writer; codec features snap / brotli / flate2 / lz4 / zstd / base64</td></tr>
+          <tr><td><code>arrow</code>, <code>arrow-json</code>, <code>arrow-csv</code></td><td>58</td><td>columnar bridge + CSV/JSON conversion</td></tr>
+          <tr><td><code>serde</code> / <code>serde_json</code></td><td>1</td><td>FFI JSON envelope (<code>preserve_order</code>)</td></tr>
+          <tr><td><code>anyhow</code></td><td>1</td><td>error propagation into the <code>{"error": ...}</code> envelope</td></tr>
+          <tr><td><code>once_cell</code></td><td>1</td><td>lazily-initialized statics</td></tr>
+        </tbody>
+      </table>
+      <p>Release profile: <code>opt-level = 3</code>, <code>lto = "thin"</code>, <code>codegen-units = 1</code>, <code>strip = true</code>, <code>panic = "abort"</code>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-parquet">github.com/MenkeTechnologies/stryke-parquet</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-parquet/issues">github.com/MenkeTechnologies/stryke-parquet/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-scylla — ScyllaDB / Cassandra client for stryke. CQL query, DDL, schema introspection over the native binary protocol. Opt-in package — a Rust cdylib dlopened in-process on first `use Scylla`.">
+  <title>stryke-scylla — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td { padding: 6px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+    .example-tbl td:first-child { width: 30%; white-space: nowrap; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-SCYLLA &mdash; SCYLLADB / CASSANDRA CLIENT FOR STRYKE // CQL QUERY + DDL + SCHEMA INTROSPECTION</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package &middot; namespace <code>Scylla</code> &middot; cdylib <code>libstryke_scylla</code> &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-scylla/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-SCYLLA</h2>
+      <p class="tutorial-subtitle"><strong>ScyllaDB / Apache Cassandra client for stryke.</strong> CQL query, DDL, and schema introspection &mdash; over <a href="https://docs.rs/scylla" target="_blank" rel="noopener noreferrer">scylla</a>, ScyllaDB's official pure-Rust driver, which also speaks Apache Cassandra. It speaks the native CQL binary protocol; the cdylib owns one embedded tokio runtime and blocks on each call, so the stryke-facing API is synchronous. A <code>Session</code> is cached per <code>(nodes, auth, keyspace)</code>. An opt-in package, kept out of the stryke core binary so the daily-driver install stays slim.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre><code>s add github.com/MenkeTechnologies/stryke-scylla</code></pre>
+        <p>On first <code>use Scylla</code>, stryke dlopens the cdylib in-process and registers every <code>scylla__*</code> export.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start</h2>
+<pre>use Scylla
+
+var %conn
+$conn{node}     = "127.0.0.1:9042"
+$conn{keyspace} = "app"
+
+Scylla::create_keyspace("app", %conn)
+Scylla::create_table(
+    "app.users",
+    columns     =&gt; "id uuid, name text, age int",
+    primary_key =&gt; "id",
+    %conn,
+)
+
+Scylla::execute("INSERT INTO app.users (id, name, age) VALUES (uuid(), 'ada', 36)", %conn)
+
+p Scylla::count("app.users", %conn)
+val @rows = Scylla::query("SELECT name, age FROM app.users", %conn)</pre>
+        <p>Connection params travel on the same <code>%conn</code> opts hash that every call already takes &mdash; there is no explicit connect/disconnect step. A <code>Session</code> is opened lazily on the first call that needs the cluster, then cached for the rest of the process.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Connecting</h2>
+        <p>Contact points, auth, and the active keyspace come from the <code>%opts</code> hash on every call. With no node given, the wrapper falls back to <code>$SCYLLA_NODES</code> (comma-separated), and the cdylib defaults to <code>127.0.0.1:9042</code>. A bare host without a port has <code>:9042</code> appended.</p>
+        <table class="example-tbl">
+          <tr><td>node</td><td>One contact point, <code>host</code> or <code>host:port</code>. Default <code>127.0.0.1:9042</code>.</td></tr>
+          <tr><td>host</td><td>Alias for <code>node</code>; combine with <code>port</code>.</td></tr>
+          <tr><td>port</td><td>Default CQL port <code>9042</code>; applied to <code>node</code>/<code>host</code> when they carry no <code>:port</code>.</td></tr>
+          <tr><td>nodes</td><td>Array of contact points; overrides <code>node</code>/<code>host</code> when present.</td></tr>
+          <tr><td>username</td><td>CQL auth user (PasswordAuthenticator). Omit for no-auth clusters.</td></tr>
+          <tr><td>password</td><td>CQL auth password.</td></tr>
+          <tr><td>keyspace</td><td><code>USE</code>d on the session right after connect.</td></tr>
+        </table>
+        <p>The <code>Session</code> is cached per <code>(nodes, username, password, keyspace)</code> tuple, so calls that share those four values reuse one connection pool; differing on any of them opens (and caches) a separate session.</p>
+<pre># multi-node cluster, authenticated, pinned to a keyspace
+var %conn
+$conn{nodes}    = ["10.0.0.1", "10.0.0.2:9100"]
+$conn{username} = "cassandra"
+$conn{password} = "cassandra"
+$conn{keyspace} = "app"
+
+p Scylla::ping(%conn)            # 1 when the cluster answers, 0 otherwise
+p Scylla::server_version(%conn)  # release_version from system.local
+p Scylla::cluster_name(%conn)    # configured cluster name
+
+# resolve what these opts normalize to, without connecting
+val @cp = Scylla::contact_points(node =&gt; "db")   # ("db:9042")</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Rows as JSON</h2>
+        <p>Result rows are read generically: each <code>CqlValue</code> maps to its natural JSON form &mdash; integers (<code>Int</code>, <code>BigInt</code>, <code>SmallInt</code>, <code>TinyInt</code>), floats (<code>Float</code>, <code>Double</code>), <code>Text</code>/<code>Ascii</code> strings, <code>Boolean</code>, <code>Uuid</code> (as its string form), <code>List</code>/<code>Set</code> as JSON arrays, and <code>Map</code> as an array of <code>[key, value]</code> pairs &mdash; with a debug-string fallback for exotic types so the converter never fails. <code>Empty</code> becomes null. Rows come back as objects keyed by column name, taken from the result's column specs.</p>
+        <p>A statement that returns no result set (DDL, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>) yields an ok marker rather than rows; the row-returning wrappers expose an empty array for those.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>CQL injection safety</h2>
+        <p>Queries are sent as unparameterized CQL strings, so any untrusted value you interpolate must be escaped first. The pure helpers do this without touching the cluster, and are unit-tested in-crate so they validate in CI with no cluster running.</p>
+<pre># double the single quote (CQL's literal-escape rule)
+val $name = Scylla::escape($user_input)
+val @hits = Scylla::query("SELECT * FROM app.users WHERE name = '$name' ALLOW FILTERING", %conn)
+
+# or build the whole literal at once
+val $lit = Scylla::quote_literal("O'Brien")      # 'O''Brien'
+val $id  = Scylla::quote_ident("MixedCase")      # "MixedCase" (case-sensitive)
+
+# render typed values / IN-lists for a WHERE clause
+val $v   = Scylla::format_value(42)              # 42
+val $in  = Scylla::format_in_list([1, 2, 3])     # (1, 2, 3)
+
+# gate an identifier you intend to use unquoted
+if (Scylla::valid_identifier($col)) { ... }      # [A-Za-z][A-Za-z0-9_]*</pre>
+        <p><code>escape</code> doubles the single quote; <code>quote_literal</code> wraps and escapes in one step; <code>quote_ident</code> double-quotes an identifier for case sensitivity; <code>format_value</code> renders a value as a CQL literal (string&rarr;<code>'...'</code>, number as-is, bool&rarr;<code>true</code>/<code>false</code>, null&rarr;<code>NULL</code>, array&rarr;CQL list); <code>format_in_list</code> joins values into an <code>IN (...)</code> list, emitting <code>(NULL)</code> for an empty input so it matches nothing; <code>valid_identifier</code> is true only for an unquoted-safe CQL identifier.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Batches</h2>
+        <p><code>batch</code> applies an arrayref of CQL statements as one CQL batch and returns the statement count. By default it is a logged batch; pass <code>unlogged =&gt; 1</code> for an UNLOGGED batch. A batch is atomic within a single partition; cross-partition batches are allowed but not atomic.</p>
+<pre>val $n = Scylla::batch([
+    "INSERT INTO app.users (id, name) VALUES (uuid(), 'a')",
+    "INSERT INTO app.users (id, name) VALUES (uuid(), 'b')",
+], %conn)
+p $n   # 2</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Schema introspection</h2>
+        <p>The introspection calls read <code>system_schema.*</code> / <code>system.*</code> and return plain stryke arrays or row objects &mdash; no DESCRIBE parsing required.</p>
+<pre>val @ks   = Scylla::keyspaces(%conn)                 # keyspace names
+val @tbl  = Scylla::tables("app", %conn)             # table names in a keyspace
+val @cols = Scylla::columns("app", "users", %conn)   # {column_name, type, kind} rows
+val @pk   = Scylla::partition_keys("app", "users", %conn)   # in key order
+val @ck   = Scylla::clustering_keys("app", "users", %conn)  # in clustering order
+val @idx  = Scylla::indexes("app", "users", %conn)   # {index_name, kind, options}
+val @mv   = Scylla::views("app", %conn)              # materialized-view names
+val @udt  = Scylla::types("app", %conn)              # user-defined type names
+val @peer = Scylla::peers(%conn)                     # peer node addresses</pre>
+        <p><code>partition_keys</code> and <code>clustering_keys</code> read <code>system_schema.columns</code> and sort by each column's <code>position</code>, so they return in declared key order rather than the unordered order the system table emits.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>API reference</h2>
+        <p>34 public <code>Scylla::*</code> functions, each a thin wrapper over a <code>scylla__*</code> cdylib export. Every networked call takes a trailing <code>%opts</code> hash for connection params.</p>
+        <h3>Liveness</h3>
+        <table class="example-tbl">
+          <tr><td>version()</td><td>Package version string.</td></tr>
+          <tr><td>ping(%opts)</td><td>Connectivity probe &mdash; 1 when the cluster answers, 0 otherwise.</td></tr>
+          <tr><td>server_version(%opts)</td><td>Cluster release version (<code>release_version</code> from <code>system.local</code>).</td></tr>
+          <tr><td>cluster_name(%opts)</td><td>Cluster name configured on the coordinator (<code>system.local</code>).</td></tr>
+          <tr><td>peers(%opts)</td><td>Peer node addresses known to the coordinator (<code>system.peers</code>).</td></tr>
+        </table>
+        <h3>Query</h3>
+        <table class="example-tbl">
+          <tr><td>query($cql, %opts)</td><td>Run a SELECT; returns the array of row objects.</td></tr>
+          <tr><td>query_row($cql, %opts)</td><td>Run a SELECT; returns the first row object (or undef).</td></tr>
+          <tr><td>query_value($cql, %opts)</td><td>Run a SELECT; returns the first column of the first row (a scalar).</td></tr>
+          <tr><td>execute($cql, %opts)</td><td>Run a statement that returns no rows (INSERT/UPDATE/DELETE/DDL).</td></tr>
+          <tr><td>batch($statements, %opts)</td><td>Apply an arrayref of statements as one CQL batch; returns the count. <code>unlogged =&gt; 1</code> selects an UNLOGGED batch.</td></tr>
+          <tr><td>raw($cql, %opts)</td><td>Escape hatch: run arbitrary CQL. <code>rows =&gt; 0</code> for a no-row statement; default returns the row array.</td></tr>
+        </table>
+        <h3>Introspection</h3>
+        <table class="example-tbl">
+          <tr><td>keyspaces(%opts)</td><td>Array of keyspace names.</td></tr>
+          <tr><td>tables($keyspace, %opts)</td><td>Array of table names in a keyspace.</td></tr>
+          <tr><td>columns($keyspace, $table, %opts)</td><td>Column descriptor rows (<code>column_name</code>, <code>type</code>, <code>kind</code>).</td></tr>
+          <tr><td>count($table, %opts)</td><td>Row count of a table (full-table scan &mdash; use sparingly on large tables).</td></tr>
+          <tr><td>indexes($keyspace, $table, %opts)</td><td>Secondary index descriptors (<code>index_name</code>, <code>kind</code>, <code>options</code>).</td></tr>
+          <tr><td>views($keyspace, %opts)</td><td>Array of materialized-view names.</td></tr>
+          <tr><td>types($keyspace, %opts)</td><td>Array of user-defined type names.</td></tr>
+          <tr><td>partition_keys($keyspace, $table, %opts)</td><td>Partition-key column names, in key order.</td></tr>
+          <tr><td>clustering_keys($keyspace, $table, %opts)</td><td>Clustering column names, in clustering order.</td></tr>
+        </table>
+        <h3>DDL</h3>
+        <table class="example-tbl">
+          <tr><td>create_keyspace($name, %opts)</td><td>CREATE KEYSPACE IF NOT EXISTS. <code>replication =&gt;</code> sets the CQL replication map (default SimpleStrategy RF 1).</td></tr>
+          <tr><td>drop_keyspace($name, %opts)</td><td>DROP KEYSPACE IF EXISTS.</td></tr>
+          <tr><td>create_table($name, %opts)</td><td>Either <code>cql =&gt;</code> (full CREATE) or <code>columns =&gt;</code> + <code>primary_key =&gt;</code>. Uses IF NOT EXISTS.</td></tr>
+          <tr><td>drop_table($table, %opts)</td><td>DROP TABLE IF EXISTS.</td></tr>
+          <tr><td>create_index($table, $column, %opts)</td><td>CREATE INDEX IF NOT EXISTS on a column. <code>name =&gt;</code> names the index; omit to let the cluster assign one.</td></tr>
+          <tr><td>drop_index($name, %opts)</td><td>DROP INDEX IF EXISTS (name may be keyspace-qualified).</td></tr>
+          <tr><td>truncate($table, %opts)</td><td>TRUNCATE a table.</td></tr>
+        </table>
+        <h3>Pure helpers (no connection)</h3>
+        <table class="example-tbl">
+          <tr><td>escape($value)</td><td>Escape a string for a single-quoted CQL literal (doubles <code>'</code>).</td></tr>
+          <tr><td>quote_literal($value)</td><td>Wrap a string as a single-quoted CQL literal (escaping embedded quotes).</td></tr>
+          <tr><td>quote_ident($value)</td><td>Double-quote a string as a case-sensitive CQL identifier.</td></tr>
+          <tr><td>valid_identifier($value)</td><td>True when a string is a valid unquoted CQL identifier.</td></tr>
+          <tr><td>format_value($value)</td><td>Format a value as a CQL literal (string/number/bool/null/list).</td></tr>
+          <tr><td>format_in_list($values)</td><td>Render an arrayref of values into a CQL <code>IN (...)</code> list.</td></tr>
+          <tr><td>contact_points(%opts)</td><td>Normalize the contact points these opts resolve to (each <code>host:port</code>).</td></tr>
+        </table>
+        <p>The same surface is summarized in the <a href="https://github.com/MenkeTechnologies/stryke-scylla#readme" target="_blank" rel="noopener noreferrer">README</a> and detailed in the <a href="report.html">engineering report</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Build &amp; test</h2>
+<pre>make debug       # cargo build
+make test        # cargo test, then `s test t/`
+make install     # s pkg install -g .</pre>
+        <p><code>cargo test</code> runs the in-crate unit tests (CQL escaping, identifier quoting, contact-point normalization, batch construction, <code>CqlValue</code>&rarr;JSON, column-position sorting) with no cluster required. <code>t/test_stryke_scylla_surface.stk</code> pins that every public wrapper resolves and exercises the connection-free helpers; <code>t/test_scylla.stk</code> runs an end-to-end keyspace/table/insert/query/index lifecycle against a live cluster (<code>$SCYLLA_NODES</code> or <code>127.0.0.1:9042</code>) and short-circuits when none answers, so CI without a cluster still passes the connection-free asserts.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>The CQL + TLS stack (the <code>scylla</code> driver, tokio, rustls) ships once, on demand, as an opt-in package &mdash; stryke core is never linked against it. On first <code>use Scylla</code>, stryke dlopens the cdylib in-process and registers every <code>scylla__*</code> export. The cdylib owns one embedded tokio runtime and presents a blocking facade, so from stryke's perspective every <code>Scylla::*</code> function is an ordinary blocking call.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

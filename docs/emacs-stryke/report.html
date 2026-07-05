@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="emacs-stryke — engineering report. font-lock generated from the stryke binary (all 10,409 builtins via hash-table matcher), why a single regexp-opt overflows Emacs, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
+  <title>emacs-stryke — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+    .stat-card { border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.65rem 0.85rem; background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; }
+    .stat-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-val.accent { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 0.2rem; }
+    .parity-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12px; }
+    .parity-table th { background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left; padding: 6px 10px; border: 1px solid var(--border); }
+    .parity-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok { color: var(--green); font-weight: 700; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// EMACS-STRYKE &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/emacs-stryke" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Emacs major mode for stryke &middot; font-lock generated from the binary (all 10,409 builtins, hash-table matcher) &middot; LSP via stryke --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>emacs-stryke</strong> is the Emacs major mode for <strong>stryke</strong> &mdash; a highly parallel Perl 5 superset interpreter written in Rust. <code>stryke-mode</code> derives from <code>prog-mode</code> and provides font-lock, a syntax table, brace-aware indentation, filetype detection, and an LSP client that launches <code>stryke --lsp</code>.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is not a hand-picked subset and not a reskin of a Perl mode. <code>scripts/gen-stdlib.sh</code> dumps <code>%b</code> (builtins), <code>%k</code> (keywords), and <code>$c{parallel}</code> from the live binary and writes <code>stryke-stdlib.el</code> carrying the <strong>complete</strong> language surface &mdash; all 10,409 builtins. Regenerate after a stryke upgrade and it stays in sync.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">10,409</div><div class="stat-label">Builtins font-locked</div></div>
+        <div class="stat-card"><div class="stat-val accent">39</div><div class="stat-label">Parallel primitives</div></div>
+        <div class="stat-card"><div class="stat-val">90</div><div class="stat-label">Keywords</div></div>
+        <div class="stat-card"><div class="stat-val">12</div><div class="stat-label">Type names</div></div>
+        <div class="stat-card"><div class="stat-val green">2</div><div class="stat-label">LSP clients (eglot + lsp-mode)</div></div>
+        <div class="stat-card"><div class="stat-val accent">2</div><div class="stat-label">Detection paths (ext + shebang)</div></div>
+        <div class="stat-card"><div class="stat-val">12</div><div class="stat-label">Face assertions</div></div>
+        <div class="stat-card"><div class="stat-val">27.1</div><div class="stat-label">Min Emacs version</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>WHY HASH TABLES, NOT ONE REGEXP</h2>
+      <p class="tutorial-subtitle">The natural approach &mdash; <code>(regexp-opt builtins 'symbols)</code> over all 10,409 names &mdash; produces a regexp that Emacs' own compiler rejects with <code>invalid-regexp "Regular expression too big"</code>. So the generator instead emits two <strong>hash tables</strong> (<code>stryke-builtins-table</code>, <code>stryke-parallel-table</code>), and a font-lock <em>matcher function</em> walks identifiers with a generic <code>\_&lt;…\_&gt;</code> regexp and looks each one up in O(1). The two sets are disjoint, so parallel primitives get their own face without conflicting with the general builtin face. Small categories (keywords, types) still use a plain <code>regexp-opt</code> &mdash; they are well under the limit.</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td><code>stryke-mode.el</code></td><td>Major mode &mdash; syntax table (<code>#</code> comments, string quotes, sigils as punctuation), font-lock keyword list, <code>stryke-indent-line</code>, eglot + lsp-mode registration, <code>auto-mode-alist</code> + <code>interpreter-mode-alist</code>.</td></tr>
+          <tr><td><code>stryke-stdlib.el</code></td><td>Generated data &mdash; the two builtin hash tables (170&nbsp;KB). Byte-compiles cleanly; loads instantly.</td></tr>
+          <tr><td><code>scripts/gen-stdlib.sh</code> + <code>gen-stdlib.el</code></td><td>Dump <code>%b</code> / <code>$c{parallel}</code> from the binary; build the tables entirely inside Emacs (no shell escaping touches the data).</td></tr>
+          <tr><td><code>scripts/face-test.el</code></td><td>Fontify a sample buffer and assert the face at each probe token.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">CI byte-compiles the package with <code>byte-compile-error-on-warn</code> (warnings are errors) and runs the batch face test. Each probe asserts the actual <code>face</code> text-property after <code>font-lock-ensure</code>.</p>
+      <table class="parity-table">
+        <thead><tr><th>Sample token</th><th>Asserted face</th></tr></thead>
+        <tbody>
+          <tr><td><code>fn</code> / <code>use</code> / <code>my</code> / <code>async</code> / <code>await</code></td><td class="ok">font-lock-keyword-face</td></tr>
+          <tr><td><code>Str</code></td><td class="ok">font-lock-type-face</td></tr>
+          <tr><td><code>say</code></td><td class="ok">font-lock-builtin-face</td></tr>
+          <tr><td><code>pmap</code></td><td class="ok">stryke-parallel-face</td></tr>
+          <tr><td><code>absorbance</code> (deep builtin)</td><td class="ok">font-lock-builtin-face</td></tr>
+          <tr><td><code>contains</code></td><td class="ok">font-lock-builtin-face</td></tr>
+          <tr><td>double-quoted string</td><td class="ok">font-lock-string-face</td></tr>
+          <tr><td><code>#</code> comment</td><td class="ok">font-lock-comment-face</td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

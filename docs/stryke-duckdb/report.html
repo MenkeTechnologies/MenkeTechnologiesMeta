@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-duckdb — engineering report. EMBEDDED DUCKDB SQL ENGINE FOR STRYKE // DIRECT-QUERY PARQUET / CSV / JSON. Architecture, FFI layer, scope, dependencies.">
+  <title>stryke-duckdb — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-DUCKDB &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_duckdb.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use DuckDB</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-duckdb</strong> is one of the opt-in connector packages in the stryke ecosystem. Embedded DuckDB SQL engine for stryke. Direct-query parquet / CSV / JSON from disk or URL without loading, persistent <code>.duckdb</code> files when you need them, full standard SQL on top. Opt-in package, kept out of the stryke core binary so the daily-driver install stays slim; ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use DuckDB</code>.</p>
+      <p class="tutorial-subtitle">DuckDB is an in-process analytical SQL engine; the <code>duckdb</code> crate with <code>bundled</code> compiles libduckdb from source into one static cdylib &mdash; no system <code>.so</code> dep at runtime. Single-shot opt-in install.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+        <div class="stat-card"><div class="stat-val green">91</div><div class="stat-label">Public DuckDB:: fns</div></div>
+        <div class="stat-card"><div class="stat-val green">33</div><div class="stat-label">FFI exports (duckdb__*)</div></div>
+        <div class="stat-card"><div class="stat-val">v0.19.0</div><div class="stat-label">Package version</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">License</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>Thin <code>.stk</code> wrapper (<code>DuckDB</code>); exposes typed helpers that serialize args to JSON and parse the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_duckdb.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn duckdb__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use DuckDB</code>; caches one <code>duckdb::Connection</code> per <code>(db, session, read_only)</code> tuple in <code>OnceCell&lt;Mutex&lt;HashMap&gt;&gt;</code>; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/duckdb@&lt;version&gt;/</code> after <code>make install</code>; <code>use DuckDB</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p>DuckDB is an in-process analytical SQL engine; the <code>duckdb</code> crate with <code>bundled</code> compiles libduckdb from source into one static binary. Single-shot opt-in install.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>DuckDB::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>duckdb__*</code> symbol on the dlopen'd <code>libstryke_duckdb.{dylib,so}</code>; the cdylib returns a JSON <code>CString</code> the wrapper parses. <code>catch_unwind</code> on every call converts panics to JSON errors. The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>.</p>
+<pre># request shape (built by the .stk wrapper)
+{"verb": "&lt;op&gt;", "...": ...}
+
+# response shape
+{"result": ...}            # success — per-fn shape
+{"error": "&lt;msg&gt;"}        # failure — wrapper die()s with the message</pre>
+      <p>Per-verb success shapes returned by the cdylib (the <code>.stk</code> wrapper unwraps each into the stryke-native type):</p>
+      <table class="arch-table">
+        <thead><tr><th>Verb</th><th>Wire shape</th></tr></thead>
+        <tbody>
+          <tr><td><code>query</code>, <code>dump</code></td><td><code>{"columns": [...], "rows": [{col: val, ...}, ...]}</code></td></tr>
+          <tr><td><code>execute</code></td><td><code>{"affected": &lt;n&gt;}</code></td></tr>
+          <tr><td><code>exec</code></td><td><code>{"ok": true}</code></td></tr>
+          <tr><td><code>import</code></td><td><code>{"table": ..., "rows": &lt;n&gt;}</code></td></tr>
+          <tr><td><code>export</code></td><td><code>{"path": ..., "kind": ...}</code></td></tr>
+          <tr><td><code>tables</code></td><td><code>{"tables": [...]}</code></td></tr>
+          <tr><td><code>schema</code></td><td><code>{"table": ..., "columns": [{name, type, nullable}, ...]}</code></td></tr>
+          <tr><td><code>attach</code></td><td><code>{"alias": ..., "attach_path": ..., "read_only": &lt;bool&gt;}</code></td></tr>
+          <tr><td><code>detach</code></td><td><code>{"alias": ..., "detached": true}</code></td></tr>
+          <tr><td><code>copy_from</code></td><td><code>{"table": ..., "path": ..., "copied": &lt;n&gt;}</code></td></tr>
+          <tr><td><code>create_index</code></td><td><code>{"index": ..., "table": ..., "columns": [...]}</code></td></tr>
+          <tr><td><code>drop</code></td><td><code>{"dropped": ..., "kind": ...}</code></td></tr>
+          <tr><td><code>appender_columns</code></td><td><code>{"table": ..., "columns": [...], "appended": &lt;n&gt;}</code></td></tr>
+          <tr><td><code>indexes</code>, <code>constraints</code>, <code>table_info</code>, <code>database_size</code>, <code>columns</code>, <code>schemas</code>, <code>memory</code>, <code>describe_query</code></td><td><code>{"columns": [...], "rows": [...]}</code></td></tr>
+          <tr><td><code>checkpoint</code></td><td><code>{"ok": true, "force": &lt;bool&gt;}</code></td></tr>
+          <tr><td><code>inspect</code>, <code>ping</code></td><td><code>{...}</code></td></tr>
+          <tr><td>any error</td><td><code>{"error": "&lt;msg&gt;"}</code> &mdash; the wrapper <code>die</code>s with it</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>SURFACE INVENTORY</h2>
+      <p>The package exposes <strong>91 public <code>DuckDB::*</code> functions</strong> from <code>lib/DuckDB.stk</code>. Of these, <strong>33 cross the FFI boundary</strong> to a <code>duckdb__*</code> symbol in the cdylib; the remainder are pure-stryke helpers composed over <code>query</code> / <code>execute</code> (CRUD, analytics, quote/parse). The cdylib's <code>extern "C"</code> exports are declared in <code>stryke.toml</code> under <code>[ffi].exports</code> and matched by <code>extern "C" fn duckdb__&lt;verb&gt;</code> definitions in <code>src/lib.rs</code>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Category</th><th>Surface</th></tr></thead>
+        <tbody>
+          <tr><td>Read paths</td><td><code>query</code>, <code>query_stream</code>, <code>query_one</code>, <code>query_col</code>, <code>query_scalar</code>, <code>dump</code></td></tr>
+          <tr><td>DDL / DML</td><td><code>execute</code>, <code>exec_file</code>, <code>explain</code>, <code>insert_many</code>, <code>appender</code>, <code>appender_columns</code>, <code>import</code>, <code>export</code>, <code>copy_from</code>, <code>create_index</code>, <code>drop</code>, <code>drop_index</code>, <code>attach</code>, <code>detach</code>, <code>update</code>, <code>delete</code>, <code>truncate</code>, <code>upsert</code></td></tr>
+          <tr><td>Transactions</td><td><code>begin</code>, <code>commit</code>, <code>rollback</code>, <code>transaction</code></td></tr>
+          <tr><td>Metadata</td><td><code>version</code>, <code>server_version</code>, <code>ping</code>, <code>inspect</code>, <code>tables</code>, <code>databases</code>, <code>views</code>, <code>functions</code>, <code>settings</code>, <code>extensions</code>, <code>schema</code>, <code>count</code>, <code>exists</code>, <code>table_exists</code>, <code>table_info</code>, <code>indexes</code>, <code>constraints</code>, <code>database_size</code>, <code>all_columns</code>, <code>schemas</code>, <code>memory_usage</code>, <code>describe_query</code></td></tr>
+          <tr><td>Analytics &amp; readers</td><td><code>describe</code>, <code>columns</code>, <code>column_types</code>, <code>summarize</code>, <code>head</code>, <code>sample</code>, <code>distinct</code>, <code>aggregate</code>, <code>sum_</code>, <code>avg_</code>, <code>min_</code>, <code>max_</code>, <code>group_count</code>, <code>create_table_as</code>, <code>read_parquet</code>, <code>read_csv</code>, <code>read_json</code>, <code>copy_to</code>, <code>install_extension</code>, <code>load_extension</code>, <code>pragma</code>, <code>set</code>, <code>get_setting</code>, <code>vacuum</code>, <code>checkpoint</code></td></tr>
+          <tr><td>Quote / parse (pure)</td><td><code>quote_ident</code>, <code>unquote_ident</code>, <code>quote_identifier</code>, <code>quote_literal</code>, <code>unquote_literal</code>, <code>quote_like</code>, <code>unquote_like</code>, <code>quote_qualified_ident</code>, <code>parse_qualified_ident</code>, <code>format_list</code>, <code>parse_list</code>, <code>format_in_list</code>, <code>parse_in_list</code>, <code>format_struct</code>, <code>parse_struct</code>, <code>format_map</code></td></tr>
+        </tbody>
+      </table>
+      <p>The full per-function signature listing (return shapes, option keys) is in the <a href="index.html#api-reference">Docs API reference</a> and the README's <a href="https://github.com/MenkeTechnologies/stryke-duckdb#0x04-api-reference">API reference section</a>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">=</span>CONNECTION CACHE</h2>
+      <p>The cdylib caches one <code>duckdb::Connection</code> keyed on the <code>(db, session, read_only)</code> tuple in a <code>OnceCell&lt;Mutex&lt;HashMap&gt;&gt;</code> that lives for the life of the stryke process. Two consequences:</p>
+      <ul>
+        <li><code>:memory:</code> databases <strong>persist across calls</strong> within a session &mdash; the v1 helper binary got a fresh empty <code>:memory:</code> on every fork; the in-process cdylib does not.</li>
+        <li>Statements issued with the same <code>%opts</code> ride the same handle, so <code>begin</code> / <code>commit</code> / <code>rollback</code> / <code>transaction</code> work without extra FFI bookkeeping &mdash; connection affinity is implicit in the cache key.</li>
+      </ul>
+      <p>Named sessions (<code>session =&gt; "name"</code>) give distinct in-memory instances; the default session name is <code>"_default"</code>. A file-backed <code>db =&gt; "app.duckdb"</code> shares its cached connection across every call with that same path.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>CI GATES</h2>
+      <p>GitHub Actions <code>.github/workflows/ci.yml</code> runs: <code>cargo check</code> / <code>fmt --check</code> / <code>clippy -D warnings</code> / <code>test</code> (ubuntu + macOS), <code>cargo doc -D warnings</code>, a cross-target release build (linux x86_64, macOS x86_64 + aarch64), and a <code>stryke-test</code> job that downloads the latest strykelang release, syntax-checks every <code>.stk</code> file, installs the package, and runs <code>s test t/</code>. Documentation is pinned by shell gates under <code>tests/</code> (docs HTML structure, <code>target=_blank</code>/<code>rel=noopener</code>, no inline handlers, no <code>http://</code> links, no placeholder hrefs, final-newline, README/man-page structure).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-duckdb#readme">"Why this is a package"</a> + <a href="https://github.com/MenkeTechnologies/stryke-duckdb#0x04-api-reference">"API reference"</a> sections for the authoritative scope. The package is intentionally narrower than its underlying SDK / driver &mdash; the goal is "useful from a shell pipeline", not "complete API coverage".</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-duckdb">github.com/MenkeTechnologies/stryke-duckdb</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-duckdb/issues">github.com/MenkeTechnologies/stryke-duckdb/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

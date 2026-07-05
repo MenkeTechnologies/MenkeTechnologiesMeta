@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-parquet — PARQUET FILE INSPECTOR FOR STRYKE // SCHEMA + STATS + ROW-GROUPS + HEAD/TAIL + RECOMPRESS. Parquet file inspector for stryke — schema, footer stats, row-group breakdown, head/tail, recompression. Diagnostic counterpart to stryke-arrow. Ships as a Rust cdylib that stryke dlopens in-process on first `use Parquet`.">
+  <title>stryke-parquet — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 40%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-PARQUET &mdash; PARQUET FILE INSPECTOR FOR STRYKE // SCHEMA + STATS + ROW-GROUPS + HEAD/TAIL + RECOMPRESS</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package · cdylib <code>libstryke_parquet.{dylib,so}</code> · dlopen'd in-process on <code>use Parquet</code> · opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-parquet/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-PARQUET</h2>
+      <p class="tutorial-subtitle"><strong>See into parquet without loading it.</strong> Parquet file inspector for stryke &mdash; schema, footer stats, row-group breakdown, head/tail, recompression. Diagnostic counterpart to <code>stryke-arrow</code>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># from a release (no rustc on the consumer machine)
+s pkg install -g github.com/MenkeTechnologies/stryke-parquet
+
+# from a local checkout
+cd ~/projects/stryke-parquet
+cargo build --release            # produces target/release/libstryke_parquet.{dylib,so}
+s pkg install -g .               # cdylib lands in ~/.stryke/store/parquet@&lt;version&gt;/
+
+# one-liner
+make install</pre>
+        <p>The cdylib is dlopened in-process on first <code>use Parquet</code> &mdash; no helper-binary fork per call. Any stryke script that declares <code>use Parquet</code> resolves the package automatically.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick start: <code>use Parquet</code></h2>
+        <p>Declare <code>use Parquet</code> once; every <code>Parquet::*</code> helper below resolves the cdylib automatically. Footer-only calls (<code>inspect</code>, <code>schema</code>, <code>count</code>, <code>rowgroups</code>, <code>stats</code>, <code>metadata</code>, <code>dtypes</code>, <code>size_report</code>, <code>null_summary</code>, <code>encoding_summary</code>, <code>bloom_filter_summary</code>, <code>sorting_columns_summary</code>, <code>features</code>, <code>schema_diff</code>) never scan rows.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>inspect footer (no row scan)</td><td><code>p to_json Parquet::inspect "events.parquet"</code></td></tr>
+            <tr><td>row count</td><td><code>p Parquet::count "events.parquet"</code></td></tr>
+            <tr><td>schema</td><td><code>p to_json Parquet::schema "events.parquet"</code></td></tr>
+            <tr><td>column logical types</td><td><code>p to_json Parquet::dtypes "events.parquet"</code></td></tr>
+            <tr><td>per-row-group breakdown</td><td><code>val @rgs = Parquet::rowgroups "events.parquet"</code></td></tr>
+            <tr><td>per-column stats</td><td><code>Parquet::stats "events.parquet", column =&gt; "user_id"</code></td></tr>
+            <tr><td>first 20 rows</td><td><code>val @first = Parquet::head "events.parquet", n =&gt; 20</code></td></tr>
+            <tr><td>last 5 rows</td><td><code>val @last = Parquet::tail "events.parquet", n =&gt; 5</code></td></tr>
+            <tr><td>filter rows (in memory)</td><td><code>val @hits = Parquet::filter "events.parquet", "score", "gt", value =&gt; 90</code></td></tr>
+            <tr><td>one column as a flat list</td><td><code>val @ids = Parquet::column "events.parquet", "user_id"</code></td></tr>
+            <tr><td>numeric aggregate</td><td><code>p Parquet::mean "events.parquet", "score"</code></td></tr>
+            <tr><td>group + aggregate</td><td><code>val @g = Parquet::group_by "events.parquet", "level", func =&gt; "sum", agg =&gt; "score"</code></td></tr>
+            <tr><td>recompress with zstd</td><td><code>Parquet::compress "events.parquet", "events.zst.parquet", codec =&gt; "zstd"</code></td></tr>
+            <tr><td>validate a file end-to-end</td><td><code>val $v = Parquet::validate "events.parquet"   # { ok, rows, row_groups }</code></td></tr>
+            <tr><td>per-row-group column chunk detail</td><td><code>val @rg = Parquet::column_chunk_stats "events.parquet"</code></td></tr>
+            <tr><td>arbitrary row window</td><td><code>val @win = Parquet::sample "events.parquet", offset =&gt; 1000, n =&gt; 20</code></td></tr>
+            <tr><td>index / bloom-filter presence</td><td><code>val $f = Parquet::features "events.parquet"</code></td></tr>
+          </tbody>
+        </table>
+        <p>A fuller runnable walk-through (synthesize via <code>stryke-arrow</code>, then inspect) lives in <a href="https://github.com/MenkeTechnologies/stryke-parquet/blob/main/examples/discover.stk" target="_blank" rel="noopener noreferrer"><code>examples/discover.stk</code></a>; diagnostics in <a href="https://github.com/MenkeTechnologies/stryke-parquet/blob/main/examples/diagnostics.stk" target="_blank" rel="noopener noreferrer"><code>examples/diagnostics.stk</code></a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Inspection &amp; schema</h2>
+        <p>Footer-only reads &mdash; cheap regardless of file size; no row data is decoded.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Parquet::version</code></td><td>package version string &mdash; <code>{ version }</code></td></tr>
+            <tr><td><code>Parquet::inspect $path</code></td><td>footer summary &mdash; rows, row-group count, columns, dominant compression, writer version</td></tr>
+            <tr><td><code>Parquet::schema $path</code></td><td><code>{ fields, num_fields }</code></td></tr>
+            <tr><td><code>Parquet::dtypes $path</code></td><td>each column's Arrow logical type &mdash; <code>{ num_fields, columns:[{name, dtype, nullable}] }</code></td></tr>
+            <tr><td><code>Parquet::count $path</code></td><td>row count <code>$n</code> from footer metadata</td></tr>
+            <tr><td><code>Parquet::rowgroups $path</code></td><td><code>@rgs</code> &mdash; one record per row group</td></tr>
+            <tr><td><code>Parquet::row_group_summary $path</code></td><td>footer-only sizing rollup &mdash; rows/group + compressed bytes/group min/max/mean</td></tr>
+            <tr><td><code>Parquet::stats $path, %opts</code></td><td>per-column footer stats; <code>%opts</code>: <code>column</code></td></tr>
+            <tr><td><code>Parquet::metadata $path</code></td><td>writer kv metadata + <code>created_by</code> + version</td></tr>
+            <tr><td><code>Parquet::schema_diff $base, $other</code></td><td><code>{ equal, added, removed, type_changed, base_only, other_only }</code></td></tr>
+            <tr><td><code>Parquet::column_names $path</code></td><td><code>\@names</code> &mdash; schema field names in file order (composite over <code>schema</code>)</td></tr>
+            <tr><td><code>Parquet::column_count $path</code></td><td>number of columns <code>$n</code> (composite)</td></tr>
+            <tr><td><code>Parquet::is_empty $path</code></td><td><code>1 | 0</code> &mdash; <code>count == 0</code> (composite)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Reading rows</h2>
+        <p>Materialize rows as stryke hashrefs. <code>head</code>/<code>tail</code>/<code>slice</code>/<code>sample</code>/<code>reverse</code> all accept a <code>columns</code> projection list.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Parquet::head $path, %opts</code></td><td>first <code>n</code> rows; <code>%opts</code>: <code>n</code>, <code>columns</code></td></tr>
+            <tr><td><code>Parquet::tail $path, %opts</code></td><td>last <code>n</code> rows; <code>%opts</code>: <code>n</code>, <code>columns</code></td></tr>
+            <tr><td><code>Parquet::slice $path, %opts</code></td><td>offset window; <code>%opts</code>: <code>offset</code>, <code>length</code> (to end if omitted), <code>columns</code></td></tr>
+            <tr><td><code>Parquet::sample $path, %opts</code></td><td>arbitrary window; <code>%opts</code>: <code>offset</code>, <code>n</code>, <code>columns</code></td></tr>
+            <tr><td><code>Parquet::reverse $path, %opts</code></td><td>every row in reverse file order (newest-first); <code>%opts</code>: <code>columns</code></td></tr>
+            <tr><td><code>Parquet::gather $path, \@indices, %opts</code></td><td>rows by explicit 0-based index list (any order, repeats OK, out-of-range dies); <code>%opts</code>: <code>columns</code></td></tr>
+            <tr><td><code>Parquet::random_sample $path, %opts</code></td><td>n random rows (reservoir, reproducible per <code>seed</code>); <code>%opts</code>: <code>n</code>, <code>seed</code>, <code>columns</code>; keeps file order</td></tr>
+            <tr><td><code>Parquet::to_json $path, %opts</code></td><td>all rows as records</td></tr>
+            <tr><td><code>Parquet::stream $path, %opts</code></td><td>invoke a <code>callback</code> per row (no full-result buffering); returns the count processed</td></tr>
+            <tr><td><code>Parquet::column $path, $column</code></td><td>a single column's cells as a flat list (polars Series)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Row predicates &amp; reshaping (polars-style)</h2>
+        <p>Materialize the file once, then transform the rows. Comparison is numeric for numbers, lexicographic for strings; nulls always sort last. Filter operators: <code>eq ne gt ge lt le</code> (and the symbolic <code>= != &gt; &gt;= &lt; &lt;=</code>), plus <code>is_null</code> / <code>is_not_null</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Parquet::filter $path, $column, $op, %opts</code></td><td>rows where <code>$column OP $value</code>; <code>%opts</code>: <code>value</code>, <code>columns</code></td></tr>
+            <tr><td><code>Parquet::where_count $path, $column, $op, %opts</code></td><td>count-only companion to <code>filter</code> (same grammar); <code>%opts</code>: <code>value</code></td></tr>
+            <tr><td><code>Parquet::filter_to $path, $dst, $column, $op, %opts</code></td><td>write only matching rows to a new file (empty result errors); <code>%opts</code>: <code>value</code>, <code>codec</code></td></tr>
+            <tr><td><code>Parquet::distinct $path, %opts</code></td><td>unique rows (first occurrence wins); <code>%opts</code>: <code>columns</code> (key + projection)</td></tr>
+            <tr><td><code>Parquet::sort $path, $column, %opts</code></td><td>ORDER BY <code>$column</code>; <code>%opts</code>: <code>descending =&gt; 1</code>, <code>columns</code>; nulls last, stable</td></tr>
+            <tr><td><code>Parquet::top_k $path, $column, $k, %opts</code></td><td>the <code>k</code> rows with the largest <code>$column</code> values; <code>%opts</code>: <code>descending =&gt; 0</code> for the smallest (bottom_k)</td></tr>
+            <tr><td><code>Parquet::value_counts $path, $column</code></td><td><code>{ value, count }</code> per distinct value, sorted by count desc then value asc</td></tr>
+            <tr><td><code>Parquet::group_by $path, $by, %opts</code></td><td>GROUP BY <code>$by</code> &mdash; <code>{ key, count, value }</code>; <code>%opts</code>: <code>agg</code>, <code>func</code> (count/sum/min/max/mean)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Aggregates</h2>
+        <p>Numeric reductions over a single column &mdash; nulls and non-numeric cells are skipped; an all-null column yields <code>undef</code> (never <code>NaN</code>).</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Parquet::sum $path, $column</code></td><td>numeric sum <code>$sum</code></td></tr>
+            <tr><td><code>Parquet::min $path, $column</code></td><td>numeric MIN <code>$min</code></td></tr>
+            <tr><td><code>Parquet::max $path, $column</code></td><td>numeric MAX <code>$max</code></td></tr>
+            <tr><td><code>Parquet::mean $path, $column</code></td><td>numeric AVG <code>$mean</code></td></tr>
+            <tr><td><code>Parquet::n_unique $path, $column, %opts</code></td><td>COUNT(DISTINCT col); <code>%opts</code>: <code>include_nulls =&gt; 0</code> to exclude the null group (default 1)</td></tr>
+            <tr><td><code>Parquet::quantile $path, $column, %opts</code></td><td>linear-interpolated quantile; <code>%opts</code>: <code>q</code> in [0,1] (default 0.5)</td></tr>
+            <tr><td><code>Parquet::median $path, $column</code></td><td>sugar for <code>quantile(q =&gt; 0.5)</code></td></tr>
+            <tr><td><code>Parquet::describe $path</code></td><td>per-column <code>{ count, null_count, min, max, mean, sum }</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Conversion &amp; writing</h2>
+        <p>Round-trip parquet against CSV / NDJSON / in-memory rows, recompress, and rewrite layout. Writers default to the <code>zstd</code> codec; pass <code>codec =&gt; "&lt;name&gt;"</code> to override.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Parquet::to_csv $path, %opts</code></td><td>parquet &rarr; CSV (scalar, or file via <code>output</code>); <code>%opts</code>: <code>output</code>, <code>columns</code></td></tr>
+            <tr><td><code>Parquet::to_ndjson $path, $dst</code></td><td>parquet &rarr; NDJSON file (inverse of <code>from_json</code>)</td></tr>
+            <tr><td><code>Parquet::from_csv $src, $dst, %opts</code></td><td>CSV &rarr; parquet; <code>%opts</code>: <code>header</code>, <code>delimiter</code>, <code>codec</code></td></tr>
+            <tr><td><code>Parquet::from_json $src, $dst, %opts</code></td><td>NDJSON &rarr; parquet; <code>%opts</code>: <code>codec</code></td></tr>
+            <tr><td><code>Parquet::write \@rows, $dst, %opts</code></td><td>in-memory rows (hashrefs) &rarr; parquet; <code>%opts</code>: <code>codec</code></td></tr>
+            <tr><td><code>Parquet::write_partitioned \@rows, $dst, $column, %opts</code></td><td>Hive <code>col=val/</code> dirs; <code>%opts</code>: <code>codec</code></td></tr>
+            <tr><td><code>Parquet::compress $src, $dst, %opts</code></td><td>recompress; <code>%opts</code>: <code>codec</code>, <code>row_group</code></td></tr>
+            <tr><td><code>Parquet::repartition $src, $dst, %opts</code></td><td>rewrite with a target max row-group row count; <code>%opts</code>: <code>row_group</code> (default 65536), <code>codec</code></td></tr>
+            <tr><td><code>Parquet::merge \@srcs, $dst, %opts</code></td><td>concat same-schema files vertically; <code>%opts</code>: <code>codec</code></td></tr>
+            <tr><td><code>Parquet::hstack $path, $other, $dst, %opts</code></td><td>horizontal append of <code>$other</code>'s columns at matching row count; name collision errors</td></tr>
+            <tr><td><code>Parquet::select $path, $dst, \@cols, %opts</code></td><td>project a column subset (column pruning); unknown column errors</td></tr>
+            <tr><td><code>Parquet::drop $path, $dst, \@cols, %opts</code></td><td>complement of <code>select</code>: keep all but <code>\@cols</code>; unknown / drop-all errors</td></tr>
+            <tr><td><code>Parquet::rename $path, $dst, \%map, %opts</code></td><td>relabel columns <code>{ old =&gt; new }</code>; preserves types/order/rows</td></tr>
+            <tr><td><code>Parquet::with_row_index $path, $dst, %opts</code></td><td>write a copy with a leading 0-based index column; <code>%opts</code>: <code>name</code> (default "index"), <code>offset</code> (default 0), <code>codec</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Diagnostics</h2>
+        <p><code>validate</code> reads every row group and reports failure as data (it never <code>die</code>s on a corrupt file &mdash; check <code>ok</code>). The footer rollups (<code>size_report</code>, <code>null_summary</code>, <code>encoding_summary</code>, <code>bloom_filter_summary</code>, <code>sorting_columns_summary</code>, <code>column_chunk_stats</code>, <code>features</code>) read metadata only.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>Parquet::validate $path</code></td><td><code>{ ok, rows, row_groups }</code> or <code>{ ok:false, stage, detail }</code></td></tr>
+            <tr><td><code>Parquet::column_chunk_stats $path</code></td><td>per-row-group per-column chunk detail (compression, encodings, sizes, min/max, null_count)</td></tr>
+            <tr><td><code>Parquet::size_report $path</code></td><td>file + per-column compressed/uncompressed bytes, ratio, bytes_per_row; columns sorted by size desc</td></tr>
+            <tr><td><code>Parquet::null_summary $path</code></td><td><code>{ num_rows, total_nulls, columns:[{column, null_count, null_fraction}] }</code></td></tr>
+            <tr><td><code>Parquet::encoding_summary $path</code></td><td>footer-only physical-encoding rollup per column</td></tr>
+            <tr><td><code>Parquet::bloom_filter_summary $path</code></td><td>footer-only bloom-filter presence per column + totals</td></tr>
+            <tr><td><code>Parquet::sorting_columns_summary $path</code></td><td>footer-only declared sort order per row group</td></tr>
+            <tr><td><code>Parquet::features $path</code></td><td><code>{ has_bloom_filter, has_column_index, has_offset_index, columns:[...] }</code></td></tr>
+          </tbody>
+        </table>
+        <p>The authoritative export list is <code>[ffi].exports</code> in <a href="https://github.com/MenkeTechnologies/stryke-parquet/blob/main/stryke.toml" target="_blank" rel="noopener noreferrer"><code>stryke.toml</code></a>; the full annotated reference (return shapes, JSON examples) is the <a href="https://github.com/MenkeTechnologies/stryke-parquet#0x04-api-reference" target="_blank" rel="noopener noreferrer">README "API reference" section</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compression codecs</h2>
+        <p>Accepted by <code>compress</code>, <code>repartition</code>, <code>merge</code>, the <code>from_*</code> / <code>write*</code> writers, and the <code>filter_to</code> / <code>select</code> / <code>drop</code> / <code>rename</code> / <code>with_row_index</code> rewrite paths via <code>codec =&gt; "&lt;name&gt;"</code>. Default is <code>zstd</code>.</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>snappy</code></td><td>parquet-rs default; fast, modest ratio (<code>snap</code>)</td></tr>
+            <tr><td><code>zstd</code></td><td>best ratio per CPU &mdash; the writer default (<code>zstd</code>)</td></tr>
+            <tr><td><code>gzip</code></td><td>broad compatibility (<code>flate2</code>)</td></tr>
+            <tr><td><code>lz4</code></td><td>LZ4_RAW frame (<code>lz4</code>)</td></tr>
+            <tr><td><code>brotli</code></td><td>high ratio, slow (<code>brotli</code>)</td></tr>
+            <tr><td><code>uncompressed</code></td><td>(alias <code>none</code>) fastest write, biggest file</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tests &amp; dev workflow</h2>
+<pre># Rust unit tests (compile, no live parquet I/O)
+cargo test
+
+# self-contained round-trip suite — generates a fixture via mkdemo in /tmp/
+s test t/
+
+# dev shortcuts
+make             # release build (cargo build --release)
+make test
+make install     # build + s pkg install -g .
+make clean</pre>
+        <p>The <code>t/</code> suite generates a fixture parquet with <code>mkdemo</code>, then exercises the diagnostic surface against it &mdash; no external services required.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why a package, not a builtin</h2>
+        <p>Schema + footer / row-group introspection is a different workload from reading parquet into a typed DataFrame. Lightweight tool for ops + debugging.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper that calls <code>parquet__*</code> FFI symbols on the cdylib; the heavy code lives in <code>libstryke_parquet.{dylib,so}</code>, dlopened in-process on first <code>use Parquet</code>. Core stryke is never linked against this package's deps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>FFI layer</h2>
+        <p>Each <code>Parquet::*</code> wrapper builds a JSON args dict and calls a sibling <code>parquet__*</code> symbol resolved out of <code>libstryke_parquet.{dylib,so}</code>. The cdylib is dlopened in-process on first <code>use Parquet</code> (via stryke's <code>pkg::commands::try_load_ffi_for</code> resolver hook). Responses are JSON; errors come back as <code>{"error": "&lt;msg&gt;"}</code> and the wrapper <code>die</code>s with the message. Stateless package &mdash; parquet operations are file transforms; no process-level cache.</p>
+        <p>The exports span inspection (<code>version</code>, <code>inspect</code>, <code>schema</code>, <code>dtypes</code>, <code>count</code>, <code>rowgroups</code>, <code>row_group_summary</code>, <code>stats</code>, <code>metadata</code>, <code>schema_diff</code>), row read (<code>head</code>, <code>tail</code>, <code>slice</code>, <code>sample</code>, <code>reverse</code>, <code>gather</code>, <code>random_sample</code>, <code>to_json</code>, <code>to_csv</code>, <code>to_ndjson</code>, <code>column</code>), row predicates / reshaping (<code>filter</code>, <code>where_count</code>, <code>filter_to</code>, <code>distinct</code>, <code>sort</code>, <code>top_k</code>, <code>value_counts</code>, <code>group_by</code>), aggregates (<code>sum</code>, <code>min</code>, <code>max</code>, <code>mean</code>, <code>n_unique</code>, <code>quantile</code>, <code>describe</code>), conversion / write (<code>from_csv</code>, <code>from_json</code>, <code>write</code>, <code>write_partitioned</code>, <code>compress</code>, <code>repartition</code>, <code>merge</code>, <code>hstack</code>, <code>select</code>, <code>drop</code>, <code>rename</code>, <code>with_row_index</code>), and diagnostics (<code>validate</code>, <code>column_chunk_stats</code>, <code>size_report</code>, <code>null_summary</code>, <code>encoding_summary</code>, <code>bloom_filter_summary</code>, <code>sorting_columns_summary</code>, <code>features</code>). The authoritative list is <code>[ffi].exports</code> in <code>stryke.toml</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>stryke-parquet/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate manifest (crate-type = ["cdylib"], publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # cdylib — parquet__* extern "C" exports
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper — `use Parquet`
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest ([ffi] exports table)
+&#9500;&#9472;&#9472; t/                     # zunit-style tests
+&#9500;&#9472;&#9472; examples/              # runnable .stk examples
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

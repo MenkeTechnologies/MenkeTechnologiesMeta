@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vim-zsh — engineering report. Runtime-file layout, a standalone zshrs syntax grammar generated from zshrs --dump-reflection, filetype detection by extension / dotfile / shebang, ALE / vim-lsp / coc integration, and editor compatibility for zshrs (the Rust rewrite of zsh) in Vim and Neovim.">
+  <title>vim-zsh — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.accent { color: var(--cyan); }
+    .stat-val.green  { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .parity-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0;
+      font-size: 12px;
+    }
+    .parity-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .parity-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok    { color: var(--green); font-weight: 700; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VIM-ZSH &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vim-zsh" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zshrs" target="_blank" rel="noopener noreferrer">zshrs</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Vim / Neovim support for zshrs &middot; standalone zshrs grammar (generated; 137 builtins, 113 extensions, 245 special vars) &middot; zsh files + dotfiles + shebang detection &middot; ALE lint via zshrs -n &middot; vim-lsp / coc via zshrs --lsp
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>vim-zsh</strong> is the Vim / Neovim editor support for <strong>zshrs</strong> &mdash; the Rust rewrite of zsh, the first compiled Unix shell. It ships as a standard Vim runtime tree (<code>ftdetect/</code>, <code>syntax/</code>, <code>indent/</code>, <code>ftplugin/</code>, <code>plugin/</code>, <code>doc/</code>), so pathogen / vim-plug / native packages add it to <code>runtimepath</code> with no special handling.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the syntax file is a <strong>standalone zshrs grammar</strong>, not a reskin of Vim's bundled <code>zsh</code> / <code>perl</code> syntax. It is <strong>generated</strong> (<code>scripts/gen_syntax.sh</code>) directly from the zshrs binary's own reflection tables (<code>zshrs --dump-reflection</code>) &mdash; <code>.builtins</code>, <code>.extensions</code>, and <code>.special_vars</code> &mdash; so it carries the complete shell surface and never drifts. The filetype is <code>zshrs</code> (not <code>zsh</code>), so Vim's bundled zsh highlighter is never clobbered. Regenerate after a zshrs upgrade.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">137</div><div class="stat-label">Builtins</div></div>
+        <div class="stat-card"><div class="stat-val accent">113</div><div class="stat-label">zshrs extensions</div></div>
+        <div class="stat-card"><div class="stat-val">245</div><div class="stat-label">Special vars</div></div>
+        <div class="stat-card"><div class="stat-val">24+10</div><div class="stat-label">Keywords (control + decl)</div></div>
+        <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Runtime files</div></div>
+        <div class="stat-card"><div class="stat-val green">3</div><div class="stat-label">Integrations (ALE / vim-lsp / coc)</div></div>
+        <div class="stat-card"><div class="stat-val accent">2</div><div class="stat-label">Detection paths (ext + shebang)</div></div>
+        <div class="stat-card"><div class="stat-val">0</div><div class="stat-label">Config required</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>RUNTIME LAYOUT</h2>
+      <p class="tutorial-subtitle">Standard Vim runtime directories. Each file is loaded automatically when the plugin is on <code>runtimepath</code>; no entry point or sourcing call is required.</p>
+
+      <table class="parity-table">
+        <thead>
+          <tr><th>File</th><th>Responsibility</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>ftdetect/zshrs.vim</code></td><td>Sets <code>filetype=zshrs</code> for zsh files (<code>*.zsh</code> &hellip;), dotfiles (<code>.zshrc</code> &hellip;), and any file whose first line is a zsh / zshrs shebang (e.g. <code>#!/usr/bin/env zsh</code>).</td></tr>
+          <tr><td><code>syntax/zshrs.vim</code></td><td>Standalone zshrs grammar (generated) &mdash; comments / shebang, numbers, sigil variables, strings / here-docs / command substitution, 137 builtins + 113 extensions + 245 special vars + keywords, linked to standard highlight groups.</td></tr>
+          <tr><td><code>indent/zshrs.vim</code></td><td>Standalone <code>indentexpr</code> (<code>GetZshrsIndent()</code>) &mdash; indents after a line opening a block / paren / bracket or a <code>do</code> / <code>then</code> / <code>in</code>, dedents <code>done</code> / <code>fi</code> / <code>esac</code> / closing delimiters.</td></tr>
+          <tr><td><code>ftplugin/zshrs.vim</code></td><td>Buffer-local options: <code>commentstring=# %s</code>, <code>comments=:#</code>, comment-continuation <code>formatoptions</code>, with a matching <code>b:undo_ftplugin</code>.</td></tr>
+          <tr><td><code>plugin/zshrs.vim</code></td><td>Global wiring: ALE linter definition, vim-lsp server registration, coc snippet (commented), and the <code>g:vim_zsh_no_ale</code> / <code>g:vim_zsh_no_lsp</code> opt-outs, behind a load guard.</td></tr>
+          <tr><td><code>doc/zshrs.txt</code></td><td>Vim help (<code>:help vim-zsh</code>) with tagged sections for install, detection, syntax, linting, LSP, and options.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SYNTAX COVERAGE</h2>
+      <p class="tutorial-subtitle">Token categories taken from the zshrs binary's own reflection tables (<code>zshrs --dump-reflection</code>). Builtins exclude the extension and keyword names so the zshrs extensions &mdash; the additions that don't exist in upstream zsh &mdash; get their own highlight group.</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Group</th><th>Tokens (sample)</th><th>Highlight link</th></tr></thead>
+        <tbody>
+          <tr><td>Declarations (10)</td><td><code>declare</code> <code>export</code> <code>float</code> <code>integer</code> <code>let</code> <code>local</code> <code>readonly</code> <code>set</code> <code>shift</code> <code>typeset</code></td><td class="ok">StorageClass</td></tr>
+          <tr><td>Control flow (24)</td><td><code>if</code> <code>elif</code> <code>else</code> <code>fi</code> <code>for</code> <code>foreach</code> <code>while</code> <code>until</code> <code>do</code> <code>done</code> <code>case</code> <code>esac</code> <code>function</code> <code>select</code> <code>repeat</code> <code>return</code></td><td class="ok">Statement</td></tr>
+          <tr><td>Builtins (137)</td><td><code>bindkey</code> <code>cd</code> <code>echo</code> <code>print</code> <code>read</code> <code>setopt</code> <code>unsetopt</code> <code>zmodload</code> <code>zle</code> <code>zstyle</code> <code>autoload</code> <code>bg</code> <code>fg</code> <code>jobs</code></td><td class="ok">Function</td></tr>
+          <tr><td>Extensions (112)</td><td><code>async</code> <code>await</code> <code>barrier</code> <code>arch</code> <code>base64</code> <code>fold</code> &mdash; zshrs-specific</td><td class="ok">PreProc</td></tr>
+          <tr><td>Special variables (245)</td><td><code>PATH</code> <code>HOME</code> <code>PWD</code> <code>ZSH_VERSION</code> <code>RANDOM</code> <code>LINENO</code> <code>SECONDS</code> <code>HISTFILE</code></td><td class="ok">Identifier</td></tr>
+          <tr><td>Literals &amp; vars</td><td>sigils (<code>$name</code> / <code>${...}</code>), positional / punctuation specials (<code>$1</code> <code>$#</code> <code>$@</code> <code>$?</code> <code>$!</code> <code>$$</code> <code>$*</code>), strings, here-docs, <code>$(...)</code> / backtick command substitution, numbers</td><td class="ok">String / Number / Identifier</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>TOOLING INTEGRATION</h2>
+      <p class="tutorial-subtitle">All three integrations degrade gracefully: each is guarded so the plugin loads cleanly whether or not ALE / vim-lsp / coc is installed. CLI flags verified against <code>zshrs --help</code> (v0.12.1).</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Integration</th><th>Mechanism</th></tr></thead>
+        <tbody>
+          <tr><td>ALE</td><td>Registers a linter via <code>ale#linter#Define</code> running <code>zshrs -n</code> over the buffer (stdin); the handler parses <code>zsh: &lt;reason&gt;</code> / <code>zsh: parse error near &hellip;</code> stderr lines into error items. Skipped if ALE is absent or <code>g:vim_zsh_no_ale</code> is set.</td></tr>
+          <tr><td>vim-lsp</td><td>Registers a server (<code>lsp#register_server</code>) running <code>zshrs --lsp</code>, allowlisted for the <code>zshrs</code> and <code>zsh</code> filetypes. Skipped if vim-lsp is absent or <code>g:vim_zsh_no_lsp</code> is set.</td></tr>
+          <tr><td>coc.nvim</td><td>A ready-to-paste <code>languageserver</code> block for <code>coc-settings.json</code> using <code>zshrs --lsp</code>, documented in the plugin source and README.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>COMPATIBILITY</h2>
+      <table class="parity-table">
+        <thead><tr><th>Target</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Vim 8+</td><td class="ok">Filetype, syntax, indent, ftplugin, doc</td></tr>
+          <tr><td>Neovim</td><td class="ok">Same runtime files (no Lua required)</td></tr>
+          <tr><td>pathogen / vim-plug / native packages</td><td class="ok">Standard runtime layout &mdash; no plugin-manager-specific handling</td></tr>
+          <tr><td>ALE</td><td class="ok"><code>zshrs -n</code> linter</td></tr>
+          <tr><td>vim-lsp</td><td class="ok"><code>zshrs --lsp</code> server</td></tr>
+          <tr><td>coc.nvim</td><td class="ok"><code>languageserver</code> config provided</td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

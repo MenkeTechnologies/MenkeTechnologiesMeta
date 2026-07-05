@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-neo4j — Neo4j graph client for stryke. Parametrized Cypher query/run, scalar/row helpers, and schema introspection over the Bolt protocol. A cdylib dlopened in-process by the stryke runtime over neo4rs (pure-Rust).">
+  <title>stryke-neo4j — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .example-tbl td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-dim);
+    }
+    .example-tbl td:first-child { width: 38%; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+    .example-tbl td code { color: var(--accent-light); background: var(--bg); padding: 1px 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-NEO4J &mdash; NEO4J GRAPH CLIENT FOR STRYKE // CYPHER + PARAMS + RUN + SCHEMA INTROSPECTION</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">stryke package &middot; namespace <code>Neo4j</code> &middot; cdylib <code>libstryke_neo4j</code> &middot; opt-in (kept out of stryke core)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-neo4j/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>STRYKE-NEO4J</h2>
+      <p class="tutorial-subtitle"><strong>Graphs, one stryke pipe away.</strong> Neo4j graph client for stryke &mdash; parametrized Cypher query and run, scalar/row helpers, and schema introspection over the Bolt protocol. An opt-in package, kept out of the stryke core binary so the daily-driver install stays slim. The Bolt driver pulls in tokio &mdash; too heavy to bake into stryke core.</p>
+      <p class="tutorial-subtitle">It speaks Bolt directly via <a href="https://docs.rs/neo4rs" target="_blank" rel="noopener noreferrer">neo4rs</a>, the pure-Rust driver &mdash; no JVM, no official-driver FFI &mdash; against any Neo4j 4.x or 5.x server. Every <code>Neo4j::*</code> function is a thin <code>.stk</code> wrapper over a JSON-in/JSON-out cdylib export; the <code>Neo4j</code> namespace exposes 44 functions across liveness, query, write, graph helpers, schema management, introspection, query planning, and pure Cypher/URL helpers.</p>
+
+      <section class="tutorial-section">
+        <h2>Contents</h2>
+        <ul>
+          <li><a href="#install">Install</a></li>
+          <li><a href="#usage">Usage</a></li>
+          <li><a href="#connopts">Connection options</a></li>
+          <li><a href="#surface">API surface</a></li>
+          <li><a href="#reference">Function reference</a></li>
+          <li><a href="#cypher-safety">Cypher safety &amp; identifier quoting</a></li>
+          <li><a href="#transactions">Transactions &amp; batch</a></li>
+          <li><a href="#planning">Query planning</a></li>
+          <li><a href="#urlhelpers">URL helpers</a></li>
+          <li><a href="#whypkg">Why a package, not a builtin</a></li>
+          <li><a href="#ffi">FFI contract</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+          <li><a href="#layout">Layout</a></li>
+          <li><a href="#siblings">Sibling packages</a></li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section" id="install">
+        <h2>Install</h2>
+<pre># build the cdylib, install as a stryke package
+cd ~/projects/stryke-neo4j
+cargo build --release
+s pkg install -g .
+
+# one-liner
+make install</pre>
+        <p>The release build produces <code>target/release/libstryke_neo4j.{dylib,so}</code>; <code>s pkg install -g .</code> places it in <code>~/.stryke/store/neo4j@&lt;ver&gt;/</code>. The cdylib is dlopened in-process on first <code>use Neo4j</code>.</p>
+      </section>
+
+      <section class="tutorial-section" id="usage">
+        <h2>Usage</h2>
+<pre>use Neo4j
+
+var %conn = ( uri =&gt; "neo4j://localhost:7687", user =&gt; "neo4j", password =&gt; $ENV{NEO4J_PASS} )
+
+# write with named params ($name placeholders, never string-interpolated)
+Neo4j::run("CREATE (p:Person {id: \$id, name: \$name})",
+    params =&gt; { id =&gt; 1, name =&gt; "Ada" }, %conn)
+
+# query — each row is a hashref keyed by the RETURN aliases
+val @people = Neo4j::query("MATCH (p:Person) WHERE p.id = \$id RETURN p.name AS name",
+    params =&gt; { id =&gt; 1 }, %conn)
+p $people[0]{name}        # Ada
+
+# scalar + schema introspection
+p Neo4j::scalar("MATCH (p:Person) RETURN count(p) AS n", %conn)
+p Neo4j::labels(%conn)    # [ { label =&gt; "Person" }, ... ]</pre>
+        <p>The convenience helpers cover the common single-node / single-relationship CRUD shape without hand-writing Cypher. They take scalar properties only; for list or map properties, or anything more elaborate, fall back to <code>run</code> / <code>query</code> with explicit Cypher.</p>
+<pre># node CRUD by (label, key, value) — scalar props only
+val $node = Neo4j::create_node("Person", { id =&gt; 1, name =&gt; "Ada" }, %conn)
+Neo4j::merge_node("Person", "id", 1, props =&gt; { name =&gt; "Ada Lovelace" }, %conn)  # upsert
+Neo4j::set_props("Person", "id", 1, props =&gt; { active =&gt; \1 }, %conn)            # update-only
+p Neo4j::get_node("Person", "id", 1, %conn){name}                                # Ada Lovelace
+p Neo4j::exists_node("Person", "id", 1, %conn)                                   # true
+
+# typed relationships between two matched nodes
+Neo4j::create_rel(
+    from_label =&gt; "Person", from_key =&gt; "id", from_value =&gt; 2,
+    to_label   =&gt; "Person", to_key   =&gt; "id", to_value   =&gt; 1,
+    type       =&gt; "KNOWS", props =&gt; { since =&gt; 2020 }, %conn)
+Neo4j::merge_rel(                                  # idempotent edge
+    from_label =&gt; "Person", from_key =&gt; "id", from_value =&gt; 2,
+    to_label   =&gt; "Person", to_key   =&gt; "id", to_value   =&gt; 1,
+    type       =&gt; "KNOWS", %conn)
+
+# counts + degree (portable across 4.x / 5.x)
+p Neo4j::node_count(label =&gt; "Person", %conn)                       # 2
+p Neo4j::relationship_count(type =&gt; "KNOWS", %conn)                 # 1
+p Neo4j::degree("Person", "id", 2, direction =&gt; "out", type =&gt; "KNOWS", %conn)  # 1
+
+# pluck a flat list, group-by a property
+val @names = Neo4j::query_column("MATCH (p:Person) RETURN p.name AS nm", "nm", %conn)
+val @dist  = Neo4j::count_property_values("Person", "name", %conn)  # [ { value, count }, ... ]
+
+# remove
+Neo4j::delete_node("Person", "id", 1, %conn)                        # count removed
+Neo4j::delete_nodes("Person", match =&gt; { active =&gt; \0 }, %conn)     # DETACH DELETE matched</pre>
+      </section>
+
+      <section class="tutorial-section" id="connopts">
+        <h2>Connection options</h2>
+        <p>Each call takes a trailing <code>%opts</code> hash carrying the Bolt endpoint and credentials (or <code>$NEO4J_URL</code> as a fallback). A <code>Graph</code> connection pool is cached per <code>(uri, user, database)</code>.</p>
+        <table class="example-tbl">
+          <thead><tr><th>Option</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>uri</code></td><td>Bolt URI &mdash; <code>neo4j://</code>, <code>neo4j+s://</code>, <code>bolt://</code> (default <code>127.0.0.1:7687</code>)</td></tr>
+            <tr><td><code>user</code></td><td>username (default <code>neo4j</code>)</td></tr>
+            <tr><td><code>password</code></td><td>password</td></tr>
+            <tr><td><code>database</code></td><td>target database on a multi-database server</td></tr>
+          </tbody>
+        </table>
+        <p>When no <code>uri</code> is passed and <code>$NEO4J_URL</code> is set in the environment, that Bolt URI is used as the fallback endpoint. Credentials default to user <code>neo4j</code> with an empty password and the server's default database when unspecified. The pool is keyed on <code>(uri, user, password, database)</code>; a pool whose call errors is dropped from the cache so the next call reconnects cleanly.</p>
+      </section>
+
+      <section class="tutorial-section" id="surface">
+        <h2>API surface</h2>
+        <table class="example-tbl">
+          <thead><tr><th>Group</th><th>Functions</th></tr></thead>
+          <tbody>
+            <tr><td>Liveness</td><td><code>version</code>, <code>ping</code>, <code>server_info</code></td></tr>
+            <tr><td>Query</td><td><code>query</code>, <code>query_one</code>, <code>scalar</code>, <code>query_values</code>, <code>query_column</code></td></tr>
+            <tr><td>Write</td><td><code>run</code>, <code>batch</code> (transaction)</td></tr>
+            <tr><td>Graph helpers</td><td><code>create_node</code>, <code>merge_node</code>, <code>set_props</code>, <code>get_node</code>, <code>exists_node</code>, <code>create_rel</code>, <code>merge_rel</code>, <code>delete_rel</code>, <code>delete_node</code>, <code>delete_nodes</code>, <code>degree</code>, <code>node_count</code>, <code>relationship_count</code>, <code>count_property_values</code></td></tr>
+            <tr><td>Schema</td><td><code>create_index</code>, <code>create_constraint</code>, <code>drop_index</code>, <code>drop_constraint</code></td></tr>
+            <tr><td>Introspection</td><td><code>labels</code>, <code>relationship_types</code>, <code>property_keys</code>, <code>indexes</code>, <code>constraints</code>, <code>databases</code></td></tr>
+            <tr><td>Planning</td><td><code>explain</code>, <code>profile</code></td></tr>
+            <tr><td>Cypher helpers</td><td><code>escape</code>, <code>quote_literal</code>, <code>quote_ident</code>, <code>valid_identifier</code>, <code>format_value</code></td></tr>
+            <tr><td>URL helpers</td><td><code>parse_url</code>, <code>redact_url</code>, <code>build_url</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="reference">
+        <h2>Function reference</h2>
+        <p>Every function takes a trailing <code>%opts</code> hash carrying connection params (see above). The signatures below list the leading positional / named arguments; <code>%opts</code> is omitted for brevity. Return shapes are exactly what the <code>.stk</code> wrappers hand back.</p>
+
+        <h3>Liveness</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>version()</code></td><td>Package version string (from <code>CARGO_PKG_VERSION</code>). Connection-free &mdash; also a load-probe for the cdylib.</td></tr>
+            <tr><td><code>ping()</code></td><td>Connectivity probe via <code>RETURN 1</code>. True on success.</td></tr>
+            <tr><td><code>server_info()</code></td><td>Rows from <code>CALL dbms.components()</code> &mdash; name, versions, edition.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Query</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>query($cypher)</code></td><td>List of row hashrefs, each keyed by the RETURN aliases. Nodes / relationships deserialize to their property maps.</td></tr>
+            <tr><td><code>query_one($cypher)</code></td><td>The first row hashref, or undef.</td></tr>
+            <tr><td><code>scalar($cypher)</code></td><td>The first value of the first row (a scalar), or undef.</td></tr>
+            <tr><td><code>query_values($cypher)</code></td><td>Flat list of the <em>first</em> column's value across every row.</td></tr>
+            <tr><td><code>query_column($cypher, $column)</code></td><td>Flat list of one named RETURN alias across every row. Generalizes <code>query_values</code> to any column.</td></tr>
+          </tbody>
+        </table>
+        <p>All four bind <code>$name</code> placeholders from <code>%opts{params}</code> (a hashref) &mdash; values are sent as Bolt parameters, never interpolated into the query text.</p>
+
+        <h3>Write</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>run($cypher)</code></td><td>Execute a write / DDL statement that returns no rows (CREATE / MERGE / SET / DELETE / CREATE INDEX …). Binds <code>%opts{params}</code>. True on success.</td></tr>
+            <tr><td><code>batch($steps)</code></td><td>Run a list of <code>{ cypher, params =&gt; {...} }</code> steps in one transaction &mdash; commit on success, rollback if any step errors. Returns the number of committed steps.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Graph helpers (scalar properties)</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>create_node($label, $props)</code></td><td>CREATE a node with a scalar-property hashref. Returns the node.</td></tr>
+            <tr><td><code>merge_node($label, $key, $value)</code></td><td>MERGE on <code>$key = $value</code>, then <code>SET n += %opts{props}</code> (upsert). Returns the node.</td></tr>
+            <tr><td><code>set_props($label, $key, $value)</code></td><td>MATCH on <code>$key = $value</code> and <code>SET n += %opts{props}</code> &mdash; update-only, never creates. Returns the updated node, or undef on no match.</td></tr>
+            <tr><td><code>get_node($label, $key, $value)</code></td><td>Read-only point lookup of a single node by <code>$key = $value</code>. Returns the node, or undef.</td></tr>
+            <tr><td><code>exists_node($label, $key, $value)</code></td><td>True when at least one matching node exists.</td></tr>
+            <tr><td><code>create_rel(%opts)</code></td><td>CREATE a typed relationship between two matched nodes. <code>%opts</code>: <code>from_label</code>, <code>from_key</code>, <code>from_value</code>, <code>to_label</code>, <code>to_key</code>, <code>to_value</code>, <code>type</code>, <code>props</code>. Returns the rel.</td></tr>
+            <tr><td><code>merge_rel(%opts)</code></td><td>MERGE a typed relationship (idempotent); props applied via <code>SET r += {...}</code>. Same <code>%opts</code> as <code>create_rel</code>. Returns the rel.</td></tr>
+            <tr><td><code>delete_rel(%opts)</code></td><td>DELETE a typed relationship between two matched nodes. Same <code>%opts</code> minus <code>props</code>. Returns the count removed.</td></tr>
+            <tr><td><code>delete_node($label, $key, $value)</code></td><td>DETACH DELETE a single node matched by <code>$key = $value</code>. Returns the count removed (0 on no match).</td></tr>
+            <tr><td><code>delete_nodes($label)</code></td><td>DETACH DELETE all <code>$label</code> nodes, optionally narrowed by <code>%opts{match}</code> (a scalar-property map).</td></tr>
+            <tr><td><code>degree($label, $key, $value)</code></td><td>Relationship degree of one node. <code>%opts{direction}</code> is <code>out</code> / <code>in</code> / <code>both</code> (default <code>both</code>); <code>%opts{type}</code> narrows to one rel type.</td></tr>
+            <tr><td><code>node_count()</code></td><td>Count nodes, optionally of a single <code>%opts{label}</code>.</td></tr>
+            <tr><td><code>relationship_count()</code></td><td>Count relationships, optionally of a single <code>%opts{type}</code>. Portable <code>count(r)</code> &mdash; no <code>size()</code> / <code>COUNT{}</code> divergence.</td></tr>
+            <tr><td><code>count_property_values($label, $property)</code></td><td>Group-by count of a property's distinct values: rows of <code>{ value, count }</code> ordered by descending count.</td></tr>
+          </tbody>
+        </table>
+        <p>Labels, relationship types, and property names cannot be parametrized in Cypher, so these helpers backtick-quote them (internal backticks doubled) &mdash; injection-safe. Property <em>values</em> are passed as bound parameters. A non-scalar property value (list / map) is rejected with an error; use <code>run</code> with hand-written Cypher for those.</p>
+
+        <h3>Schema management</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>create_index($label, $property)</code></td><td><code>CREATE INDEX … IF NOT EXISTS FOR (n:Label) ON (n.prop)</code>. Optional <code>%opts{name}</code>.</td></tr>
+            <tr><td><code>create_constraint($label, $property)</code></td><td><code>CREATE CONSTRAINT … IF NOT EXISTS … REQUIRE n.prop IS UNIQUE</code> (uniqueness). Optional <code>%opts{name}</code>.</td></tr>
+            <tr><td><code>drop_index($name)</code></td><td><code>DROP INDEX name IF EXISTS</code>.</td></tr>
+            <tr><td><code>drop_constraint($name)</code></td><td><code>DROP CONSTRAINT name IF EXISTS</code>.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Introspection</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>labels()</code></td><td>Node labels via <code>CALL db.labels()</code>, ordered.</td></tr>
+            <tr><td><code>relationship_types()</code></td><td>Relationship types via <code>CALL db.relationshipTypes()</code>, ordered.</td></tr>
+            <tr><td><code>property_keys()</code></td><td>Property keys via <code>CALL db.propertyKeys()</code>, ordered.</td></tr>
+            <tr><td><code>indexes()</code></td><td>Rows from <code>SHOW INDEXES</code>.</td></tr>
+            <tr><td><code>constraints()</code></td><td>Rows from <code>SHOW CONSTRAINTS</code>.</td></tr>
+            <tr><td><code>databases()</code></td><td>Rows from <code>SHOW DATABASES</code> &mdash; needs a server with multi-database administration.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Query planning</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>explain($cypher)</code></td><td>EXPLAIN &mdash; the plan rows, without running the query.</td></tr>
+            <tr><td><code>profile($cypher)</code></td><td>PROFILE &mdash; run the query and return the plan with runtime stats.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Cypher helpers (pure, connection-free)</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>escape($value)</code></td><td>Escape <code>\</code> and <code>'</code> for a single-quoted Cypher string literal.</td></tr>
+            <tr><td><code>quote_literal($value)</code></td><td>Wrap a string as a single-quoted Cypher literal (calls <code>escape</code> internally).</td></tr>
+            <tr><td><code>quote_ident($value)</code></td><td>Backtick-quote a Cypher identifier (label / type / property / index name), doubling internal backticks.</td></tr>
+            <tr><td><code>format_value($value)</code></td><td>Format any value as a Cypher literal &mdash; string→<code>'…'</code>, number as-is, bool→<code>true</code>/<code>false</code>, null→<code>null</code>, list→<code>[…]</code>, map→<code>{`k`: v}</code>.</td></tr>
+            <tr><td><code>valid_identifier($value)</code></td><td>True when the string is a valid unquoted Cypher identifier (<code>[A-Za-z_][A-Za-z0-9_]*</code>).</td></tr>
+          </tbody>
+        </table>
+
+        <h3>URL helpers (pure, connection-free)</h3>
+        <table class="example-tbl">
+          <thead><tr><th>Function</th><th>Returns / behaviour</th></tr></thead>
+          <tbody>
+            <tr><td><code>parse_url($url)</code></td><td>Decompose a Bolt URI into a hashref: <code>scheme</code>, <code>host</code>, <code>port</code>, <code>username</code>, <code>password</code> (redacted to <code>***</code>), <code>tls</code> (true for <code>+s</code> / <code>+ssc</code>).</td></tr>
+            <tr><td><code>redact_url($url)</code></td><td>Return the URI with the password replaced by <code>***</code>.</td></tr>
+            <tr><td><code>build_url($parts)</code></td><td>Build a Bolt URI from a parts hashref (inverse of <code>parse_url</code>) &mdash; keys <code>scheme</code> (default <code>neo4j</code>), <code>host</code> (default <code>localhost</code>), <code>port</code>, <code>username</code>, <code>password</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="cypher-safety">
+        <h2>Cypher safety &amp; identifier quoting</h2>
+        <p>Cypher can parametrize values but <em>not</em> structural identifiers &mdash; labels, relationship types, and property names. The graph helpers interpolate those into the query text, so they backtick-quote each one (doubling any internal backtick) to keep interpolation injection-safe. The pure helpers expose the same machinery for hand-written Cypher:</p>
+<pre>p Neo4j::quote_ident("Person")              # `Person`
+p Neo4j::quote_ident("weird`label")         # `weird``label`
+p Neo4j::escape("O'Brien")                  # O\'Brien
+p Neo4j::quote_literal("O'Brien")           # 'O\'Brien'
+p Neo4j::format_value({ a =&gt; 1 })           # {`a`: 1}
+p Neo4j::format_value([1, 2])               # [1, 2]
+p Neo4j::valid_identifier("n1")             # true
+p Neo4j::valid_identifier("1n")             # false</pre>
+        <p>For values inside <code>query</code> / <code>run</code>, always prefer <code>params</code> over building literals by hand &mdash; the bound-parameter path never touches the query text at all.</p>
+      </section>
+
+      <section class="tutorial-section" id="transactions">
+        <h2>Transactions &amp; batch</h2>
+        <p><code>batch</code> runs a list of steps inside a single Bolt transaction. Every step commits together; if any step errors the whole transaction rolls back and the call dies with the failing step's error.</p>
+<pre>val $n = Neo4j::batch([
+    { cypher =&gt; "CREATE (:Person {id: \$id})", params =&gt; { id =&gt; 1 } },
+    { cypher =&gt; "CREATE (:Person {id: \$id})", params =&gt; { id =&gt; 2 } },
+], %conn)
+p $n                       # 2  (committed step count)</pre>
+      </section>
+
+      <section class="tutorial-section" id="planning">
+        <h2>Query planning</h2>
+        <p><code>explain</code> returns the planner's chosen plan without executing the query; <code>profile</code> runs it and returns the plan annotated with runtime stats (db hits, rows). Both bind <code>params</code> like <code>query</code>.</p>
+<pre>val @plan = Neo4j::explain("MATCH (p:Person) WHERE p.id = \$id RETURN p",
+    params =&gt; { id =&gt; 1 }, %conn)
+val @prof = Neo4j::profile("MATCH (p:Person) RETURN count(p) AS n", %conn)</pre>
+      </section>
+
+      <section class="tutorial-section" id="urlhelpers">
+        <h2>URL helpers</h2>
+        <p>Bolt-URI parsing, password redaction, and reconstruction &mdash; all pure, no connection required. Useful for logging a connection string without leaking the password, or normalizing endpoints.</p>
+<pre>val $p = Neo4j::parse_url("neo4j+s://alice:secret\@graph.example.com:7687")
+p $p-&gt;{host}        # graph.example.com
+p $p-&gt;{port}        # 7687
+p $p-&gt;{username}    # alice
+p $p-&gt;{password}    # ***   (always redacted)
+p $p-&gt;{tls}         # true  (neo4j+s implies TLS)
+
+p Neo4j::redact_url("neo4j://alice:secret\@host:7687")   # neo4j://alice:***@host:7687
+p Neo4j::build_url({ scheme =&gt; "neo4j", host =&gt; "db", port =&gt; 7687,
+                     username =&gt; "neo4j", password =&gt; "pw" })   # neo4j://neo4j:pw@db:7687</pre>
+      </section>
+
+      <section class="tutorial-section" id="whypkg">
+        <h2>Why a package, not a builtin</h2>
+        <p>The Bolt driver (<code>neo4rs</code>) pulls in tokio and a TLS stack. That dependency tree ships once, on demand, as an opt-in package &mdash; stryke core is never linked against it.</p>
+        <p>The stryke side is a thin <code>.stk</code> wrapper; the heavy code lives in the <code>libstryke_neo4j</code> cdylib and is dlopened on first <code>use Neo4j</code>. The cdylib holds one shared tokio runtime and one <code>Graph</code> connection pool per <code>(uri, user, db)</code> &mdash; no per-call fork, no per-call reconnect.</p>
+      </section>
+
+      <section class="tutorial-section" id="ffi">
+        <h2>FFI contract</h2>
+        <p>Each export is a <code>#[no_mangle] extern "C" fn neo4j__*</code> taking a JSON request string and returning a JSON response string. stryke's FFI bridge resolves these symbols at load. Handler errors and panics are caught and surfaced as <code>{"error": "..."}</code> &mdash; a panic never crosses the C ABI into the host shell.</p>
+<pre># the .stk wrapper decodes the JSON and dies on an {error} payload
+fn Neo4j::_decode ($name, $json) {
+    val $o = from_json $json
+    if (ref $o eq "HASH" &amp;&amp; exists $o-&gt;{error}) {
+        die "Neo4j::$name: $o-&gt;{error}"
+    }
+    $o
+}</pre>
+      </section>
+
+      <section class="tutorial-section" id="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <table class="example-tbl">
+          <thead><tr><th>Symptom</th><th>Cause / fix</th></tr></thead>
+          <tbody>
+            <tr><td><code>Neo4j::&lt;op&gt;: connect …</code></td><td>The Bolt endpoint is unreachable or credentials are wrong. Check <code>uri</code> / <code>user</code> / <code>password</code> (or <code>$NEO4J_URL</code>), and that the server's Bolt connector is listening.</td></tr>
+            <tr><td><code>Neo4j::&lt;op&gt;: missing cypher</code> (and friends)</td><td>A required argument was omitted &mdash; the handler validates each request field and surfaces the missing key as an error.</td></tr>
+            <tr><td><code>… must be a scalar …</code></td><td>A graph helper got a list or map as a property / key value. Helpers take scalars only; use <code>run</code> with hand-written Cypher for list / map properties.</td></tr>
+            <tr><td><code>databases()</code> errors</td><td><code>SHOW DATABASES</code> needs a server that supports multi-database administration; single-database editions reject it.</td></tr>
+            <tr><td>Stale connection after a server restart</td><td>The pool whose call errored is evicted automatically; the next call reconnects. No manual reset needed.</td></tr>
+            <tr><td>Live <code>t/</code> tests are skipped</td><td>The graph asserts short-circuit unless <code>$NEO4J_URL</code> is set. Point it (plus <code>$NEO4J_USER</code> / <code>$NEO4J_PASS</code>) at a throwaway Neo4j to exercise the query path.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section" id="layout">
+        <h2>Layout</h2>
+<pre>stryke-neo4j/
+&#9500;&#9472;&#9472; Cargo.toml             # cdylib crate (publish = false)
+&#9500;&#9472;&#9472; src/
+&#9474;   &#9492;&#9472;&#9472; lib.rs            # neo4j__* FFI exports + Bolt ops
+&#9500;&#9472;&#9472; lib/                   # stryke .stk wrapper (Neo4j package)
+&#9500;&#9472;&#9472; stryke.toml            # stryke package manifest + ffi exports
+&#9500;&#9472;&#9472; t/                     # offline surface + live tests
+&#9500;&#9472;&#9472; Makefile               # `make install` builds + installs
+&#9492;&#9472;&#9472; docs/                  # this site (GitHub Pages)</pre>
+      </section>
+
+      <section class="tutorial-section" id="siblings">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">stryke-search</a> &mdash; Elasticsearch / OpenSearch</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-docker — engineering report. DOCKER CLIENT FOR STRYKE // CONTAINERS + IMAGES + NETWORKS + VOLUMES + LOGS + EXEC + PRUNE. Architecture, FFI layer, scope, dependencies.">
+  <title>stryke-docker — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-DOCKER &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_docker.{dylib,so}</code> (crate-type = cdylib) &middot; dlopen'd in-process on <code>use Docker</code> &middot; JSON-over-FFI envelope
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-docker</strong> is one of the opt-in connector packages in the stryke ecosystem. Docker client for stryke. Containers, images, networks, volumes, logs, exec, prune against any reachable Docker daemon (Docker Desktop, Linux daemon, Podman with the docker-API socket, remote DOCKER_HOST). The heavy <code>bollard</code> / tokio code ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Docker</code>.</p>
+      <p class="tutorial-subtitle"><code>bollard</code> + tokio for full daemon-API coverage &mdash; opt-in so the stryke core binary stays under 40 MB.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">0.19.0</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Crate type</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val cyan">dlopen</div><div class="stat-label">Load model</div></div>
+        <div class="stat-card"><div class="stat-val green">78</div><div class="stat-label">FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val">JSON-over-FFI</div><div class="stat-label">Envelope</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">In-process cdylib design: the stryke side is a thin <code>.stk</code> wrapper that calls FFI symbols on the dlopen'd library. No subprocess, no pipe &mdash; calls return on the same thread that made them.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>Thin <code>.stk</code> wrapper (<code>Docker</code>) exposing typed helpers across containers, images, networks, volumes, logs, exec, and prune; each serializes args to JSON and parses the response</td></tr>
+          <tr><td>cdylib (<code>libstryke_docker.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn docker__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Docker</code>; a shared tokio runtime + a <code>bollard::Docker</code> client cache keyed by <code>DOCKER_HOST</code> held in <code>OnceCell</code> reuse the same client + HTTP pool across calls; lives until the runtime exits</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
+          <tr><td>Install path</td><td><code>~/.stryke/store/docker@&lt;version&gt;/</code> after <code>make install</code>; <code>use Docker</code> from any stryke script resolves it</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
+      <p><code>bollard</code> + tokio for full daemon-API coverage &mdash; opt-in so the stryke core binary stays under 40 MB.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
+      <p>JSON in / JSON out across the FFI boundary. Each <code>Docker::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>docker__*</code> symbol resolved out of <code>libstryke_docker.{dylib,so}</code>; the cdylib returns a JSON <code>CString</code> the wrapper parses. Dispatch is by symbol name &mdash; there is no <code>verb</code> field in the payload; the wrapper sends the call-specific keys (<code>container</code>, <code>image</code>, <code>tail</code>, &hellip;) plus an optional <code>host</code> connection override. The exports cover containers (including network attach/detach, TTY resize, exec inspect), images (including search + registry inspect), networks, volumes, exec, logs, and prune, plus the daemon-free parse/validate/build helpers; the authoritative list is <code>[ffi].exports</code> in <code>stryke.toml</code> (78 exported symbols). The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by stryke's cdylib loader.</p>
+<pre># request shape (built by the .stk wrapper; dispatched by symbol name)
+docker__stop({"container": "web", "timeout": 5})
+
+# success — the per-fn result object, returned as-is (NOT wrapped in {"result": ...})
+{"ok": true}
+
+# failure — wrapper _decode() die()s with the message
+{"error": "&lt;msg&gt;"}</pre>
+      <p>A handler panic is caught (<code>catch_unwind</code>) and returned as the same <code>{"error": "&hellip;"}</code> shape, so a bad call cannot abort the host process. Null or malformed arguments decode to <code>Value::Null</code> rather than segfaulting &mdash; both paths are pinned by the crate's FFI safety tests.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>PERSISTENT STATE</h2>
+      <p>Two process-lifetime singletons replace the v1 fork-per-call helper:</p>
+      <table class="arch-table">
+        <thead><tr><th>Singleton</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>RUNTIME</code></td><td>One shared <code>tokio</code> multi-thread runtime drives every async daemon call; the blocking FFI entrypoints <code>block_on</code> against it.</td></tr>
+          <tr><td><code>CLIENTS</code></td><td><code>bollard::Docker</code> cache keyed by <code>DOCKER_HOST</code> (socket path / tcp url). The same client + underlying HTTP connection pool is reused across calls instead of reconnecting per operation.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">=</span>SCOPE: DAEMON OPS vs PURE HELPERS</h2>
+      <p>The surface splits cleanly. Daemon ops need a reachable socket and <code>die</code> on daemon errors. The pure helpers &mdash; the <code>parse_* / valid_* / build_* / normalize_* / format_*</code> family for Docker's CLI spec grammars (image refs, ports, mounts, env, labels, devices, tmpfs, restart policies, platforms, memory, durations, cpus, signals, ulimits) &mdash; touch no socket, are deterministic, and are what <code>cargo test</code> exercises without a live daemon.</p>
+      <table class="arch-table">
+        <thead><tr><th>Capability</th><th>Status in 0.19.0</th></tr></thead>
+        <tbody>
+          <tr><td>Snapshot ops (<code>ps</code>, <code>inspect</code>, <code>logs</code>, <code>exec</code>, lifecycle, <code>stats --no-stream</code>, prune)</td><td>shipped</td></tr>
+          <tr><td>Pure parse/validate/build helpers</td><td>shipped</td></tr>
+          <tr><td>Streaming (<code>logs_follow</code>, <code>events</code>)</td><td>deferred &mdash; needs a callback FFI shape</td></tr>
+          <tr><td>Registry-auth / tar (<code>push</code>, <code>build</code>)</td><td>deferred &mdash; needs auth / tar-stream design</td></tr>
+          <tr><td>TLS client certs (<code>DOCKER_CERT_PATH</code> / <code>DOCKER_TLS_VERIFY</code>)</td><td>roadmap</td></tr>
+        </tbody>
+      </table>
+      <p>Calling a deferred op raises a <code>die</code> naming the op and the missing substrate &mdash; scripts fail loudly rather than returning partial data.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE</h2>
+      <p>See the README's <a href="https://github.com/MenkeTechnologies/stryke-docker#readme">"Why this is a package"</a> + <a href="https://github.com/MenkeTechnologies/stryke-docker#0x02-api-reference">"API reference"</a> sections for the authoritative scope. The package is intentionally narrower than its underlying SDK / driver &mdash; the goal is "useful from a shell pipeline", not "complete API coverage".</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Version</td><td>0.19.0 (<code>stryke.toml</code> / <code>Cargo.toml</code>; <code>publish = false</code>)</td></tr>
+          <tr><td>FFI exports</td><td>78 <code>docker__*</code> symbols (<code>[ffi].exports</code> in <code>stryke.toml</code>)</td></tr>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-docker">github.com/MenkeTechnologies/stryke-docker</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-docker/issues">github.com/MenkeTechnologies/stryke-docker/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

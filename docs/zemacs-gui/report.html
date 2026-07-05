@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zemacs-gui — Engineering report. A thin Tauri v2 desktop host that runs the zemacs editor (a Helix fork) in an embedded PTY behind the shared zgui-core baseline: 12 Rust host modules (~3520 LOC), 6 git submodules, 27 UI locales, module map, dependency footprint, test status.">
+  <title>zemacs-gui &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .mapping-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .mapping-card { border:1px solid var(--border);border-left:3px solid var(--magenta);background:var(--bg-card);padding:0.6rem 0.9rem;border-radius:2px; }
+    .mapping-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--magenta);margin:0 0 0.3rem; }
+    .mapping-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.5; }
+    .mapping-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+    .feature-card li code { font-size:10px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZEMACS-GUI &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zemacs-gui" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            module map &middot; dependency footprint &middot; test status
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">zemacs-gui is a thin <strong>Tauri v2</strong> desktop host (<code>app/src-tauri</code>) that runs the external <code>zemacs</code> editor &mdash; a Helix fork &mdash; inside an embedded PTY terminal, behind the shared <strong>zgui-core</strong> app baseline. The Rust host is small by design (~4460 LOC across 15 modules): it resolves the bundled <code>zemacs</code>/<code>stryke</code> sidecars, registers the PTY terminal (shared <code>zpwr-embed-terminal</code> crate), and exposes MacVim-style helpers (file-open intake, read-only directory listing, window chrome) plus the project workbench (fuzzy find-files, find-in-files, search &amp; replace, go-to-symbol, find-definition, TODO/markers, bookmarks, tree file ops, batch rename, recent files, git status/diff, per-line git blame, per-file history, stage/unstage/discard, branch checkout/create, stash save/pop/drop, two-file compare, repo-wide log/graph, diff-revisions, align-columns, comment-toggle, encoding detect/convert, persisted snippets, project code-stats, file cleanup/convert and sort-lines transforms). All UI chrome &mdash; menu bar, dialogs, file tree, command palette, toasts &mdash; comes from the shared <code>zgui-core</code> submodule (<code>window.ZGui.*</code>); the app hand-rolls no widgets. The GUI never edits files itself: every action is bridged into the editor by writing into the PTY (e.g. <code>:open &lt;path&gt;</code>).</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">12</div><div class="stat-label">Rust Host Modules</div></div>
+        <div class="stat-card"><div class="stat-val accent">~3520</div><div class="stat-label">Rust Host LOC</div></div>
+        <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Git Submodules</div></div>
+        <div class="stat-card"><div class="stat-val">27</div><div class="stat-label">UI Locales</div></div>
+        <div class="stat-card"><div class="stat-val green">70</div><div class="stat-label">Tests (32 JS + 38 Rust)</div></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>MODULE MAP</h2>
+      <p class="tutorial-subtitle">The Rust host (<code>app/src-tauri/src</code>) is twelve small modules; the front end mounts the shared zgui baseline and bridges everything into the PTY. The <code>zemacs</code> editor itself is external &mdash; it runs inside the terminal, not as host code.</p>
+      <table class="file-table">
+        <thead><tr><th>Module</th><th>Layer</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--accent);">main.rs</td><td>Rust host</td><td>Tauri entry point &mdash; registers terminal + GUI commands, wires the PTY's output/exit to webview events, sets up single-instance, deep-link and opener plugins.</td></tr>
+          <tr><td style="color:var(--accent);">terminal.rs</td><td>Rust host</td><td>Embedded PTY adapter over the shared <code>zpwr-embed-terminal</code> crate; the editor runs inside this PTY, forwarding <code>on_output</code>/<code>on_exit</code> to the webview.</td></tr>
+          <tr><td style="color:var(--accent);">sidecar.rs</td><td>Rust host</td><td>Resolves the bundled <code>zemacs</code> / <code>stryke</code> sidecars (env override &rarr; beside the executable &rarr; PATH) so the app is self-contained and never depends on PATH.</td></tr>
+          <tr><td style="color:var(--accent);">open_intake.rs</td><td>Rust host</td><td>File-open intake &mdash; the MacVim "open from Finder / <code>mvim</code> CLI / <code>mvim://</code> URL" surface; queues + live-emits <code>open-files</code>. Carries the unit tests.</td></tr>
+          <tr><td style="color:var(--accent);">fs_ops.rs</td><td>Rust host</td><td>Read-only directory listing backing the zgui file-open dialog (<code>ZGui.modal</code> + <code>ZGui.tree</code>); the open itself happens by writing into the PTY.</td></tr>
+          <tr><td style="color:var(--accent);">window_ops.rs</td><td>Rust host</td><td>Window chrome the zgui menubar drives &mdash; MacVim fullscreen / transparency / blur analogs (no native UI).</td></tr>
+          <tr><td style="color:var(--accent);">project.rs</td><td>Rust host</td><td>The project workbench backend: fuzzy find-files, find-in-files (regex/case/word), tree file ops (create/rename/delete/copy), persisted recent files, file stats and git status/branch/diff. Carries its own unit tests.</td></tr>
+          <tr><td style="color:var(--accent);">editor_tools.rs</td><td>Rust host</td><td>The editor-tools backend beside <code>project.rs</code>: persisted bookmarks, project-wide search &amp; replace (regex, preview then apply on disk), a workspace symbol outline (go-to-symbol) and a TODO/marker scan. Carries its own unit tests.</td></tr>
+          <tr><td style="color:var(--accent);">git_tools.rs</td><td>Rust host</td><td>A deeper git surface: per-line <code>blame</code> (line-porcelain parse + dep-free date), per-file history (<code>log --follow</code>) with <code>show</code>-commit diffs, working-tree staging (stage / unstage / discard), and a two-file compare (<code>diff --no-index</code>). Carries its own unit tests.</td></tr>
+          <tr><td style="color:var(--accent);">workbench_ext.rs</td><td>Rust host</td><td>Workbench extras: persisted code snippets (a named text library the front end pastes into the editor) and a read-only project code-stats report (file / line / byte counts by extension, reusing the <code>project.rs</code> tree walker). Carries its own unit tests.</td></tr>
+          <tr><td style="color:var(--accent);">git_ext.rs</td><td>Rust host</td><td>Branch and stash management beside <code>git_tools.rs</code>: list / checkout / create local branches (<code>for-each-ref</code>, flag-guarded refs) and drive the stash (save / list / pop / drop / show patch). Carries its own unit tests (round-trip against a throwaway repo).</td></tr>
+          <tr><td style="color:var(--accent);">text_tools.rs</td><td>Rust host</td><td>On-disk file transforms and navigation: file cleanup/convert (line endings, trailing whitespace, tab expand/tabify, final newline), sort-lines (reverse/case/numeric/unique), find-definition (reuses the <code>editor_tools</code> symbol rules), and batch rename of file base names (preview then apply, collision-guarded). Carries its own unit tests.</td></tr>
+          <tr><td style="color:var(--accent);">edit_ops.rs</td><td>Rust host</td><td>On-disk content transforms beside <code>text_tools.rs</code>: align columns on a delimiter (literal or regex, the way Emacs <code>align-regexp</code> lines up <code>=</code>/<code>:</code>/<code>//</code>) and language-aware comment toggle over a line range (prefix chosen by extension). Preview then apply. Carries its own unit tests.</td></tr>
+          <tr><td style="color:var(--accent);">encoding_ops.rs</td><td>Rust host</td><td>Character-encoding detect + transcode: sniff BOM / UTF-8 / UTF-16LE/BE / Latin-1 and line ending, then convert to UTF-8 (BOM-free), UTF-16LE/BE (BOM-prefixed) or Latin-1. Preview then apply. Carries its own unit tests.</td></tr>
+          <tr><td style="color:var(--accent);">git_more.rs</td><td>Rust host</td><td>Repo-wide git surfaces beside <code>git_tools.rs</code>: whole-repository log (with ref decorations), full <code>show</code>-commit diff, diff between any two revisions (optionally path-scoped, flag-guarded) and the ASCII commit graph across all refs. Carries its own unit tests (round-trip against a throwaway repo).</td></tr>
+          <tr><td style="color:var(--accent);">frontend/main.js</td><td>Frontend</td><td>Shell entry &mdash; mounts <code>ZGui.appShell</code> baseline and execs <code>zemacs</code> in the fullscreen embedded terminal.</td></tr>
+          <tr><td style="color:var(--accent);">frontend/menu.js</td><td>Frontend</td><td>MacVim-style menu bar, &#8984;-shortcuts and Open/Save-As/Help dialogs, built entirely from zgui-core widgets and bridged to the PTY.</td></tr>
+          <tr><td style="color:var(--accent);">frontend/panels.js</td><td>Frontend</td><td>The project workbench overlays (quick-open, find-in-files, search &amp; replace, go-to-symbol, find-definition, TODO/markers, bookmarks, recent, project files, batch rename, align columns, comment toggle, file encoding, snippets, project stats, sort-lines, file cleanup, compare files, git changes / blame / history / repo-log / commit-graph / diff-revisions / staging / branches / stash), added to the &#8984;K palette; drives <code>project.rs</code>/<code>editor_tools.rs</code>/<code>git_tools.rs</code>/<code>git_ext.rs</code>/<code>git_more.rs</code>/<code>text_tools.rs</code>/<code>edit_ops.rs</code>/<code>encoding_ops.rs</code>/<code>workbench_ext.rs</code> and opens results via the PTY.</td></tr>
+          <tr><td style="color:var(--accent);">frontend/terminal.js</td><td>Frontend</td><td>Shared <code>zpwr-embed-terminal</code> xterm.js frontend (PTY transport, geometry persistence).</td></tr>
+          <tr><td style="color:var(--accent);">frontend/i18n.js</td><td>Frontend</td><td>Shared <code>zpwr-i18n</code> runtime (<code>window.t</code>), loading the 27 JSON locale catalogs.</td></tr>
+          <tr><td style="color:var(--accent);">lib/zgui-core</td><td>Submodule</td><td>Shared cyberpunk UI baseline &mdash; <code>ZGui.appShell</code> (&#8984;K palette, colour-scheme picker, settings, CRT/splash), modal, tree, menubar, toast. Sole source of UI elements.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DEPENDENCY FOOTPRINT</h2>
+      <p class="tutorial-subtitle">A deliberately lean dependency set: the Tauri runtime, three Tauri plugins for MacVim-style behaviour, and the shared embedded-terminal crate. Six git submodules are vendored, and the <code>zemacs</code>/<code>stryke</code> binaries ship as Tauri <code>externalBin</code> sidecars &mdash; no PATH dependency.</p>
+      <table class="file-table">
+        <thead><tr><th>Dependency</th><th>Kind</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>tauri 2</td><td>Rust</td><td>Desktop host runtime + webview.</td></tr>
+          <tr><td>serde / serde_json 1</td><td>Rust</td><td>Command payload (de)serialization.</td></tr>
+          <tr><td>tauri-plugin-single-instance 2</td><td>Rust</td><td>Forward a 2nd launch's file args into the running window (MacVim behaviour).</td></tr>
+          <tr><td>tauri-plugin-deep-link 2</td><td>Rust</td><td>Register the <code>mvim</code> / <code>zemacs</code> URL schemes.</td></tr>
+          <tr><td>tauri-plugin-opener 2</td><td>Rust</td><td>Open the log file / data dir from the appShell Diagnostics buttons.</td></tr>
+          <tr><td>zpwr-embed-terminal</td><td>Rust (path)</td><td>Shared embedded PTY terminal crate (also used by Audio-Haxor, ztunnel, ztranslator, zpwr-daw).</td></tr>
+          <tr><td>window-vibrancy 0.6</td><td>Rust (macOS)</td><td>Translucent blurred window material (MacVim transparency analog).</td></tr>
+          <tr><td>@tauri-apps/cli ^2</td><td>JS dev</td><td>Build / dev tooling; pnpm-managed.</td></tr>
+        </tbody>
+      </table>
+      <div class="feature-grid" style="margin-top:1.2rem;">
+        <div class="feature-card"><h4>Six Vendored Submodules</h4><p><code>frontend/lib/zgui-core</code> (UI baseline), <code>crates/zpwr-embed-terminal</code> (PTY), <code>crates/zemacs</code> (the editor itself, a Helix fork), <code>crates/zpwr-file-browser</code>, <code>crates/zpwr-i18n</code>, and <code>crates/zemacs-gui-core</code> (shared GUI core + webui).</p></div>
+        <div class="feature-card"><h4>Self-Contained Sidecars</h4><p>The <code>zemacs</code> and <code>stryke</code> binaries are bundled as Tauri <code>externalBin</code> sidecars, so the app has no PATH dependency.</p></div>
+        <div class="feature-card"><h4>Project Workbench</h4><p>An IDE layer in the &#8984;K palette (and shortcuts): <strong>Quick Open</strong> fuzzy finder (&#8984;P), <strong>Find in Files</strong> with regex/case/word (&#8679;&#8984;J), <strong>Search &amp; Replace</strong> across the tree with regex capture refs, preview and apply-on-disk (&#8679;&#8984;H), <strong>Go to Symbol</strong> workspace outline (&#8679;&#8984;O), <strong>Find Definition</strong> of an exact symbol (&#8679;&#8984;D), a <strong>TODO / Markers</strong> scan (&#8679;&#8984;T), persisted <strong>Bookmarks</strong> (&#8984;B), persisted <strong>Recent Files</strong> (&#8984;E), a <strong>Project Files</strong> tree manager (new/rename/delete/copy/info, &#8679;&#8984;E), <strong>Batch Rename</strong> of file names (preview then apply), persisted <strong>Snippets</strong> inserted via bracketed paste (&#8679;&#8984;I), a <strong>Project Stats</strong> report and a two-file <strong>Compare</strong>. Results open at <code>path:line:col</code> in the editor.</p></div>
+        <div class="feature-card"><h4>Text Transforms</h4><p>On-disk editing helpers that mutate a file then reload it in the editor: <strong>Sort Lines</strong> (reverse / ignore-case / numeric / unique), <strong>File Cleanup</strong> (line endings LF/CRLF, trailing whitespace, tab expand/tabify, final newline), <strong>Align Columns</strong> on a delimiter (literal or regex, align-regexp style), <strong>Comment / Uncomment</strong> a line range (&#8679;&#8984;/) with the language's prefix, and <strong>File Encoding</strong> detect + transcode (UTF-8 / UTF-16LE/BE / Latin-1). Each shows a dry-run preview before Apply. Binary/oversized files are skipped.</p></div>
+        <div class="feature-card"><h4>Git Tools</h4><p>A deeper git surface: the <strong>Git Changes</strong> panel stages / unstages / discards each file inline (with refresh); per-line <strong>Blame</strong> (&#8679;&#8984;B) with commit / author / date and click-to-jump; per-file <strong>History</strong> (<code>log --follow</code>) with the <strong>diff each commit introduced</strong> (<code>show</code>); a repository-wide <strong>Log</strong> and ASCII <strong>Commit Graph</strong>; <strong>Diff Revisions</strong> between any two branches/tags/hashes (path-scopable); a general two-file <strong>Compare</strong> via <code>diff --no-index</code> (works outside a repo); <strong>Branches</strong> (list / checkout / create, flag-guarded); and <strong>Stash</strong> (save / list / pop / drop / show patch).</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle"><code>pnpm test</code> (<code>scripts/test.sh</code>) runs two suites &mdash; a headless JS bridge suite and a Rust unit suite. The runner is honest about what it can build offline, and no end-to-end / UI automation exists yet.</p>
+      <table class="file-table">
+        <thead><tr><th>Suite</th><th class="num">Cases</th><th>What it guards</th></tr></thead>
+        <tbody>
+          <tr><td>crates/zemacs-gui-core/webui/menu.test.cjs</td><td class="num">32</td><td>JS bridge tests &mdash; load <code>menu.js</code> in a <code>vm</code> context with a stubbed <code>__TAURI__</code> and assert the exact escape sequences the menu actions write into the PTY, guarding the command mapping (zemacs is a Helix fork, so buffers, not tabs).</td></tr>
+          <tr><td>Rust <code>#[test]</code> (host modules)</td><td class="num">54</td><td>Unit tests across <code>open_intake.rs</code> (open-intake parsing), <code>project.rs</code> (fuzzy score, walk pruning, file ops, search), <code>editor_tools.rs</code> (bookmarks, replace, symbols, markers), <code>git_tools.rs</code> (civil-date, blame parse, no-index diff), <code>workbench_ext.rs</code> (snippet round-trip, code-stats), <code>git_ext.rs</code> (ref guard, stash selector, branch/stash round-trip in a throwaway repo), <code>text_tools.rs</code> (text transform, sort, leading-number, rename guard, find-definition, on-disk apply), <code>edit_ops.rs</code> (align padding, comment prefix/round-trip, on-disk apply), <code>encoding_ops.rs</code> (BOM/UTF-16/Latin-1 sniff, decode/encode round-trip, transcode on disk) and <code>git_more.rs</code> (rev guard, repo-log parse, log/show/diff/graph round-trip in a throwaway repo).</td></tr>
+          <tr><td>e2e / UI automation</td><td class="num">0</td><td>None yet &mdash; the app is an early-stage MVP.</td></tr>
+        </tbody>
+      </table>
+      <div class="feature-grid" style="margin-top:1.2rem;">
+        <div class="feature-card"><h4>Honest Sidecar Skip</h4><p>Because the Rust binary embeds <code>tauri::generate_context!()</code>, which validates the <code>externalBin</code> sidecars at compile time, the runner stages the sidecars first and honestly <em>skips</em> the Rust pass (rather than failing spuriously) when they can't be produced &mdash; e.g. offline with no <code>zemacs</code> build.</p></div>
+        <div class="feature-card"><h4>Early-Stage MVP</h4><p>No end-to-end / UI automation exists yet. The editor runs in the embedded terminal with the zgui baseline; native tabs, menu bar and open/save dialogs are on the roadmap.</p></div>
+      </div>
+
+    </main>
+    <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      ZEMACS-GUI &middot; ENGINEERING REPORT &middot; 12 RUST HOST MODULES &middot; ~3520 LOC &middot; 6 SUBMODULES &middot; 27 LOCALES &middot; 70 TESTS &middot; MENKETECHNOLOGIES
+    </footer>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

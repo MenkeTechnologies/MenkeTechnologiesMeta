@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vim-awk — Vim / Neovim support for the AWK language (awkrs). Filetype detection for *.awk and awk / awkrs shebangs, a standalone AWK syntax grammar (POSIX core plus gawk / mawk extensions), brace-aware indentation, :make / :AwkRun wiring through awkrs, ALE linting via awkrs -L invalid, and vim-lsp / coc.nvim registration via awkrs --lsp plus nvim-dap via awkrs --dap. Pathogen / vim-plug / native-package install.">
+  <title>vim-awk — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .parity-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0 0.2rem;
+      font-size: 12px;
+    }
+    .parity-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .parity-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok    { color: var(--green); font-weight: 700; }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+    }
+    .cat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .cat-card h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 0 0 0.35rem;
+    }
+    .cat-card p {
+      margin: 0;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VIM-AWK — VIM / NEOVIM SUPPORT FOR THE AWK LANGUAGE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vim-awk" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">filetype detection (*.awk + awk / awkrs shebang) · standalone AWK grammar (POSIX core + gawk / mawk extensions) · brace-aware indent · :make / :AwkRun via awkrs · ALE lint via awkrs -L invalid</p>
+          <p class="docs-build-line">vim-lsp / coc via awkrs --lsp · nvim-dap via awkrs --dap · pathogen / vim-plug / native packages · zero config · opt-outs g:vim_awk_no_ale, g:vim_awk_no_lsp</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/vim-awk" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/vim-awk/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>VIM-AWK &mdash; AWK IN VIM AND NEOVIM</h2>
+      <p class="tutorial-subtitle"><strong>Load it with pathogen, get full AWK support in Vim / Neovim.</strong> awkrs is a pattern / action engine written in Rust with a POSIX / gawk / mawk-style union CLI. vim-awk registers the <code>awk</code> filetype for <code>*.awk</code> files and awk / awkrs shebangs, highlights with a <strong>standalone AWK grammar</strong> (POSIX core plus the gawk / mawk extensions awkrs accepts), indents with a brace-aware indenter, wires <code>:make</code> / <code>:AwkRun</code> through the awkrs binary, registers <code>awkrs -L invalid</code> as an ALE linter, and registers <code>awkrs --lsp</code> for vim-lsp and coc.nvim (plus <code>awkrs --dap</code> guidance for nvim-dap).</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+        <p>The <code>awkrs</code> binary must be on <code>$PATH</code> for running, linting and LSP. Then drop the plugin into your runtimepath:</p>
+<pre># pathogen
+cd ~/.vim/bundle
+git clone https://github.com/MenkeTechnologies/vim-awk
+# then, inside vim:  :Helptags
+
+# vim-plug (add to ~/.vimrc / init.vim)
+Plug 'MenkeTechnologies/vim-awk'
+
+# native packages (Vim 8+ / Neovim)
+git clone https://github.com/MenkeTechnologies/vim-awk \
+    ~/.vim/pack/plugins/start/vim-awk</pre>
+        <p>Open any <code>.awk</code> file and it lights up &mdash; no further configuration. Help: <code>:help vim-awk</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What you get</h2>
+        <div class="cat-grid">
+          <div class="cat-card">
+            <h4>Filetype detection</h4>
+            <p>Every <code>*.awk</code> file becomes <code>filetype=awk</code>. Extensionless scripts with a <code>#!/usr/bin/env awkrs</code> (or awk / gawk / mawk) shebang are detected too.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Syntax highlighting</h4>
+            <p>A standalone AWK grammar — patterns, control flow, statements, built-in variables, built-in functions, field references, regex literals, strings, and operators — POSIX core plus the gawk / mawk extensions awkrs accepts.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Indentation</h4>
+            <p>A standalone brace-aware indenter — indents after a line that opens a block / paren / bracket, dedents lines that start with a closing delimiter.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Run &amp; lint</h4>
+            <p><code>:compiler awkrs</code> wires <code>:make</code> to <code>awkrs -L invalid</code> into the quickfix list; <code>:AwkRun</code> executes the buffer via <code>awkrs -f %</code>. ALE runs the same lint inline.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Language server &amp; debugger</h4>
+            <p>Registers <code>awkrs --lsp</code> for <a href="https://github.com/prabirshrestha/vim-lsp" target="_blank" rel="noopener noreferrer">vim-lsp</a> (filetype <code>awk</code>) — diagnostics, hover, completion; coc.nvim + nvim-dap (<code>awkrs --dap</code>) snippets in the README. Each is invoked with only its flag (no appended <code>--stdio</code>), and the wiring is guarded so the plugin still loads cleanly if the binary is absent.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Zero config</h4>
+            <p>No settings required. Opt-outs: <code>g:vim_awk_no_ale</code>, <code>g:vim_awk_no_lsp</code>, and <code>g:vim_awk_no_maps</code> to skip an integration or the run mapping.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Token categories</h2>
+        <p>The grammar classifies tokens into the same categories the AWK language defines — POSIX awk plus the gawk / mawk extensions awkrs accepts in its union CLI:</p>
+        <table class="parity-table">
+          <thead><tr><th>Group</th><th>Tokens (sample)</th></tr></thead>
+          <tbody>
+            <tr><td>Patterns</td><td><code>BEGIN</code> <code>END</code> <code>BEGINFILE</code> <code>ENDFILE</code> · <code>/regex/</code> · expression patterns</td></tr>
+            <tr><td>Control flow</td><td><code>if</code> <code>else</code> <code>while</code> <code>for</code> <code>do</code> <code>break</code> <code>continue</code> <code>next</code> <code>nextfile</code> <code>exit</code> <code>return</code> <code>delete</code> <code>in</code></td></tr>
+            <tr><td>Statements</td><td><code>print</code> <code>printf</code> <code>getline</code></td></tr>
+            <tr><td>Function definition</td><td><code>function</code> <code>func</code></td></tr>
+            <tr><td>Built-in variables</td><td><code>NR</code> <code>NF</code> <code>FS</code> <code>OFS</code> <code>ORS</code> <code>RS</code> <code>FILENAME</code> <code>FNR</code> <code>RSTART</code> <code>RLENGTH</code> <code>SUBSEP</code> <code>ARGC</code> <code>ARGV</code> <code>ENVIRON</code> <code>CONVFMT</code> <code>OFMT</code></td></tr>
+            <tr><td>String functions</td><td><code>length</code> <code>substr</code> <code>index</code> <code>split</code> <code>sub</code> <code>gsub</code> <code>match</code> <code>sprintf</code> <code>tolower</code> <code>toupper</code></td></tr>
+            <tr><td>Arithmetic functions</td><td><code>sin</code> <code>cos</code> <code>atan2</code> <code>exp</code> <code>log</code> <code>sqrt</code> <code>int</code> <code>rand</code> <code>srand</code></td></tr>
+            <tr><td>I/O functions</td><td><code>system</code> <code>close</code> <code>fflush</code></td></tr>
+            <tr><td>Field references</td><td><code>$0</code> <code>$1</code> <code>$NF</code> <code>$(expr)</code></td></tr>
+          </tbody>
+        </table>
+        <p>ERE regex literals (<code>/.../</code>), double-quoted strings with escapes, the <code>~</code> / <code>!~</code> match operators, numbers, and the full operator set are handled too. Everything links to standard highlight groups, so every colorscheme covers it without bespoke tuning.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Layout</h2>
+<pre>vim-awk/
+&#9500;&#9472;&#9472; ftdetect/awk.vim     # *.awk + awk / awkrs shebang -> filetype=awk
+&#9500;&#9472;&#9472; syntax/awk.vim       # standalone AWK grammar (POSIX + gawk / mawk)
+&#9500;&#9472;&#9472; scripts/gen_syntax.sh # stamps syntax/awk.vim with the awkrs version
+&#9500;&#9472;&#9472; ftplugin/awk.vim     # commentstring '# %s', :compiler awkrs, :AwkRun
+&#9500;&#9472;&#9472; compiler/awkrs.vim   # :make via awkrs -L invalid -> quickfix
+&#9500;&#9472;&#9472; indent/awk.vim       # standalone brace-aware indenter
+&#9500;&#9472;&#9472; plugin/awk.vim       # ALE linter + vim-lsp + coc + nvim-dap wiring
+&#9492;&#9472;&#9472; doc/awk.txt          # :help vim-awk</pre>
+        <p>Standard Vim runtime layout, so pathogen / vim-plug / native packages add it to <code>runtimepath</code> with no special handling. Licensed MIT.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Compatibility</h2>
+        <table class="parity-table">
+          <thead><tr><th>Editor / plugin</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Vim 8+</td><td class="ok">Filetype, syntax, indent, ftplugin, compiler</td></tr>
+            <tr><td>Neovim</td><td class="ok">Same runtime files</td></tr>
+            <tr><td>ALE</td><td class="ok"><code>awkrs -L invalid</code> linter</td></tr>
+            <tr><td>vim-lsp</td><td class="ok"><code>awkrs --lsp</code> language server</td></tr>
+            <tr><td>coc.nvim</td><td class="ok"><code>languageserver</code> config in README</td></tr>
+            <tr><td>nvim-dap</td><td class="ok"><code>awkrs --dap</code> debug adapter config in README</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

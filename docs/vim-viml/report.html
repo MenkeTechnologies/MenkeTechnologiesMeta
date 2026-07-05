@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="vim-viml — engineering report. Runtime-file layout, a standalone VimL syntax grammar (statements, ex commands, scope vars, v: vars, the ported builtin-function subset), filetype detection by extension, rc-family filename and shebang, :make / :VimlRun / ALE / vim-lsp / coc / nvim-dap integration, and editor compatibility for the VimL (Vimscript) language (vimlrs) in Vim and Neovim.">
+  <title>vim-viml — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.accent { color: var(--cyan); }
+    .stat-val.green  { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .parity-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0;
+      font-size: 12px;
+    }
+    .parity-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .parity-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .parity-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .parity-table td.ok    { color: var(--green); font-weight: 700; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// VIM-VIML &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/vim-viml" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Vim / Neovim support for VimL (vimlrs) &middot; standalone VimL grammar (statements / ex commands / scope vars / v: vars / builtins) &middot; *.vim + rc-family + shebang filetype detection &middot; :make / :VimlRun &middot; ALE lint via vimlrs %t &middot; vim-lsp / coc / nvim-dap wiring for vimlrs --lsp / --dap
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>vim-viml</strong> is the Vim / Neovim editor support for <strong>VimL (Vimscript)</strong>, targeting <strong>vimlrs</strong> &mdash; a standalone Vimscript interpreter, a Rust port of Neovim's eval engine running on fusevm. It ships as a standard Vim runtime tree (<code>ftdetect/</code>, <code>syntax/</code>, <code>indent/</code>, <code>ftplugin/</code>, <code>compiler/</code>, <code>plugin/</code>, <code>doc/</code>), so pathogen / vim-plug / native packages add it to <code>runtimepath</code> with no special handling. It <strong>augments</strong> Vim's built-in <code>vim</code> filetype: the ftplugin guards on its own <code>b:did_ftplugin_vimlrs</code> marker so it layers the vimlrs run / make wiring on top of the stock runtime rather than replacing it.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the syntax file is a <strong>standalone VimL grammar</strong> covering the eval-engine surface vimlrs implements &mdash; not a wrapper around another language's syntax. The token surface (statement keywords, ex commands, scope sigils, special <code>v:</code> vars, and the <code>funcs.c</code> builtin subset) is hand-curated; <code>scripts/gen_syntax.sh</code> stamps the file with the vimlrs version it was verified against (currently <strong>v0.1.0</strong>).</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">94</div><div class="stat-label">Built-in functions</div></div>
+        <div class="stat-card"><div class="stat-val accent">33</div><div class="stat-label">Statement keywords</div></div>
+        <div class="stat-card"><div class="stat-val">29</div><div class="stat-label">Ex commands</div></div>
+        <div class="stat-card"><div class="stat-val">18</div><div class="stat-label">Special v: vars</div></div>
+        <div class="stat-card"><div class="stat-val">7</div><div class="stat-label">Runtime files</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Integrations (ALE / lsp / coc / dap)</div></div>
+        <div class="stat-card"><div class="stat-val accent">3</div><div class="stat-label">Detection paths (ext + rc + shebang)</div></div>
+        <div class="stat-card"><div class="stat-val">0</div><div class="stat-label">Config required</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>RUNTIME LAYOUT</h2>
+      <p class="tutorial-subtitle">Standard Vim runtime directories. Each file is loaded automatically when the plugin is on <code>runtimepath</code>; no entry point or sourcing call is required.</p>
+
+      <table class="parity-table">
+        <thead>
+          <tr><th>File</th><th>Responsibility</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>ftdetect/vim.vim</code></td><td>Sets <code>filetype=vim</code> for <code>*.vim</code> files, the vimrc / gvimrc / exrc / init.vim family, and any file whose first line is a vimlrs / vim / nvim shebang (e.g. <code>#!/usr/bin/env vimlrs</code>).</td></tr>
+          <tr><td><code>syntax/vim.vim</code></td><td>Standalone VimL grammar &mdash; command-position comments / shebang, numbers, single- and double-quoted strings, scope-sigil vars, options / env / registers, special <code>v:</code> vars, statement keywords, ex commands, builtin functions, and operators, linked to standard highlight groups.</td></tr>
+          <tr><td><code>indent/vim.vim</code></td><td>Standalone <code>indentexpr</code> (<code>GetVimlIndent()</code>) &mdash; indents after a block-opening keyword (<code>if</code> / <code>while</code> / <code>for</code> / <code>function</code> / <code>try</code>), dedents midpoints (<code>else</code> / <code>elseif</code> / <code>catch</code> / <code>finally</code>) and closers (<code>endif</code> / <code>endfunction</code> / <code>endtry</code>).</td></tr>
+          <tr><td><code>ftplugin/vim.vim</code></td><td>Buffer-local options behind a <code>b:did_ftplugin_vimlrs</code> guard: <code>commentstring=" %s</code>, <code>comments=:"</code>, comment-continuation <code>formatoptions</code>, <code>:compiler vimlrs</code>, the <code>:VimlRun</code> command and its <code>&lt;LocalLeader&gt;r</code> mapping, with a matching <code>b:undo_ftplugin</code>.</td></tr>
+          <tr><td><code>compiler/vimlrs.vim</code></td><td>Defines the <code>vimlrs</code> compiler: <code>makeprg=vimlrs %</code> (positional file &mdash; no <code>-f</code>) with an <code>errorformat</code> for Vim-style <code>EXXX:</code> messages and <code>file:line:col:</code> forms, so <code>:make</code> routes them to the quickfix list.</td></tr>
+          <tr><td><code>plugin/vim.vim</code></td><td>Global wiring: ALE linter definition (<code>vimlrs %t</code>), vim-lsp server registration, coc + nvim-dap snippets (commented), and the <code>g:vim_viml_no_ale</code> / <code>g:vim_viml_no_lsp</code> opt-outs, behind a load guard.</td></tr>
+          <tr><td><code>doc/vimlrs.txt</code></td><td>Vim help (<code>:help vim-viml</code>) with tagged sections for install, detection, syntax, running, linting, LSP, DAP, and options.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>SYNTAX COVERAGE</h2>
+      <p class="tutorial-subtitle">Token categories taken from the VimL language definition &mdash; the eval-engine surface vimlrs implements. Scope-sigil variables (<code>g:</code>, <code>s:</code>, <code>b:</code>, <code>w:</code>, <code>t:</code>, <code>l:</code>, <code>a:</code>, <code>v:</code>), options (<code>&amp;name</code>), env vars (<code>$NAME</code>) and registers (<code>@x</code>) are first-class VimL constructs and are highlighted.</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Group</th><th>Tokens (sample)</th><th>Highlight link</th></tr></thead>
+        <tbody>
+          <tr><td>Statements / control flow</td><td><code>if</code> <code>elseif</code> <code>else</code> <code>endif</code> <code>while</code> <code>for</code> <code>function</code> <code>return</code> <code>try</code> <code>catch</code> <code>finally</code> <code>let</code> <code>const</code> <code>call</code> <code>execute</code> <code>echo</code></td><td class="ok">Statement</td></tr>
+          <tr><td>Ex commands</td><td><code>source</code> <code>runtime</code> <code>normal</code> <code>set</code> <code>setlocal</code> <code>command</code> <code>autocmd</code> <code>augroup</code> <code>highlight</code> <code>syntax</code> <code>map</code> <code>nnoremap</code> <code>sign</code> <code>sleep</code></td><td class="ok">PreProc</td></tr>
+          <tr><td>Scope variables</td><td><code>g:</code> <code>s:</code> <code>b:</code> <code>w:</code> <code>t:</code> <code>l:</code> <code>a:</code> <code>v:</code> · <code>&amp;option</code> · <code>$ENV</code> · <code>@reg</code></td><td class="ok">Identifier / Special</td></tr>
+          <tr><td>Special <code>v:</code> vars</td><td><code>v:true</code> <code>v:false</code> <code>v:null</code> <code>v:count</code> <code>v:val</code> <code>v:key</code> <code>v:exception</code> <code>v:lnum</code> <code>v:errmsg</code> <code>v:shell_error</code></td><td class="ok">Constant</td></tr>
+          <tr><td>List / dict / string fns</td><td><code>add</code> <code>copy</code> <code>extend</code> <code>filter</code> <code>get</code> <code>has_key</code> <code>keys</code> <code>len</code> <code>map</code> <code>range</code> <code>reduce</code> <code>sort</code> <code>split</code> <code>string</code> <code>substitute</code> <code>type</code> <code>values</code></td><td class="ok">Function</td></tr>
+          <tr><td>Math / bit / JSON fns</td><td><code>abs</code> <code>ceil</code> <code>cos</code> <code>floor</code> <code>fmod</code> <code>pow</code> <code>round</code> <code>sin</code> <code>sqrt</code> · <code>and</code> <code>or</code> <code>xor</code> <code>invert</code> · <code>json_encode</code> <code>json_decode</code></td><td class="ok">Function</td></tr>
+          <tr><td>Literals &amp; operators</td><td><code>'literal'</code> / <code>"escaped\n"</code> strings, numbers, <code>.</code> / <code>..</code> concat, <code>=~</code> / <code>!~</code> match</td><td class="ok">String / Number / Operator</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>TOOLING INTEGRATION</h2>
+      <p class="tutorial-subtitle">All integrations degrade gracefully: each is guarded so the plugin loads cleanly whether or not ALE / vim-lsp / coc / nvim-dap is installed. The script file is a <strong>positional</strong> argument (no <code>-f</code> flag), <code>--lsp</code> starts the language server, and <code>--dap</code> the debug adapter. vimlrs has no standalone lint flag yet, so <code>:make</code> / ALE run the script and scrape Vim-style errors off stderr; the live, non-executing diagnostics path is the LSP. Each of <code>--lsp</code> / <code>--dap</code> is the sole flag (no appended <code>--stdio</code>), mirroring <code>stryke --lsp</code>; the vim-lsp / nvim-dap clients add no transport args.</p>
+
+      <table class="parity-table">
+        <thead><tr><th>Integration</th><th>Mechanism</th></tr></thead>
+        <tbody>
+          <tr><td>:make (compiler)</td><td>The <code>vimlrs</code> compiler sets <code>makeprg=vimlrs %</code> with an <code>errorformat</code> matching Vim-style <code>EXXX:</code> and <code>file:line:col:</code> diagnostics, routing them to the quickfix list.</td></tr>
+          <tr><td>:VimlRun</td><td>Buffer-local command running <code>vimlrs %</code> on the current program (positional file &mdash; no <code>-f</code>), mapped to <code>&lt;LocalLeader&gt;r</code> (skipped if <code>g:vim_viml_no_maps</code> is set).</td></tr>
+          <tr><td>ALE</td><td>Registers a linter via <code>ale#linter#Define</code> running <code>vimlrs %t</code>; the handler parses <code>&lt;file&gt;:&lt;line&gt;: &lt;message&gt;</code> and bare <code>EXXX:</code> codes into error items. Skipped if ALE is absent or <code>g:vim_viml_no_ale</code> is set.</td></tr>
+          <tr><td>vim-lsp</td><td>Registers a server (<code>lsp#register_server</code>) running <code>vimlrs --lsp</code>, allowlisted for the <code>vim</code> filetype. Skipped if vim-lsp is absent or <code>g:vim_viml_no_lsp</code> is set.</td></tr>
+          <tr><td>coc.nvim</td><td>A ready-to-paste <code>languageserver</code> block for <code>coc-settings.json</code> using <code>vimlrs --lsp</code>, documented in the plugin source and README.</td></tr>
+          <tr><td>nvim-dap</td><td>A ready-to-paste adapter / configuration block using <code>vimlrs --dap</code>, documented in the plugin source and README.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">@</span>COMPATIBILITY</h2>
+      <table class="parity-table">
+        <thead><tr><th>Target</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Vim 8+</td><td class="ok">Filetype, syntax, indent, ftplugin, compiler, doc</td></tr>
+          <tr><td>Neovim</td><td class="ok">Same runtime files (no Lua required for the core)</td></tr>
+          <tr><td>pathogen / vim-plug / native packages</td><td class="ok">Standard runtime layout &mdash; no plugin-manager-specific handling</td></tr>
+          <tr><td>ALE</td><td class="ok"><code>vimlrs %t</code> linter</td></tr>
+          <tr><td>vim-lsp</td><td class="ok"><code>vimlrs --lsp</code> language server wired</td></tr>
+          <tr><td>coc.nvim</td><td class="ok"><code>languageserver</code> config provided</td></tr>
+          <tr><td>nvim-dap</td><td class="ok"><code>vimlrs --dap</code> adapter config provided</td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

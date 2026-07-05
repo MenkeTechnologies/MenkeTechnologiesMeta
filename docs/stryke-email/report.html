@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-email engineering report — pooled blocking SMTP transport, the campaign loop, mustache-lite templating, and the compliance mechanisms (List-Unsubscribe, suppression, rate limiting).">
+  <title>stryke-email — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-EMAIL &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_email</code> (publish=false) &middot; namespace <code>Email</code> &middot; v0.3.0 &middot; 27 exports &middot; JSON-in/JSON-out FFI over dlopen
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-email</strong> is an opt-in connector package in the stryke ecosystem &mdash; transactional and campaign email through your own authenticated SMTP. It exposes single send, personalized mass mailing, <code>{{merge}}</code> templates, List-Unsubscribe headers, suppression lists, and rate limiting as the <code>Email</code> package.</p>
+      <p class="tutorial-subtitle">Sending is built on <code>lettre</code>'s blocking transport over rustls &mdash; no async runtime, no OpenSSL, no SaaS email API. The dependency set is small, durable, and vendorable, and ships once on demand rather than being linked into stryke core.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">Email</div><div class="stat-label">stryke namespace</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Load model (dlopen)</div></div>
+        <div class="stat-card"><div class="stat-val green">SMTP</div><div class="stat-label">Transport (lettre, rustls)</div></div>
+        <div class="stat-card"><div class="stat-val">27</div><div class="stat-label">Public functions</div></div>
+        <div class="stat-card"><div class="stat-val cyan">v0.3.0</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val green">no tokio</div><div class="stat-label">Runtime</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">License</div></div>
+      </div>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>FFI MODEL</h2>
+      <p>Each public symbol is a <code>#[no_mangle] extern "C" fn email__*</code> that takes a JSON string and returns a JSON string &mdash; one function per namespace method. The <code>.stk</code> wrapper (<code>lib/Email.stk</code>) builds the args dict, calls the symbol via the dlopened cdylib, and decodes the return. A return carrying an <code>error</code> key is converted into a <code>die "Email::&lt;fn&gt;: &lt;reason&gt;"</code>; otherwise the success payload is unwrapped to its meaningful field (<code>value</code> / <code>ok</code> / <code>raw</code> / <code>groups</code> / etc.). Connection params are merged into the request hash by a shared helper, with <code>$SMTP_HOST</code> / <code>$SMTP_USER</code> / <code>$SMTP_PASS</code> as the env fallback when <code>host</code> is absent. The 27 exports are pinned in <code>stryke.toml</code>'s <code>[ffi].exports</code> and mirror the 27 <code>fn Email::</code> wrappers one-to-one.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>TRANSPORT</h2>
+      <p>Sending uses <code>lettre</code>'s blocking <code>SmtpTransport</code>, which carries its own connection pool, over rustls TLS &mdash; no async runtime, no OpenSSL. One transport is cached per <code>(host, port, tls, user)</code> tuple, so a mass mailing reuses a single authenticated, pooled connection instead of reconnecting per message. The TLS mode (<code>starttls</code> / <code>tls</code> / <code>none</code>) selects the relay builder and the default port (587 / 465 / 25); an explicit <code>port</code> overrides the TLS-implied default. <code>none</code> uses <code>builder_dangerous</code> &mdash; intended for a local catch-all like MailHog, not for the open internet.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>THE CAMPAIGN LOOP</h2>
+      <p><code>send_bulk</code> iterates the recipient list once. Per recipient it validates the address, skips it if it is on the suppression set, merges the subject/text/html template with the recipient's vars (plus <code>email</code> and <code>name</code>), injects the List-Unsubscribe header (whose URL may itself be per-recipient via <code>{{email}}</code>), sends, and records <code>{ email, ok, error? }</code>. The aggregate return is <code>{ sent, failed, skipped, results }</code>. Throttling reads <code>rate.delay_ms</code> directly, or derives a millisecond delay from <code>rate.per_minute</code>; the sleep runs between sends, not after the last one. The per-recipient result set lets the caller retry failures and update its own bounce/opt-out state.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>TEMPLATING</h2>
+      <p>The merge engine is a deliberate mustache-lite: <code>{{ key }}</code> substitution only, no conditionals or loops, unknown keys render empty, key names trimmed. String values insert verbatim; other JSON values insert their string form. The scan is byte-wise and UTF-8 safe. Keeping it logic-free avoids turning user-supplied template data into a template-injection surface. It is a pure function, unit-tested in the crate and exercised by the surface test with no SMTP server. <code>render</code> applies it to each of <code>{ subject, text, html }</code>; <code>merge_many</code> applies one template across many var dicts.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>ADDRESS &amp; VALIDATION</h2>
+      <p>Address checks are conservative shape checks, not deliverability lookups (no MX/DNS): one <code>@</code>, a non-empty local part, a dotted domain with no leading/trailing dot and no whitespace. <code>parse</code> / <code>split_addresses</code> split <code>"Name &lt;user@host&gt;"</code> forms, honoring commas inside quotes and angle brackets. <code>normalize</code> drops the display name, trims, and lowercases only the domain (RFC 5321: the local part stays case-sensitive) &mdash; this is the canonical key used by <code>dedupe</code> and suppression matching. <code>validate_message</code> pre-flights a full message dict, returning <code>{ ok, errors }</code> that flag missing/invalid <code>from</code>, no recipients across <code>to</code>/<code>cc</code>/<code>bcc</code>, all-invalid recipients, and an empty body.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>COMPLIANCE AS CODE</h2>
+      <p>The package is scoped to legitimate sending &mdash; your own opted-in recipients, your own SMTP. List-Unsubscribe (RFC 2369 / 8058), suppression filtering, rate limiting, and address validation are first-class.</p>
+      <table class="arch-table">
+        <thead><tr><th>Mechanism</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>List-Unsubscribe</td><td>RFC 2369 / 8058 one-click header auto-added to every <code>send_bulk</code> message; URL templated per recipient</td></tr>
+          <tr><td>Suppression</td><td><code>suppress_filter</code> + <code>send_bulk</code> honor opt-outs and bounces before send</td></tr>
+          <tr><td>Rate limiting</td><td><code>per_minute</code> / <code>delay_ms</code> throttle for deliverability and provider limits</td></tr>
+          <tr><td>Validation</td><td>Address checks before a message is queued</td></tr>
+        </tbody>
+      </table>
+      <p>None of it removes the sender's legal obligation to obtain consent and honor unsubscribes (CAN-SPAM, GDPR); the package provides the mechanisms, not a way around them.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">=</span>FUNCTION SURFACE</h2>
+      <p>27 public <code>Email::</code> functions, grouped by role. Send functions take trailing SMTP <code>%opts</code>; the rest are network-free and CI-tested with no server. Full per-function signatures are in the <a href="index.html#reference">documentation reference</a>.</p>
+      <table class="arch-table">
+        <thead><tr><th>Group</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Send</td><td><code>send</code>, <code>send_raw</code>, <code>send_bulk</code>, <code>send_template</code>, <code>build_message</code>, <code>verify_connection</code></td></tr>
+          <tr><td>Templates</td><td><code>render</code>, <code>merge</code>, <code>merge_many</code></td></tr>
+          <tr><td>Addresses</td><td><code>validate</code>, <code>validate_list</code>, <code>validate_message</code>, <code>parse</code>, <code>split_addresses</code>, <code>format_address</code>, <code>domain</code>, <code>normalize</code></td></tr>
+          <tr><td>Lists</td><td><code>unsubscribe_header</code>, <code>suppress_filter</code>, <code>dedupe</code>, <code>chunk</code>, <code>group_by_domain</code>, <code>mailto</code></td></tr>
+          <tr><td>URL</td><td><code>parse_url</code>, <code>build_url</code>, <code>redact_url</code></td></tr>
+          <tr><td>Meta</td><td><code>version</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>DEPENDENCIES</h2>
+      <p><code>lettre</code> 0.11 with <code>default-features = false</code> (SMTP transport + message builder over rustls, hostname), <code>serde</code> / <code>serde_json</code> (the latter with <code>preserve_order</code>) for the FFI payloads, <code>once_cell</code> + <code>parking_lot</code> for the transport cache. A small, durable, vendorable set &mdash; no tokio, no OpenSSL, no SaaS email API client. The cdylib is <code>publish = false</code>: it ships through stryke's package channel, not crates.io.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Version</td><td>0.3.0</td></tr>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Crate type</td><td><code>cdylib</code> (<code>libstryke_email</code>, <code>publish = false</code>)</td></tr>
+          <tr><td>Public functions</td><td>27 (<code>Email</code> namespace)</td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-email</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-email/issues" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-email/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

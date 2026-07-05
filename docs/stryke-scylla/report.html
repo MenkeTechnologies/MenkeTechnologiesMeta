@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-scylla engineering report — CQL binary protocol via the pure-Rust scylla driver, embedded tokio runtime, Session cache, CqlValue-to-JSON, JSON-in/JSON-out FFI.">
+  <title>stryke-scylla — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-SCYLLA &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Opt-in stryke connector package &middot; cdylib <code>libstryke_scylla</code> &middot; namespace <code>Scylla</code> &middot; JSON-in/JSON-out FFI over dlopen
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>stryke-scylla</strong> is an opt-in connector package in the stryke ecosystem &mdash; a ScyllaDB / Apache Cassandra client. It exposes CQL query, DDL, and schema introspection as the <code>Scylla</code> package, against any ScyllaDB or Cassandra cluster over the native CQL binary protocol.</p>
+      <p class="tutorial-subtitle">The client is the <code>scylla</code> crate, ScyllaDB's official pure-Rust driver. The cdylib owns one embedded tokio runtime and presents a blocking facade, and ships once on demand rather than being linked into stryke core.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">Scylla</div><div class="stat-label">stryke namespace</div></div>
+        <div class="stat-card"><div class="stat-val cyan">opt-in</div><div class="stat-label">Tier</div></div>
+        <div class="stat-card"><div class="stat-val">cdylib</div><div class="stat-label">Load model (dlopen)</div></div>
+        <div class="stat-card"><div class="stat-val green">CQL</div><div class="stat-label">Driver (scylla, rustls)</div></div>
+        <div class="stat-card"><div class="stat-val">34</div><div class="stat-label">Public Scylla:: functions</div></div>
+        <div class="stat-card"><div class="stat-val cyan">34</div><div class="stat-label">scylla__* FFI exports</div></div>
+        <div class="stat-card"><div class="stat-val green">14</div><div class="stat-label">In-crate unit tests</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">License</div></div>
+      </div>
+      <p>Each public <code>Scylla::*</code> wrapper in <code>lib/Scylla.stk</code> maps to one <code>#[no_mangle] extern "C" fn scylla__*</code> export in <code>src/lib.rs</code>, registered in <code>stryke.toml</code> under <code>[ffi].exports</code> &mdash; the surface test pins all 34 wrappers, and the export list, the extern functions, and the wrapper set are kept one-to-one. The 14 unit tests cover the pure logic (escaping, identifier quoting, contact-point normalization, batch construction, <code>CqlValue</code>&rarr;JSON, column-position sorting) and run with no cluster.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>TRANSPORT</h2>
+      <p>The client speaks the CQL binary protocol via ScyllaDB's official pure-Rust driver (the <code>scylla</code> crate), which also targets Apache Cassandra. The driver manages a per-node connection pool and token-aware routing internally.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SYNC OVER ASYNC</h2>
+      <p>The driver is async. Rather than expose futures across the FFI boundary, the cdylib owns a single embedded multi-thread tokio runtime (<code>OnceCell&lt;Runtime&gt;</code>, 2 worker threads, <code>enable_all</code>) and <code>block_on</code>s every driver call, so the stryke-facing API stays synchronous like the other connectors.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SESSION CACHE + CONNECTION RESOLUTION</h2>
+      <p>A <code>Session</code> is cached in a <code>OnceCell&lt;Mutex&lt;HashMap&lt;ConnKey, Arc&lt;Session&gt;&gt;&gt;&gt;</code> keyed by <code>ConnKey { nodes, username, password, keyspace }</code> &mdash; calls sharing those four values reuse the same pooled session; differing on any field opens and caches a distinct one. The connection-free <code>conn_from_opts</code> resolves the opts dict to a <code>ConnKey</code>: a <code>nodes</code> array wins; otherwise <code>node</code>/<code>host</code> (combined with <code>port</code>) is used; an empty result defaults to <code>127.0.0.1:9042</code>. A contact point without a <code>:port</code> gets the default CQL port appended (<code>normalize_node</code>). The <code>Scylla.stk</code> wrapper fills <code>nodes</code> from <code>$SCYLLA_NODES</code> (comma-split) when the caller passes no node. Auth is applied only when a username or password is non-empty; a non-empty keyspace is <code>USE</code>d on the session right after connect.</p>
+      <table class="arch-table">
+        <thead><tr><th>opts key</th><th>Resolution</th></tr></thead>
+        <tbody>
+          <tr><td><code>nodes</code></td><td>Array of contact points; each normalized to <code>host:port</code>. Overrides <code>node</code>/<code>host</code>.</td></tr>
+          <tr><td><code>node</code> / <code>host</code></td><td>Single contact point; <code>port</code> appended when it carries no <code>:port</code>.</td></tr>
+          <tr><td><code>port</code></td><td>Default <code>9042</code>; combined with <code>node</code>/<code>host</code>.</td></tr>
+          <tr><td><code>username</code> / <code>password</code></td><td>PasswordAuthenticator credentials; applied only when non-empty.</td></tr>
+          <tr><td><code>keyspace</code></td><td><code>use_keyspace</code> after connect; part of the cache key.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>ROWS TO JSON</h2>
+      <p>SELECT-style results become an array of row objects keyed by column name (taken from the result's column specs); statements with no result set (DDL/DML) return <code>{ "ok": true }</code>, which the row-returning wrappers surface as an empty array. Each <code>CqlValue</code> is mapped by <code>cql_to_json</code> to its natural JSON form, with a debug-string fallback for exotic types so the converter never fails.</p>
+      <table class="arch-table">
+        <thead><tr><th>CqlValue</th><th>JSON form</th></tr></thead>
+        <tbody>
+          <tr><td><code>Int</code>, <code>BigInt</code>, <code>SmallInt</code>, <code>TinyInt</code></td><td>JSON number</td></tr>
+          <tr><td><code>Float</code>, <code>Double</code></td><td>JSON number</td></tr>
+          <tr><td><code>Text</code>, <code>Ascii</code></td><td>JSON string</td></tr>
+          <tr><td><code>Boolean</code></td><td>JSON bool</td></tr>
+          <tr><td><code>Uuid</code></td><td>JSON string (the UUID's string form)</td></tr>
+          <tr><td><code>List</code>, <code>Set</code></td><td>JSON array (recursively converted)</td></tr>
+          <tr><td><code>Map</code></td><td>JSON array of <code>[key, value]</code> pairs</td></tr>
+          <tr><td><code>Empty</code> / NULL column</td><td>JSON null</td></tr>
+          <tr><td>anything else</td><td><code>format!("{:?}", …)</code> debug string</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI CONTRACT + SAFETY</h2>
+      <p>Each <code>#[no_mangle] extern "C" fn scylla__*</code> is a JSON-string-in / JSON-string-out wrapper. <code>ffi_call</code> parses the argument C-string into a <code>serde_json::Value</code> (null on parse failure), runs the handler inside <code>catch_unwind</code> (<code>AssertUnwindSafe</code>), serializes the result, and hands back a heap <code>CString</code> that stryke later frees via <code>stryke_free_cstring</code>. A handler error becomes <code>{ "error": … }</code> and a panic becomes <code>{ "error": "stryke-scylla handler panicked" }</code>; the <code>Scylla.stk</code> <code>_decode</code> step turns any <code>error</code> field into a stryke <code>die</code>. Queries are unparameterized CQL &mdash; interpolate untrusted values through <code>escape</code> (doubles the single quote per the CQL grammar) or the other pure helpers, which are unit-tested in-crate and validate in CI with no cluster.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">+</span>BATCH CONSTRUCTION</h2>
+      <p><code>batch</code> takes a <code>statements</code> array (errors when missing or empty) and an <code>unlogged</code> flag (default false). <code>build_batch_cql</code> wraps them in a textual <code>BEGIN [UNLOGGED] BATCH … APPLY BATCH;</code> block, trimming each statement and giving it exactly one trailing <code>;</code> (so no <code>;;</code>), then runs it as one statement and returns <code>{ "ok": true, "count": n }</code>. Atomic within a single partition; cross-partition batches are allowed but not atomic.</p>
+      <table class="arch-table">
+        <thead><tr><th>Group</th><th>Functions</th></tr></thead>
+        <tbody>
+          <tr><td>Liveness</td><td><code>version</code>, <code>ping</code>, <code>server_version</code>, <code>cluster_name</code>, <code>peers</code></td></tr>
+          <tr><td>Query</td><td><code>query</code>, <code>query_row</code>, <code>query_value</code>, <code>execute</code>, <code>batch</code>, <code>raw</code></td></tr>
+          <tr><td>Introspection</td><td><code>keyspaces</code>, <code>tables</code>, <code>columns</code>, <code>count</code>, <code>indexes</code>, <code>views</code>, <code>types</code>, <code>partition_keys</code>, <code>clustering_keys</code></td></tr>
+          <tr><td>DDL</td><td><code>create_keyspace</code>, <code>drop_keyspace</code>, <code>create_table</code>, <code>drop_table</code>, <code>create_index</code>, <code>drop_index</code>, <code>truncate</code></td></tr>
+          <tr><td>Pure helpers</td><td><code>escape</code>, <code>quote_literal</code>, <code>quote_ident</code>, <code>valid_identifier</code>, <code>format_value</code>, <code>format_in_list</code>, <code>contact_points</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>DEPENDENCIES</h2>
+      <p><code>scylla</code> (CQL binary protocol, rustls TLS), <code>tokio</code> (embedded runtime), <code>serde_json</code> for the FFI payloads, plus <code>anyhow</code> (error type), <code>once_cell</code> (runtime + session statics), and <code>parking_lot</code> (the session-cache mutex). Pure-Rust throughout &mdash; no native client library, so the cdylib builds and vendors cleanly.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>BUILD + TEST</h2>
+      <p>The <code>Makefile</code> wraps the standard flow: <code>make debug</code> (<code>cargo build</code>), <code>make test</code> (<code>cargo test</code> then <code>s test t/</code>), <code>make install</code> (<code>s pkg install -g .</code>). <code>cargo test</code> runs the 14 in-crate unit tests with no cluster. On the stryke side, <code>t/test_stryke_scylla_surface.stk</code> asserts all 34 public wrappers resolve and exercises the connection-free helpers; <code>t/test_scylla.stk</code> drives a full keyspace &rarr; table &rarr; insert &rarr; count &rarr; query &rarr; index &rarr; drop lifecycle against a live cluster and short-circuits when <code>ping</code> fails, so a cluster-less CI run still passes the connection-free asserts.</p>
+      <table class="arch-table">
+        <thead><tr><th>Tested without a cluster</th><th>What it pins</th></tr></thead>
+        <tbody>
+          <tr><td><code>escape_string</code> / <code>quote_literal</code> / <code>quote_identifier</code></td><td>CQL quote-doubling and identifier quoting</td></tr>
+          <tr><td><code>normalize_node</code> / <code>conn_from_opts</code> / <code>contact_points</code></td><td>Default-port append, nodes-array normalization, localhost fallback</td></tr>
+          <tr><td><code>cql_to_json</code></td><td>Scalar and collection <code>CqlValue</code>&rarr;JSON mapping</td></tr>
+          <tr><td><code>format_value</code> / <code>format_in_list</code></td><td>Typed CQL literals and the <code>(NULL)</code> empty-list sentinel</td></tr>
+          <tr><td><code>build_batch_cql</code></td><td>BATCH wrapping, single trailing <code>;</code>, UNLOGGED variant</td></tr>
+          <tr><td><code>valid_identifier</code> / <code>pluck_column</code> / <code>sort_columns_by_position</code></td><td>Identifier rules, column extraction, key-order sorting</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>License</td><td>MIT</td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-scylla</a></td></tr>
+          <tr><td>Parent language</td><td><a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+          <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/stryke-scylla/issues" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-scylla/issues</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

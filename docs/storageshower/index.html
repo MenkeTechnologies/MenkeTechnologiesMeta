@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="storageshower — a cyberpunk disk usage TUI in Rust. ratatui + crossterm, 30 builtin themes, live disk I/O, SMART health, NFS latency, threshold alerts, drill-down explorer, theme editor.">
+  <title>storageshower — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 50rem;
+      opacity: 0.85;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+    }
+    .feat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .feat-card h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 0 0 0.35rem;
+    }
+    .feat-card p {
+      margin: 0;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .feat-card code { font-size: 11px; color: var(--accent-light); }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+      gap: 0.45rem;
+      margin: 0.6rem 0;
+    }
+    .theme-chip {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--magenta);
+      padding: 0.4rem 0.65rem;
+      background: var(--bg-card);
+      border-radius: 2px;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+    }
+    .theme-chip .theme-key {
+      color: var(--cyan);
+      font-weight: 600;
+    }
+    .theme-chip .theme-name {
+      color: var(--text-dim);
+      margin-left: 0.4rem;
+    }
+
+    .key-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.5rem 0 0.8rem;
+      font-size: 12px;
+    }
+    .key-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .key-table td {
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .key-table td:first-child {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--accent-light);
+      font-weight: 600;
+      white-space: nowrap;
+      width: 12rem;
+    }
+    .key-table td code { color: var(--accent-light); background: var(--bg); padding: 0 3px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STORAGESHOWER — DISK MATRIX HUD</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/storageshower" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://crates.io/crates/storageshower" target="_blank" rel="noopener noreferrer">crates.io</a>
+            <span class="sep">/</span>
+            <a href="https://docs.rs/storageshower" target="_blank" rel="noopener noreferrer">docs.rs</a>
+          </nav>
+          <p class="docs-build-line">storageshower v0.28.7 &middot; ratatui + crossterm &middot; 30 builtin themes &middot; live disk I/O &middot; SMART health &middot; NFS latency &middot; drill-down explorer &middot; theme editor</p>
+          <p class="docs-build-line">13,625 Rust src lines &middot; 49,922 integration test lines &middot; 1,336 test files &middot; 3,692 test functions &middot; macOS + Linux</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/storageshower" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/storageshower/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>JACK INTO YOUR FILESYSTEM</h2>
+      <p class="tutorial-subtitle"><strong>A neon-drenched terminal UI for monitoring disk usage.</strong> Live per-mount usage bars, threshold alerts with bell + border flash, recursive drill-down explorer, live disk I/O throughput (macOS IOKit + Linux <code>/proc/diskstats</code>), SMART health badges, NFS / SMB / SSHFS latency probes, 30 builtin cyberpunk palettes, a live theme editor with per-channel color picker, persistent TOML config. Built in Rust with <a href="https://github.com/ratatui/ratatui">ratatui</a> + <a href="https://github.com/crossterm-rs/crossterm">crossterm</a>.</p>
+
+      <section class="tutorial-section">
+        <h2>Install</h2>
+<pre># Homebrew (recommended)
+brew tap MenkeTechnologies/menketech
+brew install storageshower
+
+# crates.io
+cargo install storageshower
+
+# from source
+git clone https://github.com/MenkeTechnologies/storageshower
+cd storageshower &amp;&amp; cargo build --release
+./target/release/storageshower</pre>
+        <p>Runs on macOS and Linux. Rust &ge; 1.85 (2024 edition) to build from source. LTO + strip in release profile &mdash; lean single binary.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Quick tour</h2>
+<pre>storageshower                            # default palette, all filesystems
+storageshower --color purple -b ascii    # purple palette + ascii bars
+storageshower -s pct -R                  # sort by usage%, descending
+storageshower -l --no-virtual            # local physical disks only
+storageshower -u gib -w 60 -C 85         # GiB units, warn 60%, crit 85%
+storageshower --theme neonpink           # activate a custom theme from config
+storageshower --list-colors              # preview every builtin palette
+storageshower --export-theme --color blue # dump a builtin palette as TOML
+storageshower --config /tmp/ss.conf      # use an alternate config file</pre>
+        <p>CLI flags override config. Every <code>--flag</code> has a paired <code>--no-flag</code> inverse so either direction can be forced from the command line. Config lives at <code>~/.storageshower.conf</code> (TOML). Note: <code>--color</code> has no short alias &mdash; <code>-c</code> is reserved for <code>--config</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Subsystems</h2>
+        <div class="feat-grid">
+          <div class="feat-card">
+            <h4>Render engine</h4>
+            <p>Color-coded usage bars in four styles: <code>gradient</code> (<code>████▓▓▒▒░░</code>), <code>solid</code>, <code>thin</code>, <code>ascii</code>. Cycle with <code>b</code>. Optional border, headers, used/total columns, hover tooltips &mdash; each toggleable from the keyboard.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Telemetry core</h4>
+            <p>Background thread refreshes every 3 s via <code>Arc&lt;Mutex&lt;&gt;&gt;</code>: load avg, memory, CPU count, process count, swap, uptime, kernel, arch, OS, local IP, battery, TTY. Rendered as title / footer segments with per-segment hover tooltips.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Alert subsystem</h4>
+            <p>Threshold crossings (warn / crit) trigger terminal bell (<code>\x07</code>), 2-second pulsing red border flash, dark-red row highlight, and a status-bar message. Auto-clears when usage drops back below threshold. Default thresholds 70 % / 90 % &mdash; cycle in-app with <code>t</code> / <code>z</code>.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Drill-down explorer</h4>
+            <p><code>Enter</code> on any mount enters the directory explorer. Recursive size scan runs in a background worker; entries paint as they're computed with a progress bar + item count. Breadcrumb nav (<code>Enter</code> / <code>Backspace</code> / <code>Esc</code>), sort by size or name, gradient bars relative to the largest entry.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Live disk I/O</h4>
+            <p>Per-mount read/write throughput overlaid on the usage bar (<code>&#9650;1.2M/s &#9660;500K/s</code>). macOS: IOKit <code>IOBlockStorageDriver</code> byte counters via <code>getmntinfo</code> device map. Linux: <code>/proc/diskstats</code> sector counters via <code>/proc/mounts</code>.</p>
+          </div>
+          <div class="feat-card">
+            <h4>SMART health</h4>
+            <p>Per-device SMART probe cached per base device and mapped onto every mount that shares it. macOS via <code>diskutil info</code> SMART Status (Verified / Failing). Linux via <code>/sys/block/*/device/state</code>. Green <code>&#10004;</code> healthy, red <code>&#10007;</code> failing.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Network FS latency</h4>
+            <p>Detects <code>nfs</code>, <code>nfs4</code>, <code>cifs</code>, <code>smbfs</code>, <code>afp</code>, <code>ncp</code>, <code>fuse.sshfs</code>, <code>fuse.rclone</code>, <code>fuse.s3fs</code>, <code>9p</code>, <code>afs</code>. Timed <code>read_dir</code> probe with a 2 s timeout (no root required). Color-coded badge: green &lt; 50 ms, warn 50&ndash;200 ms, red &gt; 200 ms / timeout.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Theme system</h4>
+            <p>30 builtin palettes plus user themes loaded from <code>themes/*.toml</code>. Live theme chooser popup (<code>c</code>) with mouse + scroll preview. Per-channel color editor (<code>C</code>) with <code>h</code>/<code>l</code> &plusmn;1 and <code>H</code>/<code>L</code> &plusmn;10 nudges. <code>--export-theme</code> dumps any builtin to TOML for hand-editing.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Filter mode</h4>
+            <p><code>/</code> opens a case-insensitive substring filter with full readline-style editing: <code>Ctrl+a</code>/<code>e</code>, <code>Ctrl+b</code>/<code>f</code>, <code>Ctrl+w</code>/<code>u</code>/<code>k</code>, <code>Backspace</code>, <code>Delete</code>. <code>0</code> clears.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Mouse input</h4>
+            <p>Left-click selects, double-click drills, column headers cycle sort, drag the column separator to resize, right-click pops a verbose per-row tooltip (capacity, rank, headroom, SMART, I/O). Scroll wheel walks the disk list, drill-down list, or theme chooser.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Persistent config</h4>
+            <p><code>~/.storageshower.conf</code> in TOML. Every CLI flag has a config-file equivalent. Custom palettes are merged from <code>[custom_themes.&lt;name&gt;]</code> blocks and selectable with <code>active_theme</code> or <code>--theme NAME</code>. Rewritten on save from the theme editor and theme chooser.</p>
+          </div>
+          <div class="feat-card">
+            <h4>Bookmarks &amp; export</h4>
+            <p><code>B</code> pins the selected disk to the top (persisted in the <code>bookmarks</code> config array). <code>e</code>/<code>E</code> exports the current disk matrix (mount, percent, used, total) to <code>~/.storageshower.export.txt</code>. <code>o</code>/<code>O</code> opens the selected mount in the system file manager. <code>y</code>/<code>Y</code> copies the mount path to clipboard.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Builtin color palettes</h2>
+        <p>30 hand-tuned cyberpunk palettes ship in <code>storageshower</code>. Cycle with <code>c</code> for the popup chooser (mouse + scroll), or pin one from the CLI with <code>-c &lt;name&gt;</code>. Use <code>--list-colors</code> to see all of them rendered.</p>
+        <div class="theme-grid">
+          <div class="theme-chip"><span class="theme-key">default</span><span class="theme-name">Neon Sprawl</span></div>
+          <div class="theme-chip"><span class="theme-key">green</span><span class="theme-name">Acid Rain</span></div>
+          <div class="theme-chip"><span class="theme-key">blue</span><span class="theme-name">Ice Breaker</span></div>
+          <div class="theme-chip"><span class="theme-key">purple</span><span class="theme-name">Synth Wave</span></div>
+          <div class="theme-chip"><span class="theme-key">amber</span><span class="theme-name">Rust Belt</span></div>
+          <div class="theme-chip"><span class="theme-key">cyan</span><span class="theme-name">Ghost Wire</span></div>
+          <div class="theme-chip"><span class="theme-key">red</span><span class="theme-name">Red Sector</span></div>
+          <div class="theme-chip"><span class="theme-key">sakura</span><span class="theme-name">Sakura Den</span></div>
+          <div class="theme-chip"><span class="theme-key">matrix</span><span class="theme-name">Data Stream</span></div>
+          <div class="theme-chip"><span class="theme-key">sunset</span><span class="theme-name">Solar Flare</span></div>
+          <div class="theme-chip"><span class="theme-key">neonnoir</span><span class="theme-name">Neon Noir</span></div>
+          <div class="theme-chip"><span class="theme-key">chromeheart</span><span class="theme-name">Chrome Heart</span></div>
+          <div class="theme-chip"><span class="theme-key">bladerunner</span><span class="theme-name">Blade Runner</span></div>
+          <div class="theme-chip"><span class="theme-key">voidwalker</span><span class="theme-name">Void Walker</span></div>
+          <div class="theme-chip"><span class="theme-key">toxicwaste</span><span class="theme-name">Toxic Waste</span></div>
+          <div class="theme-chip"><span class="theme-key">cyberfrost</span><span class="theme-name">Cyber Frost</span></div>
+          <div class="theme-chip"><span class="theme-key">plasmacore</span><span class="theme-name">Plasma Core</span></div>
+          <div class="theme-chip"><span class="theme-key">steelnerve</span><span class="theme-name">Steel Nerve</span></div>
+          <div class="theme-chip"><span class="theme-key">darksignal</span><span class="theme-name">Dark Signal</span></div>
+          <div class="theme-chip"><span class="theme-key">glitchpop</span><span class="theme-name">Glitch Pop</span></div>
+          <div class="theme-chip"><span class="theme-key">holoshift</span><span class="theme-name">Holo Shift</span></div>
+          <div class="theme-chip"><span class="theme-key">nightcity</span><span class="theme-name">Night City</span></div>
+          <div class="theme-chip"><span class="theme-key">deepnet</span><span class="theme-name">Deep Net</span></div>
+          <div class="theme-chip"><span class="theme-key">lasergrid</span><span class="theme-name">Laser Grid</span></div>
+          <div class="theme-chip"><span class="theme-key">quantumflux</span><span class="theme-name">Quantum Flux</span></div>
+          <div class="theme-chip"><span class="theme-key">biohazard</span><span class="theme-name">Bio Hazard</span></div>
+          <div class="theme-chip"><span class="theme-key">darkwave</span><span class="theme-name">Darkwave</span></div>
+          <div class="theme-chip"><span class="theme-key">overlock</span><span class="theme-name">Overlock</span></div>
+          <div class="theme-chip"><span class="theme-key">megacorp</span><span class="theme-name">Megacorp</span></div>
+          <div class="theme-chip"><span class="theme-key">zaibatsu</span><span class="theme-name">Zaibatsu</span></div>
+        </div>
+        <p>Ten ready-to-copy custom-theme TOMLs also ship under <a href="https://github.com/MenkeTechnologies/storageshower/tree/main/themes"><code>themes/</code></a> as starting points: <code>acid_rain</code>, <code>data_stream</code>, <code>ghost_wire</code>, <code>ice_breaker</code>, <code>neon_sprawl</code>, <code>red_sector</code>, <code>rust_belt</code>, <code>sakura_den</code>, <code>solar_flare</code>, <code>synth_wave</code>. Each file is a single <code>[custom_themes.&lt;name&gt;]</code> block &mdash; paste one into your config and select it with <code>active_theme</code> or <code>--theme &lt;name&gt;</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>CLI flags</h2>
+        <h3>Sorting</h3>
+        <table class="key-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>-s, --sort MODE</td><td>Sort entries &mdash; <code>name</code>, <code>pct</code>, <code>size</code></td></tr>
+            <tr><td>-R, --reverse / --no-reverse</td><td>Reverse sort order</td></tr>
+            <tr><td>-l, --local-only / --no-local</td><td>Show only local disks (HDD / SSD)</td></tr>
+            <tr><td>--no-virtual / --virtual</td><td>Hide or show virtual filesystems (tmpfs, devfs, etc.)</td></tr>
+          </tbody>
+        </table>
+        <h3>Display</h3>
+        <table class="key-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>-b, --bar-style STYLE</td><td><code>gradient</code> &middot; <code>solid</code> &middot; <code>thin</code> &middot; <code>ascii</code></td></tr>
+            <tr><td>--color PALETTE</td><td>One of the 30 builtin palettes (no short flag &mdash; <code>-c</code> is <code>--config</code>)</td></tr>
+            <tr><td>--theme NAME</td><td>Activate a custom theme (from config <code>[custom_themes.NAME]</code>)</td></tr>
+            <tr><td>--list-colors</td><td>List every builtin palette with a preview</td></tr>
+            <tr><td>--export-theme</td><td>Export the current palette as TOML (pair with <code>-c</code> or <code>--theme</code>)</td></tr>
+            <tr><td>-u, --units MODE</td><td><code>human</code> &middot; <code>gib</code> &middot; <code>mib</code> &middot; <code>bytes</code></td></tr>
+            <tr><td>-k, --compact / --no-compact</td><td>Compact mount names</td></tr>
+            <tr><td>-f, --full-mount / --no-full-mount</td><td>Show full mount paths</td></tr>
+            <tr><td>--bars / --no-bars</td><td>Show or hide usage bars</td></tr>
+            <tr><td>--border / --no-border</td><td>Show or hide border chrome</td></tr>
+            <tr><td>--header / --no-header</td><td>Show or hide column headers</td></tr>
+            <tr><td>--used / --no-used</td><td>Show or hide used / total size</td></tr>
+            <tr><td>--tooltips / --no-tooltips</td><td>Show or hide hover tooltips (right-click still works)</td></tr>
+          </tbody>
+        </table>
+        <h3>Thresholds &amp; columns</h3>
+        <table class="key-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>-w, --warn PCT</td><td>Warning threshold (default 70 %)</td></tr>
+            <tr><td>-C, --crit PCT</td><td>Critical threshold (default 90 %)</td></tr>
+            <tr><td>--col-mount WIDTH</td><td>Mount column width (<code>0</code> = auto)</td></tr>
+            <tr><td>--col-bar-end WIDTH</td><td>Bar-end column width (<code>0</code> = auto)</td></tr>
+            <tr><td>--col-pct WIDTH</td><td>Percentage column width (<code>0</code> = auto)</td></tr>
+          </tbody>
+        </table>
+        <h3>System</h3>
+        <table class="key-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>-r, --refresh SECS</td><td>Data refresh interval (default 1 s)</td></tr>
+            <tr><td>-c, --config PATH</td><td>Config file path (default <code>~/.storageshower.conf</code>)</td></tr>
+            <tr><td>-h, --help</td><td>Display help transmission</td></tr>
+            <tr><td>-V, --version</td><td>Display version information</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Keybindings</h2>
+        <h3>General</h3>
+        <table class="key-table"><tbody>
+          <tr><td>q  Q</td><td>Disconnect (or close help overlay)</td></tr>
+          <tr><td>h  H  ?</td><td>Toggle help HUD</td></tr>
+          <tr><td>p  P</td><td>Pause / resume data stream</td></tr>
+          <tr><td>Esc</td><td>Deselect current disk</td></tr>
+        </tbody></table>
+        <h3>Navigation</h3>
+        <table class="key-table"><tbody>
+          <tr><td>j  Down</td><td>Select next disk</td></tr>
+          <tr><td>k  Up</td><td>Select previous disk</td></tr>
+          <tr><td>G  End</td><td>Jump to last disk</td></tr>
+          <tr><td>Home  Ctrl+g</td><td>Jump to first disk</td></tr>
+          <tr><td>Ctrl+d  /  Ctrl+u</td><td>Half-page down / up</td></tr>
+        </tbody></table>
+        <h3>Sort &amp; filter</h3>
+        <table class="key-table"><tbody>
+          <tr><td>n  N</td><td>Sort by name (again to reverse)</td></tr>
+          <tr><td>u  U</td><td>Sort by usage %</td></tr>
+          <tr><td>s  S</td><td>Sort by size</td></tr>
+          <tr><td>r  R</td><td>Reverse sort</td></tr>
+          <tr><td>l  L</td><td>Local disks only</td></tr>
+          <tr><td>a  A</td><td>Show all filesystems</td></tr>
+          <tr><td>/</td><td>Enter filter mode</td></tr>
+          <tr><td>0</td><td>Purge filter</td></tr>
+        </tbody></table>
+        <h3>Display toggles</h3>
+        <table class="key-table"><tbody>
+          <tr><td>b</td><td>Cycle bar style (gradient / solid / thin / ascii)</td></tr>
+          <tr><td>c</td><td>Theme chooser popup</td></tr>
+          <tr><td>C</td><td>Theme editor (per-channel color picker)</td></tr>
+          <tr><td>v  V</td><td>Toggle usage bars</td></tr>
+          <tr><td>d  D</td><td>Toggle used / size columns</td></tr>
+          <tr><td>g</td><td>Toggle column headers</td></tr>
+          <tr><td>x  X</td><td>Toggle border chrome</td></tr>
+          <tr><td>m  M</td><td>Compact mount names</td></tr>
+          <tr><td>w  W</td><td>Full mount paths</td></tr>
+          <tr><td>i  I</td><td>Cycle units (human / GiB / MiB / bytes)</td></tr>
+          <tr><td>f  F</td><td>Cycle refresh rate (1 / 2 / 5 / 10 s)</td></tr>
+          <tr><td>t  /  z</td><td>Cycle warn / crit threshold</td></tr>
+          <tr><td>T</td><td>Toggle hover tooltips</td></tr>
+        </tbody></table>
+        <h3>Disk ops</h3>
+        <table class="key-table"><tbody>
+          <tr><td>Enter</td><td>Drill down into selected mount</td></tr>
+          <tr><td>o  O</td><td>Open in file manager</td></tr>
+          <tr><td>y  Y</td><td>Copy mount path to clipboard</td></tr>
+          <tr><td>e  E</td><td>Export disk matrix to <code>~/.storageshower.export.txt</code></td></tr>
+          <tr><td>B</td><td>Toggle bookmark (pin to top, persisted)</td></tr>
+        </tbody></table>
+        <h3>Drill-down mode</h3>
+        <table class="key-table"><tbody>
+          <tr><td>j  k</td><td>Navigate entries</td></tr>
+          <tr><td>Enter</td><td>Drill into selected directory</td></tr>
+          <tr><td>Backspace</td><td>Go up one level</td></tr>
+          <tr><td>Esc</td><td>Return to disk list</td></tr>
+          <tr><td>s  S</td><td>Sort by size (again to reverse)</td></tr>
+          <tr><td>n  N</td><td>Sort by name (again to reverse)</td></tr>
+          <tr><td>r  R</td><td>Reverse sort direction</td></tr>
+          <tr><td>o  O</td><td>Open current directory in file manager</td></tr>
+          <tr><td>g  G</td><td>Jump to first / last entry</td></tr>
+        </tbody></table>
+        <h3>Filter edit mode (after <code>/</code>)</h3>
+        <table class="key-table"><tbody>
+          <tr><td>Enter</td><td>Confirm filter</td></tr>
+          <tr><td>Esc</td><td>Cancel (restore previous filter)</td></tr>
+          <tr><td>Backspace  Ctrl+h</td><td>Delete char before cursor</td></tr>
+          <tr><td>Delete</td><td>Delete char at cursor</td></tr>
+          <tr><td>Ctrl+w</td><td>Delete word backward</td></tr>
+          <tr><td>Ctrl+u</td><td>Clear line before cursor</td></tr>
+          <tr><td>Ctrl+k</td><td>Delete to end of line</td></tr>
+          <tr><td>Ctrl+a  Home</td><td>Cursor to start</td></tr>
+          <tr><td>Ctrl+e  End</td><td>Cursor to end</td></tr>
+          <tr><td>Ctrl+b  Left</td><td>Cursor left</td></tr>
+          <tr><td>Ctrl+f  Right</td><td>Cursor right</td></tr>
+        </tbody></table>
+        <h3>Theme editor (<code>C</code>)</h3>
+        <table class="key-table"><tbody>
+          <tr><td>j  k</td><td>Select color channel</td></tr>
+          <tr><td>h  l</td><td>Adjust value &plusmn;1</td></tr>
+          <tr><td>H  L</td><td>Adjust value &plusmn;10</td></tr>
+          <tr><td>Enter  s</td><td>Save (prompts for a name)</td></tr>
+          <tr><td>Esc  q</td><td>Cancel</td></tr>
+        </tbody></table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Mouse input</h2>
+        <table class="key-table">
+          <thead><tr><th>Action</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td>Left-click disk row</td><td>Select disk</td></tr>
+            <tr><td>Left-click selected disk</td><td>Drill down into mount</td></tr>
+            <tr><td>Left-click column header</td><td>Cycle sort on that column</td></tr>
+            <tr><td>Left-click theme chooser row</td><td>Select and preview theme</td></tr>
+            <tr><td>Left-click outside theme popup</td><td>Cancel and revert theme</td></tr>
+            <tr><td>Left-drag column separator</td><td>Resize mount / pct / right columns</td></tr>
+            <tr><td>Right-click disk row</td><td>Verbose tooltip: capacity, rank, headroom, SMART, I/O</td></tr>
+            <tr><td>Right-click drill-down entry</td><td>Verbose tooltip: size, rank, share bar, depth, sort</td></tr>
+            <tr><td>Hover title / footer segment</td><td>Per-segment tooltip (auto-hides after 3 s)</td></tr>
+            <tr><td>Scroll wheel</td><td>Walk the disk list, drill-down list, or theme chooser</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Config file</h2>
+        <p>The config lives at <code>~/.storageshower.conf</code> and is written from the default template (<code>storageshower.default.conf</code>) on first run if it does not yet exist. The theme editor and theme chooser save changes back to it on apply. Keys map directly to the serialized <code>Prefs</code> struct (TOML via <code>serde</code>); custom palettes are merged from <code>[custom_themes.&lt;name&gt;]</code> blocks and selected with <code>active_theme</code> or <code>--theme NAME</code>. Enum-valued keys are serialized in their TitleCase form. Example:</p>
+<pre>sort_mode     = "Pct"        # Name | Pct | Size
+sort_rev      = true
+show_local    = false        # only local disks (HDD/SSD)
+show_all      = true         # include virtual filesystems
+bar_style     = "Gradient"   # Gradient | Solid | Thin | Ascii
+color_mode    = "Purple"     # one of the 30 builtin palettes
+unit_mode     = "Human"      # Human | GiB | MiB | Bytes
+thresh_warn   = 70           # cycle: 50 -> 60 -> 70 -> 80
+thresh_crit   = 90           # cycle: 80 -> 85 -> 90 -> 95
+refresh_rate  = 1            # seconds; cycle: 1 -> 2 -> 5 -> 10
+show_bars     = true
+show_border   = true
+show_header   = true
+show_used     = true
+show_tooltips = true
+compact       = false
+full_mount    = false
+col_mount_w   = 0            # 0 = auto
+col_bar_end_w = 0            # 0 = auto
+col_pct_w     = 0            # 0 = auto
+active_theme  = "neonpink"
+bookmarks     = []
+
+[custom_themes.neonpink]
+blue          = 199
+green         = 46
+purple        = 201
+light_purple  = 213
+royal         = 196
+dark_purple   = 161</pre>
+        <p>A custom theme is six 256-color terminal indices: <code>blue</code>, <code>green</code>, <code>purple</code>, <code>light_purple</code>, <code>royal</code>, <code>dark_purple</code>. Set <code>active_theme</code> (or pass <code>--theme</code>) to a <code>[custom_themes.&lt;name&gt;]</code> key to activate it. Bookmarked mounts persist in the <code>bookmarks</code> array and pin to the top of the list across runs.</p>
+        <p>Inverse <code>--no-flag</code> CLI variants force-override the corresponding config field in either direction &mdash; useful for one-off invocations that diverge from the saved baseline (e.g. <code>--no-tooltips</code> defeats <code>show_tooltips = true</code> without rewriting the file). The shipped <code>storageshower.default.conf</code> in the repo root documents every key inline with comments and a full flag/keybinding reference.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Platform notes</h2>
+        <ul>
+          <li><strong>macOS</strong> &mdash; disk I/O via IOKit <code>IOBlockStorageDriver</code> byte counters, device-to-mount mapping via <code>getmntinfo</code>. SMART via <code>diskutil info</code> (parses the <code>SMART Status:</code> line). Battery via IOKit, local IP from <code>getifaddrs</code>.</li>
+          <li><strong>Linux</strong> &mdash; disk I/O via <code>/proc/diskstats</code> (sector counters, scaled by sector size), mount mapping via <code>/proc/mounts</code>. SMART status read from <code>/sys/block/&lt;dev&gt;/device/state</code>. Battery from <code>/sys/class/power_supply/</code>, local IP via <code>getifaddrs</code>.</li>
+          <li><strong>No root required</strong> for any feature. Network FS latency is a userspace <code>read_dir</code> probe with a 2 s timeout.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Worked examples</h2>
+        <table class="key-table">
+          <thead><tr><th>Goal</th><th>Command</th></tr></thead>
+          <tbody>
+            <tr><td>Local physical disks, no virtual fs</td><td><code>storageshower -l --no-virtual</code></td></tr>
+            <tr><td>Sort by usage %, highest first</td><td><code>storageshower -s pct -R</code></td></tr>
+            <tr><td>Raw byte counts, ASCII bars</td><td><code>storageshower -u bytes -b ascii</code></td></tr>
+            <tr><td>Tighter alert thresholds in GiB</td><td><code>storageshower -u gib -w 60 -C 85</code></td></tr>
+            <tr><td>Minimal chrome (no border / header)</td><td><code>storageshower --no-border --no-header</code></td></tr>
+            <tr><td>Slower refresh for a remote session</td><td><code>storageshower -r 5</code></td></tr>
+            <tr><td>Preview every builtin palette</td><td><code>storageshower --list-colors</code></td></tr>
+            <tr><td>Dump a palette to TOML for editing</td><td><code>storageshower --export-theme --color blue</code></td></tr>
+            <tr><td>Run with an alternate config</td><td><code>storageshower -c /tmp/ss.conf</code></td></tr>
+          </tbody>
+        </table>
+        <p>Inverse forms (<code>--virtual</code>, <code>--no-reverse</code>, <code>--no-local</code>, <code>--bars</code>, <code>--header</code>, &hellip;) let a one-off invocation override a saved config field without rewriting the file.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Troubleshooting</h2>
+        <ul>
+          <li><strong>No disk I/O numbers</strong> &mdash; throughput overlays (<code>&#9650;&#9660;</code>) appear only when a mount has measurable read/write delta between refresh ticks. An idle disk shows no overlay. On macOS the IOKit device map and on Linux <code>/proc/diskstats</code> must resolve the mount to a base device; loopback / overlay / pseudo devices may not map.</li>
+          <li><strong>No SMART badge</strong> &mdash; SMART is probed per base device. Network, virtual, and removable mounts that don't expose SMART (or report an unknown state) render no health glyph rather than a false one.</li>
+          <li><strong>Network mount latency badge missing</strong> &mdash; the probe times out after 2 s; an unreachable mount returns no badge instead of hanging the UI. Only the recognized network filesystem types are probed.</li>
+          <li><strong>Blank mount rows</strong> &mdash; disk enumeration omits entries with an empty mount path, so the TUI never paints a blank row even when the OS reports an odd mount-table entry.</li>
+          <li><strong>Config not loading</strong> &mdash; a malformed <code>~/.storageshower.conf</code> falls back to defaults silently rather than erroring out. Enum keys must use TitleCase values (e.g. <code>color_mode = "Purple"</code>, not <code>"purple"</code>); the on-CLI <code>--color purple</code> uses the kebab/lower form.</li>
+          <li><strong>No root required</strong> &mdash; every probe (I/O, SMART, network latency) is a userspace read; storageshower never needs elevated privileges.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Source &amp; links</h2>
+        <ul>
+          <li><strong>Source</strong> &mdash; <a href="https://github.com/MenkeTechnologies/storageshower">GitHub repo</a></li>
+          <li><strong>Crate</strong> &mdash; <a href="https://crates.io/crates/storageshower">crates.io</a> (<code>cargo install storageshower</code>)</li>
+          <li><strong>Homebrew</strong> &mdash; <a href="https://github.com/MenkeTechnologies/homebrew-menketech">MenkeTechnologies/menketech</a> tap</li>
+          <li><strong>API docs</strong> &mdash; <a href="https://docs.rs/storageshower">docs.rs</a></li>
+          <li><strong>Issues</strong> &mdash; <a href="https://github.com/MenkeTechnologies/storageshower/issues">issue tracker</a></li>
+          <li><strong>README</strong> &mdash; <a href="https://github.com/MenkeTechnologies/storageshower#readme">full README on GitHub</a></li>
+          <li><strong>Engineering report</strong> &mdash; <a href="report.html">report.html</a> (source distribution, test surface, dependency tree, key design decisions)</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

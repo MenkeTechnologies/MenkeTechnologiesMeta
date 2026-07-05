@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-search — Elasticsearch / OpenSearch client for stryke. Index admin, document CRUD, bulk, query DSL builders, scroll, aliases, cluster health. Opt-in package — ships as a Rust cdylib that stryke dlopens in-process on first `use Search`.">
+  <title>stryke-search — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .example-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .example-tbl td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .example-tbl td:first-child { white-space: nowrap; color: var(--accent); font-family: 'Share Tech Mono', ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+  <div class="tutorial-wrap">
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <h1 class="tutorial-brand">// STRYKE-SEARCH &mdash; ELASTICSEARCH / OPENSEARCH CLIENT FOR STRYKE</h1>
+        <nav class="tutorial-nav">
+          <a href="report.html">Engineering report</a>
+          <a href="https://github.com/MenkeTechnologies/stryke-search" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">strykelang</a>
+          <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+      <section>
+        <h2>What it is</h2>
+        <p>
+          <code>stryke-search</code> is an Elasticsearch / OpenSearch client for
+          <a href="https://github.com/MenkeTechnologies/strykelang" target="_blank" rel="noopener noreferrer">stryke</a>.
+          It covers index administration, document CRUD, bulk indexing, the full
+          query DSL, aggregations, scroll and point-in-time pagination, aliases,
+          templates, ingest pipelines, snapshots, stored scripts, tasks, and
+          cluster / node health against any Elasticsearch 7+/8+ or OpenSearch
+          1+/2+ cluster. Both engines speak the same REST API, so one client
+          covers both without version-locked SDK types.
+        </p>
+        <p>
+          It ships as a Rust <code>cdylib</code> that stryke dlopens in-process
+          on the first <code>use Search</code> and registers every
+          <code>search__*</code> export. A <code>ureq</code> HTTP keep-alive
+          connection pool (a <code>ureq::Agent</code>) is cached per
+          <code>(base_url, auth)</code> tuple for the life of the process, so
+          repeated calls reuse pooled sockets instead of reconnecting. There is
+          no tokio and no OpenSSL — the transport is pure-Rust over rustls,
+          which keeps the dependency tree vendorable and the build reproducible.
+          The public surface is <strong>135 functions</strong> in the
+          <code>Search</code> namespace.
+        </p>
+      </section>
+
+      <section>
+        <h2>Install</h2>
+        <pre><code>s add github.com/MenkeTechnologies/stryke-search</code></pre>
+        <p>
+          This records the dependency in your project's <code>stryke.toml</code>
+          and downloads the prebuilt cdylib for your host triple from the GitHub
+          release (SHA-256 verified). On first <code>use Search</code> stryke
+          dlopens the cdylib in-process. Prebuilt targets are
+          <code>x86_64-unknown-linux-gnu</code>,
+          <code>x86_64-apple-darwin</code>, and
+          <code>aarch64-apple-darwin</code>. Then <code>use Search</code> in any
+          stryke script.
+        </p>
+      </section>
+
+      <section>
+        <h2>Quick start</h2>
+        <pre><code>use Search
+
+var %conn
+$conn{url} = "http://127.0.0.1:9200"
+
+# create an index with a mapping
+Search::index_create(
+    "books",
+    body =&gt; { mappings =&gt; { properties =&gt; { title =&gt; { type =&gt; "text" }, year =&gt; { type =&gt; "integer" } } } },
+    %conn,
+)
+
+# index a document and make it searchable
+Search::doc_index("books", { title =&gt; "rust in action", year =&gt; 2019 }, id =&gt; "1", %conn)
+Search::index_refresh(index =&gt; "books", %conn)
+
+# search it
+val $res = Search::search("books", Search::match("title", "rust"), %conn)
+p $res-&gt;{hits}{total}{value}      # 1
+
+# count with a range query
+val $cnt = Search::count("books", Search::range("year", gte =&gt; 2019), %conn)
+p $cnt-&gt;{count}                   # 1</code></pre>
+      </section>
+
+      <section>
+        <h2>Connecting</h2>
+        <p>
+          Connection params come from the <code>%conn</code> opts hash on every
+          network call. When neither <code>url</code> nor <code>host</code> is
+          given, the client falls back to the <code>$SEARCH_URL</code>
+          environment variable. The pure query-DSL builders take no connection.
+        </p>
+        <table class="example-tbl">
+          <tr><td>url</td><td>Full base URL, e.g. <code>https://es.example.com:9243</code>. No default.</td></tr>
+          <tr><td>host</td><td>Used with <code>port</code> / <code>tls</code> when <code>url</code> is absent. Default <code>127.0.0.1</code>.</td></tr>
+          <tr><td>port</td><td>Default <code>9200</code>.</td></tr>
+          <tr><td>tls</td><td><code>true</code> selects the <code>https</code> scheme. Default <code>false</code>.</td></tr>
+          <tr><td>username / password</td><td>HTTP Basic auth.</td></tr>
+          <tr><td>api_key</td><td>Sent as <code>Authorization: ApiKey &lt;key&gt;</code>; wins over Basic when both are set.</td></tr>
+          <tr><td>params</td><td>Hash of extra URL query params merged into the request.</td></tr>
+        </table>
+        <pre><code># explicit host/port/tls with basic auth
+var %conn
+$conn{host}     = "es.example.com"
+$conn{port}     = 9243
+$conn{tls}      = true
+$conn{username} = "elastic"
+$conn{password} = "changeme"
+
+# or one URL, or an API key
+$conn{url}      = "https://es.example.com:9243"
+$conn{api_key}  = "BASE64_ENCODED_KEY"
+
+# or rely on $SEARCH_URL: SEARCH_URL=http://127.0.0.1:9200 s run app.stk</code></pre>
+      </section>
+
+      <section>
+        <h2>API surface</h2>
+        <p>
+          The 135-function FFI surface, grouped. Network ops take a trailing
+          <code>%conn</code> opts hash; the query-DSL, aggregation, body, and URL
+          builders are pure and take no connection.
+        </p>
+        <table class="example-tbl">
+          <tr><td>Version + liveness</td><td>version, ping, info, health</td></tr>
+          <tr><td>Cluster + nodes</td><td>cluster_stats, cluster_state, cluster_settings_get, cluster_settings_put, nodes_info, nodes_stats, pending_tasks, allocation_explain, cat, raw</td></tr>
+          <tr><td>Index admin</td><td>index_create, index_delete, index_exists, index_list, index_refresh, index_open, index_close, index_stats, forcemerge, flush, clear_cache, settings_get, settings_update, mapping_get, mapping_put, field_caps</td></tr>
+          <tr><td>Aliases</td><td>alias_add, alias_remove, alias_get</td></tr>
+          <tr><td>Templates</td><td>index_template_put, index_template_get, index_template_delete, index_template_exists, component_template_put, component_template_get, component_template_delete</td></tr>
+          <tr><td>Documents</td><td>doc_index, doc_get, doc_exists, doc_update, doc_delete, mget, bulk, termvectors, mtermvectors</td></tr>
+          <tr><td>Search</td><td>search, count, msearch, search_aggs, search_shards, scroll_start, scroll_next, scroll_clear, delete_by_query, update_by_query, reindex, analyze, explain, pit_open, pit_close</td></tr>
+          <tr><td>Query DSL builders</td><td>match_all, match, match_phrase, match_phrase_prefix, term, terms, range, prefix, wildcard, regexp, fuzzy, exists, ids, query_string, simple_query_string, multi_match, geo_distance, geo_bounding_box, nested, constant_score, dis_max, function_score, more_like_this, bool</td></tr>
+          <tr><td>Aggregations</td><td>agg, agg_terms, agg_avg, agg_sum, agg_min, agg_max, agg_stats, agg_extended_stats, agg_cardinality, agg_value_count, agg_percentiles, agg_histogram, agg_date_histogram, agg_range, agg_filter, agg_missing, agg_nested, agg_top_hits, agg_global</td></tr>
+          <tr><td>Body + fields</td><td>query_body, sort, highlight, bulk_ndjson, escape</td></tr>
+          <tr><td>Ingest pipelines</td><td>ingest_put, ingest_get, ingest_delete, ingest_simulate</td></tr>
+          <tr><td>Snapshot + repo</td><td>repo_create, repo_get, repo_delete, snapshot_create, snapshot_get, snapshot_delete, snapshot_restore</td></tr>
+          <tr><td>Tasks</td><td>tasks_list, tasks_get, tasks_cancel</td></tr>
+          <tr><td>Stored scripts + templates</td><td>script_put, script_get, script_delete, search_template, render_template</td></tr>
+          <tr><td>URL helpers</td><td>build_url, parse_url, redact_url</td></tr>
+          <tr><td>Validation</td><td>valid_index_name</td></tr>
+        </table>
+        <p>The full reference lives in the <a href="https://github.com/MenkeTechnologies/stryke-search#readme">README</a>; the architecture is in the <a href="report.html">engineering report</a>.</p>
+      </section>
+
+      <section>
+        <h2>Queries + aggregations</h2>
+        <p>
+          Query builders return <strong>bare clauses</strong> (e.g.
+          <code>{"match":{…}}</code>), so they nest directly inside
+          <code>bool</code> / <code>nested</code> / <code>constant_score</code>.
+          <code>Search::search</code> and <code>Search::count</code> auto-wrap a
+          top-level clause as <code>{"query": clause}</code>. Pass a full body
+          built with <code>Search::query_body</code> when you need
+          <code>aggs</code> / <code>sort</code> / <code>size</code>.
+        </p>
+        <pre><code># bool query: must match title, filter by year range
+val $q = Search::bool(
+    must   =&gt; [ Search::match("title", "rust") ],
+    filter =&gt; [ Search::range("year", gte =&gt; 2018) ],
+)
+val $hits = Search::search("books", $q, %conn)
+
+# aggregations: average price bucketed by category
+val $res = Search::search_aggs(
+    "products",
+    { by_cat =&gt; Search::agg_terms("category", size =&gt; 10) },
+    %conn,
+)
+p $res-&gt;{aggregations}{by_cat}{buckets}
+
+# full body with query + sort + size
+val $body = Search::query_body(
+    query =&gt; Search::match("title", "rust"),
+    sort  =&gt; Search::sort("year", order =&gt; "desc"),
+    size  =&gt; 20,
+)
+val $page = Search::search("books", $body, %conn)</code></pre>
+        <p>The builders are pure — they construct clauses with no cluster present:</p>
+        <pre><code># geo bounding box: docs whose `loc` is inside the box
+Search::geo_bounding_box("loc", { lat =&gt; 40.73, lon =&gt; -74.1 }, { lat =&gt; 40.01, lon =&gt; -71.12 })
+
+# function_score: re-score with a random function
+Search::function_score(Search::match_all(), [{ random_score =&gt; {} }], boost_mode =&gt; "multiply")
+
+# more_like_this across two fields
+Search::more_like_this(["title", "body"], "quick brown fox", min_term_freq =&gt; 1)
+
+# top_hits aggregation
+Search::agg_top_hits(size =&gt; 3)</code></pre>
+      </section>
+
+      <section>
+        <h2>Bulk + pagination</h2>
+        <p>
+          Bulk ops are an array of op hashes; the cdylib serializes the NDJSON
+          body. <code>Search::bulk_ndjson</code> builds the same body without
+          sending it, for inspection or batching.
+        </p>
+        <pre><code>Search::bulk(
+    [
+        { action =&gt; "index",  id =&gt; "2", document =&gt; { title =&gt; "the rust book" } },
+        { action =&gt; "update", id =&gt; "1", doc      =&gt; { year =&gt; 2020 } },
+        { action =&gt; "delete", id =&gt; "3" },
+    ],
+    index =&gt; "books",
+    %conn,
+)
+
+# scroll through a large result set
+val $first = Search::scroll_start("books", Search::match_all(), scroll =&gt; "1m", %conn)
+val $more  = Search::scroll_next($first-&gt;{_scroll_id}, %conn)
+Search::scroll_clear($first-&gt;{_scroll_id}, %conn)</code></pre>
+      </section>
+
+      <section>
+        <h2>URL helpers + validation</h2>
+        <p>
+          The URL helpers and <code>valid_index_name</code> are pure and need no
+          cluster. <code>redact_url</code> strips credentials for safe logging.
+        </p>
+        <pre><code>Search::build_url(host =&gt; "h", port =&gt; 9200)          # "http://h:9200"
+Search::redact_url("https://u:p\@h:9200")           # "https://***\@h:9200"
+Search::escape("a+b")                               # "a\\+b" (Lucene-escaped)
+
+val $pu = Search::parse_url("https://es.example.com:9243/prefix")
+p $pu-&gt;{host}                                        # "es.example.com"
+p $pu-&gt;{port}                                        # 9243
+
+Search::valid_index_name("Books")                   # { name, valid, reason }</code></pre>
+      </section>
+
+      <section>
+        <h2>Errors</h2>
+        <p>
+          When the cdylib reports an error, the wrapper <code>die</code>s with a
+          message of the form <code>Search::&lt;fn&gt;: &lt;reason&gt;</code> —
+          e.g. a missing index or a malformed query body surfaces as a raised
+          stryke exception rather than a silent <code>{ error: … }</code> hash.
+          FFI handlers run inside <code>catch_unwind</code>, so a panic becomes
+          an error result instead of unwinding across the FFI boundary. Wrap
+          calls in <code>try</code> / <code>catch</code> to handle failures.
+        </p>
+      </section>
+
+      <section>
+        <h2>Build + test</h2>
+        <pre><code>make debug       # cargo build
+make test        # cargo test, then `s test t/` (needs $SEARCH_URL or 127.0.0.1:9200)
+make install     # s pkg install -g . (cdylib lands in ~/.stryke/store/search@&lt;ver&gt;/)</code></pre>
+        <p>
+          <code>cargo test</code> runs the in-crate unit tests (NDJSON build,
+          Lucene escaping, URL parse / redact, basic-auth header,
+          percent-encoding) with no cluster required.
+          <code>t/test_stryke_search_surface.stk</code> pins the wrapper surface
+          and the query-DSL builders;
+          <code>t/test_search.stk</code> runs end-to-end CRUD + search against a
+          live cluster and short-circuits when none answers.
+        </p>
+      </section>
+
+      <section>
+        <h2>Package family</h2>
+        <p>Part of the stryke connector family under the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> — MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> — PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> — Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> — embedded DuckDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> — Apache Kafka</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Sibling packages</h2>
+        <p>Part of the stryke package family. Browse the others via the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella repo:</p>
+        <ul>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-arrow" target="_blank" rel="noopener noreferrer">stryke-arrow</a> &mdash; Apache Arrow / Parquet / Feather</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-aws" target="_blank" rel="noopener noreferrer">stryke-aws</a> &mdash; S3, DynamoDB, SQS, Lambda, STS</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-azure" target="_blank" rel="noopener noreferrer">stryke-azure</a> &mdash; Blob, Queues, Cosmos DB, Key Vault, Entra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-clickhouse" target="_blank" rel="noopener noreferrer">stryke-clickhouse</a> &mdash; ClickHouse</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-demo" target="_blank" rel="noopener noreferrer">stryke-demo</a> &mdash; live demos for every connector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-docker" target="_blank" rel="noopener noreferrer">stryke-docker</a> &mdash; Docker daemon API</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-duckdb" target="_blank" rel="noopener noreferrer">stryke-duckdb</a> &mdash; embedded DuckDB SQL engine</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-email" target="_blank" rel="noopener noreferrer">stryke-email</a> &mdash; email + campaign client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-fleet" target="_blank" rel="noopener noreferrer">stryke-fleet</a> &mdash; parallel expect/PTY automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gcp" target="_blank" rel="noopener noreferrer">stryke-gcp</a> &mdash; Cloud Storage, Pub/Sub, Secret Manager, BigQuery, Firestore</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-grpc" target="_blank" rel="noopener noreferrer">stryke-grpc</a> &mdash; reflection-based gRPC client</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-gui" target="_blank" rel="noopener noreferrer">stryke-gui</a> &mdash; mouse / keyboard / screen / clipboard automation</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-k8s" target="_blank" rel="noopener noreferrer">stryke-k8s</a> &mdash; Kubernetes</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-kafka" target="_blank" rel="noopener noreferrer">stryke-kafka</a> &mdash; Apache Kafka</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mcpd" target="_blank" rel="noopener noreferrer">stryke-mcpd</a> &mdash; MCP servers without a runtime</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mongo" target="_blank" rel="noopener noreferrer">stryke-mongo</a> &mdash; MongoDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mssql" target="_blank" rel="noopener noreferrer">stryke-mssql</a> &mdash; Microsoft SQL Server</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-mysql" target="_blank" rel="noopener noreferrer">stryke-mysql</a> &mdash; MySQL / MariaDB</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-neo4j" target="_blank" rel="noopener noreferrer">stryke-neo4j</a> &mdash; Neo4j graph (Bolt)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-office" target="_blank" rel="noopener noreferrer">stryke-office</a> &mdash; Office docs / PDF / images</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-parquet" target="_blank" rel="noopener noreferrer">stryke-parquet</a> &mdash; Parquet file inspector</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-polars" target="_blank" rel="noopener noreferrer">stryke-polars</a> &mdash; Polars + ndarray + linalg + FFT</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-postgres" target="_blank" rel="noopener noreferrer">stryke-postgres</a> &mdash; PostgreSQL</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-redis" target="_blank" rel="noopener noreferrer">stryke-redis</a> &mdash; Redis / Valkey</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scrape" target="_blank" rel="noopener noreferrer">stryke-scrape</a> &mdash; web scraping / crawling</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-scylla" target="_blank" rel="noopener noreferrer">stryke-scylla</a> &mdash; ScyllaDB / Cassandra</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-selenium" target="_blank" rel="noopener noreferrer">stryke-selenium</a> &mdash; browser automation (WebDriver)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-spark" target="_blank" rel="noopener noreferrer">stryke-spark</a> &mdash; Spark Connect (no JVM)</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-utils" target="_blank" rel="noopener noreferrer">stryke-utils</a> &mdash; pure-stryke utility belt</li>
+          <li><a href="https://github.com/MenkeTechnologies/stryke-zmq" target="_blank" rel="noopener noreferrer">stryke-zmq</a> &mdash; ZeroMQ messaging</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="tutorial-footer">
+      <p>MIT &middot; MenkeTechnologies</p>
+    </footer>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
