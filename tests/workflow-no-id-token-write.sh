@@ -69,6 +69,10 @@ declare -A OIDC_ALLOWLIST=(
     # can mint an OIDC token for the github-pages environment — first-party action,
     # no cloud-cred exchange.
     [./app-store/.github/workflows/jekyll-gh-pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party Jekyll Pages workflow; deploys the app-store site)"
+    # zwire (Chromium superset) publishes its own docs site via the same
+    # first-party actions/deploy-pages OIDC flow (configure-pages ->
+    # upload-pages-artifact -> deploy-pages) — no cloud-cred exchange.
+    [./zwire/.github/workflows/pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party; deploys zwire's docs site)"
 )
 
 checked=0
