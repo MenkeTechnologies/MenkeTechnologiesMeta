@@ -18,8 +18,8 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~195 candidates (numbered entries through 167 plus lettered sub-entries — 11a, 104a, the
-zterminal additions 105a–105n, and the zemacs additions 120a–120r). Marquee claims (the six original
+Total: ~196 candidates (numbered entries through 167 plus lettered sub-entries — 11a, 104a, the
+zterminal additions 105a–105n, and the zemacs additions 120a–120s). Marquee claims (the six original
 ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
 ---
@@ -1337,6 +1337,24 @@ the assistant compiled in," not first-AI-editor; "no prior art found" is non-exh
 proven. It is also self-described **Phase 1** — non-streaming single-turn chat; the streaming chat
 panel, inline edit, and autonomous agent are scaffolded in the module docs but not yet wired. A
 zemacs (Helix-fork) addition.
+
+**120s. First editor to source both a real Vimscript engine and a real Emacs Lisp engine at init** — `high`
+At startup zemacs runs one `load_init_scripts` pass that sources *both* interpreter families through
+genuinely embedded engines: Emacs Lisp init (`init.el`, and — opt-in — the user's personal
+`~/.emacs.d/init.el` / `~/.config/emacs/init.el` / `~/.emacs`) executed by the embedded **elisprs**
+interpreter, then Vim config (`init.vim`, and — opt-in — `~/.vimrc` / `~/.vim/vimrc` /
+`~/.config/nvim/init.vim`) executed by the embedded **vimlrs** Vimscript engine. Both are real
+interpreters wired to the live buffer/keymap/options — not config emulation or a settings shim — so a
+single editor honours a `.vimrc`'s `:set`/`:map`/`:colorscheme` *and* an `init.el`'s Lisp against the
+same session at boot. *Basis:* `zemacs-term/src/commands/scripting/mod.rs` (`load_init_scripts` — elisp
+candidates + `elisprs::eval_str`, then the `#[cfg(unix)]` vimlrs `:source` block), called from
+`zemacs-term/src/main.rs:175` via `Application::load_init_scripts` (`zemacs-term/src/application.rs:503`);
+end-to-end tests `zemacs-term/tests/{vimrc_theme,custom_source_files}.rs`. *Caveat:* Emacs sources
+`init.el` (its native language) and Vim/Neovim source a vimrc (native, plus Lua in Neovim); evil-mode
+emulates Vim inside Emacs but does *not* run a real Vimscript interpreter over your `.vimrc`, and no
+editor was found that boots by executing both a Vim engine and an Emacs Lisp engine. Personal-config
+sourcing is off by default (zemacs is neither Vim nor Emacs and won't silently inherit either); the
+"first" framing rests on a non-exhaustive search. A zemacs (Helix-fork) addition.
 
 **121. Reflection-generated, drift-proof editor language tooling for a shell** — `med`
 Editor support (Emacs major mode, Vim/Neovim runtime, VS Code extension) for the `zshrs` shell
