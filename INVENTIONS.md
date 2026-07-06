@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~194 candidates (numbered entries through 166 plus lettered sub-entries — 11a, 104a, the
+Total: ~195 candidates (numbered entries through 167 plus lettered sub-entries — 11a, 104a, the
 zterminal additions 105a–105n, and the zemacs additions 120a–120r). Marquee claims (the six original
 ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
@@ -1784,6 +1784,31 @@ URLs. "None found", not proven: browsers ship single-purpose native-messaging ho
 host shipped with the browser *and* reused verbatim by an editor and an extension host has no
 prior art found; search not exhaustive. The daemon is a privileged local process (same trust
 model as any native-messaging host).
+
+**167. Web browser with a built-in JSON REPL/console for driving its own native host + background worker** — `med`
+zwire ships a dedicated **HOST** page (a first-class HUD tab, reachable from the sidebar
+and the ⌘K palette) that is an interactive **JSON-in / JSON-out REPL** to `zwire-host`, the
+browser's native local process, over a persistent `connectNative` port: a resizable code
+editor for the request, a **collapsible JSON-tree** rendering of every reply *and* every
+streamed/pushed event, a **catalog of the entire host command surface** (49 commands — KV
+store, filesystem, `fs_walk` crawl, exec, background jobs, ps/kill, pub/sub bus, sysinfo,
+clipboard/notify/open, PTY, host peering — grouped and click-to-load), a live-tile view of
+the same statusbar telemetry the host streams, command history, and Save-As export of the
+whole transcript. The extension's own **background service worker** is drivable too —
+content-script palettes relay JSON to the worker (`zb-host`), which forwards to the host —
+and a user-defined `host` command type fires arbitrary JSON from anywhere in the browser.
+*Basis:* `zwire/extensions/hud-internal/pages/host.js` (+ `host.html`;
+`chrome.runtime.connectNative`, `Z.codeEditor` request editor, `Z.jsonView` tree log, the
+49-entry command catalog, `exportLog` via `chrome.downloads` Save-As);
+`native/zwire-host/src/session.rs` (`handle_cmd` JSON dispatch); `background.js` `zb-host`
+relay; the `host` custom-command type in `pages/commands.js` + `zpalette.js`. *Caveat:* the
+REPL surfaces an already-existing protocol — the novelty is shipping an in-browser
+interactive console/REPL whose target is the browser's **own native host + background
+worker** (with a full command catalog + JSON-tree I/O), not the protocol itself. "None
+found", not proven: browsers expose DevTools consoles for *page* JS, and extensions ship
+native-messaging hosts, but an in-product REPL aimed at the browser's native + background
+processes has no prior art found; search not exhaustive. Same privileged-local-process
+trust model as any native-messaging host.
 
 ---
 
