@@ -51,6 +51,7 @@ primary_bin[powerliners]="powerline"
 primary_bin[storageshower]="storageshower"
 primary_bin[ztmux]="ztmux"
 primary_bin[htoprs]="htoprs"
+primary_bin[zemacs]="zemacs"
 
 checked=0
 missing=0
