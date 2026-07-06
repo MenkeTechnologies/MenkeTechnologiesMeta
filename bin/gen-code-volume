@@ -21,187 +21,182 @@
 #
 # Requires: tokei, git.
 
-val $TOPN  = 10;     # repos shown in the highlights table
-val $THRESH = 20000; # languages below this code count fold into one "Other" row
-val $DAYS  = 9200;   # ~40-year career in working days
-val $STK   = 'Stryke (`.stk`)';
+val $TOPN  = 10     # repos shown in the highlights table
+val $THRESH = 20000 # languages below this code count fold into one "Other" row
+val $DAYS  = 9200   # ~40-year career in working days
+val $STK   = 'Stryke (`.stk`)'
 
 fn commify($n) {
-    var $s = "$n";
-    1 while $s =~ s/(\d)(\d{3})(?!\d)/$1,$2/;
-    return $s;
+    var $s = "$n"
+    1 while $s =~ s/(\d)(\d{3})(?!\d)/$1,$2/
+    return $s
 }
 
 # multiplier formatting: one decimal under 10× (e.g. ~9.5×), integer above.
 fn round_mult($m) {
-    return ($m < 10) ? sprintf("%.1f", $m) : sprintf("%.0f", $m);
+    return ($m < 10) ? sprintf("%.1f", $m) : sprintf("%.0f", $m)
 }
 
 # replace the body between <!-- BEGIN gen-code-volume:TAG --> / <!-- END … -->.
 # index/substr rather than a regex: the markers are fixed literals, so this
 # avoids any quotemeta / multiline-regex behavior differences.
 fn splice_region($md, $tag, $body) {
-    var $b = "<!-- BEGIN gen-code-volume:$tag -->";
-    var $e = "<!-- END gen-code-volume:$tag -->";
-    var $i = index($md, $b);
-    die "gen-code-volume: BEGIN marker '$tag' not found in README.md\n" if $i < 0;
-    var $j = index($md, $e, $i);
-    die "gen-code-volume: END marker '$tag' not found in README.md\n" if $j < 0;
-    var $before = substr($md, 0, $i);
-    var $after  = substr($md, $j + length($e));
-    return $before . $b . "\n" . $body . "\n" . $e . $after;
+    var $beg = "<!-- BEGIN gen-code-volume:$tag -->"
+    var $e   = "<!-- END gen-code-volume:$tag -->"
+    var $i = index($md, $beg)
+    die "gen-code-volume: BEGIN marker '$tag' not found in README.md\n" if $i < 0
+    var $j = index($md, $e, $i)
+    die "gen-code-volume: END marker '$tag' not found in README.md\n" if $j < 0
+    var $before = substr($md, 0, $i)
+    var $after  = substr($md, $j + len($e))
+    return "$before$beg\n$body\n$e$after"
 }
 
 # ---- run from the repo root regardless of invocation directory ----------------
-var $root = `git rev-parse --show-toplevel`;
-chomp $root;
-chdir $root or die "gen-code-volume: cannot cd to repo root '$root'\n";
+var $root = `git rev-parse --show-toplevel`
+chomp $root
+chdir $root or die "gen-code-volume: cannot cd to repo root '$root'\n"
 
-var $in_place = (@ARGV && $ARGV[0] eq "--in-place");
+var $in_place = (@ARGV && $ARGV[0] eq "--in-place")
 
 # ---- exclude set: nested submodule mountpoints + the plain-vendored fish tree --
-var @nested;
+var @nested
 for val $l (`git submodule status --recursive`) {
-    var $t = $l;
-    $t =~ s/^\s+//;                # strip the leading status char/space …
-    var @f = split /\s+/, $t;      # … so field 1 is the <path> ("<sha> <path> (<describe>)")
-    push @nested, $f[1] if defined($f[1]) && $f[1] =~ m{/};
+    var $t = $l
+    $t =~ s/^\s+//                # strip the leading status char/space …
+    var @f = split /\s+/, $t      # … so field 1 is the <path> ("<sha> <path> (<describe>)")
+    push @nested, $f[1] if defined($f[1]) && $f[1] =~ m{/}
 }
-var @ex = @nested;
-push @ex, "zshrs/vendor/fish" if -d "zshrs/vendor/fish";
+var @ex = @nested
+push @ex, "zshrs/vendor/fish" if -d "zshrs/vendor/fish"
 
 # ---- tokei (single-quote every -e arg so the shell can't glob '*' in a path) ---
-var $eargs = join " ", map { "-e '$_'" } @ex;
-var $json  = `tokei $eargs --output json 2>/dev/null`;
-die "gen-code-volume: tokei produced no JSON — is tokei installed?\n" unless length($json) > 2;
-var $tk = from_json($json);
+var $eargs = join " ", map { "-e '$_'" } @ex
+var $json  = `tokei $eargs --output json 2>/dev/null`
+die "gen-code-volume: tokei produced no JSON — is tokei installed?\n" unless len($json) > 2
+var $tk = from_json($json)
 
 # ---- aggregate per-language (authoritative) and per-repo (from file reports) ---
-var %lang_code;
-var %lang_files;
-var %repo_total;          # repo => code
-var %repo_lang;           # "repo\tlang" => code   (flat key; nested-hash autoviv is unsupported)
+var %lang_code
+var %lang_files
+var %repo_total          # repo => code
+var %repo_lang           # "repo\tlang" => code   (flat key; nested-hash autoviv is unsupported)
 for val $lang (keys %$tk) {
-    next if $lang eq "Total";
-    $lang_code{$lang}  = $tk->{$lang}{code};
-    $lang_files{$lang} = scalar @{ $tk->{$lang}{reports} };
+    next if $lang eq "Total"
+    $lang_code{$lang}  = $tk->{$lang}{code}
+    $lang_files{$lang} = len(@{ $tk->{$lang}{reports} })
     for val $r (@{ $tk->{$lang}{reports} }) {
-        var $repo = ($r->{name} =~ m{^\.?/?([^/]+)/}) ? $1 : "(root)";
-        var $c    = $r->{stats}{code};
-        $repo_total{$repo}             += $c;
-        $repo_lang{"$repo\t$lang"}     += $c;
+        var $repo = ($r->{name} =~ m{^\.?/?([^/]+)/}) ? $1 : "(root)"
+        var $c    = $r->{stats}{code}
+        $repo_total{$repo}             += $c
+        $repo_lang{"$repo\t$lang"}     += $c
     }
 }
 
 # ---- .stk pass: deduped the same way (skip nested mountpoints, fish, .git) -----
-var $stk_code  = 0;
-var $stk_files = 0;
+var $stk_code  = 0
+var $stk_files = 0
 for val $f (`find . -name '*.stk' -type f`) {
-    chomp $f;
-    next if $f eq "";
-    var $rel = $f;
-    $rel =~ s{^\./}{};
-    next if $rel =~ m{(^|/)\.git/};
-    next if index($rel, "zshrs/vendor/fish/") == 0;
-    var $skip = 0;
+    chomp $f
+    next if $f eq ""
+    var $rel = $f
+    $rel =~ s{^\./}{}
+    next if $rel =~ m{(^|/)\.git/}
+    next if index($rel, "zshrs/vendor/fish/") == 0
+    var $skip = 0
     for val $n (@nested) {
         if ($rel eq $n || index($rel, "$n/") == 0) { $skip = 1; last }
     }
-    next if $skip;
-    open(my $fh, "<", $f) or next;
-    var $cnt = 0;
-    while (my $line = <$fh>) {
-        next if $line =~ m{^\s*$};      # blank
-        next if $line =~ m{^\s*#};      # comment
-        $cnt++;
+    next if $skip
+    open(var $fh, "<", $f) or next
+    var $cnt = 0
+    while (var $line = <$fh>) {
+        next if $line =~ m{^\s*$}      # blank
+        next if $line =~ m{^\s*#}      # comment
+        $cnt++
     }
-    close $fh;
-    var $repo = ($rel =~ m{^([^/]+)/}) ? $1 : "(root)";
-    $stk_code  += $cnt;
-    $stk_files++;
-    $repo_total{$repo}            += $cnt;
-    $repo_lang{"$repo\tStryke"}   += $cnt;
+    close $fh
+    var $repo = ($rel =~ m{^([^/]+)/}) ? $1 : "(root)"
+    $stk_code  += $cnt
+    $stk_files++
+    $repo_total{$repo}            += $cnt
+    $repo_lang{"$repo\tStryke"}   += $cnt
 }
-$lang_code{$STK}  = $stk_code;
-$lang_files{$STK} = $stk_files;
+$lang_code{$STK}  = $stk_code
+$lang_files{$STK} = $stk_files
 
 # ---- grand totals -------------------------------------------------------------
-var $tot_code  = 0;
-var $tot_files = 0;
+var $tot_code  = 0
+var $tot_files = 0
 for val $lang (keys %lang_code) {
-    $tot_code  += $lang_code{$lang};
-    $tot_files += $lang_files{$lang};
+    $tot_code  += $lang_code{$lang}
+    $tot_files += $lang_files{$lang}
 }
 
 # ---- language table -----------------------------------------------------------
-var @ltab = ("| Language | Code | Files |", "|---|---:|---:|");
-var $other_code  = 0;
-var $other_files = 0;
-var $other_n     = 0;
-for val $lang (sort { $lang_code{$b} <=> $lang_code{$a} } keys %lang_code) {
-    next if $lang_code{$lang} == 0;
+var @ltab = ("| Language | Code | Files |", "|---|---:|---:|")
+var $other_code  = 0
+var $other_files = 0
+var $other_n     = 0
+for val $lang (sort { $lang_code{_1} <=> $lang_code{_0} } keys %lang_code) {
+    next if $lang_code{$lang} == 0
     if ($lang_code{$lang} < $THRESH) {       # fold the long tail, but disclose it
-        $other_code  += $lang_code{$lang};
-        $other_files += $lang_files{$lang};
-        $other_n++;
-        next;
+        $other_code  += $lang_code{$lang}
+        $other_files += $lang_files{$lang}
+        $other_n++
+        next
     }
-    push @ltab, sprintf("| %s | %s | %s |", $lang, commify($lang_code{$lang}), commify($lang_files{$lang}));
+    push @ltab, sprintf("| %s | %s | %s |", $lang, commify($lang_code{$lang}), commify($lang_files{$lang}))
 }
-push @ltab, sprintf("| *Other (%d languages)* | %s | %s |", $other_n, commify($other_code), commify($other_files)) if $other_n > 0;
-push @ltab, sprintf("| **Total** | **%s** | **%s** |", commify($tot_code), commify($tot_files));
-var $languages = join "\n", @ltab;
+push @ltab, sprintf("| *Other (%d languages)* | %s | %s |", $other_n, commify($other_code), commify($other_files)) if $other_n > 0
+push @ltab, sprintf("| **Total** | **%s** | **%s** |", commify($tot_code), commify($tot_files))
+var $languages = join "\n", @ltab
 
 # ---- repo highlights: top N by deduped code, primary + secondary language -----
-var @rtab = ("| Repo | Primary | Secondary |", "|---|---:|---:|");
-var $shown = 0;
-for val $repo (sort { $repo_total{$b} <=> $repo_total{$a} } keys %repo_total) {
-    last if $shown >= $TOPN;
-    next if $repo eq "(root)";
-    var @langs;
+var @rtab = ("| Repo | Primary | Secondary |", "|---|---:|---:|")
+var $shown = 0
+for val $repo (sort { $repo_total{_1} <=> $repo_total{_0} } keys %repo_total) {
+    last if $shown >= $TOPN
+    next if $repo eq "(root)"
+    var @langs
     for val $k (keys %repo_lang) {
-        var @kp = split /\t/, $k;
-        push @langs, [ $kp[1], $repo_lang{$k} ] if $kp[0] eq $repo;
+        var @kp = split /\t/, $k
+        push @langs, [ $kp[1], $repo_lang{$k} ] if $kp[0] eq $repo
     }
-    @langs = sort { $b->[1] <=> $a->[1] } @langs;
-    var $pri = @langs              ? sprintf("%s %s", $langs[0][0], commify($langs[0][1])) : "—";
-    var $sec = (scalar(@langs) > 1) ? sprintf("%s %s", $langs[1][0], commify($langs[1][1])) : "—";
-    push @rtab, sprintf("| `%s` | %s | %s |", $repo, $pri, $sec);
-    $shown++;
+    @langs = sort { _1->[1] <=> _0->[1] } @langs
+    var $pri = @langs         ? sprintf("%s %s", $langs[0][0], commify($langs[0][1])) : "—"
+    var $sec = (len(@langs) > 1) ? sprintf("%s %s", $langs[1][0], commify($langs[1][1])) : "—"
+    push @rtab, sprintf("| `%s` | %s | %s |", $repo, $pri, $sec)
+    $shown++
 }
-var $repos = join "\n", @rtab;
+var $repos = join "\n", @rtab
 
 # ---- engineer-career table + floor sentence -----------------------------------
-var @ctab = ("| Net LOC/day baseline | Career total | This tree ÷ baseline |", "|---:|---:|---:|");
-for val $b ([100,"optimistic ceiling"], [50,"mid estimate"], [20,"conservative"]) {
-    var $career = $b->[0] * $DAYS;
-    var $mult   = $tot_code / $career;
-    push @ctab, sprintf("| %d/day (%s) | ~%s | **~%s×** |", $b->[0], $b->[1], commify($career), round_mult($mult));
+var @ctab = ("| Net LOC/day baseline | Career total | This tree ÷ baseline |", "|---:|---:|---:|")
+for val $base ([100,"optimistic ceiling"], [50,"mid estimate"], [20,"conservative"]) {
+    var $career = $base->[0] * $DAYS
+    var $mult   = $tot_code / $career
+    push @ctab, sprintf("| %d/day (%s) | ~%s | **~%s×** |", $base->[0], $base->[1], commify($career), round_mult($mult))
 }
-var $floor = int($tot_code / (100 * $DAYS));   # highest baseline -> most conservative floor
-push @ctab, "";
+var $floor = int($tot_code / (100 * $DAYS))   # highest baseline -> most conservative floor
+push @ctab, ""
 push @ctab, sprintf(
     "The defensible floor is **≥%d engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.",
-    $floor);
-var $careers = join "\n", @ctab;
+    $floor)
+var $careers = join "\n", @ctab
 
 # ---- emit ---------------------------------------------------------------------
 if ($in_place) {
-    open(my $fh, "<", "README.md") or die "gen-code-volume: open README.md: $!\n";
-    local $/;
-    var $md = <$fh>;
-    close $fh;
-    $md = splice_region($md, "languages", $languages);
-    $md = splice_region($md, "repos",     $repos);
-    $md = splice_region($md, "careers",   $careers);
-    open(my $out, ">", "README.md") or die "gen-code-volume: write README.md: $!\n";
-    print $out $md;
-    close $out;
-    p "gen-code-volume: README.md refreshed — Total ".commify($tot_code)." code across ".commify($tot_files)." files";
+    var $md = c"README.md"
+    $md = splice_region($md, "languages", $languages)
+    $md = splice_region($md, "repos",     $repos)
+    $md = splice_region($md, "careers",   $careers)
+    spurt "README.md", $md
+    p "gen-code-volume: README.md refreshed — Total #{commify($tot_code)} code across #{commify($tot_files)} files"
 } else {
-    p $languages;
-    p "";
-    p $repos;
-    p "";
-    p $careers;
+    p $languages
+    p ""
+    p $repos
+    p ""
+    p $careers
 }
