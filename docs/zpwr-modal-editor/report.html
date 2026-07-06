@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zpwr-modal-editor — engineering report. Shared Vim / Emacs modal-editing editor (monaco-vim + monaco-emacs engines, vendored and adapter-driven) for the MenkeTechnologies app stack. Architecture, the adapter seam, bundler, source stats, integration caveats.">
+  <title>zpwr-modal-editor — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    .arch-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; }
+    .section-rule { border: 0; border-top: 1px dashed var(--border); margin: 2rem 0 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZPWR-MODAL-EDITOR &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zpwr-modal-editor" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Shared frontend submodule &middot; monaco-vim + monaco-emacs engines vendored &amp; owned &middot; surface-adapter driven &middot; esbuild IIFE bundle &middot; build-on-each-consumer &middot; one <code>window.ZModal</code> facade
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle"><strong>zpwr-modal-editor</strong> is the shared <strong>Vim / Emacs modal-editing editor</strong> of the MenkeTechnologies app stack &mdash; one TypeScript source of truth for the vim and emacs editing modes, vendored from <a href="https://github.com/brijeshb42/monaco-vim" target="_blank" rel="noopener noreferrer"><code>monaco-vim</code></a> and <a href="https://github.com/aioutecism/monaco-emacs" target="_blank" rel="noopener noreferrer"><code>monaco-emacs</code></a> and adapted so we own them outright. The source lives in <code>src/</code> and each consuming app bundles it with its own <code>monaco-editor</code> dependency.</p>
+      <p class="tutorial-subtitle">The design turns on a <strong>surface adapter</strong>: the vim engine talks only to a CodeMirror-shaped adapter, so the same ~7.1k-line engine can drive a Monaco editor today and a raw DOM surface later. The bundle is produced with esbuild (IIFE, ES2020, minified) and exposes a single <code>window.ZModal</code> facade &mdash; <code>create</code> (Monaco-backed mount) plus the Monaco-agnostic <code>attachVim</code> / <code>attachEmacs</code> primitives.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">v0.1.0</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val cyan">12</div><div class="stat-label">src .ts files</div></div>
+        <div class="stat-card"><div class="stat-val green">10,202</div><div class="stat-label">src lines</div></div>
+        <div class="stat-card"><div class="stat-val cyan">7,135</div><div class="stat-label">vim engine lines</div></div>
+        <div class="stat-card"><div class="stat-val">1,314</div><div class="stat-label">monaco adapter lines</div></div>
+        <div class="stat-card"><div class="stat-val green">1,329</div><div class="stat-label">emacs engine lines</div></div>
+        <div class="stat-card"><div class="stat-val cyan">2</div><div class="stat-label">Modal engines</div></div>
+        <div class="stat-card"><div class="stat-val">1</div><div class="stat-label">Surface adapters</div></div>
+        <div class="stat-card"><div class="stat-val green">3</div><div class="stat-label">Facade methods</div></div>
+        <div class="stat-card"><div class="stat-val cyan">0</div><div class="stat-label">External runtime deps</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">License</div></div>
+      </div>
+      <p class="tutorial-subtitle" style="font-size:11px;opacity:0.7;">Counts derived from the repo: <code>src/**/*.ts</code> = 12 files / 10,202 lines; vim engine <code>engine/vim/keymap_vim.ts</code> = 7,135; <code>adapters/monaco_adapter.ts</code> = 1,314; <code>engine/emacs/*.ts</code> = 1,329; modal engines = vim + emacs; surface adapters = monaco (dom = next milestone); <code>window.ZModal</code> methods = <code>create</code> + <code>attachVim</code> + <code>attachEmacs</code>; runtime deps = 0 (lodash replaced by a local util).</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">One engine source, built per consumer, behind a swappable surface adapter. The entry wires the Monaco theme + worker and the facade; the vim engine is bolted onto whichever adapter class it imports; the bundler runs inside each app to resolve its own Monaco dep and emit vendored IIFE artifacts.</p>
+      <table class="arch-table">
+        <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>Vim engine</td><td>the full CodeMirror vim keymap (motions, operators, registers, marks, ex commands, search, macros) vendored via <code>monaco-vim</code>; it references its host editor only through the adapter it imports as "CodeMirror"</td></tr>
+          <tr><td>Surface adapter</td><td><code>monaco_adapter.ts</code> implements the CodeMirror API (cursor, selections, ranges, marks, operations, scrolling) over a Monaco editor; a <code>dom_adapter</code> implementing the same API would drive a textarea / contenteditable with no Monaco</td></tr>
+          <tr><td>Emacs engine</td><td><code>monaco-emacs</code>' extension &mdash; keybindings, kill-ring, mark, incremental search &mdash; coupled directly to the Monaco editor API; rides the Monaco adapter only</td></tr>
+          <tr><td>No runtime deps</td><td>the two <code>lodash</code> helpers monaco-emacs used (<code>throttle</code>, <code>kebabCase</code>) are replaced by <code>engine/emacs/localutil.ts</code>, so the package carries zero external runtime deps</td></tr>
+          <tr><td>Facade</td><td><code>window.ZModal</code> &mdash; <code>create</code> (Monaco-backed mount) + <code>attachVim</code> / <code>attachEmacs</code> (Monaco-agnostic primitives) + <code>VimMode</code> / <code>EmacsExtension</code> / <code>StatusBar</code></td></tr>
+          <tr><td>Build</td><td>esbuild IIFE, ES2020, minified; codicon <code>.ttf</code> inlined as a data URL; runs inside the consumer, writes to its <code>frontend/lib</code></td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FACADE SURFACE</h2>
+      <p>The bundle exposes one global, <code>window.ZModal</code>. <code>create</code> is the convenience mount (news up a Monaco editor and applies a mode); <code>attachVim</code> / <code>attachEmacs</code> are the primitives it is built on, for hosts that already own a Monaco editor and must not bundle a second one.</p>
+      <table class="arch-table">
+        <thead><tr><th>Method</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>create(host, opts)</code></td><td>create a Monaco editor + apply <code>mode</code>; returns a handle (<code>getValue</code> / <code>setValue</code> / <code>focus</code> / <code>setMode</code> / <code>layout</code> / <code>destroy</code>)</td></tr>
+          <tr><td><code>attachVim(editor, statusEl?)</code></td><td>attach vim to an existing Monaco editor; mode / key-buffer / ex line render into <code>statusEl</code>; returns the vim adapter</td></tr>
+          <tr><td><code>attachEmacs(editor)</code></td><td>attach emacs to an existing Monaco editor; returns the started extension</td></tr>
+          <tr><td><code>VimMode</code> / <code>EmacsExtension</code> / <code>StatusBar</code></td><td>the underlying classes, re-exported for advanced use</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">!</span>INTEGRATION &mdash; ONE MONACO PER PAGE</h2>
+      <p>The default build bundles its own Monaco. If a host page also loads another Monaco bundle (e.g. <code>zpwr-hooks-editor</code>), a WebKit / WKWebView content process can crash on the second full Monaco &mdash; the window renders <strong>fully blank</strong> (the content process is gone). Chromium tolerates two Monacos on one page; WebKit does not. This is an integration constraint, not a bug in the engine. Two supported patterns:</p>
+      <table class="arch-table">
+        <thead><tr><th>Pattern</th><th>How</th></tr></thead>
+        <tbody>
+          <tr><td>Share one Monaco</td><td>the app creates its Monaco editor and calls <code>attachVim(editor)</code> / <code>attachEmacs(editor)</code>; no second Monaco is bundled. A <code>monaco-editor</code>-external build variant (the clean way to ship this) is the next packaging task.</td></tr>
+          <tr><td>Be the only Monaco</td><td>use <code>create(...)</code> (bundles Monaco) only in apps that don't already load one.</td></tr>
+          <tr><td>DOM adapter</td><td>the planned <code>dom_adapter</code> sidesteps the constraint entirely for vim &mdash; in-place modal editing on a page surface with no Monaco at all.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">/</span>BUNDLER &amp; RESOLVE FIXES</h2>
+      <p><code>scripts/build-modal-editor.mjs</code> emits two bundles &mdash; <code>modal-editor.bundle.js</code> (+ <code>.css</code>) and <code>modal-editor.worker.js</code> &mdash; and carries esbuild resolve overrides so the vendored engines and Monaco resolve to ESM rather than AMD <code>define()</code> builds that throw in the WebView. Bare <code>monaco-editor</code> imports (the vendored monaco-emacs <code>require()</code>s it) are pinned to <code>esm/vs/editor/edcore.main.js</code> &mdash; the same lean ESM instance the entry uses &mdash; instead of the AMD min build. Deep <code>monaco-editor/esm/*</code> subpaths without a file extension get <code>.js</code> appended and resolve to the package dir directly (the package <code>exports</code> map only resolves extensioned paths). The build defaults its output to <code>&lt;cwd&gt;/frontend/lib</code> and honors <code>MODAL_EDITOR_OUT</code>. Because the vim/emacs engines are vendored, the consumer needs only <code>esbuild</code> + <code>monaco-editor</code> in devDependencies &mdash; no <code>monaco-vim</code> / <code>monaco-emacs</code>.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">$</span>CI GATES</h2>
+      <p>This is a non-Rust (frontend / TypeScript) submodule, so it is exempt from the meta repo's cargo gates (fmt / clippy / doc / cargo test). The umbrella <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> repo enforces the documentation and brand gates on <code>docs/</code>:</p>
+      <table class="arch-table">
+        <thead><tr><th>Gate</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td>doctype / charset / lang</td><td><code>&lt;!DOCTYPE html&gt;</code> first line, <code>&lt;meta charset="utf-8"&gt;</code>, <code>&lt;html lang="en"&gt;</code></td></tr>
+          <tr><td>meta tags</td><td>non-empty <code>&lt;title&gt;</code>, viewport meta, <code>description</code> meta on both pages</td></tr>
+          <tr><td>structure</td><td>at least one <code>&lt;h1&gt;</code>; every <code>&lt;img&gt;</code> has <code>alt</code>; no deprecated HTML4 tags</td></tr>
+          <tr><td>links</td><td>external href/src https-only; no placeholder hrefs; <code>target="_blank"</code> carries <code>rel="noopener noreferrer"</code>; index &#8596; report cross-linked</td></tr>
+          <tr><td>behavior</td><td>no inline event handlers (all via <code>hud-theme.js</code>); referenced css/js exist in <code>docs/</code></td></tr>
+          <tr><td>brand</td><td>"zpwr-modal-editor" present in titles + headings</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
+      <table class="arch-table">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Version</td><td>0.1.0</td></tr>
+          <tr><td>Type</td><td><code>module</code> (ESM); TypeScript source</td></tr>
+          <tr><td>Pinned devDeps (consumer)</td><td><code>esbuild ^0.28.1</code>, <code>monaco-editor 0.55.1</code> (the vim/emacs engines are vendored &mdash; no <code>monaco-vim</code> / <code>monaco-emacs</code> deps)</td></tr>
+          <tr><td>Bundle artifacts</td><td><code>modal-editor.bundle.js</code> + <code>modal-editor.bundle.css</code> + <code>modal-editor.worker.js</code></td></tr>
+          <tr><td>Vendored from</td><td><a href="https://github.com/brijeshb42/monaco-vim" target="_blank" rel="noopener noreferrer">monaco-vim 0.4.4</a>, <a href="https://github.com/aioutecism/monaco-emacs" target="_blank" rel="noopener noreferrer">monaco-emacs 0.3.0</a> (MIT; upstream licenses retained under <code>src/engine/</code>)</td></tr>
+          <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies" target="_blank" rel="noopener noreferrer">MenkeTechnologies</a></td></tr>
+          <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/zpwr-modal-editor" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/zpwr-modal-editor</a></td></tr>
+          <tr><td>Meta umbrella</td><td><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a></td></tr>
+        </tbody>
+      </table>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
