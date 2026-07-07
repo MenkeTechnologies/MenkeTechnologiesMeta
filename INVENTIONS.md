@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~197 candidates (numbered entries through 168 plus lettered sub-entries — 11a, 104a, the
+Total: ~198 candidates (numbered entries through 169 plus lettered sub-entries — 11a, 104a, the
 zterminal additions 105a–105n, and the zemacs additions 120a–120s). Marquee claims (the six original
 ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
@@ -1853,6 +1853,49 @@ entry to reach the OS shell — they are sandboxed to built-in single browser ve
 found", not proven; search not exhaustive. `shell`/`host` steps carry the same
 privileged-local-process trust model as any native-messaging host and are inert without the
 host connected (they no-op on the new-tab page, which has no host access).
+
+**169. One colour scheme live-synced across a web browser and a desktop GUI app through a shared native local-host daemon** — `med`
+zwire-host doubles as a **theme bus**: a single shared file, `~/.zwire/global.toml`
+(overridable via `$ZWIRE_GLOBAL_DIR`), holds one `{ scheme, ui{ light, scanlines, vignette,
+glow, anim } }` record (8 named schemes — cyberpunk / midnight / matrix / ember / arctic /
+crimson / toxic / vapor), and whichever process the user re-themes in writes it. Because each
+app runs its **own** host process with a process-local pub/sub bus, a background **file
+watcher** bridges the gap: it polls the shared file (~700 ms) and republishes any scheme/ui
+delta onto the local bus topics `scheme` / `ui`, with echo-suppression so a process never
+re-publishes its own write — so a toggle in one app fans out live to every other running app;
+a `peer::broadcast` hop federates the same change **cross-machine**. Every write also drops
+plain-text projections (`hud-scheme` / `hud-light`) beside the TOML so a native reader needs
+no TOML parser. Two front-door adapters ride on top: a **Tauri v2 plugin** named `zwire-theme`
+(`.plugin(zwire_host::tauri_theme::init())`, two lines) that registers `theme_get`/`theme_set`
+and emits a global `theme-changed` event, and a transport-abstracted frontend shim
+`zgui-core/webui/theme-sync.js` (`ZGui.themeSync`) that speaks either Tauri invoke/listen
+**or** JUCE native-fn/backend-events and applies the snapshot onto `ZGui.colorscheme` + `fx`
+(inert no-op where no host is connected). **Live consumers:** the **zwire HUD extension**
+(`background.js` `sub`s `scheme`+`ui`, writes local picks back), the **zpwrchrome extension**
+(persistent native port, `applyScheme` on push), the **Chromium-fork native chrome** (patch
+`0002-ui-colors-hud.patch` reads the `hud-scheme`/`hud-light` projections via a
+`FilePathWatcher` and live-repaints window chrome), and the **ztranslator** GUI app
+(`app/src-tauri/src/lib.rs` registers the `zwire-theme` plugin; `zwire-host { tag = "v0.3.5",
+features=["tauri"] }`) — so one `~/.zwire/global.toml` is the single source of truth wiring the
+browser (two extensions + native chrome) to a desktop app's colour scheme in real time.
+*Basis:* `zwire/extensions/hud-internal/native/zwire-host/src/theme_watch.rs` (700 ms poll →
+`bus::publish("scheme"|"ui")`, `note_scheme`/`note_ui` echo control); `store.rs:20`
+(`SCHEMES` whitelist), `store.rs:203` (`theme_dir` → `~/.zwire`), `store.rs:272` (cross-process
+read-modify-write lock on `global.toml.lock`), plus `hud-scheme`/`hud-light` projections;
+`api.rs:183` `theme_get` / `:190` `theme_set_scheme` / `:201` `theme_set_ui` / `:215`
+`theme_watch`; `tauri_theme.rs` (the `zwire-theme` plugin, `theme-changed` emit);
+`zgui-core/webui/theme-sync.js` (Tauri/JUCE transport, `applyTheme` onto `ZGui.colorscheme`/`fx`);
+`zwire/extensions/hud-internal/background.js` (`sub` scheme+ui, write-back);
+`zwire/extensions/zpwrchrome/background.js` (`applyScheme`); `zwire/fork/patches/0002-ui-colors-hud.patch`
+(`FilePathWatcher` on the projections); `ztranslator/app/src-tauri/src/lib.rs`. *Caveat:* "None
+found", not proven — OS-level light/dark follows a system setting, and design-token pipelines
+share palettes at build time, but a **native local-host daemon that live-syncs one running
+colour scheme across a browser (extensions + native window chrome) and a Tauri desktop app**
+via a shared file + per-process pub/sub bus + drop-in plugin has no prior art found; search not
+exhaustive. The shim is a generic drop-in (vendored into every zgui-core app's `lib/`), so any
+Tauri/JUCE zgui-core app can join by registering the plugin + loading the shim. Version drift
+exists across the git pins (local crate `0.3.7`, ztranslator `v0.3.5`, zpwrchrome-host `v0.3.0`
+without the `tauri` feature). Inert wherever the host isn't connected.
 
 ---
 
