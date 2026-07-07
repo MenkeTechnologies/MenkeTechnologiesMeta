@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~196 candidates (numbered entries through 167 plus lettered sub-entries — 11a, 104a, the
+Total: ~197 candidates (numbered entries through 168 plus lettered sub-entries — 11a, 104a, the
 zterminal additions 105a–105n, and the zemacs additions 120a–120s). Marquee claims (the six original
 ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
@@ -1827,6 +1827,32 @@ found", not proven: browsers expose DevTools consoles for *page* JS, and extensi
 native-messaging hosts, but an in-product REPL aimed at the browser's native + background
 processes has no prior art found; search not exhaustive. Same privileged-local-process
 trust model as any native-messaging host.
+
+**168. Web browser whose command-palette entries are user-authored typed step-chains spanning browser actions and native-OS execution** — `med`
+In zwire a ⌘K **custom command is not a single action but a CHAIN of typed steps** run
+top-to-bottom, each step independently one of `url` / browser-`action` (tab verbs) /
+color-`scheme` / `js` / `shell` / native-`host` JSON — authored in a per-step-typed **CRUD
+wizard** (each row its own type dropdown + value control + reorder `↑↓` / remove, `＋ Add
+step`). One command can therefore chain, e.g., *open-URL → set-scheme → run a shell command
+→ send host JSON*. The **same command runs identically across three isolation contexts** —
+web-page content scripts (worker bus), extension pages (direct `chrome.tabs` + native
+messaging), and the new-tab override — reconciled behind one `entrySteps()` model that also
+migrates the shipped single-`{type,value}` defaults. `shell` steps invoke the native host's
+`exec` (OS-selected `cmd.exe`/`/bin/sh -c`), not a PTY, and toast the decoded output.
+*Basis:* `zwire/extensions/hud-internal/pages/commands.js` (the `steps[]` typed-step wizard
+— per-step type dropdown, reorder, `entrySteps()` migration); `zpalette.js` (content-script
+chain exec `runCustom`/`runStep` + `runShell` over the `zb-host` relay); `pages/zg-boot.js`
+(extension-page `runCustomBoot`/`runStepBoot`); `newtab/palette.js` (new-tab chain exec);
+`palette-cmds.js` (shared step-chain summary `url → shell → scheme`); `background.js`
+`zb-host` relay; `native/zwire-host/src/exec.rs` (`exec` program/args). *Caveat:* chaining
+sequenced actions is **established in desktop launchers** (Alfred workflows, Raycast,
+Keyboard Maestro, Automator) — the pattern itself is not novel. The first-ness is
+**browser-native**: no shipping browser (Chrome, Edge, Brave, Arc's Command Bar, Vivaldi
+Quick Commands) lets a user author a multi-step palette command, and none allow a palette
+entry to reach the OS shell — they are sandboxed to built-in single browser verbs. "None
+found", not proven; search not exhaustive. `shell`/`host` steps carry the same
+privileged-local-process trust model as any native-messaging host and are inert without the
+host connected (they no-op on the new-tab page, which has no host access).
 
 ---
 
