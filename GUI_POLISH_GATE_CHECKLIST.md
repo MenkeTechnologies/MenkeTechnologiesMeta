@@ -5,9 +5,14 @@ Concrete tasks to drive all **14 Desktop Apps** to **PASS** on
 [`GUI_APP_REQUIREMENTS.md`](GUI_APP_REQUIREMENTS.md) (R1–R10).
 [`COMPONENTS.md`](COMPONENTS.md) holds the authoritative embed matrix; this is the work list.
 
-**Roster (14, `category: 'Desktop Apps'` in `app-store/store.js`):**
+**Roster (the 14 Desktop Apps measured in the 2026-06-30 snapshot below):**
 `Audio-Haxor` (reference), `traderview`, `ztranslator`, `zpwr-daw`, `zpdf`, `zemail`,
-`zoffice`, `zreq`, `ztunnel`, `zgo`, `zftp`, `zcite`, `zterm`, `zcontainer`.
+`zoffice`, `zreq`, `ztunnel`, `zgo`, `zftp`, `zcite`, `zterminal`, `zcontainer`.
+
+> **Roster drift (2026-07-07):** `app-store/store.js` now lists **17** `category: 'Desktop Apps'`
+> ids — the three additions **`zphoto`**, **`zstation`**, and **`zwire`** postdate this gate
+> snapshot and are **not yet measured**. Run the Phase F audit to fold them into the matrix
+> before treating this checklist as complete.
 
 > **Embeds (Phase B + Phase C) are complete** — every app embeds the universal component set and
 > any `-core` engine can be embedded in any GUI app. The remaining close-out work is the non-embed
@@ -64,13 +69,13 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
 | zgo | ✗ | ✓ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | `zgo-core` |
 | zftp | ✗ | ✓ | ✓ | ? | ✗ | ? | ? | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | (app) |
 | zcite | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | N/A | ✓ | ~ | ~ | `zcite-core` |
-| zterm | ✗ | ✓ | N/A | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ~ | ✗ | (app) |
+| zterminal | ✗ | ✓ | N/A | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ~ | ✗ | (app) |
 | zcontainer | ✗ | ✓ | ✓ | ~ | ✗ | ✗ | ~ | ✗ | ✗ | ✗ | ✓ | ~ | ✓ | `zcontainer-core` |
 
 **Reads from the matrix:**
 - **Embeds (G2 + the universal set) are done:** `zpwr-embed-terminal`, `zpwr-hooks-editor`,
   `zpwr-file-browser`, and the `zpwr-i18n` runtime are embedded across all 14 (terminal is N/A for
-  `zterm`, which is itself the terminal), and every app embeds its own `-core` plus the cross-cutting
+  `zterminal`, which is itself the terminal), and every app embeds its own `-core` plus the cross-cutting
   `zoffice-core` / `zemail-core` / `zpdf-core` engines.
 - **Command palette (R1)** present in **5/14** (haxor, traderview, ztranslator, zpwr-daw, zpdf) — non-embed shell work.
 - **Settings panel** in **4/14**; **fzf filters (R7)** in **5/14**; **sortable/resizable tables (R8)** in **5/14** — non-embed shell work.
@@ -84,7 +89,7 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
   on `zgui-core` widgets, and they embed terminal/hooks/file-browser/i18n plus the
   `zoffice`/`zemail`/`zpdf` `-core` views. Remaining for PASS: the 18 i18n proof tests
   (`i18n` = `~`) and the extended pnpm script surface (`scr`).
-- **`zterm` / `zcontainer`** now embed the universal component set + their `-core`; remaining is the
+- **`zterminal` / `zcontainer`** now embed the universal component set + their `-core`; remaining is the
   non-embed shell surface (palette/settings/tables/header via the shared tokens) and full i18n.
   zcontainer has a cyberpunk look + logo but hand-rolled (not the shared tokens/header), and substring
   search (not fzf).
@@ -120,18 +125,18 @@ Every Desktop App embeds all of these (submodule + wired + transport shim) as a 
 embed (not just a `.gitmodules` line).
 
 ### B1 — `zpwr-embed-terminal` (R3) — DONE
-- [x] all 14 (N/A for `zterm` — it is itself the terminal).
+- [x] all 14 (N/A for `zterminal` — it is itself the terminal).
 
 ### B2 — `zpwr-hooks-editor` (R2) — DONE
 - [x] zpdf  - [x] zemail  - [x] zoffice  - [x] zreq  - [x] ztunnel  - [x] zgo
-- [x] zftp  - [x] zcite  - [x] zterm  - [x] zcontainer
+- [x] zftp  - [x] zcite  - [x] zterminal  - [x] zcontainer
 
 ### B3 — `zpwr-file-browser` (R10) — DONE
 - [x] zpwr-daw  - [x] zpdf  - [x] zemail  - [x] zoffice  - [x] zreq  - [x] ztunnel
-- [x] zgo  - [x] zftp  - [x] zcite  - [x] zterm  - [x] zcontainer
+- [x] zgo  - [x] zftp  - [x] zcite  - [x] zterminal  - [x] zcontainer
 
 ### B4 — `zpwr-i18n` (G3 runtime) — DONE (localization completeness tracked in Phase D)
-- [x] zcite  - [x] zterm  - [x] zcontainer
+- [x] zcite  - [x] zterminal  - [x] zcontainer
 
 ### B5 — Command palette + fzf filters + shared table (R1/R7/R8) — after Phase A
 - [ ] All 14 route filters through the shared fzf matcher (no `includes()` substring filter).
@@ -147,13 +152,13 @@ embed (not just a `.gitmodules` line).
 A searchable, **app-owned** settings panel bound to **Cmd/Ctrl+,** (NEVER in a core/embed;
 cores only offer settings items — see the gate's "END-APP surfaces" rule). Missing in 10:
 - [ ] zpdf  - [ ] zemail  - [ ] zoffice  - [ ] zreq  - [ ] ztunnel  - [ ] zgo
-- [ ] zftp  - [ ] zcite  - [ ] zterm  - [ ] zcontainer
+- [ ] zftp  - [ ] zcite  - [ ] zterminal  - [ ] zcontainer
 
 ### B8 — Colorschemes / theme switching (haxor `settings.js` theme switcher)
 The family colorscheme picker (cyberpunk variants), wired through the shared tokens (A4) so a
 theme change restyles every shared surface at once. Missing/unaudited in 10:
 - [ ] zpdf  - [ ] zemail  - [ ] zoffice  - [ ] zreq  - [ ] ztunnel  - [ ] zgo
-- [ ] zftp  - [ ] zcite  - [ ] zterm  - [ ] zcontainer
+- [ ] zftp  - [ ] zcite  - [ ] zterminal  - [ ] zcontainer
 
 ---
 
@@ -174,7 +179,7 @@ Per `COMPONENTS.md` "every GUI app" plan. Each = submodule + Rust dep / C ABI + 
   `traderview` → trades; `zreq`/`zgo` → request/run history). Mark **N/A + reason** otherwise.
   (The clip-engine itself is embedded per `COMPONENTS.md`; this tracks the per-app grid **domain** UI.)
 - [x] **C7 `zpwr-crate`** in asset apps; **N/A + reason** for non-asset apps
-  (`zcontainer`, `zterm`, `zreq`, `ztunnel`, `zgo`, `zcite`, …).
+  (`zcontainer`, `zterminal`, `zreq`, `ztunnel`, `zgo`, `zcite`, …).
 
 ---
 
@@ -182,7 +187,7 @@ Per `COMPONENTS.md` "every GUI app" plan. Each = submodule + Rust dep / C ABI + 
 
 - [ ] **D1** The apps that embed `zpwr-i18n` actually **pass** the 18 i18n proof-contract
   tests across all 27 locales (embedding ≠ passing — verify, don't assume).
-- [ ] **D2 zcite / zterm / zcontainer**: extract every UI string to `app_i18n_en.json`, seed all 27
+- [ ] **D2 zcite / zterminal / zcontainer**: extract every UI string to `app_i18n_en.json`, seed all 27
   locales (`cs da de el en es es_419 fi fr hi hu id it ja ko nb nl pl pt pt_br ro ru sv tr uk vi zh`),
   port the 18 `test/i18n-*.test.js`, make green.
 - [ ] **D3** Every app's `i18n-no-raw-showtoast` + `i18n-ui-source` are green (no raw UI

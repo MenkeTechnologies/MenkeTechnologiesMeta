@@ -7,9 +7,14 @@ dialog, table, toast, modal, panel, and chrome element must come from `zgui-core
 hand-rolled parallel widget. If a needed element doesn't exist in `zgui-core` yet, **add it there
 first**, then consume it.
 
-This audit covers the **14 clone-of-known-software desktop apps**. (Audio-Haxor and the JUCE
+This audit covers the **14 clone-of-known-software desktop apps** below. (Audio-Haxor and the JUCE
 plugins are the *reference* apps zgui-core was extracted from and are out of scope here.)
 zgui-core currently ships **244 components** under `webui/*.js`.
+
+> **Roster drift (2026-07-07):** `app-store/store.js` now lists **17** `category: 'Desktop Apps'`
+> ids. Two of them — **`zstation`** and **`zwire`** — postdate this 2026-06-28 audit and are **not
+> yet ranked** below; `zemacs-gui` is ranked here but is not in that store category. Re-run the
+> conformance sweep to cover `zstation` and `zwire` before treating this audit as complete.
 
 ## Conformance ranking (worst → best)
 
