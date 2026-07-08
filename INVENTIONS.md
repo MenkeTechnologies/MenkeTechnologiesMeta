@@ -18,8 +18,8 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~198 candidates (numbered entries through 169 plus lettered sub-entries — 11a, 104a, the
-zterminal additions 105a–105n, and the zemacs additions 120a–120s). Marquee claims (the six original
+Total: ~200 candidates (numbered entries through 170 plus lettered sub-entries — 11a, 104a, the
+zterminal additions 105a–105n, the zemacs additions 120a–120s, and 170a). Marquee claims (the six original
 ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
 ---
@@ -1896,6 +1896,65 @@ exhaustive. The shim is a generic drop-in (vendored into every zgui-core app's `
 Tauri/JUCE zgui-core app can join by registering the plugin + loading the shim. Version drift
 exists across the git pins (local crate `0.3.7`, ztranslator `v0.3.5`, zpwrchrome-host `v0.3.0`
 without the `tauri` feature). Inert wherever the host isn't connected.
+
+**170. First desktop application suite where multiple non-terminal GUI apps embed one shared in-app tmux window manager, each tiling its own document content** — `high`
+Seven independent desktop GUI apps — **zemacs-gui** (an editor per pane), **zemail** (an
+independent mail view per pane — split to triage several folders/accounts side by side),
+**zoffice**, **zpdf**, **zphoto**, **zftp**, and **zreq** — each embed the **same** shared
+`zgui-core` tiling engine (`ZGui.tmux`) and run tmux's full model *over their own
+document/app content* rather than terminals: SESSION → WINDOWS (tabs) → PANES, split both
+ways, nested to any depth, unlimited windows, with a prefix key (`C-b`/`⌥b`),
+`synchronize-panes` broadcast, copy-mode, paste-buffers, a command-prompt, session
+save/restore, and a published powerline segment — no OS windows involved. The engine is a
+single **1,227-line component** consumed as the shared submodule; each app is ~35–200 lines
+of wiring (`frontend/tmux-config.js`) that hands the WM three callbacks
+(`openEmptyPane`/`renderPane`/`paneLabel`) so every pane mounts an independent instance of
+that app's own view (its own transport + state). The tiling is an **absolute-position** model
+(every pane a permanent direct child, retiled by %-rects), so a webview/iframe/document pane
+never re-parents and never reloads on split, retile, zoom, or window switch. *Basis:*
+`zgui-core/webui/tmux.js:1` (`ZGui.tmux` — WM tree/nav/resize/zoom/tabs/sessions/prefix +
+synchronize-panes + copy-mode + paste-buffers, host-supplied pane content via `init(cfg)`;
+1,227 L); per-app consumers `zemail/frontend/tmux-config.js` (mail view per pane via
+`mountZemail`), `zemacs-gui/frontend/tmux-config.js` (editor per pane), plus
+`zoffice`/`zpdf`/`zphoto`/`zftp`/`zreq` `frontend/tmux-config.js`; each app ships
+`crates/zgui-core/webui/tmux.js` as the shared submodule copy. *Caveat:* distinct from the
+terminal-side tmux work in this ledger — `zterminal` speaks the **native** tmux wire protocol
+(#104–#105) and `zwire` embeds a tmux model in a **browser** (#164); this claim is about a
+family of **non-terminal desktop apps** sharing one in-app tiling WM over document content.
+tmux (terminal multiplexer) and tiling window managers each long predate this; the novelty is
+the combination — a shipped **desktop suite** whose apps embed the full tmux *model* over
+their own content from one shared implementation. "None found", not proven; search not
+exhaustive. Depth of per-pane wiring varies by app (editor/mail are the richest).
+
+**170a. First desktop-app suite with cross-pane `synchronize-panes` typing *and* named layout save/restore over document panes — one shared implementation** — `high`
+The same shared `ZGui.tmux` engine gives every app in the suite (#170) two capabilities tmux
+users expect from *terminals*, but here over **document/app panes**: **(a) synchronize-panes**
+— broadcast typing across a chosen set of panes, with a per-pane membership toggle (`e` = all
+on/off, `E` = add/remove this pane), so a keystroke in one synced pane replays into every
+other synced pane's last-focused editable surface. Because a single document has only one
+focused element, the engine tracks each pane's **last editable + caret** (selection offsets
+for inputs, a live `Range` for contenteditable) and inserts into *unfocused* peers at their
+remembered caret; readline line-editors forward `C-w`/`C-u` (plus the macOS ⌥/⌘-Delete twins)
+as **semantic tokens** so word/line-kill broadcasts correctly rather than as raw characters.
+**(b) Named session/layout save + restore** — the full window set (each window's pane **tree**,
+active pane, `layout`, `syncPanes` membership, and paste-buffers) is snapshotted into the
+host's own `prefs` store (`S` = save current layout as a named session, `s` = load a saved
+layout; also `save-session`/`switch-client` from the command-prompt), and on restore each pane
+is **re-mounted from its saved ref** via the host's `renderPane(bodyEl, ref)` callback — so an
+editor/mail/document pane comes back with its own content, not an empty tile. Both live once in
+the shared component, so all seven apps inherit them identically. *Basis:*
+`zgui-core/webui/tmux.js:278` (`syncMembers`/`toggleSync`/`toggleSyncPane`), `:288`
+(`paneOfNode` + per-pane `lastField`/caret tracking), `:300` (broadcast keydown observer, `:305`
+readline `C-w`/`C-u`/⌥⌘-Delete → semantic tokens), `:310` (`broadcastKey` into every synced
+peer); session/layout: `:106` (`tmux-sessions`) + `:107` (`tmux-session-save`), `:1152`
+(snapshot: `windows[].{tree,layout,syncPanes,buffers}` into `CFG.prefs`), `:735`
+(`CFG.renderPane` re-mount of a saved pane ref), `:1080` (`save-session`) + `:1077`
+(`attach-session`/`switch-client` load-by-name). *Caveat:* refinement of #170, not a separate
+engine. `synchronize-panes` and layout save (tmux-resurrect/continuum) are longstanding tmux
+features **for terminals**; the first-ness here is that a **suite of non-terminal desktop apps**
+gets both over their own document content from one shared implementation. Sessions persist to
+each app's local prefs blob (per-app, not shared across apps). "None found", not proven; search
+not exhaustive.
 
 ---
 
