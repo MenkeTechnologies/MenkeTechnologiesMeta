@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~200 candidates (numbered entries through 170 plus lettered sub-entries — 11a, 104a, the
+Total: ~200 candidates (numbered entries through 170 plus lettered sub-entries — 11a, 104a, 144a, the
 zterminal additions 105a–105n, the zemacs additions 120a–120s, and 170a). Marquee claims (the six original
 ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
 
@@ -1582,6 +1582,23 @@ are literally WHATWG autocomplete tokens (or longest-match synonyms), with alias
 — turning UNIX `pass` into a 1Password-class identity filler with no separate database. *Basis:*
 `lib/identity-tokens.js`, `background.js` `fillIdentityForm()`. *Caveat:* browserpass does login fill;
 the new part is the schema-as-store + alias backfill.
+
+**144a. First GUI editor for the UNIX `pass` store inside a Chrome extension** — `high`
+A full-page, two-pane CRUD editor for `~/.password-store` shipped *inside a Chrome extension* and
+driven entirely over the browserpass native-messaging wire (`pass.list`/`fetch`/`save`/`delete`/
+`fill`) — a store tree with filter + keyboard nav on the left, a schema-aware entry form on the right
+(show/hide password, built-in password generator, per-row copy, host-computed OTP-code copy,
+fill-active-tab, k/v rows for non-synonym fields, free-form notes, delete-with-confirm), plus a
+`⚙ raw` toggle that drops to a verbatim file-bytes textarea as an escape hatch for non-standard
+schemas, a path-as-rename convention, and URL auto-derivation from the first path segment. Reachable
+from the toolbar right-click and the popup, versioned alongside the extension with no separate
+install. *Basis:* `zpwrchrome/scripts-manager/pass.{html,css,js}` (`pass.js` ~795 L: `loadTree`/
+`renderTree`, `pickEntry`, `startNew`/`startNewFromTemplate`, rename-on-path-change save),
+`lib/pass-entry.js`; README "Full-page pass manager". *Caveat:* desktop/mobile GUIs for `pass` exist
+(QtPass, Passforios, gopass front-ends), so this is not the first `pass` GUI in general — the claim is
+narrower and defensible: the first full-page CRUD *store editor* delivered **inside a Chrome
+extension**, where the upstream browserpass extension ships only a config options page, not a store
+editor. "None found" for the in-extension framing, not a proven absolute.
 
 **145. In-extension Web Crypto TOTP/HOTP decoupled from `pass otp` and gpg PATH** — `med`
 OTP codes are computed inside the extension via Web Crypto (HMAC-SHA1/256/512, RFC 6238/4226) directly
