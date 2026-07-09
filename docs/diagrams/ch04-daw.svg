@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 840" font-family="'Share Tech Mono', ui-monospace, monospace">
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0 0 L8 4.5 L0 9 Z" fill="#05d9e8"/>
+    </marker>
+    <marker id="ahm" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0 0 L8 4.5 L0 9 Z" fill="#7a8ba8"/>
+    </marker>
+    <style>
+      .t       { fill:#e0f0ff; font-size:12px; }
+      .dim     { fill:#7a8ba8; font-size:11px; }
+      .cyan    { fill:#05d9e8; }
+      .mag     { fill:#d300c5; }
+      .pink    { fill:#ff6b9d; }
+      .green   { fill:#39ff14; }
+      .title   { font-family:'Orbitron', sans-serif; font-weight:700; }
+      .h       { fill:#05d9e8; font-size:13px; font-family:'Orbitron', sans-serif; font-weight:700; }
+      .box     { fill:#0d0d1a; stroke:#05d9e8; stroke-width:1.5; }
+      .voicebx { fill:#0d0d1a; stroke:#d300c5; stroke-width:1.5; }
+      .busbx   { fill:#0d0d1a; stroke:#ff2a6d; stroke-width:1.5; }
+      .optbx   { fill:#0b140b; stroke:#39ff14; stroke-width:1.4; }
+      .chip    { fill:#10102a; stroke:#1a1a3e; stroke-width:1; }
+      .sub     { fill:#10102a; stroke:#2a1a4e; stroke-width:1; }
+      .arrow   { stroke:#05d9e8; stroke-width:1.6; fill:none; marker-end:url(#ah); }
+      .dash    { stroke:#7a8ba8; stroke-width:1.1; stroke-dasharray:4 3; fill:none; marker-end:url(#ahm); }
+      .badge   { fill:#0b140b; stroke:#39ff14; stroke-width:1; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="840" fill="#0a0a14"/>
+  <rect x="2" y="2" width="996" height="836" fill="none" stroke="#1a1a3e" stroke-width="1"/>
+
+  <text x="24" y="34" class="title" fill="#05d9e8" font-size="19">ZPWR-PATCH-CORE &#8212; FULL SIGNAL &amp; CONTROL ARCHITECTURE</text>
+  <text x="24" y="52" class="dim">one shared engine: host &#8594; plugin &#8594; layered engine &#8594; per-voice patch graph &#8594; shared bus &#8594; output</text>
+
+  <!-- ============================ MAIN SIGNAL COLUMN ============================ -->
+
+  <!-- HOST -->
+  <rect x="50" y="68" width="560" height="48" rx="4" class="box"/>
+  <text x="68" y="90" class="h">HOST / DAW</text>
+  <text x="68" y="108" class="dim">audio buffer in &#183; MIDI in &#183; transport / tempo &#183; parameter automation</text>
+  <path d="M330 116 L330 140" class="arrow"/>
+  <text x="340" y="132" class="dim">processBlock(buffer)</text>
+
+  <!-- PLUGIN -->
+  <rect x="50" y="140" width="560" height="56" rx="4" class="box"/>
+  <text x="68" y="162" class="h">PLUGIN &#8212; zpwr-fx / zpwr-synth / zpwr-midi-fx</text>
+  <text x="68" y="180" class="dim">PluginProcessor::processBlock &#183; per-sample interleaved render &#183; atomic graph swap on edit</text>
+  <rect x="398" y="148" width="204" height="20" rx="3" class="badge"/>
+  <text x="408" y="162" class="green" font-size="10.5">per-block beginBlock() snapshot</text>
+  <path d="M330 196 L330 220" class="arrow"/>
+
+  <!-- LAYERED ENGINE -->
+  <rect x="50" y="220" width="560" height="116" rx="4" class="box"/>
+  <text x="68" y="242" class="h">LayeredEngine</text>
+  <text x="68" y="259" class="dim">unlimited layers &#183; per-layer parallel / series route &#183; each layer = a full engine copy</text>
+  <rect x="68"  y="272" width="150" height="48" rx="3" class="chip"/>
+  <text x="143" y="294" class="cyan" font-size="12" text-anchor="middle">Layer 1</text>
+  <text x="143" y="310" class="dim" text-anchor="middle">patch graph</text>
+  <rect x="232" y="272" width="150" height="48" rx="3" class="chip"/>
+  <text x="307" y="294" class="cyan" font-size="12" text-anchor="middle">Layer 2</text>
+  <text x="307" y="310" class="dim" text-anchor="middle">patch graph</text>
+  <rect x="396" y="272" width="150" height="48" rx="3" class="chip"/>
+  <text x="471" y="294" class="cyan" font-size="12" text-anchor="middle">Layer N</text>
+  <text x="471" y="310" class="dim" text-anchor="middle">parallel / series</text>
+  <path d="M330 336 L330 360" class="arrow"/>
+  <text x="340" y="352" class="dim">voices = notes &#215; unison</text>
+
+  <!-- VOICE STACK -->
+  <rect x="62" y="372" width="560" height="206" rx="4" fill="#0d0d1a" stroke="#d300c5" stroke-width="1.5" opacity="0.55"/>
+  <rect x="56" y="366" width="560" height="206" rx="4" fill="#0d0d1a" stroke="#d300c5" stroke-width="1.5" opacity="0.78"/>
+  <rect x="50" y="360" width="560" height="206" rx="4" class="voicebx"/>
+  <text x="68" y="382" class="title" fill="#d300c5" font-size="13">VOICE STACK</text>
+  <text x="160" y="382" class="dim">one sounding note &#215; unison &#8212; each voice is a private copy of the patch graph</text>
+  <text x="68" y="402" class="dim">RuntimeGraph: nodes wired by source id &#183; topological eval order &#183; 1-sample delay resolves cycles</text>
+
+  <!-- per-voice signal chain -->
+  <rect x="68"  y="416" width="118" height="46" rx="3" class="sub"/>
+  <text x="127" y="437" class="cyan" font-size="12" text-anchor="middle">Oscillator</text>
+  <text x="127" y="452" class="dim" text-anchor="middle">cached detune</text>
+  <path d="M186 439 L210 439" class="arrow"/>
+  <rect x="210" y="416" width="118" height="46" rx="3" class="sub"/>
+  <text x="269" y="437" class="cyan" font-size="12" text-anchor="middle">Filter</text>
+  <text x="269" y="452" class="green" font-size="10" text-anchor="middle">CachedSVF</text>
+  <path d="M328 439 L352 439" class="arrow"/>
+  <rect x="352" y="416" width="118" height="46" rx="3" class="sub"/>
+  <text x="411" y="437" class="cyan" font-size="12" text-anchor="middle">Env / VCA</text>
+  <text x="411" y="452" class="dim" text-anchor="middle">per-note amp</text>
+  <path d="M470 439 L494 439" class="arrow"/>
+  <rect x="494" y="416" width="100" height="46" rx="3" class="sub"/>
+  <text x="544" y="442" class="cyan" font-size="12" text-anchor="middle">voice out</text>
+
+  <text x="68" y="492" class="green" font-size="10.5">CachedSVF: filter coeffs cached per block, per-sample tan removed (~30% / voice)</text>
+  <text x="68" y="508" class="green" font-size="10.5">node-major block processing: whole buffer per node call (~50% on block-safe graphs)</text>
+  <text x="68" y="524" class="dim">block-rate transcendentals cached: additive partials, unison / Risset coeffs (~27&#8211;48%)</text>
+  <rect x="68" y="536" width="280" height="22" rx="3" class="chip"/>
+  <text x="80" y="551" class="dim" font-size="10.5">parallel voice loop &#8212; voices render across CPU cores</text>
+
+  <path d="M330 566 L330 592" class="arrow"/>
+  <text x="340" y="584" class="dim">&#931; sum all voices</text>
+
+  <!-- BUS -->
+  <rect x="50" y="592" width="560" height="66" rx="4" class="busbx"/>
+  <text x="68" y="614" class="title" fill="#ff6b9d" font-size="13">AUX / MASTER SHARED BUS</text>
+  <text x="68" y="632" class="dim">linear FX run ONCE on the summed mix &#8212; Reverb &#183; Delay &#183; Chorus &#183; EQ</text>
+  <rect x="68" y="640" width="430" height="12" fill="none"/>
+  <text x="68" y="650" class="pink" font-size="10.5">fx(v1)+fx(v2) == fx(v1+v2) &#8594; running per-voice is N&#215; waste; the bus does it once</text>
+  <path d="M330 658 L330 684" class="arrow"/>
+
+  <!-- OUTPUT -->
+  <rect x="50" y="684" width="560" height="44" rx="4" class="box"/>
+  <text x="68" y="711" class="h">OUTPUT &#8594; host buffer (L / R)</text>
+
+  <!-- ============================ CONTROL / MOD SIDE PANEL ============================ -->
+
+  <!-- EXTERNAL SOURCES -->
+  <rect x="650" y="68" width="300" height="118" rx="4" class="box"/>
+  <text x="666" y="90" class="h">EXTERNAL SOURCES</text>
+  <text x="666" y="107" class="dim">ids 1 .. kBlockBase(1000)-1</text>
+  <text x="666" y="123" class="dim">host-supplied every sample</text>
+  <text x="666" y="143" class="t">&#8250; In L / R &#160; &#8250; Noise</text>
+  <text x="666" y="160" class="t">&#8250; Soft keys &#160; &#8250; MIDI / MPE</text>
+  <text x="666" y="177" class="t">&#8250; Global mod bus</text>
+  <path d="M650 150 C 628 150 632 172 612 170" class="dash"/>
+
+  <!-- MOD MATRIX -->
+  <rect x="650" y="200" width="300" height="84" rx="4" fill="#0d0d1a" stroke="#d300c5" stroke-width="1.5"/>
+  <text x="666" y="222" class="title" fill="#d300c5" font-size="13">MOD MATRIX</text>
+  <text x="666" y="240" class="dim">every node param: (source, depth)</text>
+  <text x="666" y="257" class="dim">any node output &#8594; any parameter</text>
+  <text x="666" y="274" class="dim">per-cable gain + colour</text>
+  <path d="M650 250 C 626 250 632 446 612 446" class="dash"/>
+
+  <!-- LOCK-FREE -->
+  <rect x="650" y="298" width="300" height="84" rx="4" class="box"/>
+  <text x="666" y="320" class="h">LOCK-FREE EDITS</text>
+  <text x="666" y="338" class="dim">atomic param writes (live tweak)</text>
+  <text x="666" y="355" class="dim">atomic graph swap (structural)</text>
+  <text x="666" y="372" class="dim">relaxed atomics on the hot path</text>
+
+  <!-- CPU OPT -->
+  <rect x="650" y="396" width="300" height="332" rx="4" class="optbx"/>
+  <text x="666" y="418" class="title" fill="#39ff14" font-size="13">CPU OPTIMIZATIONS</text>
+  <text x="666" y="436" class="dim" font-size="10.5">(every block runs through this engine)</text>
+  <text x="666" y="462" class="green" font-size="11.5">&#8250; per-block param snapshot</text>
+  <text x="666" y="484" class="green" font-size="11.5">&#8250; relaxed atomics, reused scratch</text>
+  <text x="666" y="506" class="green" font-size="11.5">&#8250; CachedSVF (skip per-sample tan)</text>
+  <text x="666" y="528" class="green" font-size="11.5">&#8250; cached additive / unison / Risset</text>
+  <text x="666" y="550" class="green" font-size="11.5">&#8250; node-major block processing ~50%</text>
+  <text x="666" y="572" class="green" font-size="11.5">&#8250; linear FX on shared bus (N&#215;)</text>
+  <text x="666" y="594" class="green" font-size="11.5">&#8250; parallel multi-core voice loop</text>
+  <text x="666" y="616" class="green" font-size="11.5">&#8250; metering gated on editor-open</text>
+  <line x1="666" y1="632" x2="934" y2="632" stroke="#1a1a3e" stroke-width="1"/>
+  <text x="666" y="652" class="dim" font-size="10.5">cost / buffer = voices &#215; samples &#215; modules</text>
+  <text x="666" y="670" class="pink" font-size="10.5">multiplier (voices) &#8212; fixed by the bus</text>
+  <text x="666" y="687" class="cyan" font-size="10.5">slope (per-sample) &#8212; fixed by caching</text>
+  <text x="666" y="704" class="dim" font-size="10.5">+ node-major block processing</text>
+
+  <text x="24" y="816" class="dim" font-size="10">signal flows top &#8594; bottom (cyan); control / modulation enters from the right (dashed). zpwr-patch-core &#183; shared by zpwr-fx, zpwr-synth, zpwr-midi-fx</text>
+</svg>

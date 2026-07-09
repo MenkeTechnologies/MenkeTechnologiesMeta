@@ -1973,6 +1973,36 @@ gets both over their own document content from one shared implementation. Sessio
 each app's local prefs blob (per-app, not shared across apps). "None found", not proven; search
 not exhaustive.
 
+**171. Web browser with a user-controllable mastering DSP chain compiled into its own audio-service output-mix chokepoint, live-reconfigurable with nothing open** — `med`
+zwire compiles a full mastering chain into the Chromium **audio service** itself and applies it
+in `OutputController::OnMoreData()` — the per-stream output pull that **every** browser sound
+passes through before the OS device (HTMLMediaElement, MSE/YouTube, Web Audio, WebRTC alike),
+below the renderer's `AudioRendererMixer` (which streaming tabs bypass). The chain is per-stream,
+sample-rate-adaptive, and unity-by-default (bit-identical passthrough until a control engages it):
+preamp → parametric RBJ-biquad EQ cascade → gain → drive → stereo-linked compressor → feedback
+delay → reduced-Freeverb reverb (4 combs + 2 all-passes/ch) → M/S stereo width → equal-power
+pan/mono → brickwall limiter. It is **live-reconfigurable with nothing open and no relaunch**: the
+sandboxed audio service can't read the config file, so the unsandboxed browser process polls
+`$STATE/audio-eq` (25 ms) and pushes the spec over a new mojom `AudioService::SetZwireEqConfig`,
+which atomically swaps a process-global config every block; `bin/zwire` seeds it at launch
+(`--zwire-audio-eq`) so audio is shaped from the first block. A companion **meter back-channel**
+streams the REAL post-DSP output (Goertzel spectrum + peak/RMS + phase correlation + decimated
+stereo scope) via mojom `ZwireMeters.Pull` → `$STATE/meters` → the native host → the HUD Audio
+page — with **no `tabCapture`** (which mutes the source + drops audio on release), so closing the
+page never touches audio. *Basis:* `zwire/fork/patches/0022-audio-eq-output.patch`
+(`services/audio/output_controller.cc` `OnMoreData()` → `ZwireAudioEq` per-stream chain;
+`ZwireMeterWrite`/`ZwireMeterSnapshotJson`); `0024-audio-live-config.patch` (mojom
+`SetZwireEqConfig` live push off a browser-process file poller + a `ZwireMeters` pool-sequence
+meter feed); `zwire/extensions/hud-internal/pages/audio.js` (dashboard `buildSpec`/`parseSpec` +
+charts); `zwire/bin/zwire` (launch seed). *Caveat:* "None found", not proven — OS-level system
+equalizers shape all audio but aren't browser-internal or tab-independent at the browser's own mix
+stage; per-tab Web-Audio EQ extensions exist but only over captured/routed streams (they miss
+MSE/WebRTC and mute the source); no browser was found applying a user-controllable mastering DSP
+chain at its audio-service output chokepoint with a post-DSP meter back-channel; search not
+exhaustive. Capability requires the native fork build (the MV3 extension layer can't reach the
+audio service); the DSP was verified in isolation and runtime-verified @150.0.7871.46, but
+prior-art absence is not exhaustive.
+
 ---
 
 ## Appendix — deep prior-art analyses (marquee claims)
