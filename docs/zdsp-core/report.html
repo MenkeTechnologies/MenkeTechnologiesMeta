@@ -65,6 +65,25 @@
         </tbody>
       </table>
 
+      <h2 class="reg-h">JUCE modules per header</h2>
+      <p class="note">zdsp-core includes JUCE headers directly, so the consuming target must link the modules each header pulls in — they are not uniform across the seven units. <code>channel_strip.h</code> also uses <code>std::bit_cast</code>, which needs C++20 on the consuming target even though <code>zdsp::core</code> itself only requires C++17 (the test harness sets <code>cxx_std_20</code> for this reason).</p>
+      <table>
+        <thead><tr><th>header</th><th>juce modules</th></tr></thead>
+        <tbody>
+          <tr><td><code>ola_time_stretch.h</code></td><td><code>juce_audio_basics</code>, <code>juce_core</code></td></tr>
+          <tr><td><code>channel_strip.h</code></td><td><code>juce_dsp</code>, <code>juce_core</code></td></tr>
+          <tr><td><code>tone_audio_source.h</code></td><td><code>juce_audio_basics</code>, <code>juce_core</code></td></tr>
+          <tr><td><code>input_peak_callback.h</code></td><td><code>juce_audio_devices</code>, <code>juce_core</code></td></tr>
+          <tr><td><code>spectrogram_analysis.h</code></td><td><code>juce_dsp</code>, <code>juce_core</code></td></tr>
+          <tr><td><code>lock_free_stream_source.h</code></td><td><code>juce_audio_basics</code>, <code>juce_core</code></td></tr>
+          <tr><td><code>dsp_stereo_file_source.h</code></td><td>the three composed headers + <code>juce_audio_formats</code>, <code>juce_dsp</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">How it composes</h2>
+      <p class="note"><code>DspStereoFileSource</code> is the single orchestrator; every other unit is a piece it wires together. As a <code>juce::PositionableAudioSource</code> driven from the app's <code>AudioTransportSource</code>, its forward path per block runs: <code>AudioFormatReaderSource</code> (optionally wrapped in <code>LockFreeStreamSource</code> to move disk I/O off the audio thread) &rarr; tape-speed <code>ResamplingAudioSource</code> <em>or</em> <code>OlaTimeStretch.process</code> per <code>SpeedMode</code> &rarr; mono-source upmix &rarr; seek-fade ramp (<code>kSeekTotalSamples</code> = 1536: a 1024-sample mute then a 512-sample ramp) &rarr; per-sample <code>applyDspFrame</code> channel strip (3-band EQ &rarr; gain &rarr; pan) &rarr; the app's <code>InsertChain</code> when active &rarr; mono fold (deferred past the inserts so stereo plugins can't undo it) &rarr; peak/spectrum/scope taps. Reverse playback is a separate branch reading a pre-decoded RAM buffer backwards with no inserts.</p>
+      <p class="note">The one app coupling that was abstracted out is the <code>InsertChain</code> interface — four pure-virtual methods (<code>prepare(sampleRate, maxBlock)</code>, <code>release()</code>, <code>isActive()</code>, <code>process(buffer, startSample, numSamples)</code>) that zdsp-core declares and the consuming app implements to host VST/AU plugins. The orchestrator calls <code>prepare</code>/<code>release</code> alongside its own lifecycle and <code>process</code> after the channel strip when <code>isActive()</code>; plugin scanning, hosting, and state stay entirely in the app.</p>
+
       <h2 class="reg-h">Extraction provenance</h2>
       <p class="note">All seven units are verbatim ports out of the Audio-Haxor audio-engine's <code>Engine.cpp</code> — engine constants became configurable members, <code>appLogLine</code> became an optional <code>logLine</code>, and the in-app plugin chain became the <code>InsertChain</code> interface. The full DSP stack <em>and</em> the playback pipeline now live here; what stays in each consuming app is only the file-format wiring, IPC/transport plumbing, plugin scanning, and the <code>InsertChain</code> implementation.</p>
       <table>
@@ -74,8 +93,11 @@
         </tbody>
       </table>
 
+      <h2 class="reg-h">Tests</h2>
+      <p class="note">A headless JUCE console app (<code>tests/zdsp_tests.cpp</code>) runs known-answer unit tests over the pure-math surface of every header — dB&harr;linear conversion, power-of-two reduction, the spectrogram STFT frequency response (DC &rarr; bottom row, Nyquist &rarr; top row), the channel-strip pan law + biquad EQ DC gain, the OLA Hann window + constant-overlap-add property, the tone oscillator period/amplitude, and the peak meter's exponential release. It builds against the host JUCE and returns non-zero on failure: <code>cmake -S tests -B tests/build &amp;&amp; cmake --build tests/build &amp;&amp; ctest --test-dir tests/build --output-on-failure</code> (pass <code>-DZDSP_JUCE_DIR=/path/to/JUCE</code> to override the JUCE checkout).</p>
+
       <h2 class="reg-h">Consumption model</h2>
-      <p class="note">A consuming app adds <code>zdsp-core</code> as a submodule (typically under <code>libs/</code>), calls <code>add_subdirectory(libs/zdsp-core)</code>, and links <code>zdsp::core</code>. Because the library is header-only and links the host's own JUCE targets, there is no version skew between the app's JUCE and the DSP code. The units carry no host-specific assumptions beyond JUCE's audio-basics — they run identically inside Audio-Haxor's Tauri host and the JUCE plugin WebViews.</p>
+      <p class="note">A consuming app adds <code>zdsp-core</code> as a submodule (typically under <code>libs/</code>), calls <code>add_subdirectory(libs/zdsp-core)</code>, and links <code>zdsp::core</code>. Because the library is header-only and links the host's own JUCE targets, there is no version skew between the app's JUCE and the DSP code. The units carry no host-specific assumptions beyond the JUCE modules each header links (see the table above) — they run identically inside Audio-Haxor's Tauri host and the JUCE plugin WebViews.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zdsp-core &middot; engineering report</footer>
     </main>
