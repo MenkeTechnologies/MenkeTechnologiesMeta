@@ -7,7 +7,7 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-147-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-149-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-51_core-cyan.svg)](#tier-1--core-51)
 [![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 147 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 149 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -82,7 +82,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 All 149 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (51)
+### Tier 1 — Core (53)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -344,6 +344,8 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 1 — Core | [`ztmux-core`](https://github.com/MenkeTechnologies/ztmux-core) | — | — | — |
 | 1 — Core | [`zemacs`](https://github.com/MenkeTechnologies/zemacs) | [![CI](https://github.com/MenkeTechnologies/zemacs/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zemacs/actions/workflows/build.yml) [![gh-pages](https://github.com/MenkeTechnologies/zemacs/actions/workflows/gh-pages.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zemacs/actions/workflows/gh-pages.yml) | [![Release](https://github.com/MenkeTechnologies/zemacs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zemacs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zemacs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zemacs/tags) |
 | 1 — Core | [`zemacs-gui`](https://github.com/MenkeTechnologies/zemacs-gui) | — | [![Release](https://github.com/MenkeTechnologies/zemacs-gui/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zemacs-gui/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zemacs-gui?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zemacs-gui/tags) |
+| 1 — Core | [`htoprs`](https://github.com/MenkeTechnologies/htoprs) | [![CI](https://github.com/MenkeTechnologies/htoprs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/htoprs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/htoprs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/htoprs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/htoprs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/htoprs/tags) |
+| 1 — Core | [`ztmux`](https://github.com/MenkeTechnologies/ztmux) | [![CI](https://github.com/MenkeTechnologies/ztmux/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/ztmux/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/ztmux/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/ztmux/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/ztmux?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/ztmux/tags) |
 | 2 — Stryke ecosystem + tap | [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | [![CI](https://github.com/MenkeTechnologies/homebrew-menketech/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/homebrew-menketech/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/homebrew-menketech?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/homebrew-menketech/tags) |
 | 2 — Stryke ecosystem + tap | [`stryke-arrow`](https://github.com/MenkeTechnologies/stryke-arrow) | [![CI](https://github.com/MenkeTechnologies/stryke-arrow/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-arrow/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-arrow/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-arrow/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-arrow?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-arrow/tags) |
 | 2 — Stryke ecosystem + tap | [`stryke-aws`](https://github.com/MenkeTechnologies/stryke-aws) | [![CI](https://github.com/MenkeTechnologies/stryke-aws/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-aws/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-aws/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-aws/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-aws?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-aws/tags) |
@@ -438,6 +440,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-theme`](https://github.com/MenkeTechnologies/zpwr-theme) | [![CI](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zpwr-theme?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zpwr-theme/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`app-store`](https://github.com/MenkeTechnologies/app-store) | [![CI](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml) [![jekyll-gh-pages](https://github.com/MenkeTechnologies/app-store/actions/workflows/jekyll-gh-pages.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/jekyll-gh-pages.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/app-store?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/app-store/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-license`](https://github.com/MenkeTechnologies/zpwr-license) | — | — | — |
+| 6 — Apps, extensions, web & web-APIs | [`zwire`](https://github.com/MenkeTechnologies/zwire) | [![CI](https://github.com/MenkeTechnologies/zwire/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zwire/actions/workflows/ci.yml) [![pages](https://github.com/MenkeTechnologies/zwire/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zwire/actions/workflows/pages.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zwire?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zwire/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`MenkeTechnologiesPublications`](https://github.com/MenkeTechnologies/MenkeTechnologiesPublications) | — | — | — |
 
 ## [0x03] COMMON OPERATIONS
@@ -629,13 +632,13 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 51 | ~806 MB |
+| Tier 1 — Core | 53 | ~806 MB |
 | Tier 2 — Stryke ecosystem | 32 | ~38 MB |
 | Tier 3 — zsh-more-completions | 1 | ~203 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
 | Tier 5 — Editor / multiplexer plugins | 14 | ~12 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 21 | ~1.06 GB |
-| **Total** | **147** | **~2.2 GB** |
+| **Total** | **149** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
