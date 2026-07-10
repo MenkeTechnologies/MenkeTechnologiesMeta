@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zthrottle engineering report — the thin Tauri v2 host over the zthrottle-core engine: host command surface, GUI feature map, worker-pool job model and build. Early-stage and in active development.">
+  <title>zthrottle — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hud-static.css">
+  <link rel="stylesheet" href="tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZTHROTTLE // ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zthrottle" target="_blank" rel="noopener noreferrer">Source</a>
+          </nav>
+          <p class="docs-build-line">// thin Tauri v2 host · worker-pool job model · GUI feature map · build</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Home</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zthrottle" target="_blank" rel="noopener noreferrer">Source</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <section class="hero-stats">
+        <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version (early-stage)</span></div>
+        <div class="hero-stat"><span class="num">4</span><span class="lbl">benchmark axes + contention</span></div>
+        <div class="hero-stat"><span class="num">4</span><span class="lbl">monitor tabs</span></div>
+        <div class="hero-stat"><span class="num">v2</span><span class="lbl">Tauri</span></div>
+      </section>
+      <p class="note">zthrottle is a thin Tauri v2 host binary; all benchmark logic, the monitor data harvest, the command surface and the served frontend live in the <a href="https://github.com/MenkeTechnologies/zthrottle-core" target="_blank" rel="noopener noreferrer"><code>zthrottle-core</code></a> engine — see the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zthrottle-core/report.html" target="_blank" rel="noopener noreferrer">engine report</a> for the module map and command list. This page covers what the host adds around the engine. Early-stage and in active development.</p>
+
+      <h2 class="reg-h">Host surface</h2>
+      <table>
+        <thead><tr><th>area</th><th>role</th></tr></thead>
+        <tbody>
+          <tr><td>engine bridge</td><td><code>zth_invoke</code> forwards every benchmark and monitor command to <code>zthrottle-core</code>; stateless data-harvest runs on the tokio blocking pool without the engine mutex</td></tr>
+          <tr><td>job manager</td><td>a background-job registry (<code>job_start</code> / <code>job_list</code> / <code>job_result</code> / <code>job_partial</code> / <code>job_cancel</code> / <code>job_clear</code>) — cancellable, streaming, unlimited-concurrency storage scans surfaced in a drawer</td></tr>
+          <tr><td>tree index</td><td><code>tree_load</code> (instant cached read) + <code>tree_forget</code> (targeted delete) over the persistent SQLite directory map; <code>tree.index</code> / <code>tree.refresh</code> run as jobs</td></tr>
+          <tr><td>gear menu</td><td><code>save_screenshot</code> (xcap window capture) and <code>quit_app</code></td></tr>
+          <tr><td>Stryke Hooks (R2)</td><td>a bundled <code>stryke --lsp</code> sidecar + hook runner for the in-app scripting editor</td></tr>
+          <tr><td>shared embeds</td><td>the shared embedded PTY terminal (R3) and the multi-pane file browser (R10) from the zpwr component crates</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">GUI feature map</h2>
+      <table>
+        <thead><tr><th>tab</th><th>surface</th></tr></thead>
+        <tbody>
+          <tr><td>Benchmark</td><td>four axis gauges (Blackmagic-style sweeping needles), single-axis runs, RUN ALL, and the contention matrix + bottleneck-migration timeline</td></tr>
+          <tr><td>Processes</td><td>CPU/memory table, CPU-history graph, per-core bars, filter, and a left-/right-click signal menu (TERM · KILL · STOP · CONT · HUP · INT · QUIT · ABRT · USR1 · USR2)</td></tr>
+          <tr><td>Network</td><td>per-interface throughput with live download/upload sparkline history</td></tr>
+          <tr><td>Storage</td><td>a global macOS-Storage-style overview by auto-category, drill-down, find-biggest (the dirs Storage hides), build/cache-junk flags, SMB/NFS mount detection, and delete-to-reclaim — all backed by the persistent tree index for instant load</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Build</h2>
+      <p class="note">Tauri v2 over a webview; the frontend is served by the engine crate (single source of truth, shared with every embed). Build with <code>pnpm --dir app tauri build</code>; dev with <code>pnpm --dir app tauri dev</code>. The GUI harvests all monitor data through the worker pool so a minutes-long <code>/</code> scan never blocks the UI, and the storage map is persisted so launch is instant rather than a re-walk.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zthrottle &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="hud-theme.js"></script>
+</body>
+</html>
