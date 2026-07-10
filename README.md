@@ -7,9 +7,9 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-150-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-151-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-51_core-cyan.svg)](#tier-1--core-51)
-[![Tier 2](https://img.shields.io/badge/tier_2-32_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-32)
+[![Tier 2](https://img.shields.io/badge/tier_2-33_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-33)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-14_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-14)
@@ -20,7 +20,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 150 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 151 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -35,7 +35,7 @@
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
   - [Tier 1 — Core (51)](#tier-1--core-51)
-  - [Tier 2 — Stryke ecosystem + tap (32)](#tier-2--stryke-ecosystem--tap-32)
+  - [Tier 2 — Stryke ecosystem + tap (33)](#tier-2--stryke-ecosystem--tap-33)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (14)](#tier-5--editor--multiplexer-plugins-14)
@@ -60,7 +60,7 @@
 git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git && cd MenkeTechnologiesMeta && git submodule foreach --recursive 'git checkout main 2>/dev/null || true'
 ```
 
-`--recurse-submodules` fetches all 150 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
+`--recurse-submodules` fetches all 151 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -80,7 +80,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 150 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 151 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (53)
 
@@ -156,7 +156,7 @@ Five languages share one self-authored execution engine — the [`fusevm`](https
 | [`zemacs`](https://github.com/MenkeTechnologies/zemacs) | **Rust Emacs port** — a terminal modal IDE with a Vim-style modal editing core and full Spacemacs functionality layered on top; a windowed GUI build ships as `zemacs-gui`. **Free / OSS** (MPL-2.0) — in the app-store. |
 | [`zemacs-gui`](https://github.com/MenkeTechnologies/zemacs-gui) | **Native desktop GUI for `zemacs`** — wraps the zemacs modal-editing core in a windowed front-end (GUI tabs, menus, font rendering, mouse, native open/save dialogs), the way MacVim wraps Vim. **Free / OSS** (MPL-2.0) — in the app-store. |
 
-### Tier 2 — Stryke ecosystem + tap (32)
+### Tier 2 — Stryke ecosystem + tap (33)
 
 MenkeTechnologies distribution (single tap for every CLI tool) + per-service connector libraries for `stryke`.
 
@@ -175,6 +175,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 | [`stryke-gcp`](https://github.com/MenkeTechnologies/stryke-gcp) | Google Cloud Platform SDK bindings. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-gcp/) · [report](https://menketechnologies.github.io/stryke-gcp/report.html)</sub> |
 | [`stryke-grpc`](https://github.com/MenkeTechnologies/stryke-grpc) | gRPC client/server. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-grpc/) · [report](https://menketechnologies.github.io/stryke-grpc/report.html)</sub> |
 | [`stryke-gui`](https://github.com/MenkeTechnologies/stryke-gui) | GUI automation bridge — `stryke_gui` cdylib `dlopen`ed in-process on `use GUI`, fronting mouse/keyboard synthesis (enigo) + screen capture (xcap). Persistent `Enigo` handle in `OnceCell`, no fork-per-call. Isolates X11 / Wayland / CGEvent / SendInput linkage out of the stryke core. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-gui/) · [report](https://menketechnologies.github.io/stryke-gui/report.html)</sub> |
+| [`stryke-app`](https://github.com/MenkeTechnologies/stryke-app) | App automation bridge — `stryke_app` cdylib `dlopen`ed in-process on `use App`. Calls a MenkeTechnologies GUI app's verbs, reads its state, and subscribes to its events over the GUI Automation Bus (one Unix socket per app, `zgui-bridge` host); per-app connection pool, no fork-per-call. Semantic counterpart to `stryke-gui` — drives owned apps by name, not by pixel. |
 | [`stryke-k8s`](https://github.com/MenkeTechnologies/stryke-k8s) | Kubernetes API client. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-k8s/) · [report](https://menketechnologies.github.io/stryke-k8s/report.html)</sub> |
 | [`stryke-kafka`](https://github.com/MenkeTechnologies/stryke-kafka) | Kafka producer/consumer (rdkafka bindings). &middot; <sub>[docs](https://menketechnologies.github.io/stryke-kafka/) · [report](https://menketechnologies.github.io/stryke-kafka/report.html)</sub> |
 | [`stryke-mcpd`](https://github.com/MenkeTechnologies/stryke-mcpd) | MCP servers as single native binaries — validated tool specs, crash-isolated serving, root-jailed stock tool pack. Pure stryke, loaded on `use Mcpd`. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-mcpd/) · [report](https://menketechnologies.github.io/stryke-mcpd/report.html)</sub> |
@@ -360,6 +361,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 2 — Stryke ecosystem + tap | [`stryke-gcp`](https://github.com/MenkeTechnologies/stryke-gcp) | [![CI](https://github.com/MenkeTechnologies/stryke-gcp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-gcp/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-gcp/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-gcp/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-gcp?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-gcp/tags) |
 | 2 — Stryke ecosystem + tap | [`stryke-grpc`](https://github.com/MenkeTechnologies/stryke-grpc) | [![CI](https://github.com/MenkeTechnologies/stryke-grpc/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-grpc/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-grpc/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-grpc/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-grpc?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-grpc/tags) |
 | 2 — Stryke ecosystem + tap | [`stryke-gui`](https://github.com/MenkeTechnologies/stryke-gui) | [![CI](https://github.com/MenkeTechnologies/stryke-gui/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-gui/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-gui/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-gui/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-gui?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-gui/tags) |
+| 2 — Stryke ecosystem + tap | [`stryke-app`](https://github.com/MenkeTechnologies/stryke-app) | — | — | — |
 | 2 — Stryke ecosystem + tap | [`stryke-k8s`](https://github.com/MenkeTechnologies/stryke-k8s) | [![CI](https://github.com/MenkeTechnologies/stryke-k8s/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-k8s/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-k8s/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-k8s/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-k8s?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-k8s/tags) |
 | 2 — Stryke ecosystem + tap | [`stryke-kafka`](https://github.com/MenkeTechnologies/stryke-kafka) | [![CI](https://github.com/MenkeTechnologies/stryke-kafka/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-kafka/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-kafka/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-kafka/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-kafka?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-kafka/tags) |
 | 2 — Stryke ecosystem + tap | [`stryke-mcpd`](https://github.com/MenkeTechnologies/stryke-mcpd) | [![CI](https://github.com/MenkeTechnologies/stryke-mcpd/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/stryke-mcpd/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/stryke-mcpd/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/stryke-mcpd/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/stryke-mcpd?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/stryke-mcpd/tags) |
@@ -640,7 +642,7 @@ Measured fresh-clone size (working tree + `.git/modules/`, after `git clone --re
 | Tier 4 — Zsh ecosystem plugins | 28 | ~66 MB |
 | Tier 5 — Editor / multiplexer plugins | 14 | ~12 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 21 | ~1.06 GB |
-| **Total** | **150** | **~2.2 GB** |
+| **Total** | **151** | **~2.2 GB** |
 
 The bulk is in `MenkeTechnologies.github.io/` (~514 MB — accumulated screenshot history), `strykelang/` (~352 MB — vendored compiler/runtime sources), `zsh-more-completions/` (~203 MB), `Audio-Haxor/` (~161 MB — Tauri v2 frontend assets + JUCE C++), and `zshrs/` (~120 MB). `MenkeTechnologiesPublications/` itself is small (~22 MB of books/PDFs/tex), but it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches those three (~500 MB) a second time under it. Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits — current counts are from a fresh recursive clone.
 
