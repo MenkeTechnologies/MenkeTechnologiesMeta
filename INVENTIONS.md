@@ -2035,6 +2035,36 @@ prior-art absence is not exhaustive.
 
 ---
 
+**172. Desktop benchmark whose primary readout is cross-subsystem degradation-under-contention — an N×N interaction matrix plus a bottleneck-migration timeline** — `low`
+zthrottle's contention profiler drives disk, network, CPU, and memory simultaneously and reports not a
+score but the *interference* between axes: an isolated per-axis baseline, then an N×N interaction matrix
+(subject axis × co-loaded axis → % slowdown), then a bottleneck-migration timeline that cumulatively adds
+load and re-reads every active axis, then names the weakest link as the axis with the highest mean
+degradation across the matrix. Per-axis threads are kept near core count so contention is fair, not
+oversubscribed. The premise: a disk figure with the CPU idle and a CPU figure with the disk idle are
+numbers that never co-occur, and the interference between axes is what predicts real behaviour. *Basis:*
+`zthrottle/crates/zthrottle-core/src/contention.rs` (isolated baselines → `matrix` → `timeline` →
+weakest-link; `Load` per-axis threads); `Monitor::contention` in `sys.rs`. *Caveat:* concurrent
+multi-subsystem load is not novel — `stress-ng`, Geekbench, and OS stress harnesses all co-load several
+axes; the candidate-first is the *packaging* — a degradation matrix + bottleneck-migration timeline as the
+desktop product's primary readout — not the co-loading itself. "None found," not proven; confidence
+deliberately low.
+
+*Supporting architecture (not itself claimed as a first):* zthrottle's storage monitor is backed by a
+persistent SQLite directory index built by a **single** full filesystem walk on a cold/wiped DB (streamed,
+committed every 20k dirs so a mid-walk restart keeps progress); thereafter the fs-watch hook is the
+**only** automatic writer — a `notify` FSEvents/inotify watch on `$HOME`, debounced (1.5 s quiet, ≥3 s
+between fires, ≤64 coalesced dirs), driving a targeted `update_paths` that re-sizes only the changed dirs
+and propagates the byte delta to ancestors instead of re-walking; a new `target/` is found by re-walking
+from its nearest indexed ancestor. Reads are instant; every other write is a user action
+(refresh/reindex/delete/junk-pattern `reflag` in one SQL pass/size freshen). *Basis:*
+`zthrottle-core/src/sys.rs` (`index_tree`/`refresh_tree`/`update_paths`), `treedb.rs`, the
+`zt-storage-watch` thread in `app/src-tauri/src/main.rs`. *Not claimed:* fast local indexers exist
+(Everything, macOS `mds`, `fswatch`); this is a well-executed instance of a known pattern, documented for
+its audit (full scan once → hooks-only), not as a novelty.
+
+---
+
 ## Appendix — deep prior-art analyses (marquee claims)
 
 ### Why each near-miss isn't a dup — GP DAW as a plugin / embeddable (#64)
