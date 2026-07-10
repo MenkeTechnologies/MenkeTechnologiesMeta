@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 700" font-family="'Share Tech Mono', ui-monospace, monospace">
+  <defs>
+    <marker id="ac" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L8 4.5 L0 9 Z" fill="#05d9e8"/></marker>
+    <marker id="am" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L8 4.5 L0 9 Z" fill="#d300c5"/></marker>
+    <marker id="ad" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L8 4.5 L0 9 Z" fill="#7a8ba8"/></marker>
+    <style>
+      .t     { fill:#e0f0ff; font-size:12.5px; }
+      .ts    { fill:#e0f0ff; font-size:11px; }
+      .dim   { fill:#7a8ba8; font-size:11px; }
+      .dims  { fill:#7a8ba8; font-size:10px; }
+      .title { fill:#05d9e8; font-family:'Orbitron', sans-serif; font-weight:700; font-size:20px; letter-spacing:1px; }
+      .sub   { fill:#7a8ba8; font-size:12px; }
+      .lbl   { font-family:'Orbitron', sans-serif; font-weight:700; font-size:12px; letter-spacing:1px; }
+      .box   { fill:#0d0d1a; stroke:#05d9e8; stroke-width:1.5; }
+      .hookbx{ fill:#0d0d1a; stroke:#d300c5; stroke-width:1.5; }
+      .userbx{ fill:#0f0f1c; stroke:#3a3a5e; stroke-width:1.2; }
+      .db    { fill:#08131a; stroke:#05d9e8; stroke-width:2; }
+      .chip  { fill:#10182a; stroke:#1e3550; stroke-width:1; }
+      .green { fill:#0b140b; stroke:#39ff14; stroke-width:1.4; }
+      .ac    { stroke:#05d9e8; stroke-width:1.7; fill:none; marker-end:url(#ac); }
+      .am    { stroke:#d300c5; stroke-width:1.7; fill:none; marker-end:url(#am); }
+      .ad    { stroke:#7a8ba8; stroke-width:1.2; fill:none; stroke-dasharray:4 3; marker-end:url(#ad); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1040" height="700" fill="#0a0a14"/>
+  <rect x="2" y="2" width="1036" height="696" fill="none" stroke="#1a1a3e" stroke-width="1"/>
+
+  <!-- header -->
+  <text x="28" y="42" class="title">ZTHROTTLE · STORAGE INDEX</text>
+  <text x="28" y="64" class="sub">full scan once  →  the fs-watch hook keeps the SQLite index live · zero loading on read</text>
+
+  <!-- ============ 1. COLD START ============ -->
+  <text x="28" y="100" class="lbl" fill="#05d9e8">1 · COLD START — RUNS ONCE</text>
+  <text x="250" y="100" class="dim">first launch or wiped DB (manual rebuild otherwise)</text>
+
+  <rect class="box" x="28" y="112" width="150" height="58" rx="6"/>
+  <text x="103" y="136" class="t" text-anchor="middle">disk root /</text>
+  <text x="103" y="154" class="dims" text-anchor="middle">recursive, du -x</text>
+
+  <line class="ac" x1="178" y1="141" x2="232" y2="141"/>
+
+  <rect class="box" x="234" y="112" width="230" height="58" rx="6"/>
+  <text x="349" y="134" class="t" text-anchor="middle">index_tree()</text>
+  <text x="349" y="152" class="dims" text-anchor="middle">full walk · streams · batch-commit 20k</text>
+
+  <line class="ac" x1="464" y1="141" x2="518" y2="141"/>
+
+  <rect class="box" x="520" y="112" width="150" height="58" rx="6"/>
+  <text x="595" y="136" class="t" text-anchor="middle">persist → DB</text>
+  <text x="595" y="154" class="dims" text-anchor="middle">survives restart</text>
+
+  <!-- once badge -->
+  <rect class="green" x="700" y="112" width="120" height="58" rx="6"/>
+  <text x="760" y="137" class="ts" text-anchor="middle" fill="#39ff14">ONCE</text>
+  <text x="760" y="155" class="dims" text-anchor="middle">no periodic re-walk</text>
+
+  <!-- arrow down to DB -->
+  <line class="ac" x1="595" y1="170" x2="595" y2="196"/>
+
+  <!-- ============ THE DB HUB ============ -->
+  <rect class="db" x="150" y="198" width="740" height="118" rx="8"/>
+  <text x="172" y="226" class="lbl" fill="#05d9e8">SQLite · tree.db (WAL)</text>
+  <text x="360" y="226" class="dim">single source of truth · read-only in steady state</text>
+
+  <rect class="chip" x="172" y="240" width="200" height="56" rx="5"/>
+  <text x="272" y="262" class="ts" text-anchor="middle">dirs</text>
+  <text x="272" y="280" class="dims" text-anchor="middle">path · size · mtime · junk</text>
+
+  <rect class="chip" x="386" y="240" width="200" height="56" rx="5"/>
+  <text x="486" y="262" class="ts" text-anchor="middle">junk_patterns</text>
+  <text x="486" y="280" class="dims" text-anchor="middle">user-editable · reflag (1 SQL pass)</text>
+
+  <rect class="chip" x="600" y="240" width="270" height="56" rx="5"/>
+  <text x="735" y="262" class="ts" text-anchor="middle" fill="#05d9e8">reads · instant</text>
+  <text x="735" y="280" class="dims" text-anchor="middle">tree_load · delete_candidates → GUI</text>
+
+  <!-- GUI read arrow -->
+  <line class="ad" x1="870" y1="268" x2="960" y2="268"/>
+  <text x="1012" y="264" class="dim" text-anchor="end">GUI</text>
+  <text x="1012" y="279" class="dims" text-anchor="end">no spinner</text>
+
+  <!-- write arrow up from update_paths to the DB hub -->
+  <line class="am" x1="577" y1="402" x2="577" y2="318"/>
+  <text x="585" y="360" class="dims" fill="#d300c5">write</text>
+
+  <!-- ============ 2. HOOKS ============ -->
+  <text x="28" y="392" class="lbl" fill="#d300c5">2 · STEADY STATE — THE HOOK (only automatic writer)</text>
+
+  <rect class="hookbx" x="28" y="404" width="150" height="58" rx="6"/>
+  <text x="103" y="428" class="t" text-anchor="middle">FSEvents</text>
+  <text x="103" y="446" class="dims" text-anchor="middle">/ inotify · notify</text>
+
+  <line class="am" x1="178" y1="433" x2="220" y2="433"/>
+
+  <rect class="hookbx" x="222" y="404" width="196" height="58" rx="6"/>
+  <text x="320" y="428" class="ts" text-anchor="middle">debounce</text>
+  <text x="320" y="446" class="dims" text-anchor="middle">1.5s quiet · ≥3s · ≤64 dirs</text>
+
+  <line class="am" x1="418" y1="433" x2="460" y2="433"/>
+
+  <rect class="hookbx" x="462" y="404" width="230" height="58" rx="6"/>
+  <text x="577" y="426" class="t" text-anchor="middle">update_paths()</text>
+  <text x="577" y="444" class="dims" text-anchor="middle">targeted: resize · propagate · prune</text>
+
+  <line class="am" x1="692" y1="433" x2="734" y2="433"/>
+
+  <rect class="hookbx" x="736" y="404" width="170" height="58" rx="6"/>
+  <text x="821" y="426" class="ts" text-anchor="middle">storage-changed</text>
+  <text x="821" y="444" class="dims" text-anchor="middle">GUI re-reads in place</text>
+
+  <!-- new-dir note -->
+  <text x="462" y="480" class="dims">new dir → re-walk from nearest indexed ancestor (mtime-incremental)</text>
+
+  <!-- ============ 3. USER ACTIONS ============ -->
+  <text x="28" y="520" class="lbl" fill="#7a8ba8">3 · USER ACTIONS — MANUAL ONLY (no timer)</text>
+
+  <rect class="userbx" x="28" y="532" width="176" height="46" rx="6"/>
+  <text x="116" y="551" class="ts" text-anchor="middle">↻ refresh (full)</text>
+  <text x="116" y="568" class="dims" text-anchor="middle">rediscover off-time builds</text>
+
+  <rect class="userbx" x="214" y="532" width="150" height="46" rx="6"/>
+  <text x="289" y="551" class="ts" text-anchor="middle">↻ reindex</text>
+  <text x="289" y="568" class="dims" text-anchor="middle">explicit full rebuild</text>
+
+  <rect class="userbx" x="374" y="532" width="150" height="46" rx="6"/>
+  <text x="449" y="551" class="ts" text-anchor="middle">delete</text>
+  <text x="449" y="568" class="dims" text-anchor="middle">prune + decrement</text>
+
+  <rect class="userbx" x="534" y="532" width="170" height="46" rx="6"/>
+  <text x="619" y="551" class="ts" text-anchor="middle">edit patterns</text>
+  <text x="619" y="568" class="dims" text-anchor="middle">reflag · SQL, no walk</text>
+
+  <rect class="userbx" x="714" y="532" width="170" height="46" rx="6"/>
+  <text x="799" y="551" class="ts" text-anchor="middle">freshen</text>
+  <text x="799" y="568" class="dims" text-anchor="middle">tree_resize · self-heal</text>
+
+  <line class="ad" x1="456" y1="578" x2="456" y2="602"/>
+
+  <!-- ============ AUDIT ============ -->
+  <rect class="green" x="28" y="606" width="984" height="70" rx="8"/>
+  <text x="52" y="636" class="lbl" fill="#39ff14">AUDIT ✓ PASS</text>
+  <text x="200" y="632" class="t">update_paths (the fs-watch hook) is the ONLY automatic ongoing writer.</text>
+  <text x="200" y="652" class="dim">Full walk runs once (cold DB / manual rebuild). No periodic or timer-driven re-walk —</text>
+  <text x="200" y="668" class="dim">verified across every index_tree / refresh_tree / update_paths call site.</text>
+</svg>
