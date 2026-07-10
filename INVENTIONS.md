@@ -1914,6 +1914,36 @@ Tauri/JUCE zgui-core app can join by registering the plugin + loading the shim. 
 exists across the git pins (local crate `0.3.7`, ztranslator `v0.3.5`, zpwrchrome-host `v0.3.0`
 without the `tauri` feature). Inert wherever the host isn't connected.
 
+**169a. The theme bus extended to a terminal modal editor — bidirectional, over the editor's own ported schemes** — `med`
+zemacs — a terminal TUI editor, not a browser or a Tauri/JUCE GUI app — joins the #169
+`~/.zwire/global.toml` theme bus as a first-class peer in **both** directions, without the
+`zgui-core` JS shim or the `zwire-theme` Tauri plugin those GUI consumers ride on (a terminal
+editor can host neither). **Read side:** a dedicated native `notify` watcher on `~/.zwire`
+re-applies the matching theme the instant zwire's `{scheme, ui.light}` changes — no keypress or
+focus event — hopping onto the editor's main thread via `job::dispatch_blocking`, and maps the 8
+bus schemes onto zemacs's own ported `zgui-<scheme>` / `zgui-<scheme>-light` themes. **Write
+side:** committing a `zgui-*` theme in the editor (`:theme`, the picker, `:theme-toggle`)
+reverse-maps to `(scheme, light)` and rewrites just those two keys in `global.toml`
+(format-preserving via `toml_edit`, atomic temp+rename — zwire's other keys anim/glow/scanlines/
+vignette left byte-intact), which zwire's own watcher then fans out to the browser + native chrome
++ GUI apps. Echo between the two watchers is broken by writing only on a *committed* set (picker
+previews, which leave `last_theme = Some`, are excluded) and skipping any write whose values
+already match on disk. Behind one editor setting (`sync-zwire-theme`, default off). *Basis:*
+`zemacs/zemacs-term/src/zwire.rs` (`theme_name`:74 + `theme_name_from_toml`:81 read/map;
+`scheme_from_theme`:110 reverse-map; `spawn_watcher`:222 / `run_watcher`:235 the `notify` watcher
+→ `job::dispatch_blocking` → `apply`:193; `write_back_to`:136 the `toml_edit` surgical edit,
+`write_atomic`:182); `zemacs/zemacs-term/src/application.rs:585` (write-back hook at the single
+`ConfigEvent::ThemeChanged` choke, gated on `last_theme.is_none()` to exclude previews), `:181`
+(watcher spawn at boot); `zemacs/zemacs-view/src/editor.rs:557` (`sync_zwire_theme` setting);
+scheme whitelist `zwire-host/src/store.rs:26` (`SCHEMES`). *Caveat:* extends #169's existing theme
+bus rather than inventing colour-scheme sync — file-based multi-app palette propagation is prior
+art (base16-shell, pywal, wpgtk), and #169 already wires the browser + Tauri/JUCE apps; the narrow
+increment here is a **terminal modal editor** joining that specific bus **bidirectionally** via a
+native watcher + format-preserving write-back that maps onto the editor's own ported themes (the
+GUI consumers' JS/Tauri adapters can't apply to a TUI). Default-off; only the 8 `zgui-*` schemes
+round-trip (non-app-shell editor themes are never pushed). Verified: 11 unit tests + an end-to-end
+pty run (`:theme zgui-matrix` → `global.toml` `scheme=matrix`, other keys preserved).
+
 **170. First desktop application suite where multiple non-terminal GUI apps embed one shared in-app tmux window manager, each tiling its own document content** — `high`
 Seven independent desktop GUI apps — **zemacs-gui** (an editor per pane), **zemail** (an
 independent mail view per pane — split to triage several folders/accounts side by side),
