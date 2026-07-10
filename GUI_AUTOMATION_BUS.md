@@ -275,16 +275,33 @@ Per app (one session each, your 16-pane workflow):
 
 Then fan out to zemail, zcontainer, zftp, zstation, zterminal, the rest.
 
-## 12. Why this clears the bar
+## 12. Novelty — honest prior-art analysis
 
-- **World-first capability:** an owned bytecode-JIT language (stryke) as the native, semantic automation
-  layer for an entire owned, cross-platform GUI suite, with cross-app orchestration from one terminal.
-  AppleScript is per-OS, one language, opt-in `sdef`, no cross-app value threading of this kind; JXA is
-  macOS-only; nobody ships a unified compiled bus across their own apps. (Prior-art absence is
-  non-exhaustive, per `INVENTIONS.md` methodology — recorded as "none found", not proven categorical.)
-- **World-fastest leg:** stryke is a Cranelift-JIT VM; in-proc calls are a host callback, not a fork;
-  out-of-proc is a Unix socket, not HTTP. No subprocess per call (same discipline as `stryke-gui`'s
-  persistent `Enigo` handle).
+This is a **combination** first, not a single new capability. Embedding a language in an app, scripting
+across apps, and a vendor-authored automation language each **predate this separately**. The claim is the
+*conjunction*, under constraints. Prior-art absence below is **non-exhaustive** and the bus is
+**unbuilt** — every claim here is true only once §11 ships, not today (0 apps expose the surface now).
+
+The four nearest prior arts, and why each fails a load-bearing leg:
+
+| Prior art | Matches | Fails on |
+| --- | --- | --- |
+| **AppleScript / OSA** (Apple, 1993) — 20+ first-party apps scriptable | app count, vendor language | **macOS-only**; apps are Apple-Event **targets**, interpreter is external (`osascript`/`NSAppleScript`) — **not embedded** in the app |
+| **VBA** (Microsoft) — runtime hosted in-process in Word/Excel/… | **in-process embedding**, vendor language, cross-app (COM/OLE) | **not cross-platform** (Windows-first, Mac subset, no Linux); single domain (office) |
+| **LibreOffice + Basic/UNO** — cross-platform, embedded scripting, scriptable across apps | cross-platform, embedding, cross-app | single domain (office; ~6 apps); interpreted Basic, **no JIT**; component model, **not shared embeddable cores**; not solo |
+| **KDE + Kross/D-Bus** — domain-diverse apps, scriptable across them | **domain diversity**, cross-app | Kross **"is not a scripting language"** — it **bridges Python/Ruby/JS/Falcon**; **no owner-authored language**, no JIT, not solo, IPC/component not shared cores |
+
+**What survives — the constrained combination, none found:** a **domain-diverse** (Docker, PDF, email,
+VPN, DAW, browser…), **cross-platform**, **solo-authored** GUI suite driven by the author's own
+**from-scratch Cranelift-JIT language** (stryke), **embedded in-process** across **shared embeddable
+cores**. No single prior art holds all of those at once — AppleScript is macOS-only + external, VBA is
+Windows + single-domain, LibreOffice is single-domain + no JIT, KDE has no owner language. Recorded per
+`INVENTIONS.md` methodology as **"none found," low confidence**, a combination/packaging novelty — **not**
+a proven categorical single-capability first.
+
+**Speed leg:** stryke is a Cranelift-JIT VM; in-proc calls are a host callback, not a fork; out-of-proc
+is a Unix socket, not HTTP. No subprocess per call (same discipline as `stryke-gui`'s persistent `Enigo`
+handle).
 
 ## 13. Open questions
 
