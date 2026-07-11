@@ -54,7 +54,7 @@ pages() { # deterministic via pdfinfo (poppler); mdls is a Spotlight-timing-depe
 category_for() {
   case "$1" in
     strykelang|zshrs|elisprs|awkrs|vimlrs|zemacs) echo "Language reference" ;;
-    fusevm|zterminal|powerliners|desktop-in-rust|inventions|ztmux|zwire) echo "Companion" ;;
+    fusevm|zterminal|powerliners|desktop-in-rust|inventions|ztmux|zwire|gui-automation-bus) echo "Companion" ;;
     zpwr) echo "Encyclopedia" ;;
     fantasy|scifi|scifi2|scifi3) echo "Novel" ;;
     zpwr-synth|zpwr-fx|zpwr-midi-fx|zpwr-daw|zpwr-patch-core|zpwr-clip-engine) echo "Audio / DSP" ;;
