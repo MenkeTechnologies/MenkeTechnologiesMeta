@@ -4,7 +4,8 @@ Status: proposed. Defines how **stryke scripts drive every MenkeTechnologies GUI
 in-process and from the shell, with cross-app orchestration. Extends the existing user-programmable
 command palette (`zgui-core/webui/user-commands.js`) from a fire-and-forget step runner into a
 bidirectional automation surface. Companion to `GUI_APP_ARCHITECTURE.md` (shell/view boundary) and
-`GUI_APP_REQUIREMENTS.md`.
+`GUI_APP_REQUIREMENTS.md`. The live surface every app exposes is catalogued in
+[`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) (generated from each app's verb source).
 
 ---
 
