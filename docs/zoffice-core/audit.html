@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zoffice vs Microsoft Office — a feature-group audit. What Word, Excel, PowerPoint and Access do, mapped against what the zoffice engine actually implements today, derived from the source symbols.">
+  <title>zoffice vs Microsoft Office — Feature Audit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 82rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 16px 0; }
+    .card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); padding: 14px 16px; }
+    .card h3 { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 13px; letter-spacing: 1px; margin: 0 0 6px; }
+    .card p { color: var(--text-dim); font-size: 12.5px; line-height: 1.6; margin: 0; }
+    .card code { color: var(--accent-light); }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 26px 0 8px; }
+    .aud-app { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 16px; letter-spacing: 1px; margin: 28px 0 2px; }
+    .aud-sub { color: var(--text-dim); font-size: 12px; font-family: 'Share Tech Mono', monospace; margin: 0 0 8px; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    table.aud { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; margin: 4px 0 6px; }
+    table.aud th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    table.aud td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    table.aud td:first-child { color: var(--text); white-space: nowrap; }
+    table.aud code { color: var(--accent-light); }
+    .s-full { color: var(--green); font-weight: 700; }
+    .s-part { color: var(--cyan); font-weight: 700; }
+    .s-none { color: var(--accent); font-weight: 700; }
+    .legend { display: flex; gap: 22px; flex-wrap: wrap; margin: 6px 0 18px; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZOFFICE // MICROSOFT OFFICE &mdash; FEATURE AUDIT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering Report</a>
+            <span class="sep">/</span>
+            <span class="current">MS Office Audit</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zoffice-core" target="_blank" rel="noopener noreferrer">Source</a>
+          </nav>
+          <p class="docs-build-line">// what Word &middot; Excel &middot; PowerPoint &middot; Access do, mapped against what the zoffice engine implements &mdash; status derived from source symbols, not asserted</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="report.html">Engineering Report</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="lede">This audit maps the <strong>Microsoft Office</strong> feature surface &mdash; Word, Excel, PowerPoint, Access &mdash; against what the <strong>zoffice</strong> engine actually implements today. Granularity is the <em>feature group</em> (styles, charts, track-changes, pivot tables&hellip;), not the individual menu command; a command-level list would run to thousands of rows and obscure the shape. Every zoffice status below is grounded in an engine symbol read directly from <code>src/writer.rs</code>, <code>src/calc.rs</code>, <code>src/impress.rs</code> and <code>src/base.rs</code>, cross-checked against the source-derived <a href="report.html">engineering report</a>.</p>
+
+      <p class="lede">The single most important finding is a <strong>read / write asymmetry</strong>. zoffice is a comprehensive, high-fidelity <em>reader</em> of ODF and OOXML across all six apps, and a WYSIWYG <em>viewer</em> in the desktop shell. It is <em>not yet</em> a full authoring suite: writing splits into three tiers, and only the narrowest one is lossless. Read that asymmetry first, then the per-app tables.</p>
+
+      <div class="card-grid">
+        <div class="card"><h3>Tier 1 &mdash; Read</h3><p><span class="s-full">FULL.</span> All six apps parse real ODF/OOXML packages: text, formatting, tables, styles, charts, animations, formulas, database catalogs. This is where zoffice is strongest &mdash; close to LibreOffice-grade coverage on the read path.</p></div>
+        <div class="card"><h3>Tier 2 &mdash; Lossless patch</h3><p><span class="s-part">NARROW.</span> <code>replace_lossless</code> (find/replace) and <code>set_cell_lossless</code> (single cell) edit the <em>original</em> package XML in place, preserving all formatting &mdash; but only for those narrow operations.</p></div>
+        <div class="card"><h3>Tier 3 &mdash; Full save</h3><p><span class="s-part">CLOSING.</span> Full-save fidelity is being closed incrementally. <code>save_xlsx</code> preserves formulas, merged cells, named ranges and number-vs-text cell types, and <code>save_ods</code> now writes the ODF spreadsheet with the same fidelity as xlsx (values, number/text types, formulas, merged ranges, named ranges); <code>save_docx</code> / <code>save_odt</code> preserve every paragraph property (alignment, indent, spacing, shading, page-break, heading &amp; list level) and full run-level character formatting (bold, italic, underline, strike, font, size, color, caps, super/subscript, letter-spacing). Still dropped: cell number-formats / styles, tables, images.</p></div>
+      </div>
+
+      <p class="lede legend">
+        <span><span class="s-full">&#10003;</span> implemented / full</span>
+        <span><span class="s-part">&#9680;</span> partial &mdash; read-only, compute-only, or narrow</span>
+        <span><span class="s-none">&#9675;</span> absent</span>
+      </p>
+
+      <h2 class="reg-h">Summary by component</h2>
+      <table class="aud">
+        <thead><tr><th>Component</th><th>MS app</th><th>Read</th><th>Write / edit</th><th>Estimated parity</th></tr></thead>
+        <tbody>
+          <tr><td>Calc</td><td>Excel</td><td><span class="s-full">&#10003; full</span> &mdash; 300+ functions, formula eval</td><td><span class="s-part">&#9680;</span> 1-cell lossless; full save (xlsx + ods) keeps formulas/merges/named-ranges/types</td><td>~55% (read-weighted)</td></tr>
+          <tr><td>Writer</td><td>Word</td><td><span class="s-full">&#10003; full</span> &mdash; all structures parsed</td><td><span class="s-part">&#9680;</span> find/replace lossless; full save keeps paragraph properties</td><td>~35%</td></tr>
+          <tr><td>Impress</td><td>PowerPoint</td><td><span class="s-full">&#10003; full</span> &mdash; slides, animations, media</td><td><span class="s-part">&#9680;</span> text + positioned shapes save (pptx + odp) + add slide</td><td>~25%</td></tr>
+          <tr><td>Base</td><td>Access</td><td><span class="s-part">&#9680;</span> <code>.odb</code> only, embedded HSQLDB</td><td><span class="s-none">&#9675;</span> no DDL/DML write</td><td>~10%</td></tr>
+        </tbody>
+      </table>
+      <p class="aud-sub">Parity figures are estimates weighted toward the read path; treat them as directional, not measured. The per-feature rows below are the ground truth.</p>
+
+      <h2 class="aud-app">Excel &rarr; Calc</h2>
+      <p class="aud-sub">reads .xlsx / .xls / .ods / .fods / .csv &middot; engine: src/calc.rs</p>
+      <table class="aud">
+        <thead><tr><th>Feature group</th><th>Excel</th><th>zoffice Calc</th><th>Evidence / note</th></tr></thead>
+        <tbody>
+          <tr><td>Open formats</td><td>xlsx, xls, ods, csv</td><td><span class="s-full">&#10003;</span> xlsx, xls, ods, fods, csv</td><td>full OOXML + ODF + legacy OLE2 read</td></tr>
+          <tr><td>Save formats</td><td>full-fidelity</td><td><span class="s-part">&#9680;</span> xlsx and ods both keep formulas + merges + named ranges + numeric types; 1-cell lossless</td><td><code>save_xlsx</code> writes <code>&lt;f&gt;</code>/<code>&lt;v&gt;</code>/<code>mergeCells</code>/<code>definedNames</code>; <code>save_ods</code> writes <code>table:formula</code>/spanned merges/<code>table:named-expressions</code>; number-formats + styles still dropped</td></tr>
+          <tr><td>Formula engine</td><td>~480 functions</td><td><span class="s-full">&#10003;</span> 300+ functions, recursive-descent eval</td><td>math, stats, financial, date, text, lookup, database, engineering, logical, info families</td></tr>
+          <tr><td>Dynamic arrays / spill</td><td>FILTER, SORT, UNIQUE, SEQUENCE</td><td><span class="s-full">&#10003;</span> implemented</td><td>Excel-365 dynamic-array family present</td></tr>
+          <tr><td>Matrix functions</td><td>MMULT, MINVERSE, TRANSPOSE</td><td><span class="s-full">&#10003;</span> implemented</td><td>MMULT / MINVERSE / MUNIT / MDETERM / TRANSPOSE</td></tr>
+          <tr><td>Number formatting</td><td>custom format codes</td><td><span class="s-full">&#10003;</span> parsed + applied on display</td><td><code>number_formats</code>, format-code engine</td></tr>
+          <tr><td>Named ranges</td><td>full</td><td><span class="s-full">&#10003;</span> parsed + resolved</td><td><code>named_ranges_with_refs</code></td></tr>
+          <tr><td>Merged cells</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>enumerated</td></tr>
+          <tr><td>Comments / notes</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>calc.comments</code></td></tr>
+          <tr><td>Conditional formatting</td><td>full editor</td><td><span class="s-part">&#9680;</span> read-only, not editable</td><td><code>conditional_formats</code> enumerates rules</td></tr>
+          <tr><td>Data validation</td><td>full</td><td><span class="s-part">&#9680;</span> read-only, not editable</td><td><code>data_validations</code></td></tr>
+          <tr><td>Charts</td><td>50+ types, editable</td><td><span class="s-part">&#9680;</span> read + render data, no edit</td><td><code>charts_render</code> / <code>charts_detail</code></td></tr>
+          <tr><td>PivotTables</td><td>full drag-drop builder</td><td><span class="s-part">&#9680;</span> compute only, no builder</td><td><code>pivot_compute</code> / <code>pivot_compute_multi</code></td></tr>
+          <tr><td>Frozen panes</td><td>full</td><td><span class="s-part">&#9680;</span> read flag only</td><td><code>has_frozen_panes</code></td></tr>
+          <tr><td>Sheet protection</td><td>full</td><td><span class="s-part">&#9680;</span> read/enumerated</td><td><code>sheet_protections</code></td></tr>
+          <tr><td>Worksheet insert / delete</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no add/remove sheet API</td></tr>
+          <tr><td>Sparklines</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Slicers / timelines</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Macros (VBA)</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Power Query / Power Pivot</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Solver / Goal Seek</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Export</td><td>PDF</td><td><span class="s-full">&#10003;</span> PDF, HTML, Markdown, CSV</td><td><code>calc.pdf</code>, <code>to_html/to_markdown/to_csv</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="aud-app">Word &rarr; Writer</h2>
+      <p class="aud-sub">reads .odt / .docx / .doc / .rtf / .fodt &middot; engine: src/writer.rs</p>
+      <table class="aud">
+        <thead><tr><th>Feature group</th><th>Word</th><th>zoffice Writer</th><th>Evidence / note</th></tr></thead>
+        <tbody>
+          <tr><td>Open formats</td><td>docx, doc, rtf, odt, txt</td><td><span class="s-full">&#10003;</span> odt, docx, doc, rtf, fodt</td><td>OOXML + ODF + legacy OLE2 + RTF read</td></tr>
+          <tr><td>Save formats</td><td>full-fidelity</td><td><span class="s-part">&#9680;</span> docx/odt keep all paragraph props; find/replace lossless</td><td><code>save_docx</code> / <code>save_odt</code> write alignment/indent/spacing/shading/page-break/heading/list; run-level char formatting + tables still dropped</td></tr>
+          <tr><td>Character formatting</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>bold, italic, underline, strike, color, highlight, font, size, super/subscript, caps &mdash; writer.rs:80</td></tr>
+          <tr><td>Paragraph formatting</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>alignment, indent, spacing, shading, page breaks</td></tr>
+          <tr><td>Tables</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>cells, borders, colors, merges, row/col spans</td></tr>
+          <tr><td>Lists</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>nesting levels, ordered vs bullet</td></tr>
+          <tr><td>Images (inline)</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>inline_images</code></td></tr>
+          <tr><td>Headers / footers</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>headers_footers</code></td></tr>
+          <tr><td>Hyperlinks / bookmarks</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>hyperlinks_with_text</code>, <code>bookmark_text</code></td></tr>
+          <tr><td>Comments</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>comment_details</code></td></tr>
+          <tr><td>Footnotes / endnotes</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>footnotes</code></td></tr>
+          <tr><td>Content controls / form fields</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>content_controls</code></td></tr>
+          <tr><td>Styles</td><td>full catalog + edit</td><td><span class="s-part">&#9680;</span> read catalog, not editable</td><td>distinct paragraph styles enumerated</td></tr>
+          <tr><td>Track changes</td><td>full accept/reject</td><td><span class="s-part">&#9680;</span> read authors + counts, no accept/reject</td><td><code>revision_authors</code>, writer.rs:331</td></tr>
+          <tr><td>Mail merge</td><td>full execute</td><td><span class="s-part">&#9680;</span> fields extracted, not executed</td><td><code>merge_fields</code></td></tr>
+          <tr><td>In-place editing</td><td>full WYSIWYG</td><td><span class="s-none">&#9675;</span> absent</td><td>no inline edit; whole-document replace only</td></tr>
+          <tr><td>TOC / references / citations</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no TOC/citation generation</td></tr>
+          <tr><td>Spell / grammar check</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Macros (VBA)</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Export</td><td>PDF</td><td><span class="s-full">&#10003;</span> PDF, HTML, Markdown</td><td><code>writer.pdf</code>, <code>to_html/to_markdown</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="aud-app">PowerPoint &rarr; Impress</h2>
+      <p class="aud-sub">reads .pptx / .odp / .ppt / .fodp &middot; engine: src/impress.rs</p>
+      <table class="aud">
+        <thead><tr><th>Feature group</th><th>PowerPoint</th><th>zoffice Impress</th><th>Evidence / note</th></tr></thead>
+        <tbody>
+          <tr><td>Open formats</td><td>pptx, ppt, odp</td><td><span class="s-full">&#10003;</span> pptx, odp, ppt, fodp</td><td>OOXML + ODF + legacy binary read</td></tr>
+          <tr><td>Save formats</td><td>full-fidelity</td><td><span class="s-part">&#9680;</span> pptx + odp minimal text-shape</td><td><code>save_pptx</code> / <code>save_odp</code></td></tr>
+          <tr><td>Slides</td><td>full</td><td><span class="s-full">&#10003;</span> read + add blank</td><td><code>add_slide</code> appends empty</td></tr>
+          <tr><td>Slide delete / reorder</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no <code>delete_slide</code> / reorder</td></tr>
+          <tr><td>Layouts / masters</td><td>full + edit</td><td><span class="s-part">&#9680;</span> read, not editable</td><td><code>layout_names</code>, <code>master_count</code></td></tr>
+          <tr><td>Placeholders</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>layout_placeholders</code></td></tr>
+          <tr><td>Shapes</td><td>full + edit</td><td><span class="s-part">&#9680;</span> read geometry + text; positioned shapes written back on save</td><td>x/y/w/h positioning read + written back (pptx + odp)</td></tr>
+          <tr><td>Text extraction</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>plain_text</code></td></tr>
+          <tr><td>Media (audio / video)</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>embedded clips per slide, impress.rs:111</td></tr>
+          <tr><td>Tables on slides</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>rows &times; columns</td></tr>
+          <tr><td>Speaker notes</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>per-slide notes</td></tr>
+          <tr><td>WordArt</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>text + warp preset</td></tr>
+          <tr><td>Charts</td><td>full</td><td><span class="s-part">&#9680;</span> read + render, no edit</td><td><code>charts_render</code></td></tr>
+          <tr><td>Animations</td><td>full</td><td><span class="s-part">&#9680;</span> read effect types, no edit</td><td><code>animations</code>, impress.rs:851</td></tr>
+          <tr><td>Transitions</td><td>full</td><td><span class="s-part">&#9680;</span> read effect types, no edit</td><td><code>transitions</code>, impress.rs:827</td></tr>
+          <tr><td>SmartArt / diagrams</td><td>full</td><td><span class="s-none">&#9675;</span> stub &mdash; enumerated, not rendered</td><td>impress.rs:640</td></tr>
+          <tr><td>Master editing</td><td>full</td><td><span class="s-none">&#9675;</span> absent (read-only)</td><td>&mdash;</td></tr>
+          <tr><td>Slideshow / presenter view</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no live present mode</td></tr>
+          <tr><td>Export</td><td>PDF</td><td><span class="s-full">&#10003;</span> PDF, HTML, Markdown</td><td><code>impress.pdf</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="aud-app">Access &rarr; Base</h2>
+      <p class="aud-sub">reads .odb (embedded HSQLDB) &middot; engine: src/base.rs</p>
+      <table class="aud">
+        <thead><tr><th>Feature group</th><th>Access</th><th>zoffice Base</th><th>Evidence / note</th></tr></thead>
+        <tbody>
+          <tr><td>Open formats</td><td>accdb, mdb</td><td><span class="s-part">&#9680;</span> .odb only</td><td>no Access-native accdb/mdb reader</td></tr>
+          <tr><td>Table catalog + data</td><td>full</td><td><span class="s-full">&#10003;</span> read (embedded HSQLDB)</td><td>base.rs:106; INSERT rows from HSQLDB script</td></tr>
+          <tr><td>SQL SELECT execution</td><td>full</td><td><span class="s-full">&#10003;</span> over embedded store</td><td><code>query()</code>, base.rs:129</td></tr>
+          <tr><td>Schema / foreign keys</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>hsqldb_script</code> &rarr; CREATE TABLE / FK</td></tr>
+          <tr><td>Query designer</td><td>full visual</td><td><span class="s-part">&#9680;</span> catalog + run, no designer</td><td>saved queries listed</td></tr>
+          <tr><td>Forms / reports</td><td>full designer</td><td><span class="s-part">&#9680;</span> catalog names only</td><td>base.rs:115</td></tr>
+          <tr><td>External DSN / ODBC</td><td>full</td><td><span class="s-part">&#9680;</span> catalog visible, not queryable</td><td>connection URI parsed</td></tr>
+          <tr><td>Write (DDL / DML)</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no table/query/form edit</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">zoffice extras (no direct MS app)</h2>
+      <p class="lede">LibreOffice ships Draw and Math as standalone apps; Microsoft folds those roles into Publisher/Visio and Word's equation editor. zoffice implements both as read + export engines, plus two shell features Microsoft Office has no equivalent for.</p>
+      <table class="aud">
+        <thead><tr><th>Capability</th><th>zoffice</th><th>Evidence / note</th></tr></thead>
+        <tbody>
+          <tr><td>Draw (vector graphics)</td><td><span class="s-part">&#9680;</span> read .odg + SVG export + save .odg with shape geometry, no in-place edit</td><td>shapes, layers, gradients, connectors; <code>export_svg</code> / <code>save_odg</code> (rect/ellipse/line/&hellip; with svg:x/y/w/h)</td></tr>
+          <tr><td>Math (formula editor)</td><td><span class="s-part">&#9680;</span> read StarMath &rarr; MathML, no edit</td><td><code>math.render</code>, <code>to_starmath</code></td></tr>
+          <tr><td>Embedded terminal</td><td><span class="s-full">&#10003;</span> PTY shell in-app</td><td>zpwr-embed-terminal; Office has none</td></tr>
+          <tr><td>Command palette</td><td><span class="s-full">&#10003;</span> &#8984;K fzf-ranked</td><td>app.js:1568; beyond Office "Tell&nbsp;me"</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Cross-cutting</h2>
+      <table class="aud">
+        <thead><tr><th>Feature</th><th>MS Office</th><th>zoffice</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>PDF export</td><td>full</td><td><span class="s-full">&#10003;</span> all apps</td><td>wkhtmltopdf backend</td></tr>
+          <tr><td>Localization (i18n)</td><td>full</td><td><span class="s-full">&#10003;</span> 29 locales</td><td>zpwr-i18n runtime</td></tr>
+          <tr><td>Print dialog</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>PDF export only, no print UI</td></tr>
+          <tr><td>Save button (desktop app)</td><td>full</td><td><span class="s-none">&#9675;</span> stub</td><td>engine <code>save()</code> exists; no app Save wiring</td></tr>
+          <tr><td>Cloud co-authoring</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Macros / scripting (VBA)</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Accessibility (screen reader)</td><td>full</td><td><span class="s-none">&#9675;</span> unverified</td><td>not audited in engine surface</td></tr>
+          <tr><td>Copilot / generative AI</td><td>present</td><td><span class="s-none">&#9675;</span> absent</td><td>MS Copilot state is past my knowledge cutoff &mdash; flagged, not independently verified</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Reading this audit</h2>
+      <p class="lede">The tables describe an <strong>embeddable document engine</strong>, not a shipped consumer suite &mdash; zoffice-core exists to be linked into Rust/Tauri hosts and over a C ABI, so its center of gravity is parsing + rendering + narrow lossless edits, with full authoring deliberately downstream. Where a row reads <span class="s-part">&#9680; read-only</span>, the data model for that feature is fully parsed and available to a host; what is missing is a mutate-and-serialize path that preserves it. The realistic near-term arc is Tier&nbsp;2 (lossless patch) widening to cover more edit operations before Tier&nbsp;3 (full save) becomes fidelity-preserving. Two claims here are not source-grounded and are marked as such: the estimated parity percentages (directional), and Microsoft Copilot's current state (past knowledge cutoff).</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zoffice vs Microsoft Office &middot; feature audit &mdash; status derived from engine source</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

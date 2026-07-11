@@ -18,6 +18,9 @@
     .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
     .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
     .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    .arch-fig { margin: 14px 0 6px; border: 1px solid var(--border); border-radius: 6px; background: #0a0a14; padding: 10px; overflow-x: auto; }
+    .arch-fig img { display: block; width: 100%; min-width: 720px; height: auto; }
+    .arch-fig figcaption { color: var(--text-dim); font-size: 11.5px; line-height: 1.6; margin-top: 8px; padding: 0 4px; }
     table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
     th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
     td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
@@ -84,6 +87,13 @@
           <tr><td>Storage</td><td>a global macOS-Storage-style overview by auto-category, drill-down, find-biggest (the dirs Storage hides), build/cache-junk flags, SMB/NFS mount detection, and delete-to-reclaim — all backed by the persistent tree index for instant load</td></tr>
         </tbody>
       </table>
+
+      <h2 class="reg-h">Storage index — full scan once, then hooks</h2>
+      <p class="note">The storage monitor is backed by a persistent SQLite directory index. It is built by a <strong>single</strong> full filesystem walk on a cold or wiped database &mdash; streamed to the UI and committed every 20k directories, so a restart mid-walk keeps its progress. After that, the fs-watch hook is the <strong>only</strong> automatic writer: a <code>notify</code> FSEvents / inotify watch on <code>$HOME</code>, debounced (1.5&nbsp;s quiet, &ge;3&nbsp;s between fires, &le;64 coalesced dirs), driving a targeted <code>update_paths</code> that re-sizes only the changed directories and bubbles the byte delta to their ancestors &mdash; never a whole-tree re-walk. A freshly-built <code>target/</code> is discovered by re-walking from its nearest already-indexed ancestor. Reads (<code>tree_load</code>, <code>delete_candidates</code>) hit the index instantly; every other write &mdash; refresh, reindex, delete, a junk-pattern edit (one SQL <code>reflag</code> pass, no re-walk), a size freshen &mdash; is a user action. An audit across every walk-and-write call site confirms the pattern holds: the hook is the sole automatic writer, the full walk runs exactly once.</p>
+      <figure class="arch-fig">
+        <img src="index-arch.svg" alt="zthrottle storage-index architecture: a one-time full scan builds the SQLite index; then the fs-watch hook (update_paths) is the only automatic writer, with user actions (refresh, reindex, delete, pattern edit, freshen) manual. Audit verdict: PASS." loading="lazy">
+        <figcaption>Full scan once &rarr; the fs-watch hook keeps the SQLite index live. Audit: <code>update_paths</code> is the only automatic writer; no periodic re-walk.</figcaption>
+      </figure>
 
       <h2 class="reg-h">Build</h2>
       <p class="note">Tauri v2 over a webview; the frontend is served by the engine crate (single source of truth, shared with every embed). Build with <code>pnpm --dir app tauri build</code>; dev with <code>pnpm --dir app tauri dev</code>. The GUI harvests all monitor data through the worker pool so a minutes-long <code>/</code> scan never blocks the UI, and the storage map is persisted so launch is instant rather than a re-walk.</p>

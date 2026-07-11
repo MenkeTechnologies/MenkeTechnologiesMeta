@@ -73,6 +73,10 @@
         <h3>DAW Arranger Port Report</h3>
         <p>63 in-scope arranger features across Ableton, FL, Logic, Cubase, Bitwig and Pro Tools, each mapped to its <code>file:line</code>. (HTML)</p>
       </a>
+      <a class="hub-card" href="daw_features_port_report.html">
+        <h3>DAW Features Port Report</h3>
+        <p>Mixing console, MIDI note tools, automation/tempo math, arrangement versioning, SMF interchange, notation data-model and MIDI mapping — pure deterministic modules, each cited to its <code>module:line</code> + unit test. (HTML)</p>
+      </a>
       <a class="hub-card" href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">
         <h3>Source</h3>
         <p>Build instructions, the grid engine, the pure C++ engine, the C ABI, and the Rust bindings.</p>
@@ -92,6 +96,9 @@
           <li><strong>C ABI + Rust bindings</strong> — <code>extern "C"</code> over <code>ClipEngine</code>; Rust hosts drive the same engine the plugins do.</li>
           <li><strong>MIDI export</strong> — byte-identical C++ and JS Type-0 Standard MIDI File writers.</li>
           <li><strong>Also a full video editor</strong> — a <code>video</code> track type on the same timeline, with the whole Adobe Premiere Pro feature surface ported (0 gap). See below.</li>
+          <li><strong>Fully modular signal path</strong> — every track auto-owns a stereo patch graph, master/aux/global-mod buses are graphs too, and every param is a mod-matrix target (INVENTIONS.md #65). See below.</li>
+          <li><strong>Note-stream generative MIDI</strong> — Euclidean / Arpeggiator / ChordEngine / Scale + cellular-automata note generators as <code>ModuleInfoT&lt;NoteStream&gt;</code> nodes on the same graph core. See below.</li>
+          <li><strong>Ships three ways</strong> — standalone app, VST3 plugin, and embedded in an arbitrary GUI host off the same clip/automation timeline (INVENTIONS.md #64). See below.</li>
         </ul>
       </div>
     </section>
@@ -107,6 +114,15 @@
           <li><strong>Finish</strong> — titles &amp; Essential Graphics, transitions, optical-flow time interpolation, and an FCP-XML / Media Encoder export path.</li>
         </ul>
         <p>The video editor lives in the embedded clip engine (<code>libs/zpwr-clip-engine/webui</code>). Every feature is mapped to its exact <code>file:line</code> in the <a href="premiere_port_report.html">Adobe Premiere Pro Port Report</a>; the 2 <strong>partial</strong> rows are shipped-with-a-limitation (native sample-accurate audio DSP, Productions multi-user sync), not missing.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="ships-three-ways">
+      <h2>Ships Three Ways (Embeddable Arranger)</h2>
+      <div class="hub-prose">
+        <p>One codebase, three distributions: a <strong>standalone app</strong>, a <strong>VST3 plugin</strong>, and <strong>embedded inside any GUI app</strong> — audio or not (traderview → trades, ztranslator → translations, Audio-Haxor → stryke on clips). This is the embeddable-arranger claim (<code>INVENTIONS.md #64</code>): a <em>complete</em> two-view arranger (Arrangement + Session, clips, breakpoint automation, tempo/meter maps) that runs standalone, as a VST3 inside another DAW, <strong>and</strong> mounts in an arbitrary host off the same clip/automation timeline.</p>
+        <p>Closest prior art isn't a clean match: NI <strong>Maschine</strong> is a groovebox tied to their hardware workflow (by NI's own words, <em>"never a full DAW"</em>); <strong>Komplete Kontrol</strong> is a plugin host, not a DAW; <strong>Tracktion Engine</strong> is a compile-time library, not a loadable plugin. A general-purpose full DAW arranger that runs as a plugin <em>and</em> embeds in arbitrary GUI apps — including non-audio ones — has no clean dup found.</p>
+        <p><strong>Honest caveats from the ledger:</strong> "None found" is owned as a claim, not proven; and the <strong>non-audio</strong> embeds (traderview → trades, ztranslator → translations) are <strong>aspirational design intent</strong> — those app repos don't yet mount the clip engine.</p>
       </div>
     </section>
 
@@ -183,7 +199,56 @@ options = zpc::registerClipSeqFns (std::move (options), clip, pfx);</pre>
       <h2>C++ Engine (ClipEngine)</h2>
       <div class="hub-prose">
         <p><code>include/zpc/ClipEngine.h</code> is the pure C++ engine: a JUCE-free pattern model + swung step clock + event queue. Timing/length semantics are ported verbatim from the <code>clip.js</code> fallback sequencer, so the C++, the C ABI, and the JS clock all advance identically. It holds the pattern + transport, advances a step clock, exposes <code>currentStep()</code>, and queues per-step note on/off events — no <code>WebBrowserComponent</code> dependency.</p>
-        <p>The note-stream module pack (<code>include/zpc/midi/</code>, <code>src/midi/</code>) — Chord / Arp / Scale / Euclidean / Game-of-Life / Brian-Brain / Langton plus the chord &amp; scale engines — are <code>ModuleInfoT&lt;NoteStream&gt;</code> modules templated on the signal-agnostic graph core from <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">zpwr-patch-core</a> (vendored under <code>libs/zpwr-patch-core</code>; only <code>juce_core</code> beyond that).</p>
+        <p>The note-stream module pack (<code>include/zpc/midi/</code>, <code>src/midi/</code>) — Chord / Arp / Scale / Euclidean / Game-of-Life / Brian-Brain / Langton plus the chord &amp; scale engines — are <code>ModuleInfoT&lt;NoteStream&gt;</code> modules templated on the signal-agnostic graph core from <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">zpwr-patch-core</a> (vendored under <code>libs/zpwr-patch-core</code>; only <code>juce_core</code> beyond that). Detailed below.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="arranger-internals">
+      <h2>Arranger &amp; Clip-Engine Internals</h2>
+      <div class="hub-prose">
+        <p>The transport core is <code>zpc::ClipEngine</code> (<code>include/zpc/ClipEngine.h</code>) — JUCE-free, a single header the C ABI compiles. It holds the pattern (<code>[{s,l,n,len,v}]</code>) and the transport, and advances a <strong>swung step clock</strong> ported verbatim from the <code>clip.js</code> fallback sequencer so native and JS playback match to the sample:</p>
+        <ul>
+          <li><strong>step duration</strong> = <code>60 / bpm / perBeat</code> seconds (the grid note division);</li>
+          <li><strong>swing</strong> delays the off-beat half of the swing timebase and shortens the return so the cycle length stays constant (<code>stepDur(i)</code> = the gap <em>after</em> step <code>i</code>);</li>
+          <li><strong>note length</strong> is held in steps — a note at step <code>s</code> length <code>L</code> fires its note-off at the top of step <code>s+L</code>.</li>
+        </ul>
+        <p><code>advance(seconds)</code> accumulates dt and fires every step boundary it crosses (with a runaway-dt guard), queuing <code>ClipEvent</code> note-on/off records; a host without an audio callback pulls them with <code>pollEvents(out, max)</code> (the Tauri timer path), while a JUCE host sequences inside <code>processBlock</code>. <code>renderMidi(repeats)</code> reuses the pattern + transport to emit a Type-0 SMF. <code>setPatternJson()</code> is a tolerant scanner for the fixed clip shape (any key order, integer or float); a fractional <code>.als</code>-import start rounds to the nearest step here (the JS clock plays it exactly from the <code>bl</code> beat-length field).</p>
+        <p><strong>Native host contract.</strong> <code>zpc::ClipSeqHooks</code> (<code>include/zpc/ClipSeq.h</code>) is four <code>std::function</code>s — <code>pattern</code> / <code>transport</code> / <code>play</code> / <code>step</code> — and <code>registerClipSeqFns()</code> appends the matching <code>clipSeq*</code> native functions onto a JUCE <code>WebBrowserComponent</code> options builder (templated so the header needs only <code>juce_core</code>). <code>hooks.wired()</code> drives the page's <code>hasClipSeq</code>; a null <code>play</code> means no native sequencer and the page falls back to its JS clock. The audio-thread clock is immune to the timer throttling browsers impose on minimised/hidden windows — the "minimise-proof" playback.</p>
+        <p><strong>Audio-clip layer</strong> (<code>include/zpc/AudioClip.h</code>, <code>ClipAudio.h</code>) — the audio half: <code>zpc::AudioClipPlayer</code> decodes files into clips and streams them as voices inside <code>processBlock</code>, with per-trigger gain, linear + equal-power fades, <code>rate</code> repitch (linear-interp resample), pitch-preserving <strong>WSOLA</strong> time-stretch (cached per <code>(handle, ratio)</code>), ProTools <strong>slip</strong>, and Ableton <strong>warp markers</strong>. <code>trigger()</code> runs on the message thread (any WSOLA pre-render happens there); <code>process()</code> runs on the audio thread; the handoff is a lock-free <code>juce::AbstractFifo</code>, and the clip vector is grow-only so a sounding voice's <code>shared_ptr</code> never frees on the audio thread. The DSP math underneath is factored into JUCE-free primitives (<code>include/zpc/AudioDsp.h</code>): <code>slipStartSample</code>, equal-power <code>crossfadeGains</code> (cos/sin), the invertible piecewise-linear <code>WarpMap</code> (arrangement ↔ source time), <code>wsolaStretch</code>, and the <code>CompLane</code> take-selection model.</p>
+        <p><strong>Honest status:</strong> those primitives are headless-verified (<code>tests/audio_dsp_test.cpp</code>, <code>tests/audio_clip_render_test.cpp</code> — real WAV decode → trigger → process with Goertzel/timing assertions), but <em>subjective audible quality</em> stays a <strong>GAP</strong> until the synth's <code>processBlock</code> is built and a human hears it. Take <strong>recording</strong> (vs selection) and warp <strong>capture</strong> need a live audio input and stay host-side gaps.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="generative-midi">
+      <h2>Note-Stream Generative MIDI Engine</h2>
+      <div class="hub-prose">
+        <p>The generative side (<code>include/zpc/midi/</code>) is a second <code>zpwr-patch-core</code> host whose cable signal is a <strong>note-event stream</strong>, not audio. <code>NoteStream = std::vector&lt;NoteEvent&gt;</code> (sorted by sample offset) is the signal type; every generator/transform is a <code>zpc::ModuleInfoT&lt;NoteStream&gt;</code> node, so the same graph core that runs the audio FX runs the MIDI FX — dynamic blocks, summed cables, the mod matrix, topo eval, lock-free edits, JSON, and the shared WebEditor come for free (<code>MidiModules.h</code>). <code>registerMidiModules(reg, dict)</code> installs the 23 module bodies (ported verbatim from the former hand-rolled <code>MidiPatchGraph</code>); <code>defaultMidiPatch()</code> wires the showcase <strong>Chord → Arp</strong> patch; <code>convertLegacyMidiPatch()</code> upgrades the pre-zpc JSON schema.</p>
+        <p><code>NoteEvent</code> carries <code>On / Off / CC / Bend / Pressure</code> plus a <code>detune</code> field (microtuning in semitones → per-channel pitch-bend on output), so modules process CC, pitch-bend and channel-pressure in-stream, not just note on/off (<code>MidiTypes.h</code>). <code>MidiHostCtx</code> gives every module the per-block <code>Transport</code> snapshot, a deterministic xorshift RNG seed, and the shared <code>ChordDictionary</code> / <code>ChordEngine</code>; <code>MidiNoteState</code> (one per node) holds each generator's private DSP state.</p>
+        <ul>
+          <li><strong>Euclidean</strong> (<code>Euclidean.h</code>) — Bjorklund's algorithm distributes <code>pulses</code> hits as evenly as possible over <code>steps</code> slots (with a <code>rotate</code> offset), the maximally-even rhythm primitive. <code>E(3,8)</code> → <code>x..x..x.</code> (tresillo). Also available as the arp's per-step gate overlay.</li>
+          <li><strong>Arpeggiator</strong> (<code>Arpeggiator.h</code>) — a stateful note-traversal engine over the held pool. Modes: Up / Down / Up-Down / Down-Up / Converge / Diverge / As-Played / Random / Chord. Each of up to <code>kMaxSteps</code> (16) columns is an <code>ArpStep</code> with its own enable, velocity, gate (&gt;1 overlaps), transpose, <strong>ratchet</strong> (1..8 sub-hits), probability and tie. <code>ArpParams</code> adds musical <code>Division</code> (straight/dotted/triplet), 1..4 octave span + octave mode, swing, latch, the Euclidean gate overlay, and timing/velocity humanize.</li>
+          <li><strong>ChordEngine</strong> (<code>ChordEngine.h</code>) — stateless voicing: one input note → a sorted, de-duplicated chord with inversion (0..4), sub-octave doubling (0..2), spread (0..2), transpose, per-voice strum delay (ms), an optional per-key chord map (Chromatic / Circle-of-Fifths / Lowest-Note layout), and an optional scale lock. Chord types come from <code>ChordDictionary</code> (triads, sixths, sevenths, extended 9/11/13, suspended, added-tone, altered/jazz, quartal/cluster — count queried at runtime, never hardcoded).</li>
+          <li><strong>Scale</strong> (<code>Scale.h</code>) — a mode catalog (major/minor family, church modes, pentatonic/blues, whole-tone/diminished/augmented, Hungarian/Japanese/Egyptian/Spanish) plus a <code>quantize()</code> that snaps arbitrary notes onto the nearest in-scale pitch, driving the arp's scale-locked harmony.</li>
+          <li><strong>Cellular-automata note generators</strong> — three pure <code>std::uint64_t</code> cores on an 8×8 toroidal grid (cell = bit <code>y*8+x</code>): <strong>Game of Life</strong> (<code>GameOfLife.h</code>, B3/S23), <strong>Brian's Brain</strong> (<code>BrianBrain.h</code>, ready/firing/dying), and <strong>Langton's Ant</strong> (<code>Langton.h</code>, turn-flip-move). A read column advances one step per clock, and set cells in that column emit notes — non-repeating evolving patterns. <code>MidiNoteState</code> also carries Turing shift-register, Polymeter, Counterpoint, Bassline, and Scoop/Fall pitch-bend-sweep state for the rest of the 23-module pack.</li>
+        </ul>
+        <p>The JUCE bridge is separate (<code>NoteGraphHost.h</code>, host-only): <code>midiToNoteEvents()</code> parses a <code>juce::MidiBuffer</code> into the stream, <code>emitNoteStreamToMidi()</code> renders a stream back to MIDI (microtuning → per-channel bend), and <code>runNoteGraphLayers()</code> drives every non-muted/solo-respecting layer for one audio block.</p>
+        <pre>cmake --build build --target MidiModulesTest
+./build/MidiModulesTest_artefacts/*/MidiModulesTest</pre>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="modular-audio">
+      <h2>Modular Stereo Audio Engine</h2>
+      <div class="hub-prose">
+        <p><strong>The modular claim (<code>INVENTIONS.md #65</code>):</strong> not a fixed channel-strip mixer with a modular <em>device</em> bolted on, but a DAW whose entire signal path is a user-patchable graph — <strong>every track auto-owns a layer</strong>, each layer is a stereo patch graph hosting oscillators / FX / plugins, and master / aux / global-mod buses are themselves patch graphs. Because all of these are the same <code>zpwr-patch-core</code> graph, <strong>every param is a mod-matrix target</strong>: the same block/cable/mod-route model that routes signal also routes modulation, and the synth panel + mod matrix are generated from that one patch.</p>
+        <p>Every track auto-owns a <strong>layer</strong> (its note/MIDI graph) <strong>and</strong> a <strong>stereo audio graph</strong> — <code>zpc::StereoGraph</code> (<code>PatchEngineT&lt;StereoSample&gt;</code>), where <strong>one cable carries an L/R pair</strong>. It's a separate graph alongside the note-stream MIDI graph and the mono float graph, shared across all four products (<code>libs/zpwr-patch-core</code>):</p>
+        <ul>
+          <li><strong>mono FX run in stereo for free</strong> — <code>wrapMonoAsStereo</code> runs any of the ~3.5k mono blocks once per channel with independent L/R state. <code>registerStereoModules</code> wraps every mono block <strong>except</strong> Oscillators (excluded) and the <strong>Plugin</strong> host (already stereo → <code>registerStereoPluginBlock</code>, a native stereo node, never dual-mono-wrapped).</li>
+          <li><strong>per-track render</strong> — <code>processBlock</code> feeds each layer's note output to that track's instrument Plugin node, runs the stereo graph for the block, and sums it into the master with the layer's <strong>gain · pan (equal-power) · width (mid/side)</strong>.</li>
+          <li><strong>mod → mix</strong> — the global mod control patch (LFOs/envs/MIDI/soft-keys) and each layer's own mod routes modulate Master + per-layer Vol/Pan/Width (the GLOBAL MOD / LAYER MOD patch-panel tabs).</li>
+          <li><strong>cue + DJ crossfader</strong> — a 2nd stereo <strong>Cue</strong> output for headphone/preview, plus an automatable <strong>Crossfade</strong> param: tracks pick an A/B group (<code>LayerProps.xfade</code>), the main mix crossfades A↔B (equal-power), and <strong>cued</strong> tracks sum to the Cue bus at full level independent of the crossfader.</li>
+        </ul>
+        <p><strong>Status:</strong> the engine path (graph, wrapper, stereo Plugin host, per-track render, mod, cue/crossfade) is <strong>compile/link-verified</strong>, and the <strong>in-app editor already exists</strong> — a 2nd <code>WebEditor</code> (namespaced <code>trk</code>, bound to the per-track <code>audioEngine</code>) drives the same modular patch panel against a track's stereo graph. Each track's whole stereo graph (instrument node + FX blocks + cables + mod routes) round-trips through save/reload (<code>tracksToJson</code>/<code>restoreTracksFromJson</code> serialize the full <code>PatchDef</code> per track). It still sums silence until a track's graph hosts an instrument/source, and the one remaining step is <strong>not new code</strong> but a <strong>JUCE build + a human listening</strong> to confirm audible output — autonomous ticks compile-verify the path (they can't hear it). "None found" is owned as a claim, not proven.</p>
       </div>
     </section>
 
@@ -253,6 +318,8 @@ cargo test --manifest-path bindings/rust/zpwr-clip-engine/Cargo.toml</pre>
             <tr><td><code>webui/clip/</code></td><td>Legacy DOM piano-roll (<code>clip.js</code>); stays live until consumers cut over</td></tr>
             <tr><td><code>include/zpc/ClipEngine.h</code></td><td>Pure C++ engine — pattern model + swung step clock + event queue</td></tr>
             <tr><td><code>include/zpc/ClipSeq.h</code></td><td>Native sequencer glue — <code>ClipSeqHooks</code> + <code>registerClipSeqFns</code></td></tr>
+            <tr><td><code>include/zpc/AudioClip.h</code>, <code>ClipAudio.h</code></td><td>Audio-clip layer — <code>AudioClipPlayer</code> voices (WSOLA / slip / warp) + <code>ClipAudioHooks</code></td></tr>
+            <tr><td><code>include/zpc/AudioDsp.h</code></td><td>JUCE-free audio DSP primitives — slip / equal-power crossfade / <code>WarpMap</code> / WSOLA / comp-take</td></tr>
             <tr><td><code>include/zpc/MidiFile.h</code></td><td>Type-0 Standard MIDI File writer (C++)</td></tr>
             <tr><td><code>include/zpc/capi/clip_engine.h</code></td><td>C ABI (<code>extern "C"</code>) over <code>ClipEngine</code></td></tr>
             <tr><td><code>src/capi/clip_engine.cpp</code></td><td>C ABI implementation</td></tr>
@@ -270,6 +337,7 @@ cargo test --manifest-path bindings/rust/zpwr-clip-engine/Cargo.toml</pre>
       <a href="https://github.com/MenkeTechnologies/zpwr-midi-fx" target="_blank" rel="noopener noreferrer">zpwr-midi-fx</a> ·
       <a href="https://github.com/MenkeTechnologies/zpwr-fx" target="_blank" rel="noopener noreferrer">zpwr-fx</a> · Audio-Haxor · ztranslator.
       <br>References: <a href="report.html">Engineering Report</a> · <a href="arranger_port_report.html">DAW Arranger Port Report</a> ·
+      <a href="daw_features_port_report.html">DAW Features Port Report</a> ·
       <a href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">Source</a>.
     </div>
   </main>

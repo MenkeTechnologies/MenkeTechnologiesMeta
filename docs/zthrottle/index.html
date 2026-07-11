@@ -21,6 +21,9 @@
     .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
     pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
     .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+    .arch-fig { margin: 18px 0 6px; border: 1px solid var(--border); border-radius: 6px; background: #0a0a14; padding: 10px; overflow-x: auto; }
+    .arch-fig img { display: block; width: 100%; min-width: 720px; height: auto; }
+    .arch-fig figcaption { color: var(--text-dim); font-size: 11.5px; line-height: 1.6; margin-top: 8px; padding: 0 4px; }
   </style>
 </head>
 <body>
@@ -72,6 +75,13 @@ pnpm --dir app tauri build    # release bundle</pre>
 
       <h2 class="reg-h">Architecture</h2>
       <p class="lede">The GUI is a thin Tauri v2 shell; every calculation lives in <a href="https://github.com/MenkeTechnologies/zthrottle-core" target="_blank" rel="noopener noreferrer"><code>zthrottle-core</code></a>. The engine exposes one dotted command surface (<code>zth_invoke</code>) for benchmarks, and a lock-free worker pool for the monitor data harvest so a minutes-long storage scan never blocks the UI. Because the engine carries the served frontend, the same benchmark and monitor code embeds inside the other MenkeTechnologies apps. See the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella for the wider stack.</p>
+
+      <h2 class="reg-h">The storage index — full scan once, then hooks</h2>
+      <p class="lede">The persistent directory index is built by a single full filesystem walk on first launch (or a wiped DB), streamed to the UI and committed in batches so it survives a mid-walk restart. After that, the fs-watch hook is the only thing that <em>automatically</em> writes to it: an FSEvents / inotify watch on <code>$HOME</code>, debounced, drives a targeted <code>update_paths</code> that re-sizes only the changed directories and bubbles the delta up to their ancestors &mdash; never a whole-tree re-walk. A freshly-built <code>target/</code> is discovered by re-walking from its nearest already-indexed ancestor. The GUI reads the index instantly on every open: no scan-on-open, no loading screen. Every other write &mdash; refresh, reindex, delete, a junk-pattern edit (one SQL pass, no re-walk), a size freshen &mdash; is a button the user pressed.</p>
+      <figure class="arch-fig">
+        <img src="index-arch.svg" alt="zthrottle storage-index architecture: a one-time full scan builds the SQLite index; then the fs-watch hook (update_paths) is the only automatic writer, with user actions (refresh, reindex, delete, pattern edit, freshen) manual. Audit verdict: PASS." loading="lazy">
+        <figcaption>Full scan once &rarr; the fs-watch hook keeps the SQLite index live. Audit: <code>update_paths</code> is the only automatic writer; the full walk runs once (cold DB or manual rebuild), with no periodic re-walk.</figcaption>
+      </figure>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zthrottle &middot; system stress + benchmark + contention profiler</footer>
     </main>
