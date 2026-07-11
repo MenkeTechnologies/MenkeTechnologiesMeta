@@ -47,6 +47,15 @@ make_dmg() { # $1=appbundle  $2=out.dmg  $3=volname
   rm -rf "$stage"
 }
 
+# Make a flat installer .pkg from a .app (installs into /Applications). Headless, no UI.
+make_pkg() { # $1=appbundle  $2=out.pkg  $3=identifier  $4=version
+  local stage; stage="$(mktemp -d)"
+  cp -R "$1" "$stage/"
+  rm -f "$2"
+  pkgbuild --root "$stage" --install-location /Applications --identifier "$3" --version "$4" "$2" >/dev/null 2>&1 && echo "$2"
+  rm -rf "$stage"
+}
+
 summary=""
 for app in "${APPS[@]}"; do
   [ -n "$ONLY" ] && { case ",$ONLY," in *,"$app",*) : ;; *) continue ;; esac; }
@@ -82,19 +91,25 @@ for app in "${APPS[@]}"; do
   if [ "$DO_UPLOAD" = 1 ]; then
     cfg=$(ls "$d"/app/src-tauri/tauri.conf.json "$d"/src-tauri/tauri.conf.json 2>/dev/null | head -1)
     ver=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).version||'')}catch(e){}" "$cfg" 2>/dev/null)
+    id=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).identifier||'')}catch(e){}" "$cfg" 2>/dev/null)
     tag="v${ver:-0.0.0}"; repo="MenkeTechnologies/$app"
     dmg="$d/${app}_${ver:-0.0.0}_aarch64.dmg"
-    if make_dmg "$appbundle" "$dmg" "$app" >/dev/null; then
+    pkg="$d/${app}_${ver:-0.0.0}_aarch64.pkg"
+    # build both installer artifacts (dmg for drag-install, pkg for flat-installer)
+    assets=()
+    make_dmg "$appbundle" "$dmg" "$app" >/dev/null && assets+=("$dmg")
+    make_pkg "$appbundle" "$pkg" "${id:-com.menketechnologies.$app}" "${ver:-0.0.0}" >/dev/null && assets+=("$pkg")
+    if [ "${#assets[@]}" -gt 0 ]; then
       if gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
-        gh release upload "$tag" "$dmg" --clobber --repo "$repo" >/dev/null 2>&1 && { echo "$app: uploaded $tag $(basename "$dmg")"; did_upload=" uploaded"; }
+        gh release upload "$tag" "${assets[@]}" --clobber --repo "$repo" >/dev/null 2>&1 && { echo "$app: uploaded $tag (dmg+pkg)"; did_upload=" uploaded"; }
       else
-        gh release create "$tag" "$dmg" --repo "$repo" --title "$app $tag" \
-          --notes "$app $tag — macOS Apple silicon. Open the .dmg, drag to Applications. Unsigned: first launch right-click -> Open." >/dev/null 2>&1 \
-          && { echo "$app: created release $tag $(basename "$dmg")"; did_upload=" uploaded"; }
+        gh release create "$tag" "${assets[@]}" --repo "$repo" --title "$app $tag" \
+          --notes "$app $tag — macOS Apple silicon. .dmg: drag to Applications. .pkg: double-click to install. Unsigned: first launch right-click -> Open." >/dev/null 2>&1 \
+          && { echo "$app: created release $tag (dmg+pkg)"; did_upload=" uploaded"; }
       fi
-      rm -f "$dmg"
+      rm -f "$dmg" "$pkg"
     else
-      echo "$app: dmg build FAILED"
+      echo "$app: installer build FAILED"
     fi
   fi
   summary+="  + $app${installed}${did_upload}"$'\n'
