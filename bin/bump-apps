@@ -95,19 +95,28 @@ for app in "${APPS[@]}"; do
   V2=$(bump_ver "$V" "$LEVEL")
   echo "  version $V -> $V2  ($LEVEL)"
 
-  # update each clean zgui-core worktree to TARGET
+  # update each clean zgui-core worktree to TARGET, and stage the gitlink whenever the app's
+  # RECORDED pointer is behind the worktree — including the case where the worktree was already
+  # moved to TARGET out-of-band (so cur==TARGET) but the app still records the old commit.
   staged_zgui=()
   for zp in "${zpaths[@]}"; do
     wt="$d/$zp"
     if [ -n "$(git -C "$wt" status --porcelain 2>/dev/null)" ]; then echo "  zgui $zp dirty — leave as-is"; continue; fi
     cur=$(git -C "$wt" rev-parse HEAD 2>/dev/null)
-    [ "$cur" = "$TARGET_ZGUI" ] && { echo "  zgui $zp already latest"; continue; }
-    echo "  zgui $zp ${cur:0:10} -> ${TARGET_ZGUI:0:10}"
-    if [ "$DRY" = 0 ]; then
-      git -C "$wt" fetch origin --quiet 2>/dev/null
-      git -C "$wt" checkout --quiet "$TARGET_ZGUI" 2>/dev/null || { echo "  !! zgui checkout failed $zp"; continue; }
+    recorded=$(git -C "$d" ls-tree HEAD "$zp" 2>/dev/null | awk '{print $3}')
+    if [ "$cur" != "$TARGET_ZGUI" ]; then
+      echo "  zgui $zp ${cur:0:10} -> ${TARGET_ZGUI:0:10}"
+      if [ "$DRY" = 0 ]; then
+        git -C "$wt" fetch origin --quiet 2>/dev/null
+        git -C "$wt" checkout --quiet "$TARGET_ZGUI" 2>/dev/null || { echo "  !! zgui checkout failed $zp"; continue; }
+      fi
+      cur=$TARGET_ZGUI
     fi
-    staged_zgui+=("$zp")
+    if [ "$recorded" != "$cur" ]; then
+      echo "  zgui $zp pointer ${recorded:0:10} -> ${cur:0:10}"; staged_zgui+=("$zp")
+    else
+      echo "  zgui $zp already latest"
+    fi
   done
 
   # bump every version-bearing file whose value currently equals V
@@ -122,6 +131,7 @@ for app in "${APPS[@]}"; do
     [ "$DRY" = 0 ] && repl_json "$ind" "$V" "$V2"; changed+=("${ind#$d/}")
   fi
   for pj in "$d/package.json" "$d/app/package.json"; do
+    [ -n "$ind" ] && [ "$pj" -ef "$ind" ] && continue   # already handled as the indirection target
     [ -f "$pj" ] && [ "$(json_ver "$pj")" = "$V" ] || continue
     [ "$DRY" = 0 ] && repl_json "$pj" "$V" "$V2"; changed+=("${pj#$d/}")
   done
