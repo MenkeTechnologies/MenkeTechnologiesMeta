@@ -21,6 +21,9 @@
 set -uo pipefail
 
 META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Build logs go to a cache dir, NEVER inside the repo (a *.deploy.log per app in META_ROOT
+# would pollute the working tree and show up in git status).
+LOGDIR="${HOME}/.cache/menke-ship"; mkdir -p "$LOGDIR"
 ONLY=""; DO_BUILD=1; DO_INSTALL=1; DO_UPLOAD=1
 for a in "$@"; do
   case "$a" in
@@ -76,7 +79,7 @@ for app in "${APPS[@]}"; do
   [ -n "$ONLY" ] && { case ",$ONLY," in *,"$app",*) : ;; *) continue ;; esac; }
   d="$META_ROOT/$app"
   [ -f "$d/app/package.json" ] && bd="$d/app" || bd="$d"
-  log="$d.deploy.log"
+  log="$LOGDIR/$app.deploy.log"
 
   if [ "$DO_BUILD" = 1 ]; then
     echo "=== build $app ($bd) — .app only, no dmg popup ==="

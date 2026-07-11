@@ -1,0 +1,309 @@
+#!/usr/bin/env stryke
+
+# ship-apps — one-command release pipeline for the Tauri desktop apps.
+#
+# For every app (discovered dynamically from its tauri.conf.json): update the bundled
+# zgui-core submodule(s) to the latest zgui-core main, patch-bump the version, commit +
+# push, and bump the app's gitlink in the meta repo; then build the .app (--bundles app,
+# no dmg Finder popup), install it to /Applications, and upload a dmg + pkg to a GitHub
+# release at v<version>.
+#
+# Build logs go to ~/.cache/menke-ship/<app>.deploy.log and dmg/pkg staging to a tempdir —
+# NEVER inside the repo. Apps whose zgui-core worktree carries uncommitted WIP are skipped
+# (a checkout would clobber it); override with --include-dirty-zgui. Only version files and
+# the zgui gitlink are staged, so unrelated worktree WIP is left untouched.
+#
+# Usage:
+#   ship-apps                      # zgui->latest + bump + push + build + install + release, every app
+#   ship-apps --only=zpdf,zcite    # subset
+#   ship-apps --minor              # minor (x.Y.0) bump instead of patch
+#   ship-apps --dry-run            # preview the git phase, change nothing
+#   ship-apps --no-deploy          # git phase only (no build/install/release)
+#   ship-apps --no-upload          # build + install, no GitHub release
+#   ship-apps --include-dirty-zgui
+
+$| = 1
+
+val %opts = %{ getopts({
+    "only|o=s"           => { help => "comma-separated app subset", default => "" },
+    "minor"              => { help => "minor (x.Y.0) bump instead of patch" },
+    "dry-run|n"          => { help => "preview the git phase; change nothing" },
+    "no-push"            => { help => "commit locally; no push, no meta pointer bump" },
+    "no-deploy"          => { help => "git phase only — no build/install/upload" },
+    "no-build"           => { help => "skip build; install/upload the existing .app" },
+    "no-install"         => { help => "don't touch /Applications" },
+    "no-upload"          => { help => "no GitHub release / dmg / pkg" },
+    "include-dirty-zgui" => { help => "bump apps even with dirty zgui-core WIP" },
+}, {
+    prog => "ship-apps",
+    desc => "Update zgui-core to latest, bump, and release every Tauri desktop app.",
+}) }
+
+val $meta       = dirname(dirname(realpath($0)))
+val $only       = $opts{only} // ""
+val $minor      = $opts{minor} // 0
+val $dry        = $opts{'dry-run'} // 0
+val $push       = $opts{'no-push'} ? 0 : 1
+val $deploy     = $opts{'no-deploy'} ? 0 : 1
+val $do_build   = $opts{'no-build'} ? 0 : 1
+val $do_install = $opts{'no-install'} ? 0 : 1
+val $do_upload  = $opts{'no-upload'} ? 0 : 1
+val $incl_dirty = $opts{'include-dirty-zgui'} // 0
+val $logdir     = "#{$ENV{HOME}}/.cache/menke-ship"
+
+# ── shell helpers ─────────────────────────────────────────────────────────
+fn Sh::cap($c)      { var $o = `$c`; chomp $o; $o }          # capture trimmed stdout
+fn Sh::rc($c)       { system $c; $? >> 8 }                   # run, return exit code
+fn Sh::run($c)      = Sh::rc($c) == 0                        # run, true on success
+fn Sh::git($d, $a)  = Sh::cap("git -C '$d' $a 2>/dev/null")  # git capture
+fn Sh::gitq($d, $a) = Sh::run("git -C '$d' $a >/dev/null 2>&1")
+fn Sh::push_dir($d) = Sh::gitq($d, "push") || (Sh::gitq($d, "pull --rebase") && Sh::gitq($d, "push"))
+
+# ── version / path helpers ────────────────────────────────────────────────
+fn App::rel($d, $f)  { var $r = $f; $r =~ s{^\Q$d\E/}{}; $r }
+fn App::json_ver($f) = (from_json(c"$f"))->{version} // ""
+fn App::indirect($cfg) {
+    val $v = App::json_ver($cfg)
+    ($v =~ /\.json$|\//) ? realpath(dirname($cfg) . "/" . $v) : ""
+}
+fn App::canon($cfg) {
+    val $ind = App::indirect($cfg)
+    App::json_ver($ind ne "" ? $ind : $cfg)
+}
+fn App::bump($v) {
+    val @p = split /\./, $v
+    $minor ? "#{$p[0]}.#{$p[1] + 1}.0" : "#{$p[0]}.#{$p[1]}.#{$p[2] + 1}"
+}
+fn App::set_json_ver($f, $v, $v2) {
+    var $t = c"$f"
+    $t =~ s/("version"\s*:\s*")\Q$v\E(")/${1}$v2${2}/       # first occurrence only
+    spurt $f, $t
+}
+fn App::set_toml_ver($f, $v, $v2) {
+    var $t = c"$f"
+    $t =~ s/^(version = ")\Q$v\E(")/${1}$v2${2}/m           # first ^version line only
+    spurt $f, $t
+}
+fn App::first_file(@cands) {
+    for val $f (@cands) { return $f if -f $f }
+    ""
+}
+fn App::zgui_paths($d) {
+    var @paths
+    for val $line (split /\n/, Sh::cap("git -C '$d' config -f .gitmodules --get-regexp 'submodule\\..*zgui-core.*\\.path' 2>/dev/null")) {
+        next if $line eq ""
+        push @paths, (split /\s+/, $line)[1]
+    }
+    @paths
+}
+
+# ── installer artifacts (staged in a tempdir, never the repo) ──────────────
+fn App::make_dmg($appbundle, $out, $volname) {
+    val $stage = Sh::cap("mktemp -d")
+    Sh::run("cp -R '$appbundle' '$stage/' && ln -s /Applications '$stage/Applications' && rm -f '$out'")
+    Sh::run("hdiutil create -volname '$volname' -srcfolder '$stage' -ov -format UDZO -quiet '$out' 2>/dev/null")
+    Sh::run("rm -rf '$stage'")
+    -s $out ? 1 : 0            # success only if the dmg actually exists
+}
+fn App::make_pkg($appbundle, $out, $ident, $ver) {
+    val $stage = Sh::cap("mktemp -d")
+    Sh::run("cp -R '$appbundle' '$stage/' && rm -f '$out'")
+    Sh::run("pkgbuild --root '$stage' --install-location /Applications --identifier '$ident' --version '$ver' '$out' >/dev/null 2>&1")
+    Sh::run("rm -rf '$stage'")
+    -s $out ? 1 : 0
+}
+
+# ── build + install + upload one app ──────────────────────────────────────
+fn App::deploy_one($app) {
+    val $d  = "$meta/$app"
+    val $bd = -f "$d/app/package.json" ? "$d/app" : $d
+    val $log = "$logdir/$app.deploy.log"
+
+    if ($do_build) {
+        p "=== build $app ($bd) — .app only, no dmg popup ==="
+        # Default builder is `pnpm tauri build`. Apps that need something else (e.g. traderview
+        # drives cargo-tauri + frontend-dist isolation) ship scripts/deploy-build.sh.
+        val $bcmd = -x "$bd/scripts/deploy-build.sh" ? "./scripts/deploy-build.sh" : "pnpm tauri build --bundles app"
+        if (!Sh::run("cd '$bd' && $bcmd > '$log' 2>&1")) { warn "$app: BUILD FAILED (see $log)"; return "x $app build-failed" }
+    }
+
+    val $appbundle = Sh::cap("find '$d' -path '*/release/bundle/macos/*.app' -type d 2>/dev/null | head -1")
+    if ($appbundle eq "") { warn "$app: no .app bundle"; return "x $app no-.app" }
+    val $name = basename($appbundle)
+
+    var $inst = ""
+    if ($do_install) {
+        val $dst = "/Applications/$name"
+        if (Sh::run("rm -rf '$dst' 2>/dev/null && cp -R '$appbundle' '$dst' 2>/dev/null")) {
+            p "$app: installed $dst"
+            $inst = " installed"
+        } elsif (Sh::run("sudo -n rm -rf '$dst' 2>/dev/null && sudo -n cp -R '$appbundle' '$dst' 2>/dev/null")) {
+            p "$app: installed $dst (sudo)"
+            $inst = " installed"
+        } else {
+            warn "$app: INSTALL FAILED (perms on $dst)"
+        }
+    }
+
+    var $up = ""
+    if ($do_upload) {
+        val $cfg   = App::first_file("$d/app/src-tauri/tauri.conf.json", "$d/src-tauri/tauri.conf.json")
+        val $ver   = App::canon($cfg)
+        val $ident = (from_json(c"$cfg"))->{identifier} // "com.menketechnologies.$app"
+        val $tag   = "v$ver"
+        val $repo  = "MenkeTechnologies/$app"
+        val $tmp   = Sh::cap("mktemp -d")
+        val $dmg   = "$tmp/#{$app}_#{$ver}_aarch64.dmg"
+        val $pkg   = "$tmp/#{$app}_#{$ver}_aarch64.pkg"
+        var @assets
+        push @assets, "'$dmg'" if App::make_dmg($appbundle, $dmg, $app)
+        push @assets, "'$pkg'" if App::make_pkg($appbundle, $pkg, $ident, $ver)
+        val $notes = "$app $tag — macOS Apple silicon. .dmg: drag to Applications. .pkg: double-click to install. Unsigned: first launch right-click -> Open."
+        if (len @assets) {
+            val $al = join " ", @assets
+            if (Sh::run("gh release view '$tag' --repo '$repo' >/dev/null 2>&1")) {
+                if (Sh::run("gh release upload '$tag' $al --clobber --repo '$repo' >/dev/null 2>&1")) { p "$app: uploaded $tag"; $up = " uploaded" }
+            } elsif (Sh::run("gh release create '$tag' $al --repo '$repo' --title '$app $tag' --notes '$notes' >/dev/null 2>&1")) {
+                p "$app: created release $tag"
+                $up = " uploaded"
+            }
+        } else {
+            warn "$app: installer build FAILED"
+        }
+        Sh::run("rm -rf '$tmp'")
+    }
+    "+ $app$inst$up"
+}
+
+# ── discover apps ─────────────────────────────────────────────────────────
+var @apps
+for val $c (split /\n/, Sh::cap("find '$meta' -maxdepth 4 -name tauri.conf.json 2>/dev/null")) {
+    next if $c eq "" || $c =~ m{node_modules|/crates/.*/crates|/libs/}
+    var $a = $c
+    $a =~ s{^\Q$meta\E/}{}
+    $a =~ s{/(app/)?src-tauri/tauri\.conf\.json$}{}
+    push @apps, $a
+}
+@apps = uniq sort @apps
+
+fn App::selected($app) = $only eq "" || grep { _ eq $app } split(/,/, $only)
+
+# ── latest zgui-core (meta's own submodule, single source of truth) ────────
+Sh::gitq("$meta/zgui-core", "fetch origin")
+val $target_zgui = Sh::git("$meta/zgui-core", "rev-parse origin/main")
+die "ship-apps: cannot resolve latest zgui-core (meta/zgui-core missing?)" if $target_zgui eq ""
+p "latest zgui-core: #{$target_zgui[0:9]}"
+Sh::run("mkdir -p '$logdir'")
+
+# ── git phase: zgui->latest + version bump + commit + push ─────────────────
+var @changed_apps
+var @summary
+var $skipped = ""
+for val $app (@apps) {
+    next if !App::selected($app)
+    val $d = "$meta/$app"
+    p "======== $app ========"
+    if (Sh::git($d, "rev-parse --abbrev-ref HEAD") ne "main") { p "  not on main — SKIP"; $skipped .= " $app(detached)"; next }
+
+    val $cfg = App::first_file("$d/app/src-tauri/tauri.conf.json", "$d/src-tauri/tauri.conf.json")
+    val $V   = App::canon($cfg)
+    if ($V eq "") { p "  no version — SKIP"; $skipped .= " $app(no-ver)"; next }
+
+    var @zpaths = App::zgui_paths($d)
+    val $dirty  = grep { Sh::git("$d/$_", "status --porcelain") ne "" } @zpaths
+    if ($dirty && !$incl_dirty) { p "  zgui-core worktree DIRTY (WIP) — SKIP (--include-dirty-zgui to override)"; $skipped .= " $app(dirty-zgui)"; next }
+
+    val $V2 = App::bump($V)
+    p "  version $V -> $V2  (#{$minor ? 'minor' : 'patch'})"
+
+    # update each clean zgui-core worktree to target; stage the gitlink whenever the app's
+    # RECORDED pointer is behind the worktree (covers the already-checked-out-but-stale case).
+    var @staged_zgui
+    for val $zp (@zpaths) {
+        val $wt = "$d/$zp"
+        if (Sh::git($wt, "status --porcelain") ne "") { p "  zgui $zp dirty — leave as-is"; next }
+        var $cur = Sh::git($wt, "rev-parse HEAD")
+        val $recorded = (split /\s+/, Sh::git($d, "ls-tree HEAD '$zp'"))[2]
+        if ($cur ne $target_zgui) {
+            p "  zgui $zp #{$cur[0:9]} -> #{$target_zgui[0:9]}"
+            if (!$dry) {
+                Sh::gitq($wt, "fetch origin")
+                if (!Sh::gitq($wt, "checkout $target_zgui")) { warn "  zgui checkout failed $zp"; next }
+            }
+            $cur = $target_zgui
+        }
+        if ($recorded ne $cur) { p "  zgui $zp pointer #{$recorded[0:9]} -> #{$cur[0:9]}"; push @staged_zgui, $zp } else { p "  zgui $zp already latest" }
+    }
+
+    # bump every version-bearing file whose value currently equals V. NOTE: stryke's inline
+    # `c"path" =~ /re/` form is broken — slurp into a var first, then match.
+    var @changed
+    val $ind = App::indirect($cfg)
+    if ($ind eq "") {
+        var $txt = c"$cfg"
+        if ($txt =~ /"version"\s*:\s*"\Q$V\E"/) {
+            App::set_json_ver($cfg, $V, $V2) if !$dry
+            push @changed, App::rel($d, $cfg)
+        }
+    } elsif (-f $ind && App::json_ver($ind) eq $V) {
+        App::set_json_ver($ind, $V, $V2) if !$dry
+        push @changed, App::rel($d, $ind)
+    }
+    for val $pj ("$d/package.json", "$d/app/package.json") {
+        next if !(-f $pj)
+        next if $ind ne "" && realpath($pj) eq $ind          # already handled as indirection target
+        next if App::json_ver($pj) ne $V
+        App::set_json_ver($pj, $V, $V2) if !$dry
+        push @changed, App::rel($d, $pj)
+    }
+    for val $ct ("$d/Cargo.toml", "$d/src-tauri/Cargo.toml", "$d/app/src-tauri/Cargo.toml") {
+        next if !(-f $ct)
+        var $txt = c"$ct"                                      # slurp into a var (inline c-match is broken)
+        next if $txt !~ /^version = "\Q$V\E"/m
+        App::set_toml_ver($ct, $V, $V2) if !$dry
+        push @changed, App::rel($d, $ct)
+    }
+    p "  bump files: #{len(@changed) ? join(' ', @changed) : '<none>'}"
+
+    var @add = (@changed, @staged_zgui)
+    if (len(@add) == 0) { p "  nothing to do"; push @summary, "= $app unchanged"; next }
+    if ($dry) { p "  would: git add #{join ' ', @add} && commit 'bump v$V2' && push"; push @changed_apps, $app; push @summary, "~ $app -> v$V2 (dry)"; next }
+
+    val $addlist = join " ", map { "'$_'" } @add
+    if (Sh::gitq($d, "add -- $addlist") && Sh::gitq($d, "commit -q -m 'bump v$V2 — zgui-core -> latest'")) {
+        if ($push && !Sh::push_dir($d)) { warn "  push failed $app"; push @summary, "x $app push-failed"; next }
+        p($push ? "  committed+pushed v$V2" : "  committed v$V2 (no push)")
+        push @changed_apps, $app
+        push @summary, "+ $app -> v$V2"
+    } else {
+        warn "  commit failed $app"
+        push @summary, "x $app commit-failed"
+    }
+}
+
+# ── meta pointer bump (index.lock is contended by concurrent sessions — retry hard) ──
+if (!$dry && $push && len(@changed_apps)) {
+    p "======== meta pointer bump (#{len @changed_apps} apps) ========"
+    val $paths = join " ", map { "'$_'" } @changed_apps
+    for val $i (1:60) {
+        if (!Sh::gitq($meta, "add -- $paths")) { sleep 2; next }
+        if (Sh::run("git -C '$meta' diff --cached --quiet")) { p "  pointers already current"; last }
+        if (Sh::gitq($meta, "commit -q -m 'meta: bump #{len @changed_apps} Tauri apps — zgui-core -> latest'") && Sh::push_dir($meta)) {
+            p "  meta pointers pushed (attempt $i)"
+            last
+        }
+        sleep 2
+    }
+}
+
+# ── deploy phase: build + install + upload ────────────────────────────────
+if ($deploy && !$dry && len(@changed_apps)) {
+    p ""
+    p "======== deploy (#{len @changed_apps} apps) ========"
+    for val $app (@changed_apps) { push @summary, App::deploy_one($app) }
+}
+
+p ""
+p "=== ship summary ==="
+for val $s (@summary) { p "  $s" }
+p "  skipped:$skipped" if $skipped ne ""
