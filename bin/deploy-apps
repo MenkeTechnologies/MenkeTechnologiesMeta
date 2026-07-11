@@ -65,9 +65,17 @@ for app in "${APPS[@]}"; do
   [ -z "$appbundle" ] && { echo "$app: no .app bundle"; summary+="  x $app no-.app"$'\n'; continue; }
   name=$(basename "$appbundle")
 
+  installed=""
   if [ "$DO_INSTALL" = 1 ]; then
-    rm -rf "/Applications/$name"; cp -R "$appbundle" "/Applications/$name"
-    echo "$app: installed /Applications/$name"
+    dst="/Applications/$name"
+    if rm -rf "$dst" 2>/dev/null && cp -R "$appbundle" "$dst" 2>/dev/null; then
+      echo "$app: installed $dst"; installed=" installed"
+    elif sudo -n rm -rf "$dst" 2>/dev/null && sudo -n cp -R "$appbundle" "$dst" 2>/dev/null; then
+      # existing bundle owned by another user (e.g. root/other account) — elevate
+      echo "$app: installed $dst (sudo)"; installed=" installed"
+    else
+      echo "$app: INSTALL FAILED (perms on $dst)"; summary+="  x $app install-failed"$'\n'
+    fi
   fi
 
   did_upload=""
@@ -89,7 +97,7 @@ for app in "${APPS[@]}"; do
       echo "$app: dmg build FAILED"
     fi
   fi
-  summary+="  + $app installed${did_upload}"$'\n'
+  summary+="  + $app${installed}${did_upload}"$'\n'
 done
 
 echo ""; echo "=== deploy summary ==="; printf "%s" "$summary"
