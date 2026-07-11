@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+# bump-apps — for every Tauri desktop app: update its bundled zgui-core submodule(s) to the
+# latest zgui-core main, patch-bump the app version, commit + push the app, then bump the app's
+# gitlink in the meta repo. The build/install/publish half is bin/deploy-apps; pass --deploy to
+# chain it automatically (update zgui -> bump -> build -> /Applications -> GitHub release).
+#
+# Apps are discovered dynamically (every tauri.conf.json under a top-level submodule), so new
+# apps are picked up with no edits here. The canonical version is tauri.conf.json's "version"
+# (following a "../package.json"-style path indirection when present); every version-bearing file
+# whose value currently equals that canonical version is bumped in lockstep, and ONLY those files
+# plus the updated zgui-core gitlink(s) are staged — your in-flight WIP in the worktree is left
+# untouched.
+#
+# Safety: an app whose zgui-core worktree has uncommitted changes is SKIPPED (its local zgui WIP
+# would be clobbered by a checkout, and it likely already carries work newer than origin/main).
+# Override with --include-dirty-zgui to bump it anyway (leaving the dirty zgui as-is, no update).
+#
+# Usage:
+#   ./bin/bump-apps                     # zgui->latest + patch bump + commit/push all apps + meta
+#   ./bin/bump-apps --only=zpdf,zcite   # only these apps
+#   ./bin/bump-apps --minor             # minor bump (x.Y.0) instead of patch
+#   ./bin/bump-apps --no-push           # commit locally, don't push (and don't bump meta)
+#   ./bin/bump-apps --dry-run           # print planned actions, change nothing
+#   ./bin/bump-apps --deploy            # after the git phase, run bin/deploy-apps on the bumped apps
+#   ./bin/bump-apps --include-dirty-zgui
+set -uo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${HOME}/.cargo/bin:$PATH"
+
+META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$META_ROOT" || exit 1
+
+ONLY=""; LEVEL=patch; DO_PUSH=1; DRY=0; DO_DEPLOY=0; INCLUDE_DIRTY=0
+for a in "$@"; do
+  case "$a" in
+    --only=*)             ONLY="${a#--only=}" ;;
+    --minor)              LEVEL=minor ;;
+    --patch)              LEVEL=patch ;;
+    --no-push)            DO_PUSH=0 ;;
+    --dry-run|-n)         DRY=1 ;;
+    --deploy)             DO_DEPLOY=1 ;;
+    --include-dirty-zgui) INCLUDE_DIRTY=1 ;;
+    *) echo "unknown arg: $a" >&2; exit 2 ;;
+  esac
+done
+
+# Latest zgui-core commit = the meta's own zgui-core submodule's origin/main (single source of
+# truth so every app lands on the exact same commit). Fetch it first.
+if [ -d "$META_ROOT/zgui-core/.git" ] || [ -f "$META_ROOT/zgui-core/.git" ]; then
+  git -C "$META_ROOT/zgui-core" fetch origin --quiet 2>/dev/null
+  TARGET_ZGUI=$(git -C "$META_ROOT/zgui-core" rev-parse origin/main 2>/dev/null)
+fi
+[ -z "${TARGET_ZGUI:-}" ] && { echo "bump-apps: cannot resolve latest zgui-core (meta/zgui-core missing?)" >&2; exit 1; }
+echo "latest zgui-core: ${TARGET_ZGUI:0:10}"
+
+# Discover Tauri apps (mirror bin/deploy-apps).
+mapfile -t APPS < <(find "$META_ROOT" -maxdepth 4 -name tauri.conf.json 2>/dev/null \
+  | grep -viE 'node_modules|/crates/.*/crates|/libs/' \
+  | perl -pe "s#^\Q$META_ROOT\E/##; s#/(app/)?src-tauri/tauri\.conf\.json##" | sort -u)
+
+bump_ver() { # V level -> bumped
+  local IFS=.; read -r a b c <<<"$1"
+  if [ "$2" = minor ]; then echo "${a}.$((b+1)).0"; else echo "${a}.${b}.$((c+1))"; fi
+}
+json_ver() { node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).version||'')}catch(e){}" "$1" 2>/dev/null; }
+# canonical version from a tauri.conf.json, resolving a "../package.json"-style path indirection
+canon_ver() { node -e "const fs=require('fs'),p=require('path'),c=process.argv[1];let v='';try{v=JSON.parse(fs.readFileSync(c,'utf8')).version||''}catch(e){}if(v&&(v.endsWith('.json')||v.includes('/'))){try{v=JSON.parse(fs.readFileSync(p.resolve(p.dirname(c),v),'utf8')).version||''}catch(e){v=''}}console.log(v)" "$1" 2>/dev/null; }
+# path the tauri.conf "version" points at, if it's an indirection (else empty)
+ver_indirect() { node -e "const fs=require('fs'),p=require('path'),c=process.argv[1];let v='';try{v=JSON.parse(fs.readFileSync(c,'utf8')).version||''}catch(e){}if(v&&(v.endsWith('.json')||v.includes('/')))console.log(p.resolve(p.dirname(c),v));else console.log('')" "$1" 2>/dev/null; }
+repl_json() { perl -i -pe 'BEGIN{$c=0} if(!$c && /"version"\s*:\s*"\Q'"$2"'\E"/){s/"\Q'"$2"'\E"/"'"$3"'"/; $c=1}' "$1"; }
+repl_toml() { perl -i -pe 'BEGIN{$c=0} if(!$c && /^version\s*=\s*"\Q'"$2"'\E"/){s/"\Q'"$2"'\E"/"'"$3"'"/; $c=1}' "$1"; }
+
+CHANGED_APPS=(); SKIPPED=""; summary=""
+for app in "${APPS[@]}"; do
+  [ -n "$ONLY" ] && { case ",$ONLY," in *,"$app",*) : ;; *) continue ;; esac; }
+  d="$META_ROOT/$app"
+  echo "======== $app ========"
+  br=$(git -C "$d" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  if [ "$br" != "main" ]; then echo "  not on main ($br) — SKIP"; SKIPPED+=" $app(detached)"; continue; fi
+
+  cfg=$(command ls "$d"/app/src-tauri/tauri.conf.json "$d"/src-tauri/tauri.conf.json 2>/dev/null | head -1)
+  V=$(canon_ver "$cfg")
+  [ -z "$V" ] && { echo "  no version — SKIP"; SKIPPED+=" $app(no-ver)"; continue; }
+
+  # zgui worktree dirty? default-skip the whole app to avoid clobbering / shipping stale zgui.
+  mapfile -t zpaths < <(git -C "$d" config -f .gitmodules --get-regexp 'submodule\..*zgui-core.*\.path' 2>/dev/null | awk '{print $2}')
+  dirty_zgui=0
+  for zp in "${zpaths[@]}"; do
+    [ -n "$(git -C "$d/$zp" status --porcelain 2>/dev/null)" ] && dirty_zgui=1
+  done
+  if [ "$dirty_zgui" = 1 ] && [ "$INCLUDE_DIRTY" = 0 ]; then
+    echo "  zgui-core worktree DIRTY (uncommitted WIP) — SKIP (use --include-dirty-zgui to override)"
+    SKIPPED+=" $app(dirty-zgui)"; continue
+  fi
+
+  V2=$(bump_ver "$V" "$LEVEL")
+  echo "  version $V -> $V2  ($LEVEL)"
+
+  # update each clean zgui-core worktree to TARGET
+  staged_zgui=()
+  for zp in "${zpaths[@]}"; do
+    wt="$d/$zp"
+    if [ -n "$(git -C "$wt" status --porcelain 2>/dev/null)" ]; then echo "  zgui $zp dirty — leave as-is"; continue; fi
+    cur=$(git -C "$wt" rev-parse HEAD 2>/dev/null)
+    [ "$cur" = "$TARGET_ZGUI" ] && { echo "  zgui $zp already latest"; continue; }
+    echo "  zgui $zp ${cur:0:10} -> ${TARGET_ZGUI:0:10}"
+    if [ "$DRY" = 0 ]; then
+      git -C "$wt" fetch origin --quiet 2>/dev/null
+      git -C "$wt" checkout --quiet "$TARGET_ZGUI" 2>/dev/null || { echo "  !! zgui checkout failed $zp"; continue; }
+    fi
+    staged_zgui+=("$zp")
+  done
+
+  # bump every version-bearing file whose value currently equals V
+  changed=()
+  # tauri.conf.json: bump only if it holds a literal version (not a path indirection)
+  ind=$(ver_indirect "$cfg")
+  if [ -z "$ind" ] && command grep -qE "\"version\"[[:space:]]*:[[:space:]]*\"$V\"" "$cfg"; then
+    [ "$DRY" = 0 ] && repl_json "$cfg" "$V" "$V2"; changed+=("${cfg#$d/}")
+  fi
+  # the file the tauri.conf version points at, if any
+  if [ -n "$ind" ] && [ -f "$ind" ] && [ "$(json_ver "$ind")" = "$V" ]; then
+    [ "$DRY" = 0 ] && repl_json "$ind" "$V" "$V2"; changed+=("${ind#$d/}")
+  fi
+  for pj in "$d/package.json" "$d/app/package.json"; do
+    [ -f "$pj" ] && [ "$(json_ver "$pj")" = "$V" ] || continue
+    [ "$DRY" = 0 ] && repl_json "$pj" "$V" "$V2"; changed+=("${pj#$d/}")
+  done
+  for ct in "$d/Cargo.toml" "$d/src-tauri/Cargo.toml" "$d/app/src-tauri/Cargo.toml"; do
+    [ -f "$ct" ] && command grep -qE "^version = \"$V\"" "$ct" || continue
+    [ "$DRY" = 0 ] && repl_toml "$ct" "$V" "$V2"; changed+=("${ct#$d/}")
+  done
+  echo "  bump files: ${changed[*]:-<none>}"
+
+  add=("${changed[@]}" "${staged_zgui[@]}")
+  if [ "${#add[@]}" -eq 0 ]; then echo "  nothing to do"; summary+="  = $app unchanged"$'\n'; continue; fi
+  if [ "$DRY" = 1 ]; then
+    echo "  would: git add ${add[*]} && commit 'bump v$V2 — zgui-core -> latest' && push"
+    CHANGED_APPS+=("$app"); summary+="  ~ $app -> v$V2 (dry)"$'\n'; continue
+  fi
+  if ( cd "$d" && git add -- "${add[@]}" && git commit -q -m "bump v$V2 — zgui-core -> latest" ); then
+    if [ "$DO_PUSH" = 1 ]; then
+      ( cd "$d" && { git push -q 2>/dev/null || { git pull --rebase --quiet && git push -q; }; } ) \
+        && echo "  committed+pushed v$V2" || { echo "  !! push failed"; summary+="  x $app push-failed"$'\n'; continue; }
+    else
+      echo "  committed v$V2 (no push)"
+    fi
+    CHANGED_APPS+=("$app"); summary+="  + $app -> v$V2"$'\n'
+  else
+    echo "  !! commit failed"; summary+="  x $app commit-failed"$'\n'
+  fi
+done
+
+# Meta pointer bump (only when we pushed apps). index.lock is contended by concurrent sessions —
+# retry hard, never remove the lock, stage only the changed app paths.
+if [ "$DRY" = 0 ] && [ "$DO_PUSH" = 1 ] && [ "${#CHANGED_APPS[@]}" -gt 0 ]; then
+  echo "======== meta pointer bump (${#CHANGED_APPS[@]} apps) ========"
+  for i in $(seq 1 60); do
+    git add -- "${CHANGED_APPS[@]}" 2>/dev/null || { sleep 2; continue; }
+    if git diff --cached --quiet; then echo "  pointers already current"; break; fi
+    if git commit -q -m "meta: bump ${#CHANGED_APPS[@]} Tauri apps — zgui-core -> latest ($LEVEL)" 2>/dev/null; then
+      { git push -q 2>/dev/null || { git pull --rebase --quiet && git push -q; }; } && { echo "  meta pointers pushed (attempt $i)"; break; }
+    fi
+    sleep 2
+  done
+fi
+
+echo ""; echo "=== bump summary ==="; printf "%s" "$summary"
+[ -n "$SKIPPED" ] && echo "  skipped:$SKIPPED"
+
+# Chain the build/install/publish half.
+if [ "$DO_DEPLOY" = 1 ] && [ "${#CHANGED_APPS[@]}" -gt 0 ] && [ "$DRY" = 0 ]; then
+  only=$(IFS=,; echo "${CHANGED_APPS[*]}")
+  echo ""; echo "=== deploy: bin/deploy-apps --only=$only ==="
+  exec "$META_ROOT/bin/deploy-apps" --only="$only"
+fi

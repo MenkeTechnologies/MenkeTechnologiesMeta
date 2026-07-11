@@ -55,6 +55,10 @@ make_dmg() { # $1=appbundle  $2=out.dmg  $3=volname
     hdiutil create -volname "$3" -srcfolder "$stage" -ov -format UDZO -size "${size_m}m" -quiet "$2" 2>/dev/null && echo "$2"
   fi
   rm -rf "$stage"
+  # Report success ONLY if the dmg actually exists — otherwise a missing artifact (e.g. hdiutil
+  # ran out of disk on a large bundle) would still be handed to `gh`, failing the whole upload
+  # and dropping the pkg too.
+  [ -s "$2" ]
 }
 
 # Make a flat installer .pkg from a .app (installs into /Applications). Headless, no UI.
@@ -64,6 +68,7 @@ make_pkg() { # $1=appbundle  $2=out.pkg  $3=identifier  $4=version
   rm -f "$2"
   pkgbuild --root "$stage" --install-location /Applications --identifier "$3" --version "$4" "$2" >/dev/null 2>&1 && echo "$2"
   rm -rf "$stage"
+  [ -s "$2" ]
 }
 
 summary=""
@@ -75,7 +80,15 @@ for app in "${APPS[@]}"; do
 
   if [ "$DO_BUILD" = 1 ]; then
     echo "=== build $app ($bd) — .app only, no dmg popup ==="
-    if ! ( cd "$bd" && pnpm tauri build --bundles app ) >"$log" 2>&1; then
+    # Default builder is `pnpm tauri build --bundles app`. Apps that can't use it (e.g. traderview
+    # needs cargo-tauri + frontend-dist isolation) ship an executable scripts/deploy-build.sh that
+    # produces the .app under release/bundle/macos; use it when present.
+    if [ -x "$bd/scripts/deploy-build.sh" ]; then
+      buildcmd=( ./scripts/deploy-build.sh )
+    else
+      buildcmd=( pnpm tauri build --bundles app )
+    fi
+    if ! ( cd "$bd" && "${buildcmd[@]}" ) >"$log" 2>&1; then
       echo "$app: BUILD FAILED (see $log)"; summary+="  x $app build-failed"$'\n'; continue
     fi
   fi
