@@ -26,6 +26,7 @@ APPS=(
   "ztunnel|ztunnel-core|src/commands.rs|Tunnelblick-style VPN client — OpenVPN / WireGuard config + control"
   "zgo|zgo-core|src/syscommands.rs|Alfred-style launcher — script-filter workflows and system commands"
   "zwire|zwire-host|src/zbus.rs|Chromium-superset browser — tabs, windows, tab-groups, downloads, reading list, power"
+  "traderview|traderview|frontend/js/zg-automation.js|TradingView-style charting/trading terminal — the ⌘K palette catalog registered as bus verbs (view tiles + shortcut actions)"
 )
 
 esc() { printf '%s' "$1"; }
@@ -46,6 +47,19 @@ extract_verbs() {
   fi
 }
 
+# traderview has no `-core` engine; its bus surface is the webview command catalog
+# (frontend/js/zg-automation.js), which registers the STABLE `view:` tiles + `action:`
+# shortcuts (ephemeral recents/favs/bookmarks dropped — its buildVerbs filter). Rebuild
+# exactly that set from source: launcher.js TILES (id = element 0) and _shortcuts.js ids.
+tv_verbs() {
+  local sub="$1"
+  git -C "$sub" show origin/main:frontend/js/views/launcher.js 2>/dev/null \
+    | awk '/export const TILES = \[/{f=1;next} f&&/^\];/{exit} f' \
+    | grep -oE "^[[:space:]]*\[[[:space:]]*['\"][^'\"]+" | grep -oE "['\"][^'\"]+$" | tr -d "\"'" | sed 's/^/view:/'
+  git -C "$sub" show origin/main:frontend/js/_shortcuts.js 2>/dev/null \
+    | grep -oE "id:[[:space:]]*['\"][^'\"]+['\"]" | grep -oE "['\"][^'\"]+['\"]\$" | tr -d "\"'" | sed 's/^/action:/'
+}
+
 # --- shared appShell verbs (every app inherits these from zgui-core) ---
 APPSHELL=$(git -C zgui-core show origin/main:webui/app-shell.js 2>/dev/null \
   | grep -oE 'id:[[:space:]]*"appshell\.[a-zA-Z0-9_.]+"' \
@@ -59,7 +73,11 @@ GRAND=0
 declare -a ROWS
 for entry in "${APPS[@]}"; do
   IFS='|' read -r app sub file desc <<<"$entry"
-  git -C "$sub" show "origin/main:$file" 2>/dev/null | extract_verbs "$file" | sort -u > "$tmp/$app" || true
+  if [[ "$app" == traderview ]]; then
+    tv_verbs "$sub" | sort -u > "$tmp/$app" || true
+  else
+    git -C "$sub" show "origin/main:$file" 2>/dev/null | extract_verbs "$file" | sort -u > "$tmp/$app" || true
+  fi
   n=$(grep -c . "$tmp/$app" || true)
   GRAND=$((GRAND + n))
   ROWS+=("$app|$sub|$file|$desc|$n")
