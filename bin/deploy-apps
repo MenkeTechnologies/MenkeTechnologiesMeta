@@ -90,7 +90,8 @@ for app in "${APPS[@]}"; do
   did_upload=""
   if [ "$DO_UPLOAD" = 1 ]; then
     cfg=$(ls "$d"/app/src-tauri/tauri.conf.json "$d"/src-tauri/tauri.conf.json 2>/dev/null | head -1)
-    ver=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).version||'')}catch(e){}" "$cfg" 2>/dev/null)
+    # Tauri allows "version" to be a path to a package.json (e.g. "../package.json"); resolve it.
+    ver=$(node -e "const fs=require('fs'),p=require('path'),c=process.argv[1];let v='';try{v=JSON.parse(fs.readFileSync(c,'utf8')).version||''}catch(e){}if(v&&(v.endsWith('.json')||v.includes('/'))){try{v=JSON.parse(fs.readFileSync(p.resolve(p.dirname(c),v),'utf8')).version||''}catch(e){v=''}}console.log(v)" "$cfg" 2>/dev/null)
     id=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).identifier||'')}catch(e){}" "$cfg" 2>/dev/null)
     tag="v${ver:-0.0.0}"; repo="MenkeTechnologies/$app"
     dmg="$d/${app}_${ver:-0.0.0}_aarch64.dmg"
