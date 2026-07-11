@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# deploy-apps — build every Tauri desktop app's RELEASE .app bundle, install it to /Applications,
+# and upload a .dmg to a GitHub release at the app's version. Complements bin/release-all (which
+# handles crate/formula TAG bumps for the CLI tools); this handles the GUI-app build+install+publish.
+#
+# Builds with `--bundles app` ONLY, so Tauri's interactive dmg bundler (which mounts the volume and
+# runs an osascript Finder-window arrangement — the "drag to Applications" popup) never runs. The
+# .app is installed to /Applications with cp -R (no dragging). The .dmg for GitHub is produced
+# HEADLESSLY with hdiutil from a staging folder (.app + /Applications symlink) — no Finder window.
+#
+# Apps are discovered dynamically: every tauri.conf.json under a top-level submodule (new apps are
+# picked up automatically). Build dir is <app>/app if it has package.json, else <app>. Release tag
+# is v<version> from tauri.conf.json's "version".
+#
+# Usage:
+#   ./bin/deploy-apps                       # build + install + upload every app
+#   ./bin/deploy-apps --only=zthrottle,zcite
+#   ./bin/deploy-apps --no-install          # build + upload, don't touch /Applications
+#   ./bin/deploy-apps --no-upload           # build + install, no GitHub release / dmg
+#   ./bin/deploy-apps --no-build            # install/upload already-built .app bundles only
+set -uo pipefail
+
+META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ONLY=""; DO_BUILD=1; DO_INSTALL=1; DO_UPLOAD=1
+for a in "$@"; do
+  case "$a" in
+    --only=*)     ONLY="${a#--only=}" ;;
+    --no-build)   DO_BUILD=0 ;;
+    --no-install) DO_INSTALL=0 ;;
+    --no-upload)  DO_UPLOAD=0 ;;
+    *) echo "unknown arg: $a" >&2; exit 2 ;;
+  esac
+done
+
+# Discover Tauri apps: a tauri.conf.json directly under a top-level dir (not nested in crates/ or libs/).
+mapfile -t APPS < <(find "$META_ROOT" -maxdepth 4 -name tauri.conf.json 2>/dev/null \
+  | grep -viE 'node_modules|/crates/.*/crates|/libs/' \
+  | perl -pe "s#^\Q$META_ROOT\E/##; s#/(app/)?src-tauri/tauri\.conf\.json##" | sort -u)
+
+# Make a distributable dmg from a .app WITHOUT any Finder popup: stage app + Applications symlink,
+# then hdiutil create (compressed UDZO). Prints the dmg path on success.
+make_dmg() { # $1=appbundle  $2=out.dmg  $3=volname
+  local stage; stage="$(mktemp -d)"
+  cp -R "$1" "$stage/" && ln -s /Applications "$stage/Applications"
+  rm -f "$2"
+  hdiutil create -volname "$3" -srcfolder "$stage" -ov -format UDZO -quiet "$2" && echo "$2"
+  rm -rf "$stage"
+}
+
+summary=""
+for app in "${APPS[@]}"; do
+  [ -n "$ONLY" ] && { case ",$ONLY," in *,"$app",*) : ;; *) continue ;; esac; }
+  d="$META_ROOT/$app"
+  [ -f "$d/app/package.json" ] && bd="$d/app" || bd="$d"
+  log="$d.deploy.log"
+
+  if [ "$DO_BUILD" = 1 ]; then
+    echo "=== build $app ($bd) — .app only, no dmg popup ==="
+    if ! ( cd "$bd" && pnpm tauri build --bundles app ) >"$log" 2>&1; then
+      echo "$app: BUILD FAILED (see $log)"; summary+="  x $app build-failed"$'\n'; continue
+    fi
+  fi
+
+  appbundle=$(find "$d" -path '*/release/bundle/macos/*.app' -type d 2>/dev/null | head -1)
+  [ -z "$appbundle" ] && { echo "$app: no .app bundle"; summary+="  x $app no-.app"$'\n'; continue; }
+  name=$(basename "$appbundle")
+
+  if [ "$DO_INSTALL" = 1 ]; then
+    rm -rf "/Applications/$name"; cp -R "$appbundle" "/Applications/$name"
+    echo "$app: installed /Applications/$name"
+  fi
+
+  did_upload=""
+  if [ "$DO_UPLOAD" = 1 ]; then
+    cfg=$(ls "$d"/app/src-tauri/tauri.conf.json "$d"/src-tauri/tauri.conf.json 2>/dev/null | head -1)
+    ver=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).version||'')}catch(e){}" "$cfg" 2>/dev/null)
+    tag="v${ver:-0.0.0}"; repo="MenkeTechnologies/$app"
+    dmg="$d/${app}_${ver:-0.0.0}_aarch64.dmg"
+    if make_dmg "$appbundle" "$dmg" "$app" >/dev/null; then
+      if gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
+        gh release upload "$tag" "$dmg" --clobber --repo "$repo" >/dev/null 2>&1 && { echo "$app: uploaded $tag $(basename "$dmg")"; did_upload=" uploaded"; }
+      else
+        gh release create "$tag" "$dmg" --repo "$repo" --title "$app $tag" \
+          --notes "$app $tag — macOS Apple silicon. Open the .dmg, drag to Applications. Unsigned: first launch right-click -> Open." >/dev/null 2>&1 \
+          && { echo "$app: created release $tag $(basename "$dmg")"; did_upload=" uploaded"; }
+      fi
+      rm -f "$dmg"
+    else
+      echo "$app: dmg build FAILED"
+    fi
+  fi
+  summary+="  + $app installed${did_upload}"$'\n'
+done
+
+echo ""; echo "=== deploy summary ==="; printf "%s" "$summary"
