@@ -38,12 +38,22 @@ mapfile -t APPS < <(find "$META_ROOT" -maxdepth 4 -name tauri.conf.json 2>/dev/n
   | perl -pe "s#^\Q$META_ROOT\E/##; s#/(app/)?src-tauri/tauri\.conf\.json##" | sort -u)
 
 # Make a distributable dmg from a .app WITHOUT any Finder popup: stage app + Applications symlink,
-# then hdiutil create (compressed UDZO). Prints the dmg path on success.
+# then hdiutil create (compressed UDZO). Prints the dmg path on success. hdiutil's auto-sizing
+# underestimates when the .app carries a sparse image (e.g. a bundled VM rootfs.img), so on failure
+# retry with an explicit size from the app's apparent bytes; UDZO compresses the zero blocks away.
 make_dmg() { # $1=appbundle  $2=out.dmg  $3=volname
   local stage; stage="$(mktemp -d)"
   cp -R "$1" "$stage/" && ln -s /Applications "$stage/Applications"
   rm -f "$2"
-  hdiutil create -volname "$3" -srcfolder "$stage" -ov -format UDZO -quiet "$2" && echo "$2"
+  if hdiutil create -volname "$3" -srcfolder "$stage" -ov -format UDZO -quiet "$2" 2>/dev/null; then
+    echo "$2"
+  else
+    local apparent size_m
+    apparent=$(find "$1" -type f -print0 | xargs -0 stat -f %z 2>/dev/null | awk '{s+=$1} END{print s+0}')
+    size_m=$(( apparent / 1048576 + 200 ))
+    rm -f "$2"
+    hdiutil create -volname "$3" -srcfolder "$stage" -ov -format UDZO -size "${size_m}m" -quiet "$2" 2>/dev/null && echo "$2"
+  fi
   rm -rf "$stage"
 }
 
