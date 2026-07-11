@@ -29,6 +29,7 @@ val %opts = %{ getopts({
     "minor"              => { help => "minor (x.Y.0) bump instead of patch" },
     "dry-run|n"          => { help => "preview the git phase; change nothing" },
     "no-push"            => { help => "commit locally; no push, no meta pointer bump" },
+    "no-bump"            => { help => "skip the git phase; deploy the current build as-is" },
     "no-deploy"          => { help => "git phase only — no build/install/upload" },
     "no-build"           => { help => "skip build; install/upload the existing .app" },
     "no-install"         => { help => "don't touch /Applications" },
@@ -44,6 +45,7 @@ val $only       = $opts{only} // ""
 val $minor      = $opts{minor} // 0
 val $dry        = $opts{'dry-run'} // 0
 val $push       = $opts{'no-push'} ? 0 : 1
+val $bump       = $opts{'no-bump'} ? 0 : 1
 val $deploy     = $opts{'no-deploy'} ? 0 : 1
 val $do_build   = $opts{'no-build'} ? 0 : 1
 val $do_install = $opts{'no-install'} ? 0 : 1
@@ -103,14 +105,14 @@ fn App::make_dmg($appbundle, $out, $volname) {
     Sh::run("cp -R '$appbundle' '$stage/' && ln -s /Applications '$stage/Applications' && rm -f '$out'")
     Sh::run("hdiutil create -volname '$volname' -srcfolder '$stage' -ov -format UDZO -quiet '$out' 2>/dev/null")
     Sh::run("rm -rf '$stage'")
-    -s $out ? 1 : 0            # success only if the dmg actually exists
+    (-s $out) ? 1 : 0        # parens required: bare `-s` collides with the s/// operator; also = success only if the dmg exists
 }
 fn App::make_pkg($appbundle, $out, $ident, $ver) {
     val $stage = Sh::cap("mktemp -d")
     Sh::run("cp -R '$appbundle' '$stage/' && rm -f '$out'")
     Sh::run("pkgbuild --root '$stage' --install-location /Applications --identifier '$ident' --version '$ver' '$out' >/dev/null 2>&1")
     Sh::run("rm -rf '$stage'")
-    -s $out ? 1 : 0
+    (-s $out) ? 1 : 0        # parens required: bare `-s` collides with the s/// operator
 }
 
 # ── build + install + upload one app ──────────────────────────────────────
@@ -201,6 +203,7 @@ var @summary
 var $skipped = ""
 for val $app (@apps) {
     next if !App::selected($app)
+    if (!$bump) { push @changed_apps, $app; next }    # --no-bump: deploy current build, skip git phase
     val $d = "$meta/$app"
     p "======== $app ========"
     if (Sh::git($d, "rev-parse --abbrev-ref HEAD") ne "main") { p "  not on main — SKIP"; $skipped .= " $app(detached)"; next }
@@ -282,7 +285,7 @@ for val $app (@apps) {
 }
 
 # ── meta pointer bump (index.lock is contended by concurrent sessions — retry hard) ──
-if (!$dry && $push && len(@changed_apps)) {
+if ($bump && !$dry && $push && len(@changed_apps)) {
     p "======== meta pointer bump (#{len @changed_apps} apps) ========"
     val $paths = join " ", map { "'$_'" } @changed_apps
     for val $i (1:60) {
