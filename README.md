@@ -664,30 +664,30 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 3,148,642 | 7,842 |
-| JSON | 1,925,576 | 693 |
-| Perl | 1,902,491 | 19,534 |
-| JavaScript | 582,880 | 4,013 |
-| HTML | 530,926 | 1,305 |
-| C++ | 351,797 | 1,080 |
-| C Header | 328,150 | 2,026 |
+| Rust | 3,318,038 | 8,399 |
+| JSON | 2,488,940 | 888 |
+| Perl | 1,904,893 | 19,752 |
+| JavaScript | 849,289 | 6,680 |
+| HTML | 536,556 | 1,387 |
+| C Header | 425,436 | 2,176 |
+| C++ | 387,273 | 1,150 |
 | C | 289,952 | 572 |
-| TeX | 262,300 | 45 |
-| Stryke (`.stk`) | 200,685 | 3,377 |
-| Zsh | 130,129 | 1,030 |
-| Vim Script | 121,873 | 905 |
-| CSS | 114,738 | 557 |
+| TeX | 279,516 | 53 |
+| Zsh | 278,944 | 1,304 |
+| CSS | 203,405 | 2,230 |
+| Stryke (`.stk`) | 201,197 | 3,387 |
+| Vim Script | 123,272 | 934 |
+| Shell | 92,284 | 2,932 |
 | AWK | 82,707 | 2,192 |
-| C++ Header | 78,161 | 273 |
-| Shell | 75,766 | 2,365 |
-| Python | 47,469 | 326 |
+| C++ Header | 78,339 | 277 |
+| Python | 64,366 | 744 |
+| TOML | 38,123 | 728 |
 | Scheme | 37,894 | 1,156 |
-| TOML | 36,502 | 632 |
 | Kotlin | 29,820 | 272 |
 | SQL | 29,188 | 119 |
 | Objective-C++ | 20,810 | 64 |
-| *Other (84 languages)* | 61,188 | 722 |
-| **Total** | **10,389,644** | **51,756** |
+| *Other (88 languages)* | 80,379 | 1,027 |
+| **Total** | **11,840,621** | **59,262** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -697,16 +697,16 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 <!-- BEGIN gen-code-volume:repos -->
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | JSON 1,581,560 | Rust 772,877 |
-| `strykelang` | Perl 1,902,103 | Rust 415,527 |
+| `traderview` | JSON 1,581,575 | Rust 773,239 |
+| `strykelang` | Perl 1,902,103 | Rust 415,682 |
 | `zpwr-fx` | C++ 334,186 | C Header 308,756 |
-| `zshrs` | Rust 447,886 | Zsh 50,324 |
-| `zemacs` | Rust 224,299 | JSON 88,928 |
-| `docs` | HTML 374,812 | JavaScript 3,538 |
-| `MenkeTechnologiesPublications` | TeX 262,075 | HTML 102,234 |
-| `Audio-Haxor` | Rust 125,381 | JSON 111,935 |
-| `ztmux` | Rust 122,906 | C 76,754 |
-| `awkrs` | AWK 82,138 | Rust 52,860 |
+| `zshrs` | Rust 453,853 | Zsh 50,324 |
+| `zemacs` | Rust 242,929 | JSON 95,100 |
+| `MenkeTechnologiesPublications` | TeX 278,605 | HTML 102,985 |
+| `docs` | HTML 368,383 | CSS 5,564 |
+| `Audio-Haxor` | Rust 125,126 | JSON 117,582 |
+| `ztranslator` | JSON 115,578 | JavaScript 66,980 |
+| `ztmux` | Rust 123,282 | C 76,754 |
 <!-- END gen-code-volume:repos -->
 
 Numbers refresh as repos add commits — regenerate with `bin/gen-code-volume --in-place`.
@@ -718,11 +718,11 @@ Every line above is hand-authored. The standard software-engineering productivit
 <!-- BEGIN gen-code-volume:careers -->
 | Net LOC/day baseline | Career total | This tree ÷ baseline |
 |---:|---:|---:|
-| 100/day (optimistic ceiling) | ~920,000 | **~11×** |
-| 50/day (mid estimate) | ~460,000 | **~23×** |
-| 20/day (conservative) | ~184,000 | **~56×** |
+| 100/day (optimistic ceiling) | ~920,000 | **~13×** |
+| 50/day (mid estimate) | ~460,000 | **~26×** |
+| 20/day (conservative) | ~184,000 | **~64×** |
 
-The defensible floor is **≥11 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
+The defensible floor is **≥12 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
 <!-- END gen-code-volume:careers -->
 
 The baseline is an industry estimate, not a measured value; the Total is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
