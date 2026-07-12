@@ -201,9 +201,9 @@ task-by-task work list to close every gap is [`GUI_POLISH_GATE_CHECKLIST.md`](GU
 | **traderview** | partial | ✓ | ✓ | partial | FAIL |
 | **ztranslator** | partial | ✓ | ✓ | partial | FAIL |
 | **zpwr-daw** | partial | ✓ | ✗ | partial | FAIL |
-| **zcontainer** | ✗ | partial (`zcontainer-core` only) | ✗ | partial (dev/build/clean/bust/rebuild/nuke only) | FAIL |
-| **zcite** | partial (R1–R10 ✓; R9 N/A — no timeline) | ✓ (terminal/hooks/file-browser/i18n + office/mail/pdf-core) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/test/doc/ship-check/deploy/nuke/build:hooks-editor) | FAIL |
-| **zreq** | partial (R1–R10 ✓; R9 N/A — no timeline) | ✓ (terminal/hooks/file-browser/i18n + office/mail/pdf-core) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/nuke/build:hooks-editor) | FAIL |
+| **zcontainer** | partial (appShell ⌘K/⌘, ✓; hand-rolled skin, no shared tokens/header) | partial (`zcontainer-core` + `zpwr-hooks-editor` + `zpwr-file-browser` + `zgui-core` + `zgui-bridge`; **no `zpwr-embed-terminal`**) | ✗ | partial (dev/build/clean/bust/rebuild/nuke + test/test:rust) | FAIL |
+| **zcite** | partial (R1–R10 ✓; R9 N/A — no timeline) | partial (terminal/hooks/file-browser/i18n; **no office/mail/pdf-core**) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/test/doc/ship-check/deploy/nuke/build:hooks-editor) | FAIL |
+| **zreq** | partial (R1–R10 ✓; R9 N/A — no timeline) | partial (terminal/hooks/file-browser/i18n; **no office/mail/pdf-core**) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/nuke/build:hooks-editor) | FAIL |
 
 ### zcite / zreq — newly onboarded (R1–R10 green)
 
@@ -226,27 +226,31 @@ To reach **PASS** each still owes the gate:
 
 ### zcontainer — what it owes the gate
 
-`zcontainer` currently embeds only `zcontainer-core` and ships a bespoke Docker/Kubernetes
-UI. To reach PASS it must port the haxor family chrome onto its existing layout and localize
-everything:
+`zcontainer` embeds `zcontainer-core`, `zpwr-hooks-editor`, `zpwr-file-browser`, `zgui-core` and
+`zgui-bridge` (its `.gitmodules`), and its UI mounts `ZGui.appShell` — so it already has the ⌘K
+palette, the ⌘, settings panel, `ZGui.fzf` and `ZGui.dataTable`. The remaining gap is the skin, the
+terminal embed, the bus, and localization:
 
-- **G1**: command palette (R1) over its commands; embedded terminal (R3) — already has an
-  exec terminal, replace with `zpwr-embed-terminal`; hooks editor (R2); shared cyberpunk
-  tokens (R4) — the current skin is hand-rolled, move to `cyberpunk.css` tokens; tile
-  dashboard + tab bar (R5); shared header/logo (R6); fzf filters with highlight (R7) — the
-  current search is substring; sortable + resizable tables (R8) — the current resource table
-  is neither; file browser (R10); context menu, keyboard nav, help overlay.
-- **G2**: add submodules `zpwr-embed-terminal`, `zpwr-hooks-editor`, `zpwr-file-browser`,
-  `zpwr-i18n`, plus `zoffice-core` / `zemail-core` / `zpdf-core` with views. Arrangement grid
-  (R9) is relevant — container/pod events and log timelines fit `createGrid` with a new
-  domain; `zpwr-crate` and `ztranslator-core` are **N/A** (no audio/show-control domain).
-- **G3**: adopt `zpwr-i18n`, extract every string in `webui/*` to `app_i18n_en.json`, seed all
-  27 locales, port the 18 i18n proof tests, and make them green.
-- **G4**: it already has `dev`/`build`/`tauri`/`clean`/`bust`/`rebuild`/`nuke`; add the rest of
-  the haxor surface — `tauri:build:ci`, `ship-check`, `deploy`, `test` + `test:js` + `test:rust`,
-  `doc`/`doc:open`/`doc:sync`, and `i18n:sort`/`i18n:sort:check`/`i18n:audit` (in node, not
-  Python) — plus the matching `scripts/*.sh` (`ship-check.sh`, `deploy.sh`, `test.sh`).
-  `db:*` is N/A unless a SQLite store is added.
+- **G1**: shared cyberpunk tokens (R4) — the current skin is hand-rolled, move to `cyberpunk.css`
+  tokens; embedded terminal (R3) — the exec terminal is bespoke, replace with
+  `zpwr-embed-terminal`; tile dashboard + tab bar (R5); shared header/logo (R6); context menu,
+  keyboard nav, help overlay. R1 (palette), R2 (hooks editor), R7 (fzf) and R8 (tables) are already
+  met through the appShell + the `zgui-core` widgets.
+- **G2**: add the one missing submodule — `zpwr-embed-terminal` — plus `zoffice-core` /
+  `zemail-core` / `zpdf-core` with views. (`zpwr-hooks-editor` and `zpwr-file-browser` are already
+  submodules; `zpwr-i18n` arrives transitively, vendored inside `zcontainer-core`.) The automation
+  bus is also unlanded: there is no `bus.rs` and no `zgui_bridge::serve` call anywhere in the app,
+  only the `zgui-bridge` dependency line in `app/src-tauri/Cargo.toml`. Arrangement grid (R9) is
+  relevant — container/pod events and log timelines fit `createGrid` with a new domain; `zpwr-crate`
+  and `ztranslator-core` are **N/A** (no audio/show-control domain).
+- **G3**: `zpwr-i18n` is already present (vendored inside `zcontainer-core`); extract every string
+  in `webui/*` to `app_i18n_en.json`, seed all 27 locales, port the 18 i18n proof tests, and make
+  them green.
+- **G4**: it already has `dev`/`build`/`tauri`/`clean`/`bust`/`rebuild`/`nuke` **plus `test`
+  (`scripts/test.sh`) and `test:rust`**; add the rest of the haxor surface — `tauri:build:ci`,
+  `ship-check`, `deploy`, `test:js`, `doc`/`doc:open`/`doc:sync`, and
+  `i18n:sort`/`i18n:sort:check`/`i18n:audit` (in node, not Python) — plus the matching
+  `scripts/*.sh` (`ship-check.sh`, `deploy.sh`). `db:*` is N/A unless a SQLite store is added.
 
 Until these land, `zcontainer` is **FAIL** — a faithful Docker Desktop + Lens port, but not
 yet a polished member of the GUI family.

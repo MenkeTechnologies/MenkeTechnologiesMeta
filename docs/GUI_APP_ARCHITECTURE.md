@@ -146,6 +146,13 @@ at the **same path**:
 <ui-repo>/frontend/<name>-view.js        # embeddable view — widgets only, NO app-shell
 ```
 
+> **The tree currently violates this rule and the gate that enforces it.** `baseline-gate.mjs:142`
+> hard-fails any JS UI lib not at exactly `frontend/lib/<name>`, but only `zterminal` and `zthrottle`
+> mount `zgui-core` there. Twelve apps (`zpdf`, `zemail`, `zcite`, `zreq`, `ztunnel`, `zgo`, `zftp`,
+> `zphoto`, `zstation`, `zcontainer`, `zemacs-gui`, `traderview`) mount it at `crates/zgui-core`, and
+> `zoffice` + `Audio-Haxor` carry **both** paths. The rule above is the intended one — this is a
+> migration debt to close in the apps, not a rule to relax.
+
 - **Every repo serves `frontend/`.** Engine cores that historically served `webui/` are renamed
   `webui → frontend`, and the wrapper's Tauri `frontendDist` points at `…/frontend`.
 - **Engine‑hosted apps** (the wrapper's `frontendDist → <core>/frontend`): zgui lives in the **core**;
@@ -226,15 +233,17 @@ fine. Two layers, defense in depth.
 | --- | --- | --- |
 | Audio‑Haxor | app‑hosted | zgui at `frontend/lib/zgui-core` (already ✓); it is the top‑level shell |
 | zterm | app‑hosted (include_dir) | zgui at `frontend/lib/zgui-core` (done ✓) |
-| ztranslator, zemail | TBD by `frontendDist` | if engine‑hosted, move zgui to the core + drop from wrapper; else keep in app |
+| ztranslator, zemail | resolved | ztranslator is engine‑hosted (`ztranslator-core/frontend`); zemail is app‑hosted (`zemail/frontend`) |
 | zpdf, zgo, zcontainer | engine‑hosted | rename core `webui → frontend`; zgui at `<core>/frontend/lib`; wrapper embeds none; `frontendDist → <core>/frontend` |
-| zreq, ztunnel, zoffice, zftp, zemacs‑gui, zpwr‑daw, zcite | not wired | add `frontend/lib/zgui-core`; standalone `index.html` mounts `appShell`; domain UI becomes a `*-view.js` |
+| zreq, ztunnel, zoffice, zftp, zemacs‑gui, zcite | wired ✓ | all embed `zgui-core` and mount `appShell` — but at `crates/zgui-core`, not the required `frontend/lib/zgui-core` (see §placement note) |
+| zpwr‑daw | not wired | the only remaining app with no `zgui-core` embed; add it, mount `appShell`, domain UI becomes a `*-view.js` |
 
 Each migration: place zgui → (rename webui→frontend if a core) → wire shell in `index.html` only →
 declare `zguiView` → run the gate → bump pointers (`<core>` → `<app>` → meta).
 
 ## 8. Build order in `zgui-core`
 
-The runtime guards (§5a) ship as a small `webui/role.js` + `webui/embed.js` and an `appShell`
-single‑instance check; the gate (§5b) gains the view‑purity scan. These land in `zgui-core` first
+The runtime guards (§5a) ship as `webui/embed.js` plus the `appShell` single‑instance check
+(`app-shell.js:43`) — the once‑planned `webui/role.js` was never split out and does not exist; the
+gate (§5b) gains the view‑purity scan. These land in `zgui-core` first
 (they are the substrate every app depends on), then the per‑app sweep follows.

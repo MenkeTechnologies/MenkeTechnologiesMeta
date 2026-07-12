@@ -9,10 +9,15 @@ Where `COMPONENTS.md` says *what an app pulls in*, this says *what an app turns 
 these surfaces ship in `zgui-core` but must be `init()`'d per app, so presence is verified at the
 call site, not by the submodule being vendored.
 
-_Verified 2026-07-11 by grepping each app's real entry/frontend + `src-tauri` at the recorded
-gitlink: `.powerline.init(` / `.tmux.init(` for the bars, `serve("<app>")` + `bus::start` for the
-socket, `monaco-vim` / `initVimMode` for editor vim, app-specific vim handlers for app-level vim,
-`hooks-editor-entry` for the hooks editor. Engine-verb counts come from `GUI_SCRIPT_ACTIONS.md`._
+_Re-verified 2026-07-12 by grepping each app's real entry/frontend + `src-tauri` at the recorded
+gitlink. For the two tmux surfaces the test is **does the app's own frontend load the script**:
+`powerline.js` self-boots its bar on `DOMContentLoaded` when loaded (`boot()` →
+`apply(true)`, `zgui-core/webui/powerline.js:190`; `.powerline.init(` is *optional* — it only
+supplies the sig/providers to an already-built bar, `powerline.js:162-167`), while `tmux.js`
+additionally needs an explicit `.tmux.init(` (each app's `tmux-config.js`). Vendoring `zgui-core`
+alone wires neither. The rest: `serve("<app>")` in the app's `bus.rs` for the socket, `monaco-vim` /
+`initVimMode` for editor vim, app-specific vim handlers for app-level vim, `hooks-editor-entry` for
+the hooks editor. Engine-verb counts come from `GUI_SCRIPT_ACTIONS.md`._
 
 ---
 
@@ -41,19 +46,19 @@ in [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md).
 | --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | **zpdf** | ✓ | 649 | ✓ | ✓ | ✓ | · | ✓ |
 | **zemail** | ✓ | 208 | ✓ | ✓ | ✓ | · | ✓ |
-| **zcite** | ✓ | 206 | ✓ | ✓ | ✓ | · | ✓ |
+| **zcite** | ✓ | 206 | · | · | ✓ | · | ✓ |
 | **zftp** | ✓ | 160 | ✓ | ✓ | ✓ | · | ✓ |
 | **zreq** | ✓ | 151 | ✓ | ✓ | ✓ | · | ✓ |
-| **ztunnel** | ✓ | 125 | ✓ | ✓ | ✓ | · | ✓ |
+| **ztunnel** | ✓ | 125 | · | · | ✓ | · | ✓ |
 | **zoffice** | ✓ | 199 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **zthrottle** | ✓ | 91 | ✓ | ✓ | ✓ | · | ✓ |
-| **zgo** | ✓ | 140 | ✓ | ✓ | ✓ | · | ✓ |
-| **traderview** | ✓ | 1732 | ✓ | ✓ | ✓ | · | ✓ |
+| **zgo** | ✓ | 140 | · | · | ✓ | · | ✓ |
+| **traderview** | ✓ | 1732 | · | · | ✓ | · | ✓ |
 | **zphoto** | ✓ | 101 | ✓ | ✓ | ✓ | · | ✓ |
-| **zstation** | ✓ | 37 | ✓ | ✓ | ✓ | · | ✓ |
-| **zcontainer** | ✓ | 25 | ✓ | ✓ | ✓ | · | ✓ |
-| **Audio-Haxor** | ✓ | 239 | ✓ | ✓ | ✓ | · | ✓ |
-| **ztranslator** | ✓ | 54 | ✓ | ✓ | ✓ | · | ✓ |
+| **zstation** | ✓ | 37 | · | · | ✓ | · | ✓ |
+| **zcontainer** | ·⁴ | 25⁴ | · | · | ✓ | · | ✓ |
+| **Audio-Haxor** | ✓ | 239 | · | · | ✓ | · | ✓ |
+| **ztranslator** | ✓ | 54 | · | · | ✓ | · | ✓ |
 | **zemacs-gui** | ✓ | 30 | ✓ | ✓ | ✓ | · | ✓ |
 | **zwire** | native² | 161 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **zterminal** | · | — | native³ | native³ | · | · | · |
@@ -77,6 +82,25 @@ are the generalized ports of zwire's `zstatus.js` / `ztmux.js`.
 mount the appShell, so it has no automation-bus socket, no hooks editor, and no editor vim (vim
 runs *inside* it). Embedded-terminal component is n/a for the same reason.
 
+⁴ **zcontainer** is the one row that is **not reproducible from source**. The live catalog in
+`GUI_SCRIPT_ACTIONS.md` lists 25 `zcontainer` verbs, but **no bus code exists on any git ref**: there
+is no `bus.rs` anywhere in the app (every other bus app has `app/src-tauri/src/bus.rs` or
+`src-tauri/src/bus.rs` with a `serve("<app>", handler)` call), and no `zgui_bridge::serve` call site.
+The only trace is the `zgui-bridge` dependency line in `app/src-tauri/Cargo.toml` plus the
+`crates/zgui-bridge` submodule. Until the bus lands in git, treat those 25 verbs as an artifact of a
+local, uncommitted tree — the socket is **not wired** on the recorded gitlink. The 15 apps that do
+call `serve("<app>")`: Audio-Haxor, traderview, zcite, zemacs-gui, zemail, zftp, zgo, zoffice, zpdf,
+zphoto, zreq, zstation, zthrottle, ztranslator, ztunnel.
+
+**On the two tmux surfaces** — the bar and the WM ship in `zgui-core` but are **not** mounted by the
+appShell; they are per-app **script loads**. The eight ✓ apps (`zpdf`, `zemail`, `zftp`, `zreq`,
+`zoffice`, `zthrottle`, `zphoto`, `zemacs-gui`) each pull `powerline.js` + `tmux.js` into their own
+`index.html` and call `.tmux.init(` from an app-owned `tmux-config.js`. The eight `·` apps load
+neither script outside their vendored `lib/zgui-core` copy, so `ZGui.powerline` / `ZGui.tmux` never
+exist in their document. Of the eight ✓ apps only **zoffice** (`frontend/tmux-config.js:82`) and
+**zthrottle** (`frontend/main.js:163`) additionally call `.powerline.init(`, which feeds the
+already-booted bar an app sig + stat providers; the other six run the bar's auto-booted defaults.
+
 ---
 
 ## Track B — JUCE plugins (`zpwr-daw` engine · `zpwr-synth` · `zpwr-fx` · `zpwr-midi-fx`)
@@ -91,11 +115,16 @@ socket addressing) is still unbuilt (see [`GUI_AUTOMATION_BUS_CHECKLIST.md`](GUI
 
 ## Notes
 
-- **The webview surfaces are shared, so the answer is "nearly all of them."** The differentiation is
-  at the outliers: `zterminal` (native everything, no webview shell) and the JUCE plugins (no
-  webview at all). Every full Tauri app mounts the same `zgui-core` shell and therefore gets the
-  same bar / tmux WM / hooks / editor-vim by construction — this uniformity is intentional (identical
-  cyberpunk HUD across apps).
+- **Shared shell ≠ shared surfaces.** Mounting `ZGui.appShell` gets an app the shell chrome (⌘K
+  palette, ⌘, settings, filter bar, native menu) and the shell's own lazy deps (`toast.js`,
+  `modal.js`, `menu.js` — `app-shell.js:384`, `:387`, `:614`). It does **not** get it the bar or the
+  tmux WM: `app-shell.js` never loads `powerline.js` / `tmux.js`, and it only *feature-detects* tmux
+  (`Z().tmux && …isInited()` at `app-shell.js:166`, `:171`) to decide whether to list the status-bar
+  and saved-layouts commands. The bar and the WM come from **per-app script loads** — the app's own
+  `index.html` pulling `powerline.js` / `tmux.js` plus a `tmux-config.js` calling `.tmux.init(` — so
+  they are wired in 8 of the 16 `zgui-core` apps, not all of them (`zwire` has both natively, and
+  they were ported *from* it; `zterminal` has both natively). The hooks editor and editor-vim are
+  likewise per-app embeds (`zpwr-hooks-editor`), not shell-mounted.
 - **App-level vim** (whole-UI vim navigation, not just the Monaco editor) is only in **zoffice**
   (`zoVimMode` editing mode) and **zwire** (browser-wide vim keys). Everywhere else "vim" means the
   `monaco-vim` binding inside the hooks editor.

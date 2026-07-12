@@ -18,21 +18,24 @@ create it in a submodule and route every app through it.
 
 | App | Host substrate | Repo |
 | --- | --- | --- |
-| Audio-Haxor | Tauri v2 (static `frontend/`) | `Audio-Haxor` |
-| traderview | Tauri v2 (static `frontend/` → `frontend-dist/`) | `traderview` |
-| ztranslator | Tauri v2 (static `frontend/`) | `ztranslator` |
-| zoffice | Tauri v2 (static `frontend/`) | `zoffice` |
-| zpdf | Tauri v2 (static `frontend/`) | `zpdf` |
-| zphoto | Tauri v2 (static `frontend/`) | `zphoto` |
-| ztunnel | Tauri v2 (static `frontend/`) | `ztunnel` |
-| zftp | Tauri v2 (static `frontend/`) | `zftp` |
-| zcite | Tauri v2 (static `frontend/`) | `zcite` |
-| zemail | Tauri v2 (static `frontend/`) | `zemail` |
-| zstation | Tauri v2 (static `frontend/`, native multiwebview) | `zstation` |
-| zemacs-gui | Tauri v2 (static `frontend/`) | `zemacs-gui` |
+| Audio-Haxor | Tauri v2 (root `src-tauri/`, static `frontend/`) | `Audio-Haxor` |
+| traderview | Tauri v2 (root `src-tauri/`, static `frontend/` → `frontend-dist/`) | `traderview` |
+| ztranslator | Tauri v2 (`app/` workspace, engine-hosted `ztranslator-core/frontend`) | `ztranslator` |
+| zoffice | Tauri v2 (`app/` workspace) | `zoffice` |
+| zpdf | Tauri v2 (`app/` workspace) | `zpdf` |
+| zphoto | Tauri v2 (`app/` workspace) | `zphoto` |
+| ztunnel | Tauri v2 (`app/` workspace) | `ztunnel` |
+| zftp | Tauri v2 (`app/` workspace) | `zftp` |
+| zcite | Tauri v2 (`app/` workspace) | `zcite` |
+| zemail | Tauri v2 (`app/` workspace) | `zemail` |
+| zstation | Tauri v2 (`app/` workspace, native multiwebview) | `zstation` |
+| zemacs-gui | Tauri v2 (`app/` workspace) | `zemacs-gui` |
 | zgo | Tauri v2 (`app/` workspace) | `zgo` |
 | zcontainer | Tauri v2 (`app/` workspace) | `zcontainer` |
 | zreq | Tauri v2 (`app/` workspace) | `zreq` |
+| zthrottle | Tauri v2 (`app/` workspace) | `zthrottle` |
+| zterminal | native OpenGL renderer (not Tauri) | `zterminal` |
+| zwire | Chromium superset (not Tauri) | `zwire` |
 | zpwr-daw | JUCE `WebBrowserComponent` (BinaryData) | `zpwr-daw` (vendored at `zpwr-clip-engine`) |
 | zpwr-synth | JUCE `WebBrowserComponent` (BinaryData) | `zpwr-synth` |
 | zpwr-fx | JUCE `WebBrowserComponent` (BinaryData) | `zpwr-fx` |
@@ -132,7 +135,7 @@ is driven entirely by a **domain** (`webui/grid/domains/*.js`). A domain supplie
 - Shipping domains: `notes` (piano roll), `arranger` (clip arrangement), `launcher` (session
   clips), `autolanes` / `automation` (breakpoint lanes), `triggers`. New purposes add a new
   domain file, not a new grid.
-- Intended per-app purposes (INVENTIONS #1 — a general-purpose arranger embedded in any host,
+- Intended per-app purposes (INVENTIONS #64 — a general-purpose arranger embedded in any host,
   including non-audio): **zpwr-daw** → notes/clips/arrangement; **traderview** → trades on the
   timeline; **ztranslator** → translations; **Audio-Haxor** → stryke on clips; synth/fx/midi-fx
   → the clip/automation lane for the plugin.
@@ -143,8 +146,8 @@ hidden-file toggle, rename/copy/move, keyboard navigation, and per-pane path per
 It is the family's file surface (open/import/export, project/sample/asset browsing).
 
 - The browser is **promoted to a shared module** (mirror `zpwr-embed-terminal`): one source,
-  vendored into every app — never re-forked. Today it lives only in
-  `Audio-Haxor/frontend/js/file-browser.js`; it must move to a shared submodule.
+  vendored into every app — never re-forked. Done: it is the top-level `zpwr-file-browser`
+  submodule, mounted by 17 repos.
 - Filesystem access goes through a **host-provided backend behind a transport shim**, the
   same way the terminal abstracts its PTY. The host supplies the fs ops
   (`listDirectory`, `renameFile`, copy/move/delete, …); Tauri routes them to `invoke`,
@@ -217,10 +220,11 @@ Per app, all ten must be true:
 
 ### Known conformance gaps (close these)
 
-- **Command palette is not yet single-source.** `command-palette.js` exists in
-  `zpwr-patch-core/webui` (JUCE shell) and a separate `Audio-Haxor/frontend/js/command-palette.js`;
-  ztranslator implements its palette inline in `ztranslator_view.js`. Converge all three on
-  one shared module.
+- **Command palette is single-source for the Tauri apps.** The canonical module is
+  `zgui-core/webui/command-palette.js`; ztranslator loads it
+  (`ztranslator-core/frontend/index.html`), superseding the older
+  `zpwr-patch-core/webui/command-palette.js` named above. The JUCE shell is the remaining
+  consumer to converge.
 - **Styles are split by substrate.** JUCE apps share `cyberpunk.css`; the Tauri apps
   (Audio-Haxor, traderview, ztranslator) carry their own stylesheets. Extract the shared
   design tokens so both substrates read the same theme source.
@@ -230,8 +234,9 @@ Per app, all ten must be true:
   `zreq` route every table/filter/tab through them; the remaining apps still carry ad-hoc
   instances and must converge on the shared widgets.
 - **File browser is promoted** to the shared `zpwr-file-browser` submodule (webui + Rust
-  `fs_*` backend behind the `window.vstUpdater` shim) and embedded in Audio-Haxor, traderview,
-  ztranslator, `zcite`, and `zreq`. Remaining embeds: `zpwr-daw` and the `zoffice`/`zemail`/`zpdf`
-  set.
-- **Arrangement grid is embedded only in zpwr-daw.** The other six apps need a domain +
-  `createGrid` embed (R9).
+  `fs_*` backend behind the `window.vstUpdater` shim) and mounted by 17 repos — including
+  `zoffice`, `zemail` and `zpdf`. Remaining embeds: `zpwr-daw` and `zterminal`.
+- **Arrangement grid** (`zpwr-clip-engine`) is a submodule in 10 repos: beyond `zpwr-daw`,
+  ztranslator embeds it (`ztranslator-core/frontend/trigger-grid.js` — `createGrid` +
+  `createTriggersDomain`) and Audio-Haxor drives it from `als-timeline.js`. The remaining apps
+  still need a domain + `createGrid` embed (R9).

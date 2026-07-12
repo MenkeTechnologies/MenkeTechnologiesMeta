@@ -1,6 +1,6 @@
 # GUI Automation Bus — Design Doc (RFC)
 
-Status: proposed. Defines how **stryke scripts drive every MenkeTechnologies GUI app** — semantically,
+Status: shipped (Track A). Defines how **stryke scripts drive every MenkeTechnologies GUI app** — semantically,
 in-process and from the shell, with cross-app orchestration. Extends the existing user-programmable
 command palette (`zgui-core/webui/user-commands.js`) from a fire-and-forget step runner into a
 bidirectional automation surface. Companion to `GUI_APP_ARCHITECTURE.md` (shell/view boundary) and
@@ -270,8 +270,8 @@ Per app (one session each, your 16-pane workflow):
 7. Verify: a `.stk` script drives the app **in-proc** (palette step) and **out-of-proc** (from zshrs).
 
 **Pilot apps first** — highest existing action count, prove the loop before fan-out:
-- **zcite** (85 cmds) — library/collection/citation verbs, rich state (selection, active collection).
-- **zreq** (75 cmds) — request.send/save, environments; natural cross-app partner (fire requests for
+- **zcite** (206 verbs) — library/collection/citation verbs, rich state (selection, active collection).
+- **zreq** (151 verbs) — request.send/save, environments; natural cross-app partner (fire requests for
   zcite DOIs, drive zcontainer service endpoints).
 
 Then fan out to zemail, zcontainer, zftp, zstation, zterminal, the rest.
@@ -280,8 +280,11 @@ Then fan out to zemail, zcontainer, zftp, zstation, zterminal, the rest.
 
 This is a **combination** first, not a single new capability. Embedding a language in an app, scripting
 across apps, and a vendor-authored automation language each **predate this separately**. The claim is the
-*conjunction*, under constraints. Prior-art absence below is **non-exhaustive** and the bus is
-**unbuilt** — every claim here is true only once §11 ships, not today (0 apps expose the surface now).
+*conjunction*, under constraints. Prior-art absence below is **non-exhaustive**. The bus is **built**:
+**15 apps** call `zgui_bridge::serve` and expose the surface today — Audio-Haxor, traderview, zcite,
+zemacs-gui, zemail, zftp, zgo, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztranslator, ztunnel.
+**zcontainer is not wired** — it declares the `zgui-bridge` dep (`app/src-tauri/Cargo.toml:22`) but has
+no `bus.rs` and never calls `serve`. Track B (JUCE plugins) is still unbuilt.
 
 The four nearest prior arts, and why each fails a load-bearing leg:
 
@@ -313,8 +316,9 @@ handle).
 3. **Blocking vs async `on`** — does `$h->on` run the callback on a stryke event loop, or drain a queue
    the script polls? Proposal: drain on an explicit `App::pump()` / end-of-script block, to stay in
    stryke's execution model.
-4. **`zgui-bridge` crate vs per-app module** — one shared crate is cleaner but adds a dependency to every
-   app backend; confirm that fits the vendorable/durable constraint.
+4. **`zgui-bridge` crate vs per-app module** — **RESOLVED: one shared crate.** `zgui-bridge` exists
+   (`zgui-bridge/src/{lib,proto,sockpath}.rs`) and is vendored into each app as a submodule under
+   `crates/zgui-bridge`; app backends depend on it by path.
 5. **Launch-on-demand** — v1 requires the app running. Worth an `App::open($name, %{ launch => 1 })`
    later?
 ```

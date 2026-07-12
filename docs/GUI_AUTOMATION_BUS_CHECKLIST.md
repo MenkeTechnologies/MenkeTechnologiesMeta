@@ -5,12 +5,15 @@ Work list to bring every app onto the bus defined in [`GUI_AUTOMATION_BUS.md`](G
 [`GUI_APP_ARCHITECTURE.md`](GUI_APP_ARCHITECTURE.md) (core/host ownership) and
 [`GUI_POLISH_GATE_CHECKLIST.md`](GUI_POLISH_GATE_CHECKLIST.md).
 
-**Status (2026-07-11): Track A substrate built, sockets wired on all 15 full Tauri apps.**
+**Status (2026-07-11): Track A substrate built, sockets wired on 15 Tauri apps.**
 Phase 0A shipped — `zgui-bridge` (Rust socket crate), `zgui-core/webui/automation.js` +
-`automation-host.js`, and per-app `bus.rs` all exist. Every full Track-A app opens its socket
-(`serve("<app>")` + `bus::start` verified at the call site). The live verb surface is generated into
-[`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) — **3073 engine verbs across 11 apps** + 15 shared
-appShell verbs. Per-app power-user surface coverage (bars / vim / hooks) is in
+`automation-host.js`, and per-app `bus.rs` all exist. Fifteen apps open their socket
+(`serve("<app>")` + `bus::start` verified at the call site): **Audio-Haxor, traderview, zcite,
+zemacs-gui, zemail, zftp, zgo, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztranslator,
+ztunnel**. **`zcontainer` is NOT wired** — it declares the `zgui-bridge` dep
+(`app/src-tauri/Cargo.toml:22`) but has no `bus.rs` and never calls `serve`. The live verb surface is
+generated into [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) — **4308 engine verbs across 17 apps**
++ 15 shared appShell verbs. Per-app power-user surface coverage (bars / vim / hooks) is in
 [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
 
 Still open: typed-verb `register({app,verbs})` surfaces exist only for **traderview** + **zwire**;
@@ -19,7 +22,7 @@ the other socket-wired apps run a **webview-forward** `bus.rs` (forward every ve
 **Track B (JUCE) substrate is still unbuilt** — the `sock`/`verbs` cells below are current for
 Track A only; do not read the Track B matrix as started.
 
-## Roster (21 apps, two tracks)
+## Roster (22 apps, two tracks)
 
 Derived from `app-store/store.js` — recompute, don't trust the literal:
 ```
@@ -29,10 +32,11 @@ perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"
 perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"'"'"]Audio Plugins['"'"'"]/gs){print "$1\n"}' app-store/store.js
 ```
 
-- **Track A — Tauri / webview (18):** `zpdf`, `zphoto`, `zemail`, `zstation`, `zoffice`, `Audio-Haxor`,
+- **Track A — Tauri / webview (19):** `zpdf`, `zphoto`, `zemail`, `zstation`, `zoffice`, `Audio-Haxor`,
   `traderview`, `ztranslator`, `zcite`, `zreq`, `ztunnel`, `zthrottle`, `zgo`, `zftp`, `zcontainer`,
-  `zterminal`, `zwire`, `zpwr-daw`. Uses `ZGui.automation` (JS) + `zgui-bridge` (Rust socket) +
-  `run_stryke_hook`.
+  `zterminal`, `zwire`, `zpwr-daw`, plus `zemacs-gui` — socket-wired (`app/src-tauri/src/bus.rs`) and
+  publishing 30 verbs, though it is not in the store's `Desktop Apps` category. Uses `ZGui.automation`
+  (JS) + `zgui-bridge` (Rust socket) + `run_stryke_hook`.
 - **Track B — JUCE (4):** `zpwr-daw`, `zpwr-synth`, `zpwr-fx`, `zpwr-midi-fx`. No webview, no Tauri
   `invoke` — the surface, socket host, and stryke embedding are **C++ / C-ABI**.
 - **`zpwr-daw` is in both** — its Tauri shell rides Track A; its JUCE `ClipEngine` rides Track B. The two
@@ -45,16 +49,19 @@ perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"
 ## Phase 0 — shared prerequisites (once, blocking)
 
 ### 0A — Track A substrate (`zgui-core` + `strykelang`)
-- [ ] `zgui-core/webui/automation.js` — `ZGui.automation`: `register({app,verbs,state,events})`,
+- [x] `zgui-core/webui/automation.js` — `ZGui.automation`: `register({app,verbs,state,events})`,
       `surface()`, `emit(id,payload)`, and the call/get/subscribe **dispatch** to registered handlers (§4).
+      Shipped, alongside `zgui-core/webui/automation-host.js`.
 - [ ] Upgrade the `event`-step editor (`user-commands.js:300`) to read the typed `surface()` instead of
-      label-only `setActions`.
-- [ ] `zgui-bridge` (new shared Rust crate) — Unix-socket host, newline-JSON frame codec, request router
-      (§7.1). One entry point: `zgui_bridge::serve(app_name, surface)`.
+      label-only `setActions`. **Still open** — `user-commands.js` exports only `setActions`.
+- [x] `zgui-bridge` (new shared Rust crate) — Unix-socket host, newline-JSON frame codec, request router
+      (§7.1). One entry point: `zgui_bridge::serve(app_name, surface)`. Shipped
+      (`zgui-bridge/src/{lib,proto,sockpath}.rs`), vendored into apps at `crates/zgui-bridge`.
 - [ ] Port the request/response + subscribe substrate out of **zcontainer** into `zgui-bridge` (don't
       reinvent) — reference impl per §5.
-- [ ] `stryke-app` package (sibling of `stryke-gui`) — `app__*` FFI, the `App` module
+- [x] `stryke-app` package (sibling of `stryke-gui`) — `app__*` FFI, the `App` module
       (`here/open/list/verbs/call/get/on`), + `stryke.toml [ffi.exports]` entries (pkg-FFI-manifest rule).
+      Shipped — `app__open`/`app__list`/`app__call` in `stryke-app/src/lib.rs`.
 - [ ] `run_stryke_hook` (app backends' shared handler) — bind `App::here()` into the script's host env so
       palette/hook scripts get the live surface (§8).
 
@@ -114,27 +121,33 @@ site are flipped. **verbs** ✅ = the app's verb surface is enumerated in
 | --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | zcite ⭐ | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zreq ⭐ | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
-| zcontainer | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| zcontainer² | ✅ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ✅ |
 | zemail | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zftp | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zgo | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | ztunnel | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
-| ztranslator | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| ztranslator | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zpdf | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
-| zphoto | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| zphoto | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zoffice | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
-| zstation | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| zstation | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zterminal | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
 | zwire | ✅ | ☐ | ☐ | ✅¹ | ☐ | ☐ | ☐ | ✅ |
 | zthrottle | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | traderview | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
-| Audio-Haxor | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| Audio-Haxor | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zemacs-gui | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zpwr-daw (shell) | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 
 ¹ zwire scripts through its **own** native bus (`zwire-host/src/zbus.rs`, 161 verbs), not the
 `zgui-bridge` socket — counted done because it is fully scriptable, not because it rides this
 transport. zterminal is N/A: native terminal, no webview shell, not on this bus (see
 [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md)).
+
+² zcontainer's 25 verbs appear in the live-generated `GUI_SCRIPT_ACTIONS.md` catalog, but **no bus
+code exists in git** for it: it declares the `zgui-bridge` dep (`app/src-tauri/Cargo.toml:22`) yet
+ships no `bus.rs` and never calls `serve`. Its `sock` box stays ☐ until the call site lands; the
+catalog/source discrepancy needs resolving.
 
 ## Status matrix — Track B (JUCE)
 
@@ -150,7 +163,7 @@ transport. zterminal is N/A: native terminal, no webview shell, not on this bus 
 ## Order
 
 1. **Phase 0A** (Track A substrate) — nothing else can start until this lands.
-2. **Pilots ⭐ `zcite` + `zreq`** — highest existing action counts (85 / 75), rich state, natural cross-app
+2. **Pilots ⭐ `zcite` + `zreq`** — highest existing action counts (206 / 151), rich state, natural cross-app
    pair. Prove in-proc + out-of-proc + one cross-app script (`zcite` selection → `zreq` request) before
    fan-out.
 3. **Fan out Track A** — remaining 16 apps, one session each (16-pane workflow).

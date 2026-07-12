@@ -18,9 +18,10 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: ~200 candidates (numbered entries through 170 plus lettered sub-entries — 11a, 104a, 144a, the
-zterminal additions 105a–105n, the zemacs additions 120a–120s, and 170a). Marquee claims (the six original
-ledger entries, kept with their deep prior-art analyses) are flagged **★** and re-numbered below.
+Total: 204 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 104a, 144a, the
+zterminal additions 105a–105n, the zemacs additions 120a–120s, 169a, and 170a). Marquee claims (the six
+original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
+deep prior-art analysis in the appendix.
 
 ---
 
@@ -56,8 +57,8 @@ semantic fork.
 A from-scratch tracing JIT inlines calls (incl. bounded self-recursion), traces
 branches across caller and inlined-callee frames, stitches side traces at hot
 side-exits, and on deopt reconstructs full interpreter state (synthetic frames + live
-stack) to resume mid-callee. *Basis:* `fusevm/src/jit.rs` (`DeoptInfo`/`DeoptFrame`,
-`MAX_INLINE_RECURSION=4`, `MAX_TRACE_CHAIN=4`); `fusevm/src/vm.rs`
+stack) to resume mid-callee. *Basis:* `fusevm/src/jit.rs` (`DeoptInfo`/`DeoptFrame`; the
+`JitConfig` fields `max_inline_recursion` / `max_trace_chain`, both defaulting to 4); `fusevm/src/vm.rs`
 `materialize_deopt_frames()`. *Caveat:* speculative tracing JITs with deopt/side-traces
 are well-trodden (LuaJIT, PyPy, TraceMonkey) — novelty is implementation, not concept;
 hard bounds make it narrower than production tracers. Not a categorical first.
@@ -77,7 +78,7 @@ independently tested here.
 `.el` programs run as standalone CLI processes that trace-compile hot loops to native
 machine code via the shared Cranelift JIT — Emacs Lisp with a JIT and no Emacs anywhere.
 *Basis:* `elisprs/src/compiler.rs` lowers all special forms to `fusevm::Chunk`;
-`src/host.rs:1842` `run_chunk` calls `vm.enable_tracing_jit()`; 234 native subrs + 617
+`src/host.rs:3713` `run_chunk` calls `vm.enable_tracing_jit()` (`:3720`); 323 native subrs + 712
 prelude defuns. **Build-verified:** a 1,000,000-iteration `while` JIT-ran to the correct
 sum; `mapcar` over a lambda returned `(1 4 9 16)`. *Caveat:* "Milestone 1 · early"; many
 open `BUGS.md` items; a large subset of Emacs Lisp, not the editor environment.
@@ -94,8 +95,8 @@ prelude (~73k objects) is embedded per binary.
 **7. Standalone JIT-compiled Vim script outside any editor** — `high`
 vimlrs runs ordinary `.vim` scripts as standalone programs with a tracing JIT that
 compiles hot numeric loops to native code — Vimscript outside a Vim/Neovim host with
-real JIT acceleration. *Basis:* `vimlrs/src/fusevm_bridge.rs:2917` `enable_tracing_jit()`;
-`src/compile_viml.rs`; 14 trace-JIT proof tests assert loop bodies lower to
+real JIT acceleration. *Basis:* `vimlrs/src/fusevm_bridge.rs:3836` `enable_tracing_jit()`;
+`src/compile_viml.rs`; 17 trace-JIT proof tests assert loop bodies lower to
 `Op::GetSlot/SetSlot/NumLt/Add` with no `CallBuiltin`; `for i in range(N)` lowers to a
 native counter loop with no list materialized. *Caveat:* self-described "early"; only
 numeric/float/bitwise loops trace; builtin surface ~113 of Neovim's `funcs.c`;
@@ -113,7 +114,7 @@ top-level scripts only.
 awkrs AOT-compiles a BEGIN-only AWK program to native machine code and links it into a
 self-contained executable shipping no AWK interpreter. *Basis:* `awkrs/src/aot.rs`
 `build_native` → `compile_begin_only` → `fusevm::aot::compile_object` → link
-`libawkrs.a`; `--aot` (`src/cli.rs:61`). *Caveat:* limited to BEGIN-only programs
+`libawkrs.a`; `--aot` (`src/cli.rs:79`). *Caveat:* limited to BEGIN-only programs
 (per-record rules and `END` rejected); no end-to-end test of the linked binary found.
 AWK JIT itself is not first — frawk/zawk precede it.
 
@@ -155,10 +156,10 @@ workload-specific.
 
 **12. Compiled Unix shell: bytecode VM, JIT, no tree-walker** — `high`
 First Unix shell whose entire execution model compiles every construct to register-based
-bytecode (fusevm, ~129 ops) and runs on a JIT'd VM, with the AST tree-walker **physically
+bytecode (fusevm, ~224 ops) and runs on a JIT'd VM, with the AST tree-walker **physically
 removed** rather than kept as a fallback. *Basis:* `docs/DESIGN_GOALS.md` §0x06 Phase F
 deletes `execute_simple/pipeline/list/compound/command_bg` (~1,275 LOC) from `src/exec.rs`;
-`tests/tree_walker_absent.rs` + `tests/no_tree_walker_dispatch.rs` (160 tests) pin absence
+`tests/tree_walker_absent.rs` + `tests/no_tree_walker_dispatch.rs` (8 + 160 = 168 tests) pin absence
 and per-construct behavior; `src/extensions/compile_zsh.rs` (615 KB),
 `src/fusevm_bridge.rs:951`. *Caveat:* strong historical claim vs csh/ksh/bash/zsh/fish
 interpreters; zsh's `.zwc` caches parsed AST for re-interpretation, not bytecode-on-a-VM.
@@ -170,7 +171,7 @@ on-disk cache; a script also AOT-compiles to a relocatable `.o` linked against t
 runtime staticlib into a standalone executable. *Basis:* `Cargo.toml`
 `fusevm = { features = ["jit-disk-cache","aot"] }`; `src/extensions/aot.rs:379`
 `build_native` → `fusevm::aot::compile_object` → `cc` link `libzsh.a`; `zbuild` builtin
-(`ext_builtins.rs:5377`); trailer path bakes source into a binary copy (magic
+(`builtin_zbuild`, `ext_builtins.rs:5448`); trailer path bakes source into a binary copy (magic
 `ZSHRSAOT`), ~25 codec tests. *Caveat:* command execution still routes through the
 linked-in interpreter runtime (not a fully standalone-compiled program). `AOT_DESIGN.md`
 extras (perfect-hash completion tables, compile-time AOP, hardware-counter timing) are
@@ -295,7 +296,8 @@ bytecodes bulk-committed). *Caveat:* overlaps #14 but completion-specific.
 zsh's compsys is reimplemented in Rust (~128 files / ~22k LOC mirroring zsh
 `Completion/`) and driven outside an interactive shell so an LSP surfaces the same
 matches a Tab press would, with no subshell spawn. *Basis:* `src/compsys/ported/`;
-`src/compsys/in_editor.rs:256` `complete_at`; LSP wiring `lsp.rs:1697`;
+`src/compsys/in_editor.rs:256` `complete_at`; LSP wiring `lsp.rs:1723` (compsys dispatch) →
+`try_compsys_completion` (`lsp.rs:1746`);
 `tests/compsys_backend_proof.rs`. *Caveat:* Phase 0.5 / unproven end-to-end — no
 per-command completer (`_git`/`_kubectl`) ported yet, in-editor smoke test yields zero
 matches (no `compinit` bootstrap); framework real, content WIP.
@@ -317,18 +319,23 @@ zstyle/bindkey to canonical in the live process — no parser, no importer, pres
 `daemon/ops.rs`/`export.rs` (82 KB). *Caveat:* round-trip fidelity depends on canonical
 capture completeness.
 
-**31. Snapshot / diff / bisect of full shell state** — `med`
-Saves portable rkyv snapshots of canonical state, structurally diffs two snapshots
-per-record, and bisects to the first diverging record — git-like state archaeology for a
-shell environment. *Basis:* `daemon/snapshot.rs`
-(`snapshot_save/load/diff/bisect`, `~/.zshrs/snapshots/<tag>.rkyv`);
-`DAEMON_AS_SERVICE.md`. *Caveat:* v1 defers publish/sign/verify and registry transport.
+**31. Snapshot / list / load / diff of full shell state** — `med`
+Saves portable rkyv snapshots of canonical state, lists them, restores one by atomic swap, and
+structurally diffs two snapshots per-record (added / removed / changed) — git-like state
+archaeology for a shell environment. *Basis:* `daemon/snapshot.rs` — `op_snapshot_save:81`,
+`op_snapshot_list:139`, `op_snapshot_load:178`, `op_snapshot_diff:323`
+(`~/.zshrs/snapshots/<tag>.rkyv`), with `daemon/auth.rs:175-176` scoping exactly those four ops
+to `snapshot.read` / `snapshot.write`; `DAEMON_AS_SERVICE.md`. *Caveat:* **there is no bisect
+op** — bisecting to the first diverging record is described in the module doc header but is not
+implemented; only save/list/load/diff ship. v1 also defers publish/sign/verify and registry
+transport.
 
 **32. Anti-fork in-process coreutils + fork-free command substitution** — `low`
-Executes 24 coreutils (cat/head/tail/wc/sort/find/uniq/cut/tr/seq/date/…) plus 4 xattr
+Executes 23 coreutils (cat/head/tail/wc/sort/find/uniq/cut/tr/seq/date/…) plus 4 xattr
 ops as in-process builtins and captures `$(builtin)` via `dup2` with zero fork.
 *Basis:* `src/extensions/ext_builtins.rs` (353 KB), RFC "Anti-Fork Architecture" +
-Appendix A parity matrix; xattr syscalls `src/ported/modules/attr.rs`; `fds.rs`.
+Appendix A parity matrix; xattr syscalls `src/ported/modules/attr.rs`;
+`src/extensions/fds.rs`.
 *Caveat:* in-process coreutils exist (busybox/nushell); the novel leg is doing it inside
 a zsh-compatible compiled shell with fork-free cmdsubst — "fastest, not first" by the
 project's own rule for the coreutils alone.
@@ -385,7 +392,7 @@ differentiator is the explicit guarantee, not a unique mechanism.
 Decodes zsh's native compiled `.zwc` wordcode and emits a canonical AST S-expression so
 zshrs's parser output can be byte-compared against zsh's own `bin_zcompile()` output — a
 verifiable parser-parity oracle. *Basis:* `src/extensions/zwc_decode.rs` (43 KB) +
-`zwc.rs` (60 KB) + `ast_sexp.rs` → `tests/parity_harness.rs`. *Caveat:* verification
+`zwc.rs` (60 KB) + `ast_sexp.rs` → `tests/parity/parity_harness.rs`. *Caveat:* verification
 infrastructure, not a user-facing capability.
 
 **40. Real-PTY, per-file-persistent zsh test harness (ZTST)** — `low`
@@ -409,8 +416,8 @@ segments (strings/arrays/hashes/closures stay on stryke's VM); whole-program nat
 
 **42. Self-contained AOT trailer-format executables with versioned magic** — `high`
 `stryke build` appends a zstd-compressed script payload as a versioned, OS-loader-invisible
-trailer (`STRYKEAOT` magic) to a copy of the interpreter binary, with idempotent rebuild
-and ~50 µs magic-suffix detection. *Basis:* `aot.rs` (530 L) layout
+trailer (8-byte `AOT_MAGIC` = `b"STRK_AOT"`, `aot.rs:39-40`) to a copy of the interpreter binary,
+with idempotent rebuild and ~50 µs magic-suffix detection. *Basis:* `aot.rs` (530 L) layout
 `[zstd payload][u64 lens][u32 ver][u32 rsv][8B magic]`. *Caveat:* this track re-parses +
 re-runs on the interpreter at startup; the truly-native artifact is `aot_native.rs`.
 
@@ -430,7 +437,7 @@ rewrite on commit; not a concurrent multi-writer DB.
 
 **45. `ai` as a no-import language primitive with `tool fn` / MCP DSL** — `high`
 LLM agents, tool-calling, MCP client/server, RAG memory, and cost-aware batching ship as
-a built-in `ai` primitive (call, `~>` thread-macro, `|>` pipe; ~80 `ai_*` builtins; hard
+a built-in `ai` primitive (call, `~>` thread-macro, `|>` pipe; 67 `ai_*` builtins; hard
 USD ceiling via `max_cost_run_usd`, `ai_cost`, `tokens_of`, `ai_mock` deterministic test
 interception) rather than an imported SDK. *Basis:* `ai.rs` (6,638 L: agent loop,
 multi-provider dispatch, SSE streaming, prompt caching, vision/PDF, batch API, sqlite
@@ -483,10 +490,12 @@ binary on remotes; closures don't round-trip the wire.
 
 **52. Bare-metal stress builtins + fleet agent/controller REPL** — `high`
 The single binary doubles as `stryke agent` and `stryke controller` (interactive fleet
-REPL: `status`/`fire`/`terminate`, ~29-verb scatter/gather over TCP+bincode), plus stress
-builtins (`stress_cpu`/`stress_mem`/`stress_io`/`heat`) pinning all cores to ~100% TDP.
-*Basis:* `agent.rs` (1,017 L), `controller.rs` (1,448 L), `stress.rs` (1,835 L);
-`tests/suite/scriptable_controller_pin.rs`. *Caveat:* mTLS/Prometheus/k8s are roadmap; TDP
+REPL: 6 commands — `status`/`fire`/`eval`/`terminate`/`shutdown`/`help`, 16 spellings incl.
+aliases, `controller.rs:509` — scatter/gather over TCP+bincode), plus stress
+builtins (`stress_cpu`/`stress_mem`/`stress_io`/`heat`) pinning all cores to ~100% TDP, and
+Prometheus/CSV/JSON metric exporters (`stress_metrics_prometheus`/`_csv`/`_json`/`_export`/
+`_watch`). *Basis:* `agent.rs` (1,017 L), `controller.rs` (1,448 L), `stress.rs` (1,835 L);
+`tests/suite/scriptable_controller_pin.rs`. *Caveat:* mTLS and k8s are roadmap; TDP
 figures are M3-Max-specific.
 
 **53. Probabilistic data structures (sketches) as stdlib builtins** — `med`
@@ -514,7 +523,8 @@ count and benchmark numbers are claims, not independently re-verified here.
 Thousands of builtins without import — version control (git), structured-data query (jq),
 terminal viz, crypto/stats/linalg — inverting "core minimal, libraries optional". *Basis:*
 82 `math_wolfram_*.rs` (astronomy, GR, quantum gates, BLAS/LAPACK, pandas/scipy/sklearn
-analogues) + ~30 `builtins_*.rs`; `builtins_github.rs`; ~7,300–10,900 dispatch arms
+analogues) + 24 `builtins_*.rs` files (21 excluding the `*_tests.rs` companions);
+`builtins_github.rs`; ~7,300–10,900 dispatch arms
 (documented ~10,449 incl. aliases). *Caveat:* exact count fuzzy (alias vs primary);
 absorbed jq/git are native subset reimplementations, not full upstream parity.
 
@@ -523,7 +533,9 @@ absorbed jq/git are native subset reimplementations, not full upstream parity.
 generator/pipeline/closure-capture internals with cycle detection; complemented by nine
 compile-time-populated globally-named introspection hashes (`%b`/`%all`/`%k`/`%a`/`%pc`/…)
 giving O(1) bidirectional name↔callable indexing under the invariant `%all = %a + %b + %k`.
-*Basis:* `god.rs` (336 L); reflection table seeded `builtins.rs:609`; `patent.md` D #17.
+*Basis:* `god.rs` (336 L); the reflection table is `include!()`'d from `OUT_DIR` at
+`builtins.rs:53`, with the `"reflection"`-tagged names starting at `builtins.rs:614`;
+`patent.md` D #17.
 *Caveat:* the disjoint-union invariant wasn't independently re-verified.
 
 **58. Polymorphic literal-typed range operator inferring 11+ element domains** — `high`
@@ -539,8 +551,10 @@ date/IP/Roman/time unification is the novel part.
 Five+ first-class pipeline operators (`|>`, `->`/`->>`, `~>`/`~>>`) extended with arrows
 that fan a pipeline across cores (`ThreadArrowPar`) and across a remote cluster
 (`ThreadArrowDist`), composable with bare-fn, arrow-block, and positional-placeholder
-stage forms. *Basis:* `token.rs:179-216`; parser wiring `parser.rs:10099`
-(`parse_thread_macro_dist`/`_par`). *Caveat:* the "universal-access" framing is an
+stage forms. *Basis:* `token.rs:179-216`; parser dispatch `parser.rs:10093-10108` routing
+`ThreadArrowPar`/`ThreadArrowParLast` → `parse_thread_macro_chunk_par` (`parser.rs:8593`) and
+`ThreadArrowDist`/`ThreadArrowDistLast` → `parse_thread_macro_dist` (`parser.rs:8654`).
+*Caveat:* the "universal-access" framing is an
 abstraction over the operator set, not a verified invariant.
 
 **60. First-party LSP + DAP with a multi-editor plugin suite** — `high`
@@ -585,11 +599,15 @@ tempo/meter maps) shipping standalone, as a VST3 inside another DAW, **and** emb
 arbitrary hosts — designed to drive even **non-audio** ones off the same clip/automation
 timeline. *Basis:* `zpwr-daw` app + `zpwr-clip-engine`; editor/arranger/automation
 verified. *Caveat:* "None found", not proven (see analysis). The audio render path is
-written but **unverified** (pending JUCE build). **Honesty correction:** the *non-audio*
-embeds (traderview → trades, ztranslator → translations) are **aspirational** — a grep of
-those app repos finds no clip-engine/timeline mount; traderview uses a stryke-JIT
-backtester + uPlot, ztranslator an integer-rules event-translation VM. The cross-domain-timeline claim is design
-intent, not yet wired in those apps.
+written but **unverified** (pending JUCE build). The *non-audio* embeds are **wired today**:
+**traderview** vendors `zpwr-clip-engine` as a submodule (`frontend/vendor/zpwr-clip-engine`),
+registers the six FFI commands `clip_seq_{pattern,transport,play,step,poll_events,export_midi}`
+in `traderview/src-tauri/src/lib.rs:492-497` (state at `:294`), and mounts the grid in
+`frontend/js/views/sequencer.js`; **ztranslator** imports
+`./vendor/zpwr-clip-engine/webui/clip/clip-seq.js` and calls `initClipSeq(...)` from
+`crates/ztranslator-core/frontend/ztranslator_view.js:1235-1258`, driving the real C++ engine
+under Tauri and the non-audio JS step backend in a plain browser. What is still design intent
+is those timelines *carrying* domain payloads (trades, translation events) rather than notes.
 
 **65. ★ Fully modular DAW — every track/layer/bus is one user-patchable graph** — `med`
 Not a fixed channel-strip mixer with a modular *device* bolted on, but a DAW whose entire
@@ -660,8 +678,8 @@ voiced approximations, sharing one `ckt::` framework. *Basis:* `Circuit.h`, `Tub
 **73. 21 physical-model instrument-network blocks with string↔body coupling** — `med`
 21 blocks are full instrument networks — Extended Karplus-Strong waveguide strings + modal
 resonator banks + **bidirectional** string↔body coupling — so sympathetic resonance and
-attack transients emerge from the physics. *Basis:* `PhysicalModel.h` (12 `tech="physical"`
-tags), `Physical.h`; `BLOCKS.md` PHY badge. *Caveat:* physical modeling is a known field;
+attack transients emerge from the physics. *Basis:* `PhysicalModel.h` (20 `tech="physical"`
+tags) + `Physical.h` (1) = 21; `BLOCKS.md` PHY badge. *Caveat:* physical modeling is a known field;
 novelty is offering coupled string/body networks as drop-in patch blocks.
 
 **74. Generative-math block family: number-theory / chaos / cellular-automaton generators** — `med`
@@ -698,7 +716,7 @@ Phase 1 splices modules into real blocks (no nested-block encapsulated playback 
 
 **78. Single FX plugin exposing the entire patch-graph palette (H3000-Factory generalized)** — `high`
 A shipping VST3/AU/CLAP effect with no fixed node count where the user wires any number of
-the 2,782 audio blocks into arbitrary feedback/cross-modulation patches — the
+the 3,366 audio blocks into arbitrary feedback/cross-modulation patches — the
 "build-your-own-algorithm" idea generalized to thousands of primitives. *Basis:*
 `zpwr-fx/README.md` [0x00]/[0x02] (dynamic patch graph, summing buses, one-sample-delay
 feedback); `src/` consumes `libs/zpwr-patch-core`. *Caveat:* practical patch size is
@@ -726,15 +744,16 @@ engine that compiles two ways from one source (a static `.a` the DAW links nativ
 `.dylib`/`.so` Tauri apps load via Rust FFI), paired with one JS canvas grid whose domains
 (arranger/notes/launcher/automation) are reused verbatim by every GUI app, with a non-audio
 JS fallback backend. *Basis:* `zpwr-clip-engine/README.md` (`engine/include/zpc/ClipEngine.h`,
-`capi/clip_engine.h` `zpc_clip_*`, `CMakeLists.txt` shared+static, `webui/clip/clip-seq.js`,
+`engine/include/zpc/capi/clip_engine.h` `zpc_clip_*`, `engine/CMakeLists.txt:18,21`
+(`zpwr_clip_engine` SHARED + `zpwr_clip_engine_static` STATIC), `webui/clip/clip-seq.js`,
 `clip-basic-backend.js`). *Caveat:* the Tauri FFI wiring "lands in steps"; several commands
 are no-ops in non-DAW hosts.
 
 **82. Byte-identical MIDI export from independent C++ and JS code paths** — `med`
 Standard MIDI File export is implemented twice (native C++ `MidiFile.h` and JS
-`export/midi.js`) and produces byte-identical output, so a project exports identically
+`grid/export/midi.js`) and produces byte-identical output, so a project exports identically
 whether driven by the native engine or the browser fallback. *Basis:*
-`zpwr-clip-engine/.../MidiFile.h` + `webui/clip/export/midi.js`; tests under `webui/grid/tests/`.
+`zpwr-clip-engine/.../MidiFile.h` + `webui/grid/export/midi.js`; tests under `webui/grid/tests/`.
 *Caveat:* a parity guarantee asserted in docs/tests, not independently re-verified.
 
 **83. Generative engine that emits finished Ableton Live Sets and native projects from one action** — `high`
@@ -743,7 +762,7 @@ structure, key/tempo with key-compatibility theory, per-section MIDI, genre engi
 writes a full Ableton `.als` Live Set (MIDI + audio clips + automation) or a native `.zdp`
 embedding the live project JSON for instant in-DAW load. *Basis:* `zpwr-algo-production/src/`
 (`als_project.rs`, `als_generator.rs`, `midi_generator.rs`, `trance_generator.rs`, `zdp.rs`
-+ XML templates); "all 7 generator modules build, 280 tests pass". *Caveat:* genre coverage
++ XML templates); all 7 generator modules build, 282 tests pass. *Caveat:* genre coverage
 is currently mainly trance.
 
 **84. Dependency-free BPM detection + audio similarity fingerprinting** — `low`
@@ -795,7 +814,7 @@ Ableton Link, eurorack CV/gate (DC-coupled audio), MTC/MMC/RTP-MIDI, gamepad rum
 all from one rules VM, embedding into non-MIDI Tauri hosts. *Basis:* `ztranslator/README.md`
 Outgoing-actions table (backends `rosc`/`rumqttc`/`tungstenite`/`rusty_link`/`cpal`/`gilrs`),
 `rules.rs` integer VM, `tauri/` plugin + `frontend/ztranslator_view.js` `mountZTranslator`.
-*Caveat:* PORT_REPORT self-reports 61.1% BOME coverage; OS-control + CV/gate are macOS-only.
+*Caveat:* PORT_REPORT self-reports 71.9% BOME coverage; OS-control + CV/gate are macOS-only.
 
 **95. Lossless clean-room BOME `.bmtp` round-trip** — `med`
 A clean-room importer/exporter for BOME MIDI Translator Pro `.bmtp` projects that round-trips
@@ -818,7 +837,8 @@ A trading journal bundling a no-cloud/no-LLM receipt + IRS-form OCR pipeline (Ap
 Tesseract/PaddleOCR ensemble, W-2 / 1099-* / 1098 parsers, 20-bucket Schedule C taxonomy)
 feeding a dependency-light US federal tax compute engine pinned to IRS Rev. Proc. 2024-40
 with 218 unit tests. *Basis:* `traderview` crates — `traderview-ocr` (5.2k LOC),
-`traderview-expense`, `traderview-tax` (6.6k LOC, deps only `rust_decimal`+`serde`).
+`traderview-expense`, `traderview-tax` (6.6k LOC; 5 deps — `serde`, `serde_json`,
+`rust_decimal`, `chrono`, `thiserror`).
 *Caveat:* the notable part is integration ($0/receipt, on-device) inside a trading app; test
 counts/LOC are README-reported.
 
@@ -832,7 +852,8 @@ hooks as sandboxed subprocesses. *Caveat:* an application of the fusevm/stryke r
 engine maturity not build-verified.
 
 **99. A shared cyberpunk widget library spanning a heterogeneous desktop-app suite** — `med`
-~120 framework-free `window.ZGui.*` components — including DAW-grade controls (rotary knob,
+258 framework-free `window.ZGui.*` components (one `webui/*.js` module each) — including
+DAW-grade controls (rotary knob,
 88-key playable piano, modular patchbay with drag-to-connect bezier cables, ADSR/LFO/curve
 editors, dB faders, peak/LUFS meters) alongside tables, modals, charts, and shell chrome —
 consumed by submodule (never copied) as the single UI source across a whole suite of unrelated
@@ -856,7 +877,7 @@ switcher, fzf history, a Tampermonkey-equivalent userscript engine, full-page sc
 stitching, and a Wappalyzer-compatible detector over a vendored 3,993-fingerprint corpus —
 all backed by a single pure-Rust native-messaging host. *Basis:* `zpwrchrome/README.md` +
 `zpwrchrome-host` (Rust port of browserpass-native v3.1.2 + `otp`/`search`/`dl.*`, `ureq`+
-rustls); 3004 JS + 127 Rust tests; `lib/wappalyzer/engine.js`. *Caveat:* each capability
+rustls); 3044 JS + 127 Rust tests; `lib/wappalyzer/engine.js`. *Caveat:* each capability
 replaces a known tool; novelty is consolidation + a single static Rust host.
 
 **102. Pure-Rust segmented download accelerator that owns the browser's default** — `med`
@@ -873,7 +894,8 @@ A native desktop GUI that wraps the `zemacs` Rust Emacs/Helix-modal editor by ru
 an embedded PTY and driving it purely through ex-commands, with every GUI surface (menubar,
 toolbar, palette, dialogs, file tree) built from zgui-core. *Basis:* `zemacs-gui/README.md`
 — `zpwr-embed-terminal` PTY, `open_intake.rs` (`mvim://` deep-link → `:open`), bundled
-`zemacs`+`stryke` sidecars, `frontend/menu.js` zgui widgets → PTY. *Caveat:* the
+`zemacs`+`stryke` sidecars, `frontend/main.js` zgui widgets → PTY (with `frontend/panels.js`
+and `frontend/tmux-config.js` alongside it). *Caveat:* the
 "wrap-a-CLI-editor-in-a-window" pattern is MacVim; novelty is doing it for a new Rust Emacs
 entirely through a shared web widget kit + PTY.
 
@@ -1043,15 +1065,17 @@ angle.
 
 ## VI. Language connectors & data ecosystem
 
-**106. First-party connector ecosystem for a Perl5-like language (31 packages)** — `med`
-strykelang ships a 31-package first-party connector ecosystem spanning cloud (AWS/GCP/Azure),
+**106. First-party connector ecosystem for a Perl5-like language (32 packages)** — `med`
+strykelang ships a 32-package first-party connector ecosystem spanning cloud (AWS/GCP/Azure),
 orchestration (Docker, k8s), messaging (Kafka, ZeroMQ), 9+ databases (Postgres/MySQL/MSSQL/
 Mongo/Redis/Scylla/Neo4j/ClickHouse/DuckDB), columnar (Arrow/Parquet/Polars/Spark), search
 (Elasticsearch/OpenSearch), gRPC, browser/GUI automation, office I/O, and MCP — breadth of
 native data/cloud connectivity not previously offered for a Perl5-lineage language. *Basis:*
-31 `stryke-*` dirs; `stryke-demo/README.md` package matrix + single `s install`; every README
-carries the `[stryke-package]` badge. *Caveat:* "first for a Perl5-like language" is a framing
-claim; tiers vary in maturity; breadth, not any single deep integration, is the novelty.
+32 `stryke-*` dirs in the monorepo; 31 of the 32 READMEs carry the `[stryke-package]` badge
+(`stryke-app` does not). *Caveat:* "first for a Perl5-like language" is a framing claim; tiers
+vary in maturity; breadth, not any single deep integration, is the novelty.
+`stryke-demo/README.md:17,65` covers only the 14 packages it ships live demos for (a single
+`s install` pulls those 14) — it is not evidence for the full 32.
 
 **107. No-FFI "policy layer" connectors built entirely from language core builtins** — `med`
 Several connectors are pure-`.stk` packages (zero FFI table, zero cdylib, zero helper binary)
@@ -1132,7 +1156,8 @@ functionality (powerline-go exists but isn't a byte-parity port).
 Parses MySQL/PostgreSQL/SQLite/MSSQL DDL dumps into one model and emits a fully wired REST
 backend on two stacks — JVM (Spring Boot + JPA) and notably Rust/Loco (SeaORM entities, Axum
 controllers, `loco_rs` migrations) — a SQL-to-Loco generator being uncommon. *Basis:*
-`api-rest-generator/src/loco.rs` (~3954 LOC), `parser.rs`, `entity.rs`, `templates.rs`; JVM
+`api-rest-generator/src/loco.rs` (857 L, inside a 4,013-line `src/` tree), `parser.rs`,
+`entity.rs`, `templates.rs`; JVM
 generator in Kotlin/Gradle. *Caveat:* SQL-to-CRUD generators are crowded; only the Rust/Loco
 target is unusual.
 
@@ -1142,8 +1167,9 @@ CSL processor, BibTeX/RIS/CSL-JSON/EndNote/MODS/MARCXML/RDF I/O, DOI/ISBN/PMID/a
 dedup) extracted as one engine (rlib/staticlib/cdylib + C ABI + header-only C++ wrapper +
 mountable webui) so the same citation engine embeds inside other GUI apps. *Basis:*
 `zcite/crates/zcite-core/src/{schema,model,store,search,bib,csl,import,export,identifier,pdf,
-duplicates,webdav,zotero,ffi}.rs`; `include/zcite_core.{h,hpp}`; `webui/`; `PORT_REPORT.md`
-self-assesses 95.0% weighted Zotero coverage (54 full / 6 partial / 0 missing). *Caveat:*
+duplicates,webdav,zotero,ffi}.rs`; `include/zcite_core.{h,hpp}`; `webui/`;
+`zcite/crates/zcite-core/PORT_REPORT.md:9,13-17` self-assesses 96.6% weighted Zotero coverage
+(82 full / 6 partial / 0 missing / 4 out-of-scope, over 88 features). *Caveat:*
 "in development"; a reimplementation of Zotero — the novelty is the embeddable-engine packaging.
 
 **119. Multi-dialect raw-packet network scanner in safe Rust** — `low`
@@ -1161,8 +1187,8 @@ byte-for-byte Nmap and does NOT embed the NSE Lua runtime; several areas marked 
 **120. Five embedded scripting languages in one editor binary, zero FFI** — `med`
 zemacs embeds five scripting interpreters — Emacs Lisp, Vimscript, AWK, zsh, and stryke —
 directly compiled into the binary with no external process and no C-ABI/FFI between them, all
-driving the live buffer through one uniform host API. *Basis:* `zemacs/README.md:72` ("the only
-editor to embed 5 scripting languages with zero external dependencies and no FFI between them");
+driving the live buffer through one uniform host API. *Basis:* `zemacs/README.md:86-87` ("the only
+IDE to embed 5 scripting languages with zero external dependencies and no FFI between them");
 `book/src/scripting.md` (`:elisp`/`:vim`/`:awk`/`:zsh`/`:stryke`, `SPC a r` unified REPL); each
 is a pure-Rust crate lowering onto shared fusevm bytecode. *Caveat:* overlaps #1 (the editor-
 embedding angle of the same crate family); "world first" is the repo's own assertion; each
@@ -1186,7 +1212,7 @@ motion" is reproduced; counts ride the engine prefix); Helix has no operator-pen
 A single running editor exposes vim, emacs, and helix keymap personalities switchable live via
 `:keymap <preset>`, where the emacs preset reroutes the modal engine so the editor boots into
 Insert mode and binds real emacs chords there (modeless-on-modal). *Basis:*
-`zemacs-term/src/commands/typed.rs:17260` (`keymap` cmd, `set_keymap:18221` swaps live + sets
+`zemacs-term/src/commands/typed.rs:40715` (`keymap` cmd, `set_keymap:42664` swaps live + sets
 default mode); `keymap/emacs.rs` (emacs bindings in Insert, `C-space` enters Select);
 `keymap/vim.rs`, `keymap/default.rs`. *Caveat:* multi-keymap configs exist (evil-mode), but those
 emulate the *other* model inside a host; here all three are first-class presets over one Rust
@@ -1197,7 +1223,7 @@ An anti-tamper instrument measures zemacs's own coverage of the cited Vim/Neovim
 Spacemacs feature surface by re-deriving the numerator from source on every run and flagging any
 mapping that points at non-existent code as "broken" — making it structurally impossible to
 inflate the number. *Basis:* `port/README.md` (evidence tokens `static:`/`typable:`/`key:` must
-resolve or count absent; `broken` must be 0); `scripts/gen_port_report.py` (46 KB); denominators
+resolve or count absent; `broken` must be 0); `scripts/gen_port_report.py` (57.5 KB); denominators
 from primary Neovim/Emacs/Spacemacs docs in `port/data/`; outputs `docs/port_report.{md,html}`.
 *Caveat:* coverage dashboards exist; the source-derived, broken-loud, self-auditing design as a
 shipped editor artifact is the unusual part.
@@ -1273,7 +1299,7 @@ A JetBrains-style workbench renders inside the editor view — project file tree
 structure outline, problems/run panels, right-hand error-stripe minimap — entirely from
 in-process editor state (no PTY bridge), with the whole layout (drawer widths, folds, hidden
 panels, minimap, colorscheme) persisted to appdata and restored. *Basis:*
-`zemacs-term/src/ui/ide.rs` (4883 L), `file_tree.rs`, `run.rs` (live console with ANSI scrubbing),
+`zemacs-term/src/ui/ide.rs` (5451 L), `file_tree.rs`, `run.rs` (live console with ANSI scrubbing),
 `run_config.rs`; `:ide`/`:workbench`/`F2`. *Caveat:* IDE chrome is common in GUI IDEs; doing it as
 a pure-terminal overlay fed only from editor state, in a Helix fork, is unusual.
 
@@ -1305,8 +1331,8 @@ reflective settings TUI for a terminal modal editor is unusual (Helix is TOML-by
 **120p. Wildfire expand-region bound to `<ret>`** — `low`
 Pressing `<ret>` in Normal mode selects the closest text object and grows to the next enclosing
 one on repeat; `<backspace>` shrinks — a Wildfire/expand-region port wired to the engine's
-text-object hierarchy. *Basis:* `zemacs-term/src/keymap/vim.rs:255-259`
-(`"ret" => wildfire`, `"backspace" => wildfire_shrink`). *Caveat:* expand-region / wildfire.vim
+text-object hierarchy. *Basis:* `zemacs-term/src/keymap/vim.rs:396`
+(`"ret" => wildfire`) and `:333` (`"backspace" => wildfire_shrink`). *Caveat:* expand-region / wildfire.vim
 are direct prior art; this is a native port (Helix's `expand_selection` isn't the
 ret-grows/backspace-shrinks UX).
 
@@ -1315,7 +1341,8 @@ A broad in-editor text-tooling suite usually requiring plugins ships built-in: a
 UUID v1/v4 insert, lorem-ipsum, password generators (simple→paranoid→phonetic→numeric),
 base64/base64url, ROT13/Caesar, NATO phonetic, JSON omit/table, markdown-table align, delimiter
 align, narrow-to-region, and a spell checker (`]s`/`z=`/`zg`). *Basis:*
-`book/src/generated/{typable-cmd.md,static-cmd.md}`; `calc` at `commands/typed.rs:12374`. *Caveat:*
+`book/src/generated/{typable-cmd.md,static-cmd.md}`; `fn calc` at `commands/typed.rs:27155`
+(registered `:39659`). *Caveat:*
 each utility individually mirrors a Spacemacs/Emacs/vim plugin — not novel in isolation; the
 candidate is the breadth shipped built-in in one Helix-fork binary (a coverage note more than an
 invention).
@@ -1328,8 +1355,8 @@ off the UI thread, and renders the reply in a scratch buffer — with no package
 external agent process, and no FFI. Anthropic is the default with `ANTHROPIC_API_KEY`, so a
 freshly-built binary is AI-capable out of the box. *Basis:* `zemacs-term/src/ai/{mod,anthropic,openai}.rs`
 (the `Provider` trait + two vendor backends, `ZEMACS_AI_PROVIDER`/`ZEMACS_AI_MODEL` env config);
-`ai_chat` at `zemacs-term/src/commands.rs:8859` (selection→fenced-context prompt → scratch buffer,
-`spawn_blocking` off the UI thread); keymap binding `zemacs-term/src/keymap/vim.rs:889`
+`ai_chat` at `zemacs-term/src/commands.rs:12974` (selection→fenced-context prompt → scratch buffer,
+`spawn_blocking` off the UI thread); keymap binding `zemacs-term/src/keymap/vim.rs:1113`
 (`SPC a i`). *Caveat:* the *terminal/Emacs-style* + *built-in, no-plugin* framing is the angle —
 GUI editors ship AI built-in (Cursor, Zed, Windsurf), and Emacs/Neovim get LLMs via packages
 (gptel, copilot.el, avante.nvim, codecompanion), so this is "first **CLI/Emacs-style editor** with
@@ -1348,7 +1375,7 @@ interpreters wired to the live buffer/keymap/options — not config emulation or
 single editor honours a `.vimrc`'s `:set`/`:map`/`:colorscheme` *and* an `init.el`'s Lisp against the
 same session at boot. *Basis:* `zemacs-term/src/commands/scripting/mod.rs` (`load_init_scripts` — elisp
 candidates + `elisprs::eval_str`, then the `#[cfg(unix)]` vimlrs `:source` block), called from
-`zemacs-term/src/main.rs:175` via `Application::load_init_scripts` (`zemacs-term/src/application.rs:503`);
+`zemacs-term/src/main.rs:175` via `Application::load_init_scripts` (`zemacs-term/src/application.rs:556`);
 end-to-end tests `zemacs-term/tests/{vimrc_theme,custom_source_files}.rs`. *Caveat:* Emacs sources
 `init.el` (its native language) and Vim/Neovim source a vimrc (native, plus Lua in Neovim); evil-mode
 emulates Vim inside Emacs but does *not* run a real Vimscript interpreter over your `.vimrc`, and no
@@ -1388,7 +1415,7 @@ history to `$ZPWR_LOCAL/startup_history.log`; `aliasrank`/`funcrank` (`README.md
 A ~47k-file curated zsh completion corpus (claimed largest), much auto-generated by scraping
 `--help`/man/web then hand-verified, that doubles as a greppable offline reference index for
 command interfaces of tools you don't have installed. *Basis:* verified `find -name '_*'` →
-**47,346** files (README claims "47,332"); `zsh-more-completions/README.md:27,52,56-60`
+**47,393** files (README claims "47,455"); `zsh-more-completions/README.md:27,52,56-60`
 (auto-generate-then-curate pipeline, uniform `#compdef`/`_arguments`, `architecture_src/`,
 ZUnit suite, scientific ecosystems: BIND9, EPICS, GRASS GIS, Quantum ESPRESSO, BLAST+, CCP4).
 *Caveat:* "largest in existence" is unprovable; auto-gen depth varies; scale is the feature,
@@ -1429,7 +1456,8 @@ from each product's own source repo (language crate, grammar, shell wizard pages
 shared pandoc→lualatex HUD-themed pipeline, with a test suite asserting zero overfull boxes and
 a 200-page floor. *Basis:* `MenkeTechnologiesPublications/README.md` ("How generation resolves
 source"); `zshrs/scripts/{update_reference_html.sh,gen_grammar_docs.py,reference_pdf.sh}`;
-`zpwr/docs/genEncyclopediaTex.py` (587 L, reads `page_*.zsh` wizard pages) + `regenPDF.sh`;
+`MenkeTechnologiesPublications/zpwr/docs/genEncyclopediaMd.py` (332 L, reads `page_*.zsh` wizard
+pages), driven by `MenkeTechnologiesPublications/zpwr/scripts/book_pdf.sh`;
 `tests/run.sh`. *Caveat:* doc-generation pipelines (Sphinx, mdBook) are common; the distinctive
 part is generating typeset *book/encyclopedia* deliverables from the stack's own
 LSP/grammar/wizard corpus.
@@ -1488,7 +1516,7 @@ strategy on one symbol/period, regime-conditional (trend/range/chop) attribution
 strategy-portfolio Pearson diversification benefit, post-backtest trade-PnL bootstrap MC, and
 walk-forward efficiency (OOS/IS) as an overfit detector. *Basis:* `traderview-core/src/{algo_
 tournament,algo_regime_attribution,algo_strategy_portfolio,algo_backtest_mc,algo_walk_forward}.rs`;
-22-strategy library. *Caveat:* backtest is interpreted over hardcoded indicators (no JIT/DSL — see
+21-strategy library (`algo_strategies/mod.rs:130` `all()`). *Caveat:* backtest is interpreted over hardcoded indicators (no JIT/DSL — see
 #98).
 
 **134. Broker-grade paper-trading simulator (algorithmic parent orders, margin, corporate actions)** — `high`
@@ -1499,10 +1527,11 @@ interest, and auto-liquidation. *Basis:* `traderview-db/src/paper_*.rs`; migrati
 *Caveat:* fills modeled against polled quotes, not a matching engine.
 
 **135. Live broker execution + WebSocket fill pumps across six brokers** — `med`
-Native REST trading clients + reconnecting WS fill-pumps for Alpaca/IBKR/Schwab/Tastytrade/Tradier/
-Webull(RO), routed by a dispatcher that logs order intent and feeds fills into the roll-up. *Basis:*
-`traderview-db/src/{alpaca,ibkr,schwab,tastytrade,tradier,webull}_trading.rs` + `*_pump.rs`,
-`broker_dispatcher.rs`. *Caveat:* WIP — only Alpaca fully wired; others return `integration_pending`.
+Native REST trading clients for Alpaca/IBKR/Schwab/Tastytrade/Tradier plus Webull(RO), with
+reconnecting WS fill-pumps for the five trading brokers, routed by a dispatcher that logs order
+intent and feeds fills into the roll-up. *Basis:*
+`traderview-db/src/{alpaca,ibkr,schwab,tastytrade,tradier}_trading.rs` + the five matching
+`*_pump.rs`, `webull.rs` (read-only, no pump), `broker_dispatcher.rs`. *Caveat:* WIP — only Alpaca fully wired; others return `integration_pending`.
 
 **136. ~1,600-module dependency-light pure-Rust quant compute library** — `high`
 `traderview-core` is a ~297k-LOC, ~1,600-module pure-compute quant library: exotic option pricers
@@ -1682,7 +1711,7 @@ The same `window.ZGui.*` factory family ships a complete DAW control surface (sp
 analyzer, EQ/filter curves, waveform player, step sequencer, channel strip, knob/fader/drawbar,
 wavetable, env/LFO, LUFS/peak/VU meters) and a market-data terminal set (order book, depth chart,
 candlestick, volume profile, time-and-sales, liquidity heatmap, CVD line) — as plain static JS with no
-build step, no React/Vue, no virtual DOM (each of ~220 components is a self-contained IIFE returning a
+build step, no React/Vue, no virtual DOM (each of the 258 components is a self-contained IIFE returning a
 `{el, get(), set()}` handle). *Basis:* `zgui-core/webui/*.js`; `CONSUMERS.md`. *Caveat:* each is a
 widget, not a DSP/exchange engine; novelty is the breadth of specialized domains in one framework-free
 kit.
@@ -1763,14 +1792,16 @@ philosophy, not a single artifact; the reimplementations are subsets, not always
 zwire (a rebranded Chromium) ships tmux's full control model *inside the browser* driven
 by a prefix key (Ctrl-b, ⌥-b fallback) — not a two-pane "split view" but nested
 SESSION → WINDOWS → PANES with splits both directions to any depth, named windows,
-zoom, `synchronize-panes` typing broadcast, copy-mode, and detach — in **two** independent
-engines: an **in-page iframe overlay** where every pane is a real webpage (any site framed
-by stripping `X-Frame-Options` / `frame-ancestors`), and an **OS-window tiling engine**
-where panes are real browser windows tiled by `chrome.windows` geometry (cols/rows/main-v
-layouts), both fed by one prefix-key content script and surviving MV3 worker eviction via
-persisted state. *Basis:* `zwire/extensions/hud-internal/ztmux.js` (777 L — iframe overlay,
-`isPrefix()` Ctrl-b/⌥-b, `toggleSync()`/`broadcastSync()`, nested `tree` splits);
-`zwire/extensions/hud-internal/background.js` (644 L — `TMUX` window/pane model, `tmuxCmd()`
+zoom, `synchronize-panes` typing broadcast, copy-mode, and detach — across **two** surfaces:
+an **in-page overlay** where every pane is a real webpage (any site framed by stripping
+`X-Frame-Options` / `frame-ancestors`), and an **OS-window tiling engine** where panes are
+real browser windows tiled by `chrome.windows` geometry (cols/rows/main-v layouts), both fed
+by one prefix-key content script and surviving MV3 worker eviction via persisted state.
+*Basis:* the HUD's former standalone `ztmux.js` was removed (commit `cc46c47065`) and the
+in-page surface now runs on the **same shared engine as #170** — `lib/zgui-core/webui/tmux.js`
+(1,474 L) — driven by two thin HUD adapters, `zwire/extensions/hud-internal/ztmux-pane.js`
+(252 L, `isPrefix()` Ctrl-b/⌥-b, pane forwarding) and `ztmux-config.js` (88 L);
+`zwire/extensions/hud-internal/background.js` (1,396 L — `TMUX` window/pane model, `tmuxCmd()`
 split/nav, `rectsFor()` layouts, `tile()`, `publishTmux()` state persist);
 `zwire/newtab/tmux-pane.js` pane forwarder; the fork's `0008-allow-framing.patch`
 (`renderer_host/ancestor_throttle.cc`) bypasses X-Frame-Options natively so any site frames
@@ -1789,9 +1820,11 @@ state with live machine telemetry: LEFT shows the `ZW` signature, the **C-b pref
 that lights when the multiplexer prefix is armed, active window/pane list, color scheme,
 VIM mode, and ⌘K; RIGHT streams real host stats from the native host — CPU · MEM · SWAP ·
 DISK · IO · NET · LOAD · UP · TEMP · BATT · LAN · WAN · host · clock — themed by the active
-HUD scheme. *Basis:* `zwire/extensions/hud-internal/zstatus.js` (203 L, registered
-`manifest.json:168`; powerline `.sig`/`.pll`/`.plr` chevron CSS, `setTmux()` reads
-`zb_tmux`, `refreshSys()` reads `zb_sys`, prefix-armed indicator off `zb_tmux.armed`);
+HUD scheme. *Basis:* `zwire/extensions/hud-internal/zpowerline.js` (72 L, registered
+`manifest.json:292` — it superseded the removed `zstatus.js` in commit `cc46c47065`): an adapter
+that feeds the shared `ZGui.powerline` component (which owns the chevron rendering) from
+`chrome.storage` — `sysStats()` reads `zb_sys`, `tmuxStatus()` reads `zb_tmux`, and
+`ZGui.powerline.arm()` lights the prefix lamp off `zb_tmux.armed`;
 telemetry from `zwire/extensions/hud-internal/native/zwire-host/src/sysmon.rs`
 (`cpu`/`mem`/`load`/`net`/`temp` via `sysinfo`). *Caveat:* "None found", not proven —
 browser extensions add status/stat bars, and terminal powerline bars are ubiquitous, but a
@@ -1807,12 +1840,13 @@ store — usable as a `serve` NDJSON local-socket daemon, a one-shot `call`, **a
 embeddable Rust library (`zwire_host::api::{walk, exec}`). The same agent binary/crate backs
 **three** independent frontends unchanged: the zwire browser HUD (statusbar telemetry, pane
 terminals), the **zemacs** editor (auto-spawns `zwire-host serve`, no manual step), and the
-**zpwrchrome** extension host (`zpwrchrome-host` pins it as a git dependency and calls
+**zpwrchrome** extension host (`zpwrchrome-host` depends on the published crate and calls
 `zwire_host::api` for its `host.crawl` / `host.exec` actions). *Basis:*
 `zwire/extensions/hud-internal/native/zwire-host/src/lib.rs:6` (capability list),
-`fsops.rs:116` (`fs_walk` recursive crawl) + `api.rs:104` (`walk`) + `api.rs:44` (`exec`);
+`fsops.rs:116` (`fs_walk` recursive crawl) + `api.rs:107` (`walk`) + `api.rs:44` (`exec`);
 `zemacs/zemacs-term/src/commands/host.rs:1` (client bridge, auto-spawn `serve`);
-`zpwrchrome/zpwrchrome-host/Cargo.toml:52` (`zwire-host = { git = …, tag = "v0.3.0" }`).
+`zpwrchrome/zpwrchrome-host/Cargo.toml:52` (`zwire-host = { version = "0.3",
+default-features = false }` — a crates.io registry dep, resolved to `0.3.8` in the lockfile).
 *Caveat:* this is a **filesystem** crawler, **not** a web crawler — it walks local paths, not
 URLs. "None found", not proven: browsers ship single-purpose native-messaging hosts
 (password managers, download helpers), but a general filesystem-crawl + exec + watch + PTY
@@ -1896,10 +1930,10 @@ and emits a global `theme-changed` event, and a transport-abstracted frontend sh
 features=["tauri"] }`) — so one `~/.zwire/global.toml` is the single source of truth wiring the
 browser (two extensions + native chrome) to a desktop app's colour scheme in real time.
 *Basis:* `zwire/extensions/hud-internal/native/zwire-host/src/theme_watch.rs` (700 ms poll →
-`bus::publish("scheme"|"ui")`, `note_scheme`/`note_ui` echo control); `store.rs:20`
-(`SCHEMES` whitelist), `store.rs:203` (`theme_dir` → `~/.zwire`), `store.rs:272` (cross-process
+`bus::publish("scheme"|"ui")`, `note_scheme`/`note_ui` echo control); `store.rs:26`
+(`SCHEMES` whitelist), `store.rs:240` (`theme_dir` → `~/.zwire`), `store.rs:319` (cross-process
 read-modify-write lock on `global.toml.lock`), plus `hud-scheme`/`hud-light` projections;
-`api.rs:183` `theme_get` / `:190` `theme_set_scheme` / `:201` `theme_set_ui` / `:215`
+`api.rs:183` `theme_get` / `:193` `theme_set_scheme` / `:204` `theme_set_ui` / `:218`
 `theme_watch`; `tauri_theme.rs` (the `zwire-theme` plugin, `theme-changed` emit);
 `zgui-core/webui/theme-sync.js` (Tauri/JUCE transport, `applyTheme` onto `ZGui.colorscheme`/`fx`);
 `zwire/extensions/hud-internal/background.js` (`sub` scheme+ui, write-back);
@@ -1911,8 +1945,9 @@ colour scheme across a browser (extensions + native window chrome) and a Tauri d
 via a shared file + per-process pub/sub bus + drop-in plugin has no prior art found; search not
 exhaustive. The shim is a generic drop-in (vendored into every zgui-core app's `lib/`), so any
 Tauri/JUCE zgui-core app can join by registering the plugin + loading the shim. Version drift
-exists across the git pins (local crate `0.3.7`, ztranslator `v0.3.5`, zpwrchrome-host `v0.3.0`
-without the `tauri` feature). Inert wherever the host isn't connected.
+exists across the pins (local crate `0.3.14`, ztranslator `v0.3.5`, zpwrchrome-host on the
+crates.io `0.3` line resolved to `0.3.8`, without the `tauri` feature). Inert wherever the host
+isn't connected.
 
 **169a. The theme bus extended to a terminal modal editor — bidirectional, over the editor's own ported schemes** — `med`
 zemacs — a terminal TUI editor, not a browser or a Tauri/JUCE GUI app — joins the #169
@@ -1929,19 +1964,19 @@ vignette left byte-intact), which zwire's own watcher then fans out to the brows
 + GUI apps. Echo between the two watchers is broken by writing only on a *committed* set (picker
 previews, which leave `last_theme = Some`, are excluded) and skipping any write whose values
 already match on disk. Behind one editor setting (`sync-zwire-theme`, default off). *Basis:*
-`zemacs/zemacs-term/src/zwire.rs` (`theme_name`:74 + `theme_name_from_toml`:81 read/map;
-`scheme_from_theme`:110 reverse-map; `spawn_watcher`:222 / `run_watcher`:235 the `notify` watcher
-→ `job::dispatch_blocking` → `apply`:193; `write_back_to`:136 the `toml_edit` surgical edit,
-`write_atomic`:182); `zemacs/zemacs-term/src/application.rs:585` (write-back hook at the single
-`ConfigEvent::ThemeChanged` choke, gated on `last_theme.is_none()` to exclude previews), `:181`
-(watcher spawn at boot); `zemacs/zemacs-view/src/editor.rs:557` (`sync_zwire_theme` setting);
+`zemacs/zemacs-term/src/zwire.rs` (`theme_name`:114 + `theme_name_from_toml`:121 read/map;
+`scheme_from_theme`:172 reverse-map; `spawn_watcher`:333 / `run_watcher`:346 the `notify` watcher
+→ `job::dispatch_blocking` → `apply`:302; `write_back_to`:198 the `toml_edit` surgical edit,
+`write_atomic`:244); `zemacs/zemacs-term/src/application.rs:582` (write-back hook at the single
+`ConfigEvent::ThemeChanged` choke, gated on `last_theme.is_none()` to exclude previews), `:191`
+(watcher spawn at boot); `zemacs/zemacs-view/src/editor.rs:564` (`sync_zwire_theme` setting);
 scheme whitelist `zwire-host/src/store.rs:26` (`SCHEMES`). *Caveat:* extends #169's existing theme
 bus rather than inventing colour-scheme sync — file-based multi-app palette propagation is prior
 art (base16-shell, pywal, wpgtk), and #169 already wires the browser + Tauri/JUCE apps; the narrow
 increment here is a **terminal modal editor** joining that specific bus **bidirectionally** via a
 native watcher + format-preserving write-back that maps onto the editor's own ported themes (the
 GUI consumers' JS/Tauri adapters can't apply to a TUI). Default-off; only the 8 `zgui-*` schemes
-round-trip (non-app-shell editor themes are never pushed). Verified: 11 unit tests + an end-to-end
+round-trip (non-app-shell editor themes are never pushed). Verified: 13 unit tests + an end-to-end
 pty run (`:theme zgui-matrix` → `global.toml` `scheme=matrix`, other keys preserved).
 
 **170. First desktop application suite where multiple non-terminal GUI apps embed one shared in-app tmux window manager, each tiling its own document content** — `high`
@@ -1953,7 +1988,7 @@ document/app content* rather than terminals: SESSION → WINDOWS (tabs) → PANE
 ways, nested to any depth, unlimited windows, with a prefix key (`C-b`/`⌥b`),
 `synchronize-panes` broadcast, copy-mode, paste-buffers, a command-prompt, session
 save/restore, and a published powerline segment — no OS windows involved. The engine is a
-single **1,227-line component** consumed as the shared submodule; each app is ~35–200 lines
+single **1,474-line component** consumed as the shared submodule; each app is ~35–200 lines
 of wiring (`frontend/tmux-config.js`) that hands the WM three callbacks
 (`openEmptyPane`/`renderPane`/`paneLabel`) so every pane mounts an independent instance of
 that app's own view (its own transport + state). The tiling is an **absolute-position** model
@@ -1961,9 +1996,10 @@ that app's own view (its own transport + state). The tiling is an **absolute-pos
 never re-parents and never reloads on split, retile, zoom, or window switch. *Basis:*
 `zgui-core/webui/tmux.js:1` (`ZGui.tmux` — WM tree/nav/resize/zoom/tabs/sessions/prefix +
 synchronize-panes + copy-mode + paste-buffers, host-supplied pane content via `init(cfg)`;
-1,227 L); per-app consumers `zemail/frontend/tmux-config.js` (mail view per pane via
+1,474 L); per-app consumers `zemail/frontend/tmux-config.js` (mail view per pane via
 `mountZemail`), `zemacs-gui/frontend/tmux-config.js` (editor per pane), plus
-`zoffice`/`zpdf`/`zphoto`/`zftp`/`zreq` `frontend/tmux-config.js`; each app ships
+`zoffice`/`zphoto`/`zftp`/`zreq` `frontend/tmux-config.js` and
+`zpdf/crates/zpdf-core/frontend/tmux-config.js`; each app ships
 `crates/zgui-core/webui/tmux.js` as the shared submodule copy. *Caveat:* distinct from the
 terminal-side tmux work in this ledger — `zterminal` speaks the **native** tmux wire protocol
 (#104–#105) and `zwire` embeds a tmux model in a **browser** (#164); this claim is about a
@@ -1983,25 +2019,30 @@ focused element, the engine tracks each pane's **last editable + caret** (select
 for inputs, a live `Range` for contenteditable) and inserts into *unfocused* peers at their
 remembered caret; readline line-editors forward `C-w`/`C-u` (plus the macOS ⌥/⌘-Delete twins)
 as **semantic tokens** so word/line-kill broadcasts correctly rather than as raw characters.
-**(b) Named session/layout save + restore** — the full window set (each window's pane **tree**,
-active pane, `layout`, `syncPanes` membership, and paste-buffers) is snapshotted into the
-host's own `prefs` store (`S` = save current layout as a named session, `s` = load a saved
-layout; also `save-session`/`switch-client` from the command-prompt), and on restore each pane
-is **re-mounted from its saved ref** via the host's `renderPane(bodyEl, ref)` callback — so an
-editor/mail/document pane comes back with its own content, not an empty tile. Both live once in
-the shared component, so all seven apps inherit them identically. *Basis:*
-`zgui-core/webui/tmux.js:278` (`syncMembers`/`toggleSync`/`toggleSyncPane`), `:288`
-(`paneOfNode` + per-pane `lastField`/caret tracking), `:300` (broadcast keydown observer, `:305`
-readline `C-w`/`C-u`/⌥⌘-Delete → semantic tokens), `:310` (`broadcastKey` into every synced
-peer); session/layout: `:106` (`tmux-sessions`) + `:107` (`tmux-session-save`), `:1152`
-(snapshot: `windows[].{tree,layout,syncPanes,buffers}` into `CFG.prefs`), `:735`
-(`CFG.renderPane` re-mount of a saved pane ref), `:1080` (`save-session`) + `:1077`
-(`attach-session`/`switch-client` load-by-name). *Caveat:* refinement of #170, not a separate
+**(b) Named session/layout save + restore** — each window's name plus its panes' saved refs are
+snapshotted into the host's own `prefs` store under `tmuxSessions` (`S` = save current layout as
+a named session, `s` = load a saved layout; also `save-session`/`switch-client` from the
+command-prompt), and on restore each pane is **re-mounted from its saved ref** via the host's
+`renderPane(bodyEl, ref)` callback — so an editor/mail/document pane comes back with its own
+content, not an empty tile. Both live once in the shared component, so all seven apps inherit
+them identically. *Basis:*
+`zgui-core/webui/tmux.js:282` (`syncMembers`) + `:286`/`:287` (`toggleSync`/`toggleSyncPane`),
+`:292` (`paneOfNode`, with per-pane `lastField`/caret tracking at `:294`/`:298`/`:299`), `:304`
+(broadcast keydown observer; `:309-:312` readline `C-w`/`C-u`/⌥⌘-Delete → semantic tokens),
+`:314` (`broadcastKey` into every synced peer); session/layout: `:109` (`tmux-sessions`) +
+`:110` (`tmux-session-save`), `:1148` (`saveSessionNamed` → `sessionSnapshot():1107` →
+`savePrefs` `p.tmuxSessions` at `:1153`), `:747` (`CFG.renderPane` re-mount of a saved pane
+ref), `:1095` (`save-session`) + `:1092` (`attach-session`/`switch-client` load-by-name).
+*Caveat:* refinement of #170, not a separate
 engine. `synchronize-panes` and layout save (tmux-resurrect/continuum) are longstanding tmux
 features **for terminals**; the first-ness here is that a **suite of non-terminal desktop apps**
 gets both over their own document content from one shared implementation. Sessions persist to
-each app's local prefs blob (per-app, not shared across apps). "None found", not proven; search
-not exhaustive.
+each app's local prefs blob (per-app, not shared across apps). A named session stores each
+window's name + its panes' refs only — the exact split-tree geometry, `layout`, `syncPanes`
+membership and paste-buffers are **not** restored from it (`applySession` rebuilds an even
+split); those fields are carried only by the per-tab `sessionStorage` snapshot (`persist()`,
+`tmux.js:1395`), which survives reload but not a named-layout load. "None found", not proven;
+search not exhaustive.
 
 **171. Web browser with a user-controllable mastering DSP chain compiled into its own audio-service output-mix chokepoint, live-reconfigurable with nothing open** — `med`
 zwire compiles a full mastering chain into the Chromium **audio service** itself and applies it
