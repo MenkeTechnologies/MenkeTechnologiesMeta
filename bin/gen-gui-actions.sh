@@ -25,6 +25,9 @@ APPS=(
   "zthrottle|zthrottle-core|src/commands.rs|System monitor / process & network throttling"
   "ztunnel|ztunnel-core|src/commands.rs|Tunnelblick-style VPN client — OpenVPN / WireGuard config + control"
   "zgo|zgo-core|src/syscommands.rs|Alfred-style launcher — script-filter workflows and system commands"
+  "zphoto|zphoto-core|DISPATCH:src|Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions, smart objects"
+  "zcontainer|zcontainer-core|DISPATCH:src|Docker Desktop + Lens-style container / Kubernetes manager — containers, images, volumes, compose, analyze, kube"
+  "zstation|zstation-core|DISPATCH:src|Station-style multi-app workspace — boards, tiles, panes"
   "zwire|zwire-host|src/zbus.rs|Chromium-superset browser — tabs, windows, tab-groups, downloads, reading list, power"
   "traderview|traderview|frontend/js/zg-automation.js|TradingView-style charting/trading terminal — the ⌘K palette catalog registered as bus verbs (view tiles + shortcut actions)"
 )
@@ -75,6 +78,15 @@ for entry in "${APPS[@]}"; do
   IFS='|' read -r app sub file desc <<<"$entry"
   if [[ "$app" == traderview ]]; then
     tv_verbs "$sub" | sort -u > "$tmp/$app" || true
+  elif [[ "$file" == DISPATCH:* ]]; then
+    # Cores whose bus verbs are a multi-file `"ns.verb" => handler` match dispatch (zphoto/zcontainer/
+    # zstation), not a single `commands.rs` verb list. Read every .rs under the given dir at origin/main
+    # and collect the distinct namespaced (dotted) dispatch keys — the engine's real command surface,
+    # reachable over the bus via the app's `*_invoke` bridge.
+    dir="${file#DISPATCH:}"
+    git -C "$sub" ls-tree -r --name-only origin/main -- "$dir" 2>/dev/null | grep '\.rs$' | while IFS= read -r rf; do
+      git -C "$sub" show "origin/main:$rf" 2>/dev/null
+    done | grep -oE '"[a-z][a-z0-9_]*\.[a-z0-9_.]+"[[:space:]]*=>' | grep -oE '"[^"]+"' | tr -d '"' | sort -u > "$tmp/$app" || true
   else
     git -C "$sub" show "origin/main:$file" 2>/dev/null | extract_verbs "$file" | sort -u > "$tmp/$app" || true
   fi
@@ -102,7 +114,7 @@ DATE="${GUI_ACTIONS_DATE:-$(date -u +%Y-%m-%d 2>/dev/null || echo unknown)}"
   echo "| --- |:--:| --- | --- |"
   for row in "${ROWS[@]}"; do
     IFS='|' read -r app sub file desc n <<<"$row"
-    echo "| [\`$app\`](#$app) | $n | \`$sub/$file\` | $desc |"
+    echo "| [\`$app\`](#$app) | $n | \`$sub/${file#DISPATCH:}\` | $desc |"
   done
   echo "| **appShell** (shared) | $APPSHELL_N | \`zgui-core/webui/app-shell.js\` | Terminal, file browser, hooks, palette, theme / CRT / neon toggles — on every app |"
   echo
@@ -122,7 +134,7 @@ DATE="${GUI_ACTIONS_DATE:-$(date -u +%Y-%m-%d 2>/dev/null || echo unknown)}"
     echo "## $app"
     echo
     echo "$desc  "
-    echo "**$n verbs** · source \`$sub/$file\` · call as \`App::open(\"$app\")->call(\"<verb>\", %args)\`"
+    echo "**$n verbs** · source \`$sub/${file#DISPATCH:}\` · call as \`App::open(\"$app\")->call(\"<verb>\", %args)\`"
     echo
     # group by namespace prefix (text before first '.'); non-dotted verbs go under "(top-level)"
     prefixes=$(awk -F. '{print (NF>1?$1:"(top-level)")}' "$tmp/$app" | sort -u)
@@ -147,9 +159,12 @@ DATE="${GUI_ACTIONS_DATE:-$(date -u +%Y-%m-%d 2>/dev/null || echo unknown)}"
   echo
   echo "## Notes"
   echo
-  echo "- **Coreless bus apps** (\`zphoto\`, \`zstation\`, \`ztranslator\`, \`zcontainer\`) expose the shared appShell"
-  echo "  verbs plus their Tauri backend commands; they have no standalone Rust verb list, so only the appShell"
-  echo "  surface is enumerated here."
+  echo "- **Dispatch-core apps** (\`zphoto\`, \`zcontainer\`, \`zstation\`) expose their engine verbs as a multi-file"
+  echo "  \`\"ns.verb\" => handler\` match dispatch in their \`-core\` (not a single \`commands.rs\` list); the count is"
+  echo "  the distinct namespaced dispatch keys, reachable over the bus via each app's \`*_invoke\` bridge."
+  echo "- **Forward-only apps** (\`ztranslator\`, \`Audio-Haxor\`) have no namespaced verb dispatch — their core is a"
+  echo "  typed-function library and the bus forwards to the webview's \`ZGui.automation\` surface; only the appShell"
+  echo "  verbs are enumerated here."
   echo "- Each app's \`bus.rs\` is a **hybrid** handler: engine verbs route straight to the \`-core\` engine;"
   echo "  \`appshell.*\` and any \`ZGui.automation\`-registered verb forward to the webview. \`call\` accepts any"
   echo "  registered verb even if discovery does not list it (e.g. zwire's \`browser.*\` executor)."
