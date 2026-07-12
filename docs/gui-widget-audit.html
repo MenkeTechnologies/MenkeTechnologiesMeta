@@ -329,6 +329,23 @@
         <li><strong>Stragglers</strong> (1&ndash;3 each): zftp, zemail, zpdf, zreq, zstation, ztunnel — a handful of native selects / range / colour inputs, a bounded cleanup.</li>
         <li><strong>Already clean (0 app-owned native):</strong> zcite, zgo, zoffice, zthrottle, zcontainer, zphoto — the reference implementations.</li>
       </ul>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">*</span>Beyond form controls — hand-rolled widget modules</h2>
+      <p class="tutorial-subtitle">A second pass looked past native form elements for whole <em>modules</em> that reimplement a <code>ZGui.*</code> component. Raw greps for native checkbox / number / text / textarea and <code>modal</code>/<code>dialog</code> class names are <strong>not reliable</strong> — they inflate wildly through vendored/embedded content (e.g. the ztranslator view embedded in traderview) and per-class-name variants, so they are deliberately <strong>not tabulated</strong>. Named widget modules are the trustworthy signal:</p>
+      <div class="table-scroll">
+        <table class="arch-table">
+          <thead><tr><th>Module</th><th>What it hand-rolls</th><th>ZGui.* refs</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td><code>traderview/frontend/js/dialog.js</code></td><td>Custom modal dialogs (<code>tConfirm</code> / <code>tPrompt</code>, "replaces native confirm/prompt") — <code>dialog-overlay</code> / <code>dialog-actions</code> chrome</td><td class="c"><span class="no">0</span></td><td class="c"><span class="native">hand-rolled → ZGui.modal</span></td></tr>
+            <tr><td><code>traderview/frontend/js/tooltip.js</code></td><td>Custom tooltips — walks <code>data-tip</code> and builds its own popover</td><td class="c"><span class="no">0</span></td><td class="c"><span class="native">hand-rolled → ZGui.tooltip</span></td></tr>
+            <tr><td><code>zemacs-gui/frontend/menu.js</code></td><td>Menu surface</td><td class="c"><span class="ok">62</span></td><td class="c"><span class="ok">already ZGui</span></td></tr>
+            <tr><td><code>zemail/frontend/menu.js</code></td><td>Bridge to the <em>native</em> macOS menu bar (Tauri), not a webview widget</td><td class="c"><span class="ok">n/a</span></td><td class="c"><span class="ok">not a violation</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fn">Net new fakes: <strong>traderview's <code>dialog.js</code> + <code>tooltip.js</code></strong> — two hand-rolled widget modules (0 ZGui refs) reimplementing <code>ZGui.modal</code> / <code>ZGui.tooltip</code>, consistent with traderview being the heaviest offender. Both are traderview-only and a real (non-trivial) refactor: the dialog module has its own promise-based <code>tConfirm/tPrompt</code> API used across setup-wizard / accounts / brokers, so migrating means re-pointing those call sites at <code>ZGui.modal</code>. The <code>menu.js</code> pair are <strong>not</strong> violations — checked at the source.</p>
   </main>
   </div>
   <script src="hud-theme.js"></script>
