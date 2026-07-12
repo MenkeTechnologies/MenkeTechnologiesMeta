@@ -5,8 +5,19 @@ Work list to bring every app onto the bus defined in [`GUI_AUTOMATION_BUS.md`](G
 [`GUI_APP_ARCHITECTURE.md`](GUI_APP_ARCHITECTURE.md) (core/host ownership) and
 [`GUI_POLISH_GATE_CHECKLIST.md`](GUI_POLISH_GATE_CHECKLIST.md).
 
-**Status: nothing built.** Every cell starts ☐. The shared prerequisites (Phase 0) block all per-app
-work; do not start an app row until Phase 0 for its track is ✅.
+**Status (2026-07-11): Track A substrate built, sockets wired on all 15 full Tauri apps.**
+Phase 0A shipped — `zgui-bridge` (Rust socket crate), `zgui-core/webui/automation.js` +
+`automation-host.js`, and per-app `bus.rs` all exist. Every full Track-A app opens its socket
+(`serve("<app>")` + `bus::start` verified at the call site). The live verb surface is generated into
+[`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) — **3073 engine verbs across 11 apps** + 15 shared
+appShell verbs. Per-app power-user surface coverage (bars / vim / hooks) is in
+[`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
+
+Still open: typed-verb `register({app,verbs})` surfaces exist only for **traderview** + **zwire**;
+the other socket-wired apps run a **webview-forward** `bus.rs` (forward every verb to the webview →
+`ZGui.automation` verb or `invoke` fallback) until their verbs are promoted into the catalog.
+**Track B (JUCE) substrate is still unbuilt** — the `sock`/`verbs` cells below are current for
+Track A only; do not read the Track B matrix as started.
 
 ## Roster (21 apps, two tracks)
 
@@ -92,28 +103,38 @@ perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"
 
 ## Status matrix — Track A
 
-Legend: ☐ not started · ◐ in progress · ✅ done · N/A.
+Legend: ☐ not started · ◐ in progress · ✅ done · N/A. Only cells directly verified at the call
+site are flipped. **verbs** ✅ = the app's verb surface is enumerated in
+[`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md); ◐ = socket wired but verbs still webview-forwarded
+(not yet promoted into the catalog). **sock** ✅ = `serve("<app>")` + `bus::start` verified.
+**docs** ✅ = the app's verbs appear in the generated global catalog. `state`/`evt`/`cores`/`in-proc`/
+`out-proc` are left ☐ — not individually verified in this pass.
 
 | App | verbs | state | evt | sock | cores | in-proc | out-proc | docs |
 | --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| zcite ⭐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zreq ⭐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zcontainer | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zemail | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zftp | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zgo | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| ztunnel | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| ztranslator | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zpdf | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zphoto | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zoffice | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zstation | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zterminal | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zwire | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| zthrottle | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| traderview | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| Audio-Haxor | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| zcite ⭐ | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zreq ⭐ | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zcontainer | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| zemail | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zftp | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zgo | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| ztunnel | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| ztranslator | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| zpdf | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zphoto | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| zoffice | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zstation | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| zterminal | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
+| zwire | ✅ | ☐ | ☐ | ✅¹ | ☐ | ☐ | ☐ | ✅ |
+| zthrottle | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| traderview | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| Audio-Haxor | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
 | zpwr-daw (shell) | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+¹ zwire scripts through its **own** native bus (`zwire-host/src/zbus.rs`, 161 verbs), not the
+`zgui-bridge` socket — counted done because it is fully scriptable, not because it rides this
+transport. zterminal is N/A: native terminal, no webview shell, not on this bus (see
+[`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md)).
 
 ## Status matrix — Track B (JUCE)
 

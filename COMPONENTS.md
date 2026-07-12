@@ -4,6 +4,10 @@ Which shared submodules each GUI app consumes. Source of truth is each app's `.g
 this table is the human-readable map. Any `-core` engine can be embedded in any GUI app, and
 every GUI app embeds the full shared component set it needs.
 
+> For *which power-user surfaces each app actually turns on* (GUI scripting / tmux bar / tmux WM /
+> vim / hooks editor) — as opposed to which submodules it embeds — see
+> [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
+
 _Last reconciled: 2026-07-03._
 
 ## Components
