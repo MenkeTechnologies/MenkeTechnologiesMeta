@@ -47,9 +47,9 @@ verbs**).
 | **zthrottle** | ✓ | 54 | ✓ | ✓ | ✓ | · | ✓ |
 | **zgo** | ✓ | 19 | ✓ | ✓ | ✓ | · | ✓ |
 | **traderview** | ✓ | 1726 | ✓ | ✓ | ✓ | · | ✓ |
-| **zphoto** | ✓ | forward¹ | ✓ | ✓ | ✓ | · | ✓ |
-| **zstation** | ✓ | forward¹ | ✓ | ✓ | ✓ | · | ✓ |
-| **zcontainer** | ✓ | forward¹ | ✓ | ✓ | ✓ | · | ✓ |
+| **zphoto** | ✓ | 533 | ✓ | ✓ | ✓ | · | ✓ |
+| **zstation** | ✓ | 36 | ✓ | ✓ | ✓ | · | ✓ |
+| **zcontainer** | ✓ | 218 | ✓ | ✓ | ✓ | · | ✓ |
 | **Audio-Haxor** | ✓ | forward¹ | ✓ | ✓ | ✓ | · | ✓ |
 | **ztranslator** | ✓ | forward¹ | ✓ | ✓ | ✓ | · | ✓ |
 | **zwire** | native² | 161 | ✓ | ✓ | ✓ | ✓ | ✓ |
@@ -95,6 +95,5 @@ socket addressing) is still unbuilt (see [`GUI_AUTOMATION_BUS_CHECKLIST.md`](GUI
   (`zoVimMode` editing mode) and **zwire** (browser-wide vim keys). Everywhere else "vim" means the
   `monaco-vim` binding inside the hooks editor.
 - **GUI scripting is live, not planned.** [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) is
-  regenerated from each app's verb source (`bin/gen-gui-actions.sh`) and currently lists **3073
-  engine verbs across 11 apps** + 15 shared appShell verbs. The remaining socket-wired apps expose
+  regenerated from each app's verb source (`bin/gen-gui-actions.sh`) and currently lists **3860 engine verbs across 14 apps** + 15 shared appShell verbs. The remaining socket-wired apps expose
   their Tauri commands via webview-forward until their typed verbs are promoted into the catalog.
