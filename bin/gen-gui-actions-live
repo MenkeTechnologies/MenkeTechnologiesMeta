@@ -1,0 +1,144 @@
+#!/usr/bin/env stryke
+# Regenerate GUI_SCRIPT_ACTIONS.md from the LIVE automation-bus surface of every GUI app.
+#
+# The static `gen-gui-actions.sh` only sees grep-able verb sources (`-core/commands.rs` lists,
+# `"ns.verb" =>` dispatch cores). It CANNOT see the full runtime surface — appShell verbs,
+# per-app `opts.commands`, and verbs pushed dynamically at load. That surface is exactly what
+# `App::open("<app>")->verbs()` returns over the GUI Automation Bus, so this asks each *running*
+# app directly: open it, query its Unix socket, write the full catalog, close it.
+#
+# Native Unix-domain sockets (`connect $fh, "/path.sock"` → send/recv) land the whole thing in
+# stryke — no socat/nc shell-out. Sockets live at `$TMPDIR/zgui/<app>.sock`.
+
+val $meta    = dirname(dirname(realpath($0)))
+val $sockdir = "#{$ENV{TMPDIR}}zgui"                 # $TMPDIR ends in '/' on macOS
+val $out     = "#{$meta}/GUI_SCRIPT_ACTIONS.md"
+val $req     = qq({"t":"verbs","id":1}) . "\n"
+
+# app socket-name -> /Applications bundle basename
+val %bundle = (
+  "audio-haxor" => "AUDIO_HAXOR",
+  "traderview"  => "TraderView",
+  "zcite"       => "zcite",
+  "zcontainer"  => "zcontainer",
+  "zemacs-gui"  => "zemacs-gui",
+  "zemail"      => "zemail",
+  "zftp"        => "zftp",
+  "zgo"         => "zgo",
+  "zoffice"     => "zoffice",
+  "zpdf"        => "zpdf",
+  "zphoto"      => "zphoto",
+  "zreq"        => "zreq",
+  "zstation"    => "zstation",
+  "zthrottle"   => "zthrottle",
+  "ztranslator" => "ZTranslator",
+  "ztunnel"     => "ztunnel",
+  "zwire"       => "zwire",
+)
+val %desc = (
+  "zpdf"        => "Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact",
+  "zcite"       => "Zotero-style reference manager — library, collections, citations, PDF, sync",
+  "zemail"      => "Thunderbird-style mail client — accounts, folders, messages, PGP/S-MIME, search",
+  "zftp"        => "Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync",
+  "zreq"        => "Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocket",
+  "ztunnel"     => "Tunnelblick-style VPN client — OpenVPN / WireGuard config + control",
+  "zoffice"     => "LibreOffice-style office engine — writer/calc/impress over ODF/OOXML",
+  "zthrottle"   => "System monitor / process & network throttling",
+  "zgo"         => "Alfred-style launcher — script-filter workflows and system commands",
+  "zphoto"      => "Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions",
+  "zcontainer"  => "Docker Desktop + Lens-style container / Kubernetes manager",
+  "zstation"    => "Station-style multi-app workspace — boards, tiles, panes",
+  "ztranslator" => "BOME-style MIDI/keyboard translator — presets, translators, rules, HID",
+  "audio-haxor" => "Audio analyzer / DAW-project generator — spectrum, DSP, .als generation",
+  "traderview"  => "TradingView-style charting/trading terminal — view tiles + shortcut actions",
+  "zwire"       => "Chromium-superset browser — tabs, windows, tab-groups, downloads, reading list, power",
+)
+
+# Query one live bus socket for its full, sorted verb-id list. Empty on any failure.
+fn verbs_of($app) {
+  val $sock = "#{$sockdir}/#{$app}.sock"
+  return () unless connect($app, $sock)
+  send $app, $req
+  var $buf = ""
+  while (index($buf, "\n") < 0) {
+    val $c = recv($app, 65536)
+    last unless len $c
+    $buf .= $c
+  }
+  shutdown $app, 2
+  val $d = from_json((split /\n/, $buf)[0])
+  return () unless $d && $d->{ok}
+  var @ids = ()
+  for val $v (@{$d->{value}{verbs}}) { push @ids, $v->{id} }
+  sort @ids
+}
+
+# ── open every app (background, no focus steal) ──
+p "opening #{scalar keys %bundle} apps…"
+for val $app (sort keys %bundle) { system "open -g -a '/Applications/#{$bundle{$app}}.app' 2>/dev/null" }
+
+# ── poll each socket until its app has booted + registered (up to 60s) ──
+var %verbs = ()
+var @pending = sort keys %bundle
+val $deadline = time() + 150
+while (@pending && time() < $deadline) {
+  var @still = ()
+  for val $app (@pending) {
+    var @v = verbs_of($app)
+    if (@v) { $verbs{$app} = [@v] } else { push @still, $app }
+  }
+  @pending = @still
+  sleep 2 if @pending
+}
+warn "not reachable: @pending" if @pending
+
+# ── render the catalog (per-app full surface, grouped by namespace) ──
+var $total = 0
+for val $app (keys %verbs) { $total += scalar @{$verbs{$app}} }
+var @bysize = sort { scalar @{$verbs{$b}} <=> scalar @{$verbs{$a}} } keys %verbs
+
+var @o = ()
+push @o, "# GUI Script Actions — Global Catalog"
+push @o, ""
+push @o, "Every scriptable **GUI-Script action** (automation-bus verb) exposed by every MenkeTechnologies"
+push @o, "GUI app — the exact surface `App::open(\"<app>\")->verbs()` returns over the"
+push @o, "[GUI Automation Bus](GUI_AUTOMATION_BUS.md): the LIVE runtime surface (appShell verbs +"
+push @o, "per-app `opts.commands` + dynamically-registered verbs), read from each running app."
+push @o, ""
+push @o, "**#{$total} actions** across **#{scalar keys %verbs} apps**. Read from each app's live bus"
+push @o, "surface by `bin/gen-gui-actions-live` — do not hand-edit. Requires every app open when generated."
+push @o, ""
+push @o, "| App | Verbs | Surface |"
+push @o, "| --- |:--:| --- |"
+for val $app (@bysize) { push @o, "| [`#{$app}`](##{$app}) | #{scalar @{$verbs{$app}}} | #{$desc{$app} // ''} |" }
+push @o, ""
+push @o, "---"
+push @o, ""
+for val $app (@bysize) {
+  var @ids = @{$verbs{$app}}
+  push @o, "## #{$app}"
+  push @o, ""
+  push @o, "#{$desc{$app} // ''}  " if $desc{$app}
+  push @o, "**#{scalar @ids} verbs** · live bus surface · call as `App::open(\"#{$app}\")->call(\"<verb>\", %args)`"
+  push @o, ""
+  var %grp = ()
+  for val $id (@ids) {
+    val $ns = index($id, ".") >= 0 ? (split /\./, $id, 2)[0] : "(top-level)"
+    push @{$grp{$ns}}, $id
+  }
+  for val $ns (sort keys %grp) {
+    push @o, "**`#{$ns}`** (#{scalar @{$grp{$ns}}})"
+    push @o, ""
+    push @o, "```"
+    for val $id (@{$grp{$ns}}) { push @o, $id }
+    push @o, "```"
+    push @o, ""
+  }
+}
+spurt $out, join("\n", @o) . "\n"
+system "cp '#{$out}' '#{$meta}/docs/GUI_SCRIPT_ACTIONS.md'"
+p "wrote #{$out} — #{$total} actions across #{scalar keys %verbs} live apps"
+
+# ── close every app ──
+p "closing apps…"
+for val $app (sort keys %bundle) { system "osascript -e 'quit app \"#{$bundle{$app}}\"' 2>/dev/null" }
