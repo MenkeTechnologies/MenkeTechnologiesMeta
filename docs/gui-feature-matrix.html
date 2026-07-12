@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="MenkeTechnologiesMeta — GUI Feature Matrix. Which power-user surfaces each desktop GUI app actually wires: GUI scripting (automation bus), tmux status bar, tmux tiling WM, vim mode (editor + app-level), stryke hooks editor. Verified per-app at the call site.">
+  <title>MenkeTechnologiesMeta — GUI Feature Matrix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hud-static.css">
+  <style>
+    .report-main { max-width: 82rem; padding: 1.5rem 1.5rem 4rem; margin: 0 auto; }
+    pre, code { font-family: 'Share Tech Mono', ui-monospace, monospace; }
+    pre {
+      background: var(--bg); border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem; overflow-x: auto; font-size: 12px; color: var(--text);
+    }
+    .table-scroll { overflow-x: auto; }
+    table.report {
+      width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px;
+    }
+    table.report th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; text-align: left;
+      padding: 6px 10px; border: 1px solid var(--border); white-space: nowrap;
+    }
+    table.report td {
+      padding: 6px 10px; border: 1px solid var(--border); color: var(--text); vertical-align: top;
+    }
+    table.report td.c { text-align: center; }
+    table.report td code { background: var(--bg); color: var(--accent-light); padding: 0 4px; }
+    table.report td a { color: var(--cyan); text-decoration: none; }
+    table.report .app { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--cyan); white-space: nowrap; }
+    table.report .ok { color: #39ff14; font-weight: 700; }
+    table.report .pend { color: var(--accent); font-weight: 700; }
+    table.report .no { color: var(--text-muted); font-weight: 700; }
+    table.report .native { color: #ffb020; font-weight: 700; font-size: 10px; letter-spacing: 0.5px; }
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+      gap: 0.5rem; margin: 1rem 0;
+    }
+    .stat-card {
+      border: 1px solid var(--border); border-left: 2px solid var(--cyan);
+      padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px;
+    }
+    .stat-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: #39ff14; }
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--text-dim); margin-top: 0.2rem;
+    }
+    .report-section {
+      margin: 1.6rem 0; padding: 1rem 1.2rem 1.2rem; border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px;
+    }
+    .report-section h2 {
+      font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--cyan);
+      letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 0.6rem;
+    }
+    .report-section p, .report-section li { color: var(--text); font-size: 13px; line-height: 1.55; }
+    .legend { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin: 0.3rem 0 0.8rem; }
+    .legend .ok { color: #39ff14; } .legend .native { color: #ffb020; } .legend .no { color: var(--text-muted); } .legend .pend { color: var(--accent); }
+    .report-header {
+      border-bottom: 1px solid var(--border); padding: 1.2rem 1.5rem;
+      background: linear-gradient(180deg, #070714 0%, #0d0d22 60%, var(--bg-secondary) 100%);
+    }
+    .report-header-inner { max-width: 82rem; margin: 0 auto; }
+    .report-brand {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.1rem, 2.4vw, 1.6rem); font-weight: 900;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), #fff, var(--accent), var(--cyan));
+      background-size: 300% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px var(--cyan-glow));
+      margin: 0 0 0.4rem;
+    }
+    .report-crumbs { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.04em; }
+    .report-crumbs a { color: var(--cyan); text-decoration: none; }
+    .report-crumbs .sep { color: var(--text-muted); margin: 0 6px; }
+    .report-crumbs .current { color: var(--accent); }
+    .report-sub { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em; opacity: 0.8; margin: 0.35rem 0 0; }
+    .report-title {
+      font-family: 'Orbitron', sans-serif; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin: 0.6rem 0 0.4rem;
+    }
+    .report-title .step-hash { color: var(--cyan); margin-right: 0.4rem; }
+  </style>
+</head>
+<body class="crt">
+  <header class="report-header">
+    <div class="report-header-inner">
+      <h1 class="report-brand">// MENKETECHNOLOGIESMETA &mdash; GUI FEATURE MATRIX</h1>
+      <nav class="report-crumbs" aria-label="Breadcrumb">
+        <a href="index.html">Docs</a>
+        <span class="sep">/</span>
+        <span class="current">GUI Feature Matrix</span>
+        <span class="sep">/</span>
+        <a href="report.html">Engineering report</a>
+        <span class="sep">/</span>
+        <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+      <p class="report-sub">Which power-user surfaces each desktop GUI app <em>turns on</em> &middot; verified 2026-07-11 at the call site &middot; companion to <code>COMPONENTS.md</code> (embeds) and the generated <code>GUI_SCRIPT_ACTIONS.md</code> (verb catalog)</p>
+    </div>
+  </header>
+
+  <main class="report-main">
+    <h2 class="report-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+    <p>Every full Tauri app mounts the same <code>zgui-core</code> shell, so the power-user surfaces &mdash; GUI scripting bus, tmux/powerline status bar, tmux tiling WM, editor vim, stryke hooks editor &mdash; are near-universal <em>by construction</em> (the identical cyberpunk HUD across apps is intentional). The interesting signal is at the <strong>wiring level</strong> and the <strong>outliers</strong>: several of these ship in <code>zgui-core</code> but must be <code>init()</code>'d per app, and two apps step outside the webview shell entirely &mdash; <code>zterminal</code> (native Rust terminal, native tmux) and the JUCE plugins (no webview at all).</p>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val cyan">15</div><div class="stat-label">Full apps, bus-wired</div></div>
+      <div class="stat-card"><div class="stat-val green">3073</div><div class="stat-label">Cataloged verbs / 11 apps</div></div>
+      <div class="stat-card"><div class="stat-val">17</div><div class="stat-label">Apps w/ tmux bar + WM</div></div>
+      <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">App-level vim (zoffice, zwire)</div></div>
+    </div>
+
+    <section class="report-section">
+      <h2>~ WHAT EACH SURFACE IS</h2>
+      <div class="table-scroll">
+      <table class="report">
+        <tr><th>Surface</th><th>Where it lives</th><th>What it is</th></tr>
+        <tr><td><strong>GUI scripting (bus)</strong></td><td><code>zgui-bridge</code> (Rust socket) + <code>zgui-core/webui/automation*.js</code></td><td>Per-app Unix socket so a stryke script drives the app by name &mdash; <code>App::open("&lt;app&gt;")-&gt;call(...)</code>, and <code>App::here()</code> from a hook running inside it. Verbs cataloged in <code>GUI_SCRIPT_ACTIONS.md</code>.</td></tr>
+        <tr><td><strong>tmux status bar</strong></td><td><code>zgui-core/webui/powerline.js</code> (<code>ZGui.powerline</code>)</td><td>Powerline bar pinned to the bottom: <code>C-b</code> prefix light &middot; scheme &middot; tmux windows &middot; VIM segment &middot; CPU/MEM/SWAP/DISK/IO/NET/LOAD/UP/TEMP/BATT/LAN/WAN/host/clock. Ported from zwire's <code>zstatus.js</code>.</td></tr>
+        <tr><td><strong>tmux tiling WM</strong></td><td><code>zgui-core/webui/tmux.js</code> (<code>ZGui.tmux</code>)</td><td>Real in-app tiling overlay: SESSION &rarr; WINDOWS (tabs) &rarr; PANES, split both ways, nested, copy-mode, synchronize-panes, command-prompt. Ported from zwire's <code>ztmux.js</code>.</td></tr>
+        <tr><td><strong>vim (editor)</strong></td><td><code>zpwr-hooks-editor</code> &rarr; <code>monaco-vim</code></td><td>Vim keybindings + <code>:cmd</code> line inside the Monaco hooks editor &mdash; present wherever the hooks editor is.</td></tr>
+        <tr><td><strong>vim (app-level)</strong></td><td>app-owned</td><td>Vim navigation over the whole app UI (<code>hjkl</code> / marks / <code>/</code> search / <code>:cmd</code>), not just inside an editor.</td></tr>
+        <tr><td><strong>hooks editor</strong></td><td><code>zpwr-hooks-editor</code></td><td>Monaco stryke-hooks editor embed.</td></tr>
+      </table>
+      </div>
+    </section>
+
+    <section class="report-section">
+      <h2># TRACK A &mdash; TAURI / WEBVIEW APPS</h2>
+      <p class="legend"><span class="ok">✓</span> wired &middot; <span class="no">·</span> not wired &middot; <span class="native">NATIVE</span> app implements its own (not the zgui-core one) &middot; <em>fwd</em> = socket wired but verbs still webview-forwarded (not yet promoted into the catalog). Every app also inherits 15 shared appShell verbs.</p>
+      <div class="table-scroll">
+      <table class="report">
+        <tr>
+          <th>App</th><th>GUI scripting</th><th>Bus verbs</th><th>tmux bar</th><th>tmux WM</th><th>vim (editor)</th><th>vim (app)</th><th>hooks editor</th>
+        </tr>
+        <tr><td class="app">zpdf</td><td class="c ok">✓</td><td class="c">309</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zcite</td><td class="c ok">✓</td><td class="c">178</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zemail</td><td class="c ok">✓</td><td class="c">174</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zftp</td><td class="c ok">✓</td><td class="c">123</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zreq</td><td class="c ok">✓</td><td class="c">121</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">ztunnel</td><td class="c ok">✓</td><td class="c">97</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zoffice</td><td class="c ok">✓</td><td class="c">96</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zthrottle</td><td class="c ok">✓</td><td class="c">54</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zgo</td><td class="c ok">✓</td><td class="c">19</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">traderview</td><td class="c ok">✓</td><td class="c">1726</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zphoto</td><td class="c ok">✓</td><td class="c pend">fwd</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zstation</td><td class="c ok">✓</td><td class="c pend">fwd</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zcontainer</td><td class="c ok">✓</td><td class="c pend">fwd</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">Audio-Haxor</td><td class="c ok">✓</td><td class="c pend">fwd</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">ztranslator</td><td class="c ok">✓</td><td class="c pend">fwd</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c no">·</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zwire</td><td class="c ok">✓ <span class="native">native&sup1;</span></td><td class="c">161</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+        <tr><td class="app">zterminal</td><td class="c no">·</td><td class="c no">&mdash;</td><td class="c native">native&sup2;</td><td class="c native">native&sup2;</td><td class="c no">·</td><td class="c no">·</td><td class="c no">·</td></tr>
+      </table>
+      </div>
+      <p style="font-size:11.5px;color:var(--text-dim);margin-top:0.6rem;">
+        <strong>&sup1; zwire</strong> scripts through its <em>own</em> native bus (<code>zwire-host/src/zbus.rs</code>, 161 verbs &mdash; the Chromium-superset browser control surface: tabs/windows/tab-groups/downloads/reading-list/power), not the <code>zgui-bridge</code> socket. The powerline bar, tmux WM, and app-level vim (<code>hjkl</code> / <code>H M L</code> / <code>gg G</code> / marks / <code>:cmd</code>, <code>/</code>-search) all originate here &mdash; <code>zgui-core</code>'s <code>powerline.js</code> / <code>tmux.js</code> are the generalized ports of zwire's <code>zstatus.js</code> / <code>ztmux.js</code>.<br>
+        <strong>&sup2; zterminal</strong> is the GPU terminal itself: a native status bar and native tmux (the <code>ztmux-core</code> tmux wire-protocol client), not the <code>zgui-core</code> webview components. It doesn't mount the appShell, so it has no automation-bus socket, no hooks editor, and no editor vim (vim runs <em>inside</em> it).
+      </p>
+    </section>
+
+    <section class="report-section">
+      <h2>&amp; TRACK B &mdash; JUCE PLUGINS</h2>
+      <p><code>zpwr-daw</code> (engine) &middot; <code>zpwr-synth</code> &middot; <code>zpwr-fx</code> &middot; <code>zpwr-midi-fx</code>. No <code>window.ZGui</code>, no Tauri <code>invoke</code>. The automation bus, powerline bar, and tmux WM are <strong>not wired</strong> for the JUCE surface &mdash; the Track B bus substrate (C++/C-ABI surface, per-plugin-instance socket addressing) is still unbuilt (see <code>GUI_AUTOMATION_BUS_CHECKLIST.md</code> &sect;0B). <code>zpwr-daw</code>'s <em>Tauri shell</em> carries monaco-vim + the hooks editor through its embedded <code>ztranslator-core</code> webview; the JUCE <code>ClipEngine</code> half does not.</p>
+    </section>
+
+    <section class="report-section">
+      <h2>$ GUI SCRIPTING IS LIVE, NOT PLANNED</h2>
+      <p><code>GUI_SCRIPT_ACTIONS.md</code> is regenerated from each app's verb source by <code>bin/gen-gui-actions.sh</code> and currently lists <strong>3073 engine verbs across 11 apps</strong> + 15 shared appShell verbs. Every full Tauri app opens its socket (<code>serve("&lt;app&gt;")</code> + <code>bus::start</code>, verified at the call site). The <em>fwd</em> apps run a <strong>webview-forward</strong> <code>bus.rs</code>: every verb is forwarded to the webview, which tries a registered <code>ZGui.automation</code> verb then falls back to <code>invoke(verb,args)</code> &mdash; so the app's own Tauri commands are already bus-callable by name and <code>surface()</code> advertises them for discovery. Typed verbs get promoted into the catalog later. Only <strong>traderview</strong> and <strong>zwire</strong> ship a typed <code>register({app,verbs})</code> surface today.</p>
+<pre># drive an app by name from a stryke script over the bus
+App::open("zpdf")-&gt;call("add_text", {page: 1, x: 72, y: 700, text: "REVIEWED"})
+App::open("zcite")-&gt;get("selection")   # -&gt; the selected reference
+
+# or from a hook running INSIDE the app
+App::here()-&gt;verbs()                    # this app's verb surface</pre>
+    </section>
+
+    <section class="report-section">
+      <h2>/ METHOD</h2>
+      <p>Verified 2026-07-11 by grepping each app's real entry/frontend + <code>src-tauri</code> at the recorded gitlink:</p>
+      <ul>
+        <li><code>.powerline.init(</code> / <code>.tmux.init(</code> &mdash; the bars, active init call site (not just a vendored file)</li>
+        <li><code>serve("&lt;app&gt;")</code> + <code>bus::start</code> in <code>bus.rs</code>/<code>lib.rs</code> &mdash; the automation-bus socket</li>
+        <li><code>monaco-vim</code> / <code>initVimMode</code> &mdash; editor vim</li>
+        <li>app-specific vim handlers (<code>zoVimMode</code>, zwire <code>keys.js</code>/<code>zfind</code>) &mdash; app-level vim</li>
+        <li><code>hooks-editor-entry</code> &mdash; the hooks editor</li>
+      </ul>
+      <p>Engine-verb counts come from <code>GUI_SCRIPT_ACTIONS.md</code>. Only cells backed by a verified call site are marked wired; unverified surface columns are not claimed.</p>
+    </section>
+
+    <section class="report-section">
+      <h2>. RELATED</h2>
+      <table class="report">
+        <tr><th>Doc</th><th>Covers</th></tr>
+        <tr><td><code>GUI_FEATURE_MATRIX.md</code></td><td>Markdown source of this report</td></tr>
+        <tr><td><code>COMPONENTS.md</code></td><td>Which shared submodule each app <em>embeds</em></td></tr>
+        <tr><td><code>GUI_SCRIPT_ACTIONS.md</code></td><td>Generated full verb catalog (3073 verbs)</td></tr>
+        <tr><td><code>GUI_AUTOMATION_BUS.md</code> / <code>_CHECKLIST.md</code></td><td>Bus design + rollout status</td></tr>
+        <tr><td><code>GUI_POLISH_GATE.md</code></td><td>The pass/fail bar an app clears to ship</td></tr>
+      </table>
+    </section>
+  </main>
+  <script src="hud-theme.js"></script>
+</body>
+</html>
