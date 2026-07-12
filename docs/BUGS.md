@@ -2,7 +2,7 @@
 
 Defects surfaced by the two `coverage` audit workflows (read-the-code findings, each with a `file:line` and a quoted evidence snippet). Reported here, then fixed individually under review. Paths are relative to the named submodule worktree; `file:line` is **as audited** — a few line numbers drift slightly after a fix lands in the same file (the function name in each entry locates it).
 
-**Open:** 3 high · 17 medium · 23 low.  **Fixed:** 6.
+**Open:** 1 high · 17 medium · 23 low.  **Fixed:** 8.
 
 **2×** marks a defect found independently by both audit passes (higher confidence).
 

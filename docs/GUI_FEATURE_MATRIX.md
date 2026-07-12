@@ -54,6 +54,7 @@ in [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md).
 | **zcontainer** | ✓ | 25 | ✓ | ✓ | ✓ | · | ✓ |
 | **Audio-Haxor** | ✓ | 239 | ✓ | ✓ | ✓ | · | ✓ |
 | **ztranslator** | ✓ | 54 | ✓ | ✓ | ✓ | · | ✓ |
+| **zemacs-gui** | ✓ | 30 | ✓ | ✓ | ✓ | · | ✓ |
 | **zwire** | native² | 161 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **zterminal** | · | — | native³ | native³ | · | · | · |
 

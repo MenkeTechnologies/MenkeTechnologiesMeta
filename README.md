@@ -499,7 +499,7 @@ Prefix `+` means the working tree diverges from the pinned SHA; `-` means the su
 
 ## [0x04] HELPER SCRIPTS
 
-The `bin/` directory ships a few wrappers for common operations. Most are POSIX shell with no dependencies beyond `git`; `gen-ci-board` needs bash + authenticated `gh`, `gen-code-volume` needs `stryke` + `tokei`, and the icon generators need `rsvg-convert` (librsvg), the Tauri CLI, and macOS `sips`/`iconutil`.
+The `bin/` directory ships a few wrappers for common operations. Most are POSIX shell with no dependencies beyond `git`; `gen-ci-board` needs bash + authenticated `gh`, `gen-code-volume` needs `stryke` + `tokei`, `gen-doc-inventory.mjs` needs `node`, and the icon generators need `rsvg-convert` (librsvg), the Tauri CLI, and macOS `sips`/`iconutil`. The app-release scripts (`gen-gui-actions-live`, `ship-apps`, `deploy-apps`) are macOS-only and need the Tauri CLI plus authenticated `gh`; the first two are `stryke`.
 
 | Script | What it does |
 |---|---|
@@ -511,7 +511,12 @@ The `bin/` directory ships a few wrappers for common operations. Most are POSIX 
 | [`bin/gen-ci-board`](bin/gen-ci-board) | Regenerate the [\[0x02\] CI Status Board](#0x02-ci-status-board) from the submodule map + live workflow lists (`--in-place` splices README.md). |
 | [`bin/gen-code-volume`](bin/gen-code-volume) | Regenerate the [\[0x09\] Code Volume](#0x09-code-volume) tables (stryke) — `tokei` de-duplicated by git: nested submodule mountpoints counted once at their top-level checkout (`--in-place` splices README.md). |
 | [`bin/gen-app-icon.sh`](bin/gen-app-icon.sh) | Render one GUI app icon from the shared cyberpunk brand template (chamfered neon frame + width-pinned glyph/wordmark, vendored Orbitron). Args: accent, glyph, wordmark, out.png. |
-| [`bin/gen-all-icons.sh`](bin/gen-all-icons.sh) | Regenerate every GUI app's icon set from that one template (Tauri via `tauri icon`, JUCE via `iconutil`), so all apps share `zterminal`'s geometry and differ only by accent/glyph. |
+| [`bin/gen-all-icons.sh`](bin/gen-all-icons.sh) | Regenerate every GUI app's icon set from that one template (Tauri via `tauri icon`, JUCE via `iconutil`), so all apps share `zterminal`'s geometry and differ only by accent/glyph. Reads the shared brand assets in [`bin/icon-assets/`](bin/icon-assets). |
+| [`bin/gen-gui-actions-live`](bin/gen-gui-actions-live) | Regenerate [`docs/GUI_SCRIPT_ACTIONS.md`](docs/GUI_SCRIPT_ACTIONS.md) from the **live** automation-bus surface (stryke): opens each GUI app, queries `verbs()` over its Unix socket, closes it. Sees the whole runtime surface (appShell + `opts.commands` + dynamically-registered verbs). Requires every app to be launchable. |
+| [`bin/gen-gui-actions.sh`](bin/gen-gui-actions.sh) | Static fallback for the same catalog — greps each app's verb sources at `origin/main`. Cannot see dynamically-registered or appShell verbs, so `gen-gui-actions-live` is authoritative. |
+| [`bin/gen-doc-inventory.mjs`](bin/gen-doc-inventory.mjs) | Regenerate [`docs/inventory.html`](docs/inventory.html): a clickable inventory of every page under `docs/`, plus a chrome-sync audit that flags pages not wired to the shared HUD CSS/JS, missing headers, dead-end nav, broken relative links, or a lagging color-scheme catalog. |
+| [`bin/deploy-apps`](bin/deploy-apps) | Build every Tauri app's release `.app`, install it to `/Applications`, and upload a headless `.dmg` (via `hdiutil`, no Finder popup) to a GitHub release. |
+| [`bin/ship-apps`](bin/ship-apps) | Full GUI-app release pipeline (stryke): bump each app's bundled `zgui-core`, patch-bump the version, commit + push, bump the meta gitlink, then build, install, and publish a dmg + pkg at `v<version>`. The GUI-app counterpart to `release-all`. |
 
 ```bash
 # pull everything

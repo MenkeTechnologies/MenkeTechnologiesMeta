@@ -34,30 +34,43 @@ _Last reconciled: 2026-07-03._
 
 ## Consumption matrix
 
-`✓` = consumed. `—` = not applicable to that app (the JUCE plugins consume only the clip/patch
-engines; `zterminal` is itself the terminal, so it doesn't embed `embed-terminal`). `(source)` =
-the app that owns that engine. The office/mail/pdf cores embed across every full GUI app.
+`✓` = consumed. `—` = not consumed by that app. `(source)` = the app that owns that engine (it is
+also the app's own submodule, so `(source)` implies consumption). Derived from each app's
+`.gitmodules` at the SHA this meta repo pins — a component counts only where the app actually
+mounts it, not where it could. The office/mail/pdf cores are *not* universal: only `zemail` and
+`zftp` embed all three.
+
+Two rows read as empty and that is correct: `zterminal` mounts only `zgui-core` + `ztmux-core`
+(neither is a column here) — it *is* the terminal, so it embeds no `embed-terminal` and no hooks
+editor. The JUCE plugins mount only the clip/patch engines.
 
 | App | clip-engine | patch-core | embed-terminal | hooks-editor | crate | ztranslator | file-browser | i18n | algo | office-core | mail-core | pdf-core |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **ztranslator** | ✓ | — | ✓ | ✓ | ✓ | _(source)_ | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — |
+| **ztranslator** | ✓ | — | ✓ | ✓ | ✓ | _(source)_ | ✓ | ✓ | — | — | — | — |
+| **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | — | — |
 | **zpwr-synth** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zpwr-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zpwr-midi-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
-| **zoffice** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | _(source)_ | ✓ | ✓ |
-| **zemail** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | ✓ | _(source)_ | ✓ |
-| **zpdf** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | ✓ | ✓ | _(source)_ |
-| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **zgo** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zoffice** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | _(source)_ | — | — |
+| **zemail** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | _(source)_ | ✓ |
+| **zpdf** | — | — | ✓ | ✓ | — | — | ✓ | — | — | — | — | _(source)_ |
+| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zgo** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zftp** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **zcontainer** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **zstation** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **zphoto** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **zterminal** | — | — | — | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zcontainer** | — | — | — | ✓ | — | — | ✓ | — | — | — | — | — |
+| **zstation** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | — | — | — |
+| **zphoto** | — | — | — | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **ztunnel** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zthrottle** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zemacs-gui** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zwire** | — | — | — | ✓¹ | — | — | — | — | — | — | — | — |
+| **zterminal** | — | — | — | — | — | — | — | — | — | — | — | — |
+
+<sub>¹ `zwire` vendors the hooks editor at `extensions/hud-internal/vendor/zpwr-hooks-editor` rather
+than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`, `zwire-host`.</sub>
 
 ## Notes
 
