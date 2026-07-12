@@ -17,10 +17,37 @@ for (const p of all) if (p.includes('/api/')) { const g=p.split('/')[0]; apiByGr
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const deployed = rel => BASE + rel.split('/').map(encodeURIComponent).join('/');
 const ext = ' target="_blank" rel="noopener noreferrer"';
+// Scheme catalog pre-pass: parse every hud-theme.js under docs/ for its
+// SCHEME_ORDER (the array driving the color-scheme picker) and its
+// COLOR_SCHEMES definition count (one `label:` per scheme block). The
+// canonical catalog is DERIVED as the union of all SCHEME_ORDER names —
+// no hardcoded count — so it self-adjusts when a scheme is added
+// everywhere and flags any page whose hud-theme.js lags behind.
+function walkJs(dir){const o=[];for(const e of readdirSync(dir)){const p=join(dir,e);if(statSync(p).isDirectory())o.push(...walkJs(p));else if(e==='hud-theme.js')o.push(p);}return o;}
+function parseSchemeFile(abs){
+  let c; try { c = readFileSync(abs, 'utf8'); } catch { return null; }
+  const m = c.match(/SCHEME_ORDER\s*=\s*\[([\s\S]*?)\]/);
+  const order = m ? [...m[1].matchAll(/'([^']+)'/g)].map(x => x[1]) : [];
+  const defs = (c.match(/[\s]label:/g) || []).length;
+  return { order, defs };
+}
+const schemesByPath = new Map();   // rel path under docs/ -> {order, defs}
+const canon = new Set();
+for (const p of walkJs(DOCS)) {
+  const rel = p.slice(DOCS.length + 1);
+  const s = parseSchemeFile(p);
+  schemesByPath.set(rel, s);
+  if (s) for (const n of s.order) canon.add(n);
+}
+const canonN = canon.size;
+const canonList = [...canon];
 function analyze(rel){
   const h = readFileSync(join(DOCS, rel), 'utf8');
   const title = (h.match(/<title>([\s\S]*?)<\/title>/i) || [, rel])[1].replace(/\s+/g,' ').trim();
-  const hudStatic = /hud-static\.css/.test(h), hudTheme = /hud-theme\.js/.test(h);
+  const hudStatic = /hud-static\.css/.test(h);
+  // Must ACTUALLY load hud-theme.js via a <script src>, not merely mention
+  // it in prose/<code> — a text reference gives no color-scheme picker.
+  const hudTheme = /<script[^>]+src="[^"]*hud-theme\.js"/i.test(h);
   const hdr = (h.match(/<header[\s\S]*?<\/header>/i) || [''])[0];
   const hasHeader = /<header[\s>]/.test(h);
   const tutHeader = /class="tutorial-header"/.test(h);
@@ -30,14 +57,25 @@ function analyze(rel){
   const refs = [...new Set([...h.matchAll(/(?:href|src)="([^"#]+\.(?:html|css|js))"/g)].map(m => m[1]))]
     .filter(x => !/^(https?:|\/\/|data:|mailto:)/.test(x));
   const broken = refs.filter(r => { try { statSync(join(DOCS, normalize(join(dirname(rel), r)))); return false; } catch { return true; } });
+  // Resolve the hud-theme.js this page loads and grade its scheme catalog:
+  // full = has every canonical scheme AND its SCHEME_ORDER matches the
+  // number of COLOR_SCHEMES it defines (no ordered-but-undefined / defined-
+  // but-unordered drift).
+  const themeRef = refs.find(r => /hud-theme\.js$/.test(r));
+  const themeSchemes = themeRef ? schemesByPath.get(normalize(join(dirname(rel), themeRef))) : null;
+  const schemeCount = themeSchemes ? themeSchemes.order.length : 0;
+  const schemesFull = !!themeSchemes && canonN > 0 &&
+    canonList.every(c => themeSchemes.order.includes(c)) &&
+    themeSchemes.order.length === themeSchemes.defs;
   const issues = [];
   if (!hudStatic) issues.push('no hud-static.css');
   if (!hudTheme) issues.push('no hud-theme.js (no color schemes)');
+  else if (!schemesFull) issues.push(`incomplete color schemes (${schemeCount}/${canonN})`);
   if (!hasHeader) issues.push('no header');
   else if (tutHeader && !tutCss) issues.push('unstyled header (no tutorial.css)');
   if (hasHeader && !headerNav) issues.push('header has no nav links (dead-end)');
   if (broken.length) issues.push('missing links: ' + broken.join(', '));
-  return { rel, title, hudStatic, hudTheme, hasHeader, headerNav, links: refs.length, broken: broken.length, ok: issues.length === 0, issues };
+  return { rel, title, hudStatic, hudTheme, schemesFull, schemeCount, hasHeader, headerNav, links: refs.length, broken: broken.length, ok: issues.length === 0, issues };
 }
 const meta = hud.map(analyze), fakes = meta.filter(m => !m.ok);
 const groups = {};
@@ -50,7 +88,8 @@ const sections = names.map(g => {
   const api = apiByGroup[g], apiHref = apiIndexByGroup[g];
   const items = pages.map(m => {
     const badge = m.ok ? '<span class="badge badge-ok">OK</span>' : `<span class="badge badge-bad" title="${esc(m.issues.join('; '))}">FAKE</span>`;
-    const flags = `<span class="flags">CSS ${m.hudStatic?yes:no} JS ${m.hudTheme?yes:no} HDR ${m.hasHeader?yes:no} NAV ${m.headerNav?yes:no} LINKS ${m.broken===0?yes:no}</span>`;
+    const sch = `<span class="${m.schemesFull?'ok':'bad'}" title="${m.schemeCount}/${canonN} color schemes">${m.schemesFull?'✓':'✗'}</span>`;
+    const flags = `<span class="flags">CSS ${m.hudStatic?yes:no} JS ${m.hudTheme?yes:no} SCHEMES ${sch} HDR ${m.hasHeader?yes:no} NAV ${m.headerNav?yes:no} LINKS ${m.broken===0?yes:no}</span>`;
     const note = m.ok ? '' : `<span class="issue">${esc(m.issues.join(' · '))}</span>`;
     return `        <li>${badge} <a href="${esc(deployed(m.rel))}"${ext}>${esc(m.title)}</a> ${flags}<span class="inv-path">${esc(m.rel)}</span>${note}</li>`;
   }).join('\n');
@@ -59,7 +98,7 @@ const sections = names.map(g => {
 }).join('\n');
 const auditBlock = fakes.length
   ? `      <section class="inv-audit inv-audit-bad">\n    <h2 class="inv-group-title">⚠ Fake / unsynced doc pages <span class="inv-count">${fakes.length}</span></h2>\n    <ul class="inv-list">\n${fakes.map(m=>`        <li><span class="badge badge-bad">FAKE</span> <a href="${esc(deployed(m.rel))}"${ext}>${esc(m.rel)}</a> <span class="issue">${esc(m.issues.join(' · '))}</span></li>`).join('\n')}\n    </ul>\n  </section>`
-  : `      <section class="inv-audit inv-audit-ok">\n    <h2 class="inv-group-title">✓ Chrome sync: all ${meta.length} pages wired to shared hud-static.css + hud-theme.js + styled header + nav links + zero broken links</h2>\n  </section>`;
+  : `      <section class="inv-audit inv-audit-ok">\n    <h2 class="inv-group-title">✓ Chrome sync: all ${meta.length} pages wired to shared hud-static.css + hud-theme.js (full ${canonN}-scheme catalog) + styled header + nav links + zero broken links</h2>\n  </section>`;
 const nav = (label, rel) => `          <a href="${esc(deployed(rel))}"${ext}>${label}</a>`;
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -130,7 +169,7 @@ ${nav('Invention ledger','inventions.html')}
     </div>
   </header>
   <main class="tutorial-main">
-    <p class="inv-summary">// ${meta.length} pages · ${meta.filter(m=>m.ok).length} synced · ${fakes.length} fake · ${totalApi} API — CSS=hud-static.css · JS=hud-theme.js (8 schemes) · HDR=styled header · NAV=header nav links · LINKS=no broken links · every link live</p>
+    <p class="inv-summary">// ${meta.length} pages · ${meta.filter(m=>m.ok).length} synced · ${fakes.length} fake · ${totalApi} API — CSS=hud-static.css · JS=hud-theme.js · SCHEMES=full ${canonN}-scheme catalog (${canonList.slice().sort().join(', ')}) · HDR=styled header · NAV=header nav links · LINKS=no broken links · every link live</p>
 ${auditBlock}
     <div class="inv-grid">
 ${sections}
