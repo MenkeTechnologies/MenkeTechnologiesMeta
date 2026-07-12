@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="MenkeTechnologies — GUI Widget Audit. Which apps hand-roll native browser widgets (select, range, color, date, dialog) instead of the shared zgui-core ZGui.* components. Verified per app by grep at origin/main.">
+  <meta name="description" content="MenkeTechnologies — GUI Widget Audit. App-owned native browser widgets (select, range, color, date) vs the shared zgui-core ZGui.* components, per app, excluding shared/embedded components. Verified by grep at origin/main.">
   <title>MenkeTechnologies — GUI Widget Audit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -241,7 +241,7 @@
           <a href="gui-feature-matrix.html">GUI feature matrix</a><span class="sep">/</span>
           <span class="current">GUI widget audit</span>
         </nav>
-        <p class="docs-build-line">Native / hand-rolled widgets vs the shared zgui-core components, per app · verified 2026-07-11 by grep at origin/main · companion to GUI_FEATURE_MATRIX.md and COMPONENTS.md</p>
+        <p class="docs-build-line">App-owned native / hand-rolled widgets vs the shared zgui-core components · verified 2026-07-11 by grep at origin/main · excludes shared clip-engine, embedded cores, comments</p>
       </div>
       <div class="tutorial-toolbar">
         <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -260,19 +260,19 @@
   </div>
   <main class="tutorial-main">
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>Executive summary</h2>
-      <p class="tutorial-subtitle">The house rule is <strong>GUI-only zgui components</strong>: every app builds its UI from the shared <code>zgui-core</code> library (<code>ZGui.*</code>) — modals, dropdowns, pickers, tables, tooltips — never a hand-rolled or native browser widget. This audit greps each app's own frontend for the native form-control elements that a <code>ZGui.*</code> component already covers, so they read as concrete migration targets, not vibes. Most apps are clean or near-clean; the outliers are <strong>traderview</strong> and <strong>Audio-Haxor</strong>, whose forms lean heavily on native <code>&lt;select&gt;</code> / <code>&lt;input type=range|color&gt;</code>.</p>
+      <p class="tutorial-subtitle">The house rule is <strong>GUI-only zgui components</strong>: every app builds its UI from the shared <code>zgui-core</code> library (<code>ZGui.*</code>) — modals, dropdowns, pickers, tables — never a hand-rolled or native browser widget. This counts the <strong>app-owned</strong> native form-control elements a <code>ZGui.*</code> component already covers. Only three apps are real offenders: <strong>traderview</strong>, <strong>Audio-Haxor</strong>, and <strong>ztranslator</strong>. Everything else is clean or down to 1&ndash;3 stragglers.</p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">1033</div><div class="stat-label">Native widget elements (all apps)</div></div>
-        <div class="stat-card"><div class="stat-val cyan">714</div><div class="stat-label">Native &lt;select&gt; → ZGui.dropdownMenu</div></div>
-        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Fully clean apps (0 native)</div></div>
-        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Heavy offenders (traderview, Audio-Haxor)</div></div>
+        <div class="stat-card"><div class="stat-val">963</div><div class="stat-label">App-owned native widgets</div></div>
+        <div class="stat-card"><div class="stat-val cyan">648</div><div class="stat-label">Native &lt;select&gt; → ZGui.dropdownMenu</div></div>
+        <div class="stat-card"><div class="stat-val green">6</div><div class="stat-label">Fully clean apps (0 native)</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Heavy offenders</div></div>
       </div>
 
       <hr class="section-rule">
 
-      <h2 class="tutorial-title"><span class="step-hash">~</span>Detection method</h2>
-      <p class="tutorial-subtitle">Verifiable, not heuristic. For each app's own frontend (<code>frontend/**/*.{js,html}</code>, excluding the vendored <code>lib/zgui-core</code>, <code>vendor/</code>, <code>node_modules</code>, bundles and <code>dist</code>) each native widget element is counted with a fixed grep, and each maps to the <code>ZGui.*</code> component it should be. The JS dialog metric (<code>alert/confirm/prompt</code>) was deliberately <strong>excluded</strong> — apps wrap those in a <code>ZGui.modal.prompt</code>-delegating helper, so counting the calls (or the <code>window.*</code> fallback inside the helper) mislabels correct ZGui usage as a violation.</p>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>Detection method &amp; what is excluded</h2>
+      <p class="tutorial-subtitle">Counts are native widget elements in each app's <strong>own</strong> frontend, by fixed grep, mapped to the <code>ZGui.*</code> component that should replace them. To avoid over-counting, four sources of shared/false hits are excluded — an earlier pass that counted them inflated most apps (e.g. zcite 7&rarr;0, zstation 7&rarr;0, zgo 2&rarr;0):</p>
       <div class="table-scroll">
         <table class="arch-table">
           <thead><tr><th>Native element</th><th>Grep</th><th>ZGui replacement</th></tr></thead>
@@ -280,33 +280,33 @@
             <tr><td>native dropdown</td><td><code>&lt;select</code></td><td><code>ZGui.dropdownMenu</code> / <code>combobox</code> / <code>searchSelect</code></td></tr>
             <tr><td>native slider</td><td><code>type="range"</code></td><td><code>ZGui.slider</code> / <code>dbFader</code> / <code>bipolarSlider</code></td></tr>
             <tr><td>native colour picker</td><td><code>type="color"</code></td><td><code>ZGui.colorPicker</code></td></tr>
-            <tr><td>native date/time</td><td><code>type="date|time|datetime-local"</code></td><td><code>ZGui.datePicker</code> / <code>timePicker</code> / <code>dateRangePicker</code></td></tr>
-            <tr><td>native modal</td><td><code>&lt;dialog</code> · <code>.showModal(</code></td><td><code>ZGui.modal</code> / <code>drawer</code></td></tr>
+            <tr><td>native date/time</td><td><code>type="date|time|datetime-local"</code></td><td><code>ZGui.datePicker</code> / <code>dateRangePicker</code></td></tr>
           </tbody>
         </table>
       </div>
+      <p class="fn"><strong>Excluded (not the app's own violation):</strong> (1) the vendored <code>zgui-core</code> lib, <code>vendor/</code>, <code>node_modules</code>, bundles, <code>dist</code>; (2) the shared <strong>zpwr-clip-engine</strong> clip UI (<code>clip-*</code> selects), which is embedded — sometimes inline in the host's own <code>index.html</code> — in traderview / zemail / ztranslator / zstation, so it is <em>one</em> shared-component fix, not per-app; (3) embedded <strong>zpdf-core</strong> viewer subtrees (<code>/zpdf/</code>); (4) comment lines and documented ZGui fallbacks. The JS <code>alert/confirm/prompt</code> metric is also excluded — apps route those through a <code>ZGui.modal.prompt</code>-delegating helper.</p>
 
       <hr class="section-rule">
 
       <h2 class="tutorial-title"><span class="step-hash">#</span>Per-app widget audit</h2>
-      <p class="legend">Counts are native widget elements in the app's own frontend. <span class="ok">clean</span> = 0 native · <span class="fwd">minor</span> = 1&ndash;10 · <span class="native">heavy</span> = &gt;10. "ZGui calls" counts distinct <code>ZGui.&lt;component&gt;()</code> invocations (excluding chrome like colorscheme / powerline / tmux / appShell) as a rough adoption signal.</p>
+      <p class="legend"><span class="ok">clean</span> = 0 app-owned native · <span class="fwd">minor</span> = 1&ndash;10 · <span class="native">heavy</span> = &gt;10. "ZGui calls" counts distinct <code>ZGui.&lt;component&gt;()</code> invocations (excluding chrome) as a rough adoption signal.</p>
       <div class="table-scroll">
         <table class="arch-table">
           <thead>
-            <tr><th>App</th><th>&lt;select&gt;</th><th>range</th><th>color</th><th>date/time</th><th>native modal</th><th>ZGui calls</th><th>Verdict</th></tr>
+            <tr><th>App</th><th>&lt;select&gt;</th><th>range</th><th>color</th><th>date/time</th><th>total</th><th>ZGui calls</th><th>Verdict</th></tr>
           </thead>
           <tbody>
-            <tr><td class="appcell">traderview</td><td class="n">574</td><td class="n">3</td><td class="n">4</td><td class="n">221</td><td class="n">0</td><td class="n">14</td><td class="c"><span class="native">heavy</span></td></tr>
-            <tr><td class="appcell">Audio-Haxor</td><td class="n">65</td><td class="n">63</td><td class="n">17</td><td class="n">0</td><td class="n">0</td><td class="n">14</td><td class="c"><span class="native">heavy</span></td></tr>
-            <tr><td class="appcell">ztranslator</td><td class="n">32</td><td class="n">2</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">36</td><td class="c"><span class="native">heavy</span></td></tr>
-            <tr><td class="appcell">zemail</td><td class="n">11</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">196</td><td class="c"><span class="fwd">minor</span></td></tr>
-            <tr><td class="appcell">zcite</td><td class="n">7</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">68</td><td class="c"><span class="fwd">minor</span></td></tr>
-            <tr><td class="appcell">zstation</td><td class="n">7</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">66</td><td class="c"><span class="fwd">minor</span></td></tr>
-            <tr><td class="appcell">zpdf</td><td class="n">6</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">118</td><td class="c"><span class="fwd">minor</span></td></tr>
-            <tr><td class="appcell">zftp</td><td class="n">6</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">214</td><td class="c"><span class="fwd">minor</span></td></tr>
-            <tr><td class="appcell">zreq</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">59</td><td class="c"><span class="fwd">minor</span></td></tr>
-            <tr><td class="appcell">zgo</td><td class="n">2</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">96</td><td class="c"><span class="fwd">minor</span></td></tr>
-            <tr><td class="appcell">ztunnel</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">59</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">traderview</td><td class="n">565</td><td class="n">3</td><td class="n">4</td><td class="n">219</td><td class="n">791</td><td class="n">14</td><td class="c"><span class="native">heavy</span></td></tr>
+            <tr><td class="appcell">Audio-Haxor</td><td class="n">54</td><td class="n">63</td><td class="n">17</td><td class="n">0</td><td class="n">134</td><td class="n">14</td><td class="c"><span class="native">heavy</span></td></tr>
+            <tr><td class="appcell">ztranslator</td><td class="n">25</td><td class="n">2</td><td class="n">0</td><td class="n">0</td><td class="n">27</td><td class="n">36</td><td class="c"><span class="native">heavy</span></td></tr>
+            <tr><td class="appcell">zftp</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">3</td><td class="n">214</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zemail</td><td class="n">1</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">3</td><td class="n">196</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zpdf</td><td class="n">1</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">2</td><td class="n">118</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zreq</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">59</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zstation</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">66</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">ztunnel</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n">59</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zcite</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">68</td><td class="c"><span class="ok">clean</span></td></tr>
+            <tr><td class="appcell">zgo</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">96</td><td class="c"><span class="ok">clean</span></td></tr>
             <tr><td class="appcell">zoffice</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">73</td><td class="c"><span class="ok">clean</span></td></tr>
             <tr><td class="appcell">zthrottle</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">114</td><td class="c"><span class="ok">clean</span></td></tr>
             <tr><td class="appcell">zcontainer</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">605</td><td class="c"><span class="ok">clean</span></td></tr>
@@ -314,17 +314,18 @@
           </tbody>
         </table>
       </div>
-      <p class="fn"><strong>zterminal</strong> and the <strong>JUCE plugins</strong> (zpwr-daw/synth/fx/midi-fx) are excluded: zterminal ships no webview frontend (native GPU terminal) and the JUCE plugins have no <code>window.ZGui</code> surface at all, so a native-vs-ZGui widget audit does not apply.</p>
+      <p class="fn"><strong>zterminal</strong> (native GPU terminal, no webview) and the <strong>JUCE plugins</strong> (no <code>window.ZGui</code>) are out of scope for a native-vs-ZGui widget audit.</p>
 
       <hr class="section-rule">
 
-      <h2 class="tutorial-title"><span class="step-hash">*</span>Findings</h2>
+      <h2 class="tutorial-title"><span class="step-hash">*</span>Findings &amp; fix targets</h2>
       <ul class="note-list">
-        <li><strong>traderview is the primary migration target.</strong> 574 native <code>&lt;select&gt;</code> across 404 files plus 221 native date/time inputs, against only ~14 <code>ZGui.*</code> component calls — its forms (setup wizard, currencies, business-context, clip presets) are almost entirely native. Highest payoff: route selects through <code>ZGui.dropdownMenu</code> and dates through <code>ZGui.datePicker</code>.</li>
-        <li><strong>Audio-Haxor is the second offender</strong> — 63 native <code>range</code> sliders (volume faders) + 17 <code>color</code> inputs + 65 selects. The faders should be <code>ZGui.dbFader</code> / <code>slider</code> and the colour inputs <code>ZGui.colorPicker</code>, both already used elsewhere in the fleet.</li>
-        <li><strong>Four apps are already fully clean</strong> (0 native widgets, all ZGui): <code>zoffice</code>, <code>zthrottle</code>, <code>zcontainer</code>, <code>zphoto</code>. <code>zcontainer</code> (605 ZGui calls) and <code>zthrottle</code> (114) are the reference implementations for how the rest should look.</li>
-        <li><strong>The rest are minor</strong> — a handful of native <code>&lt;select&gt;</code> / one-off colour pickers each (2&ndash;13 elements), a bounded cleanup. <code>zemail</code> (196 ZGui calls) and <code>zftp</code> (214) are near-clean already.</li>
-        <li><strong>No native <code>&lt;dialog&gt;</code> anywhere</strong> — modals are uniformly <code>ZGui.modal</code> across the fleet, and the <code>alert/confirm/prompt</code> calls all route through a <code>ZGui.modal.prompt</code>-delegating helper (which is why that metric was excluded rather than counted as a violation).</li>
+        <li><strong>Shared first: zpwr-clip-engine.</strong> Its clip UI hand-rolls native <code>&lt;select&gt;</code> (clip-div / preset / key / scale / swing) and is embedded across traderview / zemail / ztranslator / zstation. Migrating it to <code>ZGui.dropdownMenu</code> once fixes every embedder — highest leverage.</li>
+        <li><strong>traderview</strong> is the biggest app-owned offender: 565 native <code>&lt;select&gt;</code> + 219 date inputs (setup wizard, currencies, business-context) against ~14 <code>ZGui.*</code> calls. Route selects through <code>ZGui.dropdownMenu</code>, dates through <code>ZGui.datePicker</code>.</li>
+        <li><strong>Audio-Haxor</strong>: 63 native <code>range</code> faders + 17 <code>color</code> + 54 selects → <code>ZGui.dbFader</code> / <code>slider</code> / <code>colorPicker</code> / <code>dropdownMenu</code>.</li>
+        <li><strong>ztranslator</strong>: 25 app-owned <code>mtx-*</code> routing <code>&lt;select&gt;</code> in <code>ztranslator_view.js</code> → <code>ZGui.dropdownMenu</code>. The only non-heavyweight app with a real backlog.</li>
+        <li><strong>Stragglers</strong> (1&ndash;3 each): zftp, zemail, zpdf, zreq, zstation, ztunnel — a handful of native selects / range / colour inputs, a bounded cleanup.</li>
+        <li><strong>Already clean (0 app-owned native):</strong> zcite, zgo, zoffice, zthrottle, zcontainer, zphoto — the reference implementations.</li>
       </ul>
   </main>
   </div>
