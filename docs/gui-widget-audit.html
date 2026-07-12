@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="MenkeTechnologies — GUI Widget Audit. Which apps hand-roll native browser widgets (select, range, color, date, dialog) instead of the shared zgui-core ZGui.* components. Verified per app by grep at origin/main.">
+  <title>MenkeTechnologies — GUI Widget Audit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hud-static.css">
+  <style>
+
+    .tutorial-main { max-width: 80rem; padding: 1.5rem 1.5rem 4rem; margin: 0 auto; }
+    .tutorial-header {
+      border-bottom: 1px solid var(--border); padding: 1.2rem 1.5rem;
+      background: linear-gradient(180deg, #070714 0%, #0d0d22 60%, var(--bg-secondary) 100%);
+    }
+    .tutorial-header-inner {
+      max-width: 80rem; margin: 0 auto;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .tutorial-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .docs-build-line {
+      margin: 0.35rem 0 0; font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px; color: var(--text-dim); letter-spacing: 0.03em;
+      max-width: 52rem; opacity: 0.8;
+    }
+    /* Color-scheme switcher strip (drives hud-theme.js) */
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem; position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 80rem; margin: 0 auto;
+      display: flex; align-items: center; gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto; font-family: 'Orbitron', sans-serif;
+      font-size: 9px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--accent); text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto; display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .tutorial-brand {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1rem, 2.4vw, 1.5rem); font-weight: 900;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      background: linear-gradient(90deg, var(--cyan), #fff, var(--accent), var(--cyan));
+      background-size: 300% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px var(--cyan-glow));
+      margin: 0 0 0.4rem;
+    }
+    .tutorial-crumbs {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px; color: var(--text-dim); letter-spacing: 0.04em;
+    }
+    .tutorial-crumbs a { color: var(--cyan); text-decoration: none; }
+    .tutorial-crumbs a:hover { color: var(--accent-light); text-shadow: 0 0 6px var(--cyan-glow); }
+    .tutorial-crumbs .sep { color: var(--text-muted); margin: 0 6px; }
+    .tutorial-crumbs .current { color: var(--accent); }
+    .tutorial-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin: 0.6rem 0 0.4rem;
+    }
+    .tutorial-title .step-hash { color: var(--cyan); margin-right: 0.4rem; }
+
+    .stat-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 1rem 0 1.5rem; }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--cyan); border-radius: 2px;
+      padding: 10px 16px; box-shadow: 0 0 12px var(--cyan-dim); min-width: 7rem;
+    }
+    .stat-card .n {
+      font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900;
+      color: var(--cyan); letter-spacing: 1.5px;
+    }
+    .stat-card .l {
+      font-size: 9.5px; letter-spacing: 1.5px; color: var(--text-muted);
+      text-transform: uppercase; margin-top: 2px;
+    }
+    .stat-card.conf-high { border-color: var(--green); box-shadow: 0 0 12px color-mix(in srgb, var(--green) 35%, transparent); }
+    .stat-card.conf-high .n { color: var(--green); }
+    .stat-card.conf-med { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+    .stat-card.conf-med .n { color: var(--accent); }
+    .stat-card.conf-low { border-color: var(--magenta); box-shadow: 0 0 12px var(--magenta-glow); }
+    .stat-card.conf-low .n { color: var(--magenta); }
+
+    .tutorial-section {
+      margin: 1.6rem 0; padding: 1rem 1.2rem 1.2rem; border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px;
+      scroll-margin-top: 1rem;
+    }
+    .tutorial-section h2 {
+      font-family: 'Orbitron', sans-serif; font-size: 15px; color: var(--cyan);
+      letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 0.6rem;
+    }
+    .tutorial-section > p {
+      color: var(--text); font-size: 13px; line-height: 1.55;
+    }
+    .tutorial-section code {
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      background: var(--bg-secondary); color: var(--accent-light);
+      padding: 0 4px; border-radius: 2px; font-size: 0.92em;
+    }
+    .tutorial-section a { color: var(--cyan); text-decoration: none; }
+    .tutorial-section a:hover { color: var(--accent-light); text-shadow: 0 0 6px var(--cyan-glow); }
+    .star { color: #ffd700; filter: drop-shadow(0 0 4px rgba(255,215,0,.6)); }
+
+    .conf-legend { margin: 0.4rem 0 0; padding-left: 1.1rem; }
+    .conf-legend li { color: var(--text-dim); font-size: 12.5px; line-height: 1.55; margin: 0.15rem 0; }
+
+    .toc-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      gap: 0.55rem; margin: 0.5rem 0 0;
+    }
+    .toc-card {
+      display: flex; align-items: center; gap: 0.55rem;
+      border: 1px solid var(--border); border-left: 2px solid var(--accent);
+      padding: 0.5rem 0.7rem;
+      background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
+      border-radius: 2px; text-decoration: none;
+    }
+    .toc-card:hover { border-left-color: var(--cyan); background: var(--bg-hover); }
+    .toc-n {
+      flex: 0 0 auto; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 900;
+      color: var(--cyan); min-width: 1.6rem; text-align: right;
+    }
+    .toc-t { font-size: 11.5px; color: var(--text-dim); line-height: 1.35; }
+    .toc-card:hover .toc-t { color: var(--text); }
+
+    .sub-head {
+      font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--magenta);
+      letter-spacing: 1px; text-transform: uppercase;
+      margin: 1.1rem 0 0.5rem; padding-bottom: 0.3rem;
+      border-bottom: 1px dashed var(--border);
+    }
+    .near-miss { margin: 0.4rem 0 0.6rem; padding-left: 1.1rem; }
+    .near-miss li { color: var(--text-dim); font-size: 12.5px; line-height: 1.55; margin: 0.2rem 0; }
+
+    /* Invention card */
+    .inv {
+      border: 1px solid var(--border); border-left: 3px solid var(--text-muted);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      border-radius: 2px; padding: 0.6rem 0.85rem; margin: 0.55rem 0;
+      scroll-margin-top: 1rem;
+    }
+    .inv.conf-high { border-left-color: var(--green); }
+    .inv.conf-med  { border-left-color: var(--accent); }
+    .inv.conf-low  { border-left-color: var(--magenta); }
+    .inv-head { display: flex; align-items: baseline; gap: 0.6rem; }
+    .inv-num {
+      flex: 0 0 auto; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 900;
+      color: var(--cyan); min-width: 2.4rem;
+    }
+    .inv-title {
+      flex: 1 1 auto; font-family: 'Orbitron', sans-serif; font-size: 12.5px; font-weight: 700;
+      letter-spacing: 0.5px; color: var(--text); margin: 0; line-height: 1.4;
+    }
+    .inv-conf {
+      flex: 0 0 auto; font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 1.5px; padding: 2px 7px; border-radius: 2px; text-transform: uppercase;
+      align-self: flex-start;
+    }
+    .inv-conf.c-high { color: var(--green); border: 1px solid var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); }
+    .inv-conf.c-med  { color: var(--accent); border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+    .inv-conf.c-low  { color: var(--magenta); border: 1px solid var(--magenta); background: color-mix(in srgb, var(--magenta) 12%, transparent); }
+    .inv-body {
+      margin: 0.4rem 0 0; padding-left: 3rem; font-size: 12.5px; line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .inv-body strong { color: var(--text); font-weight: 600; }
+    .inv-body em { color: var(--cyan); font-style: normal; letter-spacing: 0.3px; }
+    @media (max-width: 640px) {
+      .inv-body { padding-left: 0; }
+      .inv-head { flex-wrap: wrap; }
+    }
+
+    .inv-fig { display:block; width:100%; max-width:1000px; height:auto; margin:1.2rem auto 1.6rem; border:1px solid var(--border); border-radius:3px; }
+
+    /* ── GUI feature matrix content: subtitle + stat grid + tables ── */
+    .tutorial-subtitle { color: var(--text); font-size: 13px; line-height: 1.65; margin: 0.2rem 0 1rem; max-width: 62rem; }
+    .tutorial-subtitle code, .arch-table code, .fn code, .note-list code {
+      font-family: 'Share Tech Mono', ui-monospace, monospace; background: var(--bg-secondary);
+      color: var(--accent-light); padding: 0 4px; border-radius: 2px; font-size: 0.92em;
+    }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.5rem; margin: 1rem 0 0.5rem; }
+    .stat-card {
+      border: 1px solid var(--border); border-left: 2px solid var(--cyan); padding: 0.65rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent); border-radius: 2px; box-shadow: none; min-width: 0;
+    }
+    .stat-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-val.cyan { color: var(--cyan); }
+    .stat-val.green { color: var(--green); }
+    .stat-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-top: 0.2rem; }
+    .table-scroll { overflow-x: auto; margin: 0.6rem 0; }
+    .arch-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .arch-table th {
+      background: var(--bg-secondary); color: var(--cyan); font-family: 'Orbitron', sans-serif;
+      font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: left;
+      padding: 6px 10px; border: 1px solid var(--border); white-space: nowrap;
+    }
+    .arch-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .arch-table td.c { text-align: center; white-space: nowrap; }
+    .arch-table .appcell { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--cyan); white-space: nowrap; }
+    .arch-table .ok { color: var(--green); font-weight: 700; }
+    .arch-table .no { color: var(--text-muted); font-weight: 700; }
+    .arch-table .native { color: #ffb020; font-weight: 700; font-size: 10px; letter-spacing: 0.5px; }
+    .arch-table .fwd { color: var(--accent); font-weight: 700; font-size: 11px; }
+    .arch-table .n { font-family: 'Share Tech Mono', monospace; color: var(--text); text-align: right; }
+    .legend { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin: 0.3rem 0 0; line-height: 1.7; }
+    .legend .ok { color: var(--green); } .legend .native { color: #ffb020; } .legend .no { color: var(--text-muted); } .legend .fwd { color: var(--accent); }
+    .fn { font-size: 12px; color: var(--text-dim); line-height: 1.6; margin: 0.7rem 0 0; }
+    .fn sup { color: var(--accent); font-weight: 700; }
+    .note-list { margin: 0.4rem 0 0; padding-left: 1.1rem; }
+    .note-list li { color: var(--text-dim); font-size: 13px; line-height: 1.65; margin: 0.35rem 0; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+  <header class="tutorial-header">
+    <div class="tutorial-header-inner">
+      <div>
+        <h1 class="tutorial-brand">// GUI WIDGET AUDIT</h1>
+        <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+          <a href="index.html">Docs</a><span class="sep">/</span>
+          <a href="gui-feature-matrix.html">GUI feature matrix</a><span class="sep">/</span>
+          <span class="current">GUI widget audit</span>
+        </nav>
+        <p class="docs-build-line">Native / hand-rolled widgets vs the shared zgui-core components, per app · verified 2026-07-11 by grep at origin/main · companion to GUI_FEATURE_MATRIX.md and COMPONENTS.md</p>
+      </div>
+      <div class="tutorial-toolbar">
+        <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+        <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+        <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        <a class="btn btn-secondary" href="index.html">Docs</a>
+        <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta/blob/main/INVENTIONS.md" target="_blank" rel="noopener noreferrer">Source</a>
+      </div>
+    </div>
+  </header>
+  <div class="hub-scheme-strip">
+    <div class="hub-scheme-strip-inner">
+      <span class="hud-scheme-label">// Color scheme</span>
+      <div class="scheme-grid" id="hudSchemeGrid"></div>
+    </div>
+  </div>
+  <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>Executive summary</h2>
+      <p class="tutorial-subtitle">The house rule is <strong>GUI-only zgui components</strong>: every app builds its UI from the shared <code>zgui-core</code> library (<code>ZGui.*</code>) — modals, dropdowns, pickers, tables, tooltips — never a hand-rolled or native browser widget. This audit greps each app's own frontend for the native form-control elements that a <code>ZGui.*</code> component already covers, so they read as concrete migration targets, not vibes. Most apps are clean or near-clean; the outliers are <strong>traderview</strong> and <strong>Audio-Haxor</strong>, whose forms lean heavily on native <code>&lt;select&gt;</code> / <code>&lt;input type=range|color&gt;</code>.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">1033</div><div class="stat-label">Native widget elements (all apps)</div></div>
+        <div class="stat-card"><div class="stat-val cyan">714</div><div class="stat-label">Native &lt;select&gt; → ZGui.dropdownMenu</div></div>
+        <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Fully clean apps (0 native)</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Heavy offenders (traderview, Audio-Haxor)</div></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>Detection method</h2>
+      <p class="tutorial-subtitle">Verifiable, not heuristic. For each app's own frontend (<code>frontend/**/*.{js,html}</code>, excluding the vendored <code>lib/zgui-core</code>, <code>vendor/</code>, <code>node_modules</code>, bundles and <code>dist</code>) each native widget element is counted with a fixed grep, and each maps to the <code>ZGui.*</code> component it should be. The JS dialog metric (<code>alert/confirm/prompt</code>) was deliberately <strong>excluded</strong> — apps wrap those in a <code>ZGui.modal.prompt</code>-delegating helper, so counting the calls (or the <code>window.*</code> fallback inside the helper) mislabels correct ZGui usage as a violation.</p>
+      <div class="table-scroll">
+        <table class="arch-table">
+          <thead><tr><th>Native element</th><th>Grep</th><th>ZGui replacement</th></tr></thead>
+          <tbody>
+            <tr><td>native dropdown</td><td><code>&lt;select</code></td><td><code>ZGui.dropdownMenu</code> / <code>combobox</code> / <code>searchSelect</code></td></tr>
+            <tr><td>native slider</td><td><code>type="range"</code></td><td><code>ZGui.slider</code> / <code>dbFader</code> / <code>bipolarSlider</code></td></tr>
+            <tr><td>native colour picker</td><td><code>type="color"</code></td><td><code>ZGui.colorPicker</code></td></tr>
+            <tr><td>native date/time</td><td><code>type="date|time|datetime-local"</code></td><td><code>ZGui.datePicker</code> / <code>timePicker</code> / <code>dateRangePicker</code></td></tr>
+            <tr><td>native modal</td><td><code>&lt;dialog</code> · <code>.showModal(</code></td><td><code>ZGui.modal</code> / <code>drawer</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">#</span>Per-app widget audit</h2>
+      <p class="legend">Counts are native widget elements in the app's own frontend. <span class="ok">clean</span> = 0 native · <span class="fwd">minor</span> = 1&ndash;10 · <span class="native">heavy</span> = &gt;10. "ZGui calls" counts distinct <code>ZGui.&lt;component&gt;()</code> invocations (excluding chrome like colorscheme / powerline / tmux / appShell) as a rough adoption signal.</p>
+      <div class="table-scroll">
+        <table class="arch-table">
+          <thead>
+            <tr><th>App</th><th>&lt;select&gt;</th><th>range</th><th>color</th><th>date/time</th><th>native modal</th><th>ZGui calls</th><th>Verdict</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="appcell">traderview</td><td class="n">574</td><td class="n">3</td><td class="n">4</td><td class="n">221</td><td class="n">0</td><td class="n">14</td><td class="c"><span class="native">heavy</span></td></tr>
+            <tr><td class="appcell">Audio-Haxor</td><td class="n">65</td><td class="n">63</td><td class="n">17</td><td class="n">0</td><td class="n">0</td><td class="n">14</td><td class="c"><span class="native">heavy</span></td></tr>
+            <tr><td class="appcell">ztranslator</td><td class="n">32</td><td class="n">2</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">36</td><td class="c"><span class="native">heavy</span></td></tr>
+            <tr><td class="appcell">zemail</td><td class="n">11</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">196</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zcite</td><td class="n">7</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">68</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zstation</td><td class="n">7</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">66</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zpdf</td><td class="n">6</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">118</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zftp</td><td class="n">6</td><td class="n">1</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">214</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zreq</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">59</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zgo</td><td class="n">2</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">96</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">ztunnel</td><td class="n">0</td><td class="n">1</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">59</td><td class="c"><span class="fwd">minor</span></td></tr>
+            <tr><td class="appcell">zoffice</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">73</td><td class="c"><span class="ok">clean</span></td></tr>
+            <tr><td class="appcell">zthrottle</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">114</td><td class="c"><span class="ok">clean</span></td></tr>
+            <tr><td class="appcell">zcontainer</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">605</td><td class="c"><span class="ok">clean</span></td></tr>
+            <tr><td class="appcell">zphoto</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">29</td><td class="c"><span class="ok">clean</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fn"><strong>zterminal</strong> and the <strong>JUCE plugins</strong> (zpwr-daw/synth/fx/midi-fx) are excluded: zterminal ships no webview frontend (native GPU terminal) and the JUCE plugins have no <code>window.ZGui</code> surface at all, so a native-vs-ZGui widget audit does not apply.</p>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">*</span>Findings</h2>
+      <ul class="note-list">
+        <li><strong>traderview is the primary migration target.</strong> 574 native <code>&lt;select&gt;</code> across 404 files plus 221 native date/time inputs, against only ~14 <code>ZGui.*</code> component calls — its forms (setup wizard, currencies, business-context, clip presets) are almost entirely native. Highest payoff: route selects through <code>ZGui.dropdownMenu</code> and dates through <code>ZGui.datePicker</code>.</li>
+        <li><strong>Audio-Haxor is the second offender</strong> — 63 native <code>range</code> sliders (volume faders) + 17 <code>color</code> inputs + 65 selects. The faders should be <code>ZGui.dbFader</code> / <code>slider</code> and the colour inputs <code>ZGui.colorPicker</code>, both already used elsewhere in the fleet.</li>
+        <li><strong>Four apps are already fully clean</strong> (0 native widgets, all ZGui): <code>zoffice</code>, <code>zthrottle</code>, <code>zcontainer</code>, <code>zphoto</code>. <code>zcontainer</code> (605 ZGui calls) and <code>zthrottle</code> (114) are the reference implementations for how the rest should look.</li>
+        <li><strong>The rest are minor</strong> — a handful of native <code>&lt;select&gt;</code> / one-off colour pickers each (2&ndash;13 elements), a bounded cleanup. <code>zemail</code> (196 ZGui calls) and <code>zftp</code> (214) are near-clean already.</li>
+        <li><strong>No native <code>&lt;dialog&gt;</code> anywhere</strong> — modals are uniformly <code>ZGui.modal</code> across the fleet, and the <code>alert/confirm/prompt</code> calls all route through a <code>ZGui.modal.prompt</code>-delegating helper (which is why that metric was excluded rather than counted as a violation).</li>
+      </ul>
+  </main>
+  </div>
+  <script src="hud-theme.js"></script>
+</body>
+</html>
