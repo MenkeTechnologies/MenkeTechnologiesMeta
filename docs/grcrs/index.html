@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="grcrs — a faithful Rust port of grc (Generic Colouriser 1.13). Two binaries: grc (launcher — matches grc.conf, runs the command, pipes output through grcat) and grcat (colouriser — regexp/colour blocks applied per line). fancy-regex engine, 83 bundled colourfiles, XDG-aware config search, GPL-2.0-or-later.">
+  <title>grcrs — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .flag-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.6rem 0 0.2rem;
+      font-size: 12px;
+    }
+    .flag-table th {
+      background: var(--bg-secondary);
+      color: var(--cyan);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+    }
+    .flag-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: top;
+    }
+    .flag-table td:first-child {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--accent-light);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .flag-table code { color: var(--accent-light); background: var(--bg); padding: 1px 4px; border-radius: 2px; }
+
+    .oneliner {
+      margin: 0.4rem 0;
+      padding: 0.55rem 0.8rem;
+      border-left: 2px solid var(--cyan);
+      background: var(--bg);
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .oneliner .comment { color: var(--text-muted); }
+
+    .ext-tag {
+      display: inline-block;
+      margin-left: 0.4em;
+      padding: 0.05em 0.45em;
+      font-size: 0.62em;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      vertical-align: middle;
+      border: 1px solid var(--accent, currentColor);
+      border-radius: 0.35em;
+      color: var(--accent, currentColor);
+      opacity: 0.85;
+    }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+    }
+    .cat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .cat-card h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 0 0 0.35rem;
+    }
+    .cat-card p {
+      margin: 0;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+
+    .ascii-block {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--cyan);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.6rem 0.9rem;
+      white-space: pre;
+      overflow-x: auto;
+      line-height: 1.35;
+      margin: 0.7rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// GRCRS — GENERIC COLOURISER</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/grcrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/garabik/grc" target="_blank" rel="noopener noreferrer">upstream grc</a>
+          </nav>
+          <p class="docs-build-line">grcrs v1.13.0 &middot; Two binaries (<code>grc</code> launcher + <code>grcat</code> colouriser) &middot; <code>fancy-regex</code> engine &middot; 83 bundled colourfiles &middot; XDG-aware config search &middot; GPL-2.0-or-later</p>
+          <p class="docs-build-line">1,020 production Rust lines &middot; 360 test lines &middot; 31 tests &middot; 2 direct deps (<code>fancy-regex</code>, <code>libc</code>) &middot; faithful port of grc 1.13</p>
+          <!-- prod = src/grcrs.rs (1-381, the grc launcher) + src/grcatrs.rs (1-639, the grcat colouriser) = 1,020; test = grcrs.rs 382-441 (60) + grcatrs.rs 640-755 (116) + tests/cli.rs (184) = 360; tests = 7 + 11 + 13 = 31; deps = fancy-regex 0.14 + libc 0.2 = 2 direct -->
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/grcrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/grcrs/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>GRCRS — PIPE IT IN. MATCH THE PATTERN. PAINT THE STREAM.</h2>
+      <p class="tutorial-subtitle"><strong>A faithful Rust port of grc (Generic Colouriser 1.13).</strong> Run <code>grc &lt;command&gt;</code> and its output comes back colourised. Under the hood, <code>grc</code> joins the command line into a string, scans <code>grc.conf</code> for the first regexp that matches, loads the named colourfile, spawns the command, and pipes its stdout/stderr through <code>grcat</code> — where regexp/colour blocks are applied line by line and emitted as ANSI. Two binaries mirror the original pair: <code>grc</code> the launcher, <code>grcat</code> the colouriser. The regexp engine is <code>fancy-regex</code>; the config grammar, search order, and streaming-colour behaviour match grc 1.13 exactly.</p>
+
+      <section class="tutorial-section">
+        <h2>Quickstart</h2>
+        <p>Install from the Homebrew tap or build from source. The formula installs both binaries plus <code>grc.conf</code> and the colourfiles onto the runtime search path.</p>
+<pre># install (Homebrew tap — brings binaries + grc.conf + colourfiles)
+brew install menketechnologies/menketech/grcrs
+
+# from source (config lives in the vendor/grc submodule)
+git clone --recurse-submodules https://github.com/MenkeTechnologies/grcrs
+cd grcrs &amp;&amp; cargo build --release
+
+# colourise a command (auto-matched against grc.conf)
+grc ping example.com
+grc netstat -tulpn
+grc df -h
+
+# colourise stderr instead of stdout
+grc -e make
+
+# force a specific colourfile, skip grc.conf matching
+grc -c conf.log tail -f /var/log/system.log</pre>
+        <p>Full install + usage live in the <a href="https://github.com/MenkeTechnologies/grcrs#readme">README</a>. The upstream <a href="https://github.com/garabik/grc" target="_blank" rel="noopener noreferrer">grc</a> man page still describes the config grammar this port implements.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Pipeline architecture</h2>
+        <p><code>grc</code> is a thin launcher; <code>grcat</code> does the painting. They talk over a pipe. On a match, the command's output flows into <code>grcat &lt;colourfile&gt;</code>, which reads stdin one line at a time and writes coloured text to stdout.</p>
+        <div class="ascii-block"> grc ping example.com
+       │
+       ▼  join argv → "ping example.com"
+ grc.conf ── first matching regexp ──▶ conf.ping
+       │
+       ▼  spawn command, pipe stdout/stderr
+ grcat conf.ping ── per-line regexp colouring ──▶ tty</div>
+        <p>If no regexp in <code>grc.conf</code> matches, or colour is disabled, the command runs uncoloured with inherited stdio and its exit status is propagated. The wrapper ignores <code>SIGINT</code> so Ctrl-C reaches the wrapped command; <code>grc</code> still reaps the child and returns its exit code. With <code>--pty</code>, the command's stdout is connected to a pseudo-terminal so it emits tty-style output even though it is really being piped (experimental).</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Config search — how files are found</h2>
+        <p>Both binaries resolve config exactly as grc 1.13 does. <code>grc</code> looks for <code>grc.conf</code>; <code>grcat</code> looks for a colourfile by name. XDG variables default to <code>~/.config</code> and <code>~/.local/share</code> when unset. First existing file wins.</p>
+        <table class="flag-table">
+          <thead><tr><th>File</th><th>Searched in (in order)</th></tr></thead>
+          <tbody>
+            <tr><td>grc.conf</td><td><code>/etc</code>, <code>/usr/local/etc</code>, <code>/opt/homebrew/etc</code>, <code>$XDG_CONFIG_HOME/grc</code>, <code>~/.grc</code></td></tr>
+            <tr><td>colourfiles</td><td>(empty prefix), <code>$XDG_DATA_HOME/grc</code>, <code>$XDG_CONFIG_HOME/grc</code>, <code>~/.grc</code>, <code>/usr/local/share/grc</code>, <code>/usr/share/grc</code>, <code>/opt/homebrew/share/grc</code></td></tr>
+          </tbody>
+        </table>
+        <p>The colourfile path includes an empty prefix, so an absolute or relative name passed to <code>-c</code> (e.g. <code>-c ./my.conf</code>) is honoured as-is before any search directory is consulted.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Options — the <code>grc</code> launcher</h2>
+        <p>Option scanning stops at the first non-option argument (the command). Short options cluster (<code>-se</code>); <code>--config</code> and <code>--colour</code> take a value inline (<code>--config=name</code>) or as the next argument.</p>
+        <table class="flag-table">
+          <thead><tr><th>Option</th><th>Argument</th><th>Behavior</th></tr></thead>
+          <tbody>
+            <tr><td>-e, --stderr</td><td>&nbsp;</td><td>Redirect stderr through grcat. When set, stdout is not auto-redirected.</td></tr>
+            <tr><td>-s, --stdout</td><td>&nbsp;</td><td>Redirect stdout, even if <code>-e</code> is also selected.</td></tr>
+            <tr><td>-c, --config</td><td>NAME</td><td>Use NAME as the grcat colourfile, skipping <code>grc.conf</code> matching.</td></tr>
+            <tr><td>--colour</td><td>on|off|auto</td><td>Force colour on, off, or auto (on when stdout is a tty). Default: auto.</td></tr>
+            <tr><td>--pty</td><td>&nbsp;</td><td>Run the command in a pseudo-terminal (experimental).</td></tr>
+          </tbody>
+        </table>
+        <p><code>grcat</code> takes exactly one argument — the colourfile name — and reads stdin. It is not meant to be called directly (<code>grc</code> pipes into it), but <code>some-command | grcat conf.log</code> works.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Colourfile grammar</h2>
+        <p>A colourfile is a sequence of blocks. A block is a run of <code>keyword=value</code> lines; a blank line, a <code>#</code> comment, or any line whose first character is not an ASCII letter ends the block. Keyword case is folded, and <code>colors</code> / <code>color</code> / <code>colour</code> all normalise to <code>colours</code>.</p>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>regexp</h4><p>The pattern matched against each input line. Python <code>\&lt;</code>/<code>\&gt;</code> are translated to literal <code>&lt;</code>/<code>&gt;</code> so grc configs behave as authored under <code>fancy-regex</code>.</p></div>
+          <div class="cat-card"><h4>colours</h4><p>Comma-separated list, one entry per capture group. Space-joined tokens compose (<code>bold red</code>). Groups beyond the list reuse colour 0.</p></div>
+          <div class="cat-card"><h4>count</h4><p>Loop directive: <code>more</code> (default, keep matching), <code>once</code>, <code>stop</code>, <code>block</code>, <code>unblock</code>, <code>previous</code>.</p></div>
+          <div class="cat-card"><h4>command</h4><p>Shell command run via <code>sh -c</code> on a match — for side effects (notifications, logging).</p></div>
+          <div class="cat-card"><h4>skip</h4><p><code>yes</code> / <code>1</code> / <code>true</code> suppresses the matched line from output entirely.</p></div>
+          <div class="cat-card"><h4>replace</h4><p>Replacement string applied to the line. Python <code>\N</code> backrefs are converted to <code>${N}</code>; literal <code>$</code> is escaped.</p></div>
+          <div class="cat-card"><h4>concat</h4><p>Append the matched line to a file (create-and-append).</p></div>
+          <div class="cat-card"><h4>trend <span class="ext-tag">grcrs</span></h4><p>Comma-separated <code>direction:colour</code> pairs (<code>rising</code>, <code>falling</code>, <code>steady</code>) that recolour a numeric group by the sign of its change across the stream. Not in upstream grc.</p></div>
+          <div class="cat-card"><h4>key <span class="ext-tag">grcrs</span></h4><p>Capture group whose text keys the per-key last-value map used by <code>trend</code>.</p></div>
+          <div class="cat-card"><h4>metric <span class="ext-tag">grcrs</span></h4><p>Capture group whose text is parsed as the number tracked by <code>trend</code>.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Streaming trend colour <span class="ext-tag">grcrs extension</span></h2>
+        <p>The <code>trend</code> keyword colours a numeric capture group by the sign of <code>value − last[key]</code> rather than by which regexp matched, so the colour encodes the value's motion over the stream — a counter climbing, an RTT rising, free memory falling. <code>grcat</code> keeps a per-key last-seen value; each line, the <code>metric</code> group is coloured <code>rising</code>, <code>falling</code>, or <code>steady</code> depending on how it compares to the previous value for the same <code>key</code>. The first observation of a key, and any repeated equal value, count as <code>steady</code>; a group that does not parse as a number keeps its <code>colours</code> entry. This is not part of upstream grc 1.13 — colourfiles without <code>trend</code> are unaffected.</p>
+<pre><span class="comment"># colour each name's number green when it rises, red when it falls</span>
+regexp=(\w+)\s+(\d+)
+colours=default,default
+trend=rising:green,falling:red,steady:dark
+key=1
+metric=2</pre>
+        <p>Group 1 (the name) keys the map and group 2 (the number) is recoloured by its trend under that key, so each name's series climbs and falls independently.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Colour tokens</h2>
+        <p>Colour tokens resolve through a static ANSI table, or a <code>"..."</code> quoted literal that is unescaped like a Python string (octal <code>\033</code>, hex <code>\xNN</code>, and the common single-char escapes such as <code>\n</code>, <code>\t</code>, <code>\a</code>).</p>
+        <table class="flag-table">
+          <thead><tr><th>Group</th><th>Tokens</th></tr></thead>
+          <tbody>
+            <tr><td>Attributes</td><td><code>none</code>, <code>default</code>, <code>bold</code>, <code>underline</code>, <code>blink</code>, <code>reverse</code>, <code>concealed</code>, <code>dark</code>, <code>italic</code>, <code>rapidblink</code>, <code>strikethrough</code>, <code>beep</code></td></tr>
+            <tr><td>Foreground</td><td><code>black</code>, <code>red</code>, <code>green</code>, <code>yellow</code>, <code>blue</code>, <code>magenta</code>, <code>cyan</code>, <code>white</code></td></tr>
+            <tr><td>Background</td><td><code>on_black</code> … <code>on_white</code></td></tr>
+            <tr><td>Bright (aixterm)</td><td><code>bright_black</code> … <code>bright_white</code>, <code>on_bright_black</code> … <code>on_bright_white</code> (emitted with a standard-code prefix for graceful fallback)</td></tr>
+            <tr><td>Streaming</td><td><code>previous</code> (reuse prior line's colour), <code>unchanged</code> (leave the span untouched)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Loop directives &amp; streaming colour</h2>
+        <p>The <code>count</code> keyword controls how a pattern iterates within one line, and some directives carry state across lines:</p>
+        <ul>
+          <li><strong><code>more</code></strong> (default) — after a match, continue scanning the rest of the line for further matches of the same pattern.</li>
+          <li><strong><code>once</code></strong> — colour the first match, then stop scanning this pattern on this line.</li>
+          <li><strong><code>stop</code></strong> — colour the match, then stop processing all remaining patterns for this line.</li>
+          <li><strong><code>block</code> / <code>unblock</code></strong> — enter/leave a mode where every subsequent line is painted in a single block colour until <code>unblock</code> matches.</li>
+          <li><strong><code>previous</code></strong> — resolve to whatever <code>count</code> the previous match used.</li>
+        </ul>
+        <p>The <code>previous</code> colour token and the first/last-char bookkeeping let a colour carry from one line into the next, so multi-line constructs (e.g. an indented continuation) inherit the colour of the line that opened them — the same behaviour as grcat.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Examples</h2>
+<pre><span class="comment"># auto-matched against grc.conf</span>
+grc ping example.com
+grc ifconfig
+grc netstat -tulpn
+grc make
+
+<span class="comment"># colourise stderr; when -e is set, stdout is not auto-redirected</span>
+grc -e ./configure
+
+<span class="comment"># colourise both streams</span>
+grc -s -e ./build.sh
+
+<span class="comment"># force a specific colourfile (skip grc.conf matching)</span>
+grc -c conf.df df -h
+grc --config=conf.log tail -f /var/log/system.log
+
+<span class="comment"># control colour explicitly</span>
+grc --colour=on  ls -l      <span class="comment"># force colour even when piped</span>
+grc --colour=off netstat    <span class="comment"># disable colour</span>
+
+<span class="comment"># experimental: run under a pty so the command emits tty-style output</span>
+grc --pty top
+
+<span class="comment"># grcat directly (grc normally does this for you)</span>
+some-command | grcat conf.log</pre>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Bundled configs</h2>
+        <p>The <code>vendor/grc</code> submodule ships <strong>83 colourfiles</strong> (<code>conf.ant</code> … <code>conf.yaml</code>) plus a <code>grc.conf</code> mapping commands to them — everything from <code>ping</code>, <code>netstat</code>, <code>ifconfig</code>, <code>df</code>, and <code>du</code> to <code>docker</code>, <code>ip</code>, <code>iptables</code>, <code>mount</code>, and log formats. The Homebrew formula installs <code>grc.conf</code> to <code>$(brew --prefix)/etc</code> and the colourfiles to <code>$(brew --prefix)/share/grc</code>. From source, place them on any directory in the search paths above.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Development &amp; CI</h2>
+        <p>The repository ships a GitHub Actions workflow at <code>.github/workflows/ci.yml</code> that runs <code>cargo fmt --check</code>, <code>cargo clippy --all-targets -D warnings</code>, <code>cargo doc -D warnings</code>, and a build + <code>cargo test</code> matrix on <code>ubuntu-latest</code> and <code>macos-latest</code>, plus a binary smoke test — on every push to <code>main</code> and every pull request. <strong>31 tests</strong> back the port: 7 launcher unit tests in <code>src/grcrs.rs</code> (option parsing, regexp translation, config matching), 11 colouriser unit tests in <code>src/grcatrs.rs</code> (colour table, unescape, backref conversion, config parsing), and 13 end-to-end tests in <code>tests/cli.rs</code> that spawn the built binaries and assert on the coloured output. A separate <code>release.yml</code> builds release artifacts.</p>
+        <p>For source layout, dependency rationale, and the port mapping from grc's Python to Rust, see the <a href="report.html">engineering report</a>.</p>
+      </section>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js" defer></script>
+</body>
+</html>

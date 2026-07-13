@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="grcrs — Engineering report. Faithful Rust port of grc (Generic Colouriser 1.13): two binaries (grc launcher + grcat colouriser), 1,020 production Rust lines + 360 test lines, 31 tests, v1.13.0, 6 commits, 2 direct deps (fancy-regex, libc), 83 bundled colourfiles, GPL-2.0-or-later.">
+  <title>grcrs &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+    .bar-pct { position:absolute;right:6px;top:0;line-height:18px;font-size:10px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;font-family:'Orbitron',sans-serif; }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .mapping-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .mapping-card { border:1px solid var(--border);border-left:3px solid var(--magenta);background:var(--bg-card);padding:0.6rem 0.9rem;border-radius:2px; }
+    .mapping-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--magenta);margin:0 0 0.3rem; }
+    .mapping-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.5; }
+    .mapping-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+    .feature-card li code { font-size:10px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// GRCRS &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Grcrs Docs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/grcrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/garabik/grc" target="_blank" rel="noopener noreferrer">upstream grc</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            Faithful Rust port of grc (Generic Colouriser 1.13) &middot; v1.13.0 &middot; two binaries (<code>grc</code> + <code>grcat</code>) &middot; <code>fancy-regex</code> engine &middot; XDG-aware config search &middot; 83 bundled colourfiles
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="tutorial-main">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 1: EXECUTIVE SUMMARY           -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">grcrs is a faithful Rust port of <a href="https://github.com/garabik/grc" target="_blank" rel="noopener noreferrer">grc</a> (Generic Colouriser 1.13). It ships the same two binaries as the original: <code>grc</code>, the launcher that matches a command line against <code>grc.conf</code> and pipes the command's output through the colouriser; and <code>grcat</code>, the colouriser that applies regexp/colour blocks to stdin line by line. The port keeps grc's config grammar (<code>regexp</code> / <code>colours</code> / <code>count</code> / <code>command</code> / <code>skip</code> / <code>replace</code> / <code>concat</code>) — plus a grcrs-only <code>trend</code> / <code>key</code> / <code>metric</code> extension that colours a numeric group by its delta across the stream — its loop directives (<code>more</code>, <code>once</code>, <code>stop</code>, <code>block</code>, <code>unblock</code>, <code>previous</code>), its XDG-aware search order, and its cross-line streaming-colour behaviour. Python-<code>re</code> idioms are translated where the dialects differ: <code>\&lt;</code>/<code>\&gt;</code> become literal angle brackets, and <code>\N</code> replacement backrefs become <code>${N}</code>. <strong>1,020 production Rust lines + 360 test lines back the surface, with 31 tests (18 unit + 13 end-to-end) all green in CI</strong> on Linux and macOS.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">1,020</div><div class="stat-label">Production Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val accent">31</div><div class="stat-label">Tests (Verified Passing)</div></div>
+        <div class="stat-card"><div class="stat-val green">1.13.0</div><div class="stat-label">Version (tracks grc 1.13)</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Binaries (<code>grc</code>+<code>grcat</code>)</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Direct Dependencies</div></div>
+        <div class="stat-card"><div class="stat-val">83</div><div class="stat-label">Bundled Colourfiles</div></div>
+        <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Git Commits</div></div>
+      </div>
+
+      <div style="margin:1.2rem 0;">
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution &mdash; 1,380 Rust lines total</p>
+        <div class="bar-wrap" style="height:26px;">
+          <div class="bar-fill cyan" style="width:73.9%;"></div>
+          <span class="bar-pct" style="font-size:12px;">1,020 production / 360 test &middot; 26.1% test code</span>
+        </div>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Production source: <code>src/grcrs.rs</code> lines 1&ndash;381 (the <code>grc</code> launcher) + <code>src/grcatrs.rs</code> lines 1&ndash;639 (the <code>grcat</code> colouriser). Test source: inline <code>#[cfg(test)]</code> modules in <code>src/grcrs.rs</code> (382&ndash;441) and <code>src/grcatrs.rs</code> (640&ndash;755) + the integration suite in <code>tests/cli.rs</code> (184 lines).</p>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 2: SOURCE LAYOUT               -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SOURCE LAYOUT</h2>
+      <p class="tutorial-subtitle">Two Cargo binary targets, one integration test crate. The launcher is a small option-parser + process-orchestrator; the colouriser holds the config parser, the ANSI colour table, and the per-line painting engine.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th>File</th>
+            <th class="num">Lines</th>
+            <th class="num">Tests</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>src/grcrs.rs (prod)</td><td class="num">381</td><td class="num">&mdash;</td><td><code>grc</code> launcher &mdash; getopt parser, <code>grc.conf</code> matching, stdout/stderr redirection, command spawn, grcat piping, pty mode, SIGINT handling</td></tr>
+          <tr><td>src/grcrs.rs (tests)</td><td class="num">60</td><td class="num">7</td><td>Option parsing, regexp translation</td></tr>
+          <tr><td>src/grcatrs.rs (prod)</td><td class="num">639</td><td class="num">&mdash;</td><td><code>grcat</code> colouriser &mdash; ANSI colour table, Python-string unescape, config-block parser, backref conversion, per-line matching + painting engine with cross-line state</td></tr>
+          <tr><td>src/grcatrs.rs (tests)</td><td class="num">116</td><td class="num">11</td><td>Colour table, unescape, config parsing, backrefs</td></tr>
+          <tr><td>tests/cli.rs</td><td class="num">184</td><td class="num">13</td><td>End-to-end &mdash; spawn the built binaries, pipe stdin, assert on the coloured output and exit status</td></tr>
+          <tr class="total-row"><td>TOTAL Rust</td><td class="num">1,380</td><td class="num">31</td><td>All <code>cargo test</code> functions pass on Linux + macOS in CI</td></tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">
+        Runtime config is not Rust: the <code>vendor/grc</code> submodule provides <code>grc.conf</code> and 83 <code>colourfiles/conf.*</code> files, installed to the search paths by the Homebrew formula.
+      </p>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 3: DEPENDENCIES                -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">$</span>DEPENDENCIES</h2>
+      <p class="tutorial-subtitle">Two direct dependencies. The lock file resolves to 9 crates total. Selection criteria: the regexp engine has to support the lookahead/lookbehind that grc colourfiles use, and the process/pty/signal plumbing needs raw libc.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr><th>Crate</th><th>Version</th><th>Role</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>fancy-regex</td><td>0.14</td><td>Regexp engine</td><td>Backtracking engine with lookahead/lookbehind and backreferences &mdash; grc colourfiles use constructs the standard <code>regex</code> crate rejects. Drives both <code>grc.conf</code> matching and <code>grcat</code> line colouring.</td></tr>
+          <tr><td>libc</td><td>0.2</td><td>System calls</td><td><code>isatty</code> (colour=auto), <code>openpty</code> (<code>--pty</code>), <code>signal</code>/<code>SIG_IGN</code> (forward Ctrl-C to the child), <code>dup</code> (stderr routing), <code>strerror</code> (grc-format error strings).</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 4: CONFIG RESOLUTION           -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>CONFIG RESOLUTION</h2>
+      <p class="tutorial-subtitle">Both binaries resolve config the way grc 1.13 does. <code>grc</code> finds <code>grc.conf</code> and reads regexp/colourfile pairs; <code>grcat</code> resolves a colourfile by name against a search path. XDG variables default to <code>~/.config</code> and <code>~/.local/share</code> when unset; the first existing, non-directory file wins.</p>
+
+      <div class="mapping-grid">
+        <div class="mapping-card"><h4>grc.conf search</h4><p><code>/etc</code> &rarr; <code>/usr/local/etc</code> &rarr; <code>/opt/homebrew/etc</code> &rarr; <code>$XDG_CONFIG_HOME/grc</code> &rarr; <code>~/.grc</code>. Each line is a regexp; the <em>next</em> line names the colourfile.</p></div>
+        <div class="mapping-card"><h4>colourfile search</h4><p>Empty prefix (honour absolute/relative <code>-c</code> names as-is) &rarr; <code>$XDG_DATA_HOME/grc</code> &rarr; <code>$XDG_CONFIG_HOME/grc</code> &rarr; <code>~/.grc</code> &rarr; <code>/usr/local/share/grc</code> &rarr; <code>/usr/share/grc</code> &rarr; <code>/opt/homebrew/share/grc</code>.</p></div>
+        <div class="mapping-card"><h4>Command-line join</h4><p><code>grc</code> joins argv with spaces into one string and matches it against each <code>grc.conf</code> regexp top to bottom &mdash; so patterns can key off subcommands and flags, not just the binary name.</p></div>
+        <div class="mapping-card"><h4>Redirection resolution</h4><p>Default: colourise stdout. <code>-e</code> switches to stderr and stops auto-redirecting stdout; <code>-s</code> forces stdout back on even with <code>-e</code>. Both can be piped through separate <code>grcat</code> children.</p></div>
+        <div class="mapping-card"><h4>Colour gating</h4><p><code>--colour=on|off|auto</code>; auto = <code>isatty(1)</code>. When colour is off or no colourfile matched, the command runs uncoloured with inherited stdio and its exit status is propagated verbatim.</p></div>
+        <div class="mapping-card"><h4>grcat location</h4><p><code>grc</code> prefers a <code>grcat</code> sitting next to its own executable, falling back to <code>grcat</code> on <code>PATH</code> &mdash; so a source build and an installed build both find the right colouriser.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 5: PORT MAPPING                -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">%</span>PORT MAPPING &mdash; PYTHON &rarr; RUST</h2>
+      <p class="tutorial-subtitle">grc is Python; grcrs is Rust. The behaviour is preserved function-for-function, with translations only where the two regexp dialects and string models differ.</p>
+
+      <div class="mapping-grid">
+        <div class="mapping-card"><h4>Regexp dialect</h4><p><code>translate_regex</code> rewrites Python's <code>\&lt;</code>/<code>\&gt;</code> (literal angle brackets in Python <code>re</code>) to literals, because <code>fancy-regex</code> would otherwise read them as GNU word boundaries. Present in both binaries.</p></div>
+        <div class="mapping-card"><h4>Colour literals</h4><p><code>get_colour</code> maps named tokens through the static ANSI table; a <code>"..."</code> token is <code>unescape</code>d exactly as a Python string literal &mdash; octal <code>\033</code>, hex <code>\xNN</code>, and the single-char escapes.</p></div>
+        <div class="mapping-card"><h4>Replacement backrefs</h4><p><code>convert_backrefs</code> turns Python <code>\1</code> into <code>${1}</code> and escapes literal <code>$</code> to <code>$$</code>, so <code>replace=</code> directives rewrite lines identically.</p></div>
+        <div class="mapping-card"><h4>Config block parsing</h4><p><code>parse_config</code> mirrors grcat: blocks of <code>keyword=value</code>, terminated by a blank/comment/non-letter line; <code>colors</code>/<code>color</code>/<code>colour</code> fold to <code>colours</code>; unknown keywords error.</p></div>
+        <div class="mapping-card"><h4>Per-line engine</h4><p>The main loop reads bytes leniently (<code>from_utf8_lossy</code> &mdash; command output is not guaranteed UTF-8), applies each pattern with the <code>count</code> loop semantics, then flattens overlapping colour spans into a single ANSI-annotated line.</p></div>
+        <div class="mapping-card"><h4>Cross-line state</h4><p><code>prevcolour</code>/<code>prevcount</code>/<code>blockflag</code>/<code>blockcolour</code> carry between lines so <code>previous</code>, <code>block</code>, and <code>unblock</code> behave as in grcat &mdash; multi-line constructs inherit the opening line's colour.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 6: CAPABILITY SURFACE          -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">@</span>CAPABILITY SURFACE</h2>
+      <p class="tutorial-subtitle">The launcher options and the colourfile grammar, grouped by role.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Launcher options</h4><p>getopt-style; scanning stops at the command.</p><ul><li><code>-e / --stderr</code> &mdash; colourise stderr</li><li><code>-s / --stdout</code> &mdash; force stdout on</li><li><code>-c NAME / --config=NAME</code> &mdash; explicit colourfile</li><li><code>--colour=on|off|auto</code></li><li><code>--pty</code> &mdash; run under a pseudo-terminal (experimental)</li></ul></div>
+        <div class="feature-card"><h4>Colourfile keywords</h4><p>One block per pattern.</p><ul><li><code>regexp</code> &mdash; the pattern</li><li><code>colours</code> &mdash; per-group colour list</li><li><code>count</code> &mdash; loop directive</li><li><code>command</code> &mdash; run <code>sh -c</code> on match</li><li><code>skip</code> &mdash; drop the line</li><li><code>replace</code> / <code>concat</code></li><li><code>trend</code> / <code>key</code> / <code>metric</code> &mdash; grcrs delta colour</li></ul></div>
+        <div class="feature-card"><h4>Loop directives</h4><p><code>count=</code> controls iteration + cross-line state.</p><ul><li><code>more</code> &mdash; keep matching (default)</li><li><code>once</code> &mdash; first match only</li><li><code>stop</code> &mdash; halt all patterns</li><li><code>block</code>/<code>unblock</code> &mdash; whole-line block colour</li><li><code>previous</code> &mdash; inherit prior count</li></ul></div>
+        <div class="feature-card"><h4>Colour tokens</h4><p>Resolved through the static ANSI table.</p><ul><li>Attributes: <code>bold</code>, <code>underline</code>, <code>italic</code>, <code>reverse</code>, <code>dark</code>, <code>strikethrough</code>&hellip;</li><li>FG/BG: <code>red</code>&hellip;<code>white</code>, <code>on_black</code>&hellip;</li><li>Bright: <code>bright_*</code>, <code>on_bright_*</code></li><li>Streaming: <code>previous</code>, <code>unchanged</code></li></ul></div>
+        <div class="feature-card"><h4>Process orchestration</h4><p>Faithful stdio wiring.</p><ul><li>Pipe stdout and/or stderr to separate <code>grcat</code> children</li><li>SIGINT ignored in the wrapper; Ctrl-C reaches the child</li><li>Child exit status propagated</li><li>grcat located next to <code>grc</code> or on PATH</li></ul></div>
+        <div class="feature-card"><h4>Encoding safety</h4><p>Robust to non-UTF-8 command output.</p><ul><li>Lines read as bytes, decoded lossily</li><li>Byte offsets mapped to char indices for span painting</li><li>EPIPE on a closed downstream ends the stream cleanly</li></ul></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 7: TEST POSTURE                -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">!</span>TEST POSTURE</h2>
+      <p class="tutorial-subtitle">Three layers: launcher unit tests, colouriser unit tests, and end-to-end tests that spawn the real binaries. Aggregate: <strong>31 tests pass</strong> under <code>cargo test</code>, green on Linux and macOS in CI.</p>
+
+      <table class="file-table">
+        <thead>
+          <tr><th>Suite</th><th>File</th><th class="num">Tests</th><th>Coverage</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Launcher unit</td><td>src/grcrs.rs</td><td class="num">7</td><td>Option parsing (stops at command, long forms, attached/separate <code>-c</code>, clustered shorts + <code>--pty</code>, <code>--</code> terminator, <code>--colour</code>), regexp translation</td></tr>
+          <tr><td>Colouriser unit</td><td>src/grcatrs.rs</td><td class="num">11</td><td>Octal/hex/named unescape, angle-bracket translation, backref conversion, named/quoted/invalid colours, multibyte byte&rarr;char mapping, config parsing (colours+count+regex, comma groups, lookahead + US spelling, blocks without regexp, bad keyword)</td></tr>
+          <tr><td>End-to-end</td><td>tests/cli.rs</td><td class="num">13</td><td>Match-only colouring, lookahead colouring, per-group layering, <code>unchanged</code>, <code>count=stop</code>, <code>block</code> across lines, <code>replace</code>-then-colour, quoted literals, angle escapes, <code>skip</code>, missing-config error, <code>grc</code>&rarr;<code>grcat</code> piping, exit-status propagation</td></tr>
+          <tr class="total-row"><td>TOTAL</td><td>cargo test</td><td class="num">31</td><td>CI gate on every push to main &amp; every PR (ubuntu-latest + macos-latest)</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 8: SHIP SURFACE                -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">#</span>SHIP SURFACE</h2>
+      <p class="tutorial-subtitle">What you get from the Homebrew tap or a source build.</p>
+
+      <div class="mapping-grid">
+        <div class="mapping-card"><h4>Binaries</h4><p><code>grc</code> (launcher) and <code>grcat</code> (colouriser) &mdash; two Cargo targets built from <code>src/grcrs.rs</code> and <code>src/grcatrs.rs</code>. Release profile: LTO + <code>codegen-units = 1</code>.</p></div>
+        <div class="mapping-card"><h4>Runtime config</h4><p><code>grc.conf</code> + 83 <code>colourfiles/conf.*</code> from the <code>vendor/grc</code> submodule. The formula installs <code>grc.conf</code> to <code>$(brew --prefix)/etc</code> and the colourfiles to <code>$(brew --prefix)/share/grc</code>.</p></div>
+        <div class="mapping-card"><h4>CI workflow</h4><p><code>.github/workflows/ci.yml</code> &mdash; fmt, clippy (<code>-D warnings</code>), doc (<code>-D warnings</code>), build + test on ubuntu + macos, and a binary smoke test. Runnable via workflow dispatch.</p></div>
+        <div class="mapping-card"><h4>Release workflow</h4><p><code>.github/workflows/release.yml</code> &mdash; builds release artifacts.</p></div>
+        <div class="mapping-card"><h4>Compatibility</h4><p>Tracks grc <strong>1.13</strong>: same option surface, same config grammar, same search order, same colour semantics. Existing grc colourfiles work unchanged.</p></div>
+        <div class="mapping-card"><h4>License</h4><p>GPL-2.0-or-later &mdash; the same license as upstream grc.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <!-- ═══════════════════════════════════════ -->
+      <!-- SECTION 9: VERSION HISTORY             -->
+      <!-- ═══════════════════════════════════════ -->
+      <h2 class="tutorial-title"><span class="step-hash">v</span>VERSION HISTORY</h2>
+      <p class="tutorial-subtitle">Current version: <code>grcrs 1.13.0</code> (tracking grc 1.13). 6 commits on <code>main</code>. Last five:</p>
+
+      <table class="file-table">
+        <thead><tr><th>Hash</th><th>Subject</th></tr></thead>
+        <tbody>
+          <tr><td>52d2edbaad</td><td>tests</td></tr>
+          <tr><td>741696a2ba</td><td>grcat: fix clippy lints (is_some_and, if-let, collapse newline strip)</td></tr>
+          <tr><td>6e57ee508b</td><td>CI</td></tr>
+          <tr><td>d41ec22817</td><td>init</td></tr>
+          <tr><td>be525cfb2d</td><td>add vendor</td></tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.7rem;">Full history: <a href="https://github.com/MenkeTechnologies/grcrs/commits/main" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/grcrs/commits/main</a></p>
+
+      <hr class="section-rule">
+
+      <p style="text-align:center;font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin:2rem 0 0;">
+        &gt;&gt;&gt; PIPE IT IN. MATCH THE PATTERN. PAINT THE STREAM. &lt;&lt;&lt;
+      </p>
+
+    </main>
+  </div>
+  <script src="../hud-theme.js" defer></script>
+</body>
+</html>
