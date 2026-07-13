@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 204 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 104a, 144a, the
+Total: 205 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zemacs additions 120a–120s, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -1136,6 +1136,18 @@ capture groups become semantic tokens and all rules/themes live in editable TOML
 is a theme swap with no rule edits. *Basis:* `zcolorizer/src/{rules,theme,engine,modules,
 modules_modern}.rs`; `--themes-json`, live `--watch`; ~3855 LOC. *Caveat:* ccze and pygments
 predate it; the novelty is the TOML-driven capture-group→token fusion in a streaming CLI.
+
+**114a. First Rust port of grc (Generic Colouriser), config-compatible with upstream** — `low`
+A faithful single-binary Rust port of the ~20-year-old Python `grc` (Generic Colouriser 1.13),
+shipping both upstream binaries — `grc` (the launcher: parses options, matches the command line
+against `grc.conf`, runs the command, pipes output through `grcat`) and `grcat` (the regexp→ANSI
+colouriser reading stdin). It reuses upstream's own config verbatim via a vendored `grc` submodule
+(`grc.conf` + 83 `colourfiles/conf.*`), so existing grc configs and colourfiles work unchanged.
+*Basis:* `grcrs/src/{grcrs,grcatrs}.rs` (~1021 LOC); `vendor/grc` submodule (83 colourfiles);
+GPL-2.0-or-later (matching upstream); Homebrew formula `menketechnologies/menketech/grcrs`.
+*Caveat:* a faithful port, not a new capability — the "first Rust port of grc" framing is the
+claim; "none found" is a search result, not proof. Novelty is the port + config parity, not new
+functionality.
 
 **115. Temp-file stack as a CLI data structure** — `low`
 An original concept (not a rewrite): a flock-protected stack of temporary files exposed as a
