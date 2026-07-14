@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 206 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 104a, 114a, 144a, the
+Total: 207 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zemacs additions 120a–120s, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -150,25 +150,34 @@ params. *Caveat:* superinstruction fusion is a classic interpreter technique; th
 distinctiveness is degree / the specific loop-shaped fusions, and gains are
 workload-specific.
 
-**11b. First AWK and first Vim script with aspect-oriented before/after/around intercepts** — `high`
-Aspect-oriented programming — register `before` / `after` / `around` advice on
-user-function (awk) or user-function/command (VimL) calls by glob pattern, with
-`intercept_proceed()` to run the original and reuse its value, `intercept_list` /
-`intercept_remove(id)` / `intercept_clear`, and the AOP context surfaced to advice as
-ordinary language globals (`INTERCEPT_NAME`/`ARGS`/`CMD`/`MS`/`US`) — ported from zshrs's
-`intercept` engine onto AWK and Vim script, neither of which has any AOP facility.
-*Basis:* `awkrs/src/intercepts.rs` (230 L; `AdviceKind::{Before,After,Around}`,
-`intercept_matches` glob engine, `InterceptProceed` state) joined at the `funcname(args)`
-dispatch; `vimlrs/src/intercepts.rs` (301 L) + `fusevm_bridge.rs`, driven by the
-`:Intercept before|after|around {pat} { code }` command and the `intercept()` /
-`intercept_proceed()` builtins. **Test-verified:** `awkrs/tests/intercept_integration.rs`
-(14 tests) and `vimlrs/tests/intercepts.rs` (6 tests) both pass — before/after ordering,
+**11b. First AWK with aspect-oriented before/after/around intercepts** — `high`
+Aspect-oriented programming for AWK — register `before` / `after` / `around` advice on
+user-function calls by glob pattern, with `intercept_proceed()` to run the original and
+reuse its value, `intercept_list` / `intercept_remove(id)` / `intercept_clear`, and the
+AOP context surfaced to advice as ordinary awk globals
+(`INTERCEPT_NAME`/`ARGS`/`CMD`/`MS`/`US`) — ported from zshrs's `intercept` engine onto
+the awk `funcname(args)` join point. *Basis:* `awkrs/src/intercepts.rs` (230 L;
+`AdviceKind::{Before,After,Around}`, `intercept_matches` glob engine, `InterceptProceed`
+state); dispatch hooks in `awkrs/src/vm.rs` + `vm_builtins.rs`. **Test-verified:**
+`awkrs/tests/intercept_integration.rs` — 14 tests pass (before/after ordering,
 around+proceed value reuse, around-without-proceed suppression, glob matching, timing
-context, and remove/clear. *Caveat:* advice runs in-interpreter (no fork); the glob
-matcher is a hand-rolled `*`/`?`/char-class/`all` matcher, not full POSIX ERE. zsh's only
-analog is `addwrapper()` (function-wrap, not per-pattern before/after/around); "first for
-AWK/VimL" rests on non-exhaustive prior-art absence — no POSIX-awk, gawk, Vim, or Neovim
-counterpart found.
+context, remove/clear). *Caveat:* advice runs in-interpreter (no fork); the glob matcher
+is a hand-rolled `*`/`?`/char-class/`all` matcher, not full POSIX ERE. "First for AWK"
+rests on non-exhaustive prior-art absence — no POSIX-awk or gawk counterpart found.
+
+**11c. First Vim script with aspect-oriented before/after/around intercepts** — `high`
+Aspect-oriented programming for Vim script — `:Intercept before|after|around {pat}
+{ code }` (and the `intercept()` / `intercept_proceed()` builtins) weaves advice around
+user-function/command calls by glob pattern, with `intercept_list` / `intercept_remove` /
+`intercept_clear` and the AOP context exposed as `g:INTERCEPT_NAME`/`ARGS`/`CMD`/`MS`/`US`
+— ported from zshrs's `intercept` engine, which Vim/Neovim have no analog for. *Basis:*
+`vimlrs/src/intercepts.rs` (301 L; `AdviceKind::{Before,After,Around}`, `register`/`list`/
+`remove`/`clear`, `intercept_matches`) + `fusevm_bridge.rs` typval/VM glue.
+**Test-verified:** `vimlrs/tests/intercepts.rs` — 6 tests pass (before/after ordering,
+around+proceed value reuse, around-without-proceed suppression, glob matching, context
+vars). *Caveat:* advice is VimL evaluated in the current interpreter (no subprocess); the
+glob matcher is a hand-rolled `*`/`?`/char-class/`all` matcher, not full regex. "First for
+VimL" rests on non-exhaustive prior-art absence — no Vim or Neovim counterpart found.
 
 ---
 
