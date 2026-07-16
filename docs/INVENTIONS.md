@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 208 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 104a, 114a, 144a, the
+Total: 209 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -824,7 +824,7 @@ client feature superset: Hey Screener, Proton expire, Gmail snooze…), **zphoto
 userspace WireGuard data path), **zcite-core**→Zotero. *Basis:* each project's README + PORT_REPORT.
 *Caveat:* parity features are **not "world's firsts"**. The genuine novelty across this family is not
 any one app but (a) the shared **embeddable-engine pattern** (#162) and (b) the **durable-dependency
-discipline** (#163); the one app-level exception that *is* a distinct first is #89 below.
+discipline** (#163); the app-level exceptions that *are* distinct firsts are #89 and #89a below.
 
 **89. Self-hosting Docker daemon via Apple Virtualization.framework** — `med`
 A Docker-Desktop replacement that *provides its own* `dockerd` by booting a Linux guest
@@ -835,6 +835,29 @@ directly on macOS Virtualization.framework (`objc2-virtualization`) — no
 socket proxy to `~/.zcontainer/run/docker.sock`. *Caveat:* the managed-VM path requires a
 signed `tauri build` (`com.apple.security.virtualization`); an unsigned build reports
 `vm_runtime_unavailable`, so end-to-end self-hosting isn't verifiable from a dev build.
+
+**89a. Git-style content-addressed version control stored inside the PDF file itself, with per-glyph blame and bisect** — `high`
+zpdf-core embeds a full Merkle version-control system **inside the PDF's own trailer**: every
+commit snapshots the whole object graph as a BLAKE3 content-addressed DAG — a **Blob** is one
+object version deduplicated by content hash, a **Tree** is a revision's `ObjectId → blob-hash`
+map, and a **Revision** id is `BLAKE3(parent ‖ timestamp ‖ message ‖ tree)` so any change
+anywhere changes the id (a true Merkle commit) — serialized as one Flate stream under a private
+`/ZPDFVCS` key, so the entire history travels *with the file*: no sidecar, no `.git`, no server.
+The public API is `vcs_commit` / `vcs_log` / `vcs_diff` / `vcs_blame` / `vcs_blame_lines` /
+`vcs_checkout` / `vcs_bisect`, including per-line blame within a content stream (point at a glyph
+run's owning stream to blame that glyph) and a good/bad-revision bisect. *Basis:*
+`zpdf/crates/zpdf-core/src/vcs.rs` (805 L; `Blob`/`Tree`/`Revision`, `blake3::hash`,
+`VCS_TRAILER_KEY = b"ZPDFVCS"`, public methods `vcs.rs:632-716`, `blame`/`blame_lines` at
+`:466`/`:492`); the DAG survives linearization (`src/linearize.rs:76-80,482-490` re-emits
+`/ZPDFVCS` across prune/rewrite) and is surfaced through `src/tauri_plugin.rs`; `blake3 = "1"` in
+`Cargo.toml`. **Test-verified:** `vcs.rs` inline `mod tests` asserts commit + `vcs_log` ordering,
+content-hash dedup (one changed object → exactly one new blob), `vcs_diff`
+modified/added/removed/unchanged classification, `vcs_blame`, and a `vcs_checkout` round-trip
+restoring an object's exact bytes (`BT /F1 12 Tf (Hello) Tj ET`). *Caveat:* the **second**
+app-level exception to the #86 port family (with #89) — **not** an Acrobat parity feature:
+Acrobat/PDF incremental-update revisions are an append-only save chain, with no content-addressed
+DAG, no per-object/glyph blame, and no bisect. "None found", not proven — no PDF tool found stores
+a git-like content-addressed history with blame/bisect inside the file; search not exhaustive.
 
 **94. General event-translation engine routing any trigger to a non-MIDI protocol matrix** — `med`
 A BOME-MIDI-Translator-class engine whose Outgoing layer fans far beyond MIDI/keystroke into
