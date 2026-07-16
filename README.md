@@ -738,6 +738,6 @@ The baseline is an industry estimate, not a measured value; the Total is measure
 
 ## [0xFF] LICENSE
 
-MIT License — Jacob Menke. See [LICENSE](LICENSE).
+MIT License — MenkeTechnologies. See [LICENSE](LICENSE).
 
 Each submodule retains its own license; see the `LICENSE` file inside each submodule directory.

@@ -2110,13 +2110,13 @@ appshell.hooks
 appshell.neon.off
 appshell.neon.on
 appshell.palette
-appshell.recent:/Users/wizard/Desktop/JacobMenke2026.pdf
+appshell.recent:/Users/wizard/Desktop/Resume2026.pdf
 appshell.recent:/Users/wizard/Desktop/pdf/beginningperl.pdf
 appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/gui-automation-bus/docs/book.pdf
 appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/gui-automation-bus/docs/reference.pdf
 appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/inventions/docs/book.pdf
 appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/zwire/docs/book.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/zpwr-jobs/JacobMenke2026.pdf
+appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/zpwr-jobs/Resume2026.pdf
 appshell.scheme-arctic
 appshell.scheme-crimson
 appshell.scheme-cyberpunk

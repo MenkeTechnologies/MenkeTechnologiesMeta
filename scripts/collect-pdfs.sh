@@ -253,7 +253,7 @@ HTML="$OUT/index.html"
     </main>
 
     <footer class="tutorial-main doc-footer" style="padding-top:0;">
-      MenkeTechnologies · All software © Jacob Menke · Built with the stryke HUD design system
+      MenkeTechnologies · All software © MenkeTechnologies · Built with the stryke HUD design system
     </footer>
   </div>
 
