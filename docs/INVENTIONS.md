@@ -18,8 +18,8 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 207 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 104a, 114a, 144a, the
-zterminal additions 105a–105n, the zmax additions 120a–120s, 169a, and 170a). Marquee claims (the six
+Total: 208 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 104a, 114a, 144a, the
+zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
 
@@ -1945,6 +1945,30 @@ entry to reach the OS shell — they are sandboxed to built-in single browser ve
 found", not proven; search not exhaustive. `shell`/`host` steps carry the same
 privileged-local-process trust model as any native-messaging host and are inert without the
 host connected (they no-op on the new-tab page, which has no host access).
+
+**168a. Browser command-palette step-chains fired automatically off page-content regex matches** — `med`
+zwire's **Output Triggers** take the #168 typed step-chain and fire it *automatically* when a
+user regex matches page text as it renders/streams — the browser-native analog of a terminal
+emulator's output triggers (iTerm2, zterminal: regex-on-output → run command), moved off
+scrollback onto live web-page text. A content-script `MutationObserver` scans rendered lines
+(throttled, line-capped, minified-blob-skipped, and excluding zwire's own HUD/toast DOM to
+avoid feedback loops); on a match it runs the **identical** typed chain (`url` / `action` /
+`scheme` / `js` / `shell` / `host`) through the shared `window.ZWIRE_CMD_EXEC.runCustom`
+executor, with the matched line bound to `{q}` in every step, an optional URL-filter regex
+scoping which pages arm a trigger, a per-trigger cooldown (default 1500 ms) against process
+storms, and an optional once-per-page-load mode. *Basis:*
+`zwire/extensions/hud-internal/ztriggers.js` (the content-script engine — `compileOne` regex +
+`urlRe` URL filter + `cooldownMs`/`firedOnce` storm control, `fire()` →
+`window.ZWIRE_CMD_EXEC.runCustom({steps},line)`); `pages/triggers.js` (full CRUD over
+`chrome.storage.local 'zb_triggers'`); `pages/step-wizard.js` (the per-step typed wizard shared
+verbatim with #168's `commands.js`); `zpalette.js` (`ZWIRE_CMD_EXEC` executor). *Caveat:* the
+increment over #168 is only the **automatic firing** — the step-chain, wizard, and executor are
+#168's, shared not re-invented. Regex-on-output triggers are prior art *in terminals*; the
+first-ness is browser-native (Vivaldi Command Chains fire manually with no content match and no
+shell, userscript managers match URLs and run sandboxed JS with no OS shell, Arc Boosts inject
+per-site CSS/JS rather than regex-gated OS-reaching chains). "None found", not proven; search
+not exhaustive. `shell`/`host` steps carry #168's privileged-local-process trust model and are
+inert without the native host connected.
 
 **169. One colour scheme live-synced across a web browser and a desktop GUI app through a shared native local-host daemon** — `med`
 zwire-host doubles as a **theme bus**: a single shared file, `~/.zwire/global.toml`
