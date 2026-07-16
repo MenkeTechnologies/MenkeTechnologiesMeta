@@ -1,19 +1,19 @@
 
 | Crate           | Description                                                      |
 | -----------     | -----------                                                      |
-| zemacs-stdx      | Extensions to the standard library (similar to [`rust-analyzer`'s](https://github.com/rust-lang/rust-analyzer/blob/ea413f67a8f730b4211c09e103f8207c62e7dbc3/crates/stdx/Cargo.toml#L5)) |
-| zemacs-core      | Core editing primitives, functional.                             |
-| zemacs-lsp       | Language server client                                           |
-| zemacs-lsp-types | Language Server Protocol type definitions                        |
-| zemacs-dap       | Debug Adapter Protocol (DAP) client                              |
-| zemacs-event     | Primitives for defining and handling events within the editor    |
-| zemacs-loader    | Functions for building, fetching, and loading external resources |
-| zemacs-view      | UI abstractions for use in backends, imperative shell.           |
-| zemacs-term      | Terminal UI                                                      |
-| zemacs-tui       | TUI primitives, forked from tui-rs, inspired by Cursive          |
+| zmax-stdx      | Extensions to the standard library (similar to [`rust-analyzer`'s](https://github.com/rust-lang/rust-analyzer/blob/ea413f67a8f730b4211c09e103f8207c62e7dbc3/crates/stdx/Cargo.toml#L5)) |
+| zmax-core      | Core editing primitives, functional.                             |
+| zmax-lsp       | Language server client                                           |
+| zmax-lsp-types | Language Server Protocol type definitions                        |
+| zmax-dap       | Debug Adapter Protocol (DAP) client                              |
+| zmax-event     | Primitives for defining and handling events within the editor    |
+| zmax-loader    | Functions for building, fetching, and loading external resources |
+| zmax-view      | UI abstractions for use in backends, imperative shell.           |
+| zmax-term      | Terminal UI                                                      |
+| zmax-tui       | TUI primitives, forked from tui-rs, inspired by Cursive          |
 
 
-This document contains a high-level overview of Zemacs internals.
+This document contains a high-level overview of Zmax internals.
 
 > NOTE: Use `cargo doc --open` for API documentation as well as dependency
 > documentation.
@@ -79,7 +79,7 @@ render. For example if we wrap a `Markdown` component in a `Popup`
 will get a Rect that is the exact size of the popup.
 
 Widgets are called `Component`s internally, and you can see most of them
-in `zemacs-term/src/ui`. Some components like `Popup` and `Overlay` can take
+in `zmax-term/src/ui`. Some components like `Popup` and `Overlay` can take
 other components as children.
 
 `Layer`s are how multiple components are displayed, and is simply a
@@ -115,14 +115,14 @@ TODO: document Component and rendering related stuff
 
 ## Event
 
-The `zemacs-event` crate defines primitives for defining and acting on events
+The `zmax-event` crate defines primitives for defining and acting on events
 within the editor. "Events" cover things like opening, changing and closing of
 documents, starting and stopping of language servers and more.
 
-`zemacs-event` has tools for defining events and registering _hooks_ which run
-any time an event is emitted. `zemacs-event` also provides `AsyncHook` - a tool
+`zmax-event` has tools for defining events and registering _hooks_ which run
+any time an event is emitted. `zmax-event` also provides `AsyncHook` - a tool
 for running cancellable tasks which run after events with _debouncing_.
 
 See the `AsyncHook` type for more information. Events can be created within the
 `events!` macro. Synchronous hooks can be created with `register_hook!`. And
-editor-wide events can be sent to hooks with `zemacs_event::dispatch`.
+editor-wide events can be sent to hooks with `zmax_event::dispatch`.

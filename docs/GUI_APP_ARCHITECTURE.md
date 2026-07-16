@@ -114,7 +114,7 @@ APIs (`palette.create`, `buttonBar`, `colorscheme.scope`) are *not* stubbed.
   baseline keys (`⌘K` / `⌘,` / `?` / `F1`) to the shell so there's no double‑bind. Standalone (no
   shell handle), the view keeps them.
 
-For a CLI‑wrapping app (zemacs‑gui), "feeding" goes one layer further: menu/shortcut actions are
+For a CLI‑wrapping app (zmax‑gui), "feeding" goes one layer further: menu/shortcut actions are
 translated to **bytes written into the editor PTY** — the GUI feeds the editor process, and the editor's
 real keymap lives in the CLI, reached by typing into the terminal.
 
@@ -149,7 +149,7 @@ at the **same path**:
 > **The tree currently violates this rule and the gate that enforces it.** `baseline-gate.mjs:142`
 > hard-fails any JS UI lib not at exactly `frontend/lib/<name>`, but only `zterminal` and `zthrottle`
 > mount `zgui-core` there. Twelve apps (`zpdf`, `zemail`, `zcite`, `zreq`, `ztunnel`, `zgo`, `zftp`,
-> `zphoto`, `zstation`, `zcontainer`, `zemacs-gui`, `traderview`) mount it at `crates/zgui-core`, and
+> `zphoto`, `zstation`, `zcontainer`, `zmax-gui`, `traderview`) mount it at `crates/zgui-core`, and
 > `zoffice` + `Audio-Haxor` carry **both** paths. The rule above is the intended one — this is a
 > migration debt to close in the apps, not a rule to relax.
 
@@ -235,7 +235,7 @@ fine. Two layers, defense in depth.
 | zterm | app‑hosted (include_dir) | zgui at `frontend/lib/zgui-core` (done ✓) |
 | ztranslator, zemail | resolved | ztranslator is engine‑hosted (`ztranslator-core/frontend`); zemail is app‑hosted (`zemail/frontend`) |
 | zpdf, zgo, zcontainer | engine‑hosted | rename core `webui → frontend`; zgui at `<core>/frontend/lib`; wrapper embeds none; `frontendDist → <core>/frontend` |
-| zreq, ztunnel, zoffice, zftp, zemacs‑gui, zcite | wired ✓ | all embed `zgui-core` and mount `appShell` — but at `crates/zgui-core`, not the required `frontend/lib/zgui-core` (see §placement note) |
+| zreq, ztunnel, zoffice, zftp, zmax‑gui, zcite | wired ✓ | all embed `zgui-core` and mount `appShell` — but at `crates/zgui-core`, not the required `frontend/lib/zgui-core` (see §placement note) |
 | zpwr‑daw | not wired | the only remaining app with no `zgui-core` embed; add it, mount `appShell`, domain UI becomes a `*-view.js` |
 
 Each migration: place zgui → (rename webui→frontend if a core) → wire shell in `index.html` only →

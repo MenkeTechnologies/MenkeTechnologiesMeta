@@ -282,7 +282,7 @@ This is a **combination** first, not a single new capability. Embedding a langua
 across apps, and a vendor-authored automation language each **predate this separately**. The claim is the
 *conjunction*, under constraints. Prior-art absence below is **non-exhaustive**. The bus is **built**:
 **15 apps** call `zgui_bridge::serve` and expose the surface today — Audio-Haxor, traderview, zcite,
-zemacs-gui, zemail, zftp, zgo, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztranslator, ztunnel.
+zmax-gui, zemail, zftp, zgo, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztranslator, ztunnel.
 **zcontainer is not wired** — it declares the `zgui-bridge` dep (`app/src-tauri/Cargo.toml:22`) but has
 no `bus.rs` and never calls `serve`. Track B (JUCE plugins) is still unbuilt.
 

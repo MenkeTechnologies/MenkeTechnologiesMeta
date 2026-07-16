@@ -60,10 +60,10 @@ declare -A OIDC_ALLOWLIST=(
     # dir from main without the legacy builder's recursive private-submodule
     # clone (which aborts on Audio-Haxor/traderview/zpwr/fusevm/app-store).
     [./.github/workflows/pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party; deploys docs/ from main)"
-    # zemacs (Helix fork) signs build-provenance attestations for its release
+    # zmax (Helix fork) signs build-provenance attestations for its release
     # binaries via actions/attest-build-provenance, which mints an OIDC token
     # to call GitHub's first-party attestations API — no cloud-cred exchange.
-    [./zemacs/.github/workflows/release.yml]="build-provenance attestation via actions/attest-build-provenance (first-party GitHub attestations API; signs release binaries)"
+    [./zmax/.github/workflows/release.yml]="build-provenance attestation via actions/attest-build-provenance (first-party GitHub attestations API; signs release binaries)"
     # app-store ships GitHub's stock "Deploy Jekyll with GitHub Pages" workflow,
     # which (like our own pages.yml) declares id-token:write so actions/deploy-pages
     # can mint an OIDC token for the github-pages environment — first-party action,

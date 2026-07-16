@@ -25,7 +25,7 @@ surface by `bin/gen-gui-actions-live` — do not hand-edit. Requires every app o
 | [`zthrottle`](#zthrottle) | 91 | System monitor / process & network throttling |
 | [`ztranslator`](#ztranslator) | 54 | BOME-style MIDI/keyboard translator — presets, translators, rules, HID |
 | [`zstation`](#zstation) | 37 | Station-style multi-app workspace — boards, tiles, panes |
-| [`zemacs-gui`](#zemacs-gui) | 30 |  |
+| [`zmax-gui`](#zmax-gui) | 30 |  |
 | [`zcontainer`](#zcontainer) | 25 | Docker Desktop + Lens-style container / Kubernetes manager |
 
 ---
@@ -5863,9 +5863,9 @@ toast.clear
 toast.list
 ```
 
-## zemacs-gui
+## zmax-gui
 
-**30 verbs** · live bus surface · call as `App::open("zemacs-gui")->call("<verb>", %args)`
+**30 verbs** · live bus surface · call as `App::open("zmax-gui")->call("<verb>", %args)`
 
 **`appshell`** (30)
 

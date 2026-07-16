@@ -19,7 +19,7 @@ deep, the caveat says so.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
 Total: 207 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 104a, 114a, 144a, the
-zterminal additions 105a–105n, the zemacs additions 120a–120s, 169a, and 170a). Marquee claims (the six
+zterminal additions 105a–105n, the zmax additions 120a–120s, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
 
@@ -919,11 +919,11 @@ accelerators are a known category; the angle is doing it as the default handler 
 Rust host.
 
 **103. MacVim-style native GUI wrapping a Rust Emacs port** — `med`
-A native desktop GUI that wraps the `zemacs` Rust Emacs/Helix-modal editor by running it in
+A native desktop GUI that wraps the `zmax` Rust Emacs/Helix-modal editor by running it in
 an embedded PTY and driving it purely through ex-commands, with every GUI surface (menubar,
-toolbar, palette, dialogs, file tree) built from zgui-core. *Basis:* `zemacs-gui/README.md`
+toolbar, palette, dialogs, file tree) built from zgui-core. *Basis:* `zmax-gui/README.md`
 — `zpwr-embed-terminal` PTY, `open_intake.rs` (`mvim://` deep-link → `:open`), bundled
-`zemacs`+`stryke` sidecars, `frontend/main.js` zgui widgets → PTY (with `frontend/panels.js`
+`zmax`+`stryke` sidecars, `frontend/main.js` zgui widgets → PTY (with `frontend/panels.js`
 and `frontend/tmux-config.js` alongside it). *Caveat:* the
 "wrap-a-CLI-editor-in-a-window" pattern is MacVim; novelty is doing it for a new Rust Emacs
 entirely through a shared web widget kit + PTY.
@@ -1226,24 +1226,24 @@ byte-for-byte Nmap and does NOT embed the NSE Lua runtime; several areas marked 
 ## VIII. Editor & shell ecosystem
 
 **120. Five embedded scripting languages in one editor binary, zero FFI** — `med`
-zemacs embeds five scripting interpreters — Emacs Lisp, Vimscript, AWK, zsh, and stryke —
+zmax embeds five scripting interpreters — Emacs Lisp, Vimscript, AWK, zsh, and stryke —
 directly compiled into the binary with no external process and no C-ABI/FFI between them, all
-driving the live buffer through one uniform host API. *Basis:* `zemacs/README.md:86-87` ("the only
+driving the live buffer through one uniform host API. *Basis:* `zmax/README.md:86-87` ("the only
 IDE to embed 5 scripting languages with zero external dependencies and no FFI between them");
 `book/src/scripting.md` (`:elisp`/`:vim`/`:awk`/`:zsh`/`:stryke`, `SPC a r` unified REPL); each
 is a pure-Rust crate lowering onto shared fusevm bytecode. *Caveat:* overlaps #1 (the editor-
 embedding angle of the same crate family); "world first" is the repo's own assertion; each
 interpreter exposes only a subset of its host API.
 
-> zemacs is a **Helix fork** — tree-sitter language breadth, rainbow brackets, indent queries,
+> zmax is a **Helix fork** — tree-sitter language breadth, rainbow brackets, indent queries,
 > and the core modal model are Helix base and **not** claimed. The entries below (per CHANGELOG
-> + source) are zemacs's own additions on top of Helix.
+> + source) are zmax's own additions on top of Helix.
 
 **120a. Vim operator-pending grammar emulated on a selection-first engine** — `high`
-zemacs reconstructs Vim's verb→noun operator-pending grammar (`d{motion}`, `c{motion}`,
+zmax reconstructs Vim's verb→noun operator-pending grammar (`d{motion}`, `c{motion}`,
 `y{motion}`, `ciw`/`di(`, `df,`/`ct)`, `.` dot-repeat, `q`/`@` macros, named marks, Replace
 mode) entirely on top of Helix's noun→verb selection-first engine, without modifying the
-engine's selection model. *Basis:* `zemacs-term/src/keymap/vim.rs` (each operator is a nested
+engine's selection model. *Basis:* `zmax-term/src/keymap/vim.rs` (each operator is a nested
 submap whose motions run `[collapse_selection, extend-motion, operate]` so "operate over the
 motion" is reproduced; counts ride the engine prefix); Helix has no operator-pending mode.
 *Caveat:* Vim has the grammar; the novelty is emulating it over a fundamentally different
@@ -1253,14 +1253,14 @@ motion" is reproduced; counts ride the engine prefix); Helix has no operator-pen
 A single running editor exposes vim, emacs, and helix keymap personalities switchable live via
 `:keymap <preset>`, where the emacs preset reroutes the modal engine so the editor boots into
 Insert mode and binds real emacs chords there (modeless-on-modal). *Basis:*
-`zemacs-term/src/commands/typed.rs:40715` (`keymap` cmd, `set_keymap:42664` swaps live + sets
+`zmax-term/src/commands/typed.rs:40715` (`keymap` cmd, `set_keymap:42664` swaps live + sets
 default mode); `keymap/emacs.rs` (emacs bindings in Insert, `C-space` enters Select);
 `keymap/vim.rs`, `keymap/default.rs`. *Caveat:* multi-keymap configs exist (evil-mode), but those
 emulate the *other* model inside a host; here all three are first-class presets over one Rust
 selection engine, swappable without restart.
 
 **120c. Self-verifying feature-coverage harness ("port report")** — `high`
-An anti-tamper instrument measures zemacs's own coverage of the cited Vim/Neovim + Emacs +
+An anti-tamper instrument measures zmax's own coverage of the cited Vim/Neovim + Emacs +
 Spacemacs feature surface by re-deriving the numerator from source on every run and flagging any
 mapping that points at non-existent code as "broken" — making it structurally impossible to
 inflate the number. *Basis:* `port/README.md` (evidence tokens `static:`/`typable:`/`key:` must
@@ -1274,7 +1274,7 @@ One language-agnostic editor "host ABI" lets interpreters that expose only bare 
 with thread-local state mutate the live document, by publishing the in-flight
 `compositor::Context` through a type-erased thread-local pointer installed by an RAII guard for
 one synchronous on-thread eval, with a guard stack for nested evals. *Basis:*
-`zemacs-term/src/commands/scripting/mod.rs` (`CX_PTR` thread-local, `CxGuard` RAII, `with_cx`;
+`zmax-term/src/commands/scripting/mod.rs` (`CX_PTR` thread-local, `CxGuard` RAII, `with_cx`;
 `api_insert`/`api_goto_char`/`api_delete_region` build undoable `Transaction`s);
 `SCRIPTING_EMBED_PLAN.md` §2.1. *Caveat:* the architectural substrate of #120, recorded
 separately as a distinct mechanism; `unsafe`, single-thread-only.
@@ -1282,7 +1282,7 @@ separately as a distinct mechanism; `unsafe`, single-thread-only.
 **120e. Cross-language unified REPL with persistent per-language history** — `med`
 A single REPL panel fronts all five embedded interpreters (elisp/viml/stryke/awk/zsh) behind one
 read-eval-print loop, cycling the active language with Tab and persisting separate input
-histories per language to `~/.zemacs/repl-history.toml`. *Basis:* `zemacs-term/src/ui/repl.rs`
+histories per language to `~/.zmax/repl-history.toml`. *Basis:* `zmax-term/src/ui/repl.rs`
 (660 L, `ReplLang` enum, transcript scrollback); opened via `:repl [lang]` / `SPC a r`. *Caveat:*
 part of the captured scripting story; the one-panel-many-languages REPL with per-language
 persisted history is the distinct artifact.
@@ -1290,7 +1290,7 @@ persisted history is the distinct artifact.
 **120f. AWK as a built-in undoable region filter** — `med`
 `:awk <prog>` runs an embedded AWK interpreter over the current selection (or whole buffer) and
 replaces it with the captured output as a single undo step, in-process with no external `awk`.
-*Basis:* `zemacs-term/src/commands/scripting/mod.rs::run_awk_filter` (runs `awk::run` outside any
+*Basis:* `zmax-term/src/commands/scripting/mod.rs::run_awk_filter` (runs `awk::run` outside any
 editor borrow, applies one `Transaction`); `commands/scripting/awk.rs`. *Caveat:* piping a
 selection through external `awk` (`!awk`) is a classic vi idiom; the novelty is the in-binary
 interpreter wired as an undoable in-place filter.
@@ -1298,7 +1298,7 @@ interpreter wired as an undoable in-place filter.
 **120g. Built-in diff3 three-pane merge-conflict resolver** — `med`
 A native JetBrains-style three-pane (ours/result/theirs) conflict resolver with a diff3 base
 pane, inline char-level highlighting, per-block resolution, and a recomputed live Result pane
-written back as one undoable transaction. *Basis:* `zemacs-term/src/ui/merge.rs` (2211 L,
+written back as one undoable transaction. *Basis:* `zmax-term/src/ui/merge.rs` (2211 L,
 `imara_diff`, `DiffRow`/`Block`/`Resolution`); `:merge`/`:diff`, `]n`/`[n`. *Caveat:* 3-way merge
 tools are common standalone; embedding one as a terminal overlay in a Helix-based modal editor is
 the novel part (Helix has none).
@@ -1306,7 +1306,7 @@ the novel part (Helix has none).
 **120h. Native magit-style git porcelain in a non-Emacs modal editor** — `med`
 A magit-style interactive git porcelain (sectioned status, per-hunk staging, interactive rebase,
 branch/stash menus, commit-log + per-commit diff, ahead/behind counts) as a built-in terminal
-overlay. *Basis:* `zemacs-term/src/ui/magit.rs` (3162 L, `parse_status` unit-tested,
+overlay. *Basis:* `zmax-term/src/ui/magit.rs` (3162 L, `parse_status` unit-tested,
 stage/unstage/discard/commit, `MagitLog`/`MagitShow`); `:magit`/`:git`/`:gst`. *Caveat:* Magit
 (Emacs) and porcelains (lazygit) are prior art; novelty is native-Rust and built into this
 editor.
@@ -1315,14 +1315,14 @@ editor.
 An org-mode subset (outline folding, TODO cycling, capture) plus a date-aware agenda that
 aggregates TODO/DONE headings from all open `.org` buffers and a shallow filesystem walk,
 bucketing Overdue/Today/Upcoming with a dependency-free date model. *Basis:*
-`zemacs-term/src/ui/org_agenda.rs` + `commands/org.rs` (24 KB, `parse_agenda`/`today`
+`zmax-term/src/ui/org_agenda.rs` + `commands/org.rs` (24 KB, `parse_agenda`/`today`
 unit-tested); `:org-agenda`/`:agenda`, `:org-capture`. *Caveat:* Org-mode is canonical Emacs;
 this is a native reimplementation of a slice (babel/export/recurring deferred).
 
 **120j. Byte-faithful hex editor with automatic binary-file routing** — `med`
 Binary files a text editor would reject instead open automatically in a built-in xxd-style hex
 editor backed by a raw `Vec<u8>` (not the text rope), with nibble/ASCII overwrite editing and
-byte-faithful round-trip on save. *Basis:* `zemacs-term/src/ui/hex.rs` (720 L; raw-byte backing,
+byte-faithful round-trip on save. *Basis:* `zmax-term/src/ui/hex.rs` (720 L; raw-byte backing,
 `Ctrl-s` writes via `std::fs::write`); CHANGELOG ("binaries now open here instead of being
 rejected"). *Caveat:* `hexl-mode`/standalone hex editors are prior art; novelty is the
 auto-routing-on-binary-detection in a Helix fork. Overwrite-only (no length change).
@@ -1330,7 +1330,7 @@ auto-routing-on-binary-detection in a Helix fork. Overwrite-only (no length chan
 **120k. Integrated PTY terminal multiplexer inside the editor** — `med`
 Real PTY-backed shells in editor panes (vt100-parsed grid blitted to the surface) with its own
 `C-\` window-leader for split/focus and click-to-focus across panes — a small terminal
-multiplexer living inside the modal editor. *Basis:* `zemacs-term/src/ui/terminal.rs`
+multiplexer living inside the modal editor. *Basis:* `zmax-term/src/ui/terminal.rs`
 (`portable_pty` + `vt100`, background reader thread, F12 detach); `:terminal`/`:term`, `SPC p '`.
 *Caveat:* integrated terminals exist (Emacs/VS Code); the multiplexer-style window leader +
 per-pane PTY in a Helix fork (Helix has none) is the addition.
@@ -1340,15 +1340,15 @@ A JetBrains-style workbench renders inside the editor view — project file tree
 structure outline, problems/run panels, right-hand error-stripe minimap — entirely from
 in-process editor state (no PTY bridge), with the whole layout (drawer widths, folds, hidden
 panels, minimap, colorscheme) persisted to appdata and restored. *Basis:*
-`zemacs-term/src/ui/ide.rs` (5451 L), `file_tree.rs`, `run.rs` (live console with ANSI scrubbing),
+`zmax-term/src/ui/ide.rs` (5451 L), `file_tree.rs`, `run.rs` (live console with ANSI scrubbing),
 `run_config.rs`; `:ide`/`:workbench`/`F2`. *Caveat:* IDE chrome is common in GUI IDEs; doing it as
 a pure-terminal overlay fed only from editor state, in a Helix fork, is unusual.
 
 **120m. Snippet library with live tab-stops overriding emmet, per-language scoped** — `med`
 A CRUD snippet-library TUI whose bodies are validated against the LSP-snippet engine; typing a
 trigger + Tab expands with live `${1:…}`/`$0` tab stops, with user triggers taking priority over
-emmet abbreviation expansion and scoped per language. *Basis:* `zemacs-term/src/ui/snippets.rs`
-(validates via `zemacs_core::snippets::Snippet`, persists `snippets.toml`); `emmet_expand`/
+emmet abbreviation expansion and scoped per language. *Basis:* `zmax-term/src/ui/snippets.rs`
+(validates via `zmax_core::snippets::Snippet`, persists `snippets.toml`); `emmet_expand`/
 `snippet_expand`. *Caveat:* yasnippet/LSP snippets are prior art; the integrated CRUD TUI +
 emmet-priority + LSP-syntax validation combo is the addition (Helix has snippets, no managing
 TUI).
@@ -1365,14 +1365,14 @@ a gap-tracked coverage doc.
 **120o. Reflection-based auto-generated settings editor** — `med`
 The in-editor Settings page is not a hand-maintained schema — it serializes the live editor
 `Config` to TOML on every render and exposes every leaf (typed bool/int/float/str/enum/raw-TOML),
-writing edits back to `config.toml` with live reload. *Basis:* `zemacs-term/src/ui/settings.rs`
+writing edits back to `config.toml` with live reload. *Basis:* `zmax-term/src/ui/settings.rs`
 (`Kind`/`ENUMS` cycle support). *Caveat:* auto-generated config UIs exist generally; a fully
 reflective settings TUI for a terminal modal editor is unusual (Helix is TOML-by-hand only).
 
 **120p. Wildfire expand-region bound to `<ret>`** — `low`
 Pressing `<ret>` in Normal mode selects the closest text object and grows to the next enclosing
 one on repeat; `<backspace>` shrinks — a Wildfire/expand-region port wired to the engine's
-text-object hierarchy. *Basis:* `zemacs-term/src/keymap/vim.rs:396`
+text-object hierarchy. *Basis:* `zmax-term/src/keymap/vim.rs:396`
 (`"ret" => wildfire`) and `:333` (`"backspace" => wildfire_shrink`). *Caveat:* expand-region / wildfire.vim
 are direct prior art; this is a native port (Helix's `expand_selection` isn't the
 ret-grows/backspace-shrinks UX).
@@ -1389,40 +1389,40 @@ candidate is the breadth shipped built-in in one Helix-fork binary (a coverage n
 invention).
 
 **120r. Built-in LLM assistant compiled into a CLI/Emacs-style editor — no plugin, out of the box** — `med`
-zemacs ships a Cursor-style AI assistant **compiled into the editor binary itself** — bound to
+zmax ships a Cursor-style AI assistant **compiled into the editor binary itself** — bound to
 `SPC a i`, it sends the current selection (with language fence) as code context to a pluggable LLM
 backend (Anthropic default, OpenAI alternate) behind one `Provider` trait, runs the network call
 off the UI thread, and renders the reply in a scratch buffer — with no package to install, no
 external agent process, and no FFI. Anthropic is the default with `ANTHROPIC_API_KEY`, so a
-freshly-built binary is AI-capable out of the box. *Basis:* `zemacs-term/src/ai/{mod,anthropic,openai}.rs`
-(the `Provider` trait + two vendor backends, `ZEMACS_AI_PROVIDER`/`ZEMACS_AI_MODEL` env config);
-`ai_chat` at `zemacs-term/src/commands.rs:12974` (selection→fenced-context prompt → scratch buffer,
-`spawn_blocking` off the UI thread); keymap binding `zemacs-term/src/keymap/vim.rs:1113`
+freshly-built binary is AI-capable out of the box. *Basis:* `zmax-term/src/ai/{mod,anthropic,openai}.rs`
+(the `Provider` trait + two vendor backends, `ZMAX_AI_PROVIDER`/`ZMAX_AI_MODEL` env config);
+`ai_chat` at `zmax-term/src/commands.rs:12974` (selection→fenced-context prompt → scratch buffer,
+`spawn_blocking` off the UI thread); keymap binding `zmax-term/src/keymap/vim.rs:1113`
 (`SPC a i`). *Caveat:* the *terminal/Emacs-style* + *built-in, no-plugin* framing is the angle —
 GUI editors ship AI built-in (Cursor, Zed, Windsurf), and Emacs/Neovim get LLMs via packages
 (gptel, copilot.el, avante.nvim, codecompanion), so this is "first **CLI/Emacs-style editor** with
 the assistant compiled in," not first-AI-editor; "no prior art found" is non-exhaustive, not
 proven. It is also self-described **Phase 1** — non-streaming single-turn chat; the streaming chat
 panel, inline edit, and autonomous agent are scaffolded in the module docs but not yet wired. A
-zemacs (Helix-fork) addition.
+zmax (Helix-fork) addition.
 
 **120s. First editor to source both a real Vimscript engine and a real Emacs Lisp engine at init** — `high`
-At startup zemacs runs one `load_init_scripts` pass that sources *both* interpreter families through
+At startup zmax runs one `load_init_scripts` pass that sources *both* interpreter families through
 genuinely embedded engines: Emacs Lisp init (`init.el`, and — opt-in — the user's personal
 `~/.emacs.d/init.el` / `~/.config/emacs/init.el` / `~/.emacs`) executed by the embedded **elisprs**
 interpreter, then Vim config (`init.vim`, and — opt-in — `~/.vimrc` / `~/.vim/vimrc` /
 `~/.config/nvim/init.vim`) executed by the embedded **vimlrs** Vimscript engine. Both are real
 interpreters wired to the live buffer/keymap/options — not config emulation or a settings shim — so a
 single editor honours a `.vimrc`'s `:set`/`:map`/`:colorscheme` *and* an `init.el`'s Lisp against the
-same session at boot. *Basis:* `zemacs-term/src/commands/scripting/mod.rs` (`load_init_scripts` — elisp
+same session at boot. *Basis:* `zmax-term/src/commands/scripting/mod.rs` (`load_init_scripts` — elisp
 candidates + `elisprs::eval_str`, then the `#[cfg(unix)]` vimlrs `:source` block), called from
-`zemacs-term/src/main.rs:175` via `Application::load_init_scripts` (`zemacs-term/src/application.rs:556`);
-end-to-end tests `zemacs-term/tests/{vimrc_theme,custom_source_files}.rs`. *Caveat:* Emacs sources
+`zmax-term/src/main.rs:175` via `Application::load_init_scripts` (`zmax-term/src/application.rs:556`);
+end-to-end tests `zmax-term/tests/{vimrc_theme,custom_source_files}.rs`. *Caveat:* Emacs sources
 `init.el` (its native language) and Vim/Neovim source a vimrc (native, plus Lua in Neovim); evil-mode
 emulates Vim inside Emacs but does *not* run a real Vimscript interpreter over your `.vimrc`, and no
 editor was found that boots by executing both a Vim engine and an Emacs Lisp engine. Personal-config
-sourcing is off by default (zemacs is neither Vim nor Emacs and won't silently inherit either); the
-"first" framing rests on a non-exhaustive search. A zemacs (Helix-fork) addition.
+sourcing is off by default (zmax is neither Vim nor Emacs and won't silently inherit either); the
+"first" framing rests on a non-exhaustive search. A zmax (Helix-fork) addition.
 
 **121. Reflection-generated, drift-proof editor language tooling for a shell** — `med`
 Editor support (Emacs major mode, Vim/Neovim runtime, VS Code extension) for the `zshrs` shell
@@ -1880,12 +1880,12 @@ files, opens multiplexed PTY terminals, and exposes clipboard/notify/open + a sm
 store — usable as a `serve` NDJSON local-socket daemon, a one-shot `call`, **and** an
 embeddable Rust library (`zwire_host::api::{walk, exec}`). The same agent binary/crate backs
 **three** independent frontends unchanged: the zwire browser HUD (statusbar telemetry, pane
-terminals), the **zemacs** editor (auto-spawns `zwire-host serve`, no manual step), and the
+terminals), the **zmax** editor (auto-spawns `zwire-host serve`, no manual step), and the
 **zpwrchrome** extension host (`zpwrchrome-host` depends on the published crate and calls
 `zwire_host::api` for its `host.crawl` / `host.exec` actions). *Basis:*
 `zwire/extensions/hud-internal/native/zwire-host/src/lib.rs:6` (capability list),
 `fsops.rs:116` (`fs_walk` recursive crawl) + `api.rs:107` (`walk`) + `api.rs:44` (`exec`);
-`zemacs/zemacs-term/src/commands/host.rs:1` (client bridge, auto-spawn `serve`);
+`zmax/zmax-term/src/commands/host.rs:1` (client bridge, auto-spawn `serve`);
 `zpwrchrome/zpwrchrome-host/Cargo.toml:52` (`zwire-host = { version = "0.3",
 default-features = false }` — a crates.io registry dep, resolved to `0.3.8` in the lockfile).
 *Caveat:* this is a **filesystem** crawler, **not** a web crawler — it walks local paths, not
@@ -1991,13 +1991,13 @@ crates.io `0.3` line resolved to `0.3.8`, without the `tauri` feature). Inert wh
 isn't connected.
 
 **169a. The theme bus extended to a terminal modal editor — bidirectional, over the editor's own ported schemes** — `med`
-zemacs — a terminal TUI editor, not a browser or a Tauri/JUCE GUI app — joins the #169
+zmax — a terminal TUI editor, not a browser or a Tauri/JUCE GUI app — joins the #169
 `~/.zwire/global.toml` theme bus as a first-class peer in **both** directions, without the
 `zgui-core` JS shim or the `zwire-theme` Tauri plugin those GUI consumers ride on (a terminal
 editor can host neither). **Read side:** a dedicated native `notify` watcher on `~/.zwire`
 re-applies the matching theme the instant zwire's `{scheme, ui.light}` changes — no keypress or
 focus event — hopping onto the editor's main thread via `job::dispatch_blocking`, and maps the 8
-bus schemes onto zemacs's own ported `zgui-<scheme>` / `zgui-<scheme>-light` themes. **Write
+bus schemes onto zmax's own ported `zgui-<scheme>` / `zgui-<scheme>-light` themes. **Write
 side:** committing a `zgui-*` theme in the editor (`:theme`, the picker, `:theme-toggle`)
 reverse-maps to `(scheme, light)` and rewrites just those two keys in `global.toml`
 (format-preserving via `toml_edit`, atomic temp+rename — zwire's other keys anim/glow/scanlines/
@@ -2005,12 +2005,12 @@ vignette left byte-intact), which zwire's own watcher then fans out to the brows
 + GUI apps. Echo between the two watchers is broken by writing only on a *committed* set (picker
 previews, which leave `last_theme = Some`, are excluded) and skipping any write whose values
 already match on disk. Behind one editor setting (`sync-zwire-theme`, default off). *Basis:*
-`zemacs/zemacs-term/src/zwire.rs` (`theme_name`:114 + `theme_name_from_toml`:121 read/map;
+`zmax/zmax-term/src/zwire.rs` (`theme_name`:114 + `theme_name_from_toml`:121 read/map;
 `scheme_from_theme`:172 reverse-map; `spawn_watcher`:333 / `run_watcher`:346 the `notify` watcher
 → `job::dispatch_blocking` → `apply`:302; `write_back_to`:198 the `toml_edit` surgical edit,
-`write_atomic`:244); `zemacs/zemacs-term/src/application.rs:582` (write-back hook at the single
+`write_atomic`:244); `zmax/zmax-term/src/application.rs:582` (write-back hook at the single
 `ConfigEvent::ThemeChanged` choke, gated on `last_theme.is_none()` to exclude previews), `:191`
-(watcher spawn at boot); `zemacs/zemacs-view/src/editor.rs:564` (`sync_zwire_theme` setting);
+(watcher spawn at boot); `zmax/zmax-view/src/editor.rs:564` (`sync_zwire_theme` setting);
 scheme whitelist `zwire-host/src/store.rs:26` (`SCHEMES`). *Caveat:* extends #169's existing theme
 bus rather than inventing colour-scheme sync — file-based multi-app palette propagation is prior
 art (base16-shell, pywal, wpgtk), and #169 already wires the browser + Tauri/JUCE apps; the narrow
@@ -2021,7 +2021,7 @@ round-trip (non-app-shell editor themes are never pushed). Verified: 13 unit tes
 pty run (`:theme zgui-matrix` → `global.toml` `scheme=matrix`, other keys preserved).
 
 **170. First desktop application suite where multiple non-terminal GUI apps embed one shared in-app tmux window manager, each tiling its own document content** — `high`
-Seven independent desktop GUI apps — **zemacs-gui** (an editor per pane), **zemail** (an
+Seven independent desktop GUI apps — **zmax-gui** (an editor per pane), **zemail** (an
 independent mail view per pane — split to triage several folders/accounts side by side),
 **zoffice**, **zpdf**, **zphoto**, **zftp**, and **zreq** — each embed the **same** shared
 `zgui-core` tiling engine (`ZGui.tmux`) and run tmux's full model *over their own
@@ -2038,7 +2038,7 @@ never re-parents and never reloads on split, retile, zoom, or window switch. *Ba
 `zgui-core/webui/tmux.js:1` (`ZGui.tmux` — WM tree/nav/resize/zoom/tabs/sessions/prefix +
 synchronize-panes + copy-mode + paste-buffers, host-supplied pane content via `init(cfg)`;
 1,474 L); per-app consumers `zemail/frontend/tmux-config.js` (mail view per pane via
-`mountZemail`), `zemacs-gui/frontend/tmux-config.js` (editor per pane), plus
+`mountZemail`), `zmax-gui/frontend/tmux-config.js` (editor per pane), plus
 `zoffice`/`zphoto`/`zftp`/`zreq` `frontend/tmux-config.js` and
 `zpdf/crates/zpdf-core/frontend/tmux-config.js`; each app ships
 `crates/zgui-core/webui/tmux.js` as the shared submodule copy. *Caveat:* distinct from the
@@ -2221,7 +2221,7 @@ first" rests on **non-exhaustive** prior-art absence, not proof.
 
 A few entries were deliberately **excluded** as non-original: `fzf-tab` (upstream Aloxaf/fzf-tab, only CI
 additions), `revolver` and `zunit` (upstream molovo zsh forks), and `LearningCollectionAPI` (conventional
-Spring Boot CRUD). `zemacs`'s tree-sitter language breadth, rainbow brackets, and indent queries are
+Spring Boot CRUD). `zmax`'s tree-sitter language breadth, rainbow brackets, and indent queries are
 **inherited from Helix** (it's a Helix fork) and are **not** claimed as firsts. Several "apps" are
 scaffolds whose real artifact is the `-core` crate (`zpdf`, `zoffice`, `zphoto`, thin `zemail`/`zftp`/
 `zreq`/`ztunnel` shells; `zftp-core` transports are a phased deliverable; `app-store` is a static

@@ -215,7 +215,7 @@ C2–C4 are the cross-cutting engines; verified against every app's `.gitmodules
   `zgo-core`, `zcite-core`, `ztranslator-core`).
 - [ ] **C2 `zpdf-core`** + a PDF view in all 13 non-source apps — embedded in **3**: `zemail`,
   `zftp`, `Audio-Haxor`. Missing from zcite, zreq, zgo, ztunnel, zcontainer, zphoto, zstation,
-  zthrottle, zemacs-gui, traderview, ztranslator, zpwr-daw.
+  zthrottle, zmax-gui, traderview, ztranslator, zpwr-daw.
 - [ ] **C3 `zoffice-core`** + an office view in all 13 non-source apps — embedded in **2**: `zemail`,
   `zftp`. Missing from every other non-source app.
 - [ ] **C4 `zemail-core`** + a mail view in all 13 non-source apps — embedded in **1**: `zftp`.

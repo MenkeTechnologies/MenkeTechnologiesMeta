@@ -109,7 +109,7 @@ for p in "${paths[@]}"; do
     fi
 
     # Free forks inherit the upstream project's OSI license and CANNOT
-    # relicense to MIT (e.g. zemacs forks Helix → MPL-2.0). When Cargo.toml
+    # relicense to MIT (e.g. zmax forks Helix → MPL-2.0). When Cargo.toml
     # declares a recognized non-MIT OSI license, the repo is intentionally
     # not-MIT and the MIT-uniformity check does not apply; the LICENSE file
     # is still required to exist (license-file-present.sh).

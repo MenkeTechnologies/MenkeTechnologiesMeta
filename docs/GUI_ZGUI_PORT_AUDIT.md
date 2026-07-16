@@ -13,7 +13,7 @@ zgui-core currently ships **258 components** under `webui/*.js`.
 
 > **Roster drift (2026-07-07):** `app-store/store.js` now lists **18** `category: 'Desktop Apps'`
 > ids. Three of them — **`zstation`**, **`zwire`**, and **`zthrottle`** — postdate this 2026-06-28
-> audit and are **not yet ranked** below; `zemacs-gui` is ranked here but is not in that store
+> audit and are **not yet ranked** below; `zmax-gui` is ranked here but is not in that store
 > category. Re-run the conformance sweep to cover `zstation`, `zwire`, and `zthrottle` before
 > treating this audit as complete.
 
@@ -30,7 +30,7 @@ zgui-core currently ships **258 components** under `webui/*.js`.
 | 7 | **zreq** | Postman | ~45–50% | ~60 | tree/tables/tabs/JSON on ZGui; method bar + toolbar + sidebar + form controls bespoke |
 | 8 | **zpdf** | Adobe Acrobat | ~48% | 15 | tabs/forms/fields-table/info-popover/text-view/bookmarks; 4 needed components not even loaded |
 | 9 | **zcite** | Zotero | ~62% | 5 critical + 8 minor | rating, tag chips, citation picker, rich notes, collection tree |
-| 10 | **zemacs-gui** | Emacs | ~87% | 2 | settings toggle button + `<select>` language picker |
+| 10 | **zmax-gui** | Emacs | ~87% | 2 | settings toggle button + `<select>` language picker |
 | 11 | **ztranslator** | Google Translate | ~92% | 4 | 2 hand-rolled modals, inline rename input, trigger-grid button bar |
 | 12 | **zftp** | FileZilla | ~95% | 1 (+fallbacks) | transfer-queue list hand-rolled; status dots; defensive fallbacks |
 | 13 | **zemail** | Outlook/Thunderbird | ~98% | 1 | rich-text compose editor (**adoption gap** — `ZGui.richText` ships; zemail still hand-rolls it) |
@@ -90,7 +90,7 @@ Only **one** component is still genuinely absent from zgui-core across all 14 ap
 ### zcite (Zotero) — `crates/zcite-core/webui/zcite.js`
 - stars → `ZGui.rating`; tag chips → `ZGui.tagInput`; citation picker → `ZGui.segmented`; collection tree → `ZGui.tree`; library `<select>` → `ZGui.combobox`; attachments → `ZGui.transferList`; metadata/creator/field/annotation forms → `ZGui.field`; **rich notes → `ZGui.richText`** (ships; not yet adopted)
 
-### zemacs-gui (Emacs) — `crates/zemacs-gui-core/webui/menu.js`
+### zmax-gui (Emacs) — `crates/zmax-gui-core/webui/menu.js`
 - `toggleControl()` (`:1468`) → `ZGui.toggleGroup`; `languageControl()` (`:1489`) → `ZGui.combobox`
 
 ### ztranslator (Google Translate) — `crates/ztranslator-core/frontend/ztranslator_view.js`, `crates/ztranslator-core/frontend/trigger-grid.js`
@@ -108,7 +108,7 @@ Only **one** component is still genuinely absent from zgui-core across all 14 ap
 
 1. **Route zemail + zcite onto `ZGui.richText`** — the component already ships
    (`zgui-core/webui/rich-text.js`); both apps still hand-roll their editors.
-2. **Quick wins to 100%** (≤4 sites each): zphoto ✅, zftp, zemail, ztranslator, zemacs-gui.
+2. **Quick wins to 100%** (≤4 sites each): zphoto ✅, zftp, zemail, ztranslator, zmax-gui.
 3. **Medium adoption ports** (load + route existing components): zcite, zpdf, zreq, zcontainer, zoffice.
 4. **Heavy ports**: ztunnel, zterminal, zgo prefs.
 5. **traderview last** — it's a near-total UI-layer rewrite (wire zgui in, replace charts, retire custom CSS); treat as its own multi-step project.

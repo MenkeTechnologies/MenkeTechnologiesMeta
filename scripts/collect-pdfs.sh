@@ -29,8 +29,8 @@ set -euo pipefail
 #
 # Deliberately EXCLUDED as third-party / vendored duplicates:
 #   */build/*  */_deps/*  */node_modules/*  */vendor/*  */libs/*   (JUCE, CLAP, VST3 SDK,
-#   the nested patch-core/clip-engine/ztranslator copies), and the app-store zemacs-reference
-#   mirror (identical to Publications/zemacs — counted once, under Publications).
+#   the nested patch-core/clip-engine/ztranslator copies), and the app-store zmax-reference
+#   mirror (identical to Publications/zmax — counted once, under Publications).
 #
 # Re-run any time (idempotent). Requires: bash, git, mdls + date (macOS).
 
@@ -53,7 +53,7 @@ pages() { # deterministic via pdfinfo (poppler); mdls is a Spotlight-timing-depe
 
 category_for() {
   case "$1" in
-    strykelang|zshrs|elisprs|awkrs|vimlrs|zemacs) echo "Language reference" ;;
+    strykelang|zshrs|elisprs|awkrs|vimlrs|zmax) echo "Language reference" ;;
     fusevm|zterminal|powerliners|desktop-in-rust|inventions|ztmux|zwire|gui-automation-bus) echo "Companion" ;;
     zpwr) echo "Encyclopedia" ;;
     fantasy|scifi|scifi2|scifi3) echo "Novel" ;;
@@ -121,7 +121,7 @@ echo "collecting audio-plugin + UI manuals (app-store mirror)…"
 for f in "$ROOT"/app-store/docs/*.pdf; do
   [[ -f $f ]] || continue
   base=$(basename "$f")
-  [[ $base == zemacs-reference.pdf ]] && continue   # store mirror of Publications/zemacs
+  [[ $base == zmax-reference.pdf ]] && continue   # store mirror of Publications/zmax
   prod=${base%-reference.pdf}; prod=${prod%-block-catalog.pdf}; prod=${prod%-component-catalog.pdf}
   copy "$f" "$base" "$prod"
 done

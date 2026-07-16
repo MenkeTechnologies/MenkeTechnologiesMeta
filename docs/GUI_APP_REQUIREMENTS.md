@@ -29,7 +29,7 @@ create it in a submodule and route every app through it.
 | zcite | Tauri v2 (`app/` workspace) | `zcite` |
 | zemail | Tauri v2 (`app/` workspace) | `zemail` |
 | zstation | Tauri v2 (`app/` workspace, native multiwebview) | `zstation` |
-| zemacs-gui | Tauri v2 (`app/` workspace) | `zemacs-gui` |
+| zmax-gui | Tauri v2 (`app/` workspace) | `zmax-gui` |
 | zgo | Tauri v2 (`app/` workspace) | `zgo` |
 | zcontainer | Tauri v2 (`app/` workspace) | `zcontainer` |
 | zreq | Tauri v2 (`app/` workspace) | `zreq` |

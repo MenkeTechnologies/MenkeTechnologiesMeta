@@ -1,6 +1,6 @@
 ## Checklist
 
-Zemacs releases are versioned in the Calendar Versioning scheme:
+Zmax releases are versioned in the Calendar Versioning scheme:
 `YY.0M(.MICRO)`, for example, `22.05` for May of 2022, or in a patch release,
 `22.05.1`. In these instructions we'll use `<tag>` as a placeholder for the tag
 being published.
@@ -13,7 +13,7 @@ being published.
           patch release for 22.07 would be `22.7.1`.
         * Run `cargo check` and commit the resulting change to `Cargo.lock`
     * Add changelog notes to `CHANGELOG.md`
-    * Add new `<release>` entry in `contrib/Zemacs.appdata.xml` with release information according to the [AppStream spec](https://www.freedesktop.org/software/appstream/docs/sect-Metadata-Releases.html)
+    * Add new `<release>` entry in `contrib/Zmax.appdata.xml` with release information according to the [AppStream spec](https://www.freedesktop.org/software/appstream/docs/sect-Metadata-Releases.html)
 * Tag and push
     * Switch to master and pull
     * `git tag -s -m "<tag>" -a <tag> && git push origin <tag>` (note the `-s` which signs the tag)
@@ -30,7 +30,7 @@ being published.
 * Post to reddit
     * [Example: the r/rust subreddit](https://www.reddit.com/r/rust/)
 
-[homebrew formula]: https://github.com/Homebrew/homebrew-core/blob/master/Formula/h/zemacs.rb
+[homebrew formula]: https://github.com/Homebrew/homebrew-core/blob/master/Formula/h/zmax.rb
 
 ## Changelog Curation
 
@@ -40,7 +40,7 @@ this. For example, when creating the 22.07 release notes, this compare link
 may be used
 
 ```
-https://github.com/MenkeTechnologies/zemacs/compare/22.05...master
+https://github.com/MenkeTechnologies/zmax/compare/22.05...master
 ```
 
 Either side of the triple-dot may be replaced with an exact revision, so if
@@ -49,11 +49,11 @@ or so, record the revision where you stopped, and use that as a starting point
 next week:
 
 ```
-https://github.com/MenkeTechnologies/zemacs/compare/7706a4a0d8b67b943c31d0c5f7b00d357b5d838d...master
+https://github.com/MenkeTechnologies/zmax/compare/7706a4a0d8b67b943c31d0c5f7b00d357b5d838d...master
 ```
 
 A work-in-progress commit for a changelog might look like
-[this example](https://github.com/MenkeTechnologies/zemacs/commit/831adfd4c709ca16b248799bfef19698d5175e55).
+[this example](https://github.com/MenkeTechnologies/zmax/commit/831adfd4c709ca16b248799bfef19698d5175e55).
 
 Not every PR or commit needs a blurb in the changelog. Each release section
 tends to have a blurb that links to a GitHub comparison between release

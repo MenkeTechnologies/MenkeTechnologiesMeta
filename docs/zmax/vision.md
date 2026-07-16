@@ -5,7 +5,7 @@
 > full power of a graphical IDE in the terminal, with the muscle memory of
 > **Spacemacs** and **JetBrains** already wired in.
 
-zemacs is a modal IDE in Rust, built on a tree-sitter + LSP engine. It aims at a
+zmax is a modal IDE in Rust, built on a tree-sitter + LSP engine. It aims at a
 single, opinionated target: **the most capable out-of-the-box terminal IDE you
 can `brew install`.**
 
@@ -14,7 +14,7 @@ can `brew install`.**
 1. **Zero user config.** Everything works on first launch. No `init.el`, no
    `init.vim`, no plugin manager, no Mason, no `:PackerSync`, no external
    language-server bootstrap ritual. The defaults *are* the product. (You *can*
-   still customize — keymaps, themes, settings, `~/.zemacs/init.el` — but you
+   still customize — keymaps, themes, settings, `~/.zmax/init.el` — but you
    should never *have* to in order to be productive.)
 
 2. **Maximum power.** Not a minimal editor you grow into — the full IDE surface
@@ -41,7 +41,7 @@ can `brew install`.**
 
 **Substantially, yes — and the project refuses to claim it without proof.**
 
-Coverage is not asserted by hand; it is **re-derived from zemacs source on every
+Coverage is not asserted by hand; it is **re-derived from zmax source on every
 report run** and measured against the *exhaustive, cited* feature inventories of
 Vim/Neovim, Emacs, Spacemacs, and JetBrains (parsed from each tool's own
 documentation). A mapping that points at non-existent code is flagged as broken,
@@ -49,13 +49,13 @@ not counted. See [`port/README.md`](../port/README.md) for the honesty contract.
 
 The headline measure is **functionality coverage** — distinct editor
 *capabilities*, counted once regardless of how many ancestor editors expose the
-same feature (it answers "what can zemacs *do*," not "how many keys overlap").
+same feature (it answers "what can zmax *do*," not "how many keys overlap").
 By that measure the great majority of the tracked capability surface is
 implemented today, with only a handful of genuine gaps remaining. Per the
 muscle-memory tables, **JetBrains** and **Spacemacs** are both well into the
 high range — every cited JetBrains action is at least partially covered, and the
 Spacemacs `SPC` tree is largely complete — while the Emacs *chord* surface is
-intentionally low because zemacs is modal (vim keys), not a chord editor.
+intentionally low because zmax is modal (vim keys), not a chord editor.
 
 Live numbers — denominator, ported, partial, broken, and the per-source and
 per-capability breakdowns — are in the generated reports, never hardcoded here so
@@ -70,7 +70,7 @@ they cannot go stale:
 Honesty cuts both ways:
 
 - **Not 100% parity with three giant editors.** The Emacs manual denominator
-  includes Dired, Gnus, Calc, TeX-mode and games; zemacs deliberately does not
+  includes Dired, Gnus, Calc, TeX-mode and games; zmax deliberately does not
   chase that tail. "Parity" here means the Spacemacs and JetBrains *daily
   workflows*, not every esoteric command in every ancestor.
 - **Refactoring is the known weak area.** Symbol-level refactors (extract,
@@ -82,7 +82,7 @@ Honesty cuts both ways:
 
 ## Non-goals
 
-- **Not "everything for everyone."** zemacs has an opinion (modal, selection →
+- **Not "everything for everyone."** zmax has an opinion (modal, selection →
   action, batteries-included). It is not trying to be a blank canvas.
 - **Not a code-golf keymap.** Consistency and memorability beat saving a
   keystroke.

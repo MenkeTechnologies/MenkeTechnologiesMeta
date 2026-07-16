@@ -32,7 +32,7 @@ _Last reconciled: 2026-07-12._
 | **zphoto-core** | Embeddable pure-Rust raster-imaging engine — layers/selections/filters/export, no GUI deps; native + C ABI. Engine behind `zphoto` |
 | **ztmux-core** | Embeddable pure-Rust terminal/tmux engine (PTY + tmux wire-protocol control), no GUI deps. Engine behind `zterminal` |
 | **zgui-bridge** | GUI Automation Bus host — one Unix socket per app exposing its verbs/state/events (what `stryke-app` drives). Mounted by 16 apps |
-| **zwire-host** | Native-messaging / system-stats / PTY host binary shared with `zwire`. Mounted by 9 apps (`zreq`, `zoffice`, `zpdf`, `zftp`, `zphoto`, `zemail`, `zthrottle`, `zemacs-gui`, `zwire`) |
+| **zwire-host** | Native-messaging / system-stats / PTY host binary shared with `zwire`. Mounted by 9 apps (`zreq`, `zoffice`, `zpdf`, `zftp`, `zphoto`, `zemail`, `zthrottle`, `zmax-gui`, `zwire`) |
 | **zpwr-modal-editor** | Shared Vim/Emacs modal-editing surface. Mounted by `zoffice` + `zemail` |
 
 ## Consumption matrix
@@ -70,7 +70,7 @@ no column here; see the component table above for their consumers.
 | **zphoto** | — | — | — | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **ztunnel** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zthrottle** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zemacs-gui** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zmax-gui** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zwire** | — | — | — | ✓¹ | — | — | — | — | — | — | — | — |
 | **zterminal** | — | — | — | — | — | — | — | — | — | — | — | — |
 

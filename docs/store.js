@@ -375,37 +375,37 @@
       repo: 'https://github.com/MenkeTechnologies/elisprs',
     },
     {
-      id: 'zemacs',
-      name: 'zemacs',
+      id: 'zmax',
+      name: 'zmax',
       glyph: 'EM',
       category: 'Developer Tools',
       badge: 'NEW',
-      tagline: 'A Rust port of Emacs — a terminal modal editor with a Vim-style modal editing core and full Spacemacs functionality layered on top; a windowed GUI build ships as zemacs-gui. Free and open source.',
+      tagline: 'A Rust port of Emacs — a terminal modal editor with a Vim-style modal editing core and full Spacemacs functionality layered on top; a windowed GUI build ships as zmax-gui. Free and open source.',
       pills: ['Rust', 'Modal editing', 'Emacs / Spacemacs', 'Free / OSS'],
       price: 0,
       tiers: [
         { name: 'Open Source', desc: 'MPL-2.0 licensed', price: 0 },
       ],
-      download: 'https://github.com/MenkeTechnologies/zemacs/releases/latest',
-      repo: 'https://github.com/MenkeTechnologies/zemacs',
+      download: 'https://github.com/MenkeTechnologies/zmax/releases/latest',
+      repo: 'https://github.com/MenkeTechnologies/zmax',
       docs: [
-        { label: 'Reference (PDF)', desc: 'The complete zemacs reference — every keybinding by mode, the full IDE configuration schema, every typable : command, every static command with its default keys, and the language-support matrix. Generated from the source.', url: 'docs/zemacs-reference.pdf' },
+        { label: 'Reference (PDF)', desc: 'The complete zmax reference — every keybinding by mode, the full IDE configuration schema, every typable : command, every static command with its default keys, and the language-support matrix. Generated from the source.', url: 'docs/zmax-reference.pdf' },
       ],
     },
     {
-      id: 'zemacs-gui',
-      name: 'zemacs-gui',
+      id: 'zmax-gui',
+      name: 'zmax-gui',
       glyph: 'EG',
       category: 'Developer Tools',
       badge: 'NEW',
-      tagline: 'A native desktop GUI for the zemacs IDE — wraps the zemacs modal-editing core in a windowed front-end with GUI tabs, menus, font rendering, mouse support, and native open/save dialogs, the way MacVim wraps Vim. Free and open source.',
+      tagline: 'A native desktop GUI for the zmax IDE — wraps the zmax modal-editing core in a windowed front-end with GUI tabs, menus, font rendering, mouse support, and native open/save dialogs, the way MacVim wraps Vim. Free and open source.',
       pills: ['Rust', 'GUI editor', 'Emacs / Spacemacs', 'Free / OSS'],
       price: 0,
       tiers: [
         { name: 'Open Source', desc: 'MPL-2.0 licensed', price: 0 },
       ],
-      download: 'https://github.com/MenkeTechnologies/zemacs-gui/releases/latest',
-      repo: 'https://github.com/MenkeTechnologies/zemacs-gui',
+      download: 'https://github.com/MenkeTechnologies/zmax-gui/releases/latest',
+      repo: 'https://github.com/MenkeTechnologies/zmax-gui',
     },
     {
       id: 'awkrs', name: 'awkrs', glyph: 'ak', category: 'CLI Tools', badge: 'FREE',
@@ -532,9 +532,9 @@
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
     {
-      id: 'zemacs-book', name: 'The zemacs Book', glyph: 'eB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to zemacs — the modal IDE with vim, emacs, and Spacemacs keymaps, and the first IDE to embed five programming languages (elisp, vimscript, stryke, AWK, Zsh) in its core. Pandoc + LaTeX typeset.',
-      pills: ['Reference', 'zemacs', 'DRM-free PDF'], price: 20,
+      id: 'zmax-book', name: 'The zmax Book', glyph: 'eB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to zmax — the modal IDE with vim, emacs, and Spacemacs keymaps, and the first IDE to embed five programming languages (elisp, vimscript, stryke, AWK, Zsh) in its core. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'zmax', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
     {
@@ -698,9 +698,9 @@
       "overview": "The companion book to zshrs — the first compiled Unix shell. Bytecode + Cranelift JIT, an 18-thread parallel runtime, and a persistent worker pool, with drop-in zsh compatibility.",
       "features": ["zshrs, the first compiled Unix shell", "Bytecode + Cranelift JIT, parallel runtime, worker pool", "Drop-in zsh compatibility and AOP intercepts", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
-    "zemacs-book": {
-      "overview": "The companion book to zemacs — the modal IDE with vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first IDE ever to embed five complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
-      "features": ["zemacs, end to end — the modal IDE wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: five languages embedded in the core — elisp, vimscript, stryke, AWK, Zsh", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
+    "zmax-book": {
+      "overview": "The companion book to zmax — the modal IDE with vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first IDE ever to embed five complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
+      "features": ["zmax, end to end — the modal IDE wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: five languages embedded in the core — elisp, vimscript, stryke, AWK, Zsh", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
     },
     "fusevm-book": {
       "overview": "The companion book to fusevm — the language-agnostic bytecode VM that stryke, zshrs, awkrs, and vimlrs all compile to. The value model and opcode set, the interpreter and its fused superinstructions, the three-tier Cranelift JIT, and the closed-world AOT compiler that lowers a whole program to native registers and a standalone binary.",
@@ -892,24 +892,24 @@
         "Free / OSS — MIT licensed"
       ]
     },
-    "zemacs": {
-      "overview": "A Rust port of Emacs with a Vim-style modal editing core in Rust and full Spacemacs functionality layered on top. This is the terminal editor; a windowed GUI front-end ships separately as zemacs-gui. Free and open source.",
+    "zmax": {
+      "overview": "A Rust port of Emacs with a Vim-style modal editing core in Rust and full Spacemacs functionality layered on top. This is the terminal editor; a windowed GUI front-end ships separately as zmax-gui. Free and open source.",
       "features": [
         "Rust core — modal editing in the Vim tradition",
         "Full Spacemacs functionality (keybindings, layers, leader-key UX)",
         "Emacs-style extensibility on a modern Rust foundation",
-        "Terminal IDE; the GUI build is zemacs-gui",
+        "Terminal IDE; the GUI build is zmax-gui",
         "Cross-platform",
         "Free / OSS — MPL-2.0 licensed"
       ]
     },
-    "zemacs-gui": {
-      "overview": "A native desktop GUI for the zemacs IDE. It wraps the zemacs modal-editing core in a windowed front-end, the way MacVim wraps the Vim CLI editor: GUI tabs, menus, font rendering, mouse, and native file dialogs over the same IDE underneath. Free and open source.",
+    "zmax-gui": {
+      "overview": "A native desktop GUI for the zmax IDE. It wraps the zmax modal-editing core in a windowed front-end, the way MacVim wraps the Vim CLI editor: GUI tabs, menus, font rendering, mouse, and native file dialogs over the same IDE underneath. Free and open source.",
       "features": [
-        "GUI front-end over the zemacs terminal IDE — same modal core, native window",
+        "GUI front-end over the zmax terminal IDE — same modal core, native window",
         "Native tabs, menu bar, and toolbar; GUI font rendering and mouse support",
         "Native open/save dialogs and drag-and-drop",
-        "Modal editing, tree-sitter syntax, and LSP inherited from the zemacs core",
+        "Modal editing, tree-sitter syntax, and LSP inherited from the zmax core",
         "Cross-platform",
         "Free / OSS — MPL-2.0 licensed"
       ]

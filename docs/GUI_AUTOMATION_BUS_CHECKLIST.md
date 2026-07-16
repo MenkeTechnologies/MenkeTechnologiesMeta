@@ -9,7 +9,7 @@ Work list to bring every app onto the bus defined in [`GUI_AUTOMATION_BUS.md`](G
 Phase 0A shipped — `zgui-bridge` (Rust socket crate), `zgui-core/webui/automation.js` +
 `automation-host.js`, and per-app `bus.rs` all exist. Fifteen apps open their socket
 (`serve("<app>")` + `bus::start` verified at the call site): **Audio-Haxor, traderview, zcite,
-zemacs-gui, zemail, zftp, zgo, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztranslator,
+zmax-gui, zemail, zftp, zgo, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztranslator,
 ztunnel**. **`zcontainer` is NOT wired** — it declares the `zgui-bridge` dep
 (`app/src-tauri/Cargo.toml:22`) but has no `bus.rs` and never calls `serve`. The live verb surface is
 generated into [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) — **4308 engine verbs across 17 apps**
@@ -34,7 +34,7 @@ perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"
 
 - **Track A — Tauri / webview (19):** `zpdf`, `zphoto`, `zemail`, `zstation`, `zoffice`, `Audio-Haxor`,
   `traderview`, `ztranslator`, `zcite`, `zreq`, `ztunnel`, `zthrottle`, `zgo`, `zftp`, `zcontainer`,
-  `zterminal`, `zwire`, `zpwr-daw`, plus `zemacs-gui` — socket-wired (`app/src-tauri/src/bus.rs`) and
+  `zterminal`, `zwire`, `zpwr-daw`, plus `zmax-gui` — socket-wired (`app/src-tauri/src/bus.rs`) and
   publishing 30 verbs, though it is not in the store's `Desktop Apps` category. Uses `ZGui.automation`
   (JS) + `zgui-bridge` (Rust socket) + `run_stryke_hook`.
 - **Track B — JUCE (4):** `zpwr-daw`, `zpwr-synth`, `zpwr-fx`, `zpwr-midi-fx`. No webview, no Tauri
@@ -136,7 +136,7 @@ site are flipped. **verbs** ✅ = the app's verb surface is enumerated in
 | zthrottle | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | traderview | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | Audio-Haxor | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
-| zemacs-gui | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zmax-gui | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zpwr-daw (shell) | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 
 ¹ zwire scripts through its **own** native bus (`zwire-host/src/zbus.rs`, 161 verbs), not the

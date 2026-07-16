@@ -59,7 +59,7 @@ in [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md).
 | **zcontainer** | ·⁴ | 25⁴ | · | · | ✓ | · | ✓ |
 | **Audio-Haxor** | ✓ | 239 | · | · | ✓ | · | ✓ |
 | **ztranslator** | ✓ | 54 | · | · | ✓ | · | ✓ |
-| **zemacs-gui** | ✓ | 30 | ✓ | ✓ | ✓ | · | ✓ |
+| **zmax-gui** | ✓ | 30 | ✓ | ✓ | ✓ | · | ✓ |
 | **zwire** | native² | 161 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **zterminal** | · | — | native³ | native³ | · | · | · |
 
@@ -89,12 +89,12 @@ is no `bus.rs` anywhere in the app (every other bus app has `app/src-tauri/src/b
 The only trace is the `zgui-bridge` dependency line in `app/src-tauri/Cargo.toml` plus the
 `crates/zgui-bridge` submodule. Until the bus lands in git, treat those 25 verbs as an artifact of a
 local, uncommitted tree — the socket is **not wired** on the recorded gitlink. The 15 apps that do
-call `serve("<app>")`: Audio-Haxor, traderview, zcite, zemacs-gui, zemail, zftp, zgo, zoffice, zpdf,
+call `serve("<app>")`: Audio-Haxor, traderview, zcite, zmax-gui, zemail, zftp, zgo, zoffice, zpdf,
 zphoto, zreq, zstation, zthrottle, ztranslator, ztunnel.
 
 **On the two tmux surfaces** — the bar and the WM ship in `zgui-core` but are **not** mounted by the
 appShell; they are per-app **script loads**. The eight ✓ apps (`zpdf`, `zemail`, `zftp`, `zreq`,
-`zoffice`, `zthrottle`, `zphoto`, `zemacs-gui`) each pull `powerline.js` + `tmux.js` into their own
+`zoffice`, `zthrottle`, `zphoto`, `zmax-gui`) each pull `powerline.js` + `tmux.js` into their own
 `index.html` and call `.tmux.init(` from an app-owned `tmux-config.js`. The eight `·` apps load
 neither script outside their vendored `lib/zgui-core` copy, so `ZGui.powerline` / `ZGui.tmux` never
 exist in their document. Of the eight ✓ apps only **zoffice** (`frontend/tmux-config.js:82`) and
