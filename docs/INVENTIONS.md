@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 209 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 89a, 104a, 114a, 144a, the
+Total: 211 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 40a, 40b, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -429,6 +429,40 @@ A harness driving zshrs through a real PTY with a persistent per-file shell proc
 block-boundary protocol, to prove behavioral parity against zsh's own ZTST suite (incl.
 ZLE/completion blocks). *Basis:* `docs/ZTST_PTY_HARNESS.md`; `src/ported/modules/zpty.rs`.
 *Caveat:* testing infrastructure with a forward-looking phase plan.
+
+**40a. First to port fish's syntax highlighting, autosuggestions, and history search natively into another shell** — `med`
+fish's interactive trio — token-classification syntax highlighting, history-driven ghost-text
+autosuggestions, and history-backed suggestion search — reimplemented **inside** a
+non-fish shell's own binary, adapted from fish-shell's Rust codebase, rather than layered
+on as interpreted userspace plugins (zsh-syntax-highlighting / zsh-autosuggestions
+reimplement these as zsh script and pay interpreter cost per keystroke). *Basis:*
+`zshrs/src/extensions/fish_features.rs` (953 L; `HighlightRole` adapted from fish's
+`parse_constants::HighlightRole`, `highlight_shell` token classifier, `role_to_ansi`,
+`autosuggest_from_history` — reverse prefix-then-substring history search matching fish's
+suggestion order, `validate_autosuggestion`, plus fish abbreviations, kill ring,
+`validate_command`); in-module tests (e.g. `autosuggest_from_history("git s", …)`);
+re-exported at `zshrs/src/lib.rs:323`. zshrs's ZLE separately honors the plugin-side
+contracts (`$POSTDISPLAY` ghost text, `region_highlight` — `zle_refresh.rs:1225,4456`).
+*Caveat:* the module is implemented and test-verified but **not yet wired into the live
+ZLE keystroke path** (only re-exported — no call sites in the input loop found); "history
+search" today is the suggestion-search engine, not a ported fish Ctrl-R pager; "first"
+rests on non-exhaustive prior-art absence (no other shell found shipping fish's trio
+natively in-binary).
+
+**40b. First to port the powerlevel prompt to the shell's native implementation language** — `low`
+Powerlevel10k — 9,524 lines of zsh script with 3,621 internal override lines, the
+canonical "compatibility layer for a broken shell" — reimplemented in the shell's own
+compiled implementation language (Rust) so the prompt renders as native code with no
+per-prompt script interpretation, no gitstatusd sidecar, and no instant-prompt fakery
+(first paint = full functionality per `AOT_DESIGN.md:994`). *Basis:* substrate exists —
+zshrs runs upstream p10k faithfully today (zinit_p10k parity 192/192, `docs/PARITY.md:44`;
+p10k-specific compat throughout `src/ported/prompt.rs:842,3379`, `src/ported/parse.rs:2049`,
+`src/fusevm_bridge.rs:7809`), giving a behavioral oracle to port against; the sibling
+`powerliners` repo (#116) proves the prompt-renderer-port method (462 byte-parity tests vs
+upstream powerline). *Caveat:* **recorded ahead of implementation** — no native powerlevel
+segment engine found in-repo yet; today zshrs *executes* p10k.zsh via the compat path
+rather than replacing it; distinct from #116 (powerline-status, a Python renderer) — this
+claim is the zsh-script p10k engine natively in-shell.
 
 ---
 
