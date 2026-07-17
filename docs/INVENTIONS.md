@@ -509,26 +509,28 @@ independently-distributed ABI** — a crates.io SDK crate rather than the shell'
 internals — author-asserted on a non-exhaustive prior-art sweep.
 
 **40d. First shell package manager whose unit of installation is a native (compiled) plugin** — `high`
-Building on the published native-plugin ABI (#40c), zshrs ships `zpm`, a package manager
-that installs a compiled plugin the way every other shell manager installs a script.
-`zpm add <user>/<repo>` clones the repo, `cargo build --release`s its `cdylib`, and
-`zmodload -R`s the result into the shell; `zpm list`, `zpm load` (in `.zshrc`), and
-`zpm remove` manage the set, backed by a **global content-addressed store** shared across
-script and native plugins. It auto-detects a native plugin from a `Cargo.toml` with a
-`cdylib` crate-type — ordinary `*.plugin.zsh` script repos install too, no metadata
-needed — and an optional `zpm.toml` supplies the name/version and lib stem. `zpm` is
-ported from stryke's package manager (#63), which AOT-compiles a whole dependency graph
-to native. Every other shell "plugin manager" — oh-my-zsh, zinit, antigen, sheldon,
-zplug — only clones and `source`s **script** plugins; none builds and installs a compiled
-native-code plugin, because before #40c there was no stable ABI to install against.
-*Basis:* `zshrs/docs/PLUGINS.md` (§ "Installing with zpm" — `zpm add`/`list`/`load`/
-`remove`, `cdylib` auto-detect, the content-addressed store); `zshrs/examples/` —
-`plugin-hello`, `plugin-complete`, `plugin-forgit`, `plugin-git-fuzzy`, each a runnable
-`cdylib` with a `Cargo.toml` + `zpm.toml`; the `zshrs-plugin` SDK crate (`plugin-sdk/`);
-forgit and git-fuzzy published as worked zsh→native ports. *Caveat:* runtime native
-loading predates this (bash `enable -f`, zsh `zmodload`); the first is a *package
-manager* whose install unit is a native compiled plugin — author-asserted on a
-non-exhaustive prior-art sweep.
+Building on the published native-plugin ABI (#40c), zshrs ships `znative`, a built-in
+package manager that installs a compiled plugin the way every other shell manager installs
+a script. It is global-only — one content-addressed store under `$ZSHRS_HOME/pkg/`, no
+per-project manifest or lockfile — and the whole workflow is one self-installing line per
+plugin in `.zshrc`: `znative load owner/repo` installs and loads on first shell start, then
+loads from the store with zero network on every start after. `znative add` / `remove` /
+`list` / `info` / `update` round out the surface, and sources auto-classify
+(`owner/repo`, `github:…`, `git+URL`, `path:…`, with `@ref` pinning). It installs both zsh
+**script** plugins and native Rust **cdylib** plugins (the #40c ABI), auto-detecting a
+native plugin from a `Cargo.toml` with a `cdylib` crate-type; an optional `znative.toml`
+names the plugin and its lib. `znative` is ported from stryke's package manager (#63),
+which AOT-compiles a whole dependency graph to native. Every other shell "plugin manager"
+— oh-my-zsh, zinit, antigen, sheldon, zplug — only clones and `source`s **script** plugins;
+none builds and installs a compiled native-code plugin, because before #40c there was no
+stable ABI to install against. *Basis:* `zshrs/docs/ZNATIVE.md` (full command/source
+surface), `zshrs/docs/PLUGINS.md`; `zshrs/src/extensions/pkg/` (`mod.rs`, `commands.rs`,
+`manifest.rs`, `resolver.rs`, `builtin.rs`); `zshrs/examples/` — `plugin-hello`,
+`plugin-forgit`, `plugin-git-fuzzy`, `plugin-revolver`, `plugin-kubectl`, `plugin-zsh-z`,
+each a runnable plugin with a `Cargo.toml` + `znative.toml`; the `zshrs-plugin` SDK crate
+(`plugin-sdk/`). *Caveat:* runtime native loading predates this (bash `enable -f`, zsh
+`zmodload`); the first is a *package manager* whose install unit is a native compiled
+plugin — author-asserted on a non-exhaustive prior-art sweep.
 
 ---
 
