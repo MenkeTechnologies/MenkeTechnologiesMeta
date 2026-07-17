@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 211 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 40a, 40b, 89a, 104a, 114a, 144a, the
+Total: 213 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 40a, 40b, 40c, 40d, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -481,6 +481,54 @@ and the config wizard are unported by design (the doctrine forbids the first; th
 is config-authoring, not rendering); "first" rests on no other shell shipping its prompt
 theme in-binary — distinct from #116 (powerline-status, a Python renderer) — and is
 author-asserted.
+
+**40c. First shell to host third-party native plugins over a stable, independently-published, versioned ABI (`zmodload -R`)** — `high`
+zsh and bash can both load native code — zsh `zmodload` C modules, bash `enable -f` —
+but each binds against the shell's **internal private headers with no stable ABI and no
+version gate**, so a native module is welded to one exact shell build and can crash a
+mismatched one. That is why neither ecosystem has meaningful third-party native modules:
+nearly all that exist are the ones the shell itself bundles. zshrs makes its
+native-plugin interface an **independently-published, versioned ABI package**: a third
+party runs `cargo add zshrs-plugin`, writes a handler, ships a compiled `cdylib`, and
+loads it into any compatible zshrs at runtime with `zmodload -R <path>` (`-uR` to
+unload) — native machine-code speed, no zshrs source tree, no shell recompile, and an
+`ABI_VERSION`-mismatched plugin refused at load rather than crashing. A plugin is an
+ordinary `#[repr(C)]` cdylib exposing one `zshrs_plugin_init(host)` symbol; it registers
+builtins into an in-process registry and calls back through a curated host API
+(`print`/`eval`/`getvar`/`setvar`). Plugin commands resolve in `execute_external_bg`
+before PATH lookup — the slot zsh uses for `zmodload -ab` autoloaded builtins. Plugins
+may still be written in zsh script (unchanged) **or**, now, native Rust; the Rust path is
+additive. *Basis:* `zshrs/src/extensions/plugin_host.rs` (`dlopen` via `libloading`,
+`ABI_VERSION` gate, in-process registry, host-callback table); the published
+`zshrs-plugin` crate (`#[repr(C)]` `HostApi`/`PluginInfo`, `ABI_VERSION`, `INIT_SYMBOL`);
+`zmodload -R` / `-uR` load/unload; `declare_plugin!` macro for native completions;
+`docs/PLUGINS.md`, `docs/PORTING_ZSH_PLUGIN.md` (forgit ported as a worked example),
+README §[0x0D]; `examples/plugin-hello/`. *Caveat:* runtime native loading itself is not
+new (bash `enable -f` since ~1996, zsh `zmodload`); the first is the **stable, versioned,
+independently-distributed ABI** — a crates.io SDK crate rather than the shell's build-tree
+internals — author-asserted on a non-exhaustive prior-art sweep.
+
+**40d. First shell package manager whose unit of installation is a native (compiled) plugin** — `high`
+Building on the published native-plugin ABI (#40c), zshrs ships `zpm`, a package manager
+that installs a compiled plugin the way every other shell manager installs a script.
+`zpm add <user>/<repo>` clones the repo, `cargo build --release`s its `cdylib`, and
+`zmodload -R`s the result into the shell; `zpm list`, `zpm load` (in `.zshrc`), and
+`zpm remove` manage the set, backed by a **global content-addressed store** shared across
+script and native plugins. It auto-detects a native plugin from a `Cargo.toml` with a
+`cdylib` crate-type — ordinary `*.plugin.zsh` script repos install too, no metadata
+needed — and an optional `zpm.toml` supplies the name/version and lib stem. `zpm` is
+ported from stryke's package manager (#63), which AOT-compiles a whole dependency graph
+to native. Every other shell "plugin manager" — oh-my-zsh, zinit, antigen, sheldon,
+zplug — only clones and `source`s **script** plugins; none builds and installs a compiled
+native-code plugin, because before #40c there was no stable ABI to install against.
+*Basis:* `zshrs/docs/PLUGINS.md` (§ "Installing with zpm" — `zpm add`/`list`/`load`/
+`remove`, `cdylib` auto-detect, the content-addressed store); `zshrs/examples/` —
+`plugin-hello`, `plugin-complete`, `plugin-forgit`, `plugin-git-fuzzy`, each a runnable
+`cdylib` with a `Cargo.toml` + `zpm.toml`; the `zshrs-plugin` SDK crate (`plugin-sdk/`);
+forgit and git-fuzzy published as worked zsh→native ports. *Caveat:* runtime native
+loading predates this (bash `enable -f`, zsh `zmodload`); the first is a *package
+manager* whose install unit is a native compiled plugin — author-asserted on a
+non-exhaustive prior-art sweep.
 
 ---
 
