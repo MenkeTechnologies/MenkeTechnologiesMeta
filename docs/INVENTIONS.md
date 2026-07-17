@@ -449,19 +449,26 @@ search" today is the suggestion-search engine, not a ported fish Ctrl-R pager; "
 rests on non-exhaustive prior-art absence (no other shell found shipping fish's trio
 natively in-binary).
 
-**40b. First to port the powerlevel prompt to the shell's native implementation language** — `low`
-Powerlevel10k — 9,524 lines of zsh script with 3,621 internal override lines, the
-canonical "compatibility layer for a broken shell" — reimplemented in the shell's own
-compiled implementation language (Rust) so the prompt renders as native code with no
-per-prompt script interpretation, no gitstatusd sidecar, and no instant-prompt fakery
-(first paint = full functionality per `AOT_DESIGN.md:994`). *Basis:* substrate exists —
-zshrs runs upstream p10k faithfully today (zinit_p10k parity 192/192, `docs/PARITY.md:44`;
-p10k-specific compat throughout `src/ported/prompt.rs:842,3379`, `src/ported/parse.rs:2049`,
-`src/fusevm_bridge.rs:7809`), giving a behavioral oracle to port against; the sibling
-`powerliners` repo (#116) proves the prompt-renderer-port method (462 byte-parity tests vs
-upstream powerline). *Caveat:* **recorded ahead of implementation** — no native powerlevel
-segment engine found in-repo yet; today zshrs *executes* p10k.zsh via the compat path
-rather than replacing it; distinct from #116 (powerline-status, a Python renderer) — this
+**40b. First to port the powerlevel10k prompt engine to the shell's native implementation language** — `med`
+Powerlevel10k — ~13k lines of metaprogrammed zsh, the canonical "compatibility layer for
+a broken shell" — reimplemented as an in-process Rust segment engine inside the shell
+binary itself: sourcing `powerlevel10k.zsh-theme` is intercepted at builtin dispatch so
+the zsh theme never executes, the user's `.p10k.zsh` config still sources normally (its
+`POWERLEVEL9K_*` typesets land in the paramtab and are read back with p10k's own fallback
+chain), the engine renders PROMPT/RPROMPT at preprompt time, and gitstatusd is absorbed —
+git status computed in-process, no C++ sidecar daemon, no fork per prompt. The theme file
+is the SPEC (segments ported from `internal/p10k.zsh`, cited `// p10k:NNN`), and no
+instant-prompt fakery: first paint = full functionality (`AOT_DESIGN.md:994`). *Basis:*
+`zshrs/src/extensions/p10k/` (1,440 L, 7 files: `mod.rs` theme-source intercept +
+activation; `config.rs` 402 L `p9k_param` fallback chain; `git.rs` 529 L in-process git
+status; `icons.rs` 353 L), wired live at `fusevm_bridge.rs:649`
+(`maybe_intercept_theme_source`) and `ported/utils.rs:1768` (`preprompt_render`, after the
+`precmd` hook); the compat path doubles as the behavioral oracle (zinit_p10k parity
+192/192, `docs/PARITY.md:44`). *Caveat:* segment building + rendering are **explicit
+placeholders pending a concurrent porting session** (`render.rs`/`segments_core.rs`/
+`segments_env.rs` are marked placeholder; `render_prompt` returns empty strings,
+`build_segment` returns `None`) — intercept/config/git/icons substrate is real, visible
+prompt output is not yet; distinct from #116 (powerline-status, a Python renderer) — this
 claim is the zsh-script p10k engine natively in-shell.
 
 ---
