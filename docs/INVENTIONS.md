@@ -449,27 +449,38 @@ search" today is the suggestion-search engine, not a ported fish Ctrl-R pager; "
 rests on non-exhaustive prior-art absence (no other shell found shipping fish's trio
 natively in-binary).
 
-**40b. First to port the powerlevel10k prompt engine to the shell's native implementation language** — `med`
+**40b. First to port the powerlevel10k prompt engine to the shell's native implementation language** — `high`
 Powerlevel10k — ~13k lines of metaprogrammed zsh, the canonical "compatibility layer for
 a broken shell" — reimplemented as an in-process Rust segment engine inside the shell
 binary itself: sourcing `powerlevel10k.zsh-theme` is intercepted at builtin dispatch so
 the zsh theme never executes, the user's `.p10k.zsh` config still sources normally (its
 `POWERLEVEL9K_*` typesets land in the paramtab and are read back with p10k's own fallback
-chain), the engine renders PROMPT/RPROMPT at preprompt time, and gitstatusd is absorbed —
-git status computed in-process, no C++ sidecar daemon, no fork per prompt. The theme file
-is the SPEC (segments ported from `internal/p10k.zsh`, cited `// p10k:NNN`), and no
-instant-prompt fakery: first paint = full functionality (`AOT_DESIGN.md:994`). *Basis:*
-`zshrs/src/extensions/p10k/` (1,440 L, 7 files: `mod.rs` theme-source intercept +
-activation; `config.rs` 402 L `p9k_param` fallback chain; `git.rs` 529 L in-process git
-status; `icons.rs` 353 L), wired live at `fusevm_bridge.rs:649`
-(`maybe_intercept_theme_source`) and `ported/utils.rs:1768` (`preprompt_render`, after the
-`precmd` hook); the compat path doubles as the behavioral oracle (zinit_p10k parity
-192/192, `docs/PARITY.md:44`). *Caveat:* segment building + rendering are **explicit
-placeholders pending a concurrent porting session** (`render.rs`/`segments_core.rs`/
-`segments_env.rs` are marked placeholder; `render_prompt` returns empty strings,
-`build_segment` returns `None`) — intercept/config/git/icons substrate is real, visible
-prompt output is not yet; distinct from #116 (powerline-status, a Python renderer) — this
-claim is the zsh-script p10k engine natively in-shell.
+chain), the engine renders PROMPT/RPROMPT eagerly at preprompt time (the theme's deferred
+`${...}`-template state machine collapses into one linear fold per prompt), and
+gitstatusd is absorbed — git status computed in-process by a native `.git` reader
+(HEAD/refs/packed-refs, index v2/v3/v4 parse + lstat scan for unstaged/conflicted, stash
+reflog count, tag peel), no C++ sidecar daemon, no fork per prompt in the cached case.
+The theme file is the SPEC (segments ported from `internal/p10k.zsh`, cited
+`// p10k:NNN`), and no instant-prompt fakery: first paint = full functionality
+(`AOT_DESIGN.md:994`). *Basis:* `zshrs/src/extensions/p10k/` (12,211 L, 11 files):
+`mod.rs` theme-source intercept + activation + the user-defined `p10k segment`
+custom-segment protocol; `config.rs` `p9k_param` fallback chain; 81 segment builders
+across `segments_core.rs` / `segments_sys.rs` / `segments_env.rs` / `segments_extra.rs`
+(dir, vcs, status, prompt_char, context, battery, wifi, vi_mode, kubecontext, aws,
+virtualenv, …); `render.rs` left/right multiline assembly with true right-alignment +
+gap char/style; `expansion.rs` CONTENT/VISUAL_IDENTIFIER_EXPANSION templates evaluated
+through the real `${(e)}` subst chain + SHOW_ON_UPGLOB; `transient.rs`
+POWERLEVEL9K_TRANSIENT_PROMPT; `git.rs` native git status; `icons.rs`
+nerdfont-complete. Wired live at `fusevm_bridge.rs` (`maybe_intercept_theme_source`) and
+`ported/utils.rs` (`preprompt_render`, after the `precmd` hook); 94 in-module tests; the
+compat path doubles as the behavioral oracle (zinit_p10k parity 192/192,
+`docs/PARITY.md:44`). *Caveat:* staged/untracked counts still shell out to one gated
+`git status --porcelain=v2` per cache miss (HEAD-tree diff needs a zlib object store —
+documented, not faked); a transient-repaint double-paint glitch is open; instant prompt
+and the config wizard are unported by design (the doctrine forbids the first; the second
+is config-authoring, not rendering); "first" rests on no other shell shipping its prompt
+theme in-binary — distinct from #116 (powerline-status, a Python renderer) — and is
+author-asserted.
 
 ---
 
