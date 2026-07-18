@@ -720,6 +720,13 @@
       download: 'docs/awkrs-reference.pdf',
     },
     {
+      id: 'rubyrs-reference', name: 'The rubyrs Reference', glyph: 'rR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The complete rubyrs reference — the Ruby surface of the compiled Ruby runtime on fusevm: builtins, core classes, and the CLI, generated from the live implementation. The dense companion to The rubyrs Book. Free, DRM-free PDF.',
+      pills: ['Reference', 'rubyrs', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/rubyrs-reference.pdf',
+    },
+    {
       id: 'zpwr-synth-reference', name: 'The zpwr-synth Reference', glyph: 'yR', category: 'Publications', badge: 'REFERENCE',
       tagline: 'The zpwr-synth manual — per-module node and parameter reference for the modular voice engine, generated from the live registry. Free, DRM-free PDF.',
       pills: ['Reference', 'zpwr-synth', 'Free · DRM-free PDF'], price: 0,
@@ -2403,6 +2410,10 @@
     "gui-automation-bus-reference": {
       "overview": "The dense reference for the GUI automation bus — its message types, routing model, and per-app endpoints, for scripting the desktop suite.",
       "features": ["Every message type on the bus", "The routing model: addressing, fan-out, and delivery", "The per-app endpoint catalog", "The companion reference to The GUI Automation Bus", "Free, DRM-free PDF"]
+    },
+    "rubyrs-reference": {
+      "overview": "The complete rubyrs reference — the Ruby language surface of the compiled Ruby runtime on fusevm: builtins, core classes (String / Array / Hash), and the CLI, generated from the live implementation so every method and flag matches the shipping binary.",
+      "features": ["The Ruby surface implemented by rubyrs, generated from the live source", "Core classes and their methods: String, Array, Hash, and friends", "The CLI: run a file, a -e one-liner, or the REPL", "The runtime model: native VM ops vs the RubyHost (dispatch, blocks, yield)", "The dense companion to The rubyrs Book", "Free, DRM-free PDF"]
     },
     "strykelang-reference": {
       "overview": "The complete strykelang language reference — every builtin, operator, sigil, and pipeline form of the parallel Perl 5 superset, generated from the live implementation. The dense companion to The strykelang Book.",
