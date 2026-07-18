@@ -856,6 +856,7 @@
     ['stryke-search', 'ES', 'Elasticsearch / OpenSearch client for stryke — index admin, document CRUD, bulk indexing, the query DSL, scroll, and aliases.'],
     ['stryke-selenium', 'SE', 'Browser automation for stryke — WebDriver, DOM, JS, and cookies.'],
     ['stryke-spark', 'SK', 'Apache Spark client for stryke.'],
+    ['stryke-terminal', 'TR', 'Headless VT100 / VT220 / linux terminal emulator for stryke — a faithful pyte port; feed a program\'s raw byte stream and read the rendered screen model.'],
     ['stryke-utils', 'UT', 'Boundary helpers for stryke — everything else is a builtin.'],
     ['stryke-zmq', 'ZQ', 'ZeroMQ client for stryke — REQ/REP, PUB/SUB, PUSH/PULL, and DEALER/ROUTER.'],
   ].forEach(function (e) { PRODUCTS.push(strykePkg(e[0], e[1], e[2])); });
@@ -2001,6 +2002,18 @@
         "cache/uncache tables and runtime config",
         "submit pass-through for .py/.jar workloads",
         "master URL and table-name parsing helpers"
+      ]
+    },
+    "stryke-terminal": {
+      "overview": "Headless VTXXX terminal emulator for stryke — a faithful port of pyte. Feed it the raw byte stream a program writes and it maintains a full VT100 / VT220 / TERM=linux screen model; then read the rendered screen instead of escape-laden bytes. Shipped as a precompiled cdylib stryke dlopens in-process on first `use Terminal`, with emulator sessions that persist across calls.",
+      "features": [
+        "Faithful pyte port: VT100 / VT220 / TERM=linux screen model",
+        "Feed raw bytes — colors, cursor moves, erases, scroll regions, insert/delete, charsets, titles",
+        "Maintains grid, cursor, per-cell colors/attributes, modes, scroll margins, tab stops",
+        "Scrollback history and rendered-screen reads via Terminal::display",
+        "Per-cell inspection via Terminal::cell (character plus SGR attributes)",
+        "Backs strykelang's pty_* builtins — drive htop/vim/etc. fully headless",
+        "In-process cdylib, dlopened on first use Terminal; sessions persist across calls"
       ]
     },
     "stryke-utils": {
