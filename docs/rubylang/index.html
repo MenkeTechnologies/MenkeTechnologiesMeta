@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="rubylang — Ruby in Rust. A compiled Ruby runtime: source lexed and parsed to an AST, lowered to fusevm bytecode, and run on the shared bytecode VM with a three-tier Cranelift JIT. MIT licensed.">
+  <title>rubylang — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+      gap: 0.6rem;
+      margin: 0.7rem 0;
+    }
+    .cat-card {
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--cyan);
+      padding: 0.6rem 0.8rem;
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-radius: 2px;
+    }
+    .cat-card h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 0 0 0.35rem;
+    }
+    .cat-card p { margin: 0; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+    .cat-card code { font-size: 11px; color: var(--accent-light); }
+    .reflection-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12px; }
+    .reflection-table th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; text-align: left;
+      padding: 6px 10px; border: 1px solid var(--border);
+    }
+    .reflection-table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    .reflection-table td code { color: var(--accent-light); background: var(--bg); }
+    .status-pill {
+      display: inline-block; font-family: 'Orbitron', sans-serif; font-size: 9px;
+      font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 2px; border: 1px solid var(--border);
+    }
+    .status-ported { color: var(--cyan); border-color: var(--cyan); }
+    .status-implemented { color: var(--green); border-color: var(--green); }
+    .status-progress { color: var(--accent-light); }
+    .status-planned { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// RUBYLANG — RUBY IN RUST</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/rubylang" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line" id="rubyrsBuildLine">rubylang v0.1.0 · Ruby on fusevm · lex/parse → AST → bytecode → Cranelift JIT · a fusevm language host (with zshrs, stryke, awkrs, elisp) · MIT · in active development</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/rubylang" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/rubylang/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>RUBYLANG REFERENCE</h2>
+      <p class="tutorial-subtitle">A compiled Ruby runtime written in Rust. Source is lexed and parsed to an AST, lowered to <code>fusevm</code> bytecode, and executed on the same language-agnostic VM + three-tier Cranelift JIT that hosts <code>zshrs</code>, <code>stryke</code>, <code>awkrs</code>, and <code>elisp</code>. <strong>In active development.</strong></p>
+
+      <section class="tutorial-section">
+        <h2>What it is</h2>
+        <p><code>rubylang</code> runs Ruby programs as ordinary compiled bytecode: it lexes and parses the source, lowers it to <code>fusevm</code> instructions, and lets the shared engine execute and JIT-compile them. There is no bespoke VM or tree-walker — arithmetic and comparisons lower to native fusevm ops so the Cranelift JIT can trace hot loops, while Ruby-specific behaviour (method dispatch, blocks, object construction, <code>yield</code>) is served by the runtime host.</p>
+        <p>It is another language hosted on <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a>, the shared bytecode VM and Cranelift JIT behind <code>zshrs</code> (the shell), <code>stryke</code> (the language), <code>awkrs</code> (AWK), and <code>elisp</code> (Emacs Lisp). rubylang carries no VM or JIT of its own.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Architecture</h2>
+        <p>The pipeline mirrors how <code>zshrs</code> hosts zsh and <code>elisp</code> hosts Emacs Lisp:</p>
+        <pre>Ruby source  →  lexer  →  parser (AST)  →  lower to fusevm bytecode  →  fusevm VM + Cranelift JIT
+                                                    │
+                                         RubyHost object heap (methods, blocks, String/Array/Hash)</pre>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>fusevm-hosted</h4><p>No local <code>vm.rs</code> / <code>jit.rs</code>. Ruby is lowered to fusevm bytecode and executed on the shared three-tier Cranelift JIT; <code>jit-disk-cache</code> persists native code across runs.</p></div>
+          <div class="cat-card"><h4>Native arithmetic, JIT-able</h4><p>Arithmetic and comparison operators lower to native fusevm ops; a strict numeric hook supplies Ruby semantics (String/Array <code>+</code>, floored integer division) for non-numeric operands only.</p></div>
+          <div class="cat-card"><h4>Reference-typed objects</h4><p>String, Array, and Hash live on the host heap behind <code>Value::Obj</code> handles, so <code>a.push(x)</code> mutates in place — real Ruby reference semantics, not value copies.</p></div>
+          <div class="cat-card"><h4>Blocks share scope</h4><p>Because every variable access routes through the thread-local host, a block body run as a nested VM automatically captures and mutates its enclosing locals — Ruby's block semantics, for free.</p></div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Example</h2>
+<pre>def fib(n)
+  n &lt; 2 ? n : fib(n - 1) + fib(n - 2)
+end
+
+puts (0..10).map { |i| fib(i) }.join(", ")
+# =&gt; 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55
+
+sum = 0
+[1, 2, 3, 4].each { |x| sum += x }
+puts sum          # =&gt; 10
+
+puts({ a: 1, b: 2 }.merge({ c: 3 }).keys.length)   # =&gt; 3</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Status &amp; roadmap</h2>
+        <p>The table below reflects the current state of the tree.</p>
+        <table class="reflection-table">
+          <thead><tr><th>Component</th><th>State</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Lexer / parser → AST</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Space-aware command-call disambiguation; <code>#{}</code> interpolation.</td></tr>
+            <tr><td>AST → fusevm bytecode lowering</td><td><span class="status-pill status-implemented">Implemented</span></td><td>No local VM; native arithmetic + host dispatch (<code>src/compiler.rs</code>).</td></tr>
+            <tr><td>Object heap &amp; method dispatch</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Integer/Float/String/Array/Hash/Symbol/Range/Proc (<code>src/host.rs</code>).</td></tr>
+            <tr><td>Core method &amp; Kernel surface</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Enumerable, String, Hash, Range methods; <code>puts</code>/<code>p</code>/<code>format</code>. Growing.</td></tr>
+            <tr><td>Blocks, <code>yield</code>, closures</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Scope-sharing blocks; <code>break</code>/<code>next</code>/<code>return</code> control flow.</td></tr>
+            <tr><td>Standalone <code>ruby</code> binary + REPL</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Run <code>.rb</code> files, <code>-e</code> one-liners, interactive REPL (<code>src/main.rs</code>).</td></tr>
+            <tr><td>rkyv bytecode script cache</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Versioned, migration-safe on-disk cache (<code>src/cache.rs</code>).</td></tr>
+            <tr><td>Classes, inheritance, <code>super</code>, <code>attr_*</code></td><td><span class="status-pill status-implemented">Implemented</span></td><td><code>initialize</code>, instance vars, single inheritance, ancestor-chain dispatch, method chaining (<code>src/host.rs</code>).</td></tr>
+            <tr><td>Modules/<code>include</code>, class methods</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Mixin methods searched before the superclass; <code>def self.m</code> class methods.</td></tr>
+            <tr><td>Exceptions (<code>begin</code>/<code>rescue</code>/<code>ensure</code>)</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Typed classes, method-body + modifier <code>rescue</code>, custom exception classes.</td></tr>
+            <tr><td>Splat params, <code>&amp;:sym</code>, parallel assignment, default args</td><td><span class="status-pill status-implemented">Implemented</span></td><td><code>def f(a, *rest)</code>, <code>map(&amp;:upcase)</code>, <code>a, b = 1, 2</code>, defaulted parameters.</td></tr>
+            <tr><td>Parity harness vs reference <code>ruby</code></td><td><span class="status-pill status-implemented">Implemented</span></td><td>35-snippet differential corpus, frozen + replayed in CI (<code>tests/parity.rs</code>).</td></tr>
+            <tr><td>LSP server (<code>--lsp</code>)</td><td><span class="status-pill status-implemented">Implemented</span></td><td>Diagnostics, hover, completion (<code>src/lsp.rs</code>).</td></tr>
+            <tr><td>DAP adapter (<code>--dap</code>)</td><td><span class="status-pill status-progress">Partial</span></td><td>Handshake + run-to-completion with stdout capture; stepping is a later wave (<code>src/dap.rs</code>).</td></tr>
+            <tr><td><code>extend</code>/<code>prepend</code>, keyword params, regex</td><td><span class="status-pill status-planned">Planned</span></td><td><code>**kwargs</code>, <code>&amp;block</code> params, <code>Regexp</code>, bignum pending.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Why rubylang</h2>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>Compiled, not tree-walked</h4><p>MRI walks a node tree in C; rubylang lowers Ruby to bytecode and JITs hot paths through Cranelift — the same architecture that makes zshrs and stryke fast.</p></div>
+          <div class="cat-card"><h4>One shared engine</h4><p>Bug fixes and JIT improvements in fusevm benefit zshrs, stryke, awkrs, elisp, and rubylang at once.</p></div>
+          <div class="cat-card"><h4>AOP intercepts</h4><p>A glob-matched before/after/around method-intercept registry (<code>src/intercepts.rs</code>) — aspect weaving over Ruby method calls, the same design as zshrs's function intercepts.</p></div>
+          <div class="cat-card"><h4>Editor-ready</h4><p>Ships an LSP server and a DAP adapter over stdio from day one, plus an <code>irb</code>-style REPL on a persistent host.</p></div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Building from source</h2>
+        <p>rubylang builds as a standalone Rust crate (it is not a workspace member of the meta repo):</p>
+<pre># clone
+git clone https://github.com/MenkeTechnologies/rubylang
+cd rubylang
+
+# build (debug)
+cargo build
+
+# run a script, a one-liner, or the REPL
+./target/debug/ruby script.rb
+./target/debug/ruby -e 'puts (1..100).sum'
+./target/debug/ruby --repl
+
+# run tests
+cargo test</pre>
+        <p>fusevm is pulled from crates.io with the <code>jit</code>, <code>jit-disk-cache</code>, and <code>aot</code> features.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>License</h2>
+        <p>rubylang is <strong>MIT licensed</strong> — free and open source. See <a href="https://github.com/MenkeTechnologies/rubylang/blob/main/LICENSE">LICENSE</a>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Repository &amp; links</h2>
+        <ul>
+          <li><strong>Engineering report</strong> — <a href="report.html">report.html</a> (architecture, fusevm hosting, roadmap, dependency posture)</li>
+          <li><strong>Builtin reference</strong> — <a href="reference.html">reference.html</a> (Kernel and core methods)</li>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/rubylang">github.com/MenkeTechnologies/rubylang</a></li>
+          <li><strong>Issues</strong> — <a href="https://github.com/MenkeTechnologies/rubylang/issues">github.com/MenkeTechnologies/rubylang/issues</a></li>
+          <li><strong>The shared VM</strong> — <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a> (also behind <code>zshrs</code>, <code>stryke</code>, <code>awkrs</code>, <code>elisp</code>)</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

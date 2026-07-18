@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="arb — Engineering report. An original language for visualizing and modifying Unix pipelines, targeting the fusevm bytecode VM + Cranelift JIT. Architecture, world-first positioning, milestones, and dependency posture. MIT licensed.">
+  <title>arb &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;position:relative; }
+    .hub-scheme-strip-inner { max-width:76rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-align:left; }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch}.hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    .docs-build-line { margin:0.35rem 0 0;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;max-width:46rem;opacity:0.75; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ARB — ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/arb" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">arb v0.0.1 · pipe → dynamic TUI/web · original language targeting fusevm + Cranelift JIT · jq/xpath/css/yq superset · MIT · M0–M2: live-tail + spec interpreter + query pipeline (expanding)</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/arb" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
+      <p class="tutorial-subtitle">arb is an original language for <strong>visualizing and modifying Unix pipelines</strong> — pipe a stream in and it spawns a dynamic TUI (ratatui) or, later, a served web page (zgui) from a declarative spec. It targets the <code>fusevm</code> bytecode VM and its three-tier Cranelift JIT. This report describes the positioning, the target architecture, and the current state of the tree. The statements below are facts about the design and the manifest, not aspirational metrics.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">Pipeline</div><div class="stat-label">fusevm language host</div></div>
+        <div class="stat-card"><div class="stat-val">M2</div><div class="stat-label">interp + query (expanding)</div></div>
+        <div class="stat-card"><div class="stat-val">v0.0.1</div><div class="stat-label">version</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">license · free / OSS</div></div>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>Summary</h2>
+        <p>A pipeline dumps text at you; arb turns it into an interface. Drop <code>arb</code> into a pipe and a small declarative spec — Tcl/Tk-flavored, but not Tcl — describes widgets, layout, a uniform query over any format, and interactive controls. Those controls feed back into the passthrough, so arb can sit mid-pipe and <em>shape</em> what the downstream consumer receives, not just display it. It joins <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a> alongside <code>zshrs</code>, <code>stryke</code>, <code>rubyrs</code>, and <code>elisp</code>, reusing that shared bytecode VM and JIT rather than shipping its own.</p>
+        <p>arb is an <strong>original language in stryke's class — not a port</strong>, and deliberately lean (rubyrs-scale, not stryke-scale). It is early. <strong>M0</strong> ships the zero-config live-tail — <code>find / | arb</code> renders the stream in a full-screen ratatui TUI with a live count and rate, degrading to a headless summary with no controlling terminal on stdout. <strong>M1</strong> adds the Tcl-flavored reader and the declarative widget/<code>source</code> interpreter with multi-widget render; <strong>M2</strong> (in progress) builds out the source query pipeline — <code>in</code>, <code>match</code>/<code>grep</code>, <code>reject</code>/<code>grepv</code>, <code>field N</code>/<code>field NAME</code>, <code>count</code>, <code>rate</code>, <code>tally</code> over line and JSON streams (<code>in.json</code>, nested key paths) — with per-widget derived data rendering into <code>gauge</code>/<code>bars</code>/<code>histo</code>. The expression layer, fusevm lowering, the full query surface, the web target, actors, and the package manager arrive across the later milestones specified in <a href="https://github.com/MenkeTechnologies/arb/blob/main/SPEC.md">SPEC.md</a>. Nothing is faked — unrecognized widget verbs are ignored for forward compatibility, and unbuilt features are absent, not stubbed.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>World-first positioning</h2>
+        <p>The novelty is the <strong>synthesis and the ecosystem</strong>, not any single leg. Every capability has prior art on its own:</p>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Prior art per leg</h4><p>Tcl / Tk (1988), Expect (1990, spawn/react), <code>dasel</code> (unified query), ratatui (TUI), Streamlit / <code>textual serve</code> (served web UI), <code>filt</code> (interactive pipe grep — single filter box, filter-only, TUI-only).</p></div>
+          <div class="feature-card"><h4>The combination is new</h4><p>No tool is a <em>pipe-native, dual-target (terminal + web), component-generating UI language with a shareable dashboard registry</em>. arb is that combination.</p></div>
+          <div class="feature-card"><h4>Ecosystem leg</h4><p><code>cmd | arb</code> sniffs the upstream command or data shape → resolves the matching <code>arb-&lt;tool&gt;</code> package → renders. No registry of installable pipeline TUIs exists today.</p></div>
+          <div class="feature-card"><h4>Not a server</h4><p>Terminal-invoked and pipe-driven. The web target spawns a local UI host on demand (like <code>textual serve</code>), not a daemon you run.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Target architecture on fusevm</h2>
+        <p>arb is <em>designed</em> as a fusevm frontend: the spec is meant to lower to <code>fusevm::Chunk</code> bytecode and run on the shared VM + three-tier Cranelift JIT, while ratatui / zgui / query / actor behaviour is served by an extension-op host over a <code>Value::Obj</code> heap. The M1/M2 tree is still a <strong>direct interpreter</strong> — the reader builds a <code>Spec</code> that the ratatui backend renders and the query pipeline evaluates over the live stream; the fusevm lowering is a later milestone. The target execution path is:</p>
+<pre>arb spec  →  lexer  →  parser → AST  →  lower to fusevm bytecode  →  fusevm VM + Cranelift JIT
+                                              │
+                                   host: ratatui / zgui / query / actors
+                                   stream: stdin(.json/.xml/.html/.yaml/.toml/.csv)</pre>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Shared engine</h4><p>Planned deps pull <code>fusevm</code> from crates.io with the <code>jit</code>, <code>jit-disk-cache</code>, and <code>aot</code> features. JIT and VM improvements land once and benefit zshrs, stryke, rubyrs, elisp, and arb together.</p></div>
+          <div class="feature-card"><h4>Mechanics reused, semantics original</h4><p>Transfers from siblings are mechanics only — fusevm embedding, the rkyv cache, the LSP/DAP stdio shape, the package-manager ABI. The lexer, parser, AST, lowering, and semantics are arb-original.</p></div>
+          <div class="feature-card"><h4>One query engine</h4><p>A single vocabulary (a jq/xpath/css/yq superset) works uniformly over JSON, XML, HTML, YAML, TOML, and CSV — <code>field</code>, <code>each</code>, <code>find</code>, <code>attr</code>, <code>sel</code>, <code>where</code>, and aggregates.</p></div>
+          <div class="feature-card"><h4>Megafilter/map passthrough</h4><p>Interactive controls (<code>filter</code>, <code>facet</code>, <code>slider</code>) render AND feed <code>out</code>, so a control's path used as a value is its current state — arb filters and maps the downstream output live.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Milestones</h2>
+        <p>arb lands in stages. M0–M2 are in the tree (M2 still expanding); everything past them is specified in SPEC.md and not yet built.</p>
+        <table class="file-table">
+          <thead><tr><th>Milestone</th><th>State</th><th>Scope</th></tr></thead>
+          <tbody>
+            <tr><td>M0 · walking skeleton</td><td>Implemented</td><td>Zero-config live-tail TUI + headless summary; count/rate header, ring buffer, <code>q</code>/Esc/Ctrl-C (<code>src/main.rs</code>).</td></tr>
+            <tr><td>M1 · spec interpreter + widgets</td><td>Implemented</td><td>Tcl-flavored reader, declarative widget/<code>source</code> interp, <code>.x &lt;- in</code> binds, multi-widget render (<code>src/lexer.rs</code>, <code>src/parser.rs</code>, <code>src/ast.rs</code>, <code>src/spec.rs</code>, <code>src/tui.rs</code>).</td></tr>
+            <tr><td>M2 · query pipeline + widgets <em>(expanding)</em></td><td>Implemented</td><td><code>in</code>, <code>match</code>/<code>grep</code>, <code>reject</code>/<code>grepv</code>, <code>field N</code>/<code>field NAME</code>, <code>count</code>, <code>rate</code>, <code>tally</code> over line and JSON streams (<code>in.json</code>, nested key paths); per-widget derived data into <code>gauge</code>/<code>bars</code>/<code>histo</code> (<code>src/query.rs</code>).</td></tr>
+            <tr><td>M2+ · presets / richer query</td><td>Planned</td><td>Modules, imports, preset dashboards; CSV/XML/HTML/YAML/TOML extraction, <code>where(pred)</code>, sort / group / uniq.</td></tr>
+            <tr><td>M3 · controls + <code>out</code></td><td>Planned</td><td>Interactive controls that megafilter/map the passthrough.</td></tr>
+            <tr><td>M4 · Expect + events</td><td>Planned</td><td>Stream reactions (<code>expect</code>) and Tk-style <code>bind</code> events.</td></tr>
+            <tr><td>M5 · web target</td><td>Planned</td><td>Served zgui page + WebSocket live update (<code>-t web</code>).</td></tr>
+            <tr><td>M6 · actors</td><td>Planned</td><td>Akka-style actors, pools, <code>ask</code>/<code>tell</code>, stream fan-out.</td></tr>
+            <tr><td>M7 · package manager</td><td>Planned</td><td>Script + native packages, <code>arb install/add/publish</code>, the shared-dashboard registry.</td></tr>
+            <tr><td>M8 · LSP / DAP</td><td>Planned</td><td>Editor tooling over stdio JSON-RPC.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Module layout</h2>
+        <p>The <em>present</em> rows are in the tree today (a lib + bin: the front-end is unit-testable without a terminal); the <em>planned</em> rows are the target layout the later milestones fill in.</p>
+        <table class="file-table">
+          <thead><tr><th>File</th><th>State</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>src/main.rs</td><td>present</td><td>Entry point. Loads a spec (or synthesizes a tail), wires stdin → ratatui or headless output.</td></tr>
+            <tr><td>src/lexer.rs</td><td>present</td><td>Tcl-flavored reader (original).</td></tr>
+            <tr><td>src/parser.rs</td><td>present</td><td>Widget commands + block grammar (original).</td></tr>
+            <tr><td>src/ast.rs</td><td>present</td><td>Command syntax tree.</td></tr>
+            <tr><td>src/spec.rs</td><td>present</td><td>Command tree → <code>Spec</code> (widgets, <code>source</code> pipelines, binds).</td></tr>
+            <tr><td>src/query.rs</td><td>present</td><td>Source query pipeline (M2 verbs; jq/xpath/css/yq surface grows here).</td></tr>
+            <tr><td>src/stream.rs</td><td>present</td><td>Live stream state feeding the widgets.</td></tr>
+            <tr><td>src/tui.rs</td><td>present</td><td>ratatui backend.</td></tr>
+            <tr><td>src/compiler.rs</td><td>planned</td><td>AST → <code>fusevm::Chunk</code> (original lowering).</td></tr>
+            <tr><td>src/host.rs</td><td>planned</td><td>Extension ops over a <code>Value::Obj</code> heap.</td></tr>
+            <tr><td>src/web.rs</td><td>planned</td><td>zgui codegen + WS server (feature: web).</td></tr>
+            <tr><td>src/actor.rs</td><td>planned</td><td>Akka-style runtime (feature: actors).</td></tr>
+            <tr><td>src/module.rs</td><td>planned</td><td>import / resolution.</td></tr>
+            <tr><td>src/pkg.rs</td><td>planned</td><td>Package manager (arb.toml, install/publish).</td></tr>
+            <tr><td>src/cache.rs</td><td>planned</td><td>rkyv bytecode cache under <code>~/.arb/</code>.</td></tr>
+            <tr><td>src/lsp.rs / src/dap.rs</td><td>planned</td><td>stdio JSON-RPC (shape reused from siblings).</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Dependency posture</h2>
+        <p>arb is a standalone crate (MIT). The current manifest is deliberately minimal — <code>ratatui</code> 0.29 (with its <code>crossterm</code> backend), <code>clap</code> 4.5, and <code>regex</code> 1 for the match/reject verbs. Later milestones add <code>fusevm{jit,jit-disk-cache,aot}</code>, <code>rkyv</code>/<code>bincode</code>/<code>memmap2</code> for the cache, the format parsers (<code>serde_json</code> / <code>quick-xml</code> / <code>serde_yaml</code> / <code>toml</code> / <code>csv</code> + html), and feature-gated async http + ws for the web target. Release builds use <code>lto = true</code> and <code>strip = true</code>.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>License</h2>
+        <p>arb is <strong>MIT licensed</strong> — free and open source. See <a href="https://github.com/MenkeTechnologies/arb/blob/main/LICENSE">LICENSE</a>.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

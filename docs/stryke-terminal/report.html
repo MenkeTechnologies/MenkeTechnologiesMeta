@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="stryke-terminal engineering report — architecture and fidelity of the pyte port: the parser state machine, the sparse styled buffer, folded-in scrollback history, the JSON-over-FFI boundary, and golden-parity testing against the reference pyte 0.8.2. See https://github.com/MenkeTechnologies/stryke-terminal">
+  <title>stryke-terminal — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 42rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+    }
+    .hub-scheme-strip-inner { max-width: 68rem; margin: 0 auto; display: flex; align-items: center; gap: 0.85rem; }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto; font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+    }
+    .hub-scheme-strip .scheme-grid { flex: 1 1 auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .rpt-tbl { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 12.5px; }
+    .rpt-tbl td, .rpt-tbl th { padding: 6px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--text-dim); text-align: left; }
+    .rpt-tbl th { color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+    .rpt-tbl td:first-child { color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// STRYKE-TERMINAL &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Engineering report</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/stryke-terminal" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
+          </nav>
+          <p class="docs-build-line">faithful port of pyte 0.8.2 &middot; VT100 / VT220 / TERM=linux &middot; v0.1.0</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/stryke-terminal" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
+      <p class="tutorial-subtitle">How <code>stryke-terminal</code> ports pyte 0.8.2 to Rust and proves the port faithful. Every module maps 1:1 to a pyte module; the one structural transform is the parser (a Python generator-coroutine becomes an explicit state machine).</p>
+
+      <section class="tutorial-section">
+        <h2>Module map</h2>
+        <p>The 2,420-line pyte package (8 modules) ports module-for-module. Every handler keeps its pyte name.</p>
+        <table class="rpt-tbl">
+          <tr><th>Rust</th><th>pyte</th><th>Notes</th></tr>
+          <tr><td>control.rs</td><td>control.py</td><td>C0/C1 control-char constants</td></tr>
+          <tr><td>escape.rs</td><td>escape.py</td><td>non-CSI + CSI opcode constants</td></tr>
+          <tr><td>modes.rs</td><td>modes.py</td><td>terminal mode switches (private modes &lt;&lt;5)</td></tr>
+          <tr><td>graphics.rs</td><td>graphics.py</td><td>SGR color / attribute maps + 256-color table</td></tr>
+          <tr><td>charsets.rs</td><td>charsets.py</td><td>LAT1 / VT100 / IBMPC / VAX42 translation tables</td></tr>
+          <tr><td>wcwidth.rs</td><td>(wcwidth lib)</td><td>cell width + combining-class, via unicode-width</td></tr>
+          <tr><td>screens.rs</td><td>screens.py</td><td>Char / Cursor / Screen + HistoryScreen + dis()</td></tr>
+          <tr><td>streams.rs</td><td>streams.py</td><td>Stream / ByteStream parser (generator &rarr; state machine)</td></tr>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Design decisions</h2>
+        <ul>
+          <li><strong>Parser: generator &rarr; state machine.</strong> pyte's <code>_parser_fsm</code> is a Python coroutine driven by <code>yield</code>. It is reified into an explicit <code>enum State { Ground, Escape, Csi, Osc, &hellip; }</code> stepped one character at a time. Every branch corresponds to a branch of the Python FSM, including the plain-text fast path that draws runs of printable characters in one call.</li>
+          <li><strong>Sparse styled buffer.</strong> Each line is a <code>HashMap&lt;col, Char&gt;</code> with a static default, mirroring pyte's <code>StaticDefaultDict</code>: reading an empty cell returns the default without storing it, so a mostly-blank screen stays cheap.</li>
+          <li><strong>History folded in.</strong> pyte splits <code>HistoryScreen</code> into a subclass whose <code>__getattribute__</code> wraps every event with before/after hooks. Rust has no such dynamic dispatch, so scrollback is an optional component on <code>Screen</code>; the before/after hooks run around each event and are no-ops when history is absent.</li>
+          <li><strong>i64 coordinates.</strong> Cursor position and counts are signed, matching Python integer arithmetic that transiently goes negative before <code>ensure_hbounds</code> / <code>ensure_vbounds</code> clamp it.</li>
+          <li><strong>Device reports captured.</strong> pyte's <code>write_process_input</code> is a no-op; here it buffers DA / DSR / cursor-position replies so a script can forward them to the child with <code>pty_send</code>.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The FFI boundary</h2>
+        <p>Args and results cross the boundary as JSON. Terminal data is full of control bytes (ESC, CR, LF, BEL), and stryke's <code>to_json</code> / <code>from_json</code> use <em>raw</em> control bytes in strings rather than <code>\uXXXX</code> escapes. The cdylib matches that convention on both sides: incoming payloads have their raw control bytes escaped so a strict parser accepts them, and outgoing JSON is written with a custom formatter that emits control bytes raw. This is lossless and is what makes <code>take_input</code> data round-trip byte-for-byte.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Fidelity testing</h2>
+        <p>Correctness is pinned against the reference implementation, not asserted by hand. <code>tests/gen_golden.py</code> feeds pyte 0.8.2 a battery of escape / CSI / OSC inputs and records the resulting display, cursor, styled buffer, titles, device reports, and scrollback. The committed <code>tests/golden.json</code> is replayed through the Rust port, which must reproduce every field exactly &mdash; so CI needs no Python.</p>
+        <table class="rpt-tbl">
+          <tr><th>Suite</th><th>Cases</th><th>Checks</th></tr>
+          <tr><td>golden screen (vs pyte)</td><td>41</td><td>display + cursor + full styled buffer + title + device reports + scrollback</td></tr>
+          <tr><td>golden disassembler (vs DebugScreen)</td><td>6</td><td>event stream = pyte's <code>dis()</code></td></tr>
+          <tr><td>Rust unit (JSON interop)</td><td>4</td><td>control-byte sanitize / raw-emit round-trip</td></tr>
+          <tr><td>stryke assertions (t/)</td><td>37</td><td>end-to-end through the installed cdylib</td></tr>
+        </table>
+        <p>Coverage spans plain text and auto-wrap, cursor movement, erase-in-line/display, SGR (16-color, 256-color, truecolor, attributes), scrolling with margins, index / reverse-index, tab stops, insert/delete lines and characters, insert mode, charsets (including VT100 line-drawing in 8-bit mode), wide (CJK) and combining characters, OSC titles, device status / attribute reports, and scrollback paging.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Provenance &amp; license</h2>
+        <p>MIT. This is a port of pyte (LGPL upstream). Per pyte's own notes, the VT100 / IBMPC charset tables are reproduced verbatim from the Linux kernel and the 256-color table from Pygments, for emulation parity. One upstream typo in an aixterm color name is preserved verbatim so SGR output matches the reference byte-for-byte.</p>
+      </section>
+    </main>
+
+    <footer class="tutorial-footer">
+      <div class="tutorial-footer-inner">
+        <span>stryke-terminal v0.1.0 &middot; MIT</span>
+        <span class="sep">/</span>
+        <a href="https://github.com/MenkeTechnologies/stryke-terminal" target="_blank" rel="noopener noreferrer">github.com/MenkeTechnologies/stryke-terminal</a>
+      </div>
+    </footer>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
