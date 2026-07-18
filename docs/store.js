@@ -375,6 +375,36 @@
       repo: 'https://github.com/MenkeTechnologies/elisprs',
     },
     {
+      id: 'rubyrs',
+      name: 'rubyrs',
+      glyph: 'RB',
+      category: 'Developer Tools',
+      badge: 'NEW',
+      tagline: 'Ruby in Rust — a compiled Ruby runtime. Ruby source is lexed and parsed to an AST, lowered to fusevm bytecode, and run on the same bytecode VM + three-tier Cranelift JIT behind zshrs, stryke, awkrs, and elisprs; arithmetic lowers to native VM ops while dispatch, blocks, and objects are served by a thread-local runtime host. Free and open source.',
+      pills: ['Rust', 'Ruby', 'fusevm JIT', 'Free / OSS'],
+      price: 0,
+      tiers: [
+        { name: 'Open Source', desc: 'MIT licensed', price: 0 },
+      ],
+      download: 'https://github.com/MenkeTechnologies/rubyrs/releases/latest',
+      repo: 'https://github.com/MenkeTechnologies/rubyrs',
+    },
+    {
+      id: 'arb',
+      name: 'arb',
+      glyph: 'ar',
+      category: 'Developer Tools',
+      badge: 'WORLD FIRST',
+      tagline: 'A TUI for every pipeline. Pipe any Unix stream into arb and it spawns a dynamic full-screen TUI (and, later, a web page) built from a declarative, Tcl/Tk-flavored spec — a jq/xpath/css/yq superset, an interactive megafilter/map over the live passthrough, running on the fusevm bytecode VM + Cranelift JIT. Free and open source.',
+      pills: ['Rust', 'pipeline TUI', 'fusevm JIT', 'Free / OSS'],
+      price: 0,
+      tiers: [
+        { name: 'Open Source', desc: 'MIT licensed', price: 0 },
+      ],
+      download: 'https://github.com/MenkeTechnologies/arb/releases/latest',
+      repo: 'https://github.com/MenkeTechnologies/arb',
+    },
+    {
       id: 'zmax',
       name: 'zmax',
       glyph: 'EM',
@@ -441,11 +471,19 @@
     },
     {
       id: 'htoprs', name: 'htoprs', glyph: 'ht', category: 'CLI Tools', badge: 'FREE',
-      tagline: 'A from-source Rust port of htop — the interactive process viewer (process tree, per-core CPU/memory meters, sort/filter/search, signal sending, renice), reimplemented in memory-safe Rust against the upstream htop C source. Early scaffold (v0.1.0), GPL-2.0.',
-      pills: ['Rust', 'htop port', 'GPL-2.0 / OSS'], price: 0,
-      tiers: [{ name: 'Open Source', desc: 'GPL-2.0-or-later', price: 0 }],
+      tagline: 'A from-source Rust port of htop — the interactive process viewer (process tree, per-core CPU/memory meters, sort/filter/search, signal sending, renice), reimplemented in memory-safe Rust against the upstream htop C source. Early scaffold (v0.1.0), MIT.',
+      pills: ['Rust', 'htop port', 'MIT / OSS'], price: 0,
+      tiers: [{ name: 'Open Source', desc: 'MIT', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/htoprs/tags',
       repo: 'https://github.com/MenkeTechnologies/htoprs',
+    },
+    {
+      id: 'grcrs', name: 'grcrs', glyph: 'gr', category: 'CLI Tools', badge: 'FREE',
+      tagline: 'A from-source Rust port of grc (Generic Colouriser 1.13) — the two-binary suite grc (the wrapper: parses options, matches the command line against grc.conf regexps, runs the command and pipes its stdout/stderr through grcat, with --pty mode) plus grcat (the colouriser filter driving the per-command config rules), ported against the upstream grc sources rather than wrapping them. MIT — original Rust code.',
+      pills: ['Rust', 'grc port', 'MIT / OSS'], price: 0,
+      tiers: [{ name: 'Open Source', desc: 'MIT', price: 0 }],
+      download: 'https://github.com/MenkeTechnologies/grcrs/tags',
+      repo: 'https://github.com/MenkeTechnologies/grcrs',
     },
     {
       id: 'temprs', name: 'temprs', glyph: 'tm', category: 'CLI Tools', badge: 'FREE',
@@ -580,6 +618,24 @@
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
     {
+      id: 'studio-book', name: 'The Studio', glyph: 'St', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The cross-cutting book on the MenkeTechnologies audio stack — zpwr-synth, zpwr-fx, zpwr-midi-fx, and zpwr-daw, plus Audio-Haxor and zwire\'s ported browser audio path — and the two shared cores they stand on: zdsp-core (the shared DSP substrate) and zpwr-patch-core (the signal-agnostic patch graph, one templated engine instantiated for mono, stereo, and MIDI). Covers the mono-to-stereo block reuse, the mono and stereo plugin-host adapters, the voice/layer/MIDI engines, and the shared clip engine. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'Audio / DSP', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'cli-fleet-book', name: 'The CLI Fleet', glyph: 'cF', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The CLI-side companion to "Rewriting the Desktop in Rust" — one compendium mapping every command-line tool in the MenkeTechnologies stack. Full chapters for the tools with no book of their own: lsofrs (lsof), nmaprs (nmap), iftoprs (iftop), htoprs (htop), temprs (a shell temporary-file stack manager), storageshower (disk-usage TUI), zcolorizer (real-time log colouriser), grcrs (grc), and the two browser-adjacent native-messaging host binaries zpwrchrome-host and zwire-host — plus an opening shared-architecture chapter and a cross-reference index to the seven already documented (zshrs, strykelang, awkrs, vimlrs, elisprs, powerliners, ztmux). Every tool is MIT and original Rust; port-honest throughout — each reimplementation names its upstream and the original work is the Rust engineering. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'CLI fleet', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'stryke-ecosystem-book', name: 'The Stryke Ecosystem', glyph: 'sE', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The book on the Stryke connector fleet — the "batteries." The strykelang core ships small; the reach into external systems lives in opt-in packages kept out of the core binary so the daily install stays slim. A full, source-grounded chapter for each of 29 packages across seven parts: databases (postgres, mysql, mssql, mongo, redis, neo4j, scylla, clickhouse, search), data & analytics (arrow, parquet, polars, duckdb, spark), messaging & RPC (kafka, zmq, grpc), cloud & infrastructure (aws, gcp, azure, k8s, docker), web & automation (scrape, selenium, mcpd, email), documents (office), and foundation (utils, gui) — plus an opening chapter on the shared package model: a thin stryke library plus an in-process cdylib, dlopened on first use, a uniform JSON FFI boundary, and a URL-keyed connection cache. The strykelang reference documents the language; this book documents the batteries. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'Stryke packages', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
       id: 'zpwr-encyclopedia', name: 'The zpwr Encyclopedia', glyph: 'zE', category: 'Publications', badge: 'REFERENCE',
       tagline: 'The complete reference to zpwr — the most advanced UNIX terminal environment (500+ subcommands, 2000+ aliases). Every verb, alias, and subsystem, LaTeX-typeset into one volume.',
       pills: ['Encyclopedia', 'zpwr', 'DRM-free PDF'], price: 20,
@@ -602,6 +658,138 @@
       tagline: 'The companion book to zwire — Chromium/Blink forked into the strykelang cyberpunk HUD (not a WebView wrapper, not a new engine): why a real Blink base is required for zpwrchrome\'s Manifest V3 surface, the nine HUD patches that compile the native chrome — tab shapes, UI font, neon toolbar, omnibox, the 8 schemes in the color mixer + DevTools — the ztmux tiling overlay and ⌘K palette, the new-tab HUD, the internal-page scheme picker and native host, the dedicated profile, and the CDP overlay layer. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'zwire', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'znative-book', name: 'The znative Book', glyph: 'nB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to znative — the zshrs package manager, and the first shell package manager whose unit of installation can be native compiled code rather than shell text. The published, versioned ABI that makes a native plugin safe to install (the znative crate itself carries the plugin ABI, published from the zshrs repo to crates.io — cargo add znative + zmodload -R, #[repr(C)] boundary, ABI_VERSION checked at load); the eight-command surface (load / add / remove / list / info / update, plus gc / clean for the store); source auto-classification (owner/repo · github: · git+URL · path:) with @ref pinning and shallow clone; the content-addressed store at $ZSHRS_HOME/pkg/ with its installed.toml index and sha256 integrity; native-vs-script kind detection, the optional znative.toml manifest, the worked plugin ports (forgit, git-fuzzy, revolver, kubectl, zsh-z), and the one self-installing .zshrc line the whole workflow collapses to. Global-only, no lockfile — by design. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'znative', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'strykelang-reference', name: 'The strykelang Reference', glyph: 'sR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The complete strykelang language reference — every builtin, operator, sigil, and pipeline form of the parallel Perl 5 superset, generated from the live implementation. The dense companion to The strykelang Book. Free, DRM-free PDF.',
+      pills: ['Reference', 'strykelang', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/strykelang-reference.pdf',
+    },
+    {
+      id: 'zshrs-reference', name: 'The zshrs Reference', glyph: 'zR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The complete zshrs reference — every builtin, option, parameter flag, and completion primitive of the first compiled Unix shell. The dense companion to The zshrs Book. Free, DRM-free PDF.',
+      pills: ['Reference', 'zshrs', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zshrs-reference.pdf',
+    },
+    {
+      id: 'zmax-reference', name: 'The zmax Reference', glyph: 'eR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The complete zmax reference — every command, keymap, and embedded-language entry point of the modal IDE. The dense companion to The zmax Book. Free, DRM-free PDF.',
+      pills: ['Reference', 'zmax', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zmax-reference.pdf',
+    },
+    {
+      id: 'vimlrs-reference', name: 'The vimlrs Reference', glyph: 'vR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The complete vimlrs reference — the VimL builtin functions, commands, and options implemented as a fusevm frontend. Free, DRM-free PDF.',
+      pills: ['Reference', 'vimlrs', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/vimlrs-reference.pdf',
+    },
+    {
+      id: 'elisprs-reference', name: 'The elisprs Reference', glyph: 'lR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The complete elisprs reference — the Emacs Lisp subroutines and special forms implemented as a fusevm frontend. Free, DRM-free PDF.',
+      pills: ['Reference', 'elisprs', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/elisprs-reference.pdf',
+    },
+    {
+      id: 'awkrs-reference', name: 'The awkrs Reference', glyph: 'aR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The complete awkrs reference — the AWK language surface, builtins, and CLI of the parallel Rust AWK. Free, DRM-free PDF.',
+      pills: ['Reference', 'awkrs', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/awkrs-reference.pdf',
+    },
+    {
+      id: 'zpwr-synth-reference', name: 'The zpwr-synth Reference', glyph: 'yR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The zpwr-synth manual — per-module node and parameter reference for the modular voice engine, generated from the live registry. Free, DRM-free PDF.',
+      pills: ['Reference', 'zpwr-synth', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-synth-reference.pdf',
+    },
+    {
+      id: 'zpwr-fx-reference', name: 'The zpwr-fx Reference', glyph: 'xR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The zpwr-fx manual — shared-engine architecture overview plus per-module node and parameter reference, generated from the live registry. Free, DRM-free PDF.',
+      pills: ['Reference', 'zpwr-fx', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-fx-reference.pdf',
+    },
+    {
+      id: 'zpwr-midi-fx-reference', name: 'The zpwr-midi-fx Reference', glyph: 'mR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The zpwr-midi-fx manual — shared-engine architecture overview plus per-module node and parameter reference, generated from the live registry. Free, DRM-free PDF.',
+      pills: ['Reference', 'zpwr-midi-fx', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-midi-fx-reference.pdf',
+    },
+    {
+      id: 'zpwr-daw-reference', name: 'The zpwr-daw Reference', glyph: 'wR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The zpwr-daw manual — shared-engine architecture overview plus per-module node and parameter reference for the note-stream blocks every track wires. Free, DRM-free PDF.',
+      pills: ['Reference', 'zpwr-daw', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-daw-reference.pdf',
+    },
+    {
+      id: 'zpwr-clip-engine-reference', name: 'The zpwr Clip-Engine Reference', glyph: 'cR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The zpwr-daw clip-engine reference — the timeline, clip, and playback model behind the DAW. Free, DRM-free PDF.',
+      pills: ['Reference', 'zpwr-daw', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-clip-engine-reference.pdf',
+    },
+    {
+      id: 'zpwr-synth-block-catalog', name: 'zpwr-synth Block Catalog', glyph: 'yC', category: 'Publications', badge: 'CATALOG',
+      tagline: 'Every DSP block zpwr-synth ships — its 49 synth-voice modules plus the shared audio pack on the master/aux FX bus. Free, DRM-free PDF.',
+      pills: ['Catalog', 'zpwr-synth', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-synth-block-catalog.pdf',
+    },
+    {
+      id: 'zpwr-fx-block-catalog', name: 'zpwr-fx Block Catalog', glyph: 'xC', category: 'Publications', badge: 'CATALOG',
+      tagline: 'Every DSP block zpwr-fx ships — the full audio patch-graph pack including 194 analog-circuit models. Free, DRM-free PDF.',
+      pills: ['Catalog', 'zpwr-fx', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-fx-block-catalog.pdf',
+    },
+    {
+      id: 'zpwr-midi-fx-block-catalog', name: 'zpwr-midi-fx Block Catalog', glyph: 'mC', category: 'Publications', badge: 'CATALOG',
+      tagline: 'Every block zpwr-midi-fx ships — its note-stream module pack (arp, chord, scale, Euclidean/generative seq, humanize, remap). Free, DRM-free PDF.',
+      pills: ['Catalog', 'zpwr-midi-fx', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-midi-fx-block-catalog.pdf',
+    },
+    {
+      id: 'zpwr-patch-core-block-catalog', name: 'The Full Patch-Graph Catalog', glyph: 'pC', category: 'Publications', badge: 'CATALOG',
+      tagline: 'The complete shared patch-graph reference — every block across all four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw), with an alphabetical index. Free, DRM-free PDF.',
+      pills: ['Catalog', 'zpwr audio', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zpwr-patch-core-block-catalog.pdf',
+    },
+    {
+      id: 'zgui-core-component-catalog', name: 'zgui-core Component Catalog', glyph: 'gC', category: 'Publications', badge: 'CATALOG',
+      tagline: 'The zgui-core component catalog — every UI component in the shared GUI toolkit behind the desktop apps. Free, DRM-free PDF.',
+      pills: ['Catalog', 'zgui-core', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/zgui-core-component-catalog.pdf',
+    },
+    {
+      id: 'gui-automation-bus-book', name: 'The GUI Automation Bus', glyph: 'gB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to the GUI automation bus — the cross-app event-routing layer that wires the desktop suite together. Free, DRM-free PDF.',
+      pills: ['Reference', 'gui-automation-bus', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/gui-automation-bus-book.pdf',
+    },
+    {
+      id: 'gui-automation-bus-reference', name: 'The GUI Automation Bus Reference', glyph: 'gR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The dense reference for the GUI automation bus — its message types, routing model, and per-app endpoints. Free, DRM-free PDF.',
+      pills: ['Reference', 'gui-automation-bus', 'Free · DRM-free PDF'], price: 0,
+      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
+      download: 'docs/gui-automation-bus-reference.pdf',
     },
   ];
 
@@ -667,13 +855,93 @@
     };
   }
 
-  [["fusevm","VM","Developer Tools","Language-agnostic bytecode VM with fused superinstructions and a three-tier Cranelift JIT — the engine behind stryke, zshrs, awkrs, and vimlrs.",["Rust","VM","JIT","Free / OSS"],false],["api-rest-generator","API","Developer Tools","Parses SQL DDL dumps and generates a fully-wired REST backend — Spring Boot (Java/Kotlin/Groovy) or Loco (Rust/Axum/SeaORM).",["codegen","JVM/Rust","Free / OSS"],false],["LearningCollectionAPI","LC","Developer Tools","A Spring Boot + Kotlin REST API for managing a personal collection of learning notes, backed by MySQL.",["Kotlin","Spring Boot","Free / OSS"],false],["stryke-demo","SD","Developer Tools","Live demo scripts for every stryke-* package — one .stk per package, one install pulls them all.",["stryke","demos","Free / OSS"],false],["VimColorSchemes","VC","Developer Tools","The largest curated Vim colorscheme bundle — 732 working :colorscheme targets in one plugin.",["Vim","732 themes","Free / OSS"],false],["zpwr","zp","Zsh Plugins","The world’s most advanced UNIX terminal environment — 500+ subcommands, 2000+ aliases, 47k completions, vim + tmux integration.",["zsh","terminal env","Free / OSS"],true],["zsh-more-completions","mc","Zsh Plugins","The largest curated zsh completion corpus in existence — 47k+ command completions wired into compsys.",["zsh","completions","Free / OSS"],false],["zsh-expand","ze","Zsh Plugins","The most powerful zsh expansion plugin — spacebar-expands aliases, globs, history, params, and typo fixes in pure zsh.",["zsh","expansion","Free / OSS"],true],["zsh-learn","zl","Zsh Plugins","Turn your terminal into a MySQL-backed knowledge base — save, search, and quiz yourself on snippets and notes.",["zsh","MySQL","Free / OSS"],false],["zsh-git-acp","ga","Zsh Plugins","Stage, commit, and push in one keybinding — ZLE widgets that use the command line as your commit message, plus 159 git aliases.",["zsh","git","Free / OSS"],false],["zsh-git-repo-cache","rc","Zsh Plugins","Finds and caches every git repo on your machine for instant prompts and fzf-powered cd.",["zsh","git","fzf","Free / OSS"],false],["zsh-zinit-final","zf","Zsh Plugins","An intentionally-empty plugin that loads last under zinit — a deterministic carrier for trailing atinit/atload hooks.",["zsh","zinit","Free / OSS"],false],["zsh-sudo","su","Zsh Plugins","Toggle sudo on the current command line with a single keybind — prepend or strip without retyping.",["zsh","ZLE","Free / OSS"],false],["zsh-cargo-completion","cg","Zsh Plugins","Zsh tab-completion for Rust’s Cargo, with live crates.io search for add and install.",["zsh","completion","Free / OSS"],false],["zsh-cpan-completion","cpn","Zsh Plugins","Zsh completion that pulls live Perl module names from CPAN for cpan and cpanm.",["zsh","completion","Free / OSS"],false],["zsh-dotnet-completion","dn","Zsh Plugins","Zsh tab-completion and aliases for the .NET (dotnet) CLI.",["zsh","completion","Free / OSS"],false],["zsh-gem-completion","gm","Zsh Plugins","Zsh completion for Ruby’s gem, with live remote gem search on install.",["zsh","completion","Free / OSS"],false],["zsh-nginx","ng","Zsh Plugins","Zsh tab-completion for nginx commands.",["zsh","completion","Free / OSS"],false],["zsh-openshift-aliases","oc","Zsh Plugins","53 short aliases over the OpenShift oc CLI, plus login macros and oc completion.",["zsh","oc","Free / OSS"],false],["zsh-pip-description-completion","pp","Zsh Plugins","Zsh completion for pip with package version and description shown in the menu.",["zsh","completion","Free / OSS"],false],["zsh-sed-sub","sb","Zsh Plugins","A ZLE keybinding for global sed-style search-and-replace on the current command line.",["zsh","ZLE","Free / OSS"],false],["zsh-very-colorful-manuals","mn","Zsh Plugins","Renders man pages in cyberpunk ANSI colors via scoped LESS_TERMCAP_* injection.",["zsh","man","Free / OSS"],false],["vscode-stryke","VS","Editor Plugins","VS Code / VSCodium extension for the stryke language — *.stk detection, a stryke-native TextMate grammar from the binary's reflection tables, and LSP via stryke --lsp.",["VS Code","stryke","LSP","Free / OSS"],false],["vim-stryke","Vi","Editor Plugins","Vim / Neovim support for stryke — filetype detection, a reflection-generated syntax grammar, brace indent, ALE lint, and LSP via stryke --lsp.",["Vim","stryke","LSP","Free / OSS"],false],["emacs-stryke","Es","Editor Plugins","stryke-mode for Emacs — a generated stryke-stdlib.el with the full builtin surface, brace indent, and LSP via stryke --lsp (eglot + lsp-mode).",["Emacs","stryke","LSP","Free / OSS"],false],["vscode-zsh","Vz","Editor Plugins","VS Code / VSCodium support for zshrs — a source.zshrs grammar from zshrs --dump-reflection, *.zsh / dotfile / shebang detection, and LSP via zshrs --lsp.",["VS Code","zshrs","LSP","Free / OSS"],false],["vim-zsh","vz","Editor Plugins","Vim / Neovim support for zshrs — *.zsh / dotfile / shebang detection, a reflection-generated grammar, shell-block indent, ALE, and LSP via zshrs --lsp.",["Vim","zshrs","LSP","Free / OSS"],false],["emacs-zsh","ez","Editor Plugins","zshrs-mode for Emacs — font-lock from zshrs --dump-reflection, shell-block indent, and LSP via zshrs --lsp (eglot + lsp-mode).",["Emacs","zshrs","LSP","Free / OSS"],false],["vscode-awk","Va","Editor Plugins","VS Code / VSCodium extension for AWK (awkrs) — *.awk detection, a source.awk grammar, an awk.run command, LSP via awkrs --lsp, and DAP debugging via awkrs --dap.",["VS Code","awk","LSP · DAP","Free / OSS"],false],["vim-awk","va","Editor Plugins","Vim / Neovim support for AWK (awkrs) — *.awk detection, syntax + brace indent, run / :make, and LSP via awkrs --lsp.",["Vim","awk","LSP","Free / OSS"],false],["emacs-awk","ea","Editor Plugins","awkrs-mode for Emacs — font-lock for AWK, indent, run, eldoc + completion, and LSP via awkrs --lsp (eglot + lsp-mode).",["Emacs","awk","LSP","Free / OSS"],false],["zpwr-theme","th","Editor Plugins","Cyberpunk editor theme — VS Code (5 color schemes × dark/light = 10 themes) plus a matching JetBrains UI theme + editor scheme, generated from one palette.",["VS Code","JetBrains","theme","Free / OSS"],false],["tmux-fzf-url","tx","Editor Plugins","Pop an fzf picker over every URL visible in the tmux pane; the selected URL opens in your browser.",["tmux","fzf","Free / OSS"],false],["gh_reveal","gh","Developer Tools","Open the current git repo's GitHub page in your browser from the terminal.",["git","CLI","Free / OSS"],false],["zsh-better-npm-completion","np","Zsh Plugins","Smarter zsh completion for npm — completes installed packages for run / uninstall and caches the script list.",["zsh","npm","Free / OSS"],false],["zsh-xcode-completions","xc","Zsh Plugins","Zsh tab-completion for Xcode's xcodebuild and related developer CLI tools.",["zsh","Xcode","Free / OSS"],false],["zsh-travis","tv","Zsh Plugins","Zsh aliases + functions for the Travis CI CLI — open build / PR pages from inside a project.",["zsh","Travis CI","Free / OSS"],false]]
+  [["fusevm","VM","Developer Tools","Language-agnostic bytecode VM with fused superinstructions and a three-tier Cranelift JIT — the engine behind stryke, zshrs, awkrs, and vimlrs.",["Rust","VM","JIT","Free / OSS"],false],["api-rest-generator","API","Developer Tools","Parses SQL DDL dumps and generates a fully-wired REST backend — Spring Boot (Java/Kotlin/Groovy) or Loco (Rust/Axum/SeaORM).",["codegen","JVM/Rust","Free / OSS"],false],["LearningCollectionAPI","LC","Developer Tools","A Spring Boot + Kotlin REST API for managing a personal collection of learning notes, backed by MySQL.",["Kotlin","Spring Boot","Free / OSS"],false],["stryke-demo","SD","Developer Tools","Live demo scripts for every stryke-* package — one .stk per package, one install pulls them all.",["stryke","demos","Free / OSS"],false],["VimColorSchemes","VC","Developer Tools","The largest curated Vim colorscheme bundle — 732 working :colorscheme targets in one plugin.",["Vim","732 themes","Free / OSS"],false],["zpwr","zp","Zsh Plugins","The world’s most advanced UNIX terminal environment — 500+ subcommands, 2000+ aliases, 47k completions, vim + tmux integration.",["zsh","terminal env","Free / OSS"],true],["zsh-more-completions","mc","Zsh Plugins","The largest curated zsh completion corpus in existence — 47k+ command completions wired into compsys.",["zsh","completions","Free / OSS"],false],["zsh-expand","ze","Zsh Plugins","The most powerful zsh expansion plugin — spacebar-expands aliases, globs, history, params, and typo fixes in pure zsh.",["zsh","expansion","Free / OSS"],true],["zsh-learn","zl","Zsh Plugins","Turn your terminal into a MySQL-backed knowledge base — save, search, and quiz yourself on snippets and notes.",["zsh","MySQL","Free / OSS"],false],["zsh-git-acp","ga","Zsh Plugins","Stage, commit, and push in one keybinding — ZLE widgets that use the command line as your commit message, plus 159 git aliases.",["zsh","git","Free / OSS"],false],["zsh-git-repo-cache","rc","Zsh Plugins","Finds and caches every git repo on your machine for instant prompts and fzf-powered cd.",["zsh","git","fzf","Free / OSS"],false],["zsh-zinit-final","zf","Zsh Plugins","An intentionally-empty plugin that loads last under zinit — a deterministic carrier for trailing atinit/atload hooks.",["zsh","zinit","Free / OSS"],false],["zsh-sudo","su","Zsh Plugins","Toggle sudo on the current command line with a single keybind — prepend or strip without retyping.",["zsh","ZLE","Free / OSS"],false],["zsh-cargo-completion","cg","Zsh Plugins","Zsh tab-completion for Rust’s Cargo, with live crates.io search for add and install.",["zsh","completion","Free / OSS"],false],["zsh-cpan-completion","cpn","Zsh Plugins","Zsh completion that pulls live Perl module names from CPAN for cpan and cpanm.",["zsh","completion","Free / OSS"],false],["zsh-dotnet-completion","dn","Zsh Plugins","Zsh tab-completion and aliases for the .NET (dotnet) CLI.",["zsh","completion","Free / OSS"],false],["zsh-gem-completion","gm","Zsh Plugins","Zsh completion for Ruby’s gem, with live remote gem search on install.",["zsh","completion","Free / OSS"],false],["zsh-nginx","ng","Zsh Plugins","Zsh tab-completion for nginx commands.",["zsh","completion","Free / OSS"],false],["zsh-openshift-aliases","oc","Zsh Plugins","53 short aliases over the OpenShift oc CLI, plus login macros and oc completion.",["zsh","oc","Free / OSS"],false],["zsh-pip-description-completion","pp","Zsh Plugins","Zsh completion for pip with package version and description shown in the menu.",["zsh","completion","Free / OSS"],false],["zsh-sed-sub","sb","Zsh Plugins","A ZLE keybinding for global sed-style search-and-replace on the current command line.",["zsh","ZLE","Free / OSS"],false],["zsh-very-colorful-manuals","mn","Zsh Plugins","Renders man pages in cyberpunk ANSI colors via scoped LESS_TERMCAP_* injection.",["zsh","man","Free / OSS"],false],["zshrs-forgit","fg","znative Plugins","forgit (interactive git + fzf) ported to a native zshrs plugin — the ga/glo/gd command set as compiled Rust builtins in a cdylib, no per-startup sourcing.",["zshrs","native","Free / OSS"],false],["zshrs-git-fuzzy","gz","znative Plugins","git-fuzzy (full-screen fzf git UI) status ported to a native zshrs plugin — self-reentrant helpers as builtins, no per-keystroke library sourcing.",["zshrs","native","Free / OSS"],false],["zshrs-git-repos","gp","znative Plugins","zsh-git-repo-cache ported to a native zshrs plugin — in-process filesystem walk with parallel clean/dirty classification, then fzf-jump.",["zshrs","native","Free / OSS"],false],["zshrs-revolver","rv","znative Plugins","revolver (shell progress spinner) ported to a native zshrs plugin — the animator runs on an in-process thread, no fork and no statefile.",["zshrs","native","Free / OSS"],false],["zshrs-kubectl-completion","kb","znative Plugins","kubectl completion as a native zshrs plugin — delegates to cobra's kubectl __complete, always in sync with the installed kubectl.",["zshrs","native","Free / OSS"],false],["zshrs-zsh-z","jz","znative Plugins","zsh-z (frecency directory jumper) ported to a native zshrs plugin — a faithful Rust reimplementation of the ~/.z datafile, frecency formula, and aging.",["zshrs","native","Free / OSS"],false],["zshrs-fasd","fd","znative Plugins","fasd (frecency for files AND directories — a/s/d/f/j/v) ported to a native zshrs plugin — a preexec hook tracks every path argument; regex + fuzzy matching and frecency scoring reimplemented in Rust.",["zshrs","native","Free / OSS"],false],["zshrs-reveal","rl","znative Plugins","reveal (open the current repo's GitHub / Heroku pages in the browser) ported to a native zshrs plugin — OS opener detection, git remote -v parsing, and SSH/HTTPS URL normalization in Rust.",["zshrs","native","Free / OSS"],false],["vscode-stryke","VS","Editor Plugins","VS Code / VSCodium extension for the stryke language — *.stk detection, a stryke-native TextMate grammar from the binary's reflection tables, and LSP via stryke --lsp.",["VS Code","stryke","LSP","Free / OSS"],false],["vim-stryke","Vi","Editor Plugins","Vim / Neovim support for stryke — filetype detection, a reflection-generated syntax grammar, brace indent, ALE lint, and LSP via stryke --lsp.",["Vim","stryke","LSP","Free / OSS"],false],["emacs-stryke","Es","Editor Plugins","stryke-mode for Emacs — a generated stryke-stdlib.el with the full builtin surface, brace indent, and LSP via stryke --lsp (eglot + lsp-mode).",["Emacs","stryke","LSP","Free / OSS"],false],["vscode-zsh","Vz","Editor Plugins","VS Code / VSCodium support for zshrs — a source.zshrs grammar from zshrs --dump-reflection, *.zsh / dotfile / shebang detection, and LSP via zshrs --lsp.",["VS Code","zshrs","LSP","Free / OSS"],false],["vim-zsh","vz","Editor Plugins","Vim / Neovim support for zshrs — *.zsh / dotfile / shebang detection, a reflection-generated grammar, shell-block indent, ALE, and LSP via zshrs --lsp.",["Vim","zshrs","LSP","Free / OSS"],false],["emacs-zsh","ez","Editor Plugins","zshrs-mode for Emacs — font-lock from zshrs --dump-reflection, shell-block indent, and LSP via zshrs --lsp (eglot + lsp-mode).",["Emacs","zshrs","LSP","Free / OSS"],false],["vscode-awk","Va","Editor Plugins","VS Code / VSCodium extension for AWK (awkrs) — *.awk detection, a source.awk grammar, an awk.run command, LSP via awkrs --lsp, and DAP debugging via awkrs --dap.",["VS Code","awk","LSP · DAP","Free / OSS"],false],["vim-awk","va","Editor Plugins","Vim / Neovim support for AWK (awkrs) — *.awk detection, syntax + brace indent, run / :make, and LSP via awkrs --lsp.",["Vim","awk","LSP","Free / OSS"],false],["emacs-awk","ea","Editor Plugins","awkrs-mode for Emacs — font-lock for AWK, indent, run, eldoc + completion, and LSP via awkrs --lsp (eglot + lsp-mode).",["Emacs","awk","LSP","Free / OSS"],false],["zpwr-theme","th","Editor Plugins","Cyberpunk editor theme — VS Code (5 color schemes × dark/light = 10 themes) plus a matching JetBrains UI theme + editor scheme, generated from one palette.",["VS Code","JetBrains","theme","Free / OSS"],false],["tmux-fzf-url","tx","Editor Plugins","Pop an fzf picker over every URL visible in the tmux pane; the selected URL opens in your browser.",["tmux","fzf","Free / OSS"],false],["gh_reveal","gh","Developer Tools","Open the current git repo's GitHub page in your browser from the terminal.",["git","CLI","Free / OSS"],false],["zsh-better-npm-completion","np","Zsh Plugins","Smarter zsh completion for npm — completes installed packages for run / uninstall and caches the script list.",["zsh","npm","Free / OSS"],false],["zsh-xcode-completions","xc","Zsh Plugins","Zsh tab-completion for Xcode's xcodebuild and related developer CLI tools.",["zsh","Xcode","Free / OSS"],false],["zsh-travis","tv","Zsh Plugins","Zsh aliases + functions for the Travis CI CLI — open build / PR pages from inside a project.",["zsh","Travis CI","Free / OSS"],false]]
     .forEach(function (e) { PRODUCTS.push(metaProduct(e[0], e[1], e[2], e[3], e[4], e[5])); });
 
   // Long-form detail copy (overview + rich features), ported from each repo's
   // README / source. Authoritative source for the product-detail page; merged
   // into PRODUCTS below so PRODUCTS stays the single object the UI reads.
   var DETAILS = {
+    "zshrs-forgit": {
+      "overview": "forgit — the interactive git + fzf utility — ported to a native zshrs plugin. The commands are compiled Rust builtins in a cdylib loaded through zshrs's stable plugin ABI with zmodload -R, instead of shell functions parsed on every startup.",
+      "features": [
+        "The full forgit command set (ga, glo, gd, stash, …) as native builtins",
+        "Loaded through zshrs's stable plugin ABI with zmodload -R",
+        "Orchestration and sequencing in Rust; git and fzf run as subprocesses as upstream",
+        "delta / diff-so-fancy used for diff rendering when present",
+        "Installed with znative load MenkeTechnologies/zshrs-forgit"
+      ]
+    },
+    "zshrs-git-fuzzy": {
+      "overview": "git-fuzzy — the full-screen fzf-driven git interface — ported to a native zshrs plugin; this port covers the status command end-to-end. The self-reentrant helpers run as builtins, so there is no per-keystroke library sourcing.",
+      "features": [
+        "Full-screen fzf git UI (status command) as a native plugin",
+        "Self-reentrant preview/keybinding helpers as builtins — no per-keystroke re-sourcing",
+        "Requires git and fzf (>= 0.71) on PATH",
+        "delta / diff-so-fancy used for diff rendering when present",
+        "Installed with znative load MenkeTechnologies/zshrs-git-fuzzy"
+      ]
+    },
+    "zshrs-git-repos": {
+      "overview": "zsh-git-repo-cache ported to a native zshrs plugin: scan the filesystem for every git repository, cache the list, and fzf-pick one to cd into, with clean/dirty filtering. The native version walks in-process and classifies clean/dirty in parallel across threads.",
+      "features": [
+        "In-process filesystem walk instead of sudo find / -name .git",
+        "Parallel clean/dirty classification across threads",
+        "fzf-pick a repo to cd into, with clean/dirty filtering",
+        "Clean = git diff-index --quiet HEAD and no untracked files (same test as the original)",
+        "Installed with znative load MenkeTechnologies/zshrs-git-repos"
+      ]
+    },
+    "zshrs-revolver": {
+      "overview": "revolver — a progress spinner for the shell — ported to a native zshrs plugin. Instead of a shell script that forks a background process and coordinates through a statefile, the spinner is a compiled Rust builtin whose animator runs on an in-process thread.",
+      "features": [
+        "Start, update the message while work runs, and stop a spinner",
+        "55 spinner styles (dots, line, arc, bouncingBall, pong, shark, …); revolver demo previews them",
+        "Animator runs on an in-process thread — no fork, no statefile",
+        "Options: -h/--help, -v/--version, -s/--style <name>",
+        "Installed with znative load MenkeTechnologies/zshrs-revolver"
+      ]
+    },
+    "zshrs-kubectl-completion": {
+      "overview": "kubectl completion as a native zshrs plugin. Instead of a large static, version-pinned _kubectl function, it delegates to cobra's built-in completion protocol — kubectl __complete — so candidates always match the kubectl version actually installed.",
+      "features": [
+        "Delegates to cobra's kubectl __complete protocol",
+        "Candidates always in sync with the installed kubectl — nothing to regenerate",
+        "Completes subcommands, resources, and flags",
+        "Native zshrs plugin, no static _kubectl function to maintain",
+        "Installed with znative load MenkeTechnologies/zshrs-kubectl-completion"
+      ]
+    },
+    "zshrs-zsh-z": {
+      "overview": "zsh-z — the frecency directory jumper (z <partial> cd's to the directory you visit most, weighted by recency and frequency) — ported to a native zshrs plugin. A faithful Rust reimplementation of the ~/.z datafile, frecency formula, aging rule, matching, and z options.",
+      "features": [
+        "z <partial> jumps to the highest-frecency matching directory",
+        "Faithful reimplementation of the ~/.z datafile format and frecency formula",
+        "Aging rule, matching, and z options reproduced from upstream",
+        "z -l lists matches with scores",
+        "Installed with znative load MenkeTechnologies/zshrs-zsh-z"
+      ]
+    },
+    "zshrs-fasd": {
+      "overview": "fasd — frecency for files AND directories — ported to a native zshrs plugin. Where zsh-z tracks only the directories you cd into, fasd tracks every file and directory argument of every command via a preexec hook, and a/s/d/f/j/v query them by frecency. A faithful Rust reimplementation of the ~/.fasd datafile, the add/aging rule, the regex + fuzzy matching, and the frecency scoring.",
+      "features": [
+        "d <part> jumps to the best directory, f <part> the best file, a either, v opens the best file in $EDITOR",
+        "preexec hook records every command's path arguments (plus $PWD)",
+        "Regex → case-insensitive → fuzzy matching, last term in the basename",
+        "Frecency scoring reproduced from fasd; -r rank / -t recency ordering",
+        "Installed with znative load MenkeTechnologies/zshrs-fasd"
+      ]
+    },
+    "zshrs-reveal": {
+      "overview": "reveal — open the current git repository's GitHub (and Heroku) pages in the browser — ported to a native zshrs plugin. A faithful Rust reimplementation of gh_reveal: platform opener detection, git remote -v parsing, and SSH/HTTPS URL normalization.",
+      "features": [
+        "reveal opens the current repo's GitHub page(s); arguments filter the remotes by substring",
+        "Outside a repo, opens your GitHub repositories page (or reveals directory arguments)",
+        "Normalizes each SSH/HTTPS remote to host/user/repo (drops scheme, userinfo, port, .git)",
+        "Heroku remotes open their dashboard + herokuapp.com URLs",
+        "Installed with znative load MenkeTechnologies/zshrs-reveal"
+      ]
+    },
     "the-stack": {
       "overview": "A high-tech fantasy novel — the first work of MenkeTechnologies fiction. The world is a literalization of the stack: a dying interpreted kingdom, the compiled forge that rises to replace it, and a blade drawn from five dead master tongues.",
       "features": ["High-tech fantasy novel", "The stack made literal — interpreter vs. compiler, the war on the fork", "A blade forged from five dead master tongues", "DRM-free PDF, Pandoc + LaTeX typeset"]
@@ -729,6 +997,18 @@
     "desktop-in-rust-book": {
       "overview": "Rewriting the Desktop in Rust — the cross-cutting book on the MenkeTechnologies desktop-app fleet and the architecture that ties it together. Ten from-scratch Rust ports — zreq (Postman), zcite (Zotero), ztunnel (Tunnelblick), zgo (Alfred), zftp (Cyberduck), zcontainer (Docker Desktop / Lens), zoffice, zemail, zpdf (Acrobat / Preview), and zphoto (GIMP / Photoshop) — each a thin Tauri v2 shell over a pure-Rust *-core engine that exposes a native Rust API and a C ABI, so the same engine embeds inside every other app, all behind the shared zgui-core toolkit.",
       "features": ["The 'engine core, thin shell' thesis: WebView shell, Tauri command bridge, GUI-free *-core engine", "The *-core pattern and its C ABI embedding contract — ten engines, one shape", "One app per chapter: zreq, zcite, ztunnel, zgo, zftp, zcontainer, zoffice, zemail, zpdf, zphoto", "zcontainer: the first compiled-native desktop GUI for both Docker and Kubernetes, against an all-Electron field", "The embed matrix — how one engine bump reaches every shell that vendors it", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "studio-book": {
+      "overview": "The Studio — the cross-cutting book on the MenkeTechnologies audio stack and the two shared C++ cores it stands on. zdsp-core is the shared DSP substrate (the channel strip, the overlap-add time stretcher, the spectrogram analyzer, the lock-free streaming file source, and the playback orchestrator that composes them) and zpwr-patch-core is the signal-agnostic modular patch graph — one templated engine, PatchEngineT<S>, instantiated three ways: float for the mono audio graph, a stereo sample carrying L and R on one cable, and a note-event stream for MIDI. On those two cores sit the four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw), the desktop app Audio-Haxor, and zwire, whose browser-wide equalizer source-ports the same zdsp-core chain into Chromium's audio service so one EQ shapes every sound the browser makes. The book is the continuous account of how one DSP implementation and one graph engine serve a whole product family without any of them re-deriving the work.",
+      "features": ["The two shared cores: zdsp-core (the DSP substrate) and zpwr-patch-core (the signal-agnostic patch graph)", "One templated engine, three instantiations: mono float, stereo L/R on one cable, and the note-event MIDI stream", "Mono-to-stereo reuse: the ~3,500 mono blocks wrapped once per channel instead of hand-written stereo copies", "The plugin-host adapter, mono vs stereo: the dual-mono insert vs the native stereo block that doubles as an instrument", "The voice, layer, MIDI, and WebEditor engines that all ride the one graph", "The shared clip engine: a pure-C++ C-ABI core linked native by the DAW and loaded over Rust FFI by the Tauri apps", "The three manifestations of one DSP core: native JUCE, ported into Chromium's audio service, and a JS mirror", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "cli-fleet-book": {
+      "overview": "The CLI Fleet — the cross-cutting compendium of every command-line tool in the MenkeTechnologies stack, and the CLI-side twin of 'Rewriting the Desktop in Rust'. Part I is an index: the seven tools that already carry their own book (zshrs, strykelang, awkrs, vimlrs, elisprs, powerliners, ztmux) are situated in the fleet and pointed at their volumes, not re-documented. Part II gives a full, source-grounded chapter to each tool that had none — the Unix reimplementations lsofrs (lsof), nmaprs (nmap), iftoprs (iftop) and htoprs (htop), the shell temporary-file stack manager temprs, the disk-usage TUI storageshower, the two colourisers zcolorizer (its own theme grammar) and grcrs (a port of grc), and the two browser-adjacent native-messaging host binaries zpwrchrome-host (a Rust port of browserpass-native plus extension actions) and zwire-host (the universal local host). An opening chapter, 'The shape of the fleet', frames the shared architecture — the ratatui TUI stack, the CLI/capture layers, the uniform MIT licensing, and the port method.",
+      "features": ["Part I: a cross-reference index to the seven CLI tools with their own books", "Part II: a full grounded chapter for each of the ten tools that had none (eight CLI/TUI tools plus the two native hosts zpwrchrome-host and zwire-host)", "A shared-architecture chapter: the ratatui TUI stack, clap/pcap/procfs, the uniform MIT licensing, and the port-parity method", "Port-honest — every reimplementation names its upstream; the original work is the Rust engineering", "The Unix ports: lsofrs, nmaprs, iftoprs, htoprs — architecture, CLI surface, parity vs upstream", "The originals: zcolorizer's theme grammar, storageshower's scanner, the two native hosts' JSON protocols", "The CLI-side twin of 'Rewriting the Desktop in Rust' (the GUI fleet)", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "stryke-ecosystem-book": {
+      "overview": "The Stryke Ecosystem — the batteries. The strykelang core ships small and fast; the connection to the outside world lives in a fleet of opt-in packages, one per external system, kept out of the core binary so the daily-driver install stays slim. This book maps that fleet and gives a full, source-grounded chapter to each of its 29 packages, grounded in each package's own README, Cargo.toml, stryke.toml, and examples/. An opening chapter, 'The shape of the fleet', pulls out the shared package model: a thin stryke library plus a Rust cdylib (libstryke_<name>), dlopened in-process on first `use <Namespace>`, calls crossing a uniform JSON FFI boundary, and a connection cache scoped to the whole process run, keyed by URL so repeated calls skip the TCP+TLS+auth handshake.",
+      "features": ["An opening chapter on the shared package model — cdylib + [ffi] namespace, JSON boundary, OnceCell connection cache, s pkg install", "Part I Databases: postgres, mysql, mssql, mongo, redis, neo4j, scylla, clickhouse, search", "Part II Data & analytics: arrow, parquet, polars, duckdb, spark", "Part III Messaging & RPC: kafka, zmq, grpc", "Part IV Cloud & infrastructure: aws, gcp, azure, k8s, docker", "Part V Web & automation: scrape, selenium, mcpd, email", "Part VI Documents (office) and Part VII Foundation (utils, gui) — the packages that are not external-system clients, framed honestly as such", "Each chapter names the wrapped crate and the exported verbs from source — no invented APIs, one real example per package", "The connector-fleet companion to the strykelang language reference. Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zpwr-encyclopedia": {
       "overview": "The complete reference to zpwr — the most advanced UNIX terminal environment, with 500+ subcommands and 2000+ aliases. Every verb, alias, and subsystem, LaTeX-typeset into one volume.",
@@ -818,6 +1098,9 @@
         "Page management — insert / delete / extract / merge / split / rotate / crop",
         "Convert & export — Office formats, images, text, PDF/A",
         "Embeddable zpdf-core engine (rlib + staticlib + cdylib) — embeds into traderview and the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/zpdf.webp", "cap": "Two-page spread view — page thumbnails, the PAGE / TEXT / FIELDS / METADATA / BOOKMARKS / TIMELINE / INSIGHTS / COMPARE tabs, and open/merge/extract/export actions in the cyberpunk HUD" }
       ]
     },
     "zphoto": {
@@ -829,6 +1112,9 @@
         "Open / edit / export common image formats",
         "Cyberpunk HUD interface from the shared zgui-core chrome",
         "Embeddable zphoto-core engine (rlib + staticlib + cdylib) — embeds into the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/zphoto.webp", "cap": "Raster editing workspace — layers panel, tool palette, brushes and selections, and non-destructive adjustments in the cyberpunk HUD" }
       ]
     },
     "zemail": {
@@ -840,6 +1126,9 @@
         "Cyberpunk HUD interface",
         "Embeddable zemail-core engine (rlib + staticlib + cdylib)",
         "Owned, no-subscription desktop mail"
+      ],
+      "screenshots": [
+        { "src": "assets/zemail.webp", "cap": "Mail client — folder sidebar, message list, and reading pane over the IMAP/SMTP zemail-core engine in the cyberpunk HUD" }
       ]
     },
     "zstation": {
@@ -852,6 +1141,9 @@
         "On-disk tile-board persistence",
         "Cyberpunk HUD interface",
         "Embeddable zstation-core engine (rlib + staticlib + cdylib)"
+      ],
+      "screenshots": [
+        { "src": "assets/zstation.webp", "cap": "One board of session-isolated web apps — Trello-like draggable, resizable tiles, each its own native webview, in the cyberpunk HUD" }
       ]
     },
     "zoffice": {
@@ -863,6 +1155,9 @@
         "Cyberpunk HUD interface",
         "Embeddable zoffice-core engine (rlib + staticlib + cdylib)",
         "Owned, no-subscription office suite"
+      ],
+      "screenshots": [
+        { "src": "assets/zoffice.webp", "cap": "Office suite — Writer / Calc / Impress editing over the ODF/OOXML zoffice-core engine in the cyberpunk HUD" }
       ]
     },
     "zshrs": {
@@ -901,6 +1196,9 @@
         "Terminal IDE; the GUI build is zmax-gui",
         "Cross-platform",
         "Free / OSS — MPL-2.0 licensed"
+      ],
+      "screenshots": [
+        { "src": "assets/zmax/editor.webp", "cap": "zmax in NOR mode — file-tree, split editors over stryke source, the IDE action menu (Find Usages, Refactor, Run/Debug, Git), and an embedded terminal, all running in the terminal" }
       ]
     },
     "zmax-gui": {
@@ -912,6 +1210,9 @@
         "Modal editing, tree-sitter syntax, and LSP inherited from the zmax core",
         "Cross-platform",
         "Free / OSS — MPL-2.0 licensed"
+      ],
+      "screenshots": [
+        { "src": "assets/zmax-gui.webp", "cap": "zmax-gui — the windowed front-end over the zmax modal IDE core: native tabs, menu bar, GUI font rendering, and split editors" }
       ]
     },
     "zwire": {
@@ -927,7 +1228,9 @@
         "Free / OSS — MIT licensed"
       ],
       "screenshots": [
-        { "src": "assets/zwire/tmux.webp", "cap": "ztmux — the tmux-style tiling overlay running in the forked Chromium HUD: recursive pane splits, each pane a live webview, driven by a rebindable prefix and the powerline status bar" }
+        { "src": "assets/zwire/tmux.webp", "cap": "ztmux — the tmux-style tiling overlay running in the forked Chromium HUD: recursive pane splits, each pane a live webview, driven by a rebindable prefix and the powerline status bar" },
+        { "src": "assets/zwire/audio.webp", "cap": "The Audio HUD page — a browser-wide C++ audio engine applied live to every tab: the full signal chain, an always-on preamp + compressor, an 8-band draggable parametric EQ, and a metering column (peak/LUFS, stereo goniometer, phase correlation, VU)" },
+        { "src": "assets/zwire/audio2.webp", "cap": "The Audio HUD engine strip — gain/pan/mono/drive, space & glue (width/delay/reverb/limiter), and the two FX racks (gate·crush·exciter·Haas·cross-feed·chorus·flanger·phaser, then waveshaper·ring-mod·tremolo·auto-pan·auto-wah), over a live spectrum analyzer and scrolling spectrogram" }
       ]
     },
     "zwire-host": {
@@ -969,6 +1272,30 @@
         "Vim-native value types ported: list, dict (insertion-ordered), blob, typval",
         "rkyv-backed bytecode script cache, mmap hot path — versioned from day one",
         "Standalone binary, LSP language server, DAP debugger, and AOT native compiler",
+        "Free / OSS — MIT licensed"
+      ]
+    },
+    "rubyrs": {
+      "overview": "Ruby in Rust — a compiled Ruby runtime. MRI runs Ruby by walking an AST in C; rubyrs lexes and parses Ruby to an AST, lowers it to fusevm bytecode, and runs it on a compiled VM with a three-tier Cranelift JIT — the same engine behind zshrs, stryke, awkrs, and elisprs. Arithmetic and comparison operators lower to native VM ops so the JIT can trace hot loops, while Ruby-specific behaviour (method dispatch, blocks, object construction, yield) is served by a thread-local runtime host. rubyrs carries no VM or JIT of its own. Free and open source.",
+      "features": [
+        "Compiled Ruby runtime — Ruby source → lexer → parser (AST) → fusevm bytecode → VM + Cranelift JIT",
+        "Arithmetic and comparison lower to native VM ops so the JIT traces hot loops",
+        "RubyHost heap serves method dispatch, blocks, object construction, and yield",
+        "Classes, exceptions, modules/include, super, class methods, parallel assignment, default + splat params, &:sym block-pass",
+        "Runs a file, a one-liner (ruby -e), or an interactive REPL (ruby --repl)",
+        "Differential parity harness: snippets run against real Ruby 4.0.6",
+        "Free / OSS — MIT licensed"
+      ]
+    },
+    "arb": {
+      "overview": "Visualize and modify Unix pipelines. Pipe a stream into arb and it spawns a dynamic full-screen TUI (and, later, a web page) built from a declarative, Tcl/Tk-flavored spec. It is a jq / xpath / css / yq superset, an interactive megafilter/map over the live passthrough, and it runs on the fusevm bytecode VM + Cranelift JIT. Milestone 0 ships zero-config live-tail — pipe any stream in and watch it in a full-screen TUI; with no controlling terminal it prints a headless summary instead. Free and open source.",
+      "features": [
+        "A TUI for every pipeline — pipe any Unix stream in, get a dynamic full-screen TUI",
+        "Declarative, Tcl/Tk-flavored spec drives widgets, layout, and sources",
+        "A jq / xpath / css / yq query superset over the live stream",
+        "Interactive megafilter/map that shapes the passthrough in place",
+        "Runs on the fusevm bytecode VM + Cranelift JIT",
+        "Zero-config live-tail (Milestone 0); headless summary when there is no TTY",
         "Free / OSS — MIT licensed"
       ]
     },
@@ -1045,6 +1372,9 @@
         "Identifier lookup — DOI (CrossRef), ISBN (Open Library), and PMID",
         "Duplicate detection across the library",
         "Embeddable zcite-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/zcite.webp", "cap": "Reference library — collections, tags, and per-item metadata with citation/bibliography styles in the cyberpunk HUD" }
       ]
     },
     "zreq": {
@@ -1057,6 +1387,9 @@
         "Code generation from a request",
         "Import / export of collections and environments",
         "Embeddable zreq-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/zreq.webp", "cap": "API client — collection sidebar, request builder, and response viewer with environments and history in the cyberpunk HUD" }
       ]
     },
     "ztunnel": {
@@ -1069,6 +1402,9 @@
         "Connect / disconnect with live status",
         "Cross-platform — macOS, Linux, and Windows",
         "Embeddable ztunnel-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/ztunnel.webp", "cap": "VPN manager — OpenVPN/WireGuard tunnel list with live connection status, logs, and stats in the cyberpunk HUD" }
       ]
     },
     "zthrottle": {
@@ -1084,6 +1420,9 @@
         "\"What can I free?\" — junk detection with a user-editable pattern list, per-owner filter, and multi-select bulk delete (.git internals never flagged)",
         "Cross-platform — macOS, Linux, and Windows",
         "Embeddable zthrottle-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/zthrottle.webp", "cap": "Stress-bench + system monitor — multi-axis benchmarks, the contention profiler, and live process/network/storage panels in the cyberpunk HUD" }
       ]
     },
     "zgo": {
@@ -1096,6 +1435,9 @@
         "Clipboard history",
         "Snippets with auto-expansion",
         "Embeddable zgo-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/zgo.webp", "cap": "Launcher — fuzzy launch bar, workflows, clipboard history, and snippets in the cyberpunk HUD" }
       ]
     },
     "zftp": {
@@ -1109,6 +1451,9 @@
         "Per-session logs and throughput stats",
         "Stored credentials",
         "Embeddable zftp-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
+      ],
+      "screenshots": [
+        { "src": "assets/zftp.webp", "cap": "File-transfer client — bookmarks, remote browser, and the download/upload/sync transfer queue across FTP/SFTP/WebDAV/cloud stores in the cyberpunk HUD" }
       ]
     },
     "zcontainer": {
@@ -1199,14 +1544,25 @@
       ]
     },
     "htoprs": {
-      "overview": "A from-source Rust port of htop — the interactive process viewer, ported against the upstream htop C source rather than wrapping the htop binary. Early scaffold (crate v0.1.0), GPL-2.0-or-later.",
+      "overview": "A from-source Rust port of htop — the interactive process viewer, ported against the upstream htop C source rather than wrapping the htop binary. Early scaffold (crate v0.1.0), MIT.",
       "features": [
         "Interactive process viewer in Rust: live process table and tree view",
         "Per-core CPU, memory, and swap meters",
         "Sort, filter, search, and tag processes",
         "Signal sending (kill) and renice from the UI",
         "Ported module-by-module against the upstream htop C source of truth",
-        "GPL-2.0-or-later, matching htop's license"
+        "MIT — original Rust reimplementation of htop"
+      ]
+    },
+    "grcrs": {
+      "overview": "A from-source Rust port of grc, the Generic Colouriser (1.13) — the two-binary grc/grcat suite reimplemented against the upstream grc sources rather than wrapping them, so any command's output can be colourised by config-driven regexp rules.",
+      "features": [
+        "Two binaries: grc (the wrapper) and grcat (the colouriser filter)",
+        "grc parses options, matches the command against grc.conf, runs it, and pipes stdout/stderr through grcat",
+        "grcat drives per-command config rules — regexp-matched colour, count, and skip directives",
+        "--pty mode so colour-suppressing commands still emit colourable output",
+        "Ported against the upstream grc source of truth, not a shell wrapper",
+        "MIT — original Rust reimplementation of grc"
       ]
     },
     "temprs": {
@@ -1248,6 +1604,9 @@
         "libevent event loop and the tmux client/server socket protocol",
         "Anti-drift gate: build fails on any Rust function with no tmux C counterpart",
         "MIT-licensed, self-contained (vendors tmux C + tmux-rs as references)"
+      ],
+      "screenshots": [
+        { "src": "assets/ztmux.webp", "cap": "ztmux — the from-source Rust tmux: recursive pane splits, windows, and the status bar, byte-for-byte parity with system tmux" }
       ]
     },
     "storageshower": {
@@ -1276,6 +1635,9 @@
         "Wappalyzer-compatible detection, 3,993-fingerprint corpus",
         "Full-page screenshot capture with OffscreenCanvas stitching",
         "54 commands; 3012 node:test + 127 cargo test cases"
+      ],
+      "screenshots": [
+        { "src": "assets/zpwrchrome.webp", "cap": "zpwrchrome — the MV3 toolbar popup: pass integration, download manager, tab switcher, history search, and userscript engine in one icon" }
       ]
     },
     "zpwr-daw": {
@@ -2005,6 +2367,82 @@
         "Includes a Solaris nroff shim",
         "Installs via zinit, oh-my-zsh, or manual sourcing"
       ]
+    },
+    "awkrs-reference": {
+      "overview": "The complete awkrs reference — the AWK language surface, builtins, and command-line interface of awkrs, the parallel Rust AWK, generated from the live implementation so every function and flag matches the shipping binary.",
+      "features": ["Every AWK builtin and language construct, generated from the live awkrs source", "The command-line surface: options, field and record separators, program invocation", "Parallel-execution notes specific to the Rust implementation", "The dense companion to The awkrs Book", "Free, DRM-free PDF"]
+    },
+    "elisprs-reference": {
+      "overview": "The complete elisprs reference — the Emacs Lisp subroutines and special forms implemented as a fusevm frontend, generated from the live implementation.",
+      "features": ["Every implemented Emacs Lisp subroutine and special form", "The fusevm-frontend model: Emacs Lisp lowered to the shared bytecode VM", "Generated from the live elisprs source", "The dense companion to The elisprs Book", "Free, DRM-free PDF"]
+    },
+    "gui-automation-bus-book": {
+      "overview": "The companion book to the GUI automation bus — the cross-app event-routing layer that wires the MenkeTechnologies desktop suite together, letting one app drive another over a shared message bus.",
+      "features": ["The cross-app event-routing architecture", "The message model: how apps subscribe and publish", "Per-app endpoints across the desktop suite", "Worked automation flows spanning multiple apps", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "gui-automation-bus-reference": {
+      "overview": "The dense reference for the GUI automation bus — its message types, routing model, and per-app endpoints, for scripting the desktop suite.",
+      "features": ["Every message type on the bus", "The routing model: addressing, fan-out, and delivery", "The per-app endpoint catalog", "The companion reference to The GUI Automation Bus", "Free, DRM-free PDF"]
+    },
+    "strykelang-reference": {
+      "overview": "The complete strykelang language reference — every builtin, operator, sigil, and pipeline form of the parallel Perl 5 superset, generated from the live implementation. The dense companion to The strykelang Book.",
+      "features": ["Every strykelang builtin, generated from the live implementation", "Operators, sigils, and the pipe-forward pipeline forms", "The parallel-execution and Cranelift-JIT model", "The dense companion to The strykelang Book", "Free, DRM-free PDF"]
+    },
+    "vimlrs-reference": {
+      "overview": "The complete vimlrs reference — the VimL builtin functions, commands, and options implemented as a fusevm frontend, generated from the live implementation.",
+      "features": ["Every implemented VimL builtin function", "Ex commands and options coverage", "The fusevm-frontend model: VimL lowered to the shared bytecode VM", "The dense companion to The vimlrs Book", "Free, DRM-free PDF"]
+    },
+    "zgui-core-component-catalog": {
+      "overview": "The zgui-core component catalog — every UI component in the shared GUI toolkit behind the MenkeTechnologies desktop apps, the one library each app builds its interface from.",
+      "features": ["Every component in the shared zgui-core toolkit", "The window, panel, knob, file-browser, and HUD chrome shared across apps", "How one component implementation serves the whole desktop fleet", "The UI-side analog of zdsp-core and zpwr-patch-core", "Free, DRM-free PDF"]
+    },
+    "zmax-reference": {
+      "overview": "The complete zmax reference — every command, keymap, and embedded-language entry point of the modal IDE. The dense companion to The zmax Book.",
+      "features": ["Every zmax command and default keymap", "The embedded-language entry points", "The modal editing model", "The dense companion to The zmax Book", "Free, DRM-free PDF"]
+    },
+    "znative-book": {
+      "overview": "The companion book to znative — the zshrs package manager, and the first shell package manager whose unit of installation can be native compiled code rather than shell text. It walks the published, versioned ABI that makes a native plugin safe to install, the eight-command surface, source auto-classification with @ref pinning, the content-addressed store, and the worked plugin ports.",
+      "features": ["The published, versioned plugin ABI (the znative crate on crates.io; the repr(C) boundary and ABI_VERSION checked at load)", "The eight-command surface: load / add / remove / list / info / update, plus gc / clean", "Source auto-classification (owner/repo, github:, git+URL, path:) with @ref pinning and shallow clone", "The content-addressed store at $ZSHRS_HOME/pkg/ with its installed.toml index and sha256 integrity", "The worked plugin ports: forgit, git-fuzzy, revolver, kubectl, zsh-z", "Global-only, no lockfile, by design. Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "zpwr-clip-engine-reference": {
+      "overview": "The zpwr-daw clip-engine reference — the timeline, clip, and playback model behind the DAW's arrangement and session views.",
+      "features": ["The pattern, clip, and event model", "The step, transport, and scheduling core", "MIDI export and project serialization", "The pure-C++ C-ABI engine shared by the DAW and the Tauri apps", "Free, DRM-free PDF"]
+    },
+    "zpwr-daw-reference": {
+      "overview": "The zpwr-daw manual — a shared-engine architecture overview plus a per-module node and parameter reference for the note-stream blocks every track wires, generated from the live registry.",
+      "features": ["Shared-engine architecture overview", "Per-module node and parameter reference, generated from the live registry", "The note-stream blocks every track wires", "The stereo-graph track model", "Free, DRM-free PDF"]
+    },
+    "zpwr-fx-block-catalog": {
+      "overview": "Every DSP block zpwr-fx ships — the full audio patch-graph pack, including 194 analog-circuit models, each with its parameters.",
+      "features": ["Every audio DSP block in the zpwr-fx pack", "194 analog-circuit models", "Per-block parameter reference", "Built on the shared zpwr-patch-core graph and zdsp-core substrate", "Free, DRM-free PDF"]
+    },
+    "zpwr-fx-reference": {
+      "overview": "The zpwr-fx manual — a shared-engine architecture overview plus a per-module node and parameter reference, generated from the live registry.",
+      "features": ["Shared-engine architecture overview", "Per-module node and parameter reference, generated from the live registry", "The single-graph, stereo-locked effects model", "Built on zpwr-patch-core and zdsp-core", "Free, DRM-free PDF"]
+    },
+    "zpwr-midi-fx-block-catalog": {
+      "overview": "Every block zpwr-midi-fx ships — its note-stream module pack: arpeggiators, chord generators, scale quantizers, Euclidean and generative sequencers, humanize, and remap.",
+      "features": ["Every note-stream block in the zpwr-midi-fx pack", "Arp, chord, scale, Euclidean and generative sequencing, humanize, remap", "Per-block parameter reference", "Runs on the note-stream instantiation of the shared graph", "Free, DRM-free PDF"]
+    },
+    "zpwr-midi-fx-reference": {
+      "overview": "The zpwr-midi-fx manual — a shared-engine architecture overview plus a per-module node and parameter reference, generated from the live registry.",
+      "features": ["Shared-engine architecture overview", "Per-module node and parameter reference, generated from the live registry", "The note-event stream signal model", "Built on zpwr-patch-core", "Free, DRM-free PDF"]
+    },
+    "zpwr-patch-core-block-catalog": {
+      "overview": "The complete shared patch-graph reference — every block across all four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw), with an alphabetical index.",
+      "features": ["Every block across all four plugins in one volume", "An alphabetical cross-plugin index", "The shared zpwr-patch-core graph model", "Per-block parameters and categories", "Free, DRM-free PDF"]
+    },
+    "zpwr-synth-block-catalog": {
+      "overview": "Every DSP block zpwr-synth ships — its 49 synth-voice modules plus the shared audio pack on the master and aux FX bus.",
+      "features": ["49 synth-voice modules", "The shared audio pack on the master and aux FX bus", "Per-block parameter reference", "Runs across the polyphonic voice pool (PolyEngine)", "Free, DRM-free PDF"]
+    },
+    "zpwr-synth-reference": {
+      "overview": "The zpwr-synth manual — a per-module node and parameter reference for the modular voice engine, generated from the live registry.",
+      "features": ["Per-module node and parameter reference, generated from the live registry", "The modular voice-engine model (PolyEngine)", "Oscillators, filters, envelopes, LFOs, and effects", "Built on zpwr-patch-core and zdsp-core", "Free, DRM-free PDF"]
+    },
+    "zshrs-reference": {
+      "overview": "The complete zshrs reference — every builtin, option, parameter flag, and completion primitive of the first compiled Unix shell. The dense companion to The zshrs Book.",
+      "features": ["Every zshrs builtin and option", "Parameter flags and completion primitives", "Generated from the live zshrs source", "The dense companion to The zshrs Book", "Free, DRM-free PDF"]
     }
   };
 
@@ -2067,6 +2505,11 @@
 
   // ---- Helpers --------------------------------------------------------
   var CART_KEY = 'appstore-cart';
+
+  // Contact form target. The store is a static site with no backend, so the
+  // contact form POSTs to the Web3Forms relay (see renderContactPage), which
+  // forwards the message to the inbox registered to this public access key.
+  var WEB3FORMS_KEY = '7937cf02-fe17-4a96-8869-98165c3a1f73';
 
   function byId(id) {
     for (var i = 0; i < PRODUCTS.length; i++) {
@@ -2387,6 +2830,44 @@
   };
   var appliedCode = null;
 
+  // ---- PayPal Smart Buttons ------------------------------------------
+  // Public client ID from a LIVE REST app at developer.paypal.com. This is a
+  // PUBLIC credential — it ships in client-side JS and is safe to commit. The
+  // API *secret* never appears here (client-side capture needs no secret).
+  // Empty string => the PayPal method shows a "not configured" note instead of
+  // attempting to load the SDK.
+  var PAYPAL_CLIENT_ID = 'AZZQjvgmEJpt12iT7We_BGQ_HkVWMR2J_P3sOsqGihpRRWLagbI7S3A4w6uGnwNXyisFxw1czHRD0bZs';
+
+  var paypalSdkState = 0;        // 0 unloaded · 1 loading · 2 ready · 3 failed
+  var paypalWaiters = [];
+
+  function loadPayPalSdk(onReady, onFail) {
+    if (paypalSdkState === 2) { onReady(); return; }
+    if (paypalSdkState === 3) { onFail(); return; }
+    paypalWaiters.push({ ok: onReady, fail: onFail });
+    if (paypalSdkState === 1) return;
+    paypalSdkState = 1;
+    var s = document.createElement('script');
+    s.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(PAYPAL_CLIENT_ID) +
+            '&currency=USD&intent=capture&components=buttons';
+    s.onload = function () { paypalSdkState = 2; flushPayPalWaiters(true); };
+    s.onerror = function () { paypalSdkState = 3; flushPayPalWaiters(false); };
+    document.head.appendChild(s);
+  }
+  function flushPayPalWaiters(ok) {
+    var w = paypalWaiters; paypalWaiters = [];
+    w.forEach(function (cb) { (ok ? cb.ok : cb.fail)(); });
+  }
+
+  // Single source of truth for the checkout money math — the summary panel and
+  // the PayPal order both read from here so amounts can never diverge.
+  function checkoutTotals() {
+    var cart = readCart();
+    var subtotal = cartTotal(cart);
+    var disc = discountAmount(subtotal);
+    return { cart: cart, subtotal: subtotal, disc: disc, total: subtotal - disc };
+  }
+
   function discountAmount(subtotal) {
     if (!appliedCode) return 0;
     var d = DISCOUNTS[appliedCode];
@@ -2405,10 +2886,8 @@
   }
 
   function summaryHtml() {
-    var cart = readCart();
-    var subtotal = cartTotal(cart);
-    var disc = discountAmount(subtotal);
-    var total = subtotal - disc;
+    var t = checkoutTotals();
+    var cart = t.cart, subtotal = t.subtotal, disc = t.disc, total = t.total;
     var discLine = disc
       ? '<div class="sum-line"><span>Discount (' + appliedCode + ')</span><span>-' + fmtPrice(disc) + '</span></div>'
       : '';
@@ -2423,6 +2902,100 @@
       discLine +
       '<div class="sum-line"><span>Taxes</span><span>Calculated at fulfillment</span></div>' +
       '<div class="sum-line total"><span class="t-lbl">Total</span><span class="t-amt"><span class="cur">USD</span>' + fmtPrice(total) + '</span></div>';
+  }
+
+  // Contact page: name / email / subject / message. On submit, POST to the
+  // Web3Forms relay via fetch (15s timeout so a slow/down relay surfaces an
+  // error instead of hanging) and show inline success/error.
+  function renderContactPage() {
+    var root = document.getElementById('contactRoot');
+    if (!root) return;
+
+    root.innerHTML = '' +
+      '<div class="contact-wrap">' +
+        '<p class="contact-intro">Questions about a product, a license, a bug, or a custom build? Fill this out and it sends straight to my inbox.</p>' +
+        '<form id="contactForm" novalidate>' +
+          '<div class="field"><label for="cfName">Your name</label>' +
+            '<input id="cfName" type="text" autocomplete="name" placeholder="Name"></div>' +
+          '<div class="field"><label for="cfEmail">Your email</label>' +
+            '<input id="cfEmail" type="email" autocomplete="email" placeholder="you@example.com"></div>' +
+          '<div class="field"><label for="cfSubject">Subject</label>' +
+            '<input id="cfSubject" type="text" placeholder="What\'s this about?"></div>' +
+          '<div class="field"><label for="cfMessage">Message</label>' +
+            '<textarea id="cfMessage" placeholder="Type your message…"></textarea></div>' +
+          // honeypot — hidden from humans, tempts bots; Web3Forms drops it if filled
+          '<input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">' +
+          '<div class="contact-err" id="cfErr" role="alert" aria-live="polite"></div>' +
+          '<button type="submit" class="btn btn-buy pay-now-btn">Send message</button>' +
+        '</form>' +
+        '<div id="cfSent"></div>' +
+      '</div>';
+
+    var form = root.querySelector('#contactForm');
+    if (!form) return;
+    var btn = form.querySelector('button[type="submit"]');
+    var btnText = btn ? btn.textContent : 'Send message';
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = (root.querySelector('#cfName').value || '').trim();
+      var email = (root.querySelector('#cfEmail').value || '').trim();
+      var subject = (root.querySelector('#cfSubject').value || '').trim();
+      var message = (root.querySelector('#cfMessage').value || '').trim();
+      var botcheck = form.querySelector('input[name="botcheck"]').checked;
+      var errEl = root.querySelector('#cfErr');
+      var sent = root.querySelector('#cfSent');
+
+      var missing = [];
+      if (!name) missing.push('name');
+      if (!email || email.indexOf('@') < 1) missing.push('a valid email');
+      if (!message) missing.push('a message');
+      if (missing.length) {
+        errEl.textContent = 'Please add ' + missing.join(', ') + '.';
+        return;
+      }
+      errEl.textContent = '';
+      if (sent) sent.innerHTML = '';
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      // Hard timeout so a dead backend surfaces an error instead of hanging.
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, 15000);
+
+      var payload = {
+        access_key: WEB3FORMS_KEY,
+        name: name,
+        email: email,
+        subject: subject || ('Contact from ' + name),
+        message: message,
+        botcheck: botcheck
+      };
+
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      }).then(function (res) {
+        if (!res.ok) { throw new Error('HTTP ' + res.status); }
+        return res.json();
+      }).then(function (data) {
+        if (!data || !data.success) { throw new Error('relay rejected'); }
+        form.reset();
+        if (sent) {
+          sent.innerHTML = '<div class="contact-sent">Message sent — thanks. I\'ll get back to you at ' +
+            email.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '.</div>';
+        }
+      }).catch(function () {
+        errEl.textContent = 'Could not send right now. Please try again shortly.';
+      }).then(function () {
+        clearTimeout(timer);
+        btn.disabled = false;
+        btn.textContent = btnText;
+      });
+    });
   }
 
   function renderCheckoutPage() {
@@ -2478,7 +3051,7 @@
               '</div>' +
               '<div class="pay-method" data-method="paypal">' +
                 '<div class="pay-method-head"><span class="radio"></span><span class="pm-label">PayPal</span><span class="brand-logo paypal">PayPal</span></div>' +
-                '<div class="pay-method-body"><div id="paypalButtonContainer"><p class="checkout-note">You will be redirected to PayPal to complete your purchase securely.</p></div></div>' +
+                '<div class="pay-method-body"><div id="paypalButtonContainer"><p class="checkout-note">Pay securely with your PayPal balance, bank, or card.</p></div></div>' +
               '</div>' +
             '</div>' +
             // Billing
@@ -2538,23 +3111,25 @@
   function wireCheckoutPage(root) {
     wireSummary(root);
 
-    // Payment-method accordion (single open at a time).
+    // Payment-method accordion (single open at a time). Selecting PayPal mounts
+    // its Smart Buttons and hides the generic "Pay now".
     var methods = root.querySelector('#payMethods');
     if (methods) methods.addEventListener('click', function (e) {
       var head = e.target.closest('.pay-method-head');
       if (!head) return;
-      var all = methods.querySelectorAll('.pay-method');
-      for (var i = 0; i < all.length; i++) all[i].classList.remove('active');
-      head.parentElement.classList.add('active');
+      activateMethod(root, head.parentElement.getAttribute('data-method'));
     });
 
-    // Express wallet buttons + branded radios route to the provider.
-    // INTEGRATION HOOKS: replace the alert() calls below.
-    //   shop / shopPay  -> redirect to your Shopify hosted checkout URL
-    //   paypal          -> render PayPal Smart Buttons into #paypalButtonContainer
-    //   gpay / venmo    -> Google Pay / Braintree-Venmo SDK
+    // Express wallet buttons route to the provider.
+    //   paypal          -> select the PayPal method + render Smart Buttons (live)
+    //   shop / gpay / venmo -> client-side placeholders (see README)
     function startWallet(name) {
-      // e.g. shop: location.href = SHOPIFY_CHECKOUT_URL;
+      if (name === 'paypal') {
+        activateMethod(root, 'paypal');
+        var pm = root.querySelector('.pay-method[data-method="paypal"]');
+        if (pm && pm.scrollIntoView) pm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
       completeOrder(root, name);
     }
     root.querySelectorAll('[data-wallet]').forEach(function (b) {
@@ -2566,15 +3141,113 @@
       e.preventDefault();
       var active = root.querySelector('.pay-method.active');
       var method = active ? active.getAttribute('data-method') : 'card';
+      // PayPal is captured by its own buttons — the form submit is a no-op.
+      if (method === 'paypal') return;
       completeOrder(root, method);
     });
   }
 
-  function completeOrder(root, method) {
-    // CLIENT-SIDE PLACEHOLDER — no real charge happens here. Wire `method`
-    // to Stripe / PayPal / Shopify before going live (see README).
+  function paypalNote(msg) {
+    return '<p class="checkout-note">' + msg + '</p>';
+  }
+
+  // Mount PayPal Smart Buttons into #paypalButtonContainer. Idempotent: a second
+  // call while already mounted is a no-op. The order is built live inside
+  // createOrder, so discount changes are picked up without re-rendering.
+  function renderPayPalButtons(root) {
+    var container = root.querySelector('#paypalButtonContainer');
+    if (!container) return;
+    if (!PAYPAL_CLIENT_ID) {
+      container.innerHTML = paypalNote('PayPal is not configured yet.');
+      return;
+    }
+    if (container.getAttribute('data-rendered') === '1') return;
+    container.innerHTML = paypalNote('Loading PayPal…');
+
+    var fail = function () {
+      container.removeAttribute('data-rendered');
+      container.innerHTML = paypalNote('Could not reach PayPal — check your connection and try again.');
+    };
+
+    loadPayPalSdk(function () {
+      if (!window.paypal || !window.paypal.Buttons) { fail(); return; }
+      container.innerHTML = '';
+      container.setAttribute('data-rendered', '1');
+
+      window.paypal.Buttons({
+        style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'paypal' },
+
+        createOrder: function (data, actions) {
+          var t = checkoutTotals();
+          var unit = {
+            amount: {
+              currency_code: 'USD',
+              value: t.total.toFixed(2),
+              breakdown: {
+                item_total: { currency_code: 'USD', value: t.subtotal.toFixed(2) },
+              },
+            },
+            items: t.cart.map(function (i) {
+              var p = byId(i.id) || { name: i.id };
+              return {
+                name: (p.name + ' — ' + i.tier + ' license').slice(0, 127),
+                quantity: '1',
+                category: 'DIGITAL_GOODS',
+                unit_amount: { currency_code: 'USD', value: (i.price || 0).toFixed(2) },
+              };
+            }),
+          };
+          if (t.disc > 0) {
+            unit.amount.breakdown.discount = { currency_code: 'USD', value: t.disc.toFixed(2) };
+          }
+          // Pack fulfillment data onto the order so the PayPal "payment received"
+          // email / transaction record carries what's needed to send the app +
+          // license: the buyer's delivery email (custom_id) and the apps + tiers
+          // purchased (description). PayPal field caps are 127 chars.
+          var deliveryEl = root.querySelector('#ckEmail');
+          var deliveryEmail = (deliveryEl && deliveryEl.value || '').trim();
+          if (deliveryEmail) unit.custom_id = deliveryEmail.slice(0, 127);
+          unit.description = ('Deliver to ' + (deliveryEmail || 'PayPal email') + ' — ' +
+            t.cart.map(function (i) {
+              var p = byId(i.id) || { name: i.id };
+              return p.name + ' (' + i.tier + ')';
+            }).join(', ')).slice(0, 127);
+          return actions.order.create({ intent: 'CAPTURE', purchase_units: [unit] });
+        },
+
+        onApprove: function (data, actions) {
+          return actions.order.capture().then(function (details) {
+            var payer = details && details.payer && details.payer.email_address;
+            completeOrder(root, 'PayPal', payer);
+          });
+        },
+
+        onError: fail,
+      }).render(container).catch(fail);
+    }, fail);
+  }
+
+  // Activate one payment method: sync the accordion, hide the generic "Pay now"
+  // when PayPal is chosen (its own buttons submit), and mount those buttons.
+  function activateMethod(root, method) {
+    var methods = root.querySelector('#payMethods');
+    if (methods) {
+      var all = methods.querySelectorAll('.pay-method');
+      for (var i = 0; i < all.length; i++) {
+        all[i].classList.toggle('active', all[i].getAttribute('data-method') === method);
+      }
+    }
+    var payNow = root.querySelector('#payNow');
+    if (payNow) payNow.style.display = (method === 'paypal') ? 'none' : '';
+    if (method === 'paypal') renderPayPalButtons(root);
+  }
+
+  function completeOrder(root, method, payerEmail) {
+    // Card / Shop Pay / Google Pay / Venmo are still client-side placeholders —
+    // no real charge. PayPal (Smart Buttons) is a live capture; `payerEmail`
+    // comes back from the PayPal payer record for license delivery.
     var emailEl = root.querySelector('#ckEmail');
-    var email = (emailEl && emailEl.value) || 'your inbox';
+    var email = payerEmail || (emailEl && emailEl.value) || 'your inbox';
     writeCart([]);
     appliedCode = null;
     root.innerHTML = '<div class="checkout-ok" style="max-width:34rem;margin:3rem auto;">' +
@@ -2661,6 +3334,7 @@
     renderGrid('All', '');
     renderDetail();
     renderCheckoutPage();
+    renderContactPage();
 
     var activeCat = 'All';
     var search = document.getElementById('storeSearch');
