@@ -532,13 +532,18 @@ each a runnable plugin with a `Cargo.toml` + `znative.toml`; the `znative` SDK c
 `zmodload`); the first is a *package manager* whose install unit is a native compiled
 plugin — author-asserted on a non-exhaustive prior-art sweep.
 
-**40e. Seven-way, dual-flavor shell-emulation parity/fuzz harness gated on every push** — `high`
-zshrs is not one shell but seven emulations behind drop-in flags — `--zsh`, `--bash`,
-`--ksh`, `--mksh`, `--sh`, `--dash`, `--ash` (mksh rides the ksh base, ash the Almquist/dash
-base; `zshrs/bins/zshrs.rs:1191-1220`, `1659-1666`). The harness runs each `zshrs --<shell>`
-against the *real* reference shell and requires byte-identical stdout + exit code
-(`tests/emulation_parity.rs`, the seven-entry `REF_SHELLS` table; zsh/bash/ksh/sh/dash
-required, mksh/ash best-effort). The second axis is what lifts it past a shell matrix: every
+**40e. Nine-way, dual-flavor shell-emulation parity/fuzz harness gated on every push** — `high`
+zshrs is not one shell but **nine** shell-emulation drop-in flags — `--zsh`, `--bash`,
+`--ksh`, `--mksh`, `--sh`, `--posix`, `--dash`, `--ash`, `--csh` — over the ported zsh
+emulation bitmaps (`EMULATE_ZSH`/`KSH`/`SH`/`CSH`, plus bash-over-sh): mksh rides the ksh
+base, ash and dash the Almquist/`EMULATE_SH`+`DASH_STRICT` base, `--posix` aliases `--sh`, and
+`--csh` layers zsh's own csh option-deltas (`cshjunkiehistory`/`loops`/`quotes`, `cshnullcmd`,
+`cshnullglob`) — `zshrs/bins/zshrs.rs:1191-1220`, `1658-1667`, argv0 inference `:1175-1179`;
+`src/ported/options.rs` `EMULATE_CSH` (c:55, deltas c:125-129). The harness runs each
+`zshrs --<shell>` that has a real reference binary against it and requires byte-identical
+stdout + exit code (`tests/emulation_parity.rs`, the `REF_SHELLS` table: zsh/bash/ksh/sh/dash
+required, mksh/ash best-effort; `--posix` folds into the `--sh` row and `--csh` has no separate
+reference binary). The second axis is what lifts it past a shell matrix: every
 POSIX-family mode carries **two flavors** that must both be correct and are deliberately *not*
 equal — a bare `--sh`/`--ksh`/`--dash` is *real-shell-faithful* (matches the actual shell,
 e.g. trailing-empty-field splitting), while adding `--zsh` reproduces zsh's *own* `emulate sh`
@@ -555,11 +560,12 @@ All of it is CI-gated on every push to `main` and every PR (`zshrs/.github/workf
 under `ZSHRS_REQUIRE_REF_SHELLS=1` so a missing *required* shell fails rather than silently
 skips; the `parity-fuzz` job runs the fuzzer). *Basis:* the files cited above. *Caveat:*
 differential shell fuzzing, emulation matrices, and golden byte-tests each have prior art
-individually; the novelty asserted is the *composition* — seven emulated shells, each in both
-a real-faithful and a zsh-emulation flavor, differentially byte-compared and fuzzed on every
-push — and "first" rests on a non-exhaustive prior-art sweep. mksh/ash are best-effort
-(skipped when absent, never fatal). The real-PTY ZTST harness (#40) is separate and not yet
-CI-gated.
+individually; the novelty asserted is the *composition* — nine emulation flags, and each
+POSIX-family mode in both a real-faithful and a zsh-emulation flavor, differentially
+byte-compared and fuzzed on every push — and "first" rests on a non-exhaustive prior-art
+sweep. mksh/ash are best-effort (skipped when absent, never fatal); `--csh`/`--posix` are
+emulation surfaces without a dedicated reference-shell parity row. The real-PTY ZTST harness
+(#40) is separate and not yet CI-gated.
 
 ---
 
