@@ -600,6 +600,18 @@
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
     {
+      id: 'rubyrs-book', name: 'The rubyrs Book', glyph: 'yB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to rubyrs — Ruby as a fusevm frontend: the lexer and parser, the lowering of Ruby to fusevm bytecode, native arithmetic ops for the JIT versus the RubyHost runtime that serves dispatch, blocks, and object construction, and the differential parity harness against real Ruby. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'rubyrs', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'arb-book', name: 'The arb Book', glyph: 'rB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to arb — the pipeline-to-TUI language on fusevm: pipe any Unix stream in and get a dynamic TUI (and web page) from a declarative, Tcl/Tk-flavored spec. The spec language and widget/source model, the jq/xpath/css/yq query superset, the interactive megafilter/map over the live passthrough, and the fusevm runtime underneath. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'arb', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
       id: 'zterminal-book', name: 'The zterminal Book', glyph: 'tB', category: 'Publications', badge: 'REFERENCE',
       tagline: 'The companion book to zterminal — the GPU-accelerated, cross-platform terminal emulator in Rust (OpenGL ES glyph-atlas renderer, xterm-compatible VT parsing) with native i3-style tiling, native tmux control over the wire protocol, an embedded-WebView control panel, and a command-palette-driven workflow. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'zterminal', 'DRM-free PDF'], price: 20,
@@ -985,6 +997,14 @@
     "vimlrs-book": {
       "overview": "The companion book to vimlrs — a faithful Rust port of the Vimscript (VimL) interpreter, ported from the Neovim C eval engine and lowered to the shared fusevm bytecode machine. The command line versus expressions, scopes and types, functions and funcrefs, the regex engine, and what 'faithful port' means in practice.",
       "features": ["vimlrs, end to end — Vimscript faithful to Neovim's eval engine", "The :command line vs expressions; scopes (g:/l:/s:/b:/w:/v:) and types", "Functions, ranges, varargs, dict functions, lambdas, and funcrefs", "The fidelity story: how the Rust port mirrors the Neovim C source", "Lowering to fusevm bytecode; the JIT/AOT path; LSP and DAP tooling", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "rubyrs-book": {
+      "overview": "The companion book to rubyrs — a compiled Ruby runtime hosted on the shared fusevm bytecode VM. MRI walks an AST in C; rubyrs lexes and parses Ruby to an AST, lowers it to fusevm bytecode, and runs it on a compiled VM with a three-tier Cranelift JIT. Arithmetic and comparison lower to native VM ops so the JIT can trace hot loops, while Ruby-specific behaviour — method dispatch, blocks, object construction, yield — is served by a thread-local RubyHost runtime. rubyrs carries no VM or JIT of its own.",
+      "features": ["rubyrs, end to end — Ruby on the shared fusevm machine", "The pipeline: Ruby source → lexer → parser (AST) → fusevm bytecode → VM + JIT", "Native arithmetic/comparison ops vs the RubyHost runtime (dispatch, blocks, yield)", "Classes, modules/include, super, exceptions, splat/default params, &:sym block-pass", "The differential parity harness against real Ruby", "Pandoc + LaTeX typeset, DRM-free PDF"]
+    },
+    "arb-book": {
+      "overview": "The companion book to arb — the pipeline-to-TUI language on fusevm. Pipe any Unix stream into arb and it spawns a dynamic full-screen TUI (and, later, a web page) built from a declarative, Tcl/Tk-flavored spec. The book covers the spec language and its widget/source model, the jq/xpath/css/yq query superset over the live stream, the interactive megafilter/map that shapes the passthrough in place, and the fusevm bytecode VM + Cranelift JIT it runs on — from the zero-config live-tail of Milestone 0 outward.",
+      "features": ["arb, end to end — a TUI for every pipeline", "The declarative, Tcl/Tk-flavored spec and its widget/source model", "The jq / xpath / css / yq query superset over the live stream", "The interactive megafilter/map that shapes the passthrough in place", "Running on the fusevm bytecode VM + Cranelift JIT", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zterminal-book": {
       "overview": "The companion book to zterminal — the GPU-accelerated, cross-platform terminal emulator in Rust. The OpenGL ES glyph-atlas renderer, xterm-compatible VT parsing, native i3-style tiling with one PTY per pane, native tmux control over the wire protocol (no subprocess), the embedded-WebView control panel, and the command-palette-driven workflow — across BSD, Linux, macOS, and Windows.",
