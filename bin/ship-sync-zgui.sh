@@ -45,7 +45,7 @@ while IFS= read -r pj; do
   grep -q '"zgui-core"[[:space:]]*:[[:space:]]*"github:MenkeTechnologies/zgui-core#' "$pj" || continue
   # perl (portable in-place; sed -i differs BSD/GNU)
   perl -i -pe 's{("zgui-core"\s*:\s*"github:MenkeTechnologies/zgui-core)#[^"]+"}{${1}#'"$target"'"}g' "$pj"
-  echo "  zgui npm:  repinned ${pj#$app_dir/} -> #${target:0:9}"
+  echo "  zgui npm:  repinned ${pj#"$app_dir"/} -> #${target:0:9}"
   # the dir with the lockfile is where install must run; prefer the one holding pnpm-lock.yaml
   [ -f "$(dirname "$pj")/pnpm-lock.yaml" ] && repin_dir="$(dirname "$pj")"
   [ -z "$repin_dir" ] && repin_dir="$(dirname "$pj")"
