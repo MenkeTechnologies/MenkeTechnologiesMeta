@@ -532,31 +532,34 @@ each a runnable plugin with a `Cargo.toml` + `znative.toml`; the `znative` SDK c
 `zmodload`); the first is a *package manager* whose install unit is a native compiled
 plugin — author-asserted on a non-exhaustive prior-art sweep.
 
-**40e. Seven-way zsh-compatibility parity/fuzz harness gated on every push** — `high`
-One CI workflow fires seven independent shell-compatibility oracles on every push to `main`
-(and every PR), so a divergence from real-zsh behavior fails the build instead of shipping.
-The seven: (1) a **static golden byte-parity** suite — `tests/parity/*.rs` (99 binaries)
-byte-comparing `zshrs --zsh -fc` stdout + exit against the real zsh; (2) the **`.zwc`
-wordcode parser-parity oracle** (#39) — decode zsh's own compiled wordcode to a canonical
-AST S-expression and byte-compare; (3) **demo equivalence** —
-`tests/zsh_zshrs_demo_equivalence.rs` diffing system-zsh vs `zshrs --zsh` over every
-`examples/demos/` script; (4) a **generative differential fuzzer** — `bins/parity-fuzz.rs`
-(77 grammar-driven modes, thousands of deterministic-output snippets per mode) running
-`zsh -fc` vs `zshrs --zsh -fc`, baseline-gated with per-seed exact replay
-(`parity-fuzz --seed N --once`); (5) **five-way emulation parity** —
-`tests/emulation_parity.rs` running `zshrs --{zsh,bash,ksh,sh,dash}` against the five real
-reference shells under `ZSHRS_REQUIRE_REF_SHELLS=1` (a missing reference shell fails, never
-silently skips); (6) the **dash-strict rejection** suite — `tests/dash_mode.rs`; and (7) a
-**real-world corpus** — `test_corpus/run_corpus.sh` over real scripts against the release
-binary. *Basis:* `zshrs/.github/workflows/ci.yml` (`on: push: branches:[main]`; jobs `test`,
-`parity-fuzz`, `emulation-parity`, `corpus` all inherit the push trigger); `bins/parity-fuzz.rs`;
-`tests/parity/`, `tests/emulation_parity.rs`, `tests/dash_mode.rs`,
-`tests/zsh_zshrs_demo_equivalence.rs`; `test_corpus/run_corpus.sh`. *Caveat:* each oracle
-individually has prior art (differential shell fuzzing, golden byte-tests, emulation
-matrices); the novelty asserted is the *composition* — seven distinct oracle families gated
-on every push for one shell reimplementation — and "first" rests on a non-exhaustive
-prior-art sweep. The fuzzer's oracle is whichever zsh built the baseline (`ZSHRS_FUZZ_ZSH`);
-the real-PTY ZTST harness (#40) is **not** among the seven — it is not yet CI-gated.
+**40e. Seven-way, dual-flavor shell-emulation parity/fuzz harness gated on every push** — `high`
+zshrs is not one shell but seven emulations behind drop-in flags — `--zsh`, `--bash`,
+`--ksh`, `--mksh`, `--sh`, `--dash`, `--ash` (mksh rides the ksh base, ash the Almquist/dash
+base; `zshrs/bins/zshrs.rs:1191-1220`, `1659-1666`). The harness runs each `zshrs --<shell>`
+against the *real* reference shell and requires byte-identical stdout + exit code
+(`tests/emulation_parity.rs`, the seven-entry `REF_SHELLS` table; zsh/bash/ksh/sh/dash
+required, mksh/ash best-effort). The second axis is what lifts it past a shell matrix: every
+POSIX-family mode carries **two flavors** that must both be correct and are deliberately *not*
+equal — a bare `--sh`/`--ksh`/`--dash` is *real-shell-faithful* (matches the actual shell,
+e.g. trailing-empty-field splitting), while adding `--zsh` reproduces zsh's *own* `emulate sh`
+/ `emulate ksh` — which is only zsh's approximation of that shell, **not** byte-faithful to
+the real `/bin/sh` — so **`zshrs --zsh --sh != zshrs --sh`** by construction (the bare mode is
+the real shell; the `--zsh` flavor is zsh's fake of it)
+(`bins/zshrs.rs:1261-1271`; `src/extensions/dash_mode.rs`; the `posix_faithful` toggle at
+`src/ported/utils.rs:4949`). Alongside the fixed corpus runs a generative differential fuzzer
+(`bins/parity-fuzz.rs`, 77 grammar-driven modes, thousands of deterministic-output snippets
+per mode, `zsh -fc` vs `zshrs --zsh -fc`, baseline-gated with per-seed exact replay —
+`parity-fuzz --seed N --once`) and the dash-strict rejection suite (`tests/dash_mode.rs`).
+All of it is CI-gated on every push to `main` and every PR (`zshrs/.github/workflows/ci.yml`,
+`on: push: branches:[main]`; the `Emulation parity` job runs `emulation_parity` + `dash_mode`
+under `ZSHRS_REQUIRE_REF_SHELLS=1` so a missing *required* shell fails rather than silently
+skips; the `parity-fuzz` job runs the fuzzer). *Basis:* the files cited above. *Caveat:*
+differential shell fuzzing, emulation matrices, and golden byte-tests each have prior art
+individually; the novelty asserted is the *composition* — seven emulated shells, each in both
+a real-faithful and a zsh-emulation flavor, differentially byte-compared and fuzzed on every
+push — and "first" rests on a non-exhaustive prior-art sweep. mksh/ash are best-effort
+(skipped when absent, never fatal). The real-PTY ZTST harness (#40) is separate and not yet
+CI-gated.
 
 ---
 
