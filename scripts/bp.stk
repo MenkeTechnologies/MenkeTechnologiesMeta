@@ -28,11 +28,13 @@ val $PUB  = "$META/MenkeTechnologiesPublications"
 val $AS   = "$META/app-store"
 val $REPO = "MenkeTechnologies/MenkeTechnologiesPublications"
 
-# --- args: --all / --build-only via getopts, version level as the lone positional ---
-val %opt        = %{ getopts(\@ARGV, ["all!", "build-only!"]) }
-val $force      = $opt{all}          ? 1 : 0   # rebuild every deliverable, not just stale
-val $build_only = $opt{"build-only"} ? 1 : 0   # rebuild (parallel) but skip the release
-val $level      = len(@ARGV) ? shift @ARGV : "patch"
+# --- args: --all / --build-only via getopts (operates on @ARGV), version level
+#     as the lone positional. Two passes so flags work before OR after it. ---
+val %o1         = %{ getopts(["all!", "build-only!"]) }   # leading flags
+val $level      = len(@ARGV) ? shift @ARGV : "patch"      # the lone positional
+val %o2         = %{ getopts(["all!", "build-only!"]) }   # trailing flags
+val $force      = ($o1{all}          || $o2{all})          ? 1 : 0   # rebuild all, not just stale
+val $build_only = ($o1{"build-only"} || $o2{"build-only"}) ? 1 : 0   # rebuild (parallel), skip release
 $level =~ /^(patch|minor|major|\d+\.\d+\.\d+)$/ or die_bp "bad version arg '$level' (want patch|minor|major|X.Y.Z)"
 system("command -v gh >/dev/null 2>&1") == 0 or die_bp "gh CLI not found"
 
