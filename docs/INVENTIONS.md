@@ -489,18 +489,18 @@ version gate**, so a native module is welded to one exact shell build and can cr
 mismatched one. That is why neither ecosystem has meaningful third-party native modules:
 nearly all that exist are the ones the shell itself bundles. zshrs makes its
 native-plugin interface an **independently-published, versioned ABI package**: a third
-party runs `cargo add zshrs-plugin`, writes a handler, ships a compiled `cdylib`, and
+party runs `cargo add znative`, writes a handler, ships a compiled `cdylib`, and
 loads it into any compatible zshrs at runtime with `zmodload -R <path>` (`-uR` to
 unload) — native machine-code speed, no zshrs source tree, no shell recompile, and an
 `ABI_VERSION`-mismatched plugin refused at load rather than crashing. A plugin is an
-ordinary `#[repr(C)]` cdylib exposing one `zshrs_plugin_init(host)` symbol; it registers
+ordinary `#[repr(C)]` cdylib exposing one `znative_init(host)` symbol; it registers
 builtins into an in-process registry and calls back through a curated host API
 (`print`/`eval`/`getvar`/`setvar`). Plugin commands resolve in `execute_external_bg`
 before PATH lookup — the slot zsh uses for `zmodload -ab` autoloaded builtins. Plugins
 may still be written in zsh script (unchanged) **or**, now, native Rust; the Rust path is
 additive. *Basis:* `zshrs/src/extensions/plugin_host.rs` (`dlopen` via `libloading`,
 `ABI_VERSION` gate, in-process registry, host-callback table); the published
-`zshrs-plugin` crate (`#[repr(C)]` `HostApi`/`PluginInfo`, `ABI_VERSION`, `INIT_SYMBOL`);
+crates.io `znative` crate (`#[repr(C)]` `HostApi`/`PluginInfo`, `ABI_VERSION`, `INIT_SYMBOL`);
 `zmodload -R` / `-uR` load/unload; `declare_plugin!` macro for native completions;
 `docs/PLUGINS.md`, `docs/PORTING_ZSH_PLUGIN.md` (forgit ported as a worked example),
 README §[0x0D]; `examples/plugin-hello/`. *Caveat:* runtime native loading itself is not
@@ -527,8 +527,8 @@ stable ABI to install against. *Basis:* `zshrs/docs/ZNATIVE.md` (full command/so
 surface), `zshrs/docs/PLUGINS.md`; `zshrs/src/extensions/pkg/` (`mod.rs`, `commands.rs`,
 `manifest.rs`, `resolver.rs`, `builtin.rs`); `zshrs/examples/` — `plugin-hello`,
 `plugin-forgit`, `plugin-git-fuzzy`, `plugin-revolver`, `plugin-kubectl`, `plugin-zsh-z`,
-each a runnable plugin with a `Cargo.toml` + `znative.toml`; the `zshrs-plugin` SDK crate
-(`plugin-sdk/`). *Caveat:* runtime native loading predates this (bash `enable -f`, zsh
+each a runnable plugin with a `Cargo.toml` + `znative.toml`; the `znative` SDK crate
+(`znative/`). *Caveat:* runtime native loading predates this (bash `enable -f`, zsh
 `zmodload`); the first is a *package manager* whose install unit is a native compiled
 plugin — author-asserted on a non-exhaustive prior-art sweep.
 
