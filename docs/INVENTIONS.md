@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 216 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 217 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -206,25 +206,57 @@ compiled Ruby" outright. Early: DAP is partial (handshake + run-to-completion, s
 pending); `extend`/`prepend`, keyword params, regex, and bignum are planned (`BUGS.md`).
 "First" rests on a non-exhaustive prior-art sweep. MIT.
 
-**11e. arb — pipe-native UI-generating DSL that turns any Unix stream into a live TUI (and web) dashboard** — `low`
+**11e. arb — pipe-native UI-generating DSL that turns any Unix stream into a live TUI (and web) dashboard** — `med`
 arb is an original language (not a port) that drops into a Unix pipe and spawns a dynamic
-`ratatui` TUI — and, later, a `zgui` web page — from a declarative, Tcl/Tk-flavored spec:
-a `jq`/`xpath`/`css`/`yq` superset, an interactive megafilter/map over the live
-passthrough, with Expect-style stream reactions, Akka-style actor concurrency, and a
-package manager for sharing dashboards. The world-first framing is the **synthesis**, not
-any single leg — no prior tool is a pipe-native, dual-target (terminal + web),
-component-generating UI language with a shareable dashboard registry (each leg has prior
-art: Tcl'88 / Tk'88 / Expect'90, dasel, ratatui, Streamlit / Textual-serve, filt).
-*Basis:* `arb/README.md` + `arb/SPEC.md` (the SPEC's §1 states the world-first is the
-synthesis + ecosystem and tabulates per-leg prior art); `arb/src/{lexer,parser,ast,spec,
-query,stream,tui}.rs` (~728 L); **M0** ships zero-config live-tail (`find / | arb` → a
-full-screen TUI with count + rate; headless summary when no controlling TTY), **M1** adds
-a Tcl-flavored spec reader with declarative widget + `source .x { … }` query
-interpretation. *Caveat:* very early — M0/M1 only; the fusevm/JIT hosting is specified in
-`SPEC.md` but not yet wired (the shipped crate depends on `ratatui`/`regex`/`clap`, not
-`fusevm`); the query superset, web target, actors, Expect reactions, and package manager
-are unbuilt milestones; "world-first" is author-asserted on the synthesis per SPEC's own
-per-leg prior-art table. MIT.
+`ratatui` TUI — and, later, a `zgui` web page — from a declarative, Tcl/Tk-flavored spec.
+It is now well past the M0/M1 sketch: a **~100-verb query engine** (103 `QueryOp` variants,
+a `jq`/`xpath`/`css`/`yq` superset over six input formats — line / JSON / CSV / TSV / YAML /
+TOML / HTML), **14 widget kinds** (`text`/`tail`/`list`/`gauge`/`bars`/`histo`/`spark`/
+`chart`/`table`/`tabs`/`block`/`frame`/`input`/`select`), an interactive **megafilter/map**
+(the `input` widget + `apply` verb splice a live-edited value into a source pipeline,
+re-evaluated every frame — a before/after transform editor as a spec), and a **non-blocking
+pipe architecture**: the TUI renders to `/dev/tty` and reads keys from `/dev/tty` (like
+`vipe`), so stdout stays a clean data channel and `find / | arb | consumer` streams through
+untouched while the UI runs. The compute core **is wired to fusevm** — expressions and the
+`calc` op lower to a `fusevm::Chunk` and run on the VM + three-tier Cranelift JIT
+(`arb/src/expr.rs`; `Cargo.toml` depends on `fusevm = "0.14.10"` with `jit`). The
+world-first framing is the **synthesis** — no prior tool is a pipe-native, dual-target
+(terminal + web), component-generating UI language with a shareable dashboard registry
+(each leg has prior art: Tcl'88 / Tk'88 / Expect'90, dasel, ratatui, Streamlit /
+Textual-serve, filt). *Basis:* `arb/README.md` + `arb/SPEC.md`; `arb/src/*.rs` (~5,611 L,
+138 tests); `arb/src/query.rs` (the 103-op engine), `arb/src/expr.rs` (fusevm lowering),
+`arb/src/tui.rs` (`/dev/tty` render + raw key read). *Caveat:* the **web target, Akka-style
+actors, Expect-style reactions, and the package-manager registry are still unbuilt
+milestones**; "world-first" is author-asserted on the synthesis per SPEC's own per-leg
+prior-art table. MIT.
+
+**11f. arb subsumes fzf: fuzzy-select is one widget of a TUI-generating DSL, not a standalone tool** — `med`
+`fzf` (2013) is not a competitor arb happens to beat — it is a **strict subset of one arb
+widget**. `arb --fzf` and a `select` widget are literally the same code path
+(`fzf_mode = cli.fzf || any select widget`, `arb/src/main.rs`), and `--fzf` synthesizes a
+one-widget `select` spec (`default_spec_src`), so `sudo find / | fzf` ≡
+`sudo find / | arb -e 'select .s'`. fzf's *entire* feature surface — fuzzy smart-case
+match, multi-select marks, cursor nav, prompt/header, preview pane — is **one of arb's 14
+widget kinds**; the other thirteen are TUIs fzf cannot express. On fzf's own axis arb is a
+**superset, not a clone**: it carries fzf's real performance tricks (query-extension
+incremental match — typing narrows only the current hit set since fuzzy match is monotonic;
+`rayon` parallel rescan + parallel sort; windowed rendering of visible rows only) **and**
+adds what fzf structurally cannot do — (1) **non-blocking**: renders/reads keys on
+`/dev/tty` and tees the filtered stream downstream live, where fzf owns stdout and blocks
+the pipe until Enter; (2) **fd-owning stderr isolation**: the orchestrator (`PROD | _ | CONS`)
+makes arb spawn every stage and route the producer's stderr to a pane, so `sudo find /`
+permission errors never scribble over the list — fzf can't intercept an upstream it didn't
+spawn; (3) a **~100-verb query engine** that sees fields / JSON paths / CSV columns, where
+fzf sees opaque lines. The world-first framing is **not** "faster fzf" (dead by the no-dup
+rule — a faster fzf fails the "world's first" leg) but "arbitrary interactive TUI from a
+pipeline DSL, non-blocking and fd-owning, of which fuzzy-select is one preset." *Basis:*
+`arb/src/main.rs` (`fzf_mode`, `default_spec_src`), `arb/src/spec.rs` (`WidgetKind::Select`),
+`arb/src/tui.rs` (`/dev/tty` render + raw key read, query-extension incremental match,
+`par_iter`/`par_sort_by`, `render_err_pane` stderr pane), `arb/src/query.rs` (103-op engine).
+*Caveat:* the `select` widget currently drives off the raw stream — a `select` **source
+pipeline** (reshaping candidates before display) and mixing `select` with dashboard widgets
+in one spec are the next increments, not yet wired; the fuzzy-parity + non-blocking + stderr
+claims above are all in-tree and build-green. MIT.
 
 ---
 
