@@ -31,16 +31,16 @@ deep prior-art analysis in the appendix.
 One person built the whole execution engine — a bytecode VM plus a 3-tier
 (linear/block/tracing) Cranelift JIT emitting native machine code at runtime, and an
 AOT object compiler — and **seven independent language frontends** (`strykelang`/Perl 5,
-`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubyrs`/Ruby, and the
+`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, and the
 original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode. The
 novelty is the combination: solo author **+** from-scratch VM with a genuine machine-code
 JIT **+** 7+ real frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
 mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
-`cranelift_object`; six crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
-(arb is the seventh — its fusevm/JIT lowering is specified in `arb/SPEC.md` but the shipped
-M0/M1 crate still runs a native `ratatui` spec interpreter, so its Chunk emission is
-pending). `fusevm/src/op.rs` (~224 ops),
+`cranelift_object`; seven crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
+(arb's compute core — its `calc` / expression layer — lowers to a `fusevm::Chunk` via
+`arb/src/expr.rs` and runs on the VM, while its widget / layout construction stays a native
+`ratatui` interpreter). `fusevm/src/op.rs` (~224 ops),
 `host.rs`/`awk_host.rs` host-trait injection seam. *Caveat:* "None found", not proven —
 the deep search (see analysis) found no project meeting all three criteria but cannot
 cover private/defunct work; the nearest near-miss (Deegen) is contestable. JIT is
@@ -182,8 +182,8 @@ vars). *Caveat:* advice is VimL evaluated in the current interpreter (no subproc
 glob matcher is a hand-rolled `*`/`?`/char-class/`all` matcher, not full regex. "First for
 VimL" rests on non-exhaustive prior-art absence — no Vim or Neovim counterpart found.
 
-**11d. First Ruby lowered onto a shared multi-language JIT VM's bytecode (rubyrs) — the first compiled standalone Ruby runtime in Rust** — `med`
-rubyrs is the sixth fusevm frontend: it lexes and parses Ruby to an AST, lowers it to
+**11d. First Ruby lowered onto a shared multi-language JIT VM's bytecode (rubylang) — the first compiled standalone Ruby runtime in Rust** — `med`
+rubylang is the sixth fusevm frontend: it lexes and parses Ruby to an AST, lowers it to
 `fusevm` bytecode on a `RubyHost` object heap, and runs it on the shared three-tier
 Cranelift JIT + native-AOT engine — with **no bespoke VM or JIT of its own**.
 Arithmetic/comparison operators lower to native VM ops so the JIT can trace hot loops;
@@ -194,7 +194,7 @@ methods (`def self.m`), exceptions (`begin`/`rescue`/`ensure`, method-body and m
 `rescue`, typed exception classes), splat params, `&:sym` block-pass, parallel assignment,
 default args, the standalone `ruby` binary + REPL, the rkyv bytecode cache, an AOP
 method-intercept registry, and an LSP server. *Basis:*
-`rubyrs/src/{lexer,parser,compiler,host,cache,intercepts,lsp,dap,aot}.rs` (~6,989 L);
+`rubylang/src/{lexer,parser,compiler,host,cache,intercepts,lsp,dap,aot}.rs` (~6,989 L);
 `Cargo.toml` `fusevm = "0.14.10"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
 harness (`cargo run --bin parity`) diffs a **35-snippet** corpus live against the reference
 `ruby`, and `tests/parity.rs` replays the frozen outputs in CI with no `ruby` installed.
