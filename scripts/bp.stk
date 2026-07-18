@@ -1,0 +1,156 @@
+#!/usr/bin/env stryke
+# bp.stk — MenkeTechnologiesPublications release, parallelized.
+#
+# Stryke port of scripts/bp.sh. The one slow phase — the LaTeX builds — runs
+# concurrently via `pmap` (rayon work-stealing) instead of a sequential loop,
+# cutting ~29 LuaLaTeX builds from ~15-20 min to a few minutes.
+#
+#   1. collect-pdfs.sh            -> manifest with per-PDF staleness
+#   2. rebuild STALE PDFs (or all with --all) IN PARALLEL; fail-fast
+#   3. collect-pdfs.sh again      -> fresh manifest + uniquely-named all-pdfs/ copies
+#   4. mirror rebuilt PDFs        -> app-store/docs/<product>-<kind>.pdf
+#   5. bump VERSION, commit+tag+push publications
+#   6. commit+push the app-store mirror
+#   7. gh release v<NEW> with the PDFs attached
+#   8. bump meta submodule pointers forward-only
+#
+# Usage:  scripts/bp.stk [patch|minor|major|X.Y.Z] [--all]     (default: patch)
+
+fn die_bp = do { p "bp: " . _; exit 1 }
+fn prod_of = (split "/", _)[-3]           # ".../<product>/docs/<file>" -> <product>
+
+# --- resolve the meta checkout from this script's own path ---
+chomp(var $self = qx(realpath "$0"))
+var @seg = split "/", $self
+splice @seg, -2                            # drop /scripts/bp.stk
+val $META = join "/", @seg
+val $PUB  = "$META/MenkeTechnologiesPublications"
+val $AS   = "$META/app-store"
+val $REPO = "MenkeTechnologies/MenkeTechnologiesPublications"
+
+# --- args ---
+var $force = 0
+var $level = "patch"
+var $build_only = 0                        # rebuild (parallel) but skip the release
+for val $a (@ARGV) {
+    if    ($a eq "--all")                 { $force = 1 }
+    elsif ($a eq "--build-only")          { $build_only = 1 }
+    elsif ($a =~ /^(patch|minor|major)$/) { $level = $a }
+    elsif ($a =~ /^\d+\.\d+\.\d+$/)       { $level = $a }
+    else  { die_bp "bad arg '$a' (want patch|minor|major|X.Y.Z [--all] [--build-only])" }
+}
+system("command -v gh >/dev/null 2>&1") == 0 or die_bp "gh CLI not found"
+
+# --- branch safety: every repo we touch must be on main at origin/main ---
+for val $r ($META, $PUB, $AS) {
+    system("git -C '$r' fetch origin --quiet")
+    chomp(val $br = qx(git -C "$r" rev-parse --abbrev-ref HEAD))
+    $br eq "main" or die_bp "$r not on main"
+    chomp(val $h = qx(git -C "$r" rev-parse HEAD))
+    chomp(val $o = qx(git -C "$r" rev-parse origin/main))
+    $h eq $o or die_bp "$r not at origin/main — reconcile first"
+}
+
+# --- 1. manifest + staleness ---
+p ">> collect-pdfs (staleness scan)"
+system("bash '$META/scripts/collect-pdfs.sh' >/dev/null") == 0 or die_bp "collect-pdfs failed"
+
+# --- 2. select what to rebuild ---
+var @builds = ()
+if ($force) {
+    # books from book.md SOURCE (new books like znative are picked up before a PDF exists);
+    # references from existing reference.pdf (skips stubs with no output, e.g. fusevm:reference).
+    for val $m (glob "$PUB/*/docs/book.md")       { push @builds, prod_of($m) . ":book" }
+    for val $f (glob "$PUB/*/docs/reference.pdf")  { push @builds, prod_of($f) . ":reference" }
+} else {
+    for val $line (lines "$PUB/all-pdfs/MANIFEST.md") {
+        if ($line =~ m{^\|\s*(\d+)\s*\|.*`MenkeTechnologiesPublications/([^/]+)/docs/(book|reference)\.pdf`}) {
+            push @builds, "$2:$3" if $1 > 0
+        }
+    }
+}
+if (!len @builds) {
+    p "bp: no stale PDFs — nothing to release (use --all to force a full rebuild)"
+    exit 0
+}
+p "bp: rebuilding " . len(@builds) . " PDF(s) in parallel: @builds"
+
+# --- 3. PARALLEL rebuild (the whole point). Each closure shells out to one build
+#        script on a rayon thread; pmap collects a "<prod>:<kind>:ok|fail" tag. ---
+val $t0 = time()
+var @res = pmap {
+    val ($prod, $kind) = split ":", _
+    val $s = "$PUB/$prod/scripts/${kind}_pdf.sh"
+    val $ok = (-f $s) && (system("bash '$s' >/dev/null 2>&1") == 0)
+    "$prod:$kind:" . ($ok ? "ok" : "fail")
+} @builds
+val $dt = time() - $t0
+
+var @fails = grep { /:fail$/ } @res
+if (len @fails) {
+    p "bp: " . len(@fails) . " build(s) FAILED — aborting (no tag, no release):"
+    p "  $_" for map { s/:fail$//r } @fails
+    exit 1
+}
+var @rebuilt = map { val @x = split ":", _; "$x[0]:$x[1]" } grep { /:ok$/ } @res
+p "bp: built " . len(@rebuilt) . " PDF(s) in ${dt}s"
+if ($build_only) { p "bp: --build-only, skipping release"; exit 0 }
+
+# --- 4. fresh manifest + uniquely-named all-pdfs/ copies ---
+p ">> collect-pdfs (rebuild manifest)"
+system("bash '$META/scripts/collect-pdfs.sh' >/dev/null") == 0 or die_bp "collect-pdfs failed"
+
+# --- 5. mirror rebuilt PDFs into app-store/docs ---
+for val $b (@rebuilt) {
+    val ($prod, $kind) = split ":", $b
+    system("cp -f '$PUB/$prod/docs/$kind.pdf' '$AS/docs/$prod-$kind.pdf'")
+}
+
+# --- 6. version bump ---
+chomp(val $cur = c"$PUB/VERSION")
+var ($ma, $mi, $pa) = split /\./, $cur
+if    ($level eq "major") { $ma++; $mi = 0; $pa = 0 }
+elsif ($level eq "minor") { $mi++; $pa = 0 }
+elsif ($level eq "patch") { $pa++ }
+else  { ($ma, $mi, $pa) = split /\./, $level }
+val $new = "$ma.$mi.$pa"
+spurt "$PUB/VERSION", "$new\n"
+p "bp: v$cur -> v$new"
+
+# --- 7. commit + tag + push publications (explicit paths) ---
+system("git -C '$PUB' add VERSION all-pdfs/MANIFEST.md")
+for val $b (@rebuilt) {
+    val ($prod, $kind) = split ":", $b
+    system("git -C '$PUB' add '$prod/docs/$kind.pdf' 2>/dev/null")
+    system("git -C '$PUB' add '$prod/docs/$kind.tex' 2>/dev/null")
+}
+system("git -C '$PUB' commit -m 'release v$new: regen " . len(@rebuilt) . " PDF(s)'") == 0 or die_bp "publications commit failed"
+system("git -C '$PUB' tag -a 'v$new' -m 'MenkeTechnologiesPublications v$new'")
+system("git -C '$PUB' push origin main --follow-tags") == 0 or die_bp "publications push failed"
+
+# --- 8. commit + push app-store mirror ---
+for val $b (@rebuilt) {
+    val ($prod, $kind) = split ":", $b
+    system("git -C '$AS' add 'docs/$prod-$kind.pdf' 2>/dev/null")
+}
+if (system("git -C '$AS' diff --cached --quiet") != 0) {
+    system("git -C '$AS' commit -m 'docs: publish Publications v$new PDFs (store mirror)'")
+    system("git -C '$AS' push origin main")
+}
+
+# --- 9. GitHub release with uniquely-named assets ---
+val $assets = join " ", map { val ($p, $k) = split ":", _; "'$PUB/all-pdfs/$p-$k.pdf'" } @rebuilt
+if (system("gh release view 'v$new' --repo '$REPO' >/dev/null 2>&1") == 0) {
+    system("gh release upload 'v$new' $assets --repo '$REPO' --clobber")
+} else {
+    system("gh release create 'v$new' $assets --repo '$REPO' --title 'Publications v$new' --notes 'Regenerated " . len(@rebuilt) . " PDF(s).'")
+}
+
+# --- 10. bump meta submodule pointers forward-only ---
+system("git -C '$META' add MenkeTechnologiesPublications app-store")
+if (system("git -C '$META' diff --cached --quiet") != 0) {
+    system("git -C '$META' commit -m 'publications: release v$new; app-store PDF mirror'")
+    system("git -C '$META' push origin main")
+}
+
+p "bp: released v$new — " . len(@rebuilt) . " PDF(s), app-store mirror, gh release."
