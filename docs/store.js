@@ -2507,7 +2507,7 @@
   // (audio-haxor, traderview) and Pages-disabled repos (zpwr-fx/synth/midi-fx,
   // which link a PDF catalog instead) are intentionally absent so no link 404s.
   var DOC_REPOS = [
-    'api-rest-generator', 'awkrs', 'fusevm', 'htoprs', 'iftoprs', 'lsofrs', 'nmaprs',
+    'api-rest-generator', 'arb', 'awkrs', 'fusevm', 'htoprs', 'iftoprs', 'lsofrs', 'nmaprs',
     'powerliners', 'storageshower', 'temprs', 'strykelang', 'zshrs', 'ztmux', 'zpwr',
     'zpwrchrome', 'stryke-arrow', 'stryke-aws', 'stryke-azure',
     'stryke-clickhouse', 'stryke-demo', 'stryke-docker', 'stryke-duckdb',
@@ -2516,7 +2516,7 @@
     'stryke-mysql', 'stryke-neo4j', 'stryke-office', 'stryke-parquet',
     'stryke-polars', 'stryke-postgres', 'stryke-redis', 'stryke-scrape',
     'stryke-scylla', 'stryke-search', 'stryke-selenium', 'stryke-spark',
-    'stryke-utils', 'stryke-zmq', 'zsh-cargo-completion', 'zsh-cpan-completion',
+    'stryke-terminal', 'stryke-utils', 'stryke-zmq', 'zsh-cargo-completion', 'zsh-cpan-completion',
     'zsh-dotnet-completion', 'zsh-expand', 'zsh-gem-completion', 'zsh-git-acp',
     'zsh-git-repo-cache', 'zsh-learn', 'zsh-more-completions', 'zsh-nginx',
     'zsh-pip-description-completion', 'zsh-sed-sub', 'zsh-sudo',
@@ -2543,6 +2543,22 @@
     var base = 'https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-daw/';
     p.docsite = [
       { label: 'Documentation', desc: 'Project documentation site', url: base },
+      { label: 'Engineering Report', desc: 'Architecture & engineering report', url: base + 'report.html' },
+    ];
+  })();
+
+  // The ruby-on-fusevm product keeps the store id 'rubyrs' (matching its books
+  // and reference PDF), but the repo was renamed to 'rubylang' (crate name;
+  // 'rubyrs' is taken on crates.io), so its Pages live at github.io/rubylang/,
+  // not github.io/rubyrs/ (renamed-repo Pages URLs do not redirect). Wire the
+  // doc-site links to the real path. Verified live (HTTP 200).
+  (function () {
+    var p = byId('rubyrs');
+    if (!p) return;
+    var base = 'https://menketechnologies.github.io/rubylang/';
+    p.docsite = [
+      { label: 'Documentation', desc: 'Project documentation site', url: base },
+      { label: 'API Reference', desc: 'Full API / block reference', url: base + 'reference.html' },
       { label: 'Engineering Report', desc: 'Architecture & engineering report', url: base + 'report.html' },
     ];
   })();
