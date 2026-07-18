@@ -100,12 +100,14 @@ GI
 
 # rows: pages<TAB>category<TAB>destname<TAB>source-relpath<TAB>built_epoch<TAB>code_epoch
 rows=()
+declare -A have_dest   # destname -> 1, so mirror copies are counted once (see app-store loop)
 copy() { # src  destname  product
   local src=$1 dest=$2 prod=$3 d
   [[ -f $src ]] || { echo "  ! missing: $src" >&2; return 0; }
   cp -f "$src" "$OUT/$dest"
   d=$(dates_for "${src#$ROOT/}" "$prod")
   rows+=("$(pages "$src")	$(category_for "$prod")	$dest	${src#$ROOT/}	$d")
+  have_dest[$dest]=1
 }
 
 echo "collecting Publications books + references…"
@@ -121,7 +123,11 @@ echo "collecting audio-plugin + UI manuals (app-store mirror)…"
 for f in "$ROOT"/app-store/docs/*.pdf; do
   [[ -f $f ]] || continue
   base=$(basename "$f")
-  [[ $base == zmax-reference.pdf ]] && continue   # store mirror of Publications/zmax
+  # app-store/docs mirrors every Publications book/reference (elisprs-book, zshrs-book,
+  # zmax-reference, …). Those were already collected above from Publications, which is the
+  # canonical home; skip the mirror so each authored PDF is counted exactly once. Only the
+  # app-store-ONLY deliverables (the audio-plugin manuals + zgui-core) survive this filter.
+  [[ -n ${have_dest[$base]:-} ]] && continue
   prod=${base%-reference.pdf}; prod=${prod%-block-catalog.pdf}; prod=${prod%-component-catalog.pdf}
   copy "$f" "$base" "$prod"
 done
