@@ -123,6 +123,14 @@ fn App::deploy_one($app) {
 
     if ($do_build) {
         p "=== build $app ($bd) — .app only, no dmg popup ==="
+        # Pin EVERY zgui-core worktree under the app (top-level AND the ones nested inside
+        # engine-core submodules, which feed the frontend via copy-webui) to latest zgui-core
+        # main before building — the git phase above only reaches the app's own declared
+        # zgui-core submodule, so without this the artifact would embed a stale zgui-core.
+        # bin/ship-sync-zgui.sh leaves dirty (concurrent-WIP) worktrees untouched.
+        Sh::run("git -C '$meta/zgui-core' fetch -q origin 2>/dev/null")
+        val $tz = Sh::git("$meta/zgui-core", "rev-parse origin/main")
+        if ($tz ne "") { Sh::run("bash '$meta/bin/ship-sync-zgui.sh' '$d' '$tz' >> '$log' 2>&1") }
         # Default builder is `pnpm tauri build`. Apps that need something else (e.g. traderview
         # drives cargo-tauri + frontend-dist isolation) ship scripts/deploy-build.sh.
         val $bcmd = -x "$bd/scripts/deploy-build.sh" ? "./scripts/deploy-build.sh" : "pnpm tauri build --bundles app"
