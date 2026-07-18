@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 213 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 40a, 40b, 40c, 40d, 89a, 104a, 114a, 144a, the
+Total: 214 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -531,6 +531,32 @@ each a runnable plugin with a `Cargo.toml` + `znative.toml`; the `znative` SDK c
 (`znative/`). *Caveat:* runtime native loading predates this (bash `enable -f`, zsh
 `zmodload`); the first is a *package manager* whose install unit is a native compiled
 plugin — author-asserted on a non-exhaustive prior-art sweep.
+
+**40e. Seven-way zsh-compatibility parity/fuzz harness gated on every push** — `high`
+One CI workflow fires seven independent shell-compatibility oracles on every push to `main`
+(and every PR), so a divergence from real-zsh behavior fails the build instead of shipping.
+The seven: (1) a **static golden byte-parity** suite — `tests/parity/*.rs` (99 binaries)
+byte-comparing `zshrs --zsh -fc` stdout + exit against the real zsh; (2) the **`.zwc`
+wordcode parser-parity oracle** (#39) — decode zsh's own compiled wordcode to a canonical
+AST S-expression and byte-compare; (3) **demo equivalence** —
+`tests/zsh_zshrs_demo_equivalence.rs` diffing system-zsh vs `zshrs --zsh` over every
+`examples/demos/` script; (4) a **generative differential fuzzer** — `bins/parity-fuzz.rs`
+(77 grammar-driven modes, thousands of deterministic-output snippets per mode) running
+`zsh -fc` vs `zshrs --zsh -fc`, baseline-gated with per-seed exact replay
+(`parity-fuzz --seed N --once`); (5) **five-way emulation parity** —
+`tests/emulation_parity.rs` running `zshrs --{zsh,bash,ksh,sh,dash}` against the five real
+reference shells under `ZSHRS_REQUIRE_REF_SHELLS=1` (a missing reference shell fails, never
+silently skips); (6) the **dash-strict rejection** suite — `tests/dash_mode.rs`; and (7) a
+**real-world corpus** — `test_corpus/run_corpus.sh` over real scripts against the release
+binary. *Basis:* `zshrs/.github/workflows/ci.yml` (`on: push: branches:[main]`; jobs `test`,
+`parity-fuzz`, `emulation-parity`, `corpus` all inherit the push trigger); `bins/parity-fuzz.rs`;
+`tests/parity/`, `tests/emulation_parity.rs`, `tests/dash_mode.rs`,
+`tests/zsh_zshrs_demo_equivalence.rs`; `test_corpus/run_corpus.sh`. *Caveat:* each oracle
+individually has prior art (differential shell fuzzing, golden byte-tests, emulation
+matrices); the novelty asserted is the *composition* — seven distinct oracle families gated
+on every push for one shell reimplementation — and "first" rests on a non-exhaustive
+prior-art sweep. The fuzzer's oracle is whichever zsh built the baseline (`ZSHRS_FUZZ_ZSH`);
+the real-PTY ZTST harness (#40) is **not** among the seven — it is not yet CI-gated.
 
 ---
 
