@@ -28,17 +28,12 @@ val $PUB  = "$META/MenkeTechnologiesPublications"
 val $AS   = "$META/app-store"
 val $REPO = "MenkeTechnologies/MenkeTechnologiesPublications"
 
-# --- args ---
-var $force = 0
-var $level = "patch"
-var $build_only = 0                        # rebuild (parallel) but skip the release
-for val $a (@ARGV) {
-    if    ($a eq "--all")                 { $force = 1 }
-    elsif ($a eq "--build-only")          { $build_only = 1 }
-    elsif ($a =~ /^(patch|minor|major)$/) { $level = $a }
-    elsif ($a =~ /^\d+\.\d+\.\d+$/)       { $level = $a }
-    else  { die_bp "bad arg '$a' (want patch|minor|major|X.Y.Z [--all] [--build-only])" }
-}
+# --- args: --all / --build-only via getopts, version level as the lone positional ---
+val %opt        = %{ getopts(\@ARGV, ["all!", "build-only!"]) }
+val $force      = $opt{all}          ? 1 : 0   # rebuild every deliverable, not just stale
+val $build_only = $opt{"build-only"} ? 1 : 0   # rebuild (parallel) but skip the release
+val $level      = len(@ARGV) ? shift @ARGV : "patch"
+$level =~ /^(patch|minor|major|\d+\.\d+\.\d+)$/ or die_bp "bad version arg '$level' (want patch|minor|major|X.Y.Z)"
 system("command -v gh >/dev/null 2>&1") == 0 or die_bp "gh CLI not found"
 
 # --- branch safety: every repo we touch must be on main at origin/main ---
