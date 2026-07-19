@@ -25,19 +25,19 @@ deep prior-art analysis in the appendix.
 
 ---
 
-## I. Execution engine & language runtimes — fusevm + seven frontends
+## I. Execution engine & language runtimes — fusevm + ten frontends
 
-**1. ★ Solo-authored from-scratch JIT VM hosting seven+ production language frontends** — `med`
+**1. ★ Solo-authored from-scratch JIT VM hosting ten production language frontends** — `med`
 One person built the whole execution engine — a bytecode VM plus a 3-tier
 (linear/block/tracing) Cranelift JIT emitting native machine code at runtime, and an
-AOT object compiler — and **seven independent language frontends** (`strykelang`/Perl 5,
-`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, and the
+AOT object compiler — and **ten independent language frontends** (`strykelang`/Perl 5,
+`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, and the
 original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode. The
 novelty is the combination: solo author **+** from-scratch VM with a genuine machine-code
-JIT **+** 7+ real frontends. *Basis:* `fusevm/src/jit.rs` builds a
+JIT **+** 10 real frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
 mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
-`cranelift_object`; seven crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
+`cranelift_object`; ten crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
 (arb's compute core — its `calc` / expression layer — lowers to a `fusevm::Chunk` via
 `arb/src/expr.rs` and runs on the VM, while its widget / layout construction stays a native
 `ratatui` interpreter). `fusevm/src/op.rs` (~224 ops),

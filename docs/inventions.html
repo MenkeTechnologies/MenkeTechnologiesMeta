@@ -248,7 +248,7 @@
     <section class="tutorial-section">
       <h2>CATEGORIES</h2>
       <div class="toc-grid">
-        <a class="toc-card" href="#sec-0"><span class="toc-n">16</span><span class="toc-t">I. Execution engine &amp; language runtimes — fusevm + seven frontends</span></a>
+        <a class="toc-card" href="#sec-0"><span class="toc-n">16</span><span class="toc-t">I. Execution engine &amp; language runtimes — fusevm + ten frontends</span></a>
         <a class="toc-card" href="#sec-1"><span class="toc-n">31</span><span class="toc-t">II. zshrs — the compiled shell</span></a>
         <a class="toc-card" href="#sec-2"><span class="toc-n">23</span><span class="toc-t">III. strykelang — the language</span></a>
         <a class="toc-card" href="#sec-3"><span class="toc-n">22</span><span class="toc-t">IV. Audio &amp; the modular DAW — the zpwr stack</span></a>
@@ -262,7 +262,7 @@
       </div>
     </section>
     <section class="tutorial-section" id="sec-0">
-      <h2>I. Execution engine &amp; language runtimes — fusevm + seven frontends</h2>
+      <h2>I. Execution engine &amp; language runtimes — fusevm + ten frontends</h2>
       <img class="inv-fig" src="diagrams/ch01-fusevm.svg" alt="fusevm: seven language frontends lower to one bytecode, run by an interpreter, a 3-tier Cranelift JIT, and an AOT compiler">
       <img class="inv-fig" src="diagrams/ch01b-jit.svg" alt="fusevm tracing JIT: record a hot loop, lower to native via Cranelift with an mmap+PROT_EXEC cache and side-traces, deopt back to the interpreter">
       <img class="inv-fig" src="diagrams/ch01c-editors.svg" alt="editors dissolved: elisprs, vimlrs, awkrs - each language extracted from its host tool onto fusevm">
@@ -270,7 +270,7 @@
       <article class="inv conf-med" id="inv-1">
         <div class="inv-head">
           <span class="inv-num">1</span>
-          <h4 class="inv-title"><span class="star">★</span> Solo-authored from-scratch JIT VM hosting seven+ production language frontends</h4>
+          <h4 class="inv-title"><span class="star">★</span> Solo-authored from-scratch JIT VM hosting ten production language frontends</h4>
           <span class="inv-conf c-med">MED</span>
         </div>
         <p class="inv-body">One person built the whole execution engine — a bytecode VM plus a 3-tier (linear/block/tracing) Cranelift JIT emitting native machine code at runtime, and an AOT object compiler — and <strong>eight independent language frontends</strong> (<code>strykelang</code>/Perl 5, <code>zshrs</code>/zsh, <code>awkrs</code>/AWK, <code>vimlrs</code>/VimL, <code>elisprs</code>/Emacs Lisp, <code>rubylang</code>/Ruby, <code>pythonrs</code>/Python, and the original pipeline-UI language <code>arb</code>) each targeting the <strong>same</strong> <code>fusevm</code> bytecode. The novelty is the combination: solo author <strong>+</strong> from-scratch VM with a genuine machine-code JIT <strong>+</strong> 8+ real frontends. <em>Basis:</em> <code>fusevm/src/jit.rs</code> builds a <code>cranelift_jit::JITModule</code>, transmutes finalized functions to native fn pointers, with an mmap+<code>PROT_EXEC</code> disk cache; <code>fusevm/src/aot.rs</code> emits a relocatable <code>.o</code> via <code>cranelift_object</code>; eight crates already depend on <code>fusevm</code> and emit <code>fusevm::Chunk</code>/<code>Op</code> (arb's compute core — its <code>calc</code> / expression layer — lowers to a <code>fusevm::Chunk</code> via <code>arb/src/expr.rs</code> and runs on the VM, while its widget / layout construction stays a native <code>ratatui</code> interpreter). <code>fusevm/src/op.rs</code> (~224 ops), <code>host.rs</code>/<code>awk_host.rs</code> host-trait injection seam. <em>Caveat:</em> "None found", not proven — the deep search (see analysis) found no project meeting all three criteria but cannot cover private/defunct work; the nearest near-miss (Deegen) is contestable. JIT is opt-in behind Cargo features; interpreter is the default fallback.</p>
