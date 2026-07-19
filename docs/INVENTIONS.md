@@ -2405,6 +2405,10 @@ from its nearest indexed ancestor. Reads are instant; every other write is a use
 (Everything, macOS `mds`, `fswatch`); this is a well-executed instance of a known pattern, documented for
 its audit (full scan once → hooks-only), not as a novelty.
 
+**173. zvcs — a git superset for high-velocity, automated version-control workflows over deep submodule trees, with lock-free concurrency via a coordinating daemon** — `low`
+Git serializes index writers through a single `.git/index.lock`; under many parallel automated writers — a fleet of coding agents committing across a meta-repo of deeply nested submodules — that lock thrashes, and operations serialize, retry, or fail (the exact contention that bit this very ledger's own commits). zvcs is a git-compatible superset that routes every mutating operation through a coordinating daemon — **zdaemon**, the git-superset binary — which owns the repository index and applies forward-only, conflict-minimizing commits and submodule-pointer bumps out of band, so concurrent writers never take `.git/index.lock` and never contend. Built specifically for automated, high-velocity VCS over deep submodule trees rather than interactive single-user use. *Basis:* `zvcs` repo (`github.com/MenkeTechnologies/zvcs`) — implementation external to this ledger's in-repo-verified set; recorded here as an author-asserted claim. *Caveat:* early / WIP. Git predates this, and daemon-mediated VCS and lock-free stores each exist; the candidate-first is the packaging — a **git superset** whose coordinating `zdaemon` binary makes many-writer *automated* workflows over nested submodules lock-free. "None found," not proven; confidence deliberately `low` pending in-repo verification.
+
+
 ---
 
 ## Appendix — deep prior-art analyses (marquee claims)
