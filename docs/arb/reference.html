@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="arb — language reference. Every widget, query verb, directive, action, and input mode the current arb build implements. MIT licensed.">
+  <title>arb — Language Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;position:relative; }
+    .hub-scheme-strip-inner { max-width:68rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-align:left; }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch}.hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    .docs-build-line { margin:0.35rem 0 0;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;max-width:46rem;opacity:0.75; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ARB — LANGUAGE REFERENCE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Language Reference</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/arb" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">arb v0.0.3 · pipe → dynamic TUI/web · original language on fusevm + Cranelift JIT · jq/xpath/css/yq superset · Tcl/Tk-flavored DSL · MIT · in active development</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="report.html">Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/arb" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>LANGUAGE REFERENCE</h2>
+      <p class="tutorial-subtitle">Every widget, query verb, directive, action, and input mode the current arb build implements. This page is generated from the language-server corpus (<code>src/lsp.rs</code>) by the <code>gen-docs</code> binary, so it stays in sync with what the runtime and editor tooling actually know about. The full grammar is in <a href="https://github.com/MenkeTechnologies/arb/blob/main/SPEC.md">SPEC.md</a>.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val">153</div><div class="stat-label">Language constructs</div></div>
+        <div class="stat-card"><div class="stat-val accent">5</div><div class="stat-label">Reference sections</div></div>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>Widgets</h2>
+        <table class="file-table">
+          <thead><tr><th>Widget</th><th>Description</th></tr></thead>
+          <tbody>
+<tr><td><code>text</code></td><td>Shows the last stream line, or a scalar/top-pair result, in a bordered pane.</td></tr>
+<tr><td><code>tail</code></td><td>Scrolling list of the newest lines that fit (tail -f); -limit/-lines caps rows.</td></tr>
+<tr><td><code>list</code></td><td>Scrollable list of stream lines in a bordered pane; -limit caps rows shown.</td></tr>
+<tr><td><code>gauge</code></td><td>Renders a scalar as a progress bar filled to value/max (-max, default 100).</td></tr>
+<tr><td><code>bars</code></td><td>Horizontal bar chart of tally/count pairs; -top caps the number of bars (def 20).</td></tr>
+<tr><td><code>histo</code></td><td>Bar chart of value-distribution pairs; same rendering as bars, -top caps bars.</td></tr>
+<tr><td><code>spark</code></td><td>Compact braille sparkline of the numeric series, newest points that fit width.</td></tr>
+<tr><td><code>chart</code></td><td>Braille line chart of the numeric series with auto-scaled x/y axes.</td></tr>
+<tr><td><code>table</code></td><td>Columnar table of records; -cols sets headers, newest rows that fit are shown.</td></tr>
+<tr><td><code>tabs</code></td><td>Tab bar from -tabs {a b}; first tab selected (labelled selector, no per-tab body).</td></tr>
+<tr><td><code>block</code></td><td>Bordered container box rendering its bound stream content as a list.</td></tr>
+<tr><td><code>frame</code></td><td>Framed container rendering its bound stream content as a list.</td></tr>
+<tr><td><code>input</code></td><td>Editable text field; its value is spliced into pipelines via apply .name.</td></tr>
+<tr><td><code>select</code></td><td>Interactive fuzzy-select over the stream; type to filter, Tab marks, Enter emits.</td></tr>
+<tr><td><code>filter</code></td><td>Labelled filter control; its value drives where match(.name) / apply.</td></tr>
+<tr><td><code>facet</code></td><td>Multi-select of values (-opts or distinct -field); drives where &lt;field&gt; in .name.</td></tr>
+<tr><td><code>slider</code></td><td>Numeric control (-min/-max/-step) driving where &lt;field&gt; &lt; .name; arrows adjust.</td></tr>
+<tr><td><code>check</code></td><td>Boolean toggle (-label); its value is the string "1" or "0".</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Query verbs</h2>
+        <table class="file-table">
+          <thead><tr><th>Query</th><th>Description</th></tr></thead>
+          <tbody>
+<tr><td><code>find</code></td><td>Parse stream as HTML, emit the outer HTML of each element matching the selector.</td></tr>
+<tr><td><code>attr</code></td><td>From element fragments, emit each element's named attribute; drop those lacking it.</td></tr>
+<tr><td><code>text</code></td><td>From element fragments, emit each element's inner text; non-elements pass through.</td></tr>
+<tr><td><code>match</code></td><td>Keep lines matching the regex.</td></tr>
+<tr><td><code>grep</code></td><td>Keep lines matching the regex.</td></tr>
+<tr><td><code>reject</code></td><td>Drop lines matching the regex.</td></tr>
+<tr><td><code>grepv</code></td><td>Drop lines matching the regex.</td></tr>
+<tr><td><code>field</code></td><td>Replace each line with a selected field (whitespace column or JSON key path).</td></tr>
+<tr><td><code>fields</code></td><td>Project multiple 1-based whitespace columns, space-joined, in the given order.</td></tr>
+<tr><td><code>each</code></td><td>Flatten JSON-array lines into one line per element; non-array lines pass through.</td></tr>
+<tr><td><code>count</code></td><td>Reduce to the current line count (scalar).</td></tr>
+<tr><td><code>rate</code></td><td>Reduce to lines-per-second over the elapsed window (scalar).</td></tr>
+<tr><td><code>tally</code></td><td>Group identical lines and count them, sorted by count desc then key asc.</td></tr>
+<tr><td><code>sum</code></td><td>Sum of lines parsed as numbers; non-numeric lines are ignored (scalar).</td></tr>
+<tr><td><code>min</code></td><td>Minimum of numeric lines, or 0 if none (scalar).</td></tr>
+<tr><td><code>max</code></td><td>Maximum of numeric lines, or 0 if none (scalar).</td></tr>
+<tr><td><code>avg</code></td><td>Mean of numeric lines, or 0 if none (scalar).</td></tr>
+<tr><td><code>keys</code></td><td>Flatten a JSON object's keys into one line each; non-object lines pass through.</td></tr>
+<tr><td><code>vals</code></td><td>Flatten a JSON object's values into one line each; non-object lines pass through.</td></tr>
+<tr><td><code>pick</code></td><td>Project a JSON object to the named keys, keeping order; missing keys dropped.</td></tr>
+<tr><td><code>sort</code></td><td>Sort the lines; -n sorts numerically, -r reverses.</td></tr>
+<tr><td><code>uniq</code></td><td>Drop duplicate lines globally, keeping the first occurrence.</td></tr>
+<tr><td><code>rev</code></td><td>Reverse the order of the lines.</td></tr>
+<tr><td><code>first</code></td><td>Keep only the first line.</td></tr>
+<tr><td><code>last</code></td><td>Keep only the last line.</td></tr>
+<tr><td><code>upper</code></td><td>Uppercase each line.</td></tr>
+<tr><td><code>lower</code></td><td>Lowercase each line.</td></tr>
+<tr><td><code>trim</code></td><td>Strip leading and trailing whitespace from each line.</td></tr>
+<tr><td><code>replace</code></td><td>Regex replace-all per line (replace /RE/ TO); TO may use $1 captures.</td></tr>
+<tr><td><code>join</code></td><td>Collapse all lines into one, joined by a separator (default a space).</td></tr>
+<tr><td><code>nth</code></td><td>Keep only the Nth line (1-based).</td></tr>
+<tr><td><code>take</code></td><td>Keep the first N lines.</td></tr>
+<tr><td><code>drop</code></td><td>Drop the first N lines.</td></tr>
+<tr><td><code>calc</code></td><td>Reduce to a scalar from an arithmetic expression over the line count (x).</td></tr>
+<tr><td><code>where</code></td><td>Keep lines whose numeric value / field predicate holds (fusevm or Rust eval).</td></tr>
+<tr><td><code>map</code></td><td>Replace each line with an expression's value (field-aware; x = line-as-number).</td></tr>
+<tr><td><code>sort_by</code></td><td>Stable-sort JSON records by FIELD (numeric if all parse, else lexicographic).</td></tr>
+<tr><td><code>unique_by</code></td><td>Keep the first record per distinct FIELD value, preserving input order.</td></tr>
+<tr><td><code>count_by</code></td><td>Group JSON records by FIELD and count; value-&gt;count sorted by count desc.</td></tr>
+<tr><td><code>group_by</code></td><td>Group lines by FIELD into one JSON-array line per value, keys ascending.</td></tr>
+<tr><td><code>min_by</code></td><td>Emit the single record whose numeric FIELD is smallest.</td></tr>
+<tr><td><code>max_by</code></td><td>Emit the single record whose numeric FIELD is largest.</td></tr>
+<tr><td><code>has</code></td><td>Keep only JSON-object lines that contain KEY; all other lines are dropped.</td></tr>
+<tr><td><code>entries</code></td><td>Expand each JSON object into one key/value object line per key (jq to_entries).</td></tr>
+<tr><td><code>flatten</code></td><td>Emit each element of JSON-array lines, one level deeper than each.</td></tr>
+<tr><td><code>add</code></td><td>Reduce a JSON array line to one value (sum numbers, else concat their strings).</td></tr>
+<tr><td><code>over</code></td><td>Keep lines parsing as a number strictly greater than N; drop non-numeric.</td></tr>
+<tr><td><code>under</code></td><td>Keep numeric lines strictly less than N; drop non-numeric lines.</td></tr>
+<tr><td><code>between</code></td><td>Keep numeric lines x where lo &lt;= x &lt;= hi inclusive; drop non-numeric lines.</td></tr>
+<tr><td><code>enumerate</code></td><td>Prefix each line with its 1-based index and a tab.</td></tr>
+<tr><td><code>words</code></td><td>Split each line on whitespace and emit one word per line.</td></tr>
+<tr><td><code>dedup</code></td><td>Collapse runs of adjacent identical lines to one (classic uniq).</td></tr>
+<tr><td><code>tailn</code></td><td>Keep only the last N lines.</td></tr>
+<tr><td><code>pad</code></td><td>Right-pad each line with spaces to a minimum visible width N (no truncation).</td></tr>
+<tr><td><code>lpad</code></td><td>Left-pad each line with spaces to a minimum width N.</td></tr>
+<tr><td><code>grepf</code></td><td>Keep lines whose FIELD (JSON key or 1-based column) matches the regex.</td></tr>
+<tr><td><code>apply</code></td><td>Placeholder replaced at render by the pipeline typed into input .name; else no-op.</td></tr>
+<tr><td><code>basename</code></td><td>Path basename: the part after the last / (the whole line if none).</td></tr>
+<tr><td><code>dirname</code></td><td>Path dirname: the part before the last / (. if none).</td></tr>
+<tr><td><code>commafy</code></td><td>Group a numeric line's integer part with thousands separators; else pass through.</td></tr>
+<tr><td><code>bytes</code></td><td>Humanize a byte count (1024-based): 1536 -&gt; 1.5 KB; non-numeric passes through.</td></tr>
+<tr><td><code>duration</code></td><td>Humanize seconds: 3661 -&gt; 1h 1m; non-numeric lines pass through.</td></tr>
+<tr><td><code>flip</code></td><td>Reverse the Unicode characters of each line.</td></tr>
+<tr><td><code>b64</code></td><td>Base64-encode each line.</td></tr>
+<tr><td><code>b64d</code></td><td>Base64-decode each line; invalid or non-UTF8 lines pass through unchanged.</td></tr>
+<tr><td><code>hex</code></td><td>Lowercase hex-encode each line, two hex digits per UTF-8 byte.</td></tr>
+<tr><td><code>unhex</code></td><td>Decode a hex string to UTF-8; on any error the line passes through unchanged.</td></tr>
+<tr><td><code>urlenc</code></td><td>Percent-encode each line, escaping every non-alphanumeric byte (RFC 3986).</td></tr>
+<tr><td><code>urldec</code></td><td>Percent-decode each line to UTF-8; invalid UTF-8 passes through unchanged.</td></tr>
+<tr><td><code>extract</code></td><td>Emit the first regex match per line (group 1 if any); drop lines with no match.</td></tr>
+<tr><td><code>split</code></td><td>Explode each line by the literal DELIM into multiple lines (one part per line).</td></tr>
+<tr><td><code>substr</code></td><td>Character substring [A,B) 0-based, clamped to the line length.</td></tr>
+<tr><td><code>chars</code></td><td>Explode each line into one output line per Unicode character.</td></tr>
+<tr><td><code>title</code></td><td>Title-case each line: capitalize each word's first letter, lowercase the rest.</td></tr>
+<tr><td><code>repeat</code></td><td>Replace each line with its content repeated N times, concatenated.</td></tr>
+<tr><td><code>set</code></td><td>Set key K to string value V in each JSON object line; non-objects pass through.</td></tr>
+<tr><td><code>del</code></td><td>Remove key K from each JSON object line; non-object lines pass through.</td></tr>
+<tr><td><code>rename</code></td><td>Rename JSON object key OLD to NEW, keeping the value; no-op if OLD absent.</td></tr>
+<tr><td><code>default</code></td><td>Set string key K to V only when K is absent from the JSON object.</td></tr>
+<tr><td><code>merge</code></td><td>Reduce all JSON object lines into one object (later keys win); emits one line.</td></tr>
+<tr><td><code>floor</code></td><td>Floor each numeric line to the nearest lower integer; non-numeric passes through.</td></tr>
+<tr><td><code>ceil</code></td><td>Round each numeric line up to the nearest integer; non-numeric passes through.</td></tr>
+<tr><td><code>round</code></td><td>Round each numeric line to the nearest integer.</td></tr>
+<tr><td><code>abs</code></td><td>Absolute value of each numeric line.</td></tr>
+<tr><td><code>clamp</code></td><td>Clamp each numeric line into the inclusive range [LO, HI]; non-numeric untouched.</td></tr>
+<tr><td><code>len</code></td><td>Replace each line with its character count.</td></tr>
+<tr><td><code>wc</code></td><td>Replace each line with its word count.</td></tr>
+<tr><td><code>index</code></td><td>Keep only the Nth line (1-based); out-of-range yields no lines.</td></tr>
+<tr><td><code>cut</code></td><td>Split each line by DELIM and keep the Nth (1-based) field.</td></tr>
+<tr><td><code>contains</code></td><td>Keep lines containing a literal substring.</td></tr>
+<tr><td><code>starts</code></td><td>Keep lines starting with a literal prefix.</td></tr>
+<tr><td><code>ends</code></td><td>Keep lines ending with a literal suffix.</td></tr>
+<tr><td><code>nonempty</code></td><td>Drop empty or whitespace-only lines.</td></tr>
+<tr><td><code>numeric</code></td><td>Keep only lines that parse as a number.</td></tr>
+<tr><td><code>distinct</code></td><td>Reduce to the count of distinct lines (scalar).</td></tr>
+<tr><td><code>sample</code></td><td>Keep every Nth line (1-based).</td></tr>
+<tr><td><code>range</code></td><td>Max minus min of numeric lines (scalar).</td></tr>
+<tr><td><code>bins</code></td><td>Bucket numeric lines into N equal-width ranges -&gt; (range, count) pairs.</td></tr>
+<tr><td><code>cumsum</code></td><td>Running cumulative total of the numeric series.</td></tr>
+<tr><td><code>delta</code></td><td>Consecutive differences of the numeric series (n values -&gt; n-1 deltas).</td></tr>
+<tr><td><code>ewma</code></td><td>Exponentially-weighted moving average, smoothing factor alpha in (0,1]; s0=x0.</td></tr>
+<tr><td><code>sma</code></td><td>Simple moving average over a trailing window of N (length-preserving).</td></tr>
+<tr><td><code>median</code></td><td>Median of numeric lines (scalar).</td></tr>
+<tr><td><code>percentile</code></td><td>Nth percentile (0-100) of numeric values, linear interpolation between ranks.</td></tr>
+<tr><td><code>p50</code></td><td>50th percentile (median) of the numeric values (scalar).</td></tr>
+<tr><td><code>p90</code></td><td>90th percentile of the numeric values (scalar).</td></tr>
+<tr><td><code>p95</code></td><td>95th percentile of the numeric values (scalar).</td></tr>
+<tr><td><code>p99</code></td><td>99th percentile of the numeric values, for latency tails (scalar).</td></tr>
+<tr><td><code>stddev</code></td><td>Population standard deviation of numeric lines (scalar).</td></tr>
+<tr><td><code>product</code></td><td>Product of numeric lines (scalar).</td></tr>
+<tr><td><code>append</code></td><td>Suffix every line with a literal string.</td></tr>
+<tr><td><code>prepend</code></td><td>Prefix every line with a literal string.</td></tr>
+<tr><td><code>slice</code></td><td>Keep lines from index A to B inclusive (1-based).</td></tr>
+<tr><td><code>sel</code></td><td>Parse stream as HTML, emit each CSS-selector match's text (or -attr value).</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Directives</h2>
+        <table class="file-table">
+          <thead><tr><th>Directive</th><th>Description</th></tr></thead>
+          <tbody>
+<tr><td><code>import</code></td><td>Inline a module (stdlib preset or user .arb file) into the spec.</td></tr>
+<tr><td><code>import as</code></td><td>Build a module into namespace ALIAS, prefixing its names, then merge it in.</td></tr>
+<tr><td><code>source</code></td><td>Attach a query pipeline (body must start with in) as a widget's data source.</td></tr>
+<tr><td><code>search</code></td><td>Attach a select widget's fuzzy-match key pipeline; the row still shows source.</td></tr>
+<tr><td><code>bind</code></td><td>Bind a control key to an action (set|quit|beep|alert|flash|exec, or a { } block).</td></tr>
+<tr><td><code>expect</code></td><td>Fire an action when a stream line matches /regex/ (event-driven reaction).</td></tr>
+<tr><td><code>timeout</code></td><td>Fire an action when the stream is idle for a duration (Ns/Nms/Nm).</td></tr>
+<tr><td><code>out</code></td><td>Apply a query pipeline to the stream and write it to stdout (modify a pipe).</td></tr>
+<tr><td><code>grid</code></td><td>Place a widget in the layout grid (-row/-col, -span/-rowspan/-colspan).</td></tr>
+<tr><td><code>configure</code></td><td>Merge new -opts into an already-declared widget (build-time; later keys win).</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Bind / expect actions</h2>
+        <table class="file-table">
+          <thead><tr><th>Action</th><th>Description</th></tr></thead>
+          <tbody>
+<tr><td><code>quit</code></td><td>Quit the TUI.</td></tr>
+<tr><td><code>beep</code></td><td>Ring the terminal bell (0x07 after the next draw).</td></tr>
+<tr><td><code>alert</code></td><td>Flash a message in the status bar for a few seconds.</td></tr>
+<tr><td><code>exec</code></td><td>Run a shell command, fire-and-forget; never waits or blocks the loop.</td></tr>
+<tr><td><code>flash</code></td><td>Tint a widget's border/accent for a few seconds (-color, default yellow).</td></tr>
+<tr><td><code>set</code></td><td>Set an input .name widget's value; with out { apply .name } reshapes the live pipe.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Input modes</h2>
+        <table class="file-table">
+          <thead><tr><th>Input</th><th>Description</th></tr></thead>
+          <tbody>
+<tr><td><code>in</code></td><td>Begin the pipeline, reading the raw stdin stream line by line.</td></tr>
+<tr><td><code>in.json</code></td><td>Begin the pipeline reading stdin (JSON-lines intent; a marker, same as in).</td></tr>
+<tr><td><code>in.html</code></td><td>Begin the pipeline reading stdin as HTML (marker, same as in; use with sel/find).</td></tr>
+<tr><td><code>in.xml</code></td><td>Begin the pipeline reading stdin as XML (marker, same as in).</td></tr>
+<tr><td><code>in.logfmt</code></td><td>Begin the pipeline reading stdin as logfmt (marker, same as in).</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>More</h2>
+        <ul>
+          <li><strong>Docs</strong> — <a href="index.html">index.html</a> (overview, architecture, examples)</li>
+          <li><strong>Engineering report</strong> — <a href="report.html">report.html</a> (architecture, positioning, milestones)</li>
+          <li><strong>Language spec</strong> — <a href="https://github.com/MenkeTechnologies/arb/blob/main/SPEC.md">SPEC.md</a> (full grammar)</li>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/arb">github.com/MenkeTechnologies/arb</a></li>
+        </ul>
+      </section>
+    </main>
+
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
