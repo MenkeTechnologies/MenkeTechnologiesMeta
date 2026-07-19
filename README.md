@@ -99,6 +99,9 @@ Five languages share one self-authored execution engine — the [`fusevm`](https
 | `awkrs` | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | ✅ |
 | `vimlrs` | `vimlrs` | ✅ | ✅ | ✅ `_vimlrs` | ✅ | ✅ | ✅ |
 | `elisprs` | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | ✅ |
+| `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ |
+| `pythonrs` | `python` | ✅ | ✅ | ✅ `_python` | ✅ | ✅ | ✅ |
+| `rubylang` | `ruby` | ✅ | ✅ | ✅ `_ruby` | ✅ | ✅ | ✅ |
 
 <sub>✅ full parity across the five core toolchain dimensions. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written.
 
