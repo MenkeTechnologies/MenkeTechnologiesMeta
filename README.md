@@ -102,6 +102,8 @@ Five languages share one self-authored execution engine — the [`fusevm`](https
 | `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ |
 | `pythonrs` | `python` | ✅ | ✅ | ✅ `_python` | ✅ | ✅ | ✅ |
 | `rubylang` | `ruby` | ✅ | ✅ | ✅ `_ruby` | ✅ | ✅ | ✅ |
+| `phplang` | `php` | ✅ | ✅ | ✅ `_php` | ✅ | ✅ | ✅ |
+| `node-js` | `node` | ✅ | ✅ | ✅ `_node` | ✅ | ✅ | ✅ |
 
 <sub>✅ full parity across the five core toolchain dimensions. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written.
 
@@ -109,7 +111,7 @@ Five languages share one self-authored execution engine — the [`fusevm`](https
 |---|---|
 | [`strykelang`](https://github.com/MenkeTechnologies/strykelang) | The fastest dynamic language for parallel ops. Perl 5 compatible interpreter in Rust on the `fusevm` bytecode VM + Cranelift JIT, 10,488 builtins. &middot; <sub>[docs](https://menketechnologies.github.io/strykelang/) · [report](https://menketechnologies.github.io/strykelang/report.html) · [reference](https://menketechnologies.github.io/strykelang/reference.html)</sub> |
 | [`zshrs`](https://github.com/MenkeTechnologies/zshrs) | The first compiled Unix shell. 1:1 zsh C-port + extensions on the `fusevm` bytecode VM + Cranelift JIT, persistent worker pool, AOP intercept, rkyv bytecode cache. &middot; <sub>[docs](https://menketechnologies.github.io/zshrs/) · [report](https://menketechnologies.github.io/zshrs/report.html) · [reference](https://menketechnologies.github.io/zshrs/reference.html)</sub> |
-| [`fusevm`](https://github.com/MenkeTechnologies/fusevm) | Language-agnostic bytecode VM with fused superinstructions and 3-tier Cranelift JIT. The execution engine behind seven language frontends — zshrs, strykelang, awkrs, vimlrs, elisprs, rubylang, arb. &middot; <sub>[docs](https://menketechnologies.github.io/fusevm/) · [report](https://menketechnologies.github.io/fusevm/report.html)</sub> |
+| [`fusevm`](https://github.com/MenkeTechnologies/fusevm) | Language-agnostic bytecode VM with fused superinstructions and 3-tier Cranelift JIT. The execution engine behind ten language frontends — zshrs, strykelang, awkrs, vimlrs, elisprs, rubylang, arb, pythonrs, phplang, node-js. &middot; <sub>[docs](https://menketechnologies.github.io/fusevm/) · [report](https://menketechnologies.github.io/fusevm/report.html)</sub> |
 | [`lsofrs`](https://github.com/MenkeTechnologies/lsofrs) | Rust rewrite of `lsof` — 5–21× faster, **7-tab TUI** (ratatui), 31 cyberpunk themes. &middot; <sub>[docs](https://menketechnologies.github.io/lsofrs/) · [report](https://menketechnologies.github.io/lsofrs/report.html)</sub> |
 | [`temprs`](https://github.com/MenkeTechnologies/temprs) | Temporary file stack manager. Atomic `flock`-protected master record, dual indexing (position or `@name`). &middot; <sub>[docs](https://menketechnologies.github.io/temprs/) · [report](https://menketechnologies.github.io/temprs/report.html)</sub> |
 | [`awkrs`](https://github.com/MenkeTechnologies/awkrs) | AWK in Rust. The `fusevm` bytecode VM + Cranelift JIT + persistent rkyv bytecode cache + parallel records. LSP + DAP servers (`awkrs --lsp` / `--dap`); editor plugins `vscode-awk` / `vim-awk` / `emacs-awk`. &middot; <sub>[docs](https://menketechnologies.github.io/awkrs/) · [report](https://menketechnologies.github.io/awkrs/report.html)</sub> |
