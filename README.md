@@ -97,7 +97,7 @@ Five languages share one self-authored execution engine — the [`fusevm`](https
 | `strykelang` | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ |
 | `zshrs` | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ | ✅ |
 | `awkrs` | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | ✅ |
-| `vimlrs` | `vimlrs` | ✅ | ✅ | ✅ `_vimlrs` | ✅ | ✅ | ✅ |
+| `vimlrs` | `viml` | ✅ | ✅ | ✅ `_viml` | ✅ | ✅ | ✅ |
 | `elisprs` | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | ✅ |
 | `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ |
 | `pythonrs` | `python` | ✅ | ✅ | ✅ `_python` | ✅ | ✅ | ✅ |
