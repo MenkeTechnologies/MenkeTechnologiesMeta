@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="pythonrs — Engineering report. A compiled Python runtime in Rust, hosted on the fusevm bytecode VM with a three-tier Cranelift JIT. Transparent rkyv bytecode cache on every run, AOT to a native executable, architecture, value model, roadmap, and dependency posture. MIT licensed.">
+  <title>pythonrs &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;position:relative; }
+    .hub-scheme-strip-inner { max-width:76rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-align:left; }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch}.hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    .docs-build-line { margin:0.35rem 0 0;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;max-width:42rem;opacity:0.75; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// PYTHONRS — ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/pythonrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">pythonrs v0.1.0 · Python on fusevm · lex/parse → AST → bytecode → Cranelift JIT · transparent rkyv cache on every run · AOT native-exe · MIT · in active development</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/pythonrs" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
+      <p class="tutorial-subtitle">pythonrs is a compiled Python runtime in Rust, hosted on the <code>fusevm</code> bytecode VM and its three-tier Cranelift JIT. This report describes the architecture, the value model, the current state of the tree, and the dependency posture. The statements below are facts about the design and the manifest, not aspirational metrics.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">Python</div><div class="stat-label">fusevm language host</div></div>
+        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Cranelift JIT tiers</div></div>
+        <div class="stat-card"><div class="stat-val">v0.1.0</div><div class="stat-label">version</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">license · free / OSS</div></div>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>Summary</h2>
+        <p>CPython compiles Python to its own bytecode and walks it in C. pythonrs takes a different path: it lexes and parses Python 3 to an AST, lowers that to <code>fusevm</code> bytecode, and runs it on a compiled VM with a Cranelift JIT. Arithmetic and comparison operators lower to native VM ops so the JIT can trace hot loops; Python-specific behaviour is served by a thread-local <code>PyHost</code> object heap through a numbered builtin-call protocol. It joins <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a> alongside <code>zshrs</code>, <code>stryke</code>, <code>awkrs</code>, <code>elisp</code>, and <code>rubylang</code>, and reuses that shared bytecode VM and JIT rather than shipping its own.</p>
+        <p>Two things set it apart from every other standalone Python: it <strong>transparently caches compiled bytecode via rkyv on every run</strong> (<code>~/.pythonrs/scripts.rkyv</code>; a hit skips lex/parse/lower), and it <strong>AOT-compiles a script to a standalone native executable</strong> via <code>python --build</code>. To our knowledge it is the first compiled standalone Python runtime to do both.</p>
+        <p>The current tree implements the lexer/parser, AST-to-bytecode lowering, the object heap and method dispatch (str, list, dict, tuple, set, instances), a growing Kernel-builtin and per-type-method surface, functions/closures/<code>*args</code>/<code>**kwargs</code>, user-defined classes with inheritance and operator dunders, list/dict/set comprehensions, f-strings, exceptions (<code>try</code>/<code>except</code>/<code>finally</code>/<code>raise</code>, <code>with</code>), arbitrary-precision <code>int</code>, the standalone <code>python</code> binary and REPL, the transparent rkyv bytecode cache, AOT native-executable emission, and a glob-matched AOP method-intercept registry. Behaviour is checked against the reference <code>python3</code> by a differential parity harness. The LSP and DAP surfaces are partial; generators, <code>async</code>, <code>match</code>, and most of the standard library are planned — see <a href="https://github.com/MenkeTechnologies/pythonrs/blob/main/BUGS.md">BUGS.md</a> for the honest ledger.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Hosting on fusevm</h2>
+        <p>pythonrs contains no virtual machine or JIT of its own. The execution path is:</p>
+<pre>Python source  →  lexer  →  parser → AST  →  lower to fusevm bytecode  →  fusevm VM + Cranelift JIT
+                                                    │
+                                       PyHost heap (str/list/dict/tuple/set/instances, CallBuiltin)</pre>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Shared engine</h4><p>fusevm is pulled from crates.io with the <code>jit</code>, <code>jit-disk-cache</code>, and <code>aot</code> features. JIT and VM improvements land once and benefit zshrs, stryke, awkrs, elisp, rubylang, and pythonrs together.</p></div>
+          <div class="feature-card"><h4>Native arithmetic</h4><p>Operators lower to native fusevm ops; a strict numeric hook supplies Python semantics (<code>str</code>/<code>list</code> concatenation, truthiness, bignum promotion) only for the non-numeric operand cases the VM can't compute natively.</p></div>
+          <div class="feature-card"><h4>Persistent native code</h4><p><code>jit-disk-cache</code> persists compiled machine code across runs, so warm starts skip recompilation. Distinct from the rkyv <em>bytecode</em> cache, which persists the lowered chunks.</p></div>
+          <div class="feature-card"><h4>AOT emission</h4><p>The <code>aot</code> feature drives <code>python --build</code>: <code>fusevm::aot</code> emits a native object linked against the pythonrs runtime staticlib, producing a self-contained executable with no interpreter present (<code>src/aot_native.rs</code>).</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Value model</h2>
+        <p>Immediate values — <code>int</code> (within i64 range), <code>float</code>, <code>True</code>/<code>False</code>, and <code>None</code> — ride through the VM directly as <code>fusevm::Value</code>. The reference types (<code>str</code>, <code>list</code>, <code>dict</code>, <code>tuple</code>, <code>set</code>, and class instances) live on the <code>PyHost</code> object heap behind <code>Value::Obj(u32)</code> handles, so mutation is observed through every alias — <code>a.append(x)</code> changes the list the caller still holds, exactly as in Python. <code>dict</code> preserves insertion order (an <code>IndexMap</code>), matching CPython's guaranteed iteration order since 3.7. <code>int</code> promotes to arbitrary precision for <code>+ - * **</code>.</p>
+        <p>Truthiness follows Python, not C or the shell: <code>None</code>, <code>False</code>, <code>0</code>, empty <code>str</code>/<code>list</code>/<code>dict</code> are falsy. Conditions are therefore normalized through a truthiness host op before a native branch, rather than relying on the VM's default numeric truthiness. Operator overloading routes through the instance dunders (<code>__add__</code>, <code>__eq__</code>, <code>__getitem__</code>, <code>__len__</code>, <code>__iter__</code>, …) with reflected <code>__r*__</code> fallbacks.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Component status</h2>
+        <table class="file-table">
+          <thead><tr><th>Component</th><th>State</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>lexer / parser → AST</td><td>Implemented</td><td>Indentation-significant tokenizer (INDENT/DEDENT/NEWLINE), f-strings (<code>src/lexer.rs</code>, <code>src/parser.rs</code>).</td></tr>
+            <tr><td>AST → fusevm bytecode</td><td>Implemented</td><td>Native arithmetic + <code>CallBuiltin</code> host dispatch; no local VM (<code>src/compiler.rs</code>).</td></tr>
+            <tr><td>object heap &amp; dispatch</td><td>Implemented</td><td>str/list/dict/tuple/set/instances (<code>src/host.rs</code>, <code>src/builtins.rs</code>).</td></tr>
+            <tr><td>functions / closures / splat / kwargs</td><td>Implemented</td><td>Def-site <code>*args</code>/<code>**kwargs</code>, defaults, keyword args, real closures (<code>src/compiler.rs</code>).</td></tr>
+            <tr><td>classes / inheritance / operator dunders</td><td>Implemented</td><td><code>__init__</code>, instance attrs, arithmetic/comparison dunders with reflected fallbacks, <code>__getitem__</code>/<code>__len__</code>/<code>__iter__</code>/<code>__repr__</code>.</td></tr>
+            <tr><td>comprehensions / f-strings</td><td>Implemented</td><td>list/dict/set comprehensions; f-string format mini-language (fill/align/sign/width/<code>,</code>/<code>.prec</code>/type).</td></tr>
+            <tr><td>exceptions / <code>with</code></td><td>Implemented</td><td><code>try</code>/<code>except</code>/<code>finally</code>/<code>raise</code>, typed classes; <code>with</code> desugars to try/finally over <code>__enter__</code>/<code>__exit__</code>.</td></tr>
+            <tr><td>arbitrary-precision <code>int</code></td><td>Implemented</td><td>Bignum promotion for <code>+ - * **</code>; <code>//</code>/<code>%</code>/bitwise stay i64-range (see BUGS).</td></tr>
+            <tr><td>standalone <code>python</code> binary + REPL</td><td>Implemented</td><td>Files, <code>-c</code> one-liners, interactive REPL (<code>src/main.rs</code>, <code>src/repl.rs</code>).</td></tr>
+            <tr><td>transparent rkyv bytecode cache</td><td>Implemented</td><td>Versioned shard at <code>~/.pythonrs/scripts.rkyv</code>, consulted on every run (<code>src/cache.rs</code>).</td></tr>
+            <tr><td>AOT native executable (<code>--build</code>)</td><td>Implemented</td><td><code>fusevm::aot</code> emission linked to the runtime staticlib (<code>src/aot_native.rs</code>).</td></tr>
+            <tr><td>AOP method intercepts</td><td>Implemented</td><td>Glob-matched before/after/around registry (<code>src/intercepts.rs</code>).</td></tr>
+            <tr><td>parity harness vs reference <code>python3</code></td><td>Implemented</td><td>Differential corpus diffed byte-for-byte against CPython (<code>src/bin/parity.rs</code>).</td></tr>
+            <tr><td>LSP server (<code>--lsp</code>)</td><td>Partial</td><td>Initialize/shutdown handshake, builtin/keyword completion, stub hover; no diagnostics/go-to-def yet (<code>src/lsp.rs</code>).</td></tr>
+            <tr><td>DAP adapter (<code>--dap</code>)</td><td>Partial</td><td>Per-statement line-marker compile mode exists; the stepping server returns "not implemented" (<code>src/dap.rs</code>).</td></tr>
+            <tr><td>generators / async / match / stdlib</td><td>Planned</td><td><code>yield</code>, <code>await</code>, structural pattern matching, and most of the standard library beyond minimal <code>math</code>/<code>sys</code> pending.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Dependency posture</h2>
+        <p>Dependencies are kept foundational and durable — the goal is a crate that still builds cleanly years from now. Direct dependencies from <code>Cargo.toml</code>:</p>
+        <table class="file-table">
+          <thead><tr><th>Crate</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>fusevm</td><td>Language-agnostic bytecode VM + three-tier Cranelift JIT (<code>jit</code>, <code>jit-disk-cache</code>, <code>aot</code>)</td></tr>
+            <tr><td>clap</td><td>CLI argument parsing (<code>derive</code>, <code>cargo</code>)</td></tr>
+            <tr><td>thiserror</td><td>Error type derivation</td></tr>
+            <tr><td>rustc-hash</td><td>Fast hashing for the script-cache key</td></tr>
+            <tr><td>indexmap</td><td>Insertion-ordered <code>dict</code> storage (matches CPython iteration)</td></tr>
+            <tr><td>rkyv / bincode</td><td>Zero-copy outer shard + serde inner blobs for the transparent bytecode cache</td></tr>
+            <tr><td>memmap2 / dirs / once_cell</td><td>Cache file access + platform cache directory + lazy statics</td></tr>
+            <tr><td>lsp-server / lsp-types</td><td>LSP transport + protocol types (<code>--lsp</code> server)</td></tr>
+            <tr><td>serde / serde_json / libc</td><td>DAP/LSP JSON-RPC plumbing; libc pipe + dup2 to capture debuggee stdout</td></tr>
+            <tr><td>reedline / nu-ansi-term / sysinfo</td><td>Interactive REPL line editor, colors, live stats</td></tr>
+            <tr><td>glob</td><td>Pattern matching for the AOP method-intercept engine</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Compatibility &amp; longevity</h2>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Versioned caches</h4><p>The rkyv script-cache format carries a schema version from the first release, so an old cached <code>.py</code> rebuilds silently rather than breaking.</p></div>
+          <div class="feature-card"><h4>Reference semantics</h4><p>Behaviour tracks CPython — integer <code>//</code> floors, <code>dict</code> preserves insertion order, aliases share mutation — as the compatibility target, verified byte-for-byte on the parity corpus.</p></div>
+          <div class="feature-card"><h4>Cross-architecture</h4><p>macOS aarch64 and Linux x86_64 / aarch64 via the Cranelift JIT; portable bytecode underneath.</p></div>
+          <div class="feature-card"><h4>Standalone crate</h4><p>An explicit empty <code>[workspace]</code> keeps pythonrs buildable on its own, independent of the meta repo.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Links</h2>
+        <ul>
+          <li><strong>Docs</strong> — <a href="index.html">index.html</a></li>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/pythonrs">github.com/MenkeTechnologies/pythonrs</a></li>
+          <li><strong>Issues</strong> — <a href="https://github.com/MenkeTechnologies/pythonrs/issues">github.com/MenkeTechnologies/pythonrs/issues</a></li>
+          <li><strong>fusevm</strong> — <a href="https://github.com/MenkeTechnologies/fusevm">github.com/MenkeTechnologies/fusevm</a> (the shared VM)</li>
+          <li><strong>License</strong> — MIT (<a href="https://github.com/MenkeTechnologies/pythonrs/blob/main/LICENSE">LICENSE</a>)</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
