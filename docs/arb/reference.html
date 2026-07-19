@@ -48,7 +48,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/arb" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line">arb v0.0.3 · pipe → dynamic TUI/web · original language on fusevm + Cranelift JIT · jq/xpath/css/yq superset · Tcl/Tk-flavored DSL · MIT · in active development</p>
+          <p class="docs-build-line">arb v0.0.4 · pipe → dynamic TUI/web · original language on fusevm + Cranelift JIT · jq/xpath/css/yq superset · Tcl/Tk-flavored DSL · MIT · in active development</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -72,207 +72,1579 @@
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>LANGUAGE REFERENCE</h2>
       <p class="tutorial-subtitle">Every widget, query verb, directive, action, and input mode the current arb build implements. This page is generated from the language-server corpus (<code>src/lsp.rs</code>) by the <code>gen-docs</code> binary, so it stays in sync with what the runtime and editor tooling actually know about. The full grammar is in <a href="https://github.com/MenkeTechnologies/arb/blob/main/SPEC.md">SPEC.md</a>.</p>
 
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">153</div><div class="stat-label">Language constructs</div></div>
-        <div class="stat-card"><div class="stat-val accent">5</div><div class="stat-label">Reference sections</div></div>
-      </div>
-
-      <section class="tutorial-section">
+      <section class="tutorial-section" id="ch-widgets">
         <h2>Widgets</h2>
-        <table class="file-table">
-          <thead><tr><th>Widget</th><th>Description</th></tr></thead>
-          <tbody>
-<tr><td><code>text</code></td><td>Shows the last stream line, or a scalar/top-pair result, in a bordered pane.</td></tr>
-<tr><td><code>tail</code></td><td>Scrolling list of the newest lines that fit (tail -f); -limit/-lines caps rows.</td></tr>
-<tr><td><code>list</code></td><td>Scrollable list of stream lines in a bordered pane; -limit caps rows shown.</td></tr>
-<tr><td><code>gauge</code></td><td>Renders a scalar as a progress bar filled to value/max (-max, default 100).</td></tr>
-<tr><td><code>bars</code></td><td>Horizontal bar chart of tally/count pairs; -top caps the number of bars (def 20).</td></tr>
-<tr><td><code>histo</code></td><td>Bar chart of value-distribution pairs; same rendering as bars, -top caps bars.</td></tr>
-<tr><td><code>spark</code></td><td>Compact braille sparkline of the numeric series, newest points that fit width.</td></tr>
-<tr><td><code>chart</code></td><td>Braille line chart of the numeric series with auto-scaled x/y axes.</td></tr>
-<tr><td><code>table</code></td><td>Columnar table of records; -cols sets headers, newest rows that fit are shown.</td></tr>
-<tr><td><code>tabs</code></td><td>Tab bar from -tabs {a b}; first tab selected (labelled selector, no per-tab body).</td></tr>
-<tr><td><code>block</code></td><td>Bordered container box rendering its bound stream content as a list.</td></tr>
-<tr><td><code>frame</code></td><td>Framed container rendering its bound stream content as a list.</td></tr>
-<tr><td><code>input</code></td><td>Editable text field; its value is spliced into pipelines via apply .name.</td></tr>
-<tr><td><code>select</code></td><td>Interactive fuzzy-select over the stream; type to filter, Tab marks, Enter emits.</td></tr>
-<tr><td><code>filter</code></td><td>Labelled filter control; its value drives where match(.name) / apply.</td></tr>
-<tr><td><code>facet</code></td><td>Multi-select of values (-opts or distinct -field); drives where &lt;field&gt; in .name.</td></tr>
-<tr><td><code>slider</code></td><td>Numeric control (-min/-max/-step) driving where &lt;field&gt; &lt; .name; arrows adjust.</td></tr>
-<tr><td><code>check</code></td><td>Boolean toggle (-label); its value is the string "1" or "0".</td></tr>
-          </tbody>
-        </table>
+        <article class="doc-entry" id="doc-widgets-1">
+          <h3><a class="doc-anchor" href="#doc-widgets-1">#</a> <code>text</code></h3>
+          <p>Shows the last stream line, or a scalar/top-pair result, in a bordered pane.</p>
+          <pre><code class="lang-arb">text .t  ·  source .t { in | last }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-2">
+          <h3><a class="doc-anchor" href="#doc-widgets-2">#</a> <code>tail</code></h3>
+          <p>Scrolling list of the newest lines that fit (tail -f); -limit/-lines caps rows.</p>
+          <pre><code class="lang-arb">tail .log  ·  source .log { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-3">
+          <h3><a class="doc-anchor" href="#doc-widgets-3">#</a> <code>list</code></h3>
+          <p>Scrollable list of stream lines in a bordered pane; -limit caps rows shown.</p>
+          <pre><code class="lang-arb">list .rows  ·  source .rows { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-4">
+          <h3><a class="doc-anchor" href="#doc-widgets-4">#</a> <code>gauge</code></h3>
+          <p>Renders a scalar as a progress bar filled to value/max (-max, default 100).</p>
+          <pre><code class="lang-arb">gauge .cpu -max 100  ·  source .cpu { in | field 3 | sum }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-5">
+          <h3><a class="doc-anchor" href="#doc-widgets-5">#</a> <code>bars</code></h3>
+          <p>Horizontal bar chart of tally/count pairs; -top caps the number of bars (def 20).</p>
+          <pre><code class="lang-arb">bars .top  ·  source .top { in | field 1 | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-6">
+          <h3><a class="doc-anchor" href="#doc-widgets-6">#</a> <code>histo</code></h3>
+          <p>Bar chart of value-distribution pairs; same rendering as bars, -top caps bars.</p>
+          <pre><code class="lang-arb">histo .h  ·  source .h { in | field 2 | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-7">
+          <h3><a class="doc-anchor" href="#doc-widgets-7">#</a> <code>spark</code></h3>
+          <p>Compact braille sparkline of the numeric series, newest points that fit width.</p>
+          <pre><code class="lang-arb">spark .s  ·  source .s { in | field 2 }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-8">
+          <h3><a class="doc-anchor" href="#doc-widgets-8">#</a> <code>chart</code></h3>
+          <p>Braille line chart of the numeric series with auto-scaled x/y axes.</p>
+          <pre><code class="lang-arb">chart .c  ·  source .c { in | field 2 }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-9">
+          <h3><a class="doc-anchor" href="#doc-widgets-9">#</a> <code>table</code></h3>
+          <p>Columnar table of records; -cols sets headers, newest rows that fit are shown.</p>
+          <pre><code class="lang-arb">table .rows -cols "a,b,c"  ·  source .rows { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-10">
+          <h3><a class="doc-anchor" href="#doc-widgets-10">#</a> <code>tabs</code></h3>
+          <p>Tab bar from -tabs {a b}; first tab selected (labelled selector, no per-tab body).</p>
+          <pre><code class="lang-arb">tabs .t -tabs {a b c}</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-11">
+          <h3><a class="doc-anchor" href="#doc-widgets-11">#</a> <code>block</code></h3>
+          <p>Bordered container box rendering its bound stream content as a list.</p>
+          <pre><code class="lang-arb">block .b -title Logs  ·  source .b { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-12">
+          <h3><a class="doc-anchor" href="#doc-widgets-12">#</a> <code>frame</code></h3>
+          <p>Framed container rendering its bound stream content as a list.</p>
+          <pre><code class="lang-arb">frame .f  ·  source .f { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-13">
+          <h3><a class="doc-anchor" href="#doc-widgets-13">#</a> <code>input</code></h3>
+          <p>Editable text field; its value is spliced into pipelines via apply .name.</p>
+          <pre><code class="lang-arb">input .q  ·  out { apply .q }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-14">
+          <h3><a class="doc-anchor" href="#doc-widgets-14">#</a> <code>select</code></h3>
+          <p>Interactive fuzzy-select over the stream; type to filter, Tab marks, Enter emits.</p>
+          <pre><code class="lang-arb">select .k -prompt pick  ·  source .k { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-15">
+          <h3><a class="doc-anchor" href="#doc-widgets-15">#</a> <code>filter</code></h3>
+          <p>Labelled filter control; its value drives where match(.name) / apply.</p>
+          <pre><code class="lang-arb">filter .q  ·  out { where match(.q) }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-16">
+          <h3><a class="doc-anchor" href="#doc-widgets-16">#</a> <code>facet</code></h3>
+          <p>Multi-select of values (-opts or distinct -field); drives where &lt;field&gt; in .name.</p>
+          <pre><code class="lang-arb">facet .lv -field level  ·  out { where level in .lv }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-17">
+          <h3><a class="doc-anchor" href="#doc-widgets-17">#</a> <code>slider</code></h3>
+          <p>Numeric control (-min/-max/-step) driving where &lt;field&gt; &lt; .name; arrows adjust.</p>
+          <pre><code class="lang-arb">slider .th -field lat -max 5  ·  out { where lat &lt; .th }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-18">
+          <h3><a class="doc-anchor" href="#doc-widgets-18">#</a> <code>check</code></h3>
+          <p>Boolean toggle (-label); its value is the string "1" or "0".</p>
+          <pre><code class="lang-arb">check .on -label live</code></pre>
+        </article>
       </section>
 
-      <section class="tutorial-section">
+      <section class="tutorial-section" id="ch-query-verbs">
         <h2>Query verbs</h2>
-        <table class="file-table">
-          <thead><tr><th>Query</th><th>Description</th></tr></thead>
-          <tbody>
-<tr><td><code>find</code></td><td>Parse stream as HTML, emit the outer HTML of each element matching the selector.</td></tr>
-<tr><td><code>attr</code></td><td>From element fragments, emit each element's named attribute; drop those lacking it.</td></tr>
-<tr><td><code>text</code></td><td>From element fragments, emit each element's inner text; non-elements pass through.</td></tr>
-<tr><td><code>match</code></td><td>Keep lines matching the regex.</td></tr>
-<tr><td><code>grep</code></td><td>Keep lines matching the regex.</td></tr>
-<tr><td><code>reject</code></td><td>Drop lines matching the regex.</td></tr>
-<tr><td><code>grepv</code></td><td>Drop lines matching the regex.</td></tr>
-<tr><td><code>field</code></td><td>Replace each line with a selected field (whitespace column or JSON key path).</td></tr>
-<tr><td><code>fields</code></td><td>Project multiple 1-based whitespace columns, space-joined, in the given order.</td></tr>
-<tr><td><code>each</code></td><td>Flatten JSON-array lines into one line per element; non-array lines pass through.</td></tr>
-<tr><td><code>count</code></td><td>Reduce to the current line count (scalar).</td></tr>
-<tr><td><code>rate</code></td><td>Reduce to lines-per-second over the elapsed window (scalar).</td></tr>
-<tr><td><code>tally</code></td><td>Group identical lines and count them, sorted by count desc then key asc.</td></tr>
-<tr><td><code>sum</code></td><td>Sum of lines parsed as numbers; non-numeric lines are ignored (scalar).</td></tr>
-<tr><td><code>min</code></td><td>Minimum of numeric lines, or 0 if none (scalar).</td></tr>
-<tr><td><code>max</code></td><td>Maximum of numeric lines, or 0 if none (scalar).</td></tr>
-<tr><td><code>avg</code></td><td>Mean of numeric lines, or 0 if none (scalar).</td></tr>
-<tr><td><code>keys</code></td><td>Flatten a JSON object's keys into one line each; non-object lines pass through.</td></tr>
-<tr><td><code>vals</code></td><td>Flatten a JSON object's values into one line each; non-object lines pass through.</td></tr>
-<tr><td><code>pick</code></td><td>Project a JSON object to the named keys, keeping order; missing keys dropped.</td></tr>
-<tr><td><code>sort</code></td><td>Sort the lines; -n sorts numerically, -r reverses.</td></tr>
-<tr><td><code>uniq</code></td><td>Drop duplicate lines globally, keeping the first occurrence.</td></tr>
-<tr><td><code>rev</code></td><td>Reverse the order of the lines.</td></tr>
-<tr><td><code>first</code></td><td>Keep only the first line.</td></tr>
-<tr><td><code>last</code></td><td>Keep only the last line.</td></tr>
-<tr><td><code>upper</code></td><td>Uppercase each line.</td></tr>
-<tr><td><code>lower</code></td><td>Lowercase each line.</td></tr>
-<tr><td><code>trim</code></td><td>Strip leading and trailing whitespace from each line.</td></tr>
-<tr><td><code>replace</code></td><td>Regex replace-all per line (replace /RE/ TO); TO may use $1 captures.</td></tr>
-<tr><td><code>join</code></td><td>Collapse all lines into one, joined by a separator (default a space).</td></tr>
-<tr><td><code>nth</code></td><td>Keep only the Nth line (1-based).</td></tr>
-<tr><td><code>take</code></td><td>Keep the first N lines.</td></tr>
-<tr><td><code>drop</code></td><td>Drop the first N lines.</td></tr>
-<tr><td><code>calc</code></td><td>Reduce to a scalar from an arithmetic expression over the line count (x).</td></tr>
-<tr><td><code>where</code></td><td>Keep lines whose numeric value / field predicate holds (fusevm or Rust eval).</td></tr>
-<tr><td><code>map</code></td><td>Replace each line with an expression's value (field-aware; x = line-as-number).</td></tr>
-<tr><td><code>sort_by</code></td><td>Stable-sort JSON records by FIELD (numeric if all parse, else lexicographic).</td></tr>
-<tr><td><code>unique_by</code></td><td>Keep the first record per distinct FIELD value, preserving input order.</td></tr>
-<tr><td><code>count_by</code></td><td>Group JSON records by FIELD and count; value-&gt;count sorted by count desc.</td></tr>
-<tr><td><code>group_by</code></td><td>Group lines by FIELD into one JSON-array line per value, keys ascending.</td></tr>
-<tr><td><code>min_by</code></td><td>Emit the single record whose numeric FIELD is smallest.</td></tr>
-<tr><td><code>max_by</code></td><td>Emit the single record whose numeric FIELD is largest.</td></tr>
-<tr><td><code>has</code></td><td>Keep only JSON-object lines that contain KEY; all other lines are dropped.</td></tr>
-<tr><td><code>entries</code></td><td>Expand each JSON object into one key/value object line per key (jq to_entries).</td></tr>
-<tr><td><code>flatten</code></td><td>Emit each element of JSON-array lines, one level deeper than each.</td></tr>
-<tr><td><code>add</code></td><td>Reduce a JSON array line to one value (sum numbers, else concat their strings).</td></tr>
-<tr><td><code>over</code></td><td>Keep lines parsing as a number strictly greater than N; drop non-numeric.</td></tr>
-<tr><td><code>under</code></td><td>Keep numeric lines strictly less than N; drop non-numeric lines.</td></tr>
-<tr><td><code>between</code></td><td>Keep numeric lines x where lo &lt;= x &lt;= hi inclusive; drop non-numeric lines.</td></tr>
-<tr><td><code>enumerate</code></td><td>Prefix each line with its 1-based index and a tab.</td></tr>
-<tr><td><code>words</code></td><td>Split each line on whitespace and emit one word per line.</td></tr>
-<tr><td><code>dedup</code></td><td>Collapse runs of adjacent identical lines to one (classic uniq).</td></tr>
-<tr><td><code>tailn</code></td><td>Keep only the last N lines.</td></tr>
-<tr><td><code>pad</code></td><td>Right-pad each line with spaces to a minimum visible width N (no truncation).</td></tr>
-<tr><td><code>lpad</code></td><td>Left-pad each line with spaces to a minimum width N.</td></tr>
-<tr><td><code>grepf</code></td><td>Keep lines whose FIELD (JSON key or 1-based column) matches the regex.</td></tr>
-<tr><td><code>apply</code></td><td>Placeholder replaced at render by the pipeline typed into input .name; else no-op.</td></tr>
-<tr><td><code>basename</code></td><td>Path basename: the part after the last / (the whole line if none).</td></tr>
-<tr><td><code>dirname</code></td><td>Path dirname: the part before the last / (. if none).</td></tr>
-<tr><td><code>commafy</code></td><td>Group a numeric line's integer part with thousands separators; else pass through.</td></tr>
-<tr><td><code>bytes</code></td><td>Humanize a byte count (1024-based): 1536 -&gt; 1.5 KB; non-numeric passes through.</td></tr>
-<tr><td><code>duration</code></td><td>Humanize seconds: 3661 -&gt; 1h 1m; non-numeric lines pass through.</td></tr>
-<tr><td><code>flip</code></td><td>Reverse the Unicode characters of each line.</td></tr>
-<tr><td><code>b64</code></td><td>Base64-encode each line.</td></tr>
-<tr><td><code>b64d</code></td><td>Base64-decode each line; invalid or non-UTF8 lines pass through unchanged.</td></tr>
-<tr><td><code>hex</code></td><td>Lowercase hex-encode each line, two hex digits per UTF-8 byte.</td></tr>
-<tr><td><code>unhex</code></td><td>Decode a hex string to UTF-8; on any error the line passes through unchanged.</td></tr>
-<tr><td><code>urlenc</code></td><td>Percent-encode each line, escaping every non-alphanumeric byte (RFC 3986).</td></tr>
-<tr><td><code>urldec</code></td><td>Percent-decode each line to UTF-8; invalid UTF-8 passes through unchanged.</td></tr>
-<tr><td><code>extract</code></td><td>Emit the first regex match per line (group 1 if any); drop lines with no match.</td></tr>
-<tr><td><code>split</code></td><td>Explode each line by the literal DELIM into multiple lines (one part per line).</td></tr>
-<tr><td><code>substr</code></td><td>Character substring [A,B) 0-based, clamped to the line length.</td></tr>
-<tr><td><code>chars</code></td><td>Explode each line into one output line per Unicode character.</td></tr>
-<tr><td><code>title</code></td><td>Title-case each line: capitalize each word's first letter, lowercase the rest.</td></tr>
-<tr><td><code>repeat</code></td><td>Replace each line with its content repeated N times, concatenated.</td></tr>
-<tr><td><code>set</code></td><td>Set key K to string value V in each JSON object line; non-objects pass through.</td></tr>
-<tr><td><code>del</code></td><td>Remove key K from each JSON object line; non-object lines pass through.</td></tr>
-<tr><td><code>rename</code></td><td>Rename JSON object key OLD to NEW, keeping the value; no-op if OLD absent.</td></tr>
-<tr><td><code>default</code></td><td>Set string key K to V only when K is absent from the JSON object.</td></tr>
-<tr><td><code>merge</code></td><td>Reduce all JSON object lines into one object (later keys win); emits one line.</td></tr>
-<tr><td><code>floor</code></td><td>Floor each numeric line to the nearest lower integer; non-numeric passes through.</td></tr>
-<tr><td><code>ceil</code></td><td>Round each numeric line up to the nearest integer; non-numeric passes through.</td></tr>
-<tr><td><code>round</code></td><td>Round each numeric line to the nearest integer.</td></tr>
-<tr><td><code>abs</code></td><td>Absolute value of each numeric line.</td></tr>
-<tr><td><code>clamp</code></td><td>Clamp each numeric line into the inclusive range [LO, HI]; non-numeric untouched.</td></tr>
-<tr><td><code>len</code></td><td>Replace each line with its character count.</td></tr>
-<tr><td><code>wc</code></td><td>Replace each line with its word count.</td></tr>
-<tr><td><code>index</code></td><td>Keep only the Nth line (1-based); out-of-range yields no lines.</td></tr>
-<tr><td><code>cut</code></td><td>Split each line by DELIM and keep the Nth (1-based) field.</td></tr>
-<tr><td><code>contains</code></td><td>Keep lines containing a literal substring.</td></tr>
-<tr><td><code>starts</code></td><td>Keep lines starting with a literal prefix.</td></tr>
-<tr><td><code>ends</code></td><td>Keep lines ending with a literal suffix.</td></tr>
-<tr><td><code>nonempty</code></td><td>Drop empty or whitespace-only lines.</td></tr>
-<tr><td><code>numeric</code></td><td>Keep only lines that parse as a number.</td></tr>
-<tr><td><code>distinct</code></td><td>Reduce to the count of distinct lines (scalar).</td></tr>
-<tr><td><code>sample</code></td><td>Keep every Nth line (1-based).</td></tr>
-<tr><td><code>range</code></td><td>Max minus min of numeric lines (scalar).</td></tr>
-<tr><td><code>bins</code></td><td>Bucket numeric lines into N equal-width ranges -&gt; (range, count) pairs.</td></tr>
-<tr><td><code>cumsum</code></td><td>Running cumulative total of the numeric series.</td></tr>
-<tr><td><code>delta</code></td><td>Consecutive differences of the numeric series (n values -&gt; n-1 deltas).</td></tr>
-<tr><td><code>ewma</code></td><td>Exponentially-weighted moving average, smoothing factor alpha in (0,1]; s0=x0.</td></tr>
-<tr><td><code>sma</code></td><td>Simple moving average over a trailing window of N (length-preserving).</td></tr>
-<tr><td><code>median</code></td><td>Median of numeric lines (scalar).</td></tr>
-<tr><td><code>percentile</code></td><td>Nth percentile (0-100) of numeric values, linear interpolation between ranks.</td></tr>
-<tr><td><code>p50</code></td><td>50th percentile (median) of the numeric values (scalar).</td></tr>
-<tr><td><code>p90</code></td><td>90th percentile of the numeric values (scalar).</td></tr>
-<tr><td><code>p95</code></td><td>95th percentile of the numeric values (scalar).</td></tr>
-<tr><td><code>p99</code></td><td>99th percentile of the numeric values, for latency tails (scalar).</td></tr>
-<tr><td><code>stddev</code></td><td>Population standard deviation of numeric lines (scalar).</td></tr>
-<tr><td><code>product</code></td><td>Product of numeric lines (scalar).</td></tr>
-<tr><td><code>append</code></td><td>Suffix every line with a literal string.</td></tr>
-<tr><td><code>prepend</code></td><td>Prefix every line with a literal string.</td></tr>
-<tr><td><code>slice</code></td><td>Keep lines from index A to B inclusive (1-based).</td></tr>
-<tr><td><code>sel</code></td><td>Parse stream as HTML, emit each CSS-selector match's text (or -attr value).</td></tr>
-          </tbody>
-        </table>
+        <article class="doc-entry" id="doc-query-verbs-1">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-1">#</a> <code>find</code></h3>
+          <p>Parse stream as HTML, emit the outer HTML of each element matching the selector.</p>
+          <pre><code class="lang-arb">in.html | find a | attr href</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-2">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-2">#</a> <code>attr</code></h3>
+          <p>From element fragments, emit each element's named attribute; drop those lacking it.</p>
+          <pre><code class="lang-arb">in.html | find a | attr href</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-3">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-3">#</a> <code>text</code></h3>
+          <p>From element fragments, emit each element's inner text; non-elements pass through.</p>
+          <pre><code class="lang-arb">in.html | find h2 | text</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-4">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-4">#</a> <code>match</code></h3>
+          <p>Keep lines matching the regex.</p>
+          <pre><code class="lang-arb">in | match /ERROR/</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-5">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-5">#</a> <code>grep</code></h3>
+          <p>Keep lines matching the regex.</p>
+          <pre><code class="lang-arb">in | grep /ERROR/</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-6">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-6">#</a> <code>reject</code></h3>
+          <p>Drop lines matching the regex.</p>
+          <pre><code class="lang-arb">in | reject /^#/</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-7">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-7">#</a> <code>grepv</code></h3>
+          <p>Drop lines matching the regex.</p>
+          <pre><code class="lang-arb">in | grepv /^#/</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-8">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-8">#</a> <code>field</code></h3>
+          <p>Replace each line with a selected field (whitespace column or JSON key path).</p>
+          <pre><code class="lang-arb">in.json | field status | tally</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-9">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-9">#</a> <code>fields</code></h3>
+          <p>Project multiple 1-based whitespace columns, space-joined, in the given order.</p>
+          <pre><code class="lang-arb">in | fields 1 3</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-10">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-10">#</a> <code>each</code></h3>
+          <p>Flatten JSON-array lines into one line per element; non-array lines pass through.</p>
+          <pre><code class="lang-arb">in.json | field users | each | field name</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-11">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-11">#</a> <code>count</code></h3>
+          <p>Reduce to the current line count (scalar).</p>
+          <pre><code class="lang-arb">in | count</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-12">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-12">#</a> <code>rate</code></h3>
+          <p>Reduce to lines-per-second over the elapsed window (scalar).</p>
+          <pre><code class="lang-arb">in | rate</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-13">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-13">#</a> <code>tally</code></h3>
+          <p>Group identical lines and count them, sorted by count desc then key asc.</p>
+          <pre><code class="lang-arb">in | field status | tally</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-14">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-14">#</a> <code>sum</code></h3>
+          <p>Sum of lines parsed as numbers; non-numeric lines are ignored (scalar).</p>
+          <pre><code class="lang-arb">in | field 3 | sum</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-15">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-15">#</a> <code>min</code></h3>
+          <p>Minimum of numeric lines, or 0 if none (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | min</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-16">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-16">#</a> <code>max</code></h3>
+          <p>Maximum of numeric lines, or 0 if none (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | max</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-17">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-17">#</a> <code>avg</code></h3>
+          <p>Mean of numeric lines, or 0 if none (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | avg</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-18">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-18">#</a> <code>keys</code></h3>
+          <p>Flatten a JSON object's keys into one line each; non-object lines pass through.</p>
+          <pre><code class="lang-arb">in.json | keys | tally</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-19">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-19">#</a> <code>vals</code></h3>
+          <p>Flatten a JSON object's values into one line each; non-object lines pass through.</p>
+          <pre><code class="lang-arb">in.json | vals</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-20">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-20">#</a> <code>pick</code></h3>
+          <p>Project a JSON object to the named keys, keeping order; missing keys dropped.</p>
+          <pre><code class="lang-arb">in.json | pick ts msg</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-21">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-21">#</a> <code>sort</code></h3>
+          <p>Sort the lines; -n sorts numerically, -r reverses.</p>
+          <pre><code class="lang-arb">in | tally | sort -n -r</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-22">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-22">#</a> <code>uniq</code></h3>
+          <p>Drop duplicate lines globally, keeping the first occurrence.</p>
+          <pre><code class="lang-arb">in | sort | uniq</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-23">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-23">#</a> <code>rev</code></h3>
+          <p>Reverse the order of the lines.</p>
+          <pre><code class="lang-arb">in | rev</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-24">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-24">#</a> <code>first</code></h3>
+          <p>Keep only the first line.</p>
+          <pre><code class="lang-arb">in | first</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-25">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-25">#</a> <code>last</code></h3>
+          <p>Keep only the last line.</p>
+          <pre><code class="lang-arb">in | last</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-26">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-26">#</a> <code>upper</code></h3>
+          <p>Uppercase each line.</p>
+          <pre><code class="lang-arb">in | upper</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-27">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-27">#</a> <code>lower</code></h3>
+          <p>Lowercase each line.</p>
+          <pre><code class="lang-arb">in | lower</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-28">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-28">#</a> <code>trim</code></h3>
+          <p>Strip leading and trailing whitespace from each line.</p>
+          <pre><code class="lang-arb">in | trim</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-29">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-29">#</a> <code>replace</code></h3>
+          <p>Regex replace-all per line (replace /RE/ TO); TO may use $1 captures.</p>
+          <pre><code class="lang-arb">in | replace /foo/ bar</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-30">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-30">#</a> <code>join</code></h3>
+          <p>Collapse all lines into one, joined by a separator (default a space).</p>
+          <pre><code class="lang-arb">in | field 1 | join ,</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-31">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-31">#</a> <code>nth</code></h3>
+          <p>Keep only the Nth line (1-based).</p>
+          <pre><code class="lang-arb">in | nth 3</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-32">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-32">#</a> <code>take</code></h3>
+          <p>Keep the first N lines.</p>
+          <pre><code class="lang-arb">in | tally | take 10</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-33">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-33">#</a> <code>drop</code></h3>
+          <p>Drop the first N lines.</p>
+          <pre><code class="lang-arb">in | drop 1</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-34">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-34">#</a> <code>calc</code></h3>
+          <p>Reduce to a scalar from an arithmetic expression over the line count (x).</p>
+          <pre><code class="lang-arb">in | count | calc x * 100</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-35">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-35">#</a> <code>where</code></h3>
+          <p>Keep lines whose numeric value / field predicate holds (fusevm or Rust eval).</p>
+          <pre><code class="lang-arb">in.json | where lat &lt; 5</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-36">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-36">#</a> <code>map</code></h3>
+          <p>Replace each line with an expression's value (field-aware; x = line-as-number).</p>
+          <pre><code class="lang-arb">in | map x * 2</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-37">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-37">#</a> <code>sort_by</code></h3>
+          <p>Stable-sort JSON records by FIELD (numeric if all parse, else lexicographic).</p>
+          <pre><code class="lang-arb">in.json | sort_by ts</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-38">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-38">#</a> <code>unique_by</code></h3>
+          <p>Keep the first record per distinct FIELD value, preserving input order.</p>
+          <pre><code class="lang-arb">in.json | unique_by id</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-39">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-39">#</a> <code>count_by</code></h3>
+          <p>Group JSON records by FIELD and count; value-&gt;count sorted by count desc.</p>
+          <pre><code class="lang-arb">in.json | count_by level</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-40">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-40">#</a> <code>group_by</code></h3>
+          <p>Group lines by FIELD into one JSON-array line per value, keys ascending.</p>
+          <pre><code class="lang-arb">in.json | group_by level</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-41">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-41">#</a> <code>min_by</code></h3>
+          <p>Emit the single record whose numeric FIELD is smallest.</p>
+          <pre><code class="lang-arb">in.json | min_by lat</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-42">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-42">#</a> <code>max_by</code></h3>
+          <p>Emit the single record whose numeric FIELD is largest.</p>
+          <pre><code class="lang-arb">in.json | max_by lat</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-43">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-43">#</a> <code>has</code></h3>
+          <p>Keep only JSON-object lines that contain KEY; all other lines are dropped.</p>
+          <pre><code class="lang-arb">in.json | has error</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-44">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-44">#</a> <code>entries</code></h3>
+          <p>Expand each JSON object into one key/value object line per key (jq to_entries).</p>
+          <pre><code class="lang-arb">in.json | entries</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-45">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-45">#</a> <code>flatten</code></h3>
+          <p>Emit each element of JSON-array lines, one level deeper than each.</p>
+          <pre><code class="lang-arb">in.json | flatten</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-46">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-46">#</a> <code>add</code></h3>
+          <p>Reduce a JSON array line to one value (sum numbers, else concat their strings).</p>
+          <pre><code class="lang-arb">in.json | add</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-47">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-47">#</a> <code>over</code></h3>
+          <p>Keep lines parsing as a number strictly greater than N; drop non-numeric.</p>
+          <pre><code class="lang-arb">in | field 2 | over 100</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-48">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-48">#</a> <code>under</code></h3>
+          <p>Keep numeric lines strictly less than N; drop non-numeric lines.</p>
+          <pre><code class="lang-arb">in | field 2 | under 10</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-49">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-49">#</a> <code>between</code></h3>
+          <p>Keep numeric lines x where lo &lt;= x &lt;= hi inclusive; drop non-numeric lines.</p>
+          <pre><code class="lang-arb">in | between 1 10</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-50">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-50">#</a> <code>enumerate</code></h3>
+          <p>Prefix each line with its 1-based index and a tab.</p>
+          <pre><code class="lang-arb">in | enumerate</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-51">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-51">#</a> <code>words</code></h3>
+          <p>Split each line on whitespace and emit one word per line.</p>
+          <pre><code class="lang-arb">in | words | tally</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-52">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-52">#</a> <code>dedup</code></h3>
+          <p>Collapse runs of adjacent identical lines to one (classic uniq).</p>
+          <pre><code class="lang-arb">in | dedup</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-53">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-53">#</a> <code>tailn</code></h3>
+          <p>Keep only the last N lines.</p>
+          <pre><code class="lang-arb">in | tailn 5</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-54">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-54">#</a> <code>pad</code></h3>
+          <p>Right-pad each line with spaces to a minimum visible width N (no truncation).</p>
+          <pre><code class="lang-arb">in | pad 10</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-55">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-55">#</a> <code>lpad</code></h3>
+          <p>Left-pad each line with spaces to a minimum width N.</p>
+          <pre><code class="lang-arb">in | lpad 8</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-56">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-56">#</a> <code>grepf</code></h3>
+          <p>Keep lines whose FIELD (JSON key or 1-based column) matches the regex.</p>
+          <pre><code class="lang-arb">in.json | grepf status /5\d\d/</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-57">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-57">#</a> <code>apply</code></h3>
+          <p>Placeholder replaced at render by the pipeline typed into input .name; else no-op.</p>
+          <pre><code class="lang-arb">source .out { in | apply .q }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-58">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-58">#</a> <code>basename</code></h3>
+          <p>Path basename: the part after the last / (the whole line if none).</p>
+          <pre><code class="lang-arb">in | basename</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-59">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-59">#</a> <code>dirname</code></h3>
+          <p>Path dirname: the part before the last / (. if none).</p>
+          <pre><code class="lang-arb">in | dirname</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-60">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-60">#</a> <code>commafy</code></h3>
+          <p>Group a numeric line's integer part with thousands separators; else pass through.</p>
+          <pre><code class="lang-arb">in | sum | commafy</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-61">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-61">#</a> <code>bytes</code></h3>
+          <p>Humanize a byte count (1024-based): 1536 -&gt; 1.5 KB; non-numeric passes through.</p>
+          <pre><code class="lang-arb">in | field 2 | bytes</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-62">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-62">#</a> <code>duration</code></h3>
+          <p>Humanize seconds: 3661 -&gt; 1h 1m; non-numeric lines pass through.</p>
+          <pre><code class="lang-arb">in | field 2 | duration</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-63">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-63">#</a> <code>flip</code></h3>
+          <p>Reverse the Unicode characters of each line.</p>
+          <pre><code class="lang-arb">in | flip</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-64">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-64">#</a> <code>b64</code></h3>
+          <p>Base64-encode each line.</p>
+          <pre><code class="lang-arb">in | b64</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-65">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-65">#</a> <code>b64d</code></h3>
+          <p>Base64-decode each line; invalid or non-UTF8 lines pass through unchanged.</p>
+          <pre><code class="lang-arb">in | b64d</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-66">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-66">#</a> <code>hex</code></h3>
+          <p>Lowercase hex-encode each line, two hex digits per UTF-8 byte.</p>
+          <pre><code class="lang-arb">in | hex</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-67">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-67">#</a> <code>unhex</code></h3>
+          <p>Decode a hex string to UTF-8; on any error the line passes through unchanged.</p>
+          <pre><code class="lang-arb">in | unhex</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-68">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-68">#</a> <code>urlenc</code></h3>
+          <p>Percent-encode each line, escaping every non-alphanumeric byte (RFC 3986).</p>
+          <pre><code class="lang-arb">in | urlenc</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-69">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-69">#</a> <code>urldec</code></h3>
+          <p>Percent-decode each line to UTF-8; invalid UTF-8 passes through unchanged.</p>
+          <pre><code class="lang-arb">in | urldec</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-70">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-70">#</a> <code>extract</code></h3>
+          <p>Emit the first regex match per line (group 1 if any); drop lines with no match.</p>
+          <pre><code class="lang-arb">in | extract /(\d+)/</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-71">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-71">#</a> <code>split</code></h3>
+          <p>Explode each line by the literal DELIM into multiple lines (one part per line).</p>
+          <pre><code class="lang-arb">in | split ,</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-72">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-72">#</a> <code>substr</code></h3>
+          <p>Character substring [A,B) 0-based, clamped to the line length.</p>
+          <pre><code class="lang-arb">in | substr 0 8</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-73">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-73">#</a> <code>chars</code></h3>
+          <p>Explode each line into one output line per Unicode character.</p>
+          <pre><code class="lang-arb">in | chars</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-74">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-74">#</a> <code>title</code></h3>
+          <p>Title-case each line: capitalize each word's first letter, lowercase the rest.</p>
+          <pre><code class="lang-arb">in | title</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-75">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-75">#</a> <code>repeat</code></h3>
+          <p>Replace each line with its content repeated N times, concatenated.</p>
+          <pre><code class="lang-arb">in | repeat 3</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-76">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-76">#</a> <code>set</code></h3>
+          <p>Set key K to string value V in each JSON object line; non-objects pass through.</p>
+          <pre><code class="lang-arb">in.json | set env prod</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-77">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-77">#</a> <code>del</code></h3>
+          <p>Remove key K from each JSON object line; non-object lines pass through.</p>
+          <pre><code class="lang-arb">in.json | del debug</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-78">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-78">#</a> <code>rename</code></h3>
+          <p>Rename JSON object key OLD to NEW, keeping the value; no-op if OLD absent.</p>
+          <pre><code class="lang-arb">in.json | rename ts time</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-79">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-79">#</a> <code>default</code></h3>
+          <p>Set string key K to V only when K is absent from the JSON object.</p>
+          <pre><code class="lang-arb">in.json | default env dev</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-80">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-80">#</a> <code>merge</code></h3>
+          <p>Reduce all JSON object lines into one object (later keys win); emits one line.</p>
+          <pre><code class="lang-arb">in.json | merge</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-81">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-81">#</a> <code>floor</code></h3>
+          <p>Floor each numeric line to the nearest lower integer; non-numeric passes through.</p>
+          <pre><code class="lang-arb">in | floor</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-82">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-82">#</a> <code>ceil</code></h3>
+          <p>Round each numeric line up to the nearest integer; non-numeric passes through.</p>
+          <pre><code class="lang-arb">in | ceil</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-83">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-83">#</a> <code>round</code></h3>
+          <p>Round each numeric line to the nearest integer.</p>
+          <pre><code class="lang-arb">in | round</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-84">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-84">#</a> <code>abs</code></h3>
+          <p>Absolute value of each numeric line.</p>
+          <pre><code class="lang-arb">in | delta | abs</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-85">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-85">#</a> <code>clamp</code></h3>
+          <p>Clamp each numeric line into the inclusive range [LO, HI]; non-numeric untouched.</p>
+          <pre><code class="lang-arb">in | clamp 0 100</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-86">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-86">#</a> <code>len</code></h3>
+          <p>Replace each line with its character count.</p>
+          <pre><code class="lang-arb">in | len</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-87">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-87">#</a> <code>wc</code></h3>
+          <p>Replace each line with its word count.</p>
+          <pre><code class="lang-arb">in | wc</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-88">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-88">#</a> <code>index</code></h3>
+          <p>Keep only the Nth line (1-based); out-of-range yields no lines.</p>
+          <pre><code class="lang-arb">in | index 3</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-89">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-89">#</a> <code>cut</code></h3>
+          <p>Split each line by DELIM and keep the Nth (1-based) field.</p>
+          <pre><code class="lang-arb">in | cut , 2</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-90">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-90">#</a> <code>contains</code></h3>
+          <p>Keep lines containing a literal substring.</p>
+          <pre><code class="lang-arb">in | contains error</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-91">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-91">#</a> <code>starts</code></h3>
+          <p>Keep lines starting with a literal prefix.</p>
+          <pre><code class="lang-arb">in | starts GET</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-92">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-92">#</a> <code>ends</code></h3>
+          <p>Keep lines ending with a literal suffix.</p>
+          <pre><code class="lang-arb">in | ends .json</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-93">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-93">#</a> <code>nonempty</code></h3>
+          <p>Drop empty or whitespace-only lines.</p>
+          <pre><code class="lang-arb">in | nonempty</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-94">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-94">#</a> <code>numeric</code></h3>
+          <p>Keep only lines that parse as a number.</p>
+          <pre><code class="lang-arb">in | numeric | avg</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-95">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-95">#</a> <code>distinct</code></h3>
+          <p>Reduce to the count of distinct lines (scalar).</p>
+          <pre><code class="lang-arb">in | distinct</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-96">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-96">#</a> <code>sample</code></h3>
+          <p>Keep every Nth line (1-based).</p>
+          <pre><code class="lang-arb">in | sample 10</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-97">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-97">#</a> <code>range</code></h3>
+          <p>Max minus min of numeric lines (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | range</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-98">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-98">#</a> <code>bins</code></h3>
+          <p>Bucket numeric lines into N equal-width ranges -&gt; (range, count) pairs.</p>
+          <pre><code class="lang-arb">in | bins 10</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-99">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-99">#</a> <code>cumsum</code></h3>
+          <p>Running cumulative total of the numeric series.</p>
+          <pre><code class="lang-arb">in | cumsum</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-100">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-100">#</a> <code>delta</code></h3>
+          <p>Consecutive differences of the numeric series (n values -&gt; n-1 deltas).</p>
+          <pre><code class="lang-arb">in | delta</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-101">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-101">#</a> <code>ewma</code></h3>
+          <p>Exponentially-weighted moving average, smoothing factor alpha in (0,1]; s0=x0.</p>
+          <pre><code class="lang-arb">in | ewma 0.3</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-102">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-102">#</a> <code>sma</code></h3>
+          <p>Simple moving average over a trailing window of N (length-preserving).</p>
+          <pre><code class="lang-arb">in | sma 5</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-103">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-103">#</a> <code>median</code></h3>
+          <p>Median of numeric lines (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | median</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-104">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-104">#</a> <code>percentile</code></h3>
+          <p>Nth percentile (0-100) of numeric values, linear interpolation between ranks.</p>
+          <pre><code class="lang-arb">in | percentile 95</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-105">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-105">#</a> <code>p50</code></h3>
+          <p>50th percentile (median) of the numeric values (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | p50</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-106">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-106">#</a> <code>p90</code></h3>
+          <p>90th percentile of the numeric values (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | p90</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-107">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-107">#</a> <code>p95</code></h3>
+          <p>95th percentile of the numeric values (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | p95</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-108">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-108">#</a> <code>p99</code></h3>
+          <p>99th percentile of the numeric values, for latency tails (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | p99</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-109">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-109">#</a> <code>stddev</code></h3>
+          <p>Population standard deviation of numeric lines (scalar).</p>
+          <pre><code class="lang-arb">in | field 2 | stddev</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-110">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-110">#</a> <code>product</code></h3>
+          <p>Product of numeric lines (scalar).</p>
+          <pre><code class="lang-arb">in | product</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-111">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-111">#</a> <code>append</code></h3>
+          <p>Suffix every line with a literal string.</p>
+          <pre><code class="lang-arb">in | append !</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-112">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-112">#</a> <code>prepend</code></h3>
+          <p>Prefix every line with a literal string.</p>
+          <pre><code class="lang-arb">in | prepend &gt;&gt;</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-113">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-113">#</a> <code>slice</code></h3>
+          <p>Keep lines from index A to B inclusive (1-based).</p>
+          <pre><code class="lang-arb">in | slice 1 10</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-114">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-114">#</a> <code>sel</code></h3>
+          <p>Parse stream as HTML, emit each CSS-selector match's text (or -attr value).</p>
+          <pre><code class="lang-arb">in.html | sel { div.card h2 }</code></pre>
+        </article>
       </section>
 
-      <section class="tutorial-section">
+      <section class="tutorial-section" id="ch-directives">
         <h2>Directives</h2>
-        <table class="file-table">
-          <thead><tr><th>Directive</th><th>Description</th></tr></thead>
-          <tbody>
-<tr><td><code>import</code></td><td>Inline a module (stdlib preset or user .arb file) into the spec.</td></tr>
-<tr><td><code>import as</code></td><td>Build a module into namespace ALIAS, prefixing its names, then merge it in.</td></tr>
-<tr><td><code>source</code></td><td>Attach a query pipeline (body must start with in) as a widget's data source.</td></tr>
-<tr><td><code>search</code></td><td>Attach a select widget's fuzzy-match key pipeline; the row still shows source.</td></tr>
-<tr><td><code>bind</code></td><td>Bind a control key to an action (set|quit|beep|alert|flash|exec, or a { } block).</td></tr>
-<tr><td><code>expect</code></td><td>Fire an action when a stream line matches /regex/ (event-driven reaction).</td></tr>
-<tr><td><code>timeout</code></td><td>Fire an action when the stream is idle for a duration (Ns/Nms/Nm).</td></tr>
-<tr><td><code>out</code></td><td>Apply a query pipeline to the stream and write it to stdout (modify a pipe).</td></tr>
-<tr><td><code>grid</code></td><td>Place a widget in the layout grid (-row/-col, -span/-rowspan/-colspan).</td></tr>
-<tr><td><code>configure</code></td><td>Merge new -opts into an already-declared widget (build-time; later keys win).</td></tr>
-          </tbody>
-        </table>
+        <article class="doc-entry" id="doc-directives-1">
+          <h3><a class="doc-anchor" href="#doc-directives-1">#</a> <code>import</code></h3>
+          <p>Inline a module (stdlib preset or user .arb file) into the spec.</p>
+          <pre><code class="lang-arb">import http</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-2">
+          <h3><a class="doc-anchor" href="#doc-directives-2">#</a> <code>import as</code></h3>
+          <p>Build a module into namespace ALIAS, prefixing its names, then merge it in.</p>
+          <pre><code class="lang-arb">import gauges as g</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-3">
+          <h3><a class="doc-anchor" href="#doc-directives-3">#</a> <code>source</code></h3>
+          <p>Attach a query pipeline (body must start with in) as a widget's data source.</p>
+          <pre><code class="lang-arb">source .status { in.json | field status | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-4">
+          <h3><a class="doc-anchor" href="#doc-directives-4">#</a> <code>search</code></h3>
+          <p>Attach a select widget's fuzzy-match key pipeline; the row still shows source.</p>
+          <pre><code class="lang-arb">search .k { in | field 2 }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-5">
+          <h3><a class="doc-anchor" href="#doc-directives-5">#</a> <code>bind</code></h3>
+          <p>Bind a control key to an action (set|quit|beep|alert|flash|exec, or a { } block).</p>
+          <pre><code class="lang-arb">bind C-q quit</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-6">
+          <h3><a class="doc-anchor" href="#doc-directives-6">#</a> <code>expect</code></h3>
+          <p>Fire an action when a stream line matches /regex/ (event-driven reaction).</p>
+          <pre><code class="lang-arb">expect /5\d\d/ { flash .log red }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-7">
+          <h3><a class="doc-anchor" href="#doc-directives-7">#</a> <code>timeout</code></h3>
+          <p>Fire an action when the stream is idle for a duration (Ns/Nms/Nm).</p>
+          <pre><code class="lang-arb">timeout 5s alert "stream idle"</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-8">
+          <h3><a class="doc-anchor" href="#doc-directives-8">#</a> <code>out</code></h3>
+          <p>Apply a query pipeline to the stream and write it to stdout (modify a pipe).</p>
+          <pre><code class="lang-arb">out { where match(.q) }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-9">
+          <h3><a class="doc-anchor" href="#doc-directives-9">#</a> <code>grid</code></h3>
+          <p>Place a widget in the layout grid (-row/-col, -span/-rowspan/-colspan).</p>
+          <pre><code class="lang-arb">grid .cpu -row 0 -col 0 -span 2</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-10">
+          <h3><a class="doc-anchor" href="#doc-directives-10">#</a> <code>configure</code></h3>
+          <p>Merge new -opts into an already-declared widget (build-time; later keys win).</p>
+          <pre><code class="lang-arb">.cpu configure -max 200</code></pre>
+        </article>
       </section>
 
-      <section class="tutorial-section">
+      <section class="tutorial-section" id="ch-bind-expect-actions">
         <h2>Bind / expect actions</h2>
-        <table class="file-table">
-          <thead><tr><th>Action</th><th>Description</th></tr></thead>
-          <tbody>
-<tr><td><code>quit</code></td><td>Quit the TUI.</td></tr>
-<tr><td><code>beep</code></td><td>Ring the terminal bell (0x07 after the next draw).</td></tr>
-<tr><td><code>alert</code></td><td>Flash a message in the status bar for a few seconds.</td></tr>
-<tr><td><code>exec</code></td><td>Run a shell command, fire-and-forget; never waits or blocks the loop.</td></tr>
-<tr><td><code>flash</code></td><td>Tint a widget's border/accent for a few seconds (-color, default yellow).</td></tr>
-<tr><td><code>set</code></td><td>Set an input .name widget's value; with out { apply .name } reshapes the live pipe.</td></tr>
-          </tbody>
-        </table>
+        <article class="doc-entry" id="doc-bind-expect-actions-1">
+          <h3><a class="doc-anchor" href="#doc-bind-expect-actions-1">#</a> <code>quit</code></h3>
+          <p>Quit the TUI.</p>
+          <pre><code class="lang-arb">bind C-q quit</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-bind-expect-actions-2">
+          <h3><a class="doc-anchor" href="#doc-bind-expect-actions-2">#</a> <code>beep</code></h3>
+          <p>Ring the terminal bell (0x07 after the next draw).</p>
+          <pre><code class="lang-arb">expect /panic/ beep</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-bind-expect-actions-3">
+          <h3><a class="doc-anchor" href="#doc-bind-expect-actions-3">#</a> <code>alert</code></h3>
+          <p>Flash a message in the status bar for a few seconds.</p>
+          <pre><code class="lang-arb">timeout 5s alert "stream idle"</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-bind-expect-actions-4">
+          <h3><a class="doc-anchor" href="#doc-bind-expect-actions-4">#</a> <code>exec</code></h3>
+          <p>Run a shell command, fire-and-forget; never waits or blocks the loop.</p>
+          <pre><code class="lang-arb">expect /down/ exec "notify-send arb"</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-bind-expect-actions-5">
+          <h3><a class="doc-anchor" href="#doc-bind-expect-actions-5">#</a> <code>flash</code></h3>
+          <p>Tint a widget's border/accent for a few seconds (-color, default yellow).</p>
+          <pre><code class="lang-arb">expect /5\d\d/ flash .log red</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-bind-expect-actions-6">
+          <h3><a class="doc-anchor" href="#doc-bind-expect-actions-6">#</a> <code>set</code></h3>
+          <p>Set an input .name widget's value; with out { apply .name } reshapes the live pipe.</p>
+          <pre><code class="lang-arb">bind C-a set .q ERROR</code></pre>
+        </article>
       </section>
 
-      <section class="tutorial-section">
+      <section class="tutorial-section" id="ch-input-modes">
         <h2>Input modes</h2>
-        <table class="file-table">
-          <thead><tr><th>Input</th><th>Description</th></tr></thead>
-          <tbody>
-<tr><td><code>in</code></td><td>Begin the pipeline, reading the raw stdin stream line by line.</td></tr>
-<tr><td><code>in.json</code></td><td>Begin the pipeline reading stdin (JSON-lines intent; a marker, same as in).</td></tr>
-<tr><td><code>in.html</code></td><td>Begin the pipeline reading stdin as HTML (marker, same as in; use with sel/find).</td></tr>
-<tr><td><code>in.xml</code></td><td>Begin the pipeline reading stdin as XML (marker, same as in).</td></tr>
-<tr><td><code>in.logfmt</code></td><td>Begin the pipeline reading stdin as logfmt (marker, same as in).</td></tr>
-          </tbody>
-        </table>
+        <article class="doc-entry" id="doc-input-modes-1">
+          <h3><a class="doc-anchor" href="#doc-input-modes-1">#</a> <code>in</code></h3>
+          <p>Begin the pipeline, reading the raw stdin stream line by line.</p>
+          <pre><code class="lang-arb">source .log { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-2">
+          <h3><a class="doc-anchor" href="#doc-input-modes-2">#</a> <code>in.json</code></h3>
+          <p>Begin the pipeline reading stdin (JSON-lines intent; a marker, same as in).</p>
+          <pre><code class="lang-arb">source .s { in.json | field status | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-3">
+          <h3><a class="doc-anchor" href="#doc-input-modes-3">#</a> <code>in.html</code></h3>
+          <p>Begin the pipeline reading stdin as HTML (marker, same as in; use with sel/find).</p>
+          <pre><code class="lang-arb">source .s { in.html | find a | attr href }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-4">
+          <h3><a class="doc-anchor" href="#doc-input-modes-4">#</a> <code>in.xml</code></h3>
+          <p>Begin the pipeline reading stdin as XML (marker, same as in).</p>
+          <pre><code class="lang-arb">source .s { in.xml | find item | text }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-5">
+          <h3><a class="doc-anchor" href="#doc-input-modes-5">#</a> <code>in.logfmt</code></h3>
+          <p>Begin the pipeline reading stdin as logfmt (marker, same as in).</p>
+          <pre><code class="lang-arb">source .s { in.logfmt | field level | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-6">
+          <h3><a class="doc-anchor" href="#doc-input-modes-6">#</a> <code>in.csv</code></h3>
+          <p>Begin the pipeline treating stdin as CSV: the header row keys each data row into a JSON object (field NAME works).</p>
+          <pre><code class="lang-arb">source .rows { in.csv | field name | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-7">
+          <h3><a class="doc-anchor" href="#doc-input-modes-7">#</a> <code>in.tsv</code></h3>
+          <p>Begin the pipeline treating stdin as TSV: a tab-separated header + rows into JSON objects.</p>
+          <pre><code class="lang-arb">source .rows { in.tsv | field 2 | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-8">
+          <h3><a class="doc-anchor" href="#doc-input-modes-8">#</a> <code>in.yaml</code></h3>
+          <p>Begin the pipeline parsing stdin as YAML (--- multi-doc), emitting each document as a JSON line.</p>
+          <pre><code class="lang-arb">source .s { in.yaml | field status | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-9">
+          <h3><a class="doc-anchor" href="#doc-input-modes-9">#</a> <code>in.yml</code></h3>
+          <p>Alias of in.yaml: parse stdin as YAML into JSON lines.</p>
+          <pre><code class="lang-arb">source .s { in.yml | field status | tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-input-modes-10">
+          <h3><a class="doc-anchor" href="#doc-input-modes-10">#</a> <code>in.toml</code></h3>
+          <p>Begin the pipeline parsing stdin as one TOML document, emitted as a JSON object line.</p>
+          <pre><code class="lang-arb">source .cfg { in.toml | field version }</code></pre>
+        </article>
+      </section>
+
+      <section class="tutorial-section" id="ch-presets">
+        <h2>Stdlib presets</h2>
+        <p class="tutorial-note">Prebuilt dashboards shipped with arb; drop one in with <code>import NAME</code> or auto-selected by stream sniffing.</p>
+        <article class="doc-entry" id="doc-preset-1">
+          <h3><a class="doc-anchor" href="#doc-preset-1">#</a> <code>activemq</code></h3>
+          <p>broker queue depth/throughput dashboard from activemq dstat queues</p>
+          <pre><code class="lang-arb">activemq dstat queues | arb -p activemq</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-2">
+          <h3><a class="doc-anchor" href="#doc-preset-2">#</a> <code>ansible</code></h3>
+          <p>task recap by status and slowest hosts</p>
+          <pre><code class="lang-arb">ansible-playbook site.yml | arb -p ansible</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-3">
+          <h3><a class="doc-anchor" href="#doc-preset-3">#</a> <code>apache</code></h3>
+          <p>access-log status codes, top client IPs, request volume, and live requests</p>
+          <pre><code class="lang-arb">tail -f access.log | arb -p apache</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-4">
+          <h3><a class="doc-anchor" href="#doc-preset-4">#</a> <code>arangodb</code></h3>
+          <p>server-log dashboard: log-level mix, error count, live log tail</p>
+          <pre><code class="lang-arb">arangod --log.file - 2&gt;&amp;1 | arb -p arangodb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-5">
+          <h3><a class="doc-anchor" href="#doc-preset-5">#</a> <code>argocd</code></h3>
+          <p>GitOps app sync-status and health dashboard from `argocd app list`</p>
+          <pre><code class="lang-arb">argocd app list | arb -p argocd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-6">
+          <h3><a class="doc-anchor" href="#doc-preset-6">#</a> <code>aws</code></h3>
+          <p>CloudTrail event names, error counts, and request latency</p>
+          <pre><code class="lang-arb">aws cloudtrail lookup-events --output json | jq -c '.Events[]' | arb -p aws</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-7">
+          <h3><a class="doc-anchor" href="#doc-preset-7">#</a> <code>azure</code></h3>
+          <p>az CLI activity-log operations, statuses, and durations</p>
+          <pre><code class="lang-arb">az monitor activity-log list -o json | jq -c '.[]' | arb -p azure</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-8">
+          <h3><a class="doc-anchor" href="#doc-preset-8">#</a> <code>beanstalkd</code></h3>
+          <p>work-queue depth dashboard from the `stats` YAML dump</p>
+          <pre><code class="lang-arb">echo stats | nc localhost 11300 | arb -p beanstalkd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-9">
+          <h3><a class="doc-anchor" href="#doc-preset-9">#</a> <code>btrfs</code></h3>
+          <p>subvolume dashboard from btrfs subvolume list</p>
+          <pre><code class="lang-arb">btrfs subvolume list / | arb -p btrfs</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-10">
+          <h3><a class="doc-anchor" href="#doc-preset-10">#</a> <code>buildah</code></h3>
+          <p>OCI image inventory dashboard from buildah images output</p>
+          <pre><code class="lang-arb">buildah images | arb -p buildah</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-11">
+          <h3><a class="doc-anchor" href="#doc-preset-11">#</a> <code>buildkite</code></h3>
+          <p>build/job state dashboard from Buildkite builds JSON</p>
+          <pre><code class="lang-arb">buildkite-agent api builds | arb -p buildkite</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-12">
+          <h3><a class="doc-anchor" href="#doc-preset-12">#</a> <code>caddy</code></h3>
+          <p>HTTP status/latency/level dashboard from Caddy JSON access logs</p>
+          <pre><code class="lang-arb">tail -f access.json | arb -p caddy</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-13">
+          <h3><a class="doc-anchor" href="#doc-preset-13">#</a> <code>cassandra</code></h3>
+          <p>cluster node status dashboard from nodetool status</p>
+          <pre><code class="lang-arb">nodetool status | arb -p cassandra</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-14">
+          <h3><a class="doc-anchor" href="#doc-preset-14">#</a> <code>cdk</code></h3>
+          <p>CloudFormation resource-status dashboard from cdk deploy output</p>
+          <pre><code class="lang-arb">cdk deploy | arb -p cdk</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-15">
+          <h3><a class="doc-anchor" href="#doc-preset-15">#</a> <code>celery</code></h3>
+          <p>task events by state, runtimes, and slow-task tail</p>
+          <pre><code class="lang-arb">celery events --dump --json | arb -p celery</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-16">
+          <h3><a class="doc-anchor" href="#doc-preset-16">#</a> <code>chef</code></h3>
+          <p>chef-client run resource-action dashboard from converge output</p>
+          <pre><code class="lang-arb">chef-client | arb -p chef</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-17">
+          <h3><a class="doc-anchor" href="#doc-preset-17">#</a> <code>cilium</code></h3>
+          <p>endpoint policy/status dashboard from cilium endpoint list</p>
+          <pre><code class="lang-arb">cilium endpoint list | arb -p cilium</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-18">
+          <h3><a class="doc-anchor" href="#doc-preset-18">#</a> <code>circleci</code></h3>
+          <p>self-hosted runner fleet dashboard from circleci runner instance list --json</p>
+          <pre><code class="lang-arb">circleci runner instance list &lt;namespace&gt; --json | arb -p circleci</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-19">
+          <h3><a class="doc-anchor" href="#doc-preset-19">#</a> <code>clickhouse</code></h3>
+          <p>query_log dashboard from clickhouse-client TSV output</p>
+          <pre><code class="lang-arb">clickhouse-client -q "SELECT type, query_duration_ms, query FROM system.query_log" | arb -p clickhouse</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-20">
+          <h3><a class="doc-anchor" href="#doc-preset-20">#</a> <code>cloudformation</code></h3>
+          <p>stack status dashboard from list-stacks output</p>
+          <pre><code class="lang-arb">aws cloudformation list-stacks --query 'StackSummaries[].[StackStatus,StackName]' --output text | arb -p cloudformation</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-21">
+          <h3><a class="doc-anchor" href="#doc-preset-21">#</a> <code>cockroachdb</code></h3>
+          <p>node liveness/health dashboard from cockroach node status</p>
+          <pre><code class="lang-arb">cockroach node status --format=csv | arb -p cockroachdb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-22">
+          <h3><a class="doc-anchor" href="#doc-preset-22">#</a> <code>collectd</code></h3>
+          <p>live metric dashboard from collectd PUTVAL plaintext protocol</p>
+          <pre><code class="lang-arb">collectd -T | arb -p collectd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-23">
+          <h3><a class="doc-anchor" href="#doc-preset-23">#</a> <code>concourse</code></h3>
+          <p>CI build status dashboard from fly builds output</p>
+          <pre><code class="lang-arb">fly -t main builds | arb -p concourse</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-24">
+          <h3><a class="doc-anchor" href="#doc-preset-24">#</a> <code>conntrack</code></h3>
+          <p>live NAT/connection tracking by protocol, state, and byte volume</p>
+          <pre><code class="lang-arb">conntrack -E -o extended | arb -p conntrack</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-25">
+          <h3><a class="doc-anchor" href="#doc-preset-25">#</a> <code>consul</code></h3>
+          <p>service health check status and top failing checks</p>
+          <pre><code class="lang-arb">consul watch -type checks -format json | arb -p consul</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-26">
+          <h3><a class="doc-anchor" href="#doc-preset-26">#</a> <code>containerd</code></h3>
+          <p>task status dashboard from ctr tasks ls</p>
+          <pre><code class="lang-arb">ctr tasks ls | arb -p containerd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-27">
+          <h3><a class="doc-anchor" href="#doc-preset-27">#</a> <code>couchdb</code></h3>
+          <p>log-level, error count, and request dashboard from CouchDB logs</p>
+          <pre><code class="lang-arb">tail -f couch.log | arb -p couchdb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-28">
+          <h3><a class="doc-anchor" href="#doc-preset-28">#</a> <code>crictl</code></h3>
+          <p>CRI container state dashboard from crictl ps</p>
+          <pre><code class="lang-arb">crictl ps -a | arb -p crictl</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-29">
+          <h3><a class="doc-anchor" href="#doc-preset-29">#</a> <code>curl</code></h3>
+          <p>HTTP status distribution, avg transfer time, live request log</p>
+          <pre><code class="lang-arb">curl -sw 'code=%{http_code} time=%{time_total} size=%{size_download}\n' -o /dev/null $URLS | arb -p curl</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-30">
+          <h3><a class="doc-anchor" href="#doc-preset-30">#</a> <code>datadog</code></h3>
+          <p>agent check status dashboard from datadog-agent status</p>
+          <pre><code class="lang-arb">datadog-agent status | arb -p datadog</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-31">
+          <h3><a class="doc-anchor" href="#doc-preset-31">#</a> <code>dgraph</code></h3>
+          <p>server-log dashboard (glog severity tally + error count) from Dgraph Alpha/Zero logs</p>
+          <pre><code class="lang-arb">dgraph alpha 2&gt;&amp;1 | arb -p dgraph</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-32">
+          <h3><a class="doc-anchor" href="#doc-preset-32">#</a> <code>dig</code></h3>
+          <p>record types and TTLs from dig answer-section output</p>
+          <pre><code class="lang-arb">dig example.com ANY | arb -p dig</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-33">
+          <h3><a class="doc-anchor" href="#doc-preset-33">#</a> <code>dmesg</code></h3>
+          <p>kernel ring buffer: subsystem activity, error count, live log</p>
+          <pre><code class="lang-arb">dmesg | arb -p dmesg</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-34">
+          <h3><a class="doc-anchor" href="#doc-preset-34">#</a> <code>docker</code></h3>
+          <p>container CPU/memory dashboard from live docker stats</p>
+          <pre><code class="lang-arb">docker stats --no-stream | arb -p docker</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-35">
+          <h3><a class="doc-anchor" href="#doc-preset-35">#</a> <code>doctl</code></h3>
+          <p>droplet fleet dashboard from doctl compute droplet list</p>
+          <pre><code class="lang-arb">doctl compute droplet list | arb -p doctl</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-36">
+          <h3><a class="doc-anchor" href="#doc-preset-36">#</a> <code>drone</code></h3>
+          <p>Drone CI build dashboard from drone build ls output</p>
+          <pre><code class="lang-arb">drone build ls &lt;repo&gt; | arb -p drone</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-37">
+          <h3><a class="doc-anchor" href="#doc-preset-37">#</a> <code>duckdb</code></h3>
+          <p>query-result dashboard from duckdb CSV output</p>
+          <pre><code class="lang-arb">duckdb -csv -c "SELECT ..." | arb -p duckdb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-38">
+          <h3><a class="doc-anchor" href="#doc-preset-38">#</a> <code>dynamodb</code></h3>
+          <p>item dashboard from a DynamoDB scan/query JSON item stream</p>
+          <pre><code class="lang-arb">aws dynamodb scan --table T --output json | jq -c '.Items[]' | arb -p dynamodb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-39">
+          <h3><a class="doc-anchor" href="#doc-preset-39">#</a> <code>elasticsearch</code></h3>
+          <p>JSON log levels, mean query duration, and live log tail</p>
+          <pre><code class="lang-arb">tail -f /var/log/elasticsearch/es.json | arb -p elasticsearch</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-40">
+          <h3><a class="doc-anchor" href="#doc-preset-40">#</a> <code>envoy</code></h3>
+          <p>response codes, upstream latency, and top authorities</p>
+          <pre><code class="lang-arb">tail -f access.json | arb -p envoy</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-41">
+          <h3><a class="doc-anchor" href="#doc-preset-41">#</a> <code>etcd</code></h3>
+          <p>cluster log levels, error/warn count, and live message tail (zap JSON)</p>
+          <pre><code class="lang-arb">etcd 2&gt;&amp;1 | arb -p etcd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-42">
+          <h3><a class="doc-anchor" href="#doc-preset-42">#</a> <code>fail2ban</code></h3>
+          <p>banned IPs, jail activity, and ban-attempt counts from the log</p>
+          <pre><code class="lang-arb">tail -f /var/log/fail2ban.log | arb -p fail2ban</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-43">
+          <h3><a class="doc-anchor" href="#doc-preset-43">#</a> <code>fluxcd</code></h3>
+          <p>reconciliation health from flux get output (ready/suspended tally, resource count, messages)</p>
+          <pre><code class="lang-arb">flux get kustomizations -A | arb -p fluxcd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-44">
+          <h3><a class="doc-anchor" href="#doc-preset-44">#</a> <code>fly</code></h3>
+          <p>live dashboard from Fly.io machine logs (level + region tally, raw tail)</p>
+          <pre><code class="lang-arb">fly logs | arb -p fly</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-45">
+          <h3><a class="doc-anchor" href="#doc-preset-45">#</a> <code>gcloud</code></h3>
+          <p>compute instance states and error-log severity mix</p>
+          <pre><code class="lang-arb">gcloud compute instances list --format=json | arb -p gcloud</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-46">
+          <h3><a class="doc-anchor" href="#doc-preset-46">#</a> <code>gh</code></h3>
+          <p>pull-request states, open count, and recent titles</p>
+          <pre><code class="lang-arb">gh pr list --state all --json state,title,additions | arb -p gh</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-47">
+          <h3><a class="doc-anchor" href="#doc-preset-47">#</a> <code>git</code></h3>
+          <p>recent commit activity from git log</p>
+          <pre><code class="lang-arb">git log --oneline | arb -p git</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-48">
+          <h3><a class="doc-anchor" href="#doc-preset-48">#</a> <code>gitlabrunner</code></h3>
+          <p>CI job dashboard from gitlab-runner JSON structured logs</p>
+          <pre><code class="lang-arb">gitlab-runner run --log-format json | arb -p gitlabrunner</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-49">
+          <h3><a class="doc-anchor" href="#doc-preset-49">#</a> <code>grafana</code></h3>
+          <p>server log dashboard from Grafana JSON structured logs</p>
+          <pre><code class="lang-arb">grafana server | arb -p grafana</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-50">
+          <h3><a class="doc-anchor" href="#doc-preset-50">#</a> <code>gunicorn</code></h3>
+          <p>response status codes, slow requests, and live access log</p>
+          <pre><code class="lang-arb">gunicorn app:app --access-logformat '%(s)s %(D)s %(U)s' 2&gt;&amp;1 | arb -p gunicorn</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-51">
+          <h3><a class="doc-anchor" href="#doc-preset-51">#</a> <code>haproxy</code></h3>
+          <p>JSON access log: status codes, backend latency, live requests</p>
+          <pre><code class="lang-arb">tail -f /var/log/haproxy.json | arb -p haproxy</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-52">
+          <h3><a class="doc-anchor" href="#doc-preset-52">#</a> <code>hcloud</code></h3>
+          <p>server status dashboard from hcloud server list</p>
+          <pre><code class="lang-arb">hcloud server list | arb -p hcloud</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-53">
+          <h3><a class="doc-anchor" href="#doc-preset-53">#</a> <code>helm</code></h3>
+          <p>release status dashboard from helm list JSON</p>
+          <pre><code class="lang-arb">helm list -A -o json | arb -p helm</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-54">
+          <h3><a class="doc-anchor" href="#doc-preset-54">#</a> <code>heroku</code></h3>
+          <p>router-log dashboard: HTTP status mix, per-dyno traffic, platform error codes</p>
+          <pre><code class="lang-arb">heroku logs -t | arb -p heroku</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-55">
+          <h3><a class="doc-anchor" href="#doc-preset-55">#</a> <code>htop</code></h3>
+          <p>process state mix, mean CPU load, and busiest processes</p>
+          <pre><code class="lang-arb">htop -C | arb -p htop</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-56">
+          <h3><a class="doc-anchor" href="#doc-preset-56">#</a> <code>http</code></h3>
+          <p>access-log dashboard: status codes, top paths, live tail (JSON logs).</p>
+          <pre><code class="lang-arb">tail -f access.json | arb -p http</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-57">
+          <h3><a class="doc-anchor" href="#doc-preset-57">#</a> <code>icinga</code></h3>
+          <p>service check-state dashboard from icingacli monitoring list</p>
+          <pre><code class="lang-arb">icingacli monitoring list | arb -p icinga</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-58">
+          <h3><a class="doc-anchor" href="#doc-preset-58">#</a> <code>iftop</code></h3>
+          <p>bandwidth-by-host dashboard from iftop text-mode output</p>
+          <pre><code class="lang-arb">iftop -t -s 5 | arb -p iftop</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-59">
+          <h3><a class="doc-anchor" href="#doc-preset-59">#</a> <code>influxdb</code></h3>
+          <p>Flux query dashboard from influx annotated-CSV output</p>
+          <pre><code class="lang-arb">influx query --raw 'from(bucket:"x")|&gt;range(start:-1h)' | arb -p influxdb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-60">
+          <h3><a class="doc-anchor" href="#doc-preset-60">#</a> <code>iostat</code></h3>
+          <p>per-device I/O: tps by device, peak read throughput, raw stream</p>
+          <pre><code class="lang-arb">iostat 1 | arb -p iostat</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-61">
+          <h3><a class="doc-anchor" href="#doc-preset-61">#</a> <code>iptables</code></h3>
+          <p>packet counts by target and high-traffic source addresses</p>
+          <pre><code class="lang-arb">iptables -L -v -n | arb -p iptables</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-62">
+          <h3><a class="doc-anchor" href="#doc-preset-62">#</a> <code>istioctl</code></h3>
+          <p>proxy sync-status dashboard from istioctl proxy-status</p>
+          <pre><code class="lang-arb">istioctl proxy-status | arb -p istioctl</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-63">
+          <h3><a class="doc-anchor" href="#doc-preset-63">#</a> <code>jaeger</code></h3>
+          <p>span dashboard from Jaeger JSON trace output</p>
+          <pre><code class="lang-arb">jaeger query --json | arb -p jaeger</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-64">
+          <h3><a class="doc-anchor" href="#doc-preset-64">#</a> <code>jenkins</code></h3>
+          <p>CI job status dashboard from Jenkins REST API job JSON</p>
+          <pre><code class="lang-arb">curl -s .../api/json?tree=jobs[name,color] | jq -c '.jobs[]' | arb -p jenkins</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-65">
+          <h3><a class="doc-anchor" href="#doc-preset-65">#</a> <code>journalctl</code></h3>
+          <p>syslog priority levels, top units, and error count</p>
+          <pre><code class="lang-arb">journalctl -o json -f | arb -p journalctl</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-66">
+          <h3><a class="doc-anchor" href="#doc-preset-66">#</a> <code>json</code></h3>
+          <p>shape of a JSON-lines stream: key frequency + live tail.</p>
+          <pre><code class="lang-arb">cat events.json | arb -p json</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-67">
+          <h3><a class="doc-anchor" href="#doc-preset-67">#</a> <code>k8s</code></h3>
+          <p>pod status breakdown from kubectl get pods</p>
+          <pre><code class="lang-arb">kubectl get pods | arb -p k8s</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-68">
+          <h3><a class="doc-anchor" href="#doc-preset-68">#</a> <code>kafka</code></h3>
+          <p>consumer-group lag: per-topic message counts, peak lag, raw rows</p>
+          <pre><code class="lang-arb">kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group app | arb -p kafka</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-69">
+          <h3><a class="doc-anchor" href="#doc-preset-69">#</a> <code>kubectx</code></h3>
+          <p>Kubernetes context inventory dashboard from kubectx output</p>
+          <pre><code class="lang-arb">kubectx | arb -p kubectx</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-70">
+          <h3><a class="doc-anchor" href="#doc-preset-70">#</a> <code>kustomize</code></h3>
+          <p>resource kind/apiVersion dashboard from kustomize build YAML</p>
+          <pre><code class="lang-arb">kustomize build overlays/prod | arb -p kustomize</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-71">
+          <h3><a class="doc-anchor" href="#doc-preset-71">#</a> <code>lighttpd</code></h3>
+          <p>HTTP status + client dashboard from combined access logs</p>
+          <pre><code class="lang-arb">tail -f access.log | arb -p lighttpd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-72">
+          <h3><a class="doc-anchor" href="#doc-preset-72">#</a> <code>linkerd</code></h3>
+          <p>mesh success-rate &amp; RPS dashboard from linkerd viz stat</p>
+          <pre><code class="lang-arb">linkerd viz stat deploy | arb -p linkerd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-73">
+          <h3><a class="doc-anchor" href="#doc-preset-73">#</a> <code>linode</code></h3>
+          <p>instance status/region dashboard from linode-cli text output</p>
+          <pre><code class="lang-arb">linode linodes list --text | arb -p linode</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-74">
+          <h3><a class="doc-anchor" href="#doc-preset-74">#</a> <code>logs</code></h3>
+          <p>level breakdown + live tail for a JSON log stream.</p>
+          <pre><code class="lang-arb">kubectl logs -f deploy/api | arb -p logs</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-75">
+          <h3><a class="doc-anchor" href="#doc-preset-75">#</a> <code>loki</code></h3>
+          <p>log-level dashboard from logcli query output</p>
+          <pre><code class="lang-arb">logcli query '{job="app"}' --tail | arb -p loki</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-76">
+          <h3><a class="doc-anchor" href="#doc-preset-76">#</a> <code>mariadb</code></h3>
+          <p>connection command mix from SHOW PROCESSLIST output</p>
+          <pre><code class="lang-arb">mariadb -e "SHOW PROCESSLIST" | arb -p mariadb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-77">
+          <h3><a class="doc-anchor" href="#doc-preset-77">#</a> <code>memcached</code></h3>
+          <p>command mix and slow-item sizes from stats output</p>
+          <pre><code class="lang-arb">memcached-tool 127.0.0.1:11211 stats | arb -p memcached</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-78">
+          <h3><a class="doc-anchor" href="#doc-preset-78">#</a> <code>mongodb</code></h3>
+          <p>mongod JSON log: severity mix, components, and slow-op messages</p>
+          <pre><code class="lang-arb">tail -f /var/log/mongodb/mongod.log | arb -p mongodb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-79">
+          <h3><a class="doc-anchor" href="#doc-preset-79">#</a> <code>mssql</code></h3>
+          <p>live session/request dashboard from sqlcmd output</p>
+          <pre><code class="lang-arb">sqlcmd -Q "SELECT session_id,status,wait_type FROM sys.dm_exec_requests" | arb -p mssql</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-80">
+          <h3><a class="doc-anchor" href="#doc-preset-80">#</a> <code>mtr</code></h3>
+          <p>per-hop latency and packet-loss dashboard from an mtr report</p>
+          <pre><code class="lang-arb">mtr -r target | arb -p mtr</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-81">
+          <h3><a class="doc-anchor" href="#doc-preset-81">#</a> <code>mysql</code></h3>
+          <p>live SHOW PROCESSLIST: command mix, longest query time, running SELECTs</p>
+          <pre><code class="lang-arb">mysql -e 'SHOW PROCESSLIST' | arb -p mysql</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-82">
+          <h3><a class="doc-anchor" href="#doc-preset-82">#</a> <code>nagios</code></h3>
+          <p>service-state dashboard (OK/WARNING/CRITICAL/UNKNOWN) from Nagios status output</p>
+          <pre><code class="lang-arb">nagios status.dat | arb -p nagios</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-83">
+          <h3><a class="doc-anchor" href="#doc-preset-83">#</a> <code>nats</code></h3>
+          <p>subject traffic dashboard from a live nats subscription</p>
+          <pre><code class="lang-arb">nats sub "&gt;" | arb -p nats</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-84">
+          <h3><a class="doc-anchor" href="#doc-preset-84">#</a> <code>neo4j</code></h3>
+          <p>node-label distribution from cypher-shell CSV query results</p>
+          <pre><code class="lang-arb">cypher-shell --format plain "MATCH (n) RETURN labels(n)[0] AS label, n.name AS name" | arb -p neo4j</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-85">
+          <h3><a class="doc-anchor" href="#doc-preset-85">#</a> <code>netdata</code></h3>
+          <p>realtime health-alarm dashboard from the alarms JSON stream</p>
+          <pre><code class="lang-arb">curl -s localhost:19999/api/v1/alarms?all | arb -p netdata</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-86">
+          <h3><a class="doc-anchor" href="#doc-preset-86">#</a> <code>nethogs</code></h3>
+          <p>per-process bandwidth dashboard from tracemode output</p>
+          <pre><code class="lang-arb">nethogs -t | arb -p nethogs</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-87">
+          <h3><a class="doc-anchor" href="#doc-preset-87">#</a> <code>netstat</code></h3>
+          <p>TCP/UDP connection dashboard from netstat -an</p>
+          <pre><code class="lang-arb">netstat -an | arb -p netstat</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-88">
+          <h3><a class="doc-anchor" href="#doc-preset-88">#</a> <code>newrelic</code></h3>
+          <p>APM entity health dashboard from newrelic CLI JSON output</p>
+          <pre><code class="lang-arb">newrelic apm application list | arb -p newrelic</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-89">
+          <h3><a class="doc-anchor" href="#doc-preset-89">#</a> <code>nginx</code></h3>
+          <p>access-log dashboard from JSON access logs</p>
+          <pre><code class="lang-arb">tail -f access.json | arb -p nginx</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-90">
+          <h3><a class="doc-anchor" href="#doc-preset-90">#</a> <code>nmap</code></h3>
+          <p>port/state/service dashboard from a standard nmap scan</p>
+          <pre><code class="lang-arb">nmap -p- host | arb -p nmap</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-91">
+          <h3><a class="doc-anchor" href="#doc-preset-91">#</a> <code>nomad</code></h3>
+          <p>allocation client statuses and slow evals from event-stream JSON</p>
+          <pre><code class="lang-arb">nomad monitor -json | arb -p nomad</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-92">
+          <h3><a class="doc-anchor" href="#doc-preset-92">#</a> <code>nsq</code></h3>
+          <p>topic/channel depth + throughput from nsq_stat polling output</p>
+          <pre><code class="lang-arb">nsq_stat --topic=events | arb -p nsq</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-93">
+          <h3><a class="doc-anchor" href="#doc-preset-93">#</a> <code>nums</code></h3>
+          <p>quick stats for a numeric stream.</p>
+          <pre><code class="lang-arb">seq 1 100 | arb -p nums</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-94">
+          <h3><a class="doc-anchor" href="#doc-preset-94">#</a> <code>nvme</code></h3>
+          <p>NVMe device inventory dashboard from `nvme list`</p>
+          <pre><code class="lang-arb">nvme list | arb -p nvme</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-95">
+          <h3><a class="doc-anchor" href="#doc-preset-95">#</a> <code>opensearch</code></h3>
+          <p>cluster index health dashboard from _cat/indices output</p>
+          <pre><code class="lang-arb">curl -s localhost:9200/_cat/indices?v | arb -p opensearch</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-96">
+          <h3><a class="doc-anchor" href="#doc-preset-96">#</a> <code>packer</code></h3>
+          <p>build dashboard from machine-readable output</p>
+          <pre><code class="lang-arb">packer build -machine-readable . | arb -p packer</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-97">
+          <h3><a class="doc-anchor" href="#doc-preset-97">#</a> <code>pgbouncer</code></h3>
+          <p>connection-pool log: severity mix, top databases, error rate</p>
+          <pre><code class="lang-arb">tail -f pgbouncer.log | arb -p pgbouncer</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-98">
+          <h3><a class="doc-anchor" href="#doc-preset-98">#</a> <code>phpfpm</code></h3>
+          <p>worker-state dashboard from a PHP-FPM full status dump</p>
+          <pre><code class="lang-arb">SCRIPT_NAME=/status cgi-fcgi -bind -connect 127.0.0.1:9000 | arb -p phpfpm</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-99">
+          <h3><a class="doc-anchor" href="#doc-preset-99">#</a> <code>podman</code></h3>
+          <p>rootless container status/image dashboard from podman ps</p>
+          <pre><code class="lang-arb">podman ps | arb -p podman</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-100">
+          <h3><a class="doc-anchor" href="#doc-preset-100">#</a> <code>postgres</code></h3>
+          <p>jsonlog severity mix, slowest query duration, live message tail</p>
+          <pre><code class="lang-arb">tail -f /var/log/postgresql/postgresql.json | arb -p postgres</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-101">
+          <h3><a class="doc-anchor" href="#doc-preset-101">#</a> <code>prometheus</code></h3>
+          <p>exposition metrics: sample counts by name and value range</p>
+          <pre><code class="lang-arb">curl -s localhost:9090/metrics | arb -p prometheus</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-102">
+          <h3><a class="doc-anchor" href="#doc-preset-102">#</a> <code>ps</code></h3>
+          <p>process snapshot: process count, owners, total CPU load</p>
+          <pre><code class="lang-arb">ps aux | arb -p ps</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-103">
+          <h3><a class="doc-anchor" href="#doc-preset-103">#</a> <code>pulsar</code></h3>
+          <p>live event dashboard from JSON messages consumed off a Pulsar topic</p>
+          <pre><code class="lang-arb">pulsar-client consume -n 0 -s sub my-topic | arb -p pulsar</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-104">
+          <h3><a class="doc-anchor" href="#doc-preset-104">#</a> <code>pulumi</code></h3>
+          <p>resource operation dashboard from pulumi preview output</p>
+          <pre><code class="lang-arb">pulumi preview | arb -p pulumi</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-105">
+          <h3><a class="doc-anchor" href="#doc-preset-105">#</a> <code>puma</code></h3>
+          <p>HTTP status/throughput dashboard from Puma's common-log request output</p>
+          <pre><code class="lang-arb">puma 2&gt;&amp;1 | arb -p puma</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-106">
+          <h3><a class="doc-anchor" href="#doc-preset-106">#</a> <code>puppet</code></h3>
+          <p>severity/change dashboard from a puppet agent run</p>
+          <pre><code class="lang-arb">puppet agent -t | arb -p puppet</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-107">
+          <h3><a class="doc-anchor" href="#doc-preset-107">#</a> <code>questdb</code></h3>
+          <p>query-result dashboard from CSV exported via the /exp REST endpoint</p>
+          <pre><code class="lang-arb">curl -G 'http://localhost:9000/exp' --data-urlencode 'query=select * from trades' | arb -p questdb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-108">
+          <h3><a class="doc-anchor" href="#doc-preset-108">#</a> <code>rabbitmq</code></h3>
+          <p>queue depths, consumer totals, and per-queue state from rabbitmqctl</p>
+          <pre><code class="lang-arb">rabbitmqctl list_queues name messages consumers state | arb -p rabbitmq</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-109">
+          <h3><a class="doc-anchor" href="#doc-preset-109">#</a> <code>rclone</code></h3>
+          <p>object-store listing dashboard from rclone ls output</p>
+          <pre><code class="lang-arb">rclone ls remote:bucket | arb -p rclone</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-110">
+          <h3><a class="doc-anchor" href="#doc-preset-110">#</a> <code>redis</code></h3>
+          <p>command frequency from redis-cli MONITOR</p>
+          <pre><code class="lang-arb">redis-cli MONITOR | arb -p redis</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-111">
+          <h3><a class="doc-anchor" href="#doc-preset-111">#</a> <code>riak</code></h3>
+          <p>cluster membership dashboard from riak-admin member-status</p>
+          <pre><code class="lang-arb">riak-admin member-status | arb -p riak</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-112">
+          <h3><a class="doc-anchor" href="#doc-preset-112">#</a> <code>salt</code></h3>
+          <p>minion return dashboard from salt CLI output</p>
+          <pre><code class="lang-arb">salt '*' test.ping | arb -p salt</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-113">
+          <h3><a class="doc-anchor" href="#doc-preset-113">#</a> <code>sar</code></h3>
+          <p>CPU utilization, load, and memory pressure from sar samples</p>
+          <pre><code class="lang-arb">sar -u -q -r 1 | arb -p sar</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-114">
+          <h3><a class="doc-anchor" href="#doc-preset-114">#</a> <code>scaleway</code></h3>
+          <p>instance server state dashboard from scw list output</p>
+          <pre><code class="lang-arb">scw instance server list | arb -p scaleway</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-115">
+          <h3><a class="doc-anchor" href="#doc-preset-115">#</a> <code>scylla</code></h3>
+          <p>ScyllaDB cluster node status dashboard from nodetool status</p>
+          <pre><code class="lang-arb">nodetool status | arb -p scylla</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-116">
+          <h3><a class="doc-anchor" href="#doc-preset-116">#</a> <code>sentry</code></h3>
+          <p>error/event dashboard from sentry-cli event listings</p>
+          <pre><code class="lang-arb">sentry-cli events list | arb -p sentry</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-117">
+          <h3><a class="doc-anchor" href="#doc-preset-117">#</a> <code>sidekiq</code></h3>
+          <p>job throughput by class, failures, and slow-job durations</p>
+          <pre><code class="lang-arb">sidekiqmon --json | arb -p sidekiq</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-118">
+          <h3><a class="doc-anchor" href="#doc-preset-118">#</a> <code>skopeo</code></h3>
+          <p>copy progress dashboard from live skopeo copy output</p>
+          <pre><code class="lang-arb">skopeo copy docker://src docker://dst | arb -p skopeo</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-119">
+          <h3><a class="doc-anchor" href="#doc-preset-119">#</a> <code>smartctl</code></h3>
+          <p>SMART attribute health dashboard from smartctl -A output</p>
+          <pre><code class="lang-arb">smartctl -A /dev/sda | arb -p smartctl</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-120">
+          <h3><a class="doc-anchor" href="#doc-preset-120">#</a> <code>spinnaker</code></h3>
+          <p>pipeline execution status dashboard from spin CLI execution JSON</p>
+          <pre><code class="lang-arb">spin pipeline execution list --application foo | arb -p spinnaker</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-121">
+          <h3><a class="doc-anchor" href="#doc-preset-121">#</a> <code>sqlite</code></h3>
+          <p>query-result dashboard from pipe-separated sqlite3 output</p>
+          <pre><code class="lang-arb">sqlite3 app.db 'SELECT level,msg FROM logs' | arb -p sqlite</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-122">
+          <h3><a class="doc-anchor" href="#doc-preset-122">#</a> <code>ss</code></h3>
+          <p>TCP socket connection states and recv-queue backlog</p>
+          <pre><code class="lang-arb">ss -tan | arb -p ss</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-123">
+          <h3><a class="doc-anchor" href="#doc-preset-123">#</a> <code>statsd</code></h3>
+          <p>metric-type and top-metric tally plus live stream from the statsd line protocol</p>
+          <pre><code class="lang-arb">nc -lku 8125 | arb -p statsd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-124">
+          <h3><a class="doc-anchor" href="#doc-preset-124">#</a> <code>stern</code></h3>
+          <p>per-container log volume + error count from live multi-pod tail</p>
+          <pre><code class="lang-arb">stern . | arb -p stern</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-125">
+          <h3><a class="doc-anchor" href="#doc-preset-125">#</a> <code>supervisor</code></h3>
+          <p>process states, uptime, and event stream</p>
+          <pre><code class="lang-arb">supervisorctl status --json | arb -p supervisor</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-126">
+          <h3><a class="doc-anchor" href="#doc-preset-126">#</a> <code>systemd</code></h3>
+          <p>journal priority breakdown from journalctl JSON</p>
+          <pre><code class="lang-arb">journalctl -o json | arb -p systemd</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-127">
+          <h3><a class="doc-anchor" href="#doc-preset-127">#</a> <code>table</code></h3>
+          <p>columnar view of whitespace-delimited input (ps aux, ls -l, df, …).</p>
+          <pre><code class="lang-arb">ps aux | arb -p table</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-128">
+          <h3><a class="doc-anchor" href="#doc-preset-128">#</a> <code>tcpdump</code></h3>
+          <p>live packet dashboard (protocol mix, packet rate, raw capture)</p>
+          <pre><code class="lang-arb">tcpdump -nn -l | arb -p tcpdump</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-129">
+          <h3><a class="doc-anchor" href="#doc-preset-129">#</a> <code>teamcity</code></h3>
+          <p>build status/state dashboard from TeamCity REST builds JSON</p>
+          <pre><code class="lang-arb">curl -s "$TC/app/rest/builds" -H 'Accept: application/json' | jq -c '.build[]' | arb -p teamcity</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-130">
+          <h3><a class="doc-anchor" href="#doc-preset-130">#</a> <code>tekton</code></h3>
+          <p>pipelinerun status dashboard from tkn pipelinerun list</p>
+          <pre><code class="lang-arb">tkn pipelinerun list | arb -p tekton</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-131">
+          <h3><a class="doc-anchor" href="#doc-preset-131">#</a> <code>telegraf</code></h3>
+          <p>InfluxDB line-protocol dashboard from telegraf --test</p>
+          <pre><code class="lang-arb">telegraf --test | arb -p telegraf</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-132">
+          <h3><a class="doc-anchor" href="#doc-preset-132">#</a> <code>tempo</code></h3>
+          <p>trace-backend log dashboard (level tally + error count) from JSON logs</p>
+          <pre><code class="lang-arb">tempo 2&gt;&amp;1 | arb -p tempo</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-133">
+          <h3><a class="doc-anchor" href="#doc-preset-133">#</a> <code>terraform</code></h3>
+          <p>plan change types, resource providers, and apply durations</p>
+          <pre><code class="lang-arb">terraform plan -json | arb -p terraform</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-134">
+          <h3><a class="doc-anchor" href="#doc-preset-134">#</a> <code>tidb</code></h3>
+          <p>cluster component status/role dashboard from tiup cluster display</p>
+          <pre><code class="lang-arb">tiup cluster display mycluster | arb -p tidb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-135">
+          <h3><a class="doc-anchor" href="#doc-preset-135">#</a> <code>timescaledb</code></h3>
+          <p>hypertable chunk &amp; compression dashboard from timescaledb_information.chunks</p>
+          <pre><code class="lang-arb">psql --csv -c "SELECT hypertable_name, is_compressed, chunk_name FROM timescaledb_information.chunks" | arb -p timescaledb</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-136">
+          <h3><a class="doc-anchor" href="#doc-preset-136">#</a> <code>tomcat</code></h3>
+          <p>HTTP status/request dashboard from Tomcat access logs</p>
+          <pre><code class="lang-arb">tail -f logs/localhost_access_log.txt | arb -p tomcat</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-137">
+          <h3><a class="doc-anchor" href="#doc-preset-137">#</a> <code>top</code></h3>
+          <p>process stats (feed `ps aux`): total %CPU gauge + live process list.</p>
+          <pre><code class="lang-arb">ps aux | arb -p top</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-138">
+          <h3><a class="doc-anchor" href="#doc-preset-138">#</a> <code>traefik</code></h3>
+          <p>reverse-proxy dashboard from Traefik JSON access logs</p>
+          <pre><code class="lang-arb">tail -f access.log | arb -p traefik</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-139">
+          <h3><a class="doc-anchor" href="#doc-preset-139">#</a> <code>tshark</code></h3>
+          <p>protocol mix and top talkers from default packet output</p>
+          <pre><code class="lang-arb">tshark -r cap.pcap | arb -p tshark</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-140">
+          <h3><a class="doc-anchor" href="#doc-preset-140">#</a> <code>uwsgi</code></h3>
+          <p>worker status and request dashboard from JSON stats output</p>
+          <pre><code class="lang-arb">uwsgi --connect-and-read /tmp/stats.sock | arb -p uwsgi</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-141">
+          <h3><a class="doc-anchor" href="#doc-preset-141">#</a> <code>vagrant</code></h3>
+          <p>VM state and provider dashboard from vagrant global-status</p>
+          <pre><code class="lang-arb">vagrant global-status | arb -p vagrant</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-142">
+          <h3><a class="doc-anchor" href="#doc-preset-142">#</a> <code>varnish</code></h3>
+          <p>cache hit/miss distribution and slow backend responses</p>
+          <pre><code class="lang-arb">varnishncsa -F '%{VCL_Log:hit}x %{Varnish:time_firstbyte}x %U' | arb -p varnish</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-143">
+          <h3><a class="doc-anchor" href="#doc-preset-143">#</a> <code>vault</code></h3>
+          <p>audit-log request paths, latency, and error rate</p>
+          <pre><code class="lang-arb">vault audit -format=json | arb -p vault</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-144">
+          <h3><a class="doc-anchor" href="#doc-preset-144">#</a> <code>velero</code></h3>
+          <p>backup status dashboard from velero backup get</p>
+          <pre><code class="lang-arb">velero backup get | arb -p velero</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-145">
+          <h3><a class="doc-anchor" href="#doc-preset-145">#</a> <code>victoriametrics</code></h3>
+          <p>TSDB self-metrics dashboard from the /metrics exposition endpoint</p>
+          <pre><code class="lang-arb">curl -s http://localhost:8428/metrics | arb -p victoriametrics</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-146">
+          <h3><a class="doc-anchor" href="#doc-preset-146">#</a> <code>vmstat</code></h3>
+          <p>CPU idle %, free memory, and run-queue length distribution</p>
+          <pre><code class="lang-arb">vmstat 1 | arb -p vmstat</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-147">
+          <h3><a class="doc-anchor" href="#doc-preset-147">#</a> <code>vnstat</code></h3>
+          <p>live rx/tx network rate dashboard from traffic sampling</p>
+          <pre><code class="lang-arb">vnstat -tr | arb -p vnstat</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-148">
+          <h3><a class="doc-anchor" href="#doc-preset-148">#</a> <code>vultr</code></h3>
+          <p>instance status/region dashboard from vultr-cli instance list</p>
+          <pre><code class="lang-arb">vultr-cli instance list | arb -p vultr</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-149">
+          <h3><a class="doc-anchor" href="#doc-preset-149">#</a> <code>woodpecker</code></h3>
+          <p>pipeline status/branch dashboard from woodpecker pipeline list output</p>
+          <pre><code class="lang-arb">woodpecker pipeline ls owner/repo | arb -p woodpecker</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-150">
+          <h3><a class="doc-anchor" href="#doc-preset-150">#</a> <code>zabbix</code></h3>
+          <p>problem/alert dashboard from exported Zabbix problem JSON</p>
+          <pre><code class="lang-arb">zabbix_get -s host -k problems.json | arb -p zabbix</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-151">
+          <h3><a class="doc-anchor" href="#doc-preset-151">#</a> <code>zfs</code></h3>
+          <p>dataset dashboard from zfs list (pool tally, count, dataset names)</p>
+          <pre><code class="lang-arb">zfs list | arb -p zfs</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-preset-152">
+          <h3><a class="doc-anchor" href="#doc-preset-152">#</a> <code>zipkin</code></h3>
+          <p>span dashboard from Zipkin JSON spans (name, kind, duration)</p>
+          <pre><code class="lang-arb">curl -s localhost:9411/api/v2/trace/&lt;id&gt; | jq -c '.[]' | arb -p zipkin</code></pre>
+        </article>
       </section>
 
       <section class="tutorial-section">
