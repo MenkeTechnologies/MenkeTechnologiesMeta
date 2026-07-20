@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 220 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 221 candidates (numbered entries through 174 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -2462,6 +2462,34 @@ its audit (full scan once → hooks-only), not as a novelty.
 
 **173. zvcs — a git-shadowing superset that makes many-writer, submodule-heavy version control lock-free via a per-repo FIFO coordinator daemon** — `high`
 Stock git guards index writes with an `O_EXCL` `.git/index.lock`: a contended writer does not wait, it *fails* (`fatal: Unable to create '.git/index.lock': File exists`), so under many concurrent automated agents committing across a meta-repo of nested submodules the lock becomes a thundering herd of retries with no fairness — the exact contention documented throughout this project's own history. zvcs ships a single binary named **`git`** that shadows stock git on `PATH`; git-compatible porcelain is served natively through a vendored port of **gitoxide** (`src/ported/gix-*`, ~1,387 Rust files) so tools on PATH (RustRover, `gh`, cargo) see identical behavior against the same on-disk `.git`. On top of that it adds superset verbs stock git structurally cannot have: **`git zdaemon`** — a per-repo coordinator daemon that replaces the `index.lock` flock with a FIFO userspace barrier (a single `worker_loop` owns the abstract critical section and drains an mpsc channel, keeping a `VecDeque` of requests in strict arrival order; clients speak `ACQUIRE`/`GRANTED`/`RELEASE` over a Unix-domain socket and a dropped or EOF'd connection auto-releases), so N writers serialize first-come-first-served instead of racing; **`git zsync`** — reconcile every submodule to its tracked mainline (`origin/main` / `origin/master`), fast-forward only, keeping it *attached* so detached HEAD never happens; and **`git zbump`** — forward-only submodule gitlink bumps that advance a parent's pointer only when the submodule's new HEAD is a descendant of the recorded one. *Basis:* `zvcs/src/extensions/src/superset/zdaemon.rs` (`worker_loop`, the `VecDeque` FIFO queue, the `ACQUIRE`/`RELEASE` protocol over `UnixListener`/`UnixStream` + `mpsc`); `src/extensions/src/lock.rs` (`RepoLock::acquire` and the RAII `Drop` that emits `RELEASE`); `src/extensions/src/superset/zsync.rs`, `zbump.rs`; `src/extensions/src/dispatch.rs` (superset-verb vs git-compat routing); git engine at `src/ported/gix-*`; the shadow binary is declared `[[bin]] name = "git"` in `src/extensions/Cargo.toml`. **Test-verified:** `src/extensions/tests/coordination.rs::daemon_serializes_concurrent_writers` spawns the real `git zdaemon start`, races N threads that each `RepoLock::acquire` → mark occupancy → release, and asserts the peak observed critical-section occupancy is exactly 1 (a broken lock would exceed 1). *Caveat:* gitoxide (git in Rust) predates this and is the vendored engine, not the claim; daemon-mediated locking exists in other VCS. The candidate-first is the packaging — a **git-shadowing** superset whose FIFO `zdaemon` makes many-writer *automated* workflows over nested submodules lock-free and fair, with `zsync` / `zbump` codifying the attached, forward-only submodule discipline this project already enforces by hand. "None found," not proven; search not exhaustive.
+
+**174. First git-superset VCS held to git compatibility by a differential fuzz harness asserting byte-level parity — stdout, exit code, and resulting repository state — against stock git as the oracle** — `high`
+The companion claim to #173: where that entry is zvcs's *coordination* superset, this is the instrument
+that keeps its git-compat floor honest, in the exact family as #39 (zsh wordcode parity) / #116 (Python
+Powerline parity) / #55 (Perl `--compat` corpus) — parity checked against an authoritative oracle the
+author does not control, here the installed git itself, run live per case. `zvcs-parity` builds a fixture
+repository with stock git, runs each invocation against both stock git and the zvcs binary in identical
+throwaway repos, and compares three surfaces — stdout bytes, exit code, and the *resulting repository
+state* (probed with stock git, plus an object-storage-layout probe) — so a subcommand that prints the
+right thing while corrupting the index still fails where an output-only diff would pass it. A deterministic
+fuzzer (xorshift; every case a pure function of `(seed, index)`, so any failure replays from its seed)
+stacks repeated flags, mutated flag values, multiple positionals, interleaved argument order, and hard
+rev-spec / magic-pathspec forms drawn from per-command grammars extracted from git's own man pages.
+Coverage is measured empirically from `git --list-cmds=main`, not a hand-list, so the denominator cannot be
+trimmed; an unimplemented flag scores as a *failure*, never a skip; and non-determinism *in git itself*
+(random temp-file names, wall-clock stamps) is detected by re-running the stock side against itself and
+*excluded* rather than masked — the same falsify-don't-flatter instinct Chapter 12's methodology applies to
+the ledger. *Basis:* `zvcs/src/parity/{runner,fuzz,fixture,corpus,report,env,grammars_generated}.rs`,
+`zvcs/scripts/{gen_grammars,split_failures}.pl`; snapshot 2026-07-20 — 181/181 stock subcommands
+dispatched, every scored fuzz case byte-identical to stock git on the then-current corpus, one case
+auto-excluded as non-deterministic in git itself. *Caveat:* "byte parity" is asserted on process-observable
+output — stdout, exit code, repository state — *not* on pack-file bytes: zvcs writes valid but delta-free
+packs that differ from git's byte-for-byte, so the storage probe compares object-store layout by count and
+presence, and `pack-objects --stdout` (where the pack *is* stdout) is a known ceiling. The pass figure is
+corpus- and seed-relative and the fuzzer is being deliberately hardened (repeated flags, value mutation,
+deeper rev-specs), which can surface further gaps — a measurement, not a proof of universal equivalence.
+"First" is author-asserted: no prior-art survey found a git-shadowing superset shipping a byte-level
+differential parity harness; recorded as "none found," not proven.
 
 
 ---
