@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="node-js — Engineering report. A compiled JavaScript runtime in Rust, hosted on the fusevm bytecode VM with a Cranelift JIT over a JsHost object heap. Architecture, value model, builtin objects, differential parity harness and fuzzer, roadmap, and dependency posture. MIT licensed.">
+  <title>node-js &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+    .hub-scheme-strip { border-bottom:1px dashed var(--border);background:color-mix(in srgb, var(--bg-secondary) 85%, transparent);padding:0.55rem 1.5rem 0.65rem;position:relative; }
+    .hub-scheme-strip-inner { max-width:76rem;margin:0 auto;display:flex;align-items:center;gap:0.85rem; }
+    .hub-scheme-strip .hud-scheme-label { flex:0 0 auto;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);text-align:left; }
+    .hub-scheme-strip .scheme-grid { flex:1 1 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px; }
+    @media (max-width:720px){ .hub-scheme-strip-inner{flex-direction:column;align-items:stretch}.hub-scheme-strip .scheme-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+    .docs-build-line { margin:0.35rem 0 0;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;max-width:48rem;opacity:0.75; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// NODE-JS — ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/node-js" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">node-js v0.1.0 · JavaScript on fusevm · lex/parse → AST → bytecode → Cranelift JIT · JsHost object heap · binary <code>node</code> · MIT · in active development</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/node-js" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ENGINEERING REPORT</h2>
+      <p class="tutorial-subtitle">node-js is a compiled JavaScript runtime in Rust, hosted on the <code>fusevm</code> bytecode VM and its Cranelift JIT over a <code>JsHost</code> object heap. This report describes the architecture, the value model, the builtin objects, the parity tooling, the current state of the tree, and the dependency posture. The statements below are facts about the design and the manifest, not aspirational metrics.</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">JS</div><div class="stat-label">fusevm language host</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">builtin namespaces</div></div>
+        <div class="stat-card"><div class="stat-val">v0.1.0</div><div class="stat-label">version</div></div>
+        <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">license · free / OSS</div></div>
+      </div>
+
+      <section class="tutorial-section">
+        <h2>Summary</h2>
+        <p>V8 compiles JavaScript to its own bytecode and JITs it with its own engine. node-js takes a different path: it lexes and parses JavaScript to an AST, lowers that to <code>fusevm</code> bytecode, and runs it on a compiled VM with a Cranelift JIT. Arithmetic and comparison operators lower to native VM ops so the JIT can trace hot loops; JS-specific behaviour is served by a <code>JsHost</code> object heap through a numbered builtin-call protocol and a strict numeric hook. It joins <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a> alongside <code>zshrs</code>, <code>stryke</code>, <code>awkrs</code>, <code>pythonrs</code>, and <code>rubylang</code>, and reuses that shared bytecode VM and JIT rather than shipping its own.</p>
+        <p>The binary is <code>node</code>. The current tree implements the lexer/parser (including arrow-function <code>=&gt;</code> lookahead and template-literal re-lexing), AST-to-bytecode lowering with function/arrow/try sub-chunks, <code>var</code>/<code>let</code>/<code>const</code> bindings, the full operator surface, all the control-flow constructs (including <code>try</code>/<code>catch</code>/<code>finally</code> and <code>for…of</code>/<code>for…in</code>), functions/arrows/closures/<code>new</code>, array and object literals with spread and template literals, and a broad builtin surface across eight namespaces. Behaviour is checked against the reference <code>node</code> by both a frozen-corpus parity harness and a generative fuzzer. Classes, <code>async</code>, generators, ES modules, and the Node.js standard library are planned; AOT and the persistent bytecode cache are scaffolded but not yet CLI-exposed.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Hosting on fusevm</h2>
+        <p>node-js contains no virtual machine or JIT of its own. The execution path is:</p>
+<pre>JS source  →  lexer  →  parser → AST  →  lower to fusevm bytecode  →  fusevm VM + Cranelift JIT
+                                                │
+                                   JsHost heap (objects/arrays/strings, CallBuiltin, numeric hook)</pre>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Shared engine</h4><p>fusevm is pulled from crates.io with the <code>jit</code>, <code>jit-disk-cache</code>, and <code>aot</code> features. JIT and VM improvements land once and benefit zshrs, stryke, awkrs, pythonrs, rubylang, and node-js together.</p></div>
+          <div class="feature-card"><h4>Native arithmetic</h4><p>Operators lower to native fusevm ops; a strict numeric hook supplies JS semantics (<code>+</code> string concat, the <code>==</code> coercion matrix, <code>ToInt32</code> for bitwise ops, truthiness) only for the operand cases the VM can't compute natively.</p></div>
+          <div class="feature-card"><h4>Sub-chunk lowering</h4><p>The compiler emits the main chunk plus a table of function/arrow sub-chunks and try-block chunks; <code>load_merged</code> rebases a freshly compiled program's func/try ids above those already on the host before running (<code>src/lib.rs</code>, <code>src/compiler.rs</code>).</p></div>
+          <div class="feature-card"><h4>Scaffolded AOT</h4><p>The crate is built <code>crate-type = ["rlib", "staticlib"]</code> with fusevm's <code>aot</code> feature so an AOT object can later be linked against the runtime staticlib into a standalone executable — the same shape as pythonrs. Not yet wired to a CLI flag.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Value model</h2>
+        <p>Primitive values — <code>number</code>, <code>boolean</code>, <code>null</code>, and <code>undefined</code> — ride through the VM directly as <code>fusevm::Value</code>. The reference types (objects, arrays, strings, and functions) live on the <code>JsHost</code> object heap behind <code>Value::Obj(u32)</code> handles, so mutation is observed through every alias — <code>a.push(x)</code> changes the array the caller still holds, exactly as in JavaScript. Object property insertion order is preserved via an <code>IndexMap</code>, matching what iteration and <code>JSON.stringify</code> observe.</p>
+        <p>Truthiness, equality, and coercion follow JavaScript, not the VM's default numeric rules: <code>0</code>, <code>NaN</code>, <code>""</code>, <code>null</code>, <code>undefined</code>, and <code>false</code> are falsy; loose <code>==</code> runs the abstract-equality coercion matrix; <code>+</code> is string concatenation when either operand is a string; bitwise operators apply <code>ToInt32</code> before operating. These are routed through host operations rather than relying on the VM's native numeric branch.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Builtin objects</h2>
+        <p>Eight builtin namespaces and a broad per-type method surface are registered as fusevm builtins (<code>src/builtins.rs</code>), reachable through the compiler's <code>CallBuiltin</code> lowering and member-access dispatch:</p>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>console / JSON</h4><p><code>console.log</code>; <code>JSON.stringify</code> / <code>JSON.parse</code> with insertion-ordered round-trips.</p></div>
+          <div class="feature-card"><h4>Math / Number</h4><p><code>Math</code> — <code>floor</code>/<code>ceil</code>/<code>round</code>/<code>trunc</code>/<code>abs</code>/<code>sign</code>/<code>max</code>/<code>min</code>/<code>pow</code>/<code>sqrt</code>/<code>cbrt</code>/<code>random</code>/<code>hypot</code>/<code>log</code>/<code>log2</code>/<code>log10</code>/<code>exp</code>/trig, <code>PI</code>/<code>E</code>; <code>Number</code> constants (<code>MAX_SAFE_INTEGER</code>, <code>EPSILON</code>, …).</p></div>
+          <div class="feature-card"><h4>Object / Array</h4><p><code>Object.keys</code>/<code>values</code>/<code>entries</code>/<code>hasOwnProperty</code>; array methods <code>map</code>/<code>filter</code>/<code>reduce</code>/<code>forEach</code>/<code>find</code>/<code>every</code>/<code>some</code>/<code>push</code>/<code>pop</code>/<code>slice</code>/<code>join</code>/<code>concat</code>/<code>includes</code>/<code>indexOf</code>/<code>flat</code>/<code>flatMap</code>/<code>reverse</code>/<code>fill</code>/<code>at</code>.</p></div>
+          <div class="feature-card"><h4>String / global</h4><p>String methods <code>charAt</code>/<code>charCodeAt</code>/<code>padStart</code>/<code>padEnd</code>/<code>repeat</code>/<code>replace</code>/<code>replaceAll</code>/<code>startsWith</code>/<code>endsWith</code>/…; globals <code>parseInt</code>/<code>parseFloat</code>/<code>isNaN</code>/<code>isFinite</code>, <code>Boolean</code>, <code>globalThis</code>.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Differential parity</h2>
+        <p>Correctness is measured, not asserted, by two tools that diff node-js against the reference <code>node</code>. Both are development tools that need <code>node</code> on <code>PATH</code>, so CI never runs them.</p>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Frozen-corpus harness</h4><p><code>parity</code> (<code>src/bin/parity.rs</code>) runs a fixed corpus through node-js and the reference <code>node</code>, diffing stdout. The expected outputs are frozen into <code>tests/data/parity_expected.txt</code>, which <code>tests/parity.rs</code> replays with no <code>node</code> installed — so the regression check runs in CI without a Node.js toolchain.</p></div>
+          <div class="feature-card"><h4>Generative fuzzer</h4><p><code>parity-fuzz</code> (<code>src/bin/parity_fuzz.rs</code>) generates thousands of deterministic-output JS snippets and diffs <code>node -e</code> against the reference, delta-debugging each divergence to a minimal repro. Subprocess-only (never links the lib) and std-only (no <code>rand</code>).</p></div>
+        </div>
+        <p>Fuzz generators are biased toward where a JS frontend is likely to disagree with the reference: float representation and the exponential-notation threshold, <code>ToInt32</code> bitwise wrap, the <code>==</code> coercion matrix, <code>+</code> coercion, string/array methods, <code>toFixed</code>/<code>toPrecision</code> rounding, and JSON round-trips.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Component status</h2>
+        <table class="file-table">
+          <thead><tr><th>Component</th><th>State</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>lexer / parser → AST</td><td>Implemented</td><td>Newline-aware tokenizer; arrow <code>=&gt;</code> lookahead; template <code>${...}</code> re-lex (<code>src/lexer.rs</code>, <code>src/parser.rs</code>).</td></tr>
+            <tr><td>AST → fusevm bytecode</td><td>Implemented</td><td>Native arithmetic + <code>CallBuiltin</code>; func/arrow/try sub-chunks; id rebasing (<code>src/compiler.rs</code>, <code>src/lib.rs</code>).</td></tr>
+            <tr><td>bindings &amp; operators</td><td>Implemented</td><td><code>var</code>/<code>let</code>/<code>const</code>; arithmetic/comparison/logical/bitwise/nullish, <code>typeof</code>/<code>void</code>/<code>delete</code>/<code>instanceof</code>/<code>in</code>, <code>?:</code>, updates, compound assign.</td></tr>
+            <tr><td>control flow</td><td>Implemented</td><td><code>if</code>/<code>else</code>, <code>while</code>, <code>do…while</code>, <code>for</code>, <code>for…in</code>, <code>for…of</code>, <code>switch</code>, <code>break</code>/<code>continue</code>/<code>return</code>, <code>throw</code>, <code>try</code>/<code>catch</code>/<code>finally</code>.</td></tr>
+            <tr><td>functions / arrows / closures</td><td>Implemented</td><td>Declarations and expressions, arrow functions, closures, recursion, <code>new</code> (<code>src/host.rs</code>).</td></tr>
+            <tr><td>literals / spread / templates</td><td>Implemented</td><td>Array/object literals, member/index access, spread <code>...</code>, template literals.</td></tr>
+            <tr><td>builtin objects &amp; methods</td><td>Implemented</td><td><code>console</code>/<code>Math</code>/<code>JSON</code>/<code>Object</code>/<code>Array</code>/<code>Number</code>/<code>String</code>/<code>Boolean</code> + broad array/string methods (<code>src/builtins.rs</code>).</td></tr>
+            <tr><td>parity harness + fuzzer</td><td>Implemented</td><td>Frozen corpus replayed no-node (<code>tests/parity.rs</code>); generative fuzzer (<code>src/bin/parity_fuzz.rs</code>). Dev tools, never in CI.</td></tr>
+            <tr><td>AOT native-exe &amp; bytecode cache</td><td>Scaffolded</td><td><code>staticlib</code> + fusevm <code>aot</code>/<code>jit-disk-cache</code> features enabled (mirrors pythonrs); not yet exposed on the CLI.</td></tr>
+            <tr><td>classes / async / modules / stdlib</td><td>Planned</td><td><code>class</code>, <code>async</code>/<code>await</code>, generators, ES modules, destructuring, default/rest params, <code>RegExp</code>, <code>Map</code>/<code>Set</code>/<code>Promise</code>, Node.js stdlib.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Dependency posture</h2>
+        <p>Dependencies are kept foundational and durable. Direct dependencies from <code>Cargo.toml</code>:</p>
+        <table class="file-table">
+          <thead><tr><th>Crate</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>fusevm</td><td>Language-agnostic bytecode VM + Cranelift JIT (<code>jit</code>, <code>jit-disk-cache</code>, <code>aot</code>)</td></tr>
+            <tr><td>clap</td><td>CLI argument parsing (<code>derive</code>, <code>cargo</code>)</td></tr>
+            <tr><td>thiserror</td><td>Error type derivation</td></tr>
+            <tr><td>rustc-hash</td><td>Fast hashing in the frontend</td></tr>
+            <tr><td>indexmap</td><td>Insertion-ordered object property storage (observable in iteration / repr)</td></tr>
+          </tbody>
+        </table>
+        <p>The <code>parity</code> and <code>parity-fuzz</code> binaries are subprocess-only and add no runtime dependencies; the fuzzer is std-only (no <code>rand</code>), deriving determinism from a seeded generator.</p>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Compatibility &amp; longevity</h2>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Reference semantics</h4><p>Behaviour tracks the reference <code>node</code> as the compatibility target, checked by a frozen-corpus harness and a generative fuzzer over the coercion and number-formatting edge cases.</p></div>
+          <div class="feature-card"><h4>Ordered objects</h4><p>Property insertion order is preserved, matching what JS programs observe in iteration and <code>JSON.stringify</code>.</p></div>
+          <div class="feature-card"><h4>Cross-architecture</h4><p>macOS aarch64 and Linux x86_64 / aarch64 via the Cranelift JIT; portable bytecode underneath.</p></div>
+          <div class="feature-card"><h4>Standalone crate</h4><p>An explicit empty <code>[workspace]</code> keeps node-js buildable on its own, independent of the meta repo.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Links</h2>
+        <ul>
+          <li><strong>Docs</strong> — <a href="index.html">index.html</a></li>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/node-js">github.com/MenkeTechnologies/node-js</a></li>
+          <li><strong>Issues</strong> — <a href="https://github.com/MenkeTechnologies/node-js/issues">github.com/MenkeTechnologies/node-js/issues</a></li>
+          <li><strong>fusevm</strong> — <a href="https://github.com/MenkeTechnologies/fusevm">github.com/MenkeTechnologies/fusevm</a> (the shared VM)</li>
+          <li><strong>License</strong> — MIT (<a href="https://github.com/MenkeTechnologies/node-js/blob/main/LICENSE">LICENSE</a>)</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
