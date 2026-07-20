@@ -129,19 +129,24 @@ persistence the README's survey of BWK/gawk/mawk/goawk/frawk/zawk finds in none.
 machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-conducted
 survey; the machine-code tier engages only for JIT-eligible numeric chunks.
 
-**11. Five classic-language DAP debuggers on one shared VM** — `high`
-Every frontend (AWK, zsh, Perl-like stryke, Emacs Lisp, Vim script) ships a real Debug
-Adapter Protocol server (`--dap` over stdio or TCP) wrapping a shared line-stop /
-step-over / step-out / breakpoint debugger state machine, with matching IntelliJ DAP
-clients — source-level interactive debugging for five languages that historically have
-**no** DAP debugger (AWK, VimL, zsh) on a single VM substrate. *Basis:* `awkrs/src/dap.rs`
-(1085 L) + `debugger.rs`; `strykelang/.../dap.rs` (1997 L, the original it was ported
-from); `elisprs/src/dap.rs` (503 L); `vimlrs/src/dap.rs` (353 L);
-`zshrs/src/extensions/dap.rs` (879 L) + `tests/dap_integration.rs`; IntelliJ `*DapClient.kt`
-in each editors tree; line tracking via debug-only `Op::DebugLine`. *Caveat:* the
-debuggers share design (ported from stryke's), not a single fusevm op — line tracking is
-per-frontend; variable drill-down depth varies by value model (awk = scalars + flat assoc
-only); "first DAP debugger for AWK/VimL/zsh" rests on non-exhaustive prior-art absence.
+**11. Ten-language DAP debuggers on one shared VM** — `high`
+Every one of the ten fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
+Ruby, arb, Python, PHP, JavaScript) ships a real Debug Adapter Protocol server (`--dap`
+over stdio or TCP) wrapping a shared line-stop / step / breakpoint / function-breakpoint /
+expression-evaluate debugger state machine, with matching IntelliJ DAP clients —
+source-level interactive debugging for ten languages on a single VM substrate, including
+classic languages (AWK, VimL, zsh) that historically have **no** DAP debugger. *Basis:*
+`strykelang/.../dap.rs` (1997 L, the original the others were ported from);
+`awkrs/src/dap.rs` (1085 L) + `debugger.rs`; `zshrs/src/extensions/dap.rs` (879 L) +
+`tests/dap_integration.rs`; `pythonrs/src/dap.rs` (629 L); `node-js/src/dap.rs` (608 L);
+`phplang/src/dap.rs` (599 L); `rubylang/src/dap.rs` (595 L) + `tests/dap.rs`;
+`arb/src/dap.rs` (582 L); `elisprs/src/dap.rs` (564 L); `vimlrs/src/dap.rs` (353 L);
+IntelliJ `*DapClient.kt` in each editors tree; line tracking via debug-only markers.
+*Caveat:* the debuggers share design (ported from stryke's), not a single fusevm op —
+line tracking is per-frontend; variable drill-down depth varies by value model (awk =
+scalars + flat assoc only). Python/Ruby/PHP/JavaScript already have mature DAP debuggers
+elsewhere, so the world-first leg is the classic-language debuggers (AWK/VimL/zsh) plus
+running all ten on one shared VM substrate — not DAP for those four mainstream languages.
 
 **11a. Fused superinstructions collapsing whole counted/append loops into one dispatch** — `high`
 The opcode set includes macro-op superinstructions (`AccumSumLoop`, `SlotIncLtIntJumpBack`,
