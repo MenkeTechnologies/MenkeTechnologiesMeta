@@ -285,7 +285,10 @@ worker pool — is published as an importable Cargo library crate, so any Rust p
 a dependency and embed the entire shell (executor, parser, completion, job control) in-process
 instead of spawning `/bin/sh`. The crate re-exports zsh's own front-end modules, so a consumer can
 also *parse a Bourne-family script, evaluate glob qualifiers, and run parameter expansion*
-in-process without executing anything — the zsh grammar and expander as a library. *Basis:*
+in-process without executing anything — the zsh grammar and expander as a library. That makes the
+crate an **AST front-end for the whole Bourne family** (bash/ksh/dash/sh via the emulation modes) —
+a reusable foundation for shell static analyzers, linters, and formatters that until now needed a
+running shell (or a bespoke re-implementation of the grammar) to get an AST at all. *Basis:*
 `zshrs/Cargo.toml` `[lib] name = "zsh"` (v0.12.24, no `publish = false`);
 `ShellExecutor::execute_script`; public front-end modules `ported::parse`/`ported::lex` (grammar),
 `ported::glob` (glob qualifiers), `ported::subst`/`ported::params` (parameter expansion); already
