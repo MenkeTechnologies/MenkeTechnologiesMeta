@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 217 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 220 candidates (numbered entries through 172 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -278,6 +278,24 @@ and per-construct behavior; `src/extensions/compile_zsh.rs` (615 KB),
 interpreters; zsh's `.zwc` caches parsed AST for re-interpretation, not bytecode-on-a-VM.
 fusevm is an external dependency.
 
+**12a. First production-grade Unix shell importable as a Cargo library crate** — `high`
+The whole of zshrs — a ~540,000-line (over 800k with its binaries and test suite) production-grade
+interactive Unix-shell superset with a register bytecode VM, Cranelift JIT, and a background-thread
+worker pool — is published as an importable Cargo library crate, so any Rust program can take it as
+a dependency and embed the entire shell (executor, parser, completion, job control) in-process
+instead of spawning `/bin/sh`. The crate re-exports zsh's own front-end modules, so a consumer can
+also *parse a Bourne-family script, evaluate glob qualifiers, and run parameter expansion*
+in-process without executing anything — the zsh grammar and expander as a library. *Basis:*
+`zshrs/Cargo.toml` `[lib] name = "zsh"` (v0.12.24, no `publish = false`);
+`ShellExecutor::execute_script`; public front-end modules `ported::parse`/`ported::lex` (grammar),
+`ported::glob` (glob qualifiers), `ported::subst`/`ported::params` (parameter expansion); already
+consumed as the embedded `:zsh` engine in zmax (`zmax-term/Cargo.toml`, `zsh = { package = "zshrs" }`). *Caveat:* crates.io
+has hosted small standalone Rust shells (e.g. rush-sh) and embeddable shell-API libraries built for
+AI coding agents (e.g. epsh), so "a shell as a Rust library" is not itself new; the asserted first
+is the **scale** — a full production-grade Unix-shell superset (540k+ LOC, VM + JIT + worker pool)
+as an importable dependency — and "first"/"production-ready" rest on a non-exhaustive prior-art
+sweep.
+
 **13. Cranelift JIT + AOT-to-native-binary for shell code** — `high`
 Hot shell bytecode JIT-compiles to native x86-64/aarch64 (tiered linear/block) with an
 on-disk cache; a script also AOT-compiles to a relocatable `.o` linked against the shell
@@ -289,6 +307,20 @@ runtime staticlib into a standalone executable. *Basis:* `Cargo.toml`
 linked-in interpreter runtime (not a fully standalone-compiled program). `AOT_DESIGN.md`
 extras (perfect-hash completion tables, compile-time AOP, hardware-counter timing) are
 design-doc-only.
+
+**13a. First hardware acceleration for bash, dash, and ksh — legacy shells JIT-compiled to native** — `high`
+Because zshrs deleted the AST tree-walker entirely (#12), *every* shell dialect it accepts runs
+through the same fusevm bytecode + tiered Cranelift JIT — including the legacy Bourne-family shells
+it emulates. `zshrs --bash` / `--ksh` / `--dash` / `--sh` (and argv0 inference as
+`bash`/`ksh`/`dash`/`sh`/`mksh`/`ash`) compile that dialect's script to register bytecode and JIT it
+to native x86-64/aarch64, so bash/dash/ksh code — historically only ever line-by-line interpreted by
+its upstream — gets native-code execution for the first time. *Basis:* `bins/zshrs.rs`
+`ShellMode::{Bash,Ksh,Dash,Posix}` (`:562` `--bash` drop-in help, `:1177-1181` argv0→mode map); the
+JIT/AOT path is #13, the physically-removed tree-walker is #12. *Caveat:* command semantics still
+route through the linked-in runtime (as in #13), so it is acceleration of the compiled execution
+model, not a standalone-compiled program; "first" is a historical claim against bash/dash/ksh/mksh —
+whose upstream implementations are word/AST interpreters with no bytecode-VM or JIT — and rests on a
+non-exhaustive prior-art sweep.
 
 **14. rkyv-mmap'd bytecode image cache — the only cross-invocation shell bytecode cache** — `high`
 Compiled bytecode persists across invocations as zero-copy rkyv-mmap'd images (sharded
@@ -414,6 +446,17 @@ matches a Tab press would, with no subshell spawn. *Basis:* `src/compsys/ported/
 `tests/compsys_backend_proof.rs`. *Caveat:* Phase 0.5 / unproven end-to-end — no
 per-command completer (`_git`/`_kubectl`) ported yet, in-editor smoke test yields zero
 matches (no `compinit` bootstrap); framework real, content WIP.
+
+**28a. zsh's compsys completion system opened to the world as an importable Rust module** — `med`
+zsh's completion system (compsys — `compinit`/`compdef`/the `_*` completer machinery),
+historically reachable only from inside a running zsh, is reimplemented in Rust (~47,000 LOC) and
+exposed as a public module of the importable zshrs crate (`pub mod compsys`), so any Rust program
+can compute zsh-grammar completions in-process — no interactive shell, no subshell spawn. *Basis:*
+`zshrs/src/lib.rs:59` `pub mod compsys`; `src/compsys/` (~47k LOC across `in_editor::complete_at`,
+`router`, `cache`, `ported/`); builds on #27/#28 (the compiled + in-editor compsys). *Caveat:*
+compsys is a public module of the `zsh` crate, not a separately-published crate; per-command
+completer content parity is still WIP (see #28); "watershed"/"first" is the author's own assertion
+pending a prior-art sweep.
 
 **29. Read-only SQLite mirrors of live shell state for SQL/`dbview` introspection** — `med`
 The shell mirrors its internal tables (aliases, `_comps`/`_services`/`_patcomps`,
@@ -616,14 +659,15 @@ each a runnable plugin with a `Cargo.toml` + `znative.toml`; the `znative` SDK c
 `zmodload`); the first is a *package manager* whose install unit is a native compiled
 plugin — author-asserted on a non-exhaustive prior-art sweep.
 
-**40e. Nine-way, dual-flavor shell-emulation parity/fuzz harness gated on every push** — `high`
+**40e. Ten-way, dual-flavor shell-emulation parity/fuzz harness gated on every push** — `high`
 zshrs emulates other shells behind drop-in flags (`--zsh`, `--bash`, `--ksh`, `--mksh`,
-`--sh`, `--dash`, `--ash`, `--csh`, `--posix`; `zshrs/bins/zshrs.rs:1191-1220`, `1658-1667`),
-and the harness (`tests/emulation_parity.rs`, the `PARITY_CASES` table) drives **nine parity
-ways**, each demanding byte-identical stdout + exit-code sign against its *correct* reference.
-Seven ways are real-shell-faithful — `zshrs --X` vs the actual shell X: `zsh`/`bash`/`ksh`/
-`sh`/`dash` required, `mksh`/`ash` best-effort (mksh rides the ksh base, ash the Almquist/dash
-base). The other two are the invention's point — **zsh-style cross-emulation legs**.
+`--mksh`, `--pdksh`, `--sh`, `--dash`, `--ash`, `--csh`, `--posix`; `zshrs/bins/zshrs.rs:1191-1220`,
+`1658-1667`), and the harness (`tests/emulation_parity.rs`, the `WAYS` table) drives **ten parity
+ways** (eight reference shells plus two zsh-emulation legs), each demanding byte-identical stdout +
+exit-code sign against its *correct* reference.
+Eight ways are real-shell-faithful — `zshrs --X` vs the actual shell X: `zsh`/`bash`/`ksh`/
+`sh`/`dash` required, `mksh`/`pdksh`/`ash` best-effort (mksh and pdksh ride the ksh base, ash the
+Almquist/dash base). The other two are the invention's point — **zsh-style cross-emulation legs**.
 `zshrs --sh` matches real `/bin/sh`, but `zshrs --sh --zsh` deliberately keeps zsh semantics:
 it reproduces zsh's *own* `emulate sh`, which is only zsh's *approximation* of sh and is
 **not** byte-faithful to `/bin/sh` — so **`zshrs --zsh --sh != zshrs --sh`** by construction
@@ -642,11 +686,12 @@ All of it is CI-gated on every push to `main` and every PR (`zshrs/.github/workf
 under `ZSHRS_REQUIRE_REF_SHELLS=1` so a missing *required* reference fails rather than silently
 skips; the `parity-fuzz` job runs the fuzzer). *Basis:* the files cited above. *Caveat:*
 differential shell fuzzing and emulation matrices have prior art individually; the novelty
-asserted is the *composition* — nine parity ways, two of which byte-compare zshrs's
+asserted is the *composition* — ten parity ways, two of which byte-compare zshrs's
 zsh-flavored POSIX emulation against real zsh's own `emulate`, all fuzzed and gated on every
-push — and "first" rests on a non-exhaustive prior-art sweep. mksh/ash are best-effort
-(skipped when absent, never fatal). The real-PTY ZTST harness (#40) is separate and not yet
-CI-gated.
+push, on a memory-safe pure-Rust engine that excludes the C-shell memory-corruption class by
+construction — and "first" rests on a non-exhaustive prior-art sweep. mksh/pdksh/ash are
+best-effort (skipped when absent, never fatal). The real-PTY ZTST harness (#40) is separate and not
+yet CI-gated.
 
 ---
 
@@ -1466,13 +1511,14 @@ byte-for-byte Nmap and does NOT embed the NSE Lua runtime; several areas marked 
 
 ## VIII. Editor & shell ecosystem
 
-**120. Five embedded scripting languages in one editor binary, zero FFI** — `med`
-zmax embeds five scripting interpreters — Emacs Lisp, Vimscript, AWK, zsh, and stryke —
-directly compiled into the binary with no external process and no C-ABI/FFI between them, all
-driving the live buffer through one uniform host API. *Basis:* `zmax/README.md:86-87` ("the only
-IDE to embed 5 scripting languages with zero external dependencies and no FFI between them");
-`book/src/scripting.md` (`:elisp`/`:vim`/`:awk`/`:zsh`/`:stryke`, `SPC a r` unified REPL); each
-is a pure-Rust crate lowering onto shared fusevm bytecode. *Caveat:* overlaps #1 (the editor-
+**120. Ten embedded scripting languages in one editor binary, zero FFI** — `med`
+zmax embeds ten scripting interpreters — Emacs Lisp, Vimscript, AWK, zsh, stryke, Ruby, PHP,
+Python, JavaScript (Node), and arb — directly compiled into the binary with no external process
+and no C-ABI/FFI between them, all driving the live buffer through one uniform host API. *Basis:*
+`zmax/README.md:86-87` ("the only IDE to embed 10 scripting languages with zero external
+dependencies and no FFI between them"); `book/src/scripting.md`
+(`:elisp`/`:vim`/`:awk`/`:zsh`/`:stryke`/`:ruby`/`:php`/`:python`/`:node`/`:arb`, `SPC a r`
+unified REPL); each is a pure-Rust crate lowering onto shared fusevm bytecode. *Caveat:* overlaps #1 (the editor-
 embedding angle of the same crate family); "world first" is the repo's own assertion; each
 interpreter exposes only a subset of its host API.
 
@@ -1521,8 +1567,9 @@ one synchronous on-thread eval, with a guard stack for nested evals. *Basis:*
 separately as a distinct mechanism; `unsafe`, single-thread-only.
 
 **120e. Cross-language unified REPL with persistent per-language history** — `med`
-A single REPL panel fronts all five embedded interpreters (elisp/viml/stryke/awk/zsh) behind one
-read-eval-print loop, cycling the active language with Tab and persisting separate input
+A single REPL panel fronts all ten embedded interpreters (elisp/viml/stryke/awk/zsh/ruby/php/
+python/node/arb) behind one read-eval-print loop, cycling the active language with Tab and
+persisting separate input
 histories per language to `~/.zmax/repl-history.toml`. *Basis:* `zmax-term/src/ui/repl.rs`
 (660 L, `ReplLang` enum, transcript scrollback); opened via `:repl [lang]` / `SPC a r`. *Caveat:*
 part of the captured scripting story; the one-panel-many-languages REPL with per-language
