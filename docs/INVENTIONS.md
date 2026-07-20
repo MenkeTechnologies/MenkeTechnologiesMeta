@@ -25,7 +25,7 @@ deep prior-art analysis in the appendix.
 
 ---
 
-## I. Execution engine & language runtimes — fusevm + ten frontends
+## I. Execution engine & language runtimes — fusevm + twelve frontends
 
 **1. ★ Solo-authored from-scratch JIT VM hosting ten production language frontends** — `med`
 One person built the whole execution engine — a bytecode VM plus a 3-tier
@@ -130,8 +130,9 @@ machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-cond
 survey; the machine-code tier engages only for JIT-eligible numeric chunks.
 
 **11. Ten-language DAP debuggers on one shared VM** — `high`
-Every one of the ten fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
-Ruby, arb, Python, PHP, JavaScript) ships a real Debug Adapter Protocol server (`--dap`
+Ten of the twelve fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
+Ruby, arb, Python, PHP, JavaScript — the two newest, Java and Kotlin, have no DAP yet)
+ship a real Debug Adapter Protocol server (`--dap`
 over stdio or TCP) wrapping a shared line-stop / step / breakpoint / function-breakpoint /
 expression-evaluate debugger state machine, with matching IntelliJ DAP clients —
 source-level interactive debugging for ten languages on a single VM substrate, including
