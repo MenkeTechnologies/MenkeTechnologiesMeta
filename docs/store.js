@@ -571,7 +571,7 @@
     },
     {
       id: 'zmax-book', name: 'The zmax Book', glyph: 'eB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to zmax — the modal IDE with vim, emacs, and Spacemacs keymaps, and the first IDE to embed five programming languages (elisp, vimscript, stryke, AWK, Zsh) in its core. Pandoc + LaTeX typeset.',
+      tagline: 'The companion book to zmax — the modal IDE with vim, emacs, and Spacemacs keymaps, and the first IDE to embed ten programming languages (elisp, vimscript, stryke, AWK, zsh, Ruby, PHP, Python, JavaScript, arb) in its core. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'zmax', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
@@ -987,8 +987,8 @@
       "features": ["zshrs, the first compiled Unix shell", "Bytecode + Cranelift JIT, parallel runtime, worker pool", "Drop-in zsh compatibility and AOP intercepts", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zmax-book": {
-      "overview": "The companion book to zmax — the modal IDE with vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first IDE ever to embed five complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
-      "features": ["zmax, end to end — the modal IDE wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: five languages embedded in the core — elisp, vimscript, stryke, AWK, Zsh", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
+      "overview": "The companion book to zmax — the modal IDE with vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first IDE ever to embed ten complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
+      "features": ["zmax, end to end — the modal IDE wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: ten languages embedded in the core — elisp, vimscript, stryke, AWK, zsh, Ruby, PHP, Python, JavaScript, arb", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
     },
     "fusevm-book": {
       "overview": "The companion book to fusevm — the language-agnostic bytecode VM that stryke, zshrs, awkrs, and vimlrs all compile to. The value model and opcode set, the interpreter and its fused superinstructions, the three-tier Cranelift JIT, and the closed-world AOT compiler that lowers a whole program to native registers and a standalone binary.",
