@@ -92,20 +92,20 @@ The set of MenkeTechnologies projects that share the unified `strykelang`-author
 
 Ten languages share one self-authored execution engine — the [`fusevm`](https://github.com/MenkeTechnologies/fusevm) bytecode VM with its 3-tier Cranelift JIT — each lowering its own frontend (lex → parse → AST → `fusevm` bytecode) onto the same VM rather than carrying a bespoke runtime. Every one ships the full toolchain: a standalone CLI binary, an LSP server (`--lsp`) and DAP debug adapter (`--dap`) on stdio for editors, a zsh completion in `completions/`, `man/man1/<name>.1` + `<name>all.1` man pages, an HTML docs/report site, and inline Rust FFI — `rust { pub extern "C" fn … }` blocks that compile to a cached `cdylib` on first run (via the shared [`fusevm`](https://github.com/MenkeTechnologies/fusevm) FFI runtime) and become callable by name.
 
-| Frontend | CLI | LSP `--lsp` | DAP `--dap` | zsh completion | man pages | HTML docs | `reference.html` | `rust {}` FFI |
-|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `strykelang` | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ | ✅ |
-| `zshrs` | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ | ✅ | ✅ |
-| `awkrs` | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | ✅ | ✅ |
-| `vimlrs` | `viml` | ✅ | ✅ | ✅ `_viml` | ✅ | ✅ | ✅ | ✅ |
-| `elisprs` | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | ✅ | ✅ |
-| `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ | ✅ |
-| `pythonrs` | `python` | ✅ | ✅ | ✅ `_python` | ✅ | ✅ | ✅ | ✅ |
-| `rubylang` | `ruby` | ✅ | ✅ | ✅ `_ruby` | ✅ | ✅ | ✅ | ✅ |
-| `phplang` | `php` | ✅ | ✅ | ✅ `_php` | ✅ | ✅ | ✅ | ✅ |
-| `node-js` | `node` | ✅ | ✅ | ✅ `_node` | ✅ | ✅ | ✅ | ✅ |
+| Frontend | CLI | LSP `--lsp` | DAP `--dap` | zsh completion | man pages | HTML docs | `reference.html` | `rust {}` FFI | `--dump-tokens` | `--dump-ast` | `--disasm` |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `strykelang` | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅¹ | ✅ |
+| `zshrs` | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `awkrs` | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `vimlrs` | `viml` | ✅ | ✅ | ✅ `_viml` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `elisprs` | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅² |
+| `pythonrs` | `python` | ✅ | ✅ | ✅ `_python` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `rubylang` | `ruby` | ✅ | ✅ | ✅ `_ruby` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `phplang` | `php` | ✅ | ✅ | ✅ `_php` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `node-js` | `node` | ✅ | ✅ | ✅ `_node` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-<sub>✅ full parity across the five core toolchain dimensions. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written.
+<sub>✅ full parity across the core toolchain dimensions. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written. `rust {}` FFI compiles inline `rust { pub extern "C" fn … }` blocks to a cached `cdylib` (shared `fusevm` FFI runtime) callable by name. The introspection flags dump the lexer token stream (`--dump-tokens`), the parsed AST (`--dump-ast`), and a `fusevm` bytecode disassembly (`--disasm`) for the given script. ¹ `strykelang` spells the AST dump `--ast`. ² `arb` has no whole-program `fusevm::Chunk` (only ephemeral per-expression chunks), so its `--disasm` lists the compiled per-expression op vectors.
 
 | Project | What it is |
 |---|---|
