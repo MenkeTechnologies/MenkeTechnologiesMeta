@@ -88,22 +88,22 @@ All 163 submodules sit flat at the repository root. URLs are HTTPS for fresh-hos
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
-#### The five `fusevm` language frontends — toolchain parity
+#### The ten `fusevm` language frontends — toolchain parity
 
-Ten languages share one self-authored execution engine — the [`fusevm`](https://github.com/MenkeTechnologies/fusevm) bytecode VM with its 3-tier Cranelift JIT — each lowering its own frontend (lex → parse → AST → `fusevm` bytecode) onto the same VM rather than carrying a bespoke runtime. Every one ships the full toolchain: a standalone CLI binary, an LSP server (`--lsp`) and DAP debug adapter (`--dap`) on stdio for editors, a zsh completion in `completions/`, `man/man1/<name>.1` + `<name>all.1` man pages, and an HTML docs/report site.
+Ten languages share one self-authored execution engine — the [`fusevm`](https://github.com/MenkeTechnologies/fusevm) bytecode VM with its 3-tier Cranelift JIT — each lowering its own frontend (lex → parse → AST → `fusevm` bytecode) onto the same VM rather than carrying a bespoke runtime. Every one ships the full toolchain: a standalone CLI binary, an LSP server (`--lsp`) and DAP debug adapter (`--dap`) on stdio for editors, a zsh completion in `completions/`, `man/man1/<name>.1` + `<name>all.1` man pages, an HTML docs/report site, and inline Rust FFI — `rust { pub extern "C" fn … }` blocks that compile to a cached `cdylib` on first run (via the shared [`fusevm`](https://github.com/MenkeTechnologies/fusevm) FFI runtime) and become callable by name.
 
-| Frontend | CLI | LSP `--lsp` | DAP `--dap` | zsh completion | man pages | HTML docs | `reference.html` |
-|---|---|:---:|:---:|:---:|:---:|:---:|:---:|
-| `strykelang` | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ |
-| `zshrs` | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ | ✅ |
-| `awkrs` | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | ✅ |
-| `vimlrs` | `viml` | ✅ | ✅ | ✅ `_viml` | ✅ | ✅ | ✅ |
-| `elisprs` | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | ✅ |
-| `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ |
-| `pythonrs` | `python` | ✅ | ✅ | ✅ `_python` | ✅ | ✅ | ✅ |
-| `rubylang` | `ruby` | ✅ | ✅ | ✅ `_ruby` | ✅ | ✅ | ✅ |
-| `phplang` | `php` | ✅ | ✅ | ✅ `_php` | ✅ | ✅ | ✅ |
-| `node-js` | `node` | ✅ | ✅ | ✅ `_node` | ✅ | ✅ | ✅ |
+| Frontend | CLI | LSP `--lsp` | DAP `--dap` | zsh completion | man pages | HTML docs | `reference.html` | `rust {}` FFI |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `strykelang` | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ | ✅ |
+| `zshrs` | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ | ✅ | ✅ |
+| `awkrs` | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | ✅ | ✅ |
+| `vimlrs` | `viml` | ✅ | ✅ | ✅ `_viml` | ✅ | ✅ | ✅ | ✅ |
+| `elisprs` | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | ✅ | ✅ |
+| `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ | ✅ |
+| `pythonrs` | `python` | ✅ | ✅ | ✅ `_python` | ✅ | ✅ | ✅ | ✅ |
+| `rubylang` | `ruby` | ✅ | ✅ | ✅ `_ruby` | ✅ | ✅ | ✅ | ✅ |
+| `phplang` | `php` | ✅ | ✅ | ✅ `_php` | ✅ | ✅ | ✅ | ✅ |
+| `node-js` | `node` | ✅ | ✅ | ✅ `_node` | ✅ | ✅ | ✅ | ✅ |
 
 <sub>✅ full parity across the five core toolchain dimensions. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written.
 
