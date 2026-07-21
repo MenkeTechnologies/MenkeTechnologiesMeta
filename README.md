@@ -16,7 +16,7 @@
 [![Tier 6](https://img.shields.io/badge/tier_6-22_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-22)
 [![Tier 7](https://img.shields.io/badge/tier_7-8_znative_plugins-blue.svg)](#tier-7--znative-plugins-8)
 [![Rust](https://img.shields.io/badge/rust-3.2M_LOC-orange.svg)](#0x09-code-volume)
-[![Code](https://img.shields.io/badge/code-11.2M_lines-brightgreen.svg)](#0x09-code-volume)
+[![Code](https://img.shields.io/badge/code-14.1M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -733,30 +733,31 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 3,246,484 | 8,120 |
-| JSON | 2,260,224 | 750 |
-| Perl | 1,904,893 | 19,752 |
-| JavaScript | 609,662 | 3,935 |
-| HTML | 528,989 | 1,339 |
-| C Header | 393,625 | 2,117 |
-| C++ | 379,908 | 1,134 |
-| C | 289,952 | 572 |
-| Zsh | 278,950 | 1,304 |
-| TeX | 277,829 | 52 |
-| Stryke (`.stk`) | 201,197 | 3,387 |
-| Vim Script | 123,272 | 934 |
-| CSS | 107,410 | 394 |
-| Shell | 91,454 | 2,904 |
-| AWK | 82,707 | 2,192 |
+| Rust | 5,223,061 | 12,357 |
+| JSON | 2,329,297 | 860 |
+| Perl | 2,007,296 | 21,293 |
+| JavaScript | 654,036 | 4,119 |
+| HTML | 562,227 | 1,383 |
+| TeX | 485,265 | 95 |
+| C Header | 391,272 | 2,004 |
+| C++ | 379,999 | 1,138 |
+| Stryke (`.stk`) | 364,325 | 6,390 |
+| Zsh | 330,527 | 1,925 |
+| C | 307,150 | 481 |
+| AWK | 164,845 | 4,380 |
+| Vim Script | 131,037 | 1,113 |
+| Shell | 115,710 | 3,405 |
+| CSS | 111,494 | 417 |
 | C++ Header | 78,300 | 276 |
-| Python | 61,862 | 725 |
-| Scheme | 37,894 | 1,156 |
-| TOML | 37,071 | 656 |
-| Kotlin | 29,820 | 272 |
-| SQL | 29,188 | 119 |
+| Scheme | 77,726 | 2,330 |
+| Python | 71,897 | 801 |
+| TOML | 68,082 | 1,080 |
+| Kotlin | 46,827 | 479 |
+| SQL | 29,252 | 122 |
+| Lua | 27,979 | 30 |
 | Objective-C++ | 20,810 | 64 |
-| *Other (88 languages)* | 89,906 | 1,032 |
-| **Total** | **11,161,407** | **53,960** |
+| *Other (89 languages)* | 91,523 | 1,493 |
+| **Total** | **14,069,937** | **69,343** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
