@@ -7,7 +7,7 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-163-blue.svg)](#0x01-submodule-map)
+[![Submodules](https://img.shields.io/badge/submodules-177-blue.svg)](#0x01-submodule-map)
 [![Tier 1](https://img.shields.io/badge/tier_1-54_core-cyan.svg)](#tier-1--core-54)
 [![Tier 2](https://img.shields.io/badge/tier_2-34_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-34)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
@@ -21,7 +21,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 163 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 177 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -62,7 +62,7 @@
 git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git && cd MenkeTechnologiesMeta && git submodule foreach --recursive 'git checkout main 2>/dev/null || true'
 ```
 
-`--recurse-submodules` fetches all 163 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
+`--recurse-submodules` fetches all 177 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -82,7 +82,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 163 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 177 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (56)
 
@@ -705,7 +705,7 @@ Measured fresh-clone size (checked-out tracked files + `.git/modules/`, after `g
 | Tier 5 — Editor / multiplexer plugins | 14 | ~15 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 22 | ~3.6 GB |
 | Tier 7 — znative plugins | 8 | ~424 KB |
-| **Total** | **163** | **~7.8 GB** |
+| **Total** | **177** | **~7.8 GB** |
 
 Each repo's size counts its own git object store, so a nested submodule's objects are counted again under every parent that vendors it — which is exactly what a recursive clone puts on disk. The bulk is `MenkeTechnologiesPublications/` (~1.2 GB — it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches all three a second time under it), `traderview/` (~675 MB), `zwire/` (~600 MB — the Chromium snapshot), `zmax-gui/` (~590 MB) and `zmax/` (~567 MB), `MenkeTechnologies.github.io/` (~506 MB — accumulated screenshot history), `Audio-Haxor/` (~425 MB — Tauri v2 frontend assets + JUCE C++), and `zpwr-fx/` (~337 MB). Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits.
 
