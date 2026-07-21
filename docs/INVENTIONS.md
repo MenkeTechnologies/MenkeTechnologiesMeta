@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 224 candidates (numbered entries through 177 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 225 candidates (numbered entries through 178 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -2596,6 +2596,36 @@ parity are corpus-relative (1069 functions; the parity suite's cases), a measure
 universal equivalence; some extensions (the theme overlay, the status toast, the bar cycler) are ported
 from the sibling tools iftoprs / storageshower, not original to htoprs. "None found," not proven;
 prior-art sweep non-exhaustive. MIT (derivative of htop, GPL-2.0).
+
+**178. World's-first pure-Rust, zero-FFI, JIT-compiled Python runtime embedded in an editor (zmax)** — `high`
+"Python scripting" inside an editor has universally meant linking CPython: Vim `+python3`, GDB,
+Sublime, and the rest embed `libpython` through its C API, or reach it from Rust via PyO3/rust-cpython
+— an FFI boundary and a C runtime in-process either way. zmax embeds Python with **none of that**: the
+`pythonrs` frontend (a hand-written Python front-end that lexes/parses Python and **lowers it to
+`fusevm` bytecode**, hosting the Python object heap in Rust at `pythonrs/src/host.rs`) is compiled
+directly into the editor binary and runs Python on the **shared** three-tier Cranelift JIT + AOT VM
+that also hosts the editor's nine other embedded languages (#1, #120) — no CPython, no `libpython`, no
+PyO3, no C-ABI, no subprocess. The zero-FFI property is a build fact, not an aspiration: pythonrs's
+optional CPython-stdlib bridge (`stdlib-ffi` → `pyo3` → `libpython`) is **off** in the zmax-vendored
+pin, so the editor links no pyo3 and no libpython — Python evaluation is 100% Rust from source text to
+JIT'd machine code. `:python <src>` (and the unified `SPC a r` REPL) evaluate through
+`pythonrs::eval_str` with the result `repr`'d via `pythonrs::host::with_host`, fd-captured to keep the
+TUI clean. *Basis:* `zmax/zmax-term/src/commands/scripting/python.rs` (`pythonrs::eval_str` +
+`pythonrs::host::with_host` under `capture::with_captured_fds`); `zmax-term/Cargo.toml`
+(`scripting` is a **default** feature; `pythonrs = { path = "../vendor/pythonrs" }` with no
+`stdlib-ffi`); vendored `zmax/vendor/pythonrs` @ `54aeca9` (`[features]` has **no** `default` line, so
+`pyo3` is never pulled — "Default builds never pull pyo3 or need libpython"); pythonrs lowers to fusevm
+(`pythonrs/src/compiler.rs`, `Cargo.toml` `fusevm = "0.14.12"` with `jit`/`jit-disk-cache`/`aot`).
+**Build-verified:** `zmax-term/src/commands/scripting/mod.rs` tests assert
+`python::eval("111 * 1111").is_ok()` and `python::eval("1 +").is_err()`. *Caveat:* pure-Rust Python
+interpreters exist — RustPython above all, which pythonrs uses as its behavioral parity spec — so this
+is **not** "first pure-Rust Python"; the claim is the **combination**: an editor embedding a
+*zero-FFI, pure-Rust, JIT-compiled-on-a-shared-multi-language-VM* Python that drives the live session,
+where the entire prior ecosystem embeds CPython over FFI. It sharpens #120 (ten embedded languages,
+zero FFI) to the specific, verifiable Python case. Because `stdlib-ffi` is off in the embed, the CPython
+standard library is **not** importable in-editor (pythonrs's own built-in modules only); the standalone
+`python` binary can opt into the real stdlib via `stdlib-ffi`, but that is a different build. "None
+found," not proven; prior-art sweep non-exhaustive. A zmax (Helix-fork) addition. MIT.
 
 
 ---
