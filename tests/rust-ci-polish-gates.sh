@@ -91,6 +91,13 @@ gate_opt_out() {
             # Mid-transition from Kotlin to Rust; Rust path still secondary.
             return 0
             ;;
+        zvcs)
+            # Vendored gitoxide fork: src/ported is verbatim upstream gitoxide,
+            # so fmt --check and clippy -D warnings would gate on vendored code
+            # (same class as the strykelang/zshrs/fusevm massive-codebase opt-out).
+            # zvcs's own superset code (src/extensions) is reviewed directly.
+            return 0
+            ;;
     esac
     # Single-gate opt-outs.
     case "$1:$2" in
