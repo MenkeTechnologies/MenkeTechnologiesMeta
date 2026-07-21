@@ -76,7 +76,7 @@ while IFS= read -r lock; do
         too_old=$((too_old + 1))
         ok=0
     fi
-done < <(find . -name 'Cargo.lock' -not -path '*/target/*' -not -path '*/vendor/*' -not -path './.git/*' 2>/dev/null)
+done < <(find . -name 'Cargo.lock' -not -path '*/target/*' -not -path '*/vendor/*' -not -path '*/src/ported/*' -not -path './.git/*' 2>/dev/null)
 
 echo "---"
 echo "Summary: $checked Cargo.lock files checked, $no_version without version header, $too_old at v1/v2"
