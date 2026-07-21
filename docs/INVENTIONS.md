@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 223 candidates (numbered entries through 176 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 224 candidates (numbered entries through 177 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -2556,6 +2556,46 @@ render path (tested against upstream Python, per #116's caveat); the 20 segments
 upstream; reactive push is zsh-only (ZLE is the one mainstream line editor that can watch an arbitrary
 fd and redraw mid-line without a timer) and degrades silently to pull-only when no watch backend is
 available. "None found," not proven; prior-art sweep non-exhaustive. MIT.
+
+**177. htoprs — the world's-first htop superset: a byte-parity from-source htop port that then extends past htop** — `high`
+The fourth instance of the superset pattern (after zvcs #173/#174, ztmux #175, powerliners #176):
+`htoprs` is a from-**source** port of htop **3.5.1** (131 `.c` files, vendored as the `vendor/htop`
+submodule pinned to the 3.5.1 tag), one Rust module per C file with every `fn` carrying a
+`/// Port of <File>.c:<line>` citation, rendering **byte-for-byte identical to htop** (enforced by a
+parity suite — `tests/parity/` — that runs reference `htop` and htoprs and diffs their output) and held
+to the port by a **port-purity gate** (`build.rs`) that checks every free `fn` name in `src/ported/`
+against the htop C-function snapshot `tests/data/htop_c_fn_names.txt` and *fails the build* on any Rust
+name with no C counterpart — the same falsify-the-port instrument as ztmux's `ported_fn_names_match_c.rs`
+and powerliners' `ported_fn_names_match_py.rs`, with the same carve-out (`src/extensions/` is exempt
+because it is honestly not htop). Coverage 1069/1093 C functions (97.8%) across 130/131 files, a daily
+driver on macOS; the terminal layer is pure-Rust crossterm (no C dep) while the color model
+(`CRT.c` `ColorElements` + every `CRT_colorSchemes` entry) is transcribed verbatim so colors match
+htop exactly. On that byte-compatible floor it is a **superset**: 21 `src/extensions/` modules add
+capabilities htop has no counterpart for — a **memory-exhaustion forecast** (`E`) that is *a leading
+indicator htop lacks entirely* (a hand-rolled OLS trend on each PID's bounded memory ring projecting
+wall-clock time until its resident set crosses its own real ceiling — cgroup-v2 `memory.max` → `RLIMIT_AS`
+→ total RAM — soonest-first, with an inline amber row tint through htop's single color chokepoint); a
+31-palette named theme system with a live 256-color recolor at the `Ncurses::to_color` choke point plus
+a theme chooser/editor; a fuzzy process finder (`f`), a regex/substring filter with a saved named store
+(`r`), a snapshot baseline+diff (`d`, `+`started/`-`exited/`~`changed), JSON+CSV export (`o`), debounced
+threshold alerts (`A`, firing PIDs recolored red), a braille CPU history graph (`G`), an aggregate/pivot
+by user/command/parent (`y`), a command palette (`:`), a bar fill-glyph cycler (`b`, 5 styles), and a
+CPU-scaled per-PID sparkline (`v`) that makes the process panel **variable-height** (busy processes grow
+a full-width braille CPU graph, `Panel_draw`/`Panel_onKey` project every screen-Y/page/scroll through
+per-row heights) — all on keys htop leaves free, injected at the same `Panel_draw` per-row hook so no new
+ported `fn` is added. *Basis:* `htoprs/src/ported/` (function-for-function htop 3.5.1 port, `/// Port of`
+cites), `src/extensions/` (21 modules; `forecast.rs`, `theme.rs`+`colors.rs`+`overlay.rs`, `finder.rs`,
+`filter.rs`, `snapshot.rs`, `export.rs`, `alerts.rs`, `graph.rs`+`braille.rs`, `aggregate.rs`,
+`procring.rs`, `barstyle.rs`, `panels.rs`+`bridge.rs`, …); `build.rs` port-purity gate +
+`tests/data/htop_c_fn_names.txt` + `fake_fn_allowlist.txt`; `tests/parity/` (byte-diff vs reference
+htop); `scripts/gen_port_report.py` → `docs/port_report.html` (source-derived coverage, `todo!()` counts
+as stubbed); v0.5.9. *Caveat:* "first" is the **combination** — byte-compatible htop **and** a superset
+— not "first htop-like in Rust" (bottom / btop / ytop / zenith precede it but are from-scratch
+alternatives, not byte-parity ports of htop) nor "first process monitor with these features." Coverage /
+parity are corpus-relative (1069 functions; the parity suite's cases), a measurement, not proof of
+universal equivalence; some extensions (the theme overlay, the status toast, the bar cycler) are ported
+from the sibling tools iftoprs / storageshower, not original to htoprs. "None found," not proven;
+prior-art sweep non-exhaustive. MIT (derivative of htop, GPL-2.0).
 
 
 ---
