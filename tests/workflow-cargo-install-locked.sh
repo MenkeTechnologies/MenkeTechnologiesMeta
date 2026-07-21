@@ -111,6 +111,7 @@ done < <(find . -path './.git' -prune \
     -o -path '*/clap-juce-extensions/*' -prune \
     -o -path '*/node_modules/*' -prune \
     -o -path '*/vendor/*' -prune \
+    -o -path '*/src/ported/*' -prune \
     -o -path '*/target/*' -prune \
     -o -path '*/third_party/*' -prune \
     -o -type f -path '*/.github/workflows/*.yml' -print 2>/dev/null)
