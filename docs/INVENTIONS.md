@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 221 candidates (numbered entries through 174 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 222 candidates (numbered entries through 175 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -2491,6 +2491,37 @@ corpus- and seed-relative and the fuzzer is being deliberately hardened (repeate
 deeper rev-specs), which can surface further gaps — a measurement, not a proof of universal equivalence.
 "First" is author-asserted: no prior-art survey found a git-shadowing superset shipping a byte-level
 differential parity harness; recorded as "none found," not proven.
+
+**175. ztmux — the world's-first tmux superset: a byte-parity from-source tmux port that then extends past tmux** — `high`
+Every prior tmux-in-Rust effort is a *port* (tmux-rs, which ztmux itself was seeded from, is a
+faithful reimplementation) and every from-scratch Rust multiplexer (zellij, Wezterm's mux) is
+*tmux-incompatible*. ztmux is the first to be **both at once**: a from-**source** port of the whole
+tmux program — server, client, grid/screen model, input parser, layouts, the command language,
+formats, and the terminal back end — reimplemented against the upstream **tmux C sources** (vendored
+under `vendor/` as a plain, read-only, SHA-pinned copy, 196 `.c` files) and held to that spec by a
+byte-for-byte differential parity suite (identical inputs through real `tmux` and ztmux, diffed) at
+**1107/1107 (100%)**, with an **anti-drift gate** (`tests/ported_fn_names_match_c.rs`) that *fails the
+build* if a free `fn` is added to `src/` whose name has no counterpart in `vendor/tmux` — so the port
+cannot be faked with Rust-only "helper" functions. On top of that compatibility floor it is a
+**superset**: 119 original `src/extensions/` modules (walled off from the anti-drift gate precisely
+because they are *not* tmux) add capabilities tmux never had or removed — **`triggers`** revives
+tmux's deleted `monitor-content` as a general regex-on-pane-output → run-any-ztmux-command sense→act
+loop; a **ratatui** UI layer adds a which-key hint bar, a command palette with inline completion,
+edit-scrollback-in-`$EDITOR`, and multi-pane selective sync shown on the pane border; **zellij**
+features are absorbed natively (`@ztmux-zellij-mode` inset pane frames, `stack` pane-stack, a floating
+pane, a session manager, modal keybindings, a tab bar); **`resurrect`** + `@ztmux-resurrect-auto`
+fold tmux-resurrect **and** tmux-continuum into the binary; and **`open`** folds tmux-open/tmux-urlview
+in — every extension pipeable via `-o json`. *Basis:* `ztmux/README.md` §[0x02]/[0x04]/[0x05]/[0x08];
+`ztmux/vendor/` (SHA-pinned tmux C, 196 `.c`); `ztmux/parity/PARITY_ROADMAP.md` (1107/1107);
+`ztmux/tests/ported_fn_names_match_c.rs` (anti-drift gate) + `tests/data/fake_fn_allowlist.txt`;
+`ztmux/src/extensions/` (119 modules: `triggers.rs`, `resurrect.rs`, `stack.rs`, `sessions.rs`,
+`modal.rs`, `open.rs`, `switch.rs`, `dashboard.rs`, `watch.rs`, `sync.rs`, …); v3.7.21. Pairs with
+`ztmux-core` (the native tmux *client* engine) — this repo is the server+client rewrite. *Caveat:*
+"first" is the **combination** — a byte-compatible tmux **and** a superset — not "first tmux in Rust"
+(tmux-rs precedes it as a pure port) nor "first Rust multiplexer with these features" (zellij has
+frames/floating/resurrect but is not tmux). The parity figure is corpus-relative (1107 cases), not a
+proof of universal equivalence; the extensions are original subcommands, not upstream tmux. "None
+found," not proven; prior-art sweep non-exhaustive. MIT (derivative of tmux, ISC).
 
 
 ---
