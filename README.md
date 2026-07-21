@@ -35,11 +35,11 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (56)](#tier-1--core-56)
+  - [Tier 1 — Core (64)](#tier-1--core-64)
   - [Tier 2 — Stryke ecosystem + tap (34)](#tier-2--stryke-ecosystem--tap-34)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
-  - [Tier 5 — Editor / multiplexer plugins (14)](#tier-5--editor--multiplexer-plugins-14)
+  - [Tier 5 — Editor / multiplexer plugins (20)](#tier-5--editor--multiplexer-plugins-20)
   - [Tier 6 — Apps, extensions, web & web-APIs (22)](#tier-6--apps-extensions-web--web-apis-22)
   - [Tier 7 — znative plugins (8)](#tier-7--znative-plugins-8)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
@@ -84,7 +84,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 All 177 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (56)
+### Tier 1 — Core (64)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -260,7 +260,7 @@ The plugin family that `zpwr` and any zsh user can load via zinit / oh-my-zsh. T
 | [`revolver`](https://github.com/MenkeTechnologies/revolver) | Spinner / progress widget for zsh scripts. |
 | [`zunit`](https://github.com/MenkeTechnologies/zunit) | Powerful zsh unit-testing framework. |
 
-### Tier 5 — Editor / multiplexer plugins (14)
+### Tier 5 — Editor / multiplexer plugins (20)
 
 Plugins that target Vim/Neovim and tmux rather than zsh proper.
 
@@ -279,6 +279,12 @@ Plugins that target Vim/Neovim and tmux rather than zsh proper.
 | [`vscode-viml`](https://github.com/MenkeTechnologies/vscode-viml) | VS Code / VSCodium extension for VimL / Vimscript (`vimlrs`) — `*.vim` + `vimrc` / `gvimrc` / `init.vim` filetype detection, a hand-written `source.viml` TextMate grammar (control keywords, ex commands, scope sigils `g:` / `s:` / `v:`, built-in functions, both string forms), a `vim.run` command, LSP via `vimlrs --lsp`, and DAP debugging via `vimlrs --dap`. &middot; <sub>[docs](https://menketechnologies.github.io/vscode-viml/) · [report](https://menketechnologies.github.io/vscode-viml/report.html)</sub> |
 | [`vim-viml`](https://github.com/MenkeTechnologies/vim-viml) | Vim / Neovim support for VimL / Vimscript (`vimlrs`) — `*.vim` + `vimrc` / `gvimrc` / `init.vim` filetype detection, syntax + keyword-aware indent, run / `:make` (`:VimlRun`) via `vimlrs`, ALE linting, and LSP via `vimlrs --lsp` (vim-lsp / coc.nvim) plus nvim-dap via `vimlrs --dap`. &middot; <sub>[docs](https://menketechnologies.github.io/vim-viml/) · [report](https://menketechnologies.github.io/vim-viml/report.html)</sub> |
 | [`emacs-viml`](https://github.com/MenkeTechnologies/emacs-viml) | `vimlrs-mode` for Emacs — font-lock for VimL / Vimscript (keywords, ex commands, scope + special `v:` vars, built-in functions), keyword-aware indent, run via `vimlrs`, eldoc + completion from a built-in-function stdlib, and LSP via `vimlrs --lsp` (eglot + lsp-mode). &middot; <sub>[docs](https://menketechnologies.github.io/emacs-viml/) · [report](https://menketechnologies.github.io/emacs-viml/report.html)</sub> |
+| [`vscode-arb`](https://github.com/MenkeTechnologies/vscode-arb) | VS Code / VSCodium extension for **arb** — the pipe-native TUI/web dashboard language (jq/xpath/css/yq superset on `fusevm`/JIT). `*.arb` filetype detection, a `source.arb` TextMate grammar (keywords, widgets, query verbs, input sources, regex + duration/size literals, widget paths, flags), an `arb.run` command, LSP via `arb --lsp`, and DAP debugging via `arb --dap`. &middot; <sub>[docs](https://menketechnologies.github.io/vscode-arb/) · [report](https://menketechnologies.github.io/vscode-arb/report.html)</sub> |
+| [`vim-arb`](https://github.com/MenkeTechnologies/vim-arb) | Vim / Neovim support for **arb** — `*.arb` filetype detection, syntax + brace-aware indent, run / `:make` via `arb`, ALE linting, and LSP via `arb --lsp` (vim-lsp / coc.nvim) plus nvim-dap via `arb --dap`. &middot; <sub>[docs](https://menketechnologies.github.io/vim-arb/) · [report](https://menketechnologies.github.io/vim-arb/report.html)</sub> |
+| [`emacs-arb`](https://github.com/MenkeTechnologies/emacs-arb) | `arb-mode` for Emacs — font-lock for **arb** (keywords, widgets, query verbs, input sources, regex + duration/size literals), indent, run via `arb`, eldoc + completion from a built-in stdlib, and LSP via `arb --lsp` (eglot + lsp-mode). &middot; <sub>[docs](https://menketechnologies.github.io/emacs-arb/) · [report](https://menketechnologies.github.io/emacs-arb/report.html)</sub> |
+| [`vscode-elisp`](https://github.com/MenkeTechnologies/vscode-elisp) | VS Code / VSCodium extension for Emacs Lisp (`elisprs`) — `*.el` filetype detection, a `source.elisp` TextMate grammar (special forms, built-in functions, keyword symbols, char literals, quoting), an `elisp.run` command, LSP via `elisp --lsp`, and DAP debugging via `elisp --dap`. &middot; <sub>[docs](https://menketechnologies.github.io/vscode-elisp/) · [report](https://menketechnologies.github.io/vscode-elisp/report.html)</sub> |
+| [`vim-elisp`](https://github.com/MenkeTechnologies/vim-elisp) | Vim / Neovim support for Emacs Lisp (`elisprs`) — `*.el` filetype detection, syntax + paren-aware indent, run / `:make` via `elisp`, ALE linting, and LSP via `elisp --lsp` (vim-lsp / coc.nvim) plus nvim-dap via `elisp --dap`. &middot; <sub>[docs](https://menketechnologies.github.io/vim-elisp/) · [report](https://menketechnologies.github.io/vim-elisp/report.html)</sub> |
+| [`emacs-elisp`](https://github.com/MenkeTechnologies/emacs-elisp) | `elisprs-mode` for Emacs — font-lock for Emacs Lisp via `elisprs` (special forms, built-in functions, keyword symbols, char literals, quoting), paren-aware indent, run via `elisp`, eldoc + completion from a built-in stdlib, and LSP via `elisp --lsp` (eglot + lsp-mode). &middot; <sub>[docs](https://menketechnologies.github.io/emacs-elisp/) · [report](https://menketechnologies.github.io/emacs-elisp/report.html)</sub> |
 | [`tmux-fzf-url`](https://github.com/MenkeTechnologies/tmux-fzf-url) | Pop a fzf picker over every URL currently visible in the tmux pane; selected URL opens in the default browser. |
 
 ### Tier 6 — Apps, extensions, web & web-APIs (22)
@@ -698,11 +704,11 @@ Measured fresh-clone size (checked-out tracked files + `.git/modules/`, after `g
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 56 | ~4.0 GB |
+| Tier 1 — Core | 64 | ~4.0 GB |
 | Tier 2 — Stryke ecosystem | 34 | ~42 MB |
 | Tier 3 — zsh-more-completions | 1 | ~325 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~24 MB |
-| Tier 5 — Editor / multiplexer plugins | 14 | ~15 MB |
+| Tier 5 — Editor / multiplexer plugins | 20 | ~15 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 22 | ~3.6 GB |
 | Tier 7 — znative plugins | 8 | ~424 KB |
 | **Total** | **177** | **~7.8 GB** |
