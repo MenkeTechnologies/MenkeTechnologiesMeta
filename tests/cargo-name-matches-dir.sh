@@ -92,6 +92,18 @@ for p in "${paths[@]}"; do
     bl=$(echo "$base" | tr '[:upper:]' '[:lower:]')
     nl=$(echo "$name" | tr '[:upper:]' '[:lower:]')
 
+    # Intentional crate-name/dir mismatches: the dir-matching short name is
+    # already taken on crates.io, so the published crate uses a distinct name
+    # (arb/Cargo.toml documents "arb" is taken -> "arblang"; scalars -> the
+    # taken "scala-rs" slot lineage; groovyrs -> "groovy"). Permanent, not a
+    # "fix later" gap — the crates.io name can't change once a slot is claimed.
+    case "$base:$name" in
+        arb:arblang|scalars:scala-rs|groovyrs:groovy)
+            echo "ALLOWED  $cargo: name=\"$name\" != dir \"$base\" (documented crates.io-name-taken exception)"
+            continue
+            ;;
+    esac
+
     if [[ "$bl" == "$nl" ]]; then
         echo "PASS  $cargo: name=\"$name\" matches dir \"$base\""
     else
