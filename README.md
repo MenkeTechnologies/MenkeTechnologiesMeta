@@ -104,8 +104,12 @@ Fourteen languages share one self-authored execution engine — the [`fusevm`](h
 | `rubylang` | `ruby` | ✅ | ✅ | ✅ `_ruby` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `phplang` | `php` | ✅ | ✅ | ✅ `_php` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `node-js` | `node` | ✅ | ✅ | ✅ `_node` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `javars` | `java` | ❌ | ❌ | ✅ `_java` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| `kotlinrs` | `kotlin` | ❌ | ❌ | ✅ `_kotlin` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| `scalars` | `scala` | ❌ | ❌ | ✅ `_scala` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| `groovyrs` | `groovy` | ❌ | ❌ | ✅ `_groovy` | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
 
-<sub>✅ full parity across the core toolchain dimensions. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written. `rust {}` FFI compiles inline `rust { pub extern "C" fn … }` blocks to a cached `cdylib` (shared `fusevm` FFI runtime) callable by name. The introspection flags dump the lexer token stream (`--dump-tokens`), the parsed AST (`--dump-ast`), and a `fusevm` bytecode disassembly (`--disasm`) for the given script. ¹ `strykelang` spells the AST dump `--ast`. ² `arb` has no whole-program `fusevm::Chunk` (only ephemeral per-expression chunks), so its `--disasm` lists the compiled per-expression op vectors.
+<sub>The top ten rows are ✅ full parity across the core toolchain dimensions; the bottom four (`javars` / `kotlinrs` / `scalars` / `groovyrs`) are the newer JVM-language slices — standalone CLI + introspection flags + a zsh completion today, with LSP / DAP / man pages / HTML docs / `reference.html` / FFI still to come (`kotlinrs` has no `--disasm` yet either). `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written. `rust {}` FFI compiles inline `rust { pub extern "C" fn … }` blocks to a cached `cdylib` (shared `fusevm` FFI runtime) callable by name. The introspection flags dump the lexer token stream (`--dump-tokens`), the parsed AST (`--dump-ast`), and a `fusevm` bytecode disassembly (`--disasm`) for the given script. ¹ `strykelang` spells the AST dump `--ast`. ² `arb` has no whole-program `fusevm::Chunk` (only ephemeral per-expression chunks), so its `--disasm` lists the compiled per-expression op vectors.
 
 | Project | What it is |
 |---|---|
