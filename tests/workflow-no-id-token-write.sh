@@ -73,6 +73,9 @@ declare -A OIDC_ALLOWLIST=(
     # first-party actions/deploy-pages OIDC flow (configure-pages ->
     # upload-pages-artifact -> deploy-pages) — no cloud-cred exchange.
     [./zwire/.github/workflows/pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party; deploys zwire's docs site)"
+    # arb (pipe-native TUI/dashboard language) publishes its own docs site via
+    # the same first-party actions/deploy-pages OIDC flow — no cloud-cred exchange.
+    [./arb/.github/workflows/pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party; deploys arb's docs site)"
 )
 
 checked=0
