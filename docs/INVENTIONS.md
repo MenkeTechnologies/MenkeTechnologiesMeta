@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 222 candidates (numbered entries through 175 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 223 candidates (numbered entries through 176 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
 deep prior-art analysis in the appendix.
@@ -2522,6 +2522,40 @@ in — every extension pipeable via `-o json`. *Basis:* `ztmux/README.md` §[0x0
 frames/floating/resurrect but is not tmux). The parity figure is corpus-relative (1107 cases), not a
 proof of universal equivalence; the extensions are original subcommands, not upstream tmux. "None
 found," not proven; prior-art sweep non-exhaustive. MIT (derivative of tmux, ISC).
+
+**176. powerliners — the world's-first Powerline superset: a byte-parity zero-Python port that then extends past Powerline** — `high`
+The superset companion to #116 (which is the *parity harness*): `powerliners` is a single-binary,
+zero-Python Rust port of `powerline-status`, drop-in compatible with existing `powerline/config`
+themes and validated by 462 parity tests that run the upstream Python interpreter live and assert
+byte/value-identical output (134/137 upstream `.py` files DONE, 2,473 lib tests), held to that spec by
+an **anti-drift gate** (`tests/ported_fn_names_match_py.rs`) that *fails the build* if a `fn` is added
+to `src/` whose name has no counterpart in upstream Powerline's `.py` — the same falsify-the-port
+instrument as ztmux (#175) and zvcs (#173/#174), with the same **carve-out**: `docs/PORT.md` permits
+non-ported code in only `src/extensions/` and `src/bin/`. On that byte-compatible floor it is a
+**superset**: `src/extensions/` ships 20 net-new segments upstream Powerline has no counterpart for —
+GPU compute % + VRAM (vendor-dispatched nvidia-smi→rocm-smi→intel_gpu_top→ioreg), thermal (temp+fan),
+live disk I/O, a p10k-style single-chunk `git_status` (branch + unstaged/untracked/staged/conflict/
+ahead/behind/stash badges from one `--porcelain=v2` fork), Docker/OCI container counts, k8s
+kubecontext+namespace, GitHub CI check-runs, AWS/GCP context, POSIX process tally, and fusevm-JIT /
+zshrs/stryke/awkrs rkyv cache-size segments — all dispatched as native daemon built-ins, no filesystem
+theme lookup. The structural superset is **Reactive Prompt Push** (`src/extensions/watch.rs`): upstream
+Powerline is **pull-only** (it redraws on `precmd` / a tmux interval, so a `git checkout` in another
+pane leaves this pane's branch stale until Enter); powerliners adds an orthogonal **push** path — the
+warm `powerline-daemon` watches each client's live prompt inputs (`cwd`, `.git/HEAD`, `.git/index`, the
+branch ref) via real OS events (kqueue/FSEvents/inotify through the `notify` crate), edge-triggered and
+prompt-fingerprint-deduped, and writes one wake byte to a per-client FIFO the shell's ZLE (`zle -F fd`
+→ `reset-prompt`) redraws in place, so the branch flips **between keystrokes**, no Enter, no timer.
+*Basis:* `powerliners/src/ported/` (byte-parity port, `// py:NNN` citations), `src/extensions/` (20
+segment modules + `watch.rs` reactive push), `src/extensions/shell_hooks/reactive.zsh`;
+`tests/ported_fn_names_match_py.rs` (anti-drift gate); `docs/PORT.md` (`src/extensions/` + `src/bin/`
+carve-out); 462 parity tests / 2,473 lib tests; README §"Bundled extensions" / §"Reactive Prompt
+Push"; v0.2.17. *Caveat:* "first" is the **combination** — byte-compatible Powerline **and** a superset
+— not "first Powerline in Rust" (powerline-go / powerline-rs precede it but are not byte-parity ports
+of `powerline-status`) nor "first prompt with these segments." Byte-parity is asserted on the ported
+render path (tested against upstream Python, per #116's caveat); the 20 segments are original, not
+upstream; reactive push is zsh-only (ZLE is the one mainstream line editor that can watch an arbitrary
+fd and redraw mid-line without a timer) and degrades silently to pull-only when no watch backend is
+available. "None found," not proven; prior-art sweep non-exhaustive. MIT.
 
 
 ---
