@@ -20,7 +20,7 @@ deep, the caveat says so.
 
 Total: 225 candidates (numbered entries through 178 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
-original ledger entries) are flagged **★** and re-numbered below; three of them (#1, #64, #65) carry a
+original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
 deep prior-art analysis in the appendix.
 
 ---
@@ -2461,7 +2461,7 @@ from its nearest indexed ancestor. Reads are instant; every other write is a use
 (Everything, macOS `mds`, `fswatch`); this is a well-executed instance of a known pattern, documented for
 its audit (full scan once → hooks-only), not as a novelty.
 
-**173. zvcs — a git-shadowing superset that makes many-writer, submodule-heavy version control lock-free via a per-repo FIFO coordinator daemon** — `high`
+**173. ★ zvcs — a git-shadowing superset that makes many-writer, submodule-heavy version control lock-free via a per-repo FIFO coordinator daemon** — `high`
 Stock git guards index writes with an `O_EXCL` `.git/index.lock`: a contended writer does not wait, it *fails* (`fatal: Unable to create '.git/index.lock': File exists`), so under many concurrent automated agents committing across a meta-repo of nested submodules the lock becomes a thundering herd of retries with no fairness — the exact contention documented throughout this project's own history. zvcs ships a single binary named **`git`** that shadows stock git on `PATH`; git-compatible porcelain is served natively through a vendored port of **gitoxide** (`src/ported/gix-*`, ~1,387 Rust files) so tools on PATH (RustRover, `gh`, cargo) see identical behavior against the same on-disk `.git`. On top of that it adds superset verbs stock git structurally cannot have: **`git zdaemon`** — a per-repo coordinator daemon that replaces the `index.lock` flock with a FIFO userspace barrier (a single `worker_loop` owns the abstract critical section and drains an mpsc channel, keeping a `VecDeque` of requests in strict arrival order; clients speak `ACQUIRE`/`GRANTED`/`RELEASE` over a Unix-domain socket and a dropped or EOF'd connection auto-releases), so N writers serialize first-come-first-served instead of racing; **`git zsync`** — reconcile every submodule to its tracked mainline (`origin/main` / `origin/master`), fast-forward only, keeping it *attached* so detached HEAD never happens; and **`git zbump`** — forward-only submodule gitlink bumps that advance a parent's pointer only when the submodule's new HEAD is a descendant of the recorded one. *Basis:* `zvcs/src/extensions/src/superset/zdaemon.rs` (`worker_loop`, the `VecDeque` FIFO queue, the `ACQUIRE`/`RELEASE` protocol over `UnixListener`/`UnixStream` + `mpsc`); `src/extensions/src/lock.rs` (`RepoLock::acquire` and the RAII `Drop` that emits `RELEASE`); `src/extensions/src/superset/zsync.rs`, `zbump.rs`; `src/extensions/src/dispatch.rs` (superset-verb vs git-compat routing); git engine at `src/ported/gix-*`; the shadow binary is declared `[[bin]] name = "git"` in `src/extensions/Cargo.toml`. **Test-verified:** `src/extensions/tests/coordination.rs::daemon_serializes_concurrent_writers` spawns the real `git zdaemon start`, races N threads that each `RepoLock::acquire` → mark occupancy → release, and asserts the peak observed critical-section occupancy is exactly 1 (a broken lock would exceed 1). *Caveat:* gitoxide (git in Rust) predates this and is the vendored engine, not the claim; daemon-mediated locking exists in other VCS. The candidate-first is the packaging — a **git-shadowing** superset whose FIFO `zdaemon` makes many-writer *automated* workflows over nested submodules lock-free and fair, with `zsync` / `zbump` codifying the attached, forward-only submodule discipline this project already enforces by hand. "None found," not proven; search not exhaustive.
 
 **174. First git-superset VCS held to git compatibility by a differential fuzz harness asserting byte-level parity — stdout, exit code, and resulting repository state — against stock git as the oracle** — `high`
@@ -2691,6 +2691,44 @@ JIT and five+ distinct language frontends targeting it**. Recorded as "none foun
 MenkeTechnologies, **not** stamped a proven categorical first. Time-sensitive: Deegen is actively
 developed and explicitly designed to generalize, so a future release could become the first documented
 counterexample.
+
+---
+
+### Why each near-miss isn't a dup — the git-shadowing coordination superset (#173)
+
+The claim is **not** "git in Rust" (gitoxide already is that, and zvcs vendors it as the engine) and
+**not** "a better VCS." It is narrow and specific: a single binary literally named `git` that shadows
+stock git on `PATH` and serves identical porcelain, whose per-repo FIFO `zdaemon` replaces
+`.git/index.lock`'s fail-fast `O_EXCL` semantics with an arrival-ordered userspace coordinator, so many
+**automated** writers over a meta-repo of nested submodules serialize first-come-first-served instead of
+racing. A prior-art sweep (WebSearch, 2026-07, US-only, non-exhaustive) splits cleanly: the tools that
+are *git-compatible* are not `git`-shadowing drop-ins, and the community's actual answer to index-lock
+contention is retry-or-worktrees, not a shipped coordinator.
+
+- **Stock git** — the problem, not a near-miss. `.git/index.lock` is `O_EXCL`: a contended writer does
+  not queue, it *fails* (`fatal: Unable to create '.git/index.lock'`). The documented fixes are
+  retry-with-exponential-backoff (the thundering herd zvcs removes) — the exact pattern this project's
+  own history is full of — with no fairness and possible starvation.
+- **git worktrees** — the partial fix everyone reaches for: each worktree gets its own index file, so
+  staging stops racing. But it does **not** coordinate a *shared* index, ref updates and object packing
+  on the common `.git` still contend, and it is a *different-index* workaround, not an arrival-ordered
+  serializer over one repository. (One of the search hits is Claude Code's own worktree lock-contention
+  issue — the problem is live and unsolved in git.)
+- **Jujutsu (jj)** — a Git-compatible VCS, but its own system with git as a *backend*, driven by a `jj`
+  CLI; it is a layer/alternate front-end, **not** a binary named `git` that shadows stock git on `PATH`.
+  Its concurrency safety is about surviving rsync/Dropbox replication without corruption, **not** a FIFO
+  many-writer coordinator over a single shared `.git/index`. Different axis.
+- **Sapling (Meta)** — a monorepo VCS (Mercurial-derived) with its own `sl` CLI and server-backed
+  storage (Mononoke/EdenFS) for scale; not a drop-in `git` binary and not this `.git/index.lock`
+  coordinator mechanism.
+- **Workflow layers (git-branchless, git-town, …)** — porcelain conveniences *on top of* git; they add
+  no lock coordinator and do not shadow the `git` binary.
+
+Net: no prior art found for a **git-shadowing drop-in `git` binary whose per-repo FIFO daemon makes
+many-writer, submodule-heavy, automated workflows lock-free and fair**, with `zsync`/`zbump` codifying
+attached, forward-only submodule discipline and a differential fuzz harness (#174) holding the git-compat
+floor to byte parity. Recorded as "none found", owned by MenkeTechnologies, **not** stamped a proven
+absolute; the sweep is non-exhaustive and cannot cover private/internal tooling.
 
 ---
 
