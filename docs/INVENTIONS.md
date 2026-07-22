@@ -18,26 +18,28 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 226 candidates (numbered entries through 179 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 229 candidates (numbered entries through 179 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 11g, 11h, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
 deep prior-art analysis in the appendix.
 
 ---
 
-## I. Execution engine & language runtimes — fusevm + fourteen frontends
+## I. Execution engine & language runtimes — fusevm + fifteen frontends
 
-**1. ★ Solo-authored from-scratch JIT VM hosting ten production language frontends** — `med`
+**1. ★ Solo-authored from-scratch JIT VM hosting eleven production language frontends** — `med`
 One person built the whole execution engine — a bytecode VM plus a 3-tier
 (linear/block/tracing) Cranelift JIT emitting native machine code at runtime, and an
-AOT object compiler — and **ten independent language frontends** (`strykelang`/Perl 5,
-`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, and the
-original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode. The
+AOT object compiler — and **eleven independent language frontends** (`strykelang`/Perl 5,
+`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, `rlang`/R, and the
+original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode — with
+four more (`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy) at
+narrower language coverage, fifteen frontends in all. The
 novelty is the combination: solo author **+** from-scratch VM with a genuine machine-code
-JIT **+** 10 real frontends. *Basis:* `fusevm/src/jit.rs` builds a
+JIT **+** 11 mature frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
 mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
-`cranelift_object`; ten crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
+`cranelift_object`; eleven crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
 (arb's compute core — its `calc` / expression layer — lowers to a `fusevm::Chunk` via
 `arb/src/expr.rs` and runs on the VM, while its widget / layout construction stays a native
 `ratatui` interpreter). `fusevm/src/op.rs` (~224 ops),
@@ -129,25 +131,27 @@ persistence the README's survey of BWK/gawk/mawk/goawk/frawk/zawk finds in none.
 machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-conducted
 survey; the machine-code tier engages only for JIT-eligible numeric chunks.
 
-**11. Ten-language DAP debuggers on one shared VM** — `high`
-Ten of the fourteen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
-Ruby, arb, Python, PHP, JavaScript — the four newest, Java, Kotlin, Scala, and Groovy, have no DAP yet)
+**11. Eleven-language DAP debuggers on one shared VM** — `high`
+Eleven of the fifteen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
+Ruby, arb, Python, PHP, JavaScript, R — the four JVM slices, Java, Kotlin, Scala, and Groovy, have no DAP yet)
 ship a real Debug Adapter Protocol server (`--dap`
 over stdio or TCP) wrapping a shared line-stop / step / breakpoint / function-breakpoint /
 expression-evaluate debugger state machine, with matching IntelliJ DAP clients —
-source-level interactive debugging for ten languages on a single VM substrate, including
+source-level interactive debugging for eleven languages on a single VM substrate, including
 classic languages (AWK, VimL, zsh) that historically have **no** DAP debugger. *Basis:*
 `strykelang/.../dap.rs` (1997 L, the original the others were ported from);
 `awkrs/src/dap.rs` (1085 L) + `debugger.rs`; `zshrs/src/extensions/dap.rs` (879 L) +
 `tests/dap_integration.rs`; `pythonrs/src/dap.rs` (629 L); `node-js/src/dap.rs` (608 L);
 `phplang/src/dap.rs` (599 L); `rubylang/src/dap.rs` (595 L) + `tests/dap.rs`;
 `arb/src/dap.rs` (582 L); `elisprs/src/dap.rs` (564 L); `vimlrs/src/dap.rs` (353 L);
+`rlang/src/dap.rs` (166 L);
 IntelliJ `*DapClient.kt` in each editors tree; line tracking via debug-only markers.
 *Caveat:* the debuggers share design (ported from stryke's), not a single fusevm op —
 line tracking is per-frontend; variable drill-down depth varies by value model (awk =
-scalars + flat assoc only). Python/Ruby/PHP/JavaScript already have mature DAP debuggers
+scalars + flat assoc only); R's and Ruby's are partial (handshake + run-to-completion,
+stepping pending). Python/Ruby/PHP/JavaScript/R already have mature DAP debuggers
 elsewhere, so the world-first leg is the classic-language debuggers (AWK/VimL/zsh) plus
-running all ten on one shared VM substrate — not DAP for those four mainstream languages.
+running all eleven on one shared VM substrate — not DAP for those mainstream languages.
 
 **11a. Fused superinstructions collapsing whole counted/append loops into one dispatch** — `high`
 The opcode set includes macro-op superinstructions (`AccumSumLoop`, `SlotIncLtIntJumpBack`,
@@ -211,6 +215,59 @@ multi-frontend fusevm bytecode + Cranelift JIT + native AOT, authored in Rust, n
 compiled Ruby" outright. Early: DAP is partial (handshake + run-to-completion, stepping
 pending); `extend`/`prepend`, keyword params, regex, and bignum are planned (`BUGS.md`).
 "First" rests on a non-exhaustive prior-art sweep. MIT.
+
+**11g. First Python lowered onto a shared multi-language JIT VM's bytecode (pythonrs) — the first compiled standalone Python runtime in Rust** — `med`
+pythonrs is the eighth fusevm frontend: it lexes and parses Python to an AST, lowers it
+to `fusevm` bytecode on a `PyHost` object heap, and runs it on the shared three-tier
+Cranelift JIT + native-AOT engine — with **no bespoke VM or JIT of its own**.
+Arithmetic/comparison operators lower to native VM ops so the JIT can trace hot loops;
+Python-specific behavior (attribute access, container operations, object construction) is
+served by a thread-local runtime host. Implemented: the standalone `python` binary +
+REPL, the core builtin surface (`print`/`len`/`range`/`int`/`str`/`list`/`dict`/`sorted`/
+`enumerate`/`zip`/`map`/`filter` and more), the transparent rkyv bytecode cache on every
+run, AOT compilation to a standalone native executable, an AOP method-intercept registry,
+a DAP debug server, and an LSP server. *Basis:*
+`pythonrs/src/{lexer,parser,compiler,host,cache,intercepts,lsp,dap,aot}.rs` (~5,999 L);
+`Cargo.toml` `fusevm = "0.14.10"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
+harness (`cargo run --bin parity`, `src/bin/parity.rs`) diffs the example corpus live
+against the reference `python3`. *Caveat:* CPython already compiles Python to bytecode
+(in C, on its own VM) and PyPy JIT-compiles Python on RPython's own tracing JIT, while
+RustPython is a Python-in-Rust interpreter — so the defensible "first" is the narrower
+combination: Python lowered onto a *shared* multi-frontend fusevm bytecode + Cranelift
+JIT + native AOT, authored in Rust, not "first compiled Python" outright. Early:
+generators / `yield` are rejected at call time, `async`/`await` is parsed but `await` is a
+no-op (no event loop), and `**kwargs` / keyword-only params are planned (`BUGS.md`).
+"First" rests on a non-exhaustive prior-art sweep. MIT.
+
+**11h. First R lowered onto a shared multi-language JIT VM's bytecode (rlang) — R compiled to native machine code with no JVM** — `med`
+rlang is the newest (fifteenth) fusevm frontend: it lexes and parses R to an AST, lowers
+it to `fusevm` bytecode on an `RHost` vector heap, and runs it on the shared three-tier
+Cranelift JIT — with **no bespoke VM or JIT of its own**. GNU R's own "JIT"
+(`compiler::enableJIT`, default level 3 since R 3.4.0) compiles closures to *R bytecode*
+that a C interpreter loop then walks; rlang instead lowers `for` / `while` / `repeat` /
+`if` / `&&` / `||` to native fusevm jumps with native integer loop counters, so the
+tracing JIT sees ordinary loops and emits machine code. R's value model is preserved:
+everything is a vector (no scalars), values carry `names`/`dim`/`class` attributes, every
+operator recycles and propagates `NA`, and copy-on-modify semantics hold for complex
+assignment targets (`l$v[2] <- 9`, `names(x) <- v`). Implemented: the standalone
+`Rscript` binary + REPL, the primitive library, S3 dispatch, the rkyv bytecode cache, an
+AOP call-intercept registry, an LSP server, a DAP adapter, and `--dump-tokens` /
+`--dump-ast` / `--disasm` introspection. *Basis:*
+`rlang/src/{lexer,parser,compiler,host,builtins,cache,intercepts,lsp,dap,repl,aot}.rs`
+(~7,422 L across `src/*.rs`); `Cargo.toml` `fusevm = { version = "0.14.10", features =
+["jit", "jit-disk-cache", "aot"] }`; a differential parity harness (`cargo run --bin
+parity`, `src/bin/parity.rs`) diffs a **48-snippet** corpus (`tests/data/parity_corpus.R`)
+live against the system R, and `tests/parity.rs` replays the frozen outputs in CI with no
+R installed; `man/Rscript.1`, `completions/_Rscript`, `docs/` + generated
+`reference.html`. *Caveat:* R-to-native-code is not itself a first — Renjin compiles R to
+JVM machine code and FastR/TruffleR JIT-compiles R on GraalVM — so the defensible claim is
+the narrower combination: R lowered onto a *shared* multi-frontend bytecode VM with a
+Cranelift JIT, in Rust, with no JVM/GraalVM and no GNU R runtime linked. Early:
+arguments evaluate eagerly rather than as promises, so `substitute()` / `quote()` / NSE
+are unavailable; `tryCatch` and the condition system, data frames, factors, complex
+numbers, and `apply` over matrix margins are not implemented (`BUGS.md`); the DAP adapter
+is handshake + run-to-completion (stepping pending). "First" rests on a non-exhaustive
+prior-art sweep. MIT.
 
 **11e. arb — pipe-native UI-generating DSL that turns any Unix stream into a live TUI (and web) dashboard** — `med`
 arb is an original language (not a port) that drops into a Unix pipe and spawns a dynamic
