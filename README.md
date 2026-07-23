@@ -94,12 +94,12 @@ Sixteen languages share one self-authored execution engine — the [`fusevm`](ht
 
 | Frontend | CLI | LSP `--lsp` | DAP `--dap` | zsh completion | man pages | HTML docs | `reference.html` | `rust {}` FFI | `--dump-tokens` | `--dump-ast` | `--disasm` |
 |---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `strykelang` | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅¹ | ✅ |
+| `strykelang` | `stryke` | ✅ | ✅ | ✅ `_stryke` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `zshrs` | `zshrs` | ✅ | ✅ | ✅ `_zshrs` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `awkrs` | `awkrs` / `aw` | ✅ | ✅ | ✅ `_awkrs` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `vimlrs` | `viml` | ✅ | ✅ | ✅ `_viml` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `elisprs` | `elisp` | ✅ | ✅ | ✅ `_elisp` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅² |
+| `arb` | `arb` | ✅ | ✅ | ✅ `_arb` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `pythonrs` | `python` | ✅ | ✅ | ✅ `_python` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `rubylang` | `ruby` | ✅ | ✅ | ✅ `_ruby` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `phplang` | `php` | ✅ | ✅ | ✅ `_php` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -108,10 +108,10 @@ Sixteen languages share one self-authored execution engine — the [`fusevm`](ht
 | `kotlinrs` | `kotlin` | ✅ | ✅ | ✅ `_kotlin` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `scalars` | `scala` | ✅ | ✅ | ✅ `_scala` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `groovyrs` | `groovy` | ✅ | ✅ | ✅ `_groovy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `rlang` | `Rscript` | ✅ | ✅ | ✅ `_Rscript` | ✅³ | ✅ | ✅ | ✅⁴ | ✅ | ✅ | ✅ |
+| `rlang` | `Rscript` | ✅ | ✅ | ✅ `_Rscript` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `go-rs` | `go` | ✅ | ✅ | ✅ `_go` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-<sub>All sixteen rows are ✅ full parity across the core toolchain dimensions. The four JVM slices (`javars` / `kotlinrs` / `scalars` / `groovyrs`) and the newest, `go-rs`, reached full parity in the latest build-out, though their *language* surface is still narrower than the ten mature frontends. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written. `rust {}` FFI compiles inline `rust { pub extern "C" fn … }` blocks to a cached `cdylib` (shared `fusevm` FFI runtime) callable by name. The introspection flags dump the lexer token stream (`--dump-tokens`), the parsed AST (`--dump-ast`), and a `fusevm` bytecode disassembly (`--disasm`) for the given script. ¹ `strykelang` spells the AST dump `--ast`. ² `arb` has no whole-program `fusevm::Chunk` (only ephemeral per-expression chunks), so its `--disasm` lists the compiled per-expression op vectors. ³ `rlang` ships `man/man1/Rscript.1`; the `<name>all.1` companion page is the next wave. ⁴ `rlang` surfaces inline-Rust FFI as the R-idiomatic builtins `.rust(code)` / `.Call(name, …)` — compiling a self-contained `pub extern "C"` Rust block to a cached `cdylib` via the shared `fusevm` FFI runtime — since R has no `rust {}` block syntax.
+<sub>All sixteen rows are ✅ full parity across the core toolchain dimensions. The four JVM slices (`javars` / `kotlinrs` / `scalars` / `groovyrs`) and the newest, `go-rs`, reached full parity in the latest build-out, though their *language* surface is still narrower than the ten mature frontends. `reference.html` is generated from the LSP itself — the language server already knows every symbol, signature, and doc string, so the reference is emitted from that source of truth rather than hand-written. `rust {}` FFI compiles inline `rust { pub extern "C" fn … }` blocks to a cached `cdylib` (shared `fusevm` FFI runtime) callable by name. The introspection flags dump the lexer token stream (`--dump-tokens`), the parsed AST (`--dump-ast`), and a `fusevm` bytecode disassembly (`--disasm`) for the given script.
 
 | Project | What it is |
 |---|---|
