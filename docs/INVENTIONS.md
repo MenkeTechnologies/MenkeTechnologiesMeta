@@ -255,18 +255,26 @@ AOP call-intercept registry, an LSP server, a DAP adapter, and `--dump-tokens` /
 `--dump-ast` / `--disasm` introspection. Distilled, a single unified VM core yields
 a ten-part R platform: (1) the first R engine in Rust (memory-safe lexer / parser /
 compiler); (2) fusevm's slot-indexed, stack-based VM runtime; (3) its three-tier
-Cranelift JIT with native loop lowering; (4) AOT precompilation serializing bytecode
-into the rkyv/bincode cache (`~/.rlang/scripts.rkyv`) — a standalone native-object
-(`.fvm`) emitter is wired via the `staticlib` crate-type + fusevm `aot` feature but
-does not yet emit an executable (`aot.rs`); (5) the AOP call-intercept telemetry
-registry; (6) fusevm's zero-cost inline-Rust FFI bridge (a *substrate* capability —
-rlang does not enable the `ffi` feature and R exposes no `.Call` / `dyn.load`
-surface); (7) an interactive `--disasm` bytecode disassembler; (8) `--dump-tokens`
-lexical-stream tracing; (9) `--dump-ast` structural rendering; and (10) fusevm's
-`wasm32` web-worker engine (also *substrate* — rlang ships no wasm build). *Basis:*
-`rlang/src/{lexer,parser,compiler,host,builtins,cache,intercepts,lsp,dap,repl,aot}.rs`
-(~7,422 L across `src/*.rs`); `Cargo.toml` `fusevm = { version = "0.14.10", features =
-["jit", "jit-disk-cache", "aot"] }`; a differential parity harness (`cargo run --bin
+Cranelift JIT with native loop lowering; (4) AOT compilation two ways — `--build`
+warms the rkyv/bincode bytecode cache (`~/.rlang/scripts.rkyv`), and `--aot` links
+the emitted fusevm object against the rlang runtime staticlib into a **standalone
+native `.fvm` executable** with the R closures embedded in the chunk name table
+(`aot.rs`, `aot_runtime.rs`); (5) the AOP call-intercept telemetry registry;
+(6) fusevm's zero-cost inline-Rust FFI bridge **exposed to R** via `.rust(code)`
+(compile a self-contained Rust block to a cached cdylib) and R's own `.Call(name,
+…)` verb (invoke its exports, marshalling length-1 vectors to `i64`/`f64`/string
+and back), behind fusevm's `ffi` feature (`ffi.rs`, `builtins.rs`); (7) an
+interactive `--disasm` bytecode disassembler; (8) `--dump-tokens` lexical-stream
+tracing; (9) `--dump-ast` structural rendering; and (10) a **`wasm32-unknown-unknown`
+build** — the same crate on the bare fusevm interpreter (Cranelift/`ffi`/LSP/DAP
+target-gated off), R output routed through a capture buffer, exporting
+`rlang_eval` / `rlang_alloc` / `rlang_free` for a web-worker host (`wasm.rs`).
+*Basis:*
+`rlang/src/{lexer,parser,compiler,host,builtins,ffi,cache,intercepts,lsp,dap,repl,aot,aot_runtime,wasm}.rs`;
+`Cargo.toml` native `fusevm = { version = "0.14.10", features = ["jit",
+"jit-disk-cache", "aot", "ffi"] }` with the wasm target on the bare interpreter, and
+`crate-type = ["rlib", "staticlib"]` (the wasm `cdylib` emitted on demand via `cargo
+rustc --crate-type cdylib --target wasm32-unknown-unknown`); a differential parity harness (`cargo run --bin
 parity`, `src/bin/parity.rs`) diffs a **48-snippet** corpus (`tests/data/parity_corpus.R`)
 live against the system R, and `tests/parity.rs` replays the frozen outputs in CI with no
 R installed; `man/Rscript.1`, `completions/_Rscript`, `docs/` + generated
