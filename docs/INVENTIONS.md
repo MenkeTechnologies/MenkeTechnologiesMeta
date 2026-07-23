@@ -252,7 +252,18 @@ operator recycles and propagates `NA`, and copy-on-modify semantics hold for com
 assignment targets (`l$v[2] <- 9`, `names(x) <- v`). Implemented: the standalone
 `Rscript` binary + REPL, the primitive library, S3 dispatch, the rkyv bytecode cache, an
 AOP call-intercept registry, an LSP server, a DAP adapter, and `--dump-tokens` /
-`--dump-ast` / `--disasm` introspection. *Basis:*
+`--dump-ast` / `--disasm` introspection. Distilled, a single unified VM core yields
+a ten-part R platform: (1) the first R engine in Rust (memory-safe lexer / parser /
+compiler); (2) fusevm's slot-indexed, stack-based VM runtime; (3) its three-tier
+Cranelift JIT with native loop lowering; (4) AOT precompilation serializing bytecode
+into the rkyv/bincode cache (`~/.rlang/scripts.rkyv`) — a standalone native-object
+(`.fvm`) emitter is wired via the `staticlib` crate-type + fusevm `aot` feature but
+does not yet emit an executable (`aot.rs`); (5) the AOP call-intercept telemetry
+registry; (6) fusevm's zero-cost inline-Rust FFI bridge (a *substrate* capability —
+rlang does not enable the `ffi` feature and R exposes no `.Call` / `dyn.load`
+surface); (7) an interactive `--disasm` bytecode disassembler; (8) `--dump-tokens`
+lexical-stream tracing; (9) `--dump-ast` structural rendering; and (10) fusevm's
+`wasm32` web-worker engine (also *substrate* — rlang ships no wasm build). *Basis:*
 `rlang/src/{lexer,parser,compiler,host,builtins,cache,intercepts,lsp,dap,repl,aot}.rs`
 (~7,422 L across `src/*.rs`); `Cargo.toml` `fusevm = { version = "0.14.10", features =
 ["jit", "jit-disk-cache", "aot"] }`; a differential parity harness (`cargo run --bin
