@@ -60,12 +60,29 @@ chdir $root or die "gen-code-volume: cannot cd to repo root '$root'\n"
 var $in_place = (@ARGV && $ARGV[0] eq "--in-place")
 
 # ---- exclude set: nested submodule mountpoints + the plain-vendored fish tree --
+# Mountpoints are read from every `.gitmodules` in the tree, NOT from
+# `git submodule status --recursive`. That command prints `-` and refuses to
+# descend whenever it considers a submodule inactive, so one misjudged parent
+# silently drops all of its nested mountpoints from the exclude set and every
+# vendored engine under it gets counted a second time. Parsing `.gitmodules`
+# depends only on what is on disk, so the dedup can't be skewed by config.
 var @nested
-for val $l (`git submodule status --recursive`) {
-    var $t = $l
-    $t =~ s/^\s+//                # strip the leading status char/space …
-    var @f = split /\s+/, $t      # … so field 1 is the <path> ("<sha> <path> (<describe>)")
-    push @nested, $f[1] if defined($f[1]) && $f[1] =~ m{/}
+for val $gm (`find . -name .gitmodules -not -path '*/.git/*'`) {
+    chomp $gm
+    next if $gm eq ""
+    var $rel = $gm
+    $rel =~ s{^\./}{}
+    var $dir = ($rel =~ m{^(.*)/\.gitmodules$}) ? $1 : ""   # "" for the root file
+    open(var $fh, "<", $gm) or next
+    while (var $line = <$fh>) {
+        if ($line =~ m{^\s*path\s*=\s*(\S.*?)\s*$}) {
+            var $mount = ($dir eq "") ? $1 : "$dir/$1"
+            # depth > 1 == a nested copy of an engine that also has its own
+            # top-level checkout (or third-party source that isn't authored here)
+            push @nested, $mount if index($mount, "/") >= 0
+        }
+    }
+    close $fh
 }
 var @ex = @nested
 push @ex, "zshrs/vendor/fish" if -d "zshrs/vendor/fish"
