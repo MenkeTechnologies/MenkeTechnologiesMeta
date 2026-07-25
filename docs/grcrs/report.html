@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="grcrs — Engineering report. Faithful Rust port of grc (Generic Colouriser 1.13): two binaries (grc launcher + grcat colouriser), 1,020 production Rust lines + 360 test lines, 31 tests, v1.13.0, 6 commits, 2 direct deps (fancy-regex, libc), 83 bundled colourfiles, GPL-2.0-or-later.">
+  <meta name="description" content="grcrs — Engineering report. Faithful Rust port of grc (Generic Colouriser 1.13): two binaries (grc launcher + grcat colouriser), 1,231 production Rust lines + 802 test lines, 71 tests, v1.13.1, 19 commits, 2 direct deps (fancy-regex, libc), 83 bundled colourfiles, MIT.">
   <title>grcrs &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,7 +75,7 @@
             <a href="https://github.com/garabik/grc" target="_blank" rel="noopener noreferrer">upstream grc</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            Faithful Rust port of grc (Generic Colouriser 1.13) &middot; v1.13.0 &middot; two binaries (<code>grc</code> + <code>grcat</code>) &middot; <code>fancy-regex</code> engine &middot; XDG-aware config search &middot; 83 bundled colourfiles
+            Faithful Rust port of grc (Generic Colouriser 1.13) &middot; v1.13.1 &middot; two binaries (<code>grc</code> + <code>grcat</code>) &middot; <code>fancy-regex</code> engine &middot; XDG-aware config search &middot; 83 bundled colourfiles
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -92,25 +92,25 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY           -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">grcrs is a faithful Rust port of <a href="https://github.com/garabik/grc" target="_blank" rel="noopener noreferrer">grc</a> (Generic Colouriser 1.13). It ships the same two binaries as the original: <code>grc</code>, the launcher that matches a command line against <code>grc.conf</code> and pipes the command's output through the colouriser; and <code>grcat</code>, the colouriser that applies regexp/colour blocks to stdin line by line. The port keeps grc's config grammar (<code>regexp</code> / <code>colours</code> / <code>count</code> / <code>command</code> / <code>skip</code> / <code>replace</code> / <code>concat</code>) — plus a grcrs-only <code>trend</code> / <code>key</code> / <code>metric</code> extension that colours a numeric group by its delta across the stream — its loop directives (<code>more</code>, <code>once</code>, <code>stop</code>, <code>block</code>, <code>unblock</code>, <code>previous</code>), its XDG-aware search order, and its cross-line streaming-colour behaviour. Python-<code>re</code> idioms are translated where the dialects differ: <code>\&lt;</code>/<code>\&gt;</code> become literal angle brackets, and <code>\N</code> replacement backrefs become <code>${N}</code>. <strong>1,020 production Rust lines + 360 test lines back the surface, with 31 tests (18 unit + 13 end-to-end) all green in CI</strong> on Linux and macOS.</p>
+      <p class="tutorial-subtitle">grcrs is a faithful Rust port of <a href="https://github.com/garabik/grc" target="_blank" rel="noopener noreferrer">grc</a> (Generic Colouriser 1.13). It ships the same two binaries as the original: <code>grc</code>, the launcher that matches a command line against <code>grc.conf</code> and pipes the command's output through the colouriser; and <code>grcat</code>, the colouriser that applies regexp/colour blocks to stdin line by line. The port keeps grc's config grammar (<code>regexp</code> / <code>colours</code> / <code>count</code> / <code>command</code> / <code>skip</code> / <code>replace</code> / <code>concat</code>) — plus a grcrs-only <code>trend</code> / <code>key</code> / <code>metric</code> extension that colours a numeric group by its delta across the stream — its loop directives (<code>more</code>, <code>once</code>, <code>stop</code>, <code>block</code>, <code>unblock</code>, <code>previous</code>), its XDG-aware search order, and its cross-line streaming-colour behaviour. Python-<code>re</code> idioms are translated where the dialects differ: <code>\&lt;</code>/<code>\&gt;</code> become literal angle brackets, and <code>\N</code> replacement backrefs become <code>${N}</code>. <strong>1,231 production Rust lines + 802 test lines back the surface, with 71 tests (44 unit + 27 end-to-end) all green in CI</strong> on Linux and macOS.</p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">1,020</div><div class="stat-label">Production Rust Lines</div></div>
-        <div class="stat-card"><div class="stat-val accent">31</div><div class="stat-label">Tests (Verified Passing)</div></div>
-        <div class="stat-card"><div class="stat-val green">1.13.0</div><div class="stat-label">Version (tracks grc 1.13)</div></div>
+        <div class="stat-card"><div class="stat-val">1,231</div><div class="stat-label">Production Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val accent">71</div><div class="stat-label">Tests (Verified Passing)</div></div>
+        <div class="stat-card"><div class="stat-val green">1.13.1</div><div class="stat-label">Version (tracks grc 1.13)</div></div>
         <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Binaries (<code>grc</code>+<code>grcat</code>)</div></div>
         <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Direct Dependencies</div></div>
         <div class="stat-card"><div class="stat-val">83</div><div class="stat-label">Bundled Colourfiles</div></div>
-        <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Git Commits</div></div>
+        <div class="stat-card"><div class="stat-val">22</div><div class="stat-label">Git Commits</div></div>
       </div>
 
       <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution &mdash; 1,380 Rust lines total</p>
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution &mdash; 2,033 Rust lines total</p>
         <div class="bar-wrap" style="height:26px;">
-          <div class="bar-fill cyan" style="width:73.9%;"></div>
-          <span class="bar-pct" style="font-size:12px;">1,020 production / 360 test &middot; 26.1% test code</span>
+          <div class="bar-fill cyan" style="width:60.6%;"></div>
+          <span class="bar-pct" style="font-size:12px;">1,231 production / 802 test &middot; 39.4% test code</span>
         </div>
-        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Production source: <code>src/grcrs.rs</code> lines 1&ndash;381 (the <code>grc</code> launcher) + <code>src/grcatrs.rs</code> lines 1&ndash;639 (the <code>grcat</code> colouriser). Test source: inline <code>#[cfg(test)]</code> modules in <code>src/grcrs.rs</code> (382&ndash;441) and <code>src/grcatrs.rs</code> (640&ndash;755) + the integration suite in <code>tests/cli.rs</code> (184 lines).</p>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Production source: <code>src/grcrs.rs</code> lines 1&ndash;425 (the <code>grc</code> launcher) + <code>src/grcatrs.rs</code> lines 1&ndash;806 (the <code>grcat</code> colouriser). Test source: inline <code>#[cfg(test)]</code> modules in <code>src/grcrs.rs</code> (426&ndash;587) and <code>src/grcatrs.rs</code> (807&ndash;1099) + the integration suite in <code>tests/cli.rs</code> (347 lines).</p>
       </div>
 
       <hr class="section-rule">
@@ -131,12 +131,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td>src/grcrs.rs (prod)</td><td class="num">381</td><td class="num">&mdash;</td><td><code>grc</code> launcher &mdash; getopt parser, <code>grc.conf</code> matching, stdout/stderr redirection, command spawn, grcat piping, pty mode, SIGINT handling</td></tr>
-          <tr><td>src/grcrs.rs (tests)</td><td class="num">60</td><td class="num">7</td><td>Option parsing, regexp translation</td></tr>
-          <tr><td>src/grcatrs.rs (prod)</td><td class="num">639</td><td class="num">&mdash;</td><td><code>grcat</code> colouriser &mdash; ANSI colour table, Python-string unescape, config-block parser, backref conversion, per-line matching + painting engine with cross-line state</td></tr>
-          <tr><td>src/grcatrs.rs (tests)</td><td class="num">116</td><td class="num">11</td><td>Colour table, unescape, config parsing, backrefs</td></tr>
-          <tr><td>tests/cli.rs</td><td class="num">184</td><td class="num">13</td><td>End-to-end &mdash; spawn the built binaries, pipe stdin, assert on the coloured output and exit status</td></tr>
-          <tr class="total-row"><td>TOTAL Rust</td><td class="num">1,380</td><td class="num">31</td><td>All <code>cargo test</code> functions pass on Linux + macOS in CI</td></tr>
+          <tr><td>src/grcrs.rs (prod)</td><td class="num">425</td><td class="num">&mdash;</td><td><code>grc</code> launcher &mdash; getopt parser, <code>grc.conf</code> matching, stdout/stderr redirection, command spawn, grcat piping, pty mode, SIGINT handling</td></tr>
+          <tr><td>src/grcrs.rs (tests)</td><td class="num">162</td><td class="num">17</td><td>Option parsing, regexp translation</td></tr>
+          <tr><td>src/grcatrs.rs (prod)</td><td class="num">806</td><td class="num">&mdash;</td><td><code>grcat</code> colouriser &mdash; ANSI colour table, Python-string unescape, config-block parser, backref conversion, per-line matching + painting engine with cross-line state</td></tr>
+          <tr><td>src/grcatrs.rs (tests)</td><td class="num">293</td><td class="num">27</td><td>Colour table, unescape, config parsing, backrefs</td></tr>
+          <tr><td>tests/cli.rs</td><td class="num">347</td><td class="num">27</td><td>End-to-end &mdash; spawn the built binaries, pipe stdin, assert on the coloured output and exit status</td></tr>
+          <tr class="total-row"><td>TOTAL Rust</td><td class="num">2,033</td><td class="num">71</td><td>All <code>cargo test</code> functions pass on Linux + macOS in CI</td></tr>
         </tbody>
       </table>
 
@@ -219,17 +219,17 @@
       <!-- SECTION 7: TEST POSTURE                -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">!</span>TEST POSTURE</h2>
-      <p class="tutorial-subtitle">Three layers: launcher unit tests, colouriser unit tests, and end-to-end tests that spawn the real binaries. Aggregate: <strong>31 tests pass</strong> under <code>cargo test</code>, green on Linux and macOS in CI.</p>
+      <p class="tutorial-subtitle">Three layers: launcher unit tests, colouriser unit tests, and end-to-end tests that spawn the real binaries. Aggregate: <strong>71 tests pass</strong> under <code>cargo test</code>, green on Linux and macOS in CI.</p>
 
       <table class="file-table">
         <thead>
           <tr><th>Suite</th><th>File</th><th class="num">Tests</th><th>Coverage</th></tr>
         </thead>
         <tbody>
-          <tr><td>Launcher unit</td><td>src/grcrs.rs</td><td class="num">7</td><td>Option parsing (stops at command, long forms, attached/separate <code>-c</code>, clustered shorts + <code>--pty</code>, <code>--</code> terminator, <code>--colour</code>), regexp translation</td></tr>
-          <tr><td>Colouriser unit</td><td>src/grcatrs.rs</td><td class="num">11</td><td>Octal/hex/named unescape, angle-bracket translation, backref conversion, named/quoted/invalid colours, multibyte byte&rarr;char mapping, config parsing (colours+count+regex, comma groups, lookahead + US spelling, blocks without regexp, bad keyword)</td></tr>
-          <tr><td>End-to-end</td><td>tests/cli.rs</td><td class="num">13</td><td>Match-only colouring, lookahead colouring, per-group layering, <code>unchanged</code>, <code>count=stop</code>, <code>block</code> across lines, <code>replace</code>-then-colour, quoted literals, angle escapes, <code>skip</code>, missing-config error, <code>grc</code>&rarr;<code>grcat</code> piping, exit-status propagation</td></tr>
-          <tr class="total-row"><td>TOTAL</td><td>cargo test</td><td class="num">31</td><td>CI gate on every push to main &amp; every PR (ubuntu-latest + macos-latest)</td></tr>
+          <tr><td>Launcher unit</td><td>src/grcrs.rs</td><td class="num">17</td><td>Option parsing (stops at command, long forms, attached/separate <code>-c</code>, clustered shorts + <code>--pty</code>, <code>--</code> terminator, <code>--colour</code>), regexp translation</td></tr>
+          <tr><td>Colouriser unit</td><td>src/grcatrs.rs</td><td class="num">27</td><td>Octal/hex/named unescape, angle-bracket translation, backref conversion, named/quoted/invalid colours, multibyte byte&rarr;char mapping, config parsing (colours+count+regex, comma groups, lookahead + US spelling, blocks without regexp, bad keyword)</td></tr>
+          <tr><td>End-to-end</td><td>tests/cli.rs</td><td class="num">27</td><td>Match-only colouring, lookahead colouring, per-group layering, <code>unchanged</code>, <code>count=stop</code>, <code>block</code> across lines, <code>replace</code>-then-colour, quoted literals, angle escapes, <code>skip</code>, missing-config error, <code>grc</code>&rarr;<code>grcat</code> piping, exit-status propagation</td></tr>
+          <tr class="total-row"><td>TOTAL</td><td>cargo test</td><td class="num">71</td><td>CI gate on every push to main &amp; every PR (ubuntu-latest + macos-latest)</td></tr>
         </tbody>
       </table>
 
@@ -247,7 +247,7 @@
         <div class="mapping-card"><h4>CI workflow</h4><p><code>.github/workflows/ci.yml</code> &mdash; fmt, clippy (<code>-D warnings</code>), doc (<code>-D warnings</code>), build + test on ubuntu + macos, and a binary smoke test. Runnable via workflow dispatch.</p></div>
         <div class="mapping-card"><h4>Release workflow</h4><p><code>.github/workflows/release.yml</code> &mdash; builds release artifacts.</p></div>
         <div class="mapping-card"><h4>Compatibility</h4><p>Tracks grc <strong>1.13</strong>: same option surface, same config grammar, same search order, same colour semantics. Existing grc colourfiles work unchanged.</p></div>
-        <div class="mapping-card"><h4>License</h4><p>GPL-2.0-or-later &mdash; the same license as upstream grc.</p></div>
+        <div class="mapping-card"><h4>License</h4><p>MIT &mdash; original Rust code, not a derivative of grc's GPL source.</p></div>
       </div>
 
       <hr class="section-rule">
@@ -256,16 +256,17 @@
       <!-- SECTION 9: VERSION HISTORY             -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">v</span>VERSION HISTORY</h2>
-      <p class="tutorial-subtitle">Current version: <code>grcrs 1.13.0</code> (tracking grc 1.13). 6 commits on <code>main</code>. Last five:</p>
+      <p class="tutorial-subtitle">Current version: <code>grcrs 1.13.1</code> (tracking grc 1.13). 22 commits on <code>main</code>. Most recent:</p>
 
       <table class="file-table">
         <thead><tr><th>Hash</th><th>Subject</th></tr></thead>
         <tbody>
-          <tr><td>52d2edbaad</td><td>tests</td></tr>
-          <tr><td>741696a2ba</td><td>grcat: fix clippy lints (is_some_and, if-let, collapse newline strip)</td></tr>
-          <tr><td>6e57ee508b</td><td>CI</td></tr>
-          <tr><td>d41ec22817</td><td>init</td></tr>
-          <tr><td>be525cfb2d</td><td>add vendor</td></tr>
+          <tr><td>f5d46e44de</td><td>docs: refresh report to current state &mdash; license MIT not GPL, v1.13.1, 1231/802 line + 71 test counts</td></tr>
+          <tr><td>63afb1affa</td><td>docs: sync version string to v1.13.1</td></tr>
+          <tr><td>22f066b2c1</td><td>release: v1.13.1</td></tr>
+          <tr><td>697685439d</td><td>license: MIT &mdash; original Rust code, not a GPL derivative</td></tr>
+          <tr><td>433ea46e09</td><td>grcat: add streaming trend= delta colour directive</td></tr>
+
         </tbody>
       </table>
 

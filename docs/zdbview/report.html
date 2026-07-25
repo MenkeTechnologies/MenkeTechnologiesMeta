@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zdbview engineering report — module map, detection contract, rkyv format registry, dependency footprint and test status for the rkyv + SQLite terminal inspector and CRUD editor.">
+  <title>zdbview &mdash; Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 76rem; }
+    .bar-wrap { background:var(--bg-primary);border:1px solid var(--border);border-radius:2px;height:18px;position:relative;overflow:hidden; }
+    .bar-fill { height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1); }
+    .bar-fill.green  { background:linear-gradient(90deg,#39ff14,#20c00a);box-shadow:0 0 8px rgba(57,255,20,.4); }
+    .bar-fill.cyan   { background:linear-gradient(90deg,#05d9e8,#0891b2);box-shadow:0 0 8px rgba(5,217,232,.4); }
+    .bar-fill.yellow { background:linear-gradient(90deg,#ffb800,#e8a000);box-shadow:0 0 8px rgba(255,184,0,.35); }
+    .bar-fill.magenta{ background:linear-gradient(90deg,#d300c5,#a000a0);box-shadow:0 0 8px rgba(211,0,197,.35); }
+
+    .file-table { width:100%;border-collapse:collapse;margin:0.6rem 0;font-size:12px; }
+    .file-table th { background:var(--bg-secondary);color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:7px 10px;border:1px solid var(--border); }
+    .file-table td { padding:6px 10px;border:1px solid var(--border);color:var(--text-dim);vertical-align:middle; }
+    .file-table tr:hover td { background:var(--bg-hover); }
+    .file-table td:first-child { font-family:'Share Tech Mono',monospace;color:var(--accent-light);font-weight:600;white-space:nowrap; }
+    .file-table .num { text-align:right;font-family:'Share Tech Mono',monospace; }
+    .file-table .total-row td { background:var(--bg-secondary);font-weight:700;color:var(--text);border-top:2px solid var(--cyan); }
+    .file-table code { font-size:11px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+
+    .stat-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:0.75rem;margin:1.2rem 0; }
+    .stat-card { border:1px solid var(--border);border-top:3px solid var(--cyan);background:var(--bg-card);padding:1rem 1.2rem;border-radius:2px;text-align:center; }
+    .stat-card .stat-val { font-family:'Orbitron',sans-serif;font-size:28px;font-weight:900;color:var(--cyan);line-height:1.1;text-shadow:0 0 20px var(--cyan-glow); }
+    .stat-card .stat-val.accent { color:var(--accent);text-shadow:0 0 20px var(--accent-glow); }
+    .stat-card .stat-val.green  { color:var(--green);text-shadow:0 0 20px rgba(57,255,20,.3); }
+    .stat-card .stat-label { font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:0.5rem; }
+    @keyframes glow-pulse { 0%,100%{text-shadow:0 0 20px var(--cyan-glow)}50%{text-shadow:0 0 40px var(--cyan-glow),0 0 80px var(--cyan-dim)} }
+    .stat-card .stat-val { animation:glow-pulse 3s ease-in-out infinite; }
+
+    .section-rule { border:none;border-top:1px dashed var(--border);margin:2rem 0; }
+
+    .feature-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(22rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .feature-card { border:1px solid var(--border);border-left:3px solid var(--cyan);background:var(--bg-card);padding:0.7rem 1rem;border-radius:2px; }
+    .feature-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);margin:0 0 0.3rem; }
+    .feature-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.55; }
+    .feature-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+    .feature-card ul { margin:0.3rem 0 0;padding-left:1.2rem;font-size:11px;color:var(--text-dim);line-height:1.6; }
+
+    .mapping-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:0.65rem;margin:0.8rem 0; }
+    .mapping-card { border:1px solid var(--border);border-left:3px solid var(--magenta);background:var(--bg-card);padding:0.6rem 0.9rem;border-radius:2px; }
+    .mapping-card h4 { font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--magenta);margin:0 0 0.3rem; }
+    .mapping-card p { margin:0;font-size:11px;color:var(--text-dim);line-height:1.5; }
+    .mapping-card code { font-size:10.5px;color:var(--accent-light);background:var(--bg-primary);padding:1px 4px;border-radius:2px; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="reportApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZDBVIEW &mdash; ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zdbview" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://crates.io/crates/zdbview" target="_blank" rel="noopener noreferrer">crates.io</a>
+            <span class="sep">/</span>
+            <a href="https://docs.rs/zdbview" target="_blank" rel="noopener noreferrer">docs.rs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zdbview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+          </nav>
+          <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
+            module map &middot; detection contract &middot; rkyv format registry &middot; test status
+          </p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+        </div>
+      </div>
+    </header>
+    <main class="tutorial-main">
+
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
+      <p class="tutorial-subtitle">zdbview v0.4.0 is a single-crate, single-binary Rust TUI (~7,800 lines across 14 source files plus one integration-test file) that opens both halves of the cache stack: <strong>SQLite</strong> databases with full generic CRUD, and <strong>rkyv</strong> archives through a format registry that decodes recognized archives to key/value records — now writable in place as well as readable — and falls back to a structural view for everything else. The split is not a limitation of effort but of the formats: SQLite is self-describing, rkyv is not, so key/value decoding requires carrying the producer's archive type. Backend selection comes from the file's header bytes, never its name, because rkyv shards are routinely written under a <code>.db</code> name.</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val accent">14</div><div class="stat-label">Rust source files</div></div>
+        <div class="stat-card"><div class="stat-val">~7,470</div><div class="stat-label">Lines of Rust</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Store backends</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Recognized rkyv formats</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Direct dependencies</div></div>
+        <div class="stat-card"><div class="stat-val green">74</div><div class="stat-label">Tests</div></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>MODULE MAP</h2>
+      <p class="tutorial-subtitle">The crate separates the interactive layer (<code>app.rs</code>) from the two backends, so the CRUD and inspection logic is testable without a terminal. Bar widths are relative to the largest file.</p>
+      <table class="file-table">
+        <thead><tr><th>Source</th><th class="num">Lines</th><th>Size</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>src/disasm.rs</code></td><td class="num">57</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:3%"></div></div></td><td>Optional <code>disasm</code> feature: decodes a value blob as a <code>fusevm::Chunk</code> and formats its bytecode for the detail pane.</td></tr>
+          <tr><td><code>src/clipboard.rs</code></td><td class="num">61</td><td><div class="bar-wrap"><div class="bar-fill yellow" style="width:3%"></div></div></td><td>OSC 52 clipboard copy written straight to <code>/dev/tty</code> — no clipboard library, so it works over SSH.</td></tr>
+          <tr><td><code>src/store.rs</code></td><td class="num">75</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:3%"></div></div></td><td><code>Kind</code> detection from the SQLite header magic and the <code>Store</code> enum owning whichever backend was opened.</td></tr>
+          <tr><td><code>src/rkyv_inspect.rs</code></td><td class="num">75</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:3%"></div></div></td><td><code>RkyvStore</code>: whole-file load, printable-run extraction with byte offsets, and hex rows (formatted by <code>hexedit</code>).</td></tr>
+          <tr><td><code>src/prefs.rs</code></td><td class="num">80</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:3%"></div></div></td><td>Preferences file (<code>$XDG_CONFIG_HOME/zdbview/prefs</code>): the chosen color scheme and any custom palette, in a dependency-free <code>key = value</code> format.</td></tr>
+          <tr><td><code>src/mru.rs</code></td><td class="num">140</td><td><div class="bar-wrap"><div class="bar-fill yellow" style="width:5%"></div></div></td><td>Recent-files store: XDG path resolution, load/record, canonicalized dedupe, 50-entry cap, atomic temp-plus-rename writes.</td></tr>
+          <tr><td><code>src/export.rs</code></td><td class="num">151</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:5%"></div></div></td><td>Dependency-free RFC-4180 CSV and JSON writers for rows and decoded records, with the value blob as hex.</td></tr>
+          <tr><td><code>src/main.rs</code></td><td class="num">245</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:9%"></div></div></td><td>CLI (clap), terminal init/restore, the open sequence (resolve file &rarr; detect &rarr; open), non-interactive <code>--export</code>, and <code>--list-themes</code> / <code>--theme</code>.</td></tr>
+          <tr><td><code>tests/backend.rs</code></td><td class="num">355</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:13%"></div></div></td><td>Integration tests over the backends, with the sources pulled in by <code>#[path]</code>: CRUD round-trips, detection, MRU ordering, and the sorted-order paging/search contracts.</td></tr>
+          <tr><td><code>src/theme.rs</code></td><td class="num">370</td><td><div class="bar-wrap"><div class="bar-fill yellow" style="width:13%"></div></div></td><td>The color schemes ported from iftoprs: the 6-color ANSI-256 palettes and their mapping onto zdbview’s UI and overlay roles.</td></tr>
+          <tr><td><code>src/sqlite.rs</code></td><td class="num">410</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:15%"></div></div></td><td><code>SqliteStore</code>: table/view listing, paged <code>RowsView</code> carrying rowids, cell/row writes, whole-table search, and sort-aware ordering (<code>ORDER BY col, rowid</code>) shared by paging, ordinals and search.</td></tr>
+          <tr><td><code>src/hexedit.rs</code></td><td class="num">853</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:30%"></div></div></td><td>The cursor-driven hex editor ported from zmax: nav/EDIT modes, nibble composition, hex&harr;ascii columns, insert/delete, and the one <code>xxd</code>-style dump line every hex view in the app shares.</td></tr>
+          <tr><td><code>src/formats.rs</code></td><td class="num">950</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:34%"></div></div></td><td>The rkyv format registry: byte-compatible copies of the producer archive types, magic detection, validated try-decode for the header-less shards, and the write-back mutations.</td></tr>
+          <tr><td><code>src/overlay.rs</code></td><td class="num">1,184</td><td><div class="bar-wrap"><div class="bar-fill yellow" style="width:42%"></div></div></td><td>The shared overlay layer ported from iftoprs: help box, scheme chooser, palette editor, transient toasts, and the direct-buffer box/text primitives. Embedded by both the app and the recent-files picker.</td></tr>
+          <tr><td><code>src/app.rs</code></td><td class="num">2,815</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:100%"></div></div></td><td>The interactive layer: focus and modal state, per-backend key dispatch, vim motions, search, sorting, the Records / Info / Strings / Hex views, the detail, schema and hex-editor screens, the recent-files picker, and all ratatui rendering.</td></tr>
+          <tr class="total-row"><td>15 files</td><td class="num">~7,800</td><td></td><td>One binary; no library target.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DETECTION CONTRACT</h2>
+      <p class="tutorial-subtitle">The rule that keeps a mixed cache directory usable: the header magic decides, the file name does not.</p>
+      <div class="mapping-grid">
+        <div class="mapping-card"><h4>Magic is authoritative</h4><p>The first 16 bytes are matched against <code>SQLite format 3\0</code>. If a full header is readable, its presence or absence alone selects the backend — the extension is not consulted.</p></div>
+        <div class="mapping-card"><h4>Extension is a tie-breaker only</h4><p>A file shorter than 16 bytes cannot carry a header, so <code>.db</code> / <code>.sqlite</code> / <code>.sqlite3</code> select SQLite and anything else opens in the inspector.</p></div>
+        <div class="mapping-card"><h4>Flags short-circuit</h4><p><code>--sqlite</code> and <code>--rkyv</code> skip detection entirely; clap rejects the combination.</p></div>
+        <div class="mapping-card"><h4>Open failure degrades, never errors</h4><p>A file that passes the magic check but that SQLite still refuses falls back to the binary inspector, so a truncated or corrupt database can still be examined byte by byte.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
+      <p class="tutorial-subtitle">Two backends behind one enum, one interactive layer that dispatches keys per backend.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>SQLite — generic CRUD</h4><p>Rows are addressed by <code>rowid</code>, selected alongside the real columns as <code>SELECT rowid, * FROM &lt;table&gt;</code>. That single decision is what makes edit and delete work on an arbitrary schema with no configuration. Identifiers are double-quoted with internal quotes doubled; values are bound as parameters.</p><ul><li><code>WITHOUT ROWID</code> tables are listed read-only — no generic row handle exists.</li><li>Pages hold 500 rows; the title reports <code>rows from..to of total</code>.</li></ul></div>
+        <div class="feature-card"><h4>rkyv — registry, then fallback</h4><p>An archive is a memory image plus a root pointer: no field names, no type tags, no embedded schema. <code>formats.rs</code> supplies the missing schema for the formats zdbview knows — a byte-compatible copy of the producer's archive type — and decodes through <code>rkyv::check_archived_root</code>, so a drifted type fails validation instead of misreading bytes. Unrecognized archives fall back to size, printable runs with offsets, and the raw hex.</p><ul><li>Eight formats: the zshrs script + autoload caches, strykelang (native and compat layout), awkrs, vimlrs, elisprs, pythonrs, and the hash-keyed rubylang / arb shards.</li><li>A cheap little-endian magic scan pre-filters before full validation; the two header-less formats are tried last, gated by validation alone.</li></ul></div>
+        <div class="feature-card"><h4>Interactive layer</h4><p>Modal state (<code>EditCell</code>, <code>Command</code>, <code>Search</code>, <code>ConfirmDelete</code>) is handled before normal keys, and the buffer is snapshotted into a local so no borrow of the mode is held across the <code>&amp;mut self</code> dispatch. Motions follow vim: <code>gg</code>/<code>G</code>, <code>Ctrl-f</code>/<code>Ctrl-b</code>, <code>/</code> with <code>n</code>/<code>N</code>. Layered on top: a detail screen (<code>Enter</code>) with a cycling value renderer, a schema screen (<code>S</code>), column sorting (<code>s</code>, <code>&lt;</code>/<code>&gt;</code>), clipboard copy (<code>y</code>), a cursor-driven hex editor for record values (<code>e</code>), and the shared overlay layer from <code>overlay.rs</code> (<code>h</code> help, <code>c</code> chooser, <code>C</code> editor, toasts).</p></div>
+        <div class="feature-card"><h4>Export, two ways</h4><p><code>x</code> writes the current table as CSV or all decoded records as JSON to a file; <code>--export json|csv</code> does the same to stdout and never initializes the terminal, so zdbview drops into a pipeline. Both go through the same dependency-free writers in <code>export.rs</code>.</p></div>
+        <div class="feature-card"><h4>Recent files</h4><p>Opens are recorded to <code>$XDG_CACHE_HOME/zdbview/recent</code>, deduped by canonicalized path, capped at 50, and written via temp-file-plus-rename so a concurrent reader never sees a partial list. Malformed lines are skipped rather than aborting the load.</p></div>
+      </div>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>DEPENDENCY FOOTPRINT</h2>
+      <p class="tutorial-subtitle">Six direct dependencies. SQLite is compiled in via the <code>bundled</code> feature, so there is no system-library requirement at runtime, and rkyv is pinned to the version and features the producers serialize with.</p>
+      <table class="file-table">
+        <thead><tr><th>Crate</th><th>Ver</th><th>License</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>ratatui</td><td>0.30</td><td>MIT</td><td>Widgets and layout for the two-pane browser, hex view and modals.</td></tr>
+          <tr><td>crossterm</td><td>0.29</td><td>MIT</td><td>Terminal backend and key events.</td></tr>
+          <tr><td>rusqlite</td><td>0.40</td><td>MIT</td><td>The SQLite backend; <code>bundled</code> compiles SQLite itself (public domain) through libsqlite3-sys 0.38 (MIT).</td></tr>
+          <tr><td>anyhow</td><td>1</td><td>MIT / Apache-2.0</td><td>Error type for open/read paths, with per-file context.</td></tr>
+          <tr><td>clap</td><td>4</td><td>MIT / Apache-2.0</td><td>Derive-based CLI: the optional file argument, the two force flags, and <code>--export</code>.</td></tr>
+          <tr><td>rkyv</td><td>0.7</td><td>MIT</td><td>Validated zero-copy decoding of recognized archives. Pinned to the version and features the producers serialize with (<code>validation</code>, <code>archive_le</code>, <code>size_32</code>) — a mismatch would fail validation rather than decode wrongly.</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
+      <p class="tutorial-subtitle">Eighteen tests: thirteen unit tests inside the binary (format decoding and reserialization, the search primitives, the CSV/JSON writers, base64 for OSC 52) plus five integration tests in <code>tests/backend.rs</code> that exercise the backends directly — the layer the TUI drives — so no terminal is needed and they run headless in CI. Run with <code>cargo test</code>.</p>
+      <table class="file-table">
+        <thead><tr><th>Test</th><th>Scope</th></tr></thead>
+        <tbody>
+          <tr><td>formats::script_shard_roundtrips_through_try_decode</td><td>Serializes a script shard with the copied archive type, then asserts <code>try_decode</code> recognizes the format, decodes the record key and blob, and reports the header fields — the check that keeps the copied types byte-compatible with the producer.</td></tr>
+          <tr><td>formats::hash_shard_roundtrips</td><td>The same round-trip for a header-less, hash-keyed shard, which is recognized by validation alone.</td></tr>
+          <tr><td>formats::delete_record_removes_and_reserializes / hash_delete_by_hex_key</td><td>Deleting a record produces bytes that decode again with the entry gone — the precondition for ever exposing writes in the UI.</td></tr>
+          <tr><td>formats::garbage_is_not_recognized</td><td>Zeroes and plain text must fall through to the structural view rather than decode into nonsense.</td></tr>
+          <tr><td>export::csv_quotes_when_needed / json_escapes_and_shapes / records_json_includes_hex_value</td><td>The export writers: RFC-4180 quoting, JSON escaping and shape, and the hex rendering of a record's value blob.</td></tr>
+          <tr><td>clipboard::base64_matches_known_vectors</td><td>The hand-rolled base64 behind the OSC 52 escape, against known vectors.</td></tr>
+          <tr><td>app::find_next_forward_wraps / _backward_wraps / _none_and_empty</td><td>The search cursor: wrap-around in both directions, no-match, and empty-collection behavior.</td></tr>
+          <tr><td>app::find_bytes_forward_and_backward</td><td>The hex byte search: first hit past the cursor going forward, last hit before it going backward.</td></tr>
+          <tr><td>sqlite_full_crud_roundtrip</td><td>Builds a real database, then drives listing, column introspection, paging, cell update by rowid, default-values insert, row delete, and raw exec — asserting the row state after each step.</td></tr>
+          <tr><td>rkyv_structural_strings_and_hex</td><td>Synthesizes a blob with a known embedded string, then asserts run extraction honours the minimum length, reports the right byte offset, and that the hex line is correctly formatted.</td></tr>
+          <tr><td>mru_record_dedup_and_order</td><td>Records three opens including a repeat, then asserts the list dedupes by canonicalized path and that the re-opened file moves back to the front with the right kind.</td></tr>
+          <tr><td>detect_rkyv_when_db_extension_but_not_sqlite</td><td>The regression that motivates the detection contract: a <code>.db</code> file whose bytes are not a SQLite header must open in the inspector.</td></tr>
+          <tr><td>detect_sqlite_by_magic_and_extension</td><td>A real database detects as SQLite, an unknown-extension blob as rkyv, and both force flags override detection.</td></tr>
+        </tbody>
+      </table>
+      <p class="tutorial-subtitle">CI runs fmt, clippy with <code>-D warnings</code>, rustdoc with <code>-D warnings</code>, and the test suite on Ubuntu and macOS. Release builds are LTO'd and stripped, and tagged releases publish binaries for macOS (arm64 + x86_64) and Linux (glibc + static musl, arm64 + x86_64).</p>
+
+      <hr class="section-rule">
+
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SCOPE</h2>
+      <p class="tutorial-subtitle">What is deliberately not implemented, and why.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><h4>Writing rkyv archives</h4><p>Recognized formats decode to key/value and <code>formats.rs</code> carries a tested delete-and-reserialize path, but no key is bound to it: writing a shard back means reproducing the producer's exact layout, and a wrong write corrupts a cache the producer then mmaps. The Records view is read-only until that round-trip is proven against live shards from every producer. Unrecognized archives stay structural, because guessing field boundaries from an untyped image would produce plausible, wrong output.</p></div>
+        <div class="feature-card"><h4>Blob editing and transactions</h4><p>Blobs render as <code>&lt;blob N bytes&gt;</code> and each statement commits on its own. Binary writes and multi-statement transactions go through <code>:</code>.</p></div>
+      </div>
+
+    </main>
+    <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
+      ZDBVIEW &middot; ENGINEERING REPORT &middot; 8 RUST FILES / ~3,650 LINES &middot; 2 BACKENDS &middot; 8 RKYV FORMATS &middot; 6 DEPENDENCIES &middot; 18 TESTS &middot; MENKETECHNOLOGIES
+    </footer>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const btnTheme = document.getElementById('btnTheme');
+    const btnCrt = document.getElementById('btnCrt');
+    const btnNeon = document.getElementById('btnNeon');
+    const crtH = document.getElementById('crtH');
+    const crtV = document.getElementById('crtV');
+    btnTheme?.addEventListener('click', () => {
+      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    });
+    btnCrt?.addEventListener('click', () => {
+      btnCrt.classList.toggle('active');
+      const on = btnCrt.classList.contains('active');
+      if (crtH) crtH.style.display = on ? '' : 'none';
+      if (crtV) crtV.style.display = on ? '' : 'none';
+    });
+    btnNeon?.addEventListener('click', () => {
+      btnNeon.classList.toggle('active');
+      document.querySelector('.app')?.classList.toggle('neon-off');
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0';
+        requestAnimationFrame(() => { requestAnimationFrame(() => { bar.style.width = w; }); });
+      });
+    });
+  </script>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

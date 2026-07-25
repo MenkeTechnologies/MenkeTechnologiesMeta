@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="ztranslator — Engineering report. Embeddable real-time MIDI translation engine in pure Rust: 9,925 source lines (8,484 code) across 20 files, worker-thread engine, signed-32-bit rules VM, BOME .bmtp import + export, 26 incoming trigger types + 39 outgoing-action variants (MIDI / OSC / DMX / sACN / RTP-MIDI / Ableton Link / MTC / MMC / audio / CV / keystroke / mouse / AppleScript / serial / custom), 65 tests.">
+  <meta name="description" content="ztranslator — Engineering report. Embeddable real-time MIDI translation engine in pure Rust: 12,426 source lines (9,955 code) across 37 files, worker-thread engine, signed-32-bit rules VM, BOME .bmtp import + export, 26 incoming trigger types + 39 outgoing-action variants (MIDI / OSC / DMX / sACN / RTP-MIDI / Ableton Link / MTC / MMC / audio / CV / keystroke / mouse / AppleScript / serial / custom), 65 tests.">
   <title>ztranslator &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -82,13 +82,13 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY           -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">ztranslator is a self-contained, real-time MIDI translation engine written in pure Rust, meant to be embedded inside a host GUI/CLI application. It listens on MIDI input ports (via <code>midir</code>), matches each incoming message against per-translator triggers, runs a rules script on a small signed-32-bit integer VM, and fires an outgoing action &mdash; one of 39 <code>Outgoing</code> variants spanning MIDI out (incl. 14-bit / NRPN), keystroke / mouse / AppleScript synthesis (macOS), MIDI route / port / project control, MIDI clock + MTC generators, MMC transport, OSC, Art-Net + sACN DMX, HTTP / WebSocket / MQTT / raw TCP, RTP-MIDI, Ableton Link, CV / gate, gamepad rumble, serial, file write, notify / speak / clipboard, timer, preset control, a host-defined custom command, and a stryke-script hook. Beyond MIDI it accepts 26 incoming trigger types (OSC, DMX, sACN, serial, gamepad, HID, MIDI clock, MTC, MMC, Ableton Link, audio amplitude/onset/pitch, CV/gate, cron schedule, system events, HTTP, TCP, WebSocket, MQTT, RTP-MIDI). It imports BOME MIDI Translator Pro <code>.bmtp</code> projects (INI container + <code>MID3</code>/<code>KAM3</code> XML payloads + <code>Options</code> rules blob) and exports native projects back to unsigned <code>.bmtp</code> (round-tripping through import), with <code>serde</code> JSON as the native store. The crate carries no UI of its own: the host wires the engine's <code>EngineEvent</code> stream to its interface and routes <code>Outgoing::Custom</code> back through a handler. <strong>9,925 source lines (8,484 code) across 20 Rust files, a worker-thread engine, a faithful BOME rules VM, lossless <code>.bmtp</code> import + export, and a broad protocol I/O layer &mdash; the routing core behind a MIDI-controlled desktop application.</strong></p>
+      <p class="tutorial-subtitle">ztranslator is a self-contained, real-time MIDI translation engine written in pure Rust, meant to be embedded inside a host GUI/CLI application. It listens on MIDI input ports (via <code>midir</code>), matches each incoming message against per-translator triggers, runs a rules script on a small signed-32-bit integer VM, and fires an outgoing action &mdash; one of 39 <code>Outgoing</code> variants spanning MIDI out (incl. 14-bit / NRPN), keystroke / mouse / AppleScript synthesis (macOS), MIDI route / port / project control, MIDI clock + MTC generators, MMC transport, OSC, Art-Net + sACN DMX, HTTP / WebSocket / MQTT / raw TCP, RTP-MIDI, Ableton Link, CV / gate, gamepad rumble, serial, file write, notify / speak / clipboard, timer, preset control, a host-defined custom command, and a stryke-script hook. Beyond MIDI it accepts 26 incoming trigger types (OSC, DMX, sACN, serial, gamepad, HID, MIDI clock, MTC, MMC, Ableton Link, audio amplitude/onset/pitch, CV/gate, cron schedule, system events, HTTP, TCP, WebSocket, MQTT, RTP-MIDI). It imports BOME MIDI Translator Pro <code>.bmtp</code> projects (INI container + <code>MID3</code>/<code>KAM3</code> XML payloads + <code>Options</code> rules blob) and exports native projects back to unsigned <code>.bmtp</code> (round-tripping through import), with <code>serde</code> JSON as the native store. The crate carries no UI of its own: the host wires the engine's <code>EngineEvent</code> stream to its interface and routes <code>Outgoing::Custom</code> back through a handler. <strong>12,426 source lines (9,955 code) across 37 Rust files, a worker-thread engine, a faithful BOME rules VM, lossless <code>.bmtp</code> import + export, and a broad protocol I/O layer &mdash; the routing core behind a MIDI-controlled desktop application.</strong></p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">9,925</div><div class="stat-label">Source Lines</div></div>
-        <div class="stat-card"><div class="stat-val">8,484</div><div class="stat-label">Code Lines</div></div>
-        <div class="stat-card"><div class="stat-val accent">20</div><div class="stat-label">Rust Files</div></div>
-        <div class="stat-card"><div class="stat-val green">65</div><div class="stat-label">Test Functions</div></div>
+        <div class="stat-card"><div class="stat-val">12,426</div><div class="stat-label">Source Lines</div></div>
+        <div class="stat-card"><div class="stat-val">9,955</div><div class="stat-label">Code Lines</div></div>
+        <div class="stat-card"><div class="stat-val accent">37</div><div class="stat-label">Rust Files</div></div>
+        <div class="stat-card"><div class="stat-val green">161</div><div class="stat-label">Test Functions</div></div>
         <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Integration Test Modules</div></div>
         <div class="stat-card"><div class="stat-val">23</div><div class="stat-label">Direct Dependencies</div></div>
         <div class="stat-card"><div class="stat-val accent">39</div><div class="stat-label">Outgoing Variants</div></div>
@@ -96,12 +96,12 @@
       </div>
 
       <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 9,925 lines</p>
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 12,426 lines</p>
         <div class="bar-wrap" style="height:26px;">
           <div class="bar-fill cyan" style="width:92.7%;"></div>
           <span class="bar-pct" style="font-size:12px;">9,198 library / 727 tests &middot; 92.7% library</span>
         </div>
-        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Library: 17 files under <code>src/</code> (engine, rules VM, model, bmtp import/export, actions, protocol sources, midi, error). Tests: 3 integration modules under <code>tests/</code> (<code>bmtp_import.rs</code>, <code>engine_pipeline.rs</code>, <code>rules_vm.rs</code>). Line counts are physical <code>wc -l</code>; code-only (tokei, blanks + comments excluded) is 8,484.</p>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Library: 17 files under <code>src/</code> (engine, rules VM, model, bmtp import/export, actions, protocol sources, midi, error). Tests: 3 integration modules under <code>tests/</code> (<code>bmtp_import.rs</code>, <code>engine_pipeline.rs</code>, <code>rules_vm.rs</code>). Line counts are physical <code>wc -l</code>; code-only (tokei, blanks + comments excluded) is 9,955.</p>
       </div>
 
       <hr class="section-rule">
@@ -126,7 +126,7 @@
           <tr><td style="color:var(--accent);">Error / Entry</td><td><code>error, lib</code></td><td class="num">67</td><td class="num">0.7%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:0.7%"></div></div></td><td>Crate <code>Error</code> type (<code>Unsupported</code>, <code>NeedsAccessibility</code>, parse / IO variants via <code>thiserror</code>) and the public <code>lib.rs</code> surface re-exports</td></tr>
           <tr><td style="color:var(--green);">Tests</td><td><code>tests/bmtp_import, tests/engine_pipeline, tests/rules_vm</code></td><td class="num">727</td><td class="num">7.3%</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:7.3%"></div></div></td><td>Integration modules (plus a <code>tests/fixtures</code> corpus) covering <code>.bmtp</code> import fidelity + export round-trip, end-to-end engine dispatch, and rules-VM semantics; the unit tests in-crate cover the protocol codecs, MTC/MMC, and trigger/action serde round-trips (65 <code>#[test]</code> functions in all)</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">9,925</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
+        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">12,426</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
       </table>
 
       <hr class="section-rule">
@@ -161,7 +161,7 @@
           <tr><td>src/error.rs</td><td class="num">37</td><td>Crate <code>Error</code> enum (<code>thiserror</code>)</td></tr>
           <tr><td>src/lib.rs</td><td class="num">30</td><td>Public crate surface re-exports</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">9,925</td><td>20 files</td></tr></tfoot>
+        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">12,426</td><td>20 files</td></tr></tfoot>
       </table>
 
       <hr class="section-rule">

@@ -115,7 +115,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/pythonrs" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line" id="pythonrsBuildLine">pythonrs v0.1.0 · Python on fusevm · lex/parse → AST → bytecode → Cranelift JIT · transparent rkyv cache on every run · AOT native-exe via --build · a fusevm language host (with zshrs, stryke, awkrs, elisp, rubylang) · MIT · in active development</p>
+          <p class="docs-build-line" id="pythonrsBuildLine">pythonrs v0.1.1 · Python on fusevm · lex/parse → AST → bytecode → Cranelift JIT · transparent rkyv cache on every run · AOT native-exe via --build · a fusevm language host (with zshrs, stryke, awkrs, elisp, rubylang) · MIT · in active development</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -214,6 +214,20 @@ print(f"{fib(10):,}")                      # =&gt; 55</pre>
           <div class="cat-card"><h4>One shared engine</h4><p>Bug fixes and JIT improvements in fusevm benefit zshrs, stryke, awkrs, elisp, rubylang, and pythonrs at once.</p></div>
           <div class="cat-card"><h4>AOP intercepts</h4><p>A glob-matched before/after/around method-intercept registry (<code>src/intercepts.rs</code>) — aspect weaving over Python method calls, the same design as zshrs's function intercepts.</p></div>
         </div>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Cache benchmark</h2>
+        <p>The rkyv shard skips <em>lex/parse/lower</em> on a warm run — including every imported module, which is where the win lands. The gain scales with how much source a run compiles: a tiny import-free script is already sub-parse-time, so warm ≈ cold; a run that pulls in stdlib modules amortizes their compilation once and reads them back from the shard on every later run.</p>
+        <table class="reflection-table">
+          <thead><tr><th>Workload</th><th>Cold (first run: compile&nbsp;+&nbsp;store)</th><th>Warm (cache hit: load only)</th><th>Speedup</th></tr></thead>
+          <tbody>
+            <tr><td>6-line script, no imports</td><td>7.3&nbsp;±&nbsp;0.6&nbsp;ms</td><td>6.4&nbsp;±&nbsp;0.4&nbsp;ms</td><td>≈1× (neutral — nothing to skip)</td></tr>
+            <tr><td>3 stdlib imports (~a dozen modules transitively)</td><td>69.1&nbsp;±&nbsp;3.4&nbsp;ms</td><td>19.7&nbsp;±&nbsp;0.8&nbsp;ms</td><td>3.5× (−49&nbsp;ms)</td></tr>
+            <tr><td>10 stdlib imports (21 cached modules)</td><td>102.2&nbsp;±&nbsp;4.5&nbsp;ms</td><td>28.6&nbsp;±&nbsp;1.0&nbsp;ms</td><td>3.6× (−74&nbsp;ms)</td></tr>
+          </tbody>
+        </table>
+        <p class="docs-note"><code>cargo build --release</code> binary, <code>hyperfine -N</code> (80 runs each), isolated cache dir. <em>Cold</em> clears <code>~/.pythonrs/scripts.rkyv</code> before each run so it pays the full compile plus the shard write; <em>warm</em> is a straight cache hit. The shard is a single content-keyed store shared across concurrent processes (an exclusive <code>flock</code> serializes writers so no entry is lost), deduped by source hash — the 10-import run leaves 21 module entries in a 3.1&nbsp;MiB shard. Import-free scripts see no benefit by design; the cache pays off precisely when a run compiles real amounts of source.</p>
       </section>
 
       <section class="tutorial-section">

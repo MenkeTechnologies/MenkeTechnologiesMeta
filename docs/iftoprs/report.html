@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="iftoprs — Engineering report. Real-time bandwidth monitor in Rust: 28,563 Rust lines (production + tests), 2,275 test functions, 31 cyberpunk themes, ratatui TUI, pcap capture engine, per-flow process attribution, JSON streaming, mouse + sparklines, auto-restart capture, 15 direct + 269 transitive crates.">
+  <meta name="description" content="iftoprs — Engineering report. Real-time bandwidth monitor in Rust: 29,585 Rust lines (production + tests), 2,286 test functions, 31 cyberpunk themes, ratatui TUI, pcap capture engine, per-flow process attribution, JSON streaming, mouse + sparklines, auto-restart capture, 15 direct + 269 transitive crates.">
   <title>iftoprs &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -92,26 +92,26 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY            -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">iftoprs is a single-binary real-time bandwidth monitor written in Rust. Live <code>libpcap</code> capture feeds an async <code>tokio</code> pipeline; a per-flow tracker computes 2&nbsp;s / 10&nbsp;s / 40&nbsp;s sliding-window averages, cumulative byte counters, and 40-sample sparkline history; a <code>ratatui</code> TUI renders the result with mouse + keyboard navigation, hover tooltips, 31 cyberpunk color themes, configurable bandwidth alerts, and live filter / pin / drill-down. Background native polling (<code>libproc</code> on macOS, <code>/proc</code> on Linux) joins each flow to its owning <code>(PID, process_name)</code>. A headless <code>--json</code> mode streams NDJSON snapshots for pipelines. Auto-restart with exponential backoff keeps the capture loop alive across transient kernel / driver hiccups. <strong>21,891 production Rust lines + 6,672 integration-test lines + 2,275 test functions + 31 themes + 17 CLI flags + 15 direct (269 transitive) crates &mdash; macOS &amp; Linux on x86_64 + aarch64.</strong></p>
+      <p class="tutorial-subtitle">iftoprs is a single-binary real-time bandwidth monitor written in Rust. Live <code>libpcap</code> capture feeds an async <code>tokio</code> pipeline; a per-flow tracker computes 2&nbsp;s / 10&nbsp;s / 40&nbsp;s sliding-window averages, cumulative byte counters, and 40-sample sparkline history; a <code>ratatui</code> TUI renders the result with mouse + keyboard navigation, hover tooltips, 31 cyberpunk color themes, configurable bandwidth alerts, and live filter / pin / drill-down. Background native polling (<code>libproc</code> on macOS, <code>/proc</code> on Linux) joins each flow to its owning <code>(PID, process_name)</code>. A headless <code>--json</code> mode streams NDJSON snapshots for pipelines. Auto-restart with exponential backoff keeps the capture loop alive across transient kernel / driver hiccups. <strong>22,913 production Rust lines + 6,672 integration-test lines + 2,286 test functions + 31 themes + 17 CLI flags + 15 direct (269 transitive) crates &mdash; macOS &amp; Linux on x86_64 + aarch64.</strong></p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">28,563</div><div class="stat-label">Total Rust Lines</div></div>
-        <div class="stat-card"><div class="stat-val">21,891</div><div class="stat-label">Production Rust</div></div>
-        <div class="stat-card"><div class="stat-val accent">2,275</div><div class="stat-label">Test Functions</div></div>
+        <div class="stat-card"><div class="stat-val">29,585</div><div class="stat-label">Total Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val">22,913</div><div class="stat-label">Production Rust</div></div>
+        <div class="stat-card"><div class="stat-val accent">2,286</div><div class="stat-label">Test Functions</div></div>
         <div class="stat-card"><div class="stat-val green">31</div><div class="stat-label">Color Themes</div></div>
         <div class="stat-card"><div class="stat-val">17</div><div class="stat-label">CLI Flags</div></div>
         <div class="stat-card"><div class="stat-val">15</div><div class="stat-label">Direct Crates</div></div>
         <div class="stat-card"><div class="stat-val">269</div><div class="stat-label">Transitive Crates</div></div>
-        <div class="stat-card"><div class="stat-val">20</div><div class="stat-label">Production .rs Files</div></div>
+        <div class="stat-card"><div class="stat-val">21</div><div class="stat-label">Production .rs Files</div></div>
         <div class="stat-card"><div class="stat-val">244</div><div class="stat-label">Git Commits</div></div>
-        <div class="stat-card"><div class="stat-val">v2.22.9</div><div class="stat-label">Released</div></div>
+        <div class="stat-card"><div class="stat-val">v2.22.10</div><div class="stat-label">Released</div></div>
       </div>
 
       <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 28,563 lines</p>
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 29,585 lines</p>
         <div class="bar-wrap" style="height:26px;">
-          <div class="bar-fill cyan" style="width:76.6%;"></div>
-          <span class="bar-pct" style="font-size:12px;">21,891 production / 6,672 tests &middot; 76.6% production</span>
+          <div class="bar-fill cyan" style="width:77.4%;"></div>
+          <span class="bar-pct" style="font-size:12px;">22,913 production / 6,672 tests &middot; 77.4% production</span>
         </div>
         <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Production: 20 <code>.rs</code> files under <code>src/</code> (capture, data, ui, config, util, main). Tests: <code>tests/integration.rs</code> drives the built binary via <code>CARGO_BIN_EXE_iftoprs</code> &mdash; no <code>cargo run</code>, so CI output is read directly from the process.</p>
       </div>
@@ -229,11 +229,11 @@
           <tr><td style="color:var(--accent);">Capture</td><td><code>capture/parser.rs, capture/sniffer.rs</code></td><td class="num">3,315</td><td class="num">12.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:12.2%"></div></div></td><td>libpcap loop, exponential-backoff restart, Ethernet/IPv4/IPv6/TCP/UDP/ICMP decode, 5-tuple folding</td></tr>
           <tr><td style="color:var(--accent);">Config</td><td><code>config/cli.rs, config/theme.rs, config/prefs.rs</code></td><td class="num">4,579</td><td class="num">16.9%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:16.9%"></div></div></td><td>clap derive (17 flags + 5 completion shells), 31 themes with display names + swatches, TOML auto-save</td></tr>
           <tr><td style="color:var(--accent);">Data</td><td><code>data/flow.rs, data/tracker.rs, data/history.rs</code></td><td class="num">3,590</td><td class="num">13.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:13.2%"></div></div></td><td>5-tuple flow records, peak / cumulative counters, 40-sample sparkline ring buffer, sliding-window rate calculation</td></tr>
-          <tr><td style="color:var(--accent);">Util</td><td><code>util/format.rs, util/resolver.rs, util/procinfo.rs</code></td><td class="num">2,822</td><td class="num">10.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.4%"></div></div></td><td>byte/bit formatters, async reverse-DNS + port-name cache, background native poller (<code>libproc</code> / <code>/proc</code>) for PID+name attribution</td></tr>
-          <tr><td style="color:var(--accent);">Main / Entry</td><td><code>main.rs, lib.rs</code></td><td class="num">1,148</td><td class="num">4.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:4.2%"></div></div></td><td>argv handoff, JSON mode dispatch, capture spawn, TUI bootstrap, signal handling</td></tr>
+          <tr><td style="color:var(--accent);">Util</td><td><code>util/format.rs, util/resolver.rs, util/procinfo.rs</code></td><td class="num">2,839</td><td class="num">10.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.4%"></div></div></td><td>byte/bit formatters, async reverse-DNS + port-name cache, background native poller (<code>libproc</code> / <code>/proc</code>) for PID+name attribution</td></tr>
+          <tr><td style="color:var(--accent);">Main / Entry</td><td><code>main.rs, lib.rs</code></td><td class="num">1,149</td><td class="num">4.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:4.2%"></div></div></td><td>argv handoff, JSON mode dispatch, capture spawn, TUI bootstrap, signal handling</td></tr>
           <tr><td style="color:var(--green);">Integration tests</td><td><code>tests/integration.rs</code></td><td class="num">5,258</td><td class="num">19.4%</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:19.4%"></div></div></td><td>479 integration tests driving the built binary via <code>CARGO_BIN_EXE_iftoprs</code>; covers CLI parse, JSON mode, completions, theme list, BPF filter pass-through</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">27,131</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
+        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">27,149</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
       </table>
 
       <hr class="section-rule">
@@ -248,19 +248,20 @@
         <thead><tr><th>File</th><th class="num">Lines</th><th>Role</th></tr></thead>
         <tbody>
           <tr><td>tests/integration.rs</td><td class="num">5,258</td><td>479 integration tests driving the built <code>iftoprs</code> binary &mdash; CLI parse, <code>--help</code> / <code>--version</code>, <code>--list-interfaces</code>, <code>--list-colors</code>, <code>--completions {zsh,bash,fish,elvish,powershell}</code>, JSON mode, BPF filter compile, CIDR parse, theme name resolution, prefs round-trip, sparkline math, port-name resolution, multicast CIDR edges</td></tr>
-          <tr><td>src/ui/app.rs</td><td class="num">3,805</td><td>TUI app state machine: every keybind, every popup, every chooser, hover-tooltip controller, drill-down filter, pin/unpin state, pause / resume, theme + interface choosers, help HUD, mouse-event dispatch, scroll math</td></tr>
+          <tr><td>src/ui/app.rs</td><td class="num">4,066</td><td>TUI app state machine: every keybind, every popup, every chooser, hover-tooltip controller, drill-down filter, pin/unpin state, pause / resume, theme + interface choosers, help HUD, mouse-event dispatch, scroll math</td></tr>
           <tr><td>src/capture/parser.rs</td><td class="num">3,074</td><td>Packet decoder &mdash; Ethernet II, VLAN, IPv4, IPv6, TCP, UDP, ICMP, ICMPv6, ARP, raw IP. Per-packet 5-tuple extraction, protocol classification, direction inference vs interface IP / net filter</td></tr>
-          <tr><td>src/ui/render.rs</td><td class="num">2,610</td><td>ratatui paint paths &mdash; header bar with 10 hover-segment hit boxes, flow table with TX/RX columns and gradient bars, sparkline row, footer status, alert flash, popup choosers, help HUD, pause overlay</td></tr>
+          <tr><td>src/ui/render.rs</td><td class="num">2,754</td><td>ratatui paint paths &mdash; header bar with 10 hover-segment hit boxes, flow table with TX/RX columns and gradient bars, sparkline row, footer status, alert flash, popup choosers, help HUD, pause overlay</td></tr>
           <tr><td>src/config/cli.rs</td><td class="num">2,344</td><td>clap derive: 17 flags, 5 completion shells, <code>--list-colors</code> swatch dump, <code>--list-interfaces</code> table, version string. Holds every <code>clap_complete</code> generator</td></tr>
           <tr><td>src/util/resolver.rs</td><td class="num">1,733</td><td>Async reverse-DNS with cache + TTL; port-to-service-name table (<code>/etc/services</code>-style); never blocks the UI thread on lookup misses</td></tr>
           <tr><td>src/data/flow.rs</td><td class="num">1,685</td><td>5-tuple <code>Flow</code> record, TX/RX counters, sort comparators, format helpers, display variants for one-line / two-line / sent-only / recv-only modes</td></tr>
           <tr><td>src/config/theme.rs</td><td class="num">1,263</td><td>31 themes &mdash; <code>ThemeName</code> enum, <code>ThemeName::ALL</code> table, display-name resolver, color palette per theme, swatch row for chooser preview</td></tr>
-          <tr><td>src/main.rs</td><td class="num">1,136</td><td>Entry point &mdash; argv handoff, JSON-mode short-circuit, capture thread spawn, TUI bootstrap, Ctrl+C handling, prefs save on exit</td></tr>
-          <tr><td>src/data/tracker.rs</td><td class="num">1,040</td><td>Flow store: insertion / update / expiration, packet&rarr;flow folding, per-direction byte accumulation, sliding-window state, alert evaluation</td></tr>
+          <tr><td>src/main.rs</td><td class="num">1,239</td><td>Entry point &mdash; argv handoff, JSON-mode short-circuit, capture thread spawn, TUI bootstrap, Ctrl+C handling, prefs save on exit</td></tr>
+          <tr><td>src/data/tracker.rs</td><td class="num">1,069</td><td>Flow store: insertion / update / expiration, packet&rarr;flow folding, per-direction byte accumulation, sliding-window state, alert evaluation</td></tr>
           <tr><td>src/config/prefs.rs</td><td class="num">966</td><td>TOML serializer for <code>~/.iftoprs.conf</code> &mdash; load, default-on-missing, auto-save on toggle, schema-stable across upgrades</td></tr>
-          <tr><td>src/data/history.rs</td><td class="num">859</td><td>Per-flow sparkline ring buffer (40 samples), sliding-window rate math, peak tracking, display string builder (▁▂▃▅▇█)</td></tr>
+          <tr><td>src/data/history.rs</td><td class="num">863</td><td>Per-flow sparkline ring buffer (40 samples), sliding-window rate math, peak tracking, display string builder (▁▂▃▅▇█)</td></tr>
           <tr><td>src/util/format.rs</td><td class="num">673</td><td>Human-readable byte/bit formatters &mdash; <code>10b</code>, <code>1.2Kb</code>, <code>340Mb</code>, <code>1Gb</code>; log-scale bar fill computation; rate column color picker</td></tr>
-          <tr><td>src/util/procinfo.rs</td><td class="num">425</td><td>Background native poller (<code>libproc</code> on macOS, <code>/proc</code> on Linux); <code>(local_port, proto) → (pid, name)</code> cache in <code>Arc&lt;Mutex&lt;_&gt;&gt;</code>; no subprocess</td></tr>
+          <tr><td>src/util/procinfo.rs</td><td class="num">459</td><td>Background native poller (<code>libproc</code> on macOS, <code>/proc</code> on Linux); <code>(local_port, proto) → (pid, name)</code> cache in <code>Arc&lt;Mutex&lt;_&gt;&gt;</code>; no subprocess</td></tr>
+          <tr><td>src/util/provenance.rs</td><td class="num">445</td><td>Build + runtime provenance metadata surfaced in the UI and JSON output</td></tr>
           <tr><td>src/capture/sniffer.rs</td><td class="num">237</td><td>pcap capture loop, BPF filter compile, snaplen / promiscuous setup, exponential-backoff restart on transient errors</td></tr>
           <tr><td>src/util/mod.rs</td><td class="num">8</td><td>re-exports for the util submodules</td></tr>
           <tr><td>src/lib.rs</td><td class="num">13</td><td>library entry &mdash; re-exports for the integration test harness</td></tr>
@@ -269,7 +270,7 @@
           <tr><td>src/ui/mod.rs</td><td class="num">4</td><td>re-exports for ui::app + ui::render</td></tr>
           <tr><td>src/capture/mod.rs</td><td class="num">4</td><td>re-exports for capture::sniffer + capture::parser</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL (PRODUCTION + TESTS)</td><td class="num">28,563</td><td>28 <code>.rs</code> files (20 src + 8 tests) &mdash; single binary crate</td></tr></tfoot>
+        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL (PRODUCTION + TESTS)</td><td class="num">29,585</td><td>29 <code>.rs</code> files (21 src + 8 tests) &mdash; single binary crate</td></tr></tfoot>
       </table>
 
       <hr class="section-rule">
@@ -411,11 +412,11 @@
       <!-- SECTION 8: TEST SURFACE                 -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">*</span>TEST SURFACE</h2>
-      <p class="tutorial-subtitle">2,275 test functions across the production crate and integration suite. CI runs format + clippy + test on Ubuntu + macOS on every push and pull request. Integration tests drive the built binary via <code>CARGO_BIN_EXE_iftoprs</code> &mdash; not <code>cargo run</code> &mdash; so the assertions hit the real binary.</p>
+      <p class="tutorial-subtitle">2,286 test functions across the production crate and integration suite. CI runs format + clippy + test on Ubuntu + macOS on every push and pull request. Integration tests drive the built binary via <code>CARGO_BIN_EXE_iftoprs</code> &mdash; not <code>cargo run</code> &mdash; so the assertions hit the real binary.</p>
 
       <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));">
-        <div class="stat-card"><div class="stat-val accent">2,275</div><div class="stat-label">Total #[test] fns</div></div>
-        <div class="stat-card"><div class="stat-val">1,733</div><div class="stat-label">Unit Tests (src/)</div></div>
+        <div class="stat-card"><div class="stat-val accent">2,286</div><div class="stat-label">Total #[test] fns</div></div>
+        <div class="stat-card"><div class="stat-val">1,730</div><div class="stat-label">Unit Tests (src/)</div></div>
         <div class="stat-card"><div class="stat-val">545</div><div class="stat-label">Integration Tests</div></div>
         <div class="stat-card"><div class="stat-val">6,672</div><div class="stat-label">Integration LOC</div></div>
       </div>
@@ -435,11 +436,11 @@
           <tr><td>src/data/history.rs</td><td class="num">72</td><td>40-sample ring math, sparkline string, peak tracking</td></tr>
           <tr><td>src/data/tracker.rs</td><td class="num">68</td><td>flow insertion / update / expiration, direction inference, alert eval</td></tr>
           <tr><td>src/ui/render.rs</td><td class="num">64</td><td>header layout, hit-box arithmetic, tooltip positioning, popup geometry</td></tr>
-          <tr><td>src/util/procinfo.rs</td><td class="num">27</td><td>native socket-table parse, byte-order/port conversion, cache invalidation, missing-socket handling</td></tr>
+          <tr><td>src/util/procinfo.rs</td><td class="num">24</td><td>native socket-table parse, byte-order/port conversion, cache invalidation, missing-socket handling</td></tr>
           <tr><td>src/main.rs</td><td class="num">14</td><td>argv handoff, JSON-mode short-circuit, prefs save on exit</td></tr>
           <tr><td>src/capture/sniffer.rs</td><td class="num">6</td><td>pcap open, BPF compile, snaplen / promiscuous setup, exponential-backoff restart</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td>UNIT SUBTOTAL</td><td class="num">1,733</td><td>across 14 source files</td></tr></tfoot>
+        <tfoot><tr class="total-row"><td>UNIT SUBTOTAL</td><td class="num">1,730</td><td>across 14 source files</td></tr></tfoot>
       </table>
 
       <h3 style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);letter-spacing:1.5px;margin:1.5rem 0 0.5rem;">// CI MATRIX</h3>
@@ -563,7 +564,7 @@
     </main>
 
     <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
-      // IFTOPRS v2.22.9 &middot; ENGINEERING REPORT &middot; <a href="index.html" style="color:var(--cyan);">DOCS</a> &middot; <a href="https://github.com/MenkeTechnologies/iftoprs" style="color:var(--cyan);">GITHUB</a> &middot; <a href="https://crates.io/crates/iftoprs" style="color:var(--cyan);">CRATES.IO</a>
+      // IFTOPRS v2.22.10 &middot; ENGINEERING REPORT &middot; <a href="index.html" style="color:var(--cyan);">DOCS</a> &middot; <a href="https://github.com/MenkeTechnologies/iftoprs" style="color:var(--cyan);">GITHUB</a> &middot; <a href="https://crates.io/crates/iftoprs" style="color:var(--cyan);">CRATES.IO</a>
     </footer>
   </div>
 

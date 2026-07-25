@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zdbview — terminal inspector and CRUD editor for rkyv archives and SQLite databases. One binary: generic SQLite CRUD by rowid, key/value decoding for 8 recognized rkyv cache formats with structural fallback, whole-table search, detail view, CSV/JSON export, OSC 52 clipboard, recent-files picker.">
+  <title>zdbview — Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .tutorial-main { max-width: 68rem; }
+    .docs-build-line {
+      margin: 0.35rem 0 0;
+      font-family: 'Share Tech Mono', ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+      max-width: 46rem;
+      opacity: 0.75;
+    }
+    .hub-scheme-strip {
+      border-bottom: 1px dashed var(--border);
+      background: color-mix(in srgb, var(--bg-secondary) 85%, transparent);
+      padding: 0.55rem 1.5rem 0.65rem;
+      position: relative;
+    }
+    .hub-scheme-strip-inner {
+      max-width: 68rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .hub-scheme-strip .hud-scheme-label {
+      flex: 0 0 auto;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: left;
+    }
+    .hub-scheme-strip .scheme-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    @media (max-width: 720px) {
+      .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
+      .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* Tables (keys / flags / views) */
+    .doc-table { width: 100%; border-collapse: collapse; margin: 0.6rem 0 0.2rem; font-size: 12.5px; }
+    .doc-table th {
+      background: var(--bg-secondary); color: var(--cyan);
+      font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px;
+      text-transform: uppercase; text-align: left; padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .doc-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .doc-table td:first-child { white-space: nowrap; color: var(--accent-light); font-family: 'Share Tech Mono', monospace; }
+    .doc-table tr:hover td { background: var(--bg-hover); }
+    .doc-note { font-size: 12px; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div class="app tutorial-app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">// ZDBVIEW — RKYV + SQLITE TERMINAL EDITOR 🗄️</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zdbview" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://crates.io/crates/zdbview" target="_blank" rel="noopener noreferrer">crates.io</a>
+            <span class="sep">/</span>
+            <a href="https://docs.rs/zdbview" target="_blank" rel="noopener noreferrer">docs.rs</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zdbview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+          </nav>
+          <p class="docs-build-line" id="zdbviewBuildLine">zdbview v0.4.0 · ratatui + crossterm TUI · generic SQLite CRUD by rowid · 8 recognized rkyv cache formats with structural fallback · full rkyv CRUD write-back (atomic, byte-identical re-serialization) · whole-table search · CSV/JSON export · OSC 52 clipboard</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zdbview" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zdbview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="hub-scheme-strip">
+      <div class="hub-scheme-strip-inner">
+        <span class="hud-scheme-label">// Color scheme</span>
+        <div class="scheme-grid" id="hudSchemeGrid"></div>
+      </div>
+    </div>
+
+    <main class="tutorial-main">
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>ZDBVIEW</h2>
+      <p class="tutorial-subtitle"><strong>One binary for both halves of the cache.</strong> A SQLite database gets full generic CRUD — browse tables, edit any cell, insert and delete rows, run raw SQL — because SQLite is self-describing. An <a href="https://rkyv.org/format.html" target="_blank" rel="noopener noreferrer">rkyv</a> archive is <em>not</em> self-describing, so it gets decoded to real key/value records when its format is one zdbview recognizes, and a structural view — info, embedded strings, hex — when it is not. Which backend you get is decided by the file's header bytes, never by its name.</p>
+
+      <section class="tutorial-section">
+        <h2>Quickstart</h2>
+<pre># install (binary + both man pages + zsh completion)
+brew tap MenkeTechnologies/menketech
+brew install zdbview
+
+# or from crates.io (binary only)
+cargo install zdbview
+
+# or build from source
+git clone https://github.com/MenkeTechnologies/zdbview
+cd zdbview &amp;&amp; cargo build --release
+
+# open a database — kind is detected from the header magic
+zdbview app.sqlite               # SQLite  → full CRUD
+zdbview ~/.cache/zshrs/scripts.db  # rkyv   → key/value records (despite the .db name)
+
+# force a backend
+zdbview --sqlite file
+zdbview --rkyv   file
+
+# no argument → pick from recently opened files
+zdbview</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>File type detection</h2>
+        <p>The first 16 bytes are compared against the SQLite header magic <code>SQLite format 3\0</code>. When a full header is readable the magic decides <em>alone</em> — its absence means the file opens in the binary inspector, whatever the extension says.</p>
+        <table class="doc-table">
+          <thead><tr><th>Situation</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Header readable, magic present</td><td>SQLite backend</td></tr>
+            <tr><td>Header readable, magic absent</td><td>rkyv / binary inspector — extension ignored</td></tr>
+            <tr><td>File shorter than 16 bytes</td><td>Extension tie-breaker: <code>.db</code> / <code>.sqlite</code> / <code>.sqlite3</code> → SQLite, else inspector</td></tr>
+            <tr><td><code>--sqlite</code> / <code>--rkyv</code></td><td>Short-circuits both rules</td></tr>
+            <tr><td>Magic present but SQLite refuses the file</td><td>Falls back to the inspector instead of failing</td></tr>
+          </tbody>
+        </table>
+        <p class="doc-note">Trusting the magic over the name is the whole point: rkyv cache shards are routinely written under a <code>.db</code> name, and an extension-first reader hands those to SQLite, which then reports a corrupt database for a perfectly valid archive.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>SQLite — generic CRUD</h2>
+        <p>The left pane lists tables and views from <code>sqlite_master</code>; the right pane shows one 500-row page of the selection. Every edit and delete addresses its row by <code>rowid</code>, selected alongside the real columns as <code>SELECT rowid, * FROM &lt;table&gt;</code> — which is what makes the CRUD generic: no schema knowledge, no primary-key guessing, no per-database configuration.</p>
+        <table class="doc-table">
+          <thead><tr><th>Key</th><th>Operation</th></tr></thead>
+          <tbody>
+            <tr><td>e</td><td>Edit the selected cell. Enter runs <code>UPDATE "&lt;table&gt;" SET "&lt;col&gt;" = ?1 WHERE rowid = ?2</code> with the text bound as a parameter, then reloads the page.</td></tr>
+            <tr><td>a</td><td>Insert one row with <code>INSERT INTO &lt;table&gt; DEFAULT VALUES</code>.</td></tr>
+            <tr><td>d</td><td>Delete the selected row after a <code>y</code> confirmation.</td></tr>
+            <tr><td>:</td><td>Run an arbitrary SQL statement; the affected-row count lands in the status line and the page reloads.</td></tr>
+          </tbody>
+        </table>
+        <p class="doc-note">Identifiers are double-quoted with internal quotes doubled, so table and column names containing spaces or keywords work. A <code>WITHOUT ROWID</code> table has no generic row handle, so its rows are listed read-only. Values display by type: integers and reals verbatim, text as UTF-8, <code>NULL</code> as <code>NULL</code>, blobs as <code>&lt;blob N bytes&gt;</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>rkyv — recognized key/value, or structural fallback</h2>
+        <p>An rkyv archive is a memory image of a Rust value plus a root pointer. The format stores no field names, no type tags and no embedded schema — the originating Rust type <em>is</em> the schema. zdbview closes that gap with a <strong>format registry</strong>: for archives it recognizes it carries a faithful, byte-compatible copy of the producer's archive type, detects the format by its magic header, validates with <code>rkyv::check_archived_root</code>, and decodes real key/value records. Anything it does not recognize falls back to the raw structural views.</p>
+        <table class="doc-table">
+          <thead><tr><th>View</th><th>Shows</th></tr></thead>
+          <tbody>
+            <tr><td>0 — Records</td><td>Key/value table for a recognized archive: keys on the left, the selected value's decoded scalar fields plus a hex dump of its blob on the right. Searchable by key. Selected automatically whenever a format is recognized.</td></tr>
+            <tr><td>1 — Info</td><td>Path and byte size, plus the detected format name and decoded header fields when recognized.</td></tr>
+            <tr><td>2 — Strings</td><td>Every run of ≥ 4 printable ASCII bytes with its hex offset — in practice the keys, interned identifiers and string fields, in archive order.</td></tr>
+            <tr><td>3 — Hex</td><td><code>xxd</code>-style dump: 16 bytes per line as <code>offset&nbsp;&nbsp;hex&nbsp;&nbsp;|ascii|</code>.</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Recognized formats</strong> — the script and heap caches the fusevm-hosted languages write, all rkyv 0.7:</p>
+        <table class="doc-table">
+          <thead><tr><th>Format</th><th>Magic</th><th>Detected by</th><th>Record key</th></tr></thead>
+          <tbody>
+            <tr><td>zshrs script cache</td><td><code>ZRSC</code></td><td>magic</td><td>script path</td></tr>
+            <tr><td>zshrs autoload cache</td><td><code>ZRAL</code></td><td>magic</td><td>function name</td></tr>
+            <tr><td>strykelang script cache</td><td><code>STRY</code></td><td>magic (native + compat layout)</td><td>script path</td></tr>
+            <tr><td>awkrs script cache</td><td><code>AWKR</code></td><td>magic</td><td>script path</td></tr>
+            <tr><td>vimlrs script cache</td><td><code>VIML</code></td><td>magic</td><td>script path</td></tr>
+            <tr><td>elisprs heap-image cache</td><td><code>ELSP</code></td><td>magic</td><td>script path</td></tr>
+            <tr><td>pythonrs bytecode cache</td><td><em>none</em></td><td>validated try-decode</td><td>source path</td></tr>
+            <tr><td>rubylang / arb script cache</td><td><em>none</em></td><td>validated try-decode</td><td>u64 content hash</td></tr>
+          </tbody>
+        </table>
+        <p>Magic-bearing formats are matched by header; the header-less hash-keyed shards are attempted last and gated by rkyv validation, so an unrelated archive falls through to the structural view instead of mis-decoding. Adding a format is a single registry entry: copy the producer's archive type — same rkyv version (0.7) and features (<code>validation</code>, <code>archive_le</code>, <code>size_32</code>), same field order and types — and map its magic, or add a validated try-decode for a header-less one.</p>
+        <p class="doc-note">The Records view is read-only in the UI. <code>formats.rs</code> already carries a validated delete-and-reserialize path with tests, but no key is bound to it — writing a shard back means reproducing the producer's exact layout, and a wrong write corrupts a cache the producer then mmaps.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Keys</h2>
+        <table class="doc-table">
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>Tab</td><td>Switch focus between the table list and the row grid</td></tr>
+            <tr><td>j k / arrows</td><td>Move; <code>&larr;</code>/<code>&rarr;</code> move the selected column in the row grid</td></tr>
+            <tr><td>gg / G</td><td>First / last — across pages, not just the visible rows</td></tr>
+            <tr><td>Ctrl-f / Ctrl-b</td><td>Page forward / back (also PageDown / PageUp)</td></tr>
+            <tr><td>/</td><td>Search</td></tr>
+            <tr><td>n / N</td><td>Next / previous match — in the displayed order, so sorting is respected</td></tr>
+            <tr><td>e a d :</td><td>Edit cell / insert row / delete row / SQL (SQLite)</td></tr>
+            <tr><td>s</td><td>Sort by the column under the cursor: ascending &rarr; descending &rarr; off (SQLite)</td></tr>
+            <tr><td>&lt; / &gt;</td><td>Move the sort to the previous / next column, keeping the direction</td></tr>
+            <tr><td>S</td><td>Schema view for the selected table (SQLite)</td></tr>
+            <tr><td>0 1 2 3</td><td>Records / Info / Strings / Hex (rkyv — <code>0</code> only when the format was recognized)</td></tr>
+            <tr><td>a e r d</td><td>Create / hex-edit value / rename key / delete record (rkyv Records)</td></tr>
+            <tr><td>i Tab o x ^s</td><td>Inside the hex editor: EDIT mode / hex&harr;ascii column / insert / delete / save</td></tr>
+            <tr><td>Enter</td><td>Open the detail screen for the selected row or record; from the table list, focus the rows; in the picker, open the file</td></tr>
+            <tr><td>v</td><td>Cycle how a value renders on the detail screen: auto / hex / text / disasm</td></tr>
+            <tr><td>y</td><td>Copy the cell, value or record key to the clipboard (OSC 52 — works over SSH)</td></tr>
+            <tr><td>x</td><td>Export the current table as CSV, or all records as JSON, to a file</td></tr>
+            <tr><td>c</td><td>Color-scheme chooser — live preview, <code>Enter</code> saves, <code>Esc</code> restores</td></tr>
+            <tr><td>C</td><td>Palette editor for the six base colors</td></tr>
+            <tr><td>h / ?</td><td>Help overlay; any key closes it</td></tr>
+            <tr><td>q / Esc</td><td>Leave the current screen, or quit — inside a modal, Esc cancels the modal only</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Search</h2>
+        <p><code>/</code> takes a plain substring (not a regex); <code>n</code> and <code>N</code> then walk the matches. What is scanned depends on the mode and, in SQLite, on which pane has focus.</p>
+        <table class="doc-table">
+          <thead><tr><th>Mode</th><th>Scanned</th></tr></thead>
+          <tbody>
+            <tr><td>SQLite — tables</td><td>Table names, case-insensitive, wrapping</td></tr>
+            <tr><td>SQLite — rows</td><td>The whole table, not just the loaded page: a <code>SELECT rowid … WHERE &lt;any column&gt; LIKE ?</code> that walks from the current row and wraps from the far edge, then pages to the hit</td></tr>
+            <tr><td>rkyv — Records</td><td>Record keys, case-insensitive, wrapping</td></tr>
+            <tr><td>rkyv — Strings</td><td>The extracted runs, case-insensitive, wrapping</td></tr>
+            <tr><td>rkyv — Hex</td><td>Raw bytes, case-sensitive, does <em>not</em> wrap; the view scrolls to the hit and the offset is reported</td></tr>
+            <tr><td>Picker</td><td>Recorded file paths, case-insensitive, wrapping</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Detail view</h2>
+        <p><code>Enter</code> on a row or record opens a full-screen detail: every field untruncated at the top, and a scrollable value pane below. <code>v</code> cycles how the value bytes render — <strong>auto</strong> (text when it looks textual, else hex), <strong>hex</strong> (<code>xxd</code> style), or <strong>text</strong> (UTF-8). <code>y</code> copies the value. This is how you read a cell or record blob too wide for the grid.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Export</h2>
+        <p>Interactive <code>x</code> writes the current table (CSV) or all decoded records (JSON) to a file in the working directory. The same rendering is available non-interactively, which is what makes zdbview scriptable:</p>
+<pre>zdbview data.db --export json      # { table: [ {col: val, …}, … ] } for every table
+zdbview data.db --export csv       # the first table as RFC-4180 CSV
+zdbview cache.rkyv --export json   # decoded records; each value blob as lowercase hex</pre>
+        <p class="doc-note">CSV and JSON are emitted by a dependency-free writer in <code>export.rs</code> — quoting and escaping are covered by unit tests. <code>--export</code> never starts the TUI, so it is safe in a pipeline.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Clipboard</h2>
+        <p><code>y</code> copies through the <strong>OSC 52</strong> terminal escape, written straight to <code>/dev/tty</code>. That means no clipboard library, no X/Wayland/pbcopy dependency, and it works over SSH — the terminal emulator on your side sets the clipboard. It is best-effort: with no controlling terminal (output redirected), the copy silently does nothing.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Recent files</h2>
+        <p>Every successful open is recorded to <code>$XDG_CACHE_HOME/zdbview/recent</code> (or <code>~/.cache/zdbview/recent</code>), one tab-separated line per entry: <code>unix-seconds&nbsp;kind&nbsp;absolute-path</code>. Paths are canonicalized, so the same file reached by different relative paths or symlinks dedupes to a single entry that moves back to the front on re-open. The list is capped at 50 and written via temp-file-plus-rename, so a concurrent reader never sees a half-written list. The recorded kind is the one actually used — a <code>.db</code> file that turned out to be an archive is remembered as <code>rkyv</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>CLI reference</h2>
+        <table class="doc-table">
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>[FILE]</td><td>File to open; with none, the recent-files picker opens</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--sqlite</td><td>Force the SQLite backend</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--rkyv</td><td>Force the rkyv / binary inspector (conflicts with <code>--sqlite</code>)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--export FORMAT</td><td>Dump the file to stdout and exit — <code>json</code> or <code>csv</code>; requires a file argument</td></tr>
+            <tr><td>-h, --help</td><td>Print usage</td></tr>
+            <tr><td>-V, --version</td><td>Print the version</td></tr>
+          </tbody>
+        </table>
+        <p class="doc-note">Man pages ship in the repo: <code>man/man1/zdbview.1</code> and the all-in-one <code>man/man1/zdbviewall.1</code>. The zsh completion is <code>completions/_zdbview</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Repository &amp; links</h2>
+        <ul>
+          <li><strong>Source</strong> — <a href="https://github.com/MenkeTechnologies/zdbview" target="_blank" rel="noopener noreferrer">GitHub repo</a></li>
+          <li><strong>Crate</strong> — <a href="https://crates.io/crates/zdbview" target="_blank" rel="noopener noreferrer">crates.io</a> (<code>cargo install zdbview</code>), API docs on <a href="https://docs.rs/zdbview" target="_blank" rel="noopener noreferrer">docs.rs</a></li>
+          <li><strong>Engineering report</strong> — <a href="report.html">module map, dependency footprint, verification</a></li>
+          <li><strong>Issues</strong> — <a href="https://github.com/MenkeTechnologies/zdbview/issues" target="_blank" rel="noopener noreferrer">issue tracker</a></li>
+          <li><strong>Full README</strong> — <a href="https://github.com/MenkeTechnologies/zdbview#readme" target="_blank" rel="noopener noreferrer">README on GitHub</a></li>
+          <li><strong>Format reference</strong> — <a href="https://rkyv.org/format.html" target="_blank" rel="noopener noreferrer">the rkyv archive format</a>, the reason the rkyv side is read-only</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

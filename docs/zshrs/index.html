@@ -121,7 +121,7 @@
             <span class="sep">/</span>
             <a href="https://docs.rs/zshrs" target="_blank" rel="noopener noreferrer">docs.rs</a>
           </nav>
-          <p class="docs-build-line">zshrs v0.12.8 · Anti-fork architecture · 23 coreutils builtins · VM-executed parallel · Bytecode caching · JIT · <a href="reference.html" style="color: var(--cyan);">Full reference</a> · <a href="daemon-report.html" style="color: var(--cyan);">Daemon impl map</a></p>
+          <p class="docs-build-line">zshrs v0.12.25 · Anti-fork architecture · 23 coreutils builtins · VM-executed parallel · Bytecode caching · JIT · <a href="reference.html" style="color: var(--cyan);">Full reference</a> · <a href="daemon-report.html" style="color: var(--cyan);">Daemon impl map</a></p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -285,10 +285,10 @@
             <h4><code>z*</code> builtin family</h4>
             <p>One namespace, twenty-three builtins, one daemon route.
             <code>zcache</code>, <code>zls</code>, <code>zid</code>, <code>zping</code>,
-            <code>ztag</code>, <code>zsend</code>, <code>znotify</code>,
-            <code>zsubscribe</code>, <code>zjob</code>, <code>zsync</code>,
+            <code>ztag</code>, <code>zuntag</code>, <code>zsend</code>, <code>znotify</code>,
+            <code>zsubscribe</code>, <code>zunsubscribe</code>, <code>zjob</code>, <code>zsync</code>,
             <code>zask</code>, <code>zhistory</code>, <code>zsource</code>,
-            <code>zcomplete</code>, <code>zsuggest</code>, <code>zlog</code>,
+            <code>zcomplete</code>, <code>zsuggest</code>, <code>zcmd-result</code>, <code>zlog</code>,
             <code>zwhere</code>, <code>zd</code>, <code>zlock</code>,
             <code>zpublish</code>.</p>
           </div>
@@ -470,6 +470,35 @@
             runner. Lives in <code>src/extensions/ztest.rs</code>; port
             of strykelang&rsquo;s <code>stryke test</code> runner.</p>
           </div>
+          <div class="cat-card">
+            <h4>First shell with a native powerlevel10k engine</h4>
+            <p><strong>World&rsquo;s first shell to absorb its prompt theme
+            into the shell binary itself.</strong> Everywhere else,
+            powerlevel10k runs as ~13k lines of metaprogrammed zsh
+            re-evaluated by the prompt expander, plus
+            <code>gitstatusd</code> &mdash; a separate C++ daemon &mdash;
+            for git state; <em>p10k instant prompt exists precisely to
+            hide that cost.</em> zshrs intercepts the
+            <code>source powerlevel10k.zsh-theme</code> call at the
+            builtin-dispatch layer and renders in-process Rust instead
+            (<code>src/extensions/p10k/</code>, 21 files, 16,812 lines):
+            81 segment builders ported <code>p10k:NNN</code>-cited from
+            the theme spec (dir, vcs, status, prompt_char, kubecontext,
+            aws, virtualenv, battery, wifi, vi_mode, &hellip;) plus the
+            user-defined <code>prompt_&lt;name&gt;</code> /
+            <code>p10k segment</code> protocol,
+            <code>CONTENT_EXPANSION</code> templates through the real
+            <code>${(e)}</code> subst chain, <code>SHOW_ON_UPGLOB</code>,
+            transient prompt, right-aligned multiline assembly with gap
+            char/style. gitstatusd is absorbed: a native <code>.git</code>
+            reader (HEAD/refs/packed-refs, index v2/v3/v4 parse, stash
+            reflog, tags, ahead/behind) &mdash; no C++ daemon, no fork
+            per prompt in the cached case. The user&rsquo;s
+            <code>.p10k.zsh</code> config sources unchanged; the deferred
+            template state machine collapses into one eager linear fold
+            per prompt. The theme&rsquo;s own optimization layer becomes
+            unnecessary &mdash; the workaround is deleted, not ported.</p>
+          </div>
         </div>
 
         <p style="font-size: 12px; color: var(--text-muted); margin-top: 0.8rem;">
@@ -552,11 +581,11 @@
         <p>The runtime crate is physically split so port code and original code can never be confused. Bots, contributors, and humans all read <a href="https://github.com/MenkeTechnologies/zshrs/blob/main/docs/PORT.md" style="color:var(--cyan);"><code>docs/PORT.md</code></a> before writing a single line of code; <code>tests/port_purity.rs</code> mechanically enforces the rules in CI.</p>
         <ul>
           <li><strong><code>src/ported/</code> &mdash; 106 files, FROZEN.</strong> Strict 1:1 port. Every <code>.rs</code> mirrors a real <code>src/zsh/Src/&lt;x&gt;.c</code> file (same stem, same relative subpath). Every top-level <code>fn</code> carries a <code>/// Port of &lt;cname&gt;() from Src/&lt;file&gt;.c:NNNN</code> doc-comment. New file creation is banned; new fn names that don't exist in upstream zsh C source are banned. The freeze closes both drift vectors: bots invent helper names ("shell_quote", "find_in_path") and bots create fresh files to drop helpers in. Both blocked.</li>
-          <li><strong><code>src/extensions/</code> &mdash; 42 files.</strong> The non-port directory. Features zsh C demonstrably does <em>not</em> have: AOT (<code>aot.rs</code>, <code>compile_zsh.rs</code>), autoload/plugin/script caches, fish-style autosuggest/abbrev/highlight, persistent worker pool, arith JIT, AST s-exp dump, ZWC byte-code helpers, recorder hooks, daemon presence, structured logging, ZLE keymaps/widgets, ext builtins, regex module, config, overlay snapshot + canonical apply, subscript/fds/hist extensions. <code>port_purity</code> exempts this directory from the 1:1 file-existence rule on the basis that no C ancestor exists.</li>
+          <li><strong><code>src/extensions/</code> &mdash; 88 files.</strong> The non-port directory. Features zsh C demonstrably does <em>not</em> have: AOT (<code>aot.rs</code>, <code>compile_zsh.rs</code>), autoload/plugin/script caches, fish-style autosuggest/abbrev/highlight, the native powerlevel10k engine (<code>p10k/</code>, 21 files), persistent worker pool, arith JIT, AST s-exp dump, ZWC byte-code helpers, recorder hooks, daemon presence, structured logging, ZLE keymaps/widgets, ext builtins, regex module, config, overlay snapshot + canonical apply, subscript/fds/hist extensions. <code>port_purity</code> exempts this directory from the 1:1 file-existence rule on the basis that no C ancestor exists.</li>
           <li><strong><code>src/recorder/</code> &mdash; 1 file, feature-gated.</strong> Every symbol <code>#[cfg(feature = "recorder")]</code>; deleted by rustc when the feature is off. Compiled into the separate <code>zshrs-recorder</code> binary, never the default <code>zshrs</code> build.</li>
           <li><strong><code>src/zsh/</code> &mdash; vendored upstream.</strong> Read-only reference. The C spec; never modified.</li>
         </ul>
-        <p>Lexer + parser ports live in <code>src/ported/lex.rs</code> and <code>src/ported/parse.rs</code> (no separate <code>parse/</code> crate). Workspace sibling: <code>daemon/</code> (41 files, <code>zshrs-daemon</code>); <code>compsys</code> was folded into the main <code>zshrs</code> crate (no longer a standalone sibling). Vendored: <code>vendor/fish/</code> (157 files, fish-style reader/highlighter/abbreviations), <code>bins/</code> (4 entry points: <code>zshrs</code>, <code>zshrs-recorder</code> with <code>required-features = ["recorder"]</code>, <code>zd</code> with <code>required-features = ["zd"]</code>, <code>bench-autoload</code>). 628 <code>.rs</code> files total &middot; 700,413 Rust LOC (<code>git ls-files '*.rs' | xargs wc -l</code>, 2026-06-21). Test count: 16,369 <code>#[test]</code> markers across the tree.</p>
+        <p>Lexer + parser ports live in <code>src/ported/lex.rs</code> and <code>src/ported/parse.rs</code> (no separate <code>parse/</code> crate). Workspace sibling: <code>daemon/</code> (41 files, <code>zshrs-daemon</code>); <code>compsys</code> was folded into the main <code>zshrs</code> crate (no longer a standalone sibling). Vendored: <code>vendor/fish/</code> (157 files, fish-style reader/highlighter/abbreviations), <code>bins/</code> (5 entry points: <code>zshrs</code>, <code>zshrs-recorder</code> with <code>required-features = ["recorder"]</code>, <code>zd</code> with <code>required-features = ["zd"]</code>, <code>bench-autoload</code>, <code>parity-fuzz</code> with <code>required-features = ["parity-fuzz"]</code>). 694 <code>.rs</code> files total &middot; 802,878 Rust LOC (<code>git ls-files '*.rs' | xargs wc -l</code>, 2026-07-19). Test count: 18,616 <code>#[test]</code> markers across the tree.</p>
       </section>
 
       <!-- ════════════════════════════════════════════════════════════ -->
@@ -702,16 +731,6 @@ uname  date  mktemp</div>
             FTS5 index <code>zshrs_history.db</code>, both in <code>$ZSHRS_HOME</code>.</p>
           </div>
         </div>
-
-        <p><strong>Versioned &amp; migration-safe.</strong> Every shard opens through a fixed header &mdash;
-        magic (<code>ZRSC</code> for scripts, <code>ZRAL</code> for autoloads), <code>format_version</code>,
-        the building <code>zshrs_version</code>, <code>pointer_width</code>, and <code>built_at_secs</code> &mdash;
-        validated by <code>rkyv::check_archived_root</code> on mmap. Any mismatch (schema bump, a different
-        build, or a 32-vs-64-bit pointer width) fails the header check and the shard is silently recompiled
-        from source &mdash; never a hard error, never a broken load. Writes take an exclusive
-        <code>flock</code> on <code>&lt;shard&gt;.lock</code>, serialize with <code>rkyv::to_bytes</code>,
-        <code>fsync</code> a temp file, and atomic-rename over the live shard, so concurrent shells never
-        observe a half-written cache. The SQLite mirrors carry their own schema migrations applied on open.</p>
 
         <p>Browse caches without SQL:</p>
         <div class="code-block"><span class="keyword">dbview</span>                      <span class="comment"># list all tables + row counts (hits catalog.db)</span>
@@ -990,6 +1009,353 @@ Every subsequent call (client path, ZERO daemon RTT):
           <div class="cat-card"><h4>Functions</h4><p>Definition, <code>Call</code>/<code>Return</code>, <code>PushFrame</code>/<code>PopFrame</code></p></div>
           <div class="cat-card"><h4>Fused Ops</h4><p><code>AccumSumLoop</code>, <code>SlotIncLtIntJumpBack</code>, <code>PreIncSlotVoid</code> &mdash; single-dispatch loop execution</p></div>
         </div>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <section class="tutorial-section">
+        <h2><span class="section-num">[0x06b]</span> COMPLETION CODEPATH &mdash; ZSH vs ZSHRS</h2>
+
+        <p>Both shells share the same entry &mdash; zshrs ports <code>callcompfunc</code> faithfully &mdash; then split where each completion function actually runs. zsh re-interprets the whole framework as shell on <em>every</em> tab and walks <code>$fpath</code> to find the leaf; zshrs runs the framework as native Rust and resolves the leaf from an index. This is a structural codepath trace, not a benchmark &mdash; the claim is about which work exists on each path.</p>
+
+        <style>
+          .cc-fig { margin: 0.9rem 0 1rem; padding: 1rem; border: 1px solid var(--border); background: var(--bg-secondary); border-radius: 6px; overflow-x: auto; }
+          .cc-fig svg { width: 100%; min-width: 720px; height: auto; display: block; }
+          .cc-node { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.2; }
+          .cc-nz { fill: var(--bg-card); stroke: var(--accent); stroke-width: 1.2; }
+          .cc-nr { fill: var(--bg-card); stroke: var(--cyan); stroke-width: 1.2; }
+          .cc-flow { fill: none; stroke: var(--border); stroke-width: 1.6; }
+          .cc-flow-z { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+          .cc-flow-r { fill: none; stroke: var(--cyan); stroke-width: 1.6; }
+          .cc-eye { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; }
+          .cc-eye-z { fill: var(--accent); } .cc-eye-r { fill: var(--cyan); } .cc-eye-m { fill: var(--text-muted); }
+          .cc-title { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 13.5px; fill: var(--text); }
+          .cc-cite { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 10.5px; fill: var(--text-dim); }
+          .cc-mid { font-family: 'Orbitron', sans-serif; font-size: 12.5px; letter-spacing: 0.08em; fill: var(--text); }
+          .cc-lab { font-family: 'Orbitron', sans-serif; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--text-muted); }
+          .cc-hd { font-family: 'Orbitron', sans-serif; font-size: 12px; letter-spacing: 0.12em; }
+          .cc-chip-cost { fill: var(--red); fill-opacity: 0.14; stroke: var(--red); stroke-width: 1; }
+          .cc-chip-ok { fill: var(--cyan); fill-opacity: 0.12; stroke: var(--cyan); stroke-width: 1; }
+          .cc-ct-cost { font-family: 'Share Tech Mono', monospace; font-size: 9.5px; letter-spacing: 0.04em; fill: var(--red); }
+          .cc-ct-ok { font-family: 'Share Tech Mono', monospace; font-size: 9.5px; letter-spacing: 0.04em; fill: var(--cyan); }
+          .cc-fn { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11.5px; fill: var(--text); }
+          .cc-fn2 { font-family: 'Share Tech Mono', ui-monospace, monospace; font-size: 11px; fill: var(--text); }
+          .cc-chip-n { fill: var(--text-muted); fill-opacity: 0.10; stroke: var(--text-muted); }
+          .cc-ct-n { font-family: 'Share Tech Mono', monospace; font-size: 9px; fill: var(--text-dim); }
+        </style>
+
+        <div class="cc-fig">
+          <svg viewBox="0 0 960 706" role="img" aria-label="Side-by-side flow of zsh versus zshrs tab-completion codepath">
+            <defs>
+              <marker id="ccah" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--border)" stroke-width="1.5"/></marker>
+              <marker id="ccahz" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--accent)" stroke-width="1.5"/></marker>
+              <marker id="ccahr" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--cyan)" stroke-width="1.5"/></marker>
+            </defs>
+
+            <rect class="cc-node" x="290" y="16" width="380" height="46" rx="8"/>
+            <text class="cc-mid" x="480" y="44" text-anchor="middle">zle complete-word &#8594; callcompfunc</text>
+
+            <path class="cc-flow" d="M480,62 V88 H230 V140" marker-end="url(#ccah)"/>
+            <path class="cc-flow" d="M480,62 V88 H730 V140" marker-end="url(#ccah)"/>
+
+            <text class="cc-hd cc-eye-z" x="230" y="104" text-anchor="middle">ZSH &#183; INTERPRETED, EVERY TAB</text>
+            <text class="cc-hd cc-eye-r" x="730" y="104" text-anchor="middle">ZSHRS &#183; NATIVE SPINE + CACHED LEAF</text>
+
+            <text class="cc-lab" x="480" y="192" text-anchor="middle">spine</text>
+            <text class="cc-lab" x="480" y="312" text-anchor="middle">resolve leaf</text>
+            <text class="cc-lab" x="480" y="432" text-anchor="middle">load + run leaf</text>
+            <text class="cc-lab" x="480" y="552" text-anchor="middle">emit</text>
+
+            <!-- ROW 1 SPINE -->
+            <rect class="cc-nz" x="40" y="140" width="380" height="96" rx="8"/>
+            <rect class="cc-chip-cost" x="352" y="151" width="56" height="18" rx="4"/>
+            <text class="cc-ct-cost" x="380" y="164" text-anchor="middle">COST</text>
+            <text class="cc-eye cc-eye-z" x="60" y="167">spine &#183; interpreted</text>
+            <text class="cc-title" x="60" y="191">_main_complete &#8594; _complete &#8594;</text>
+            <text class="cc-title" x="60" y="209">_normal &#8594; _dispatch</text>
+            <text class="cc-cite" x="60" y="228">~1,517 shell lines walked &#183; re-run every tab</text>
+
+            <rect class="cc-nr" x="540" y="140" width="380" height="96" rx="8"/>
+            <rect class="cc-chip-ok" x="852" y="151" width="56" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="880" y="164" text-anchor="middle">NATIVE</text>
+            <text class="cc-eye cc-eye-r" x="560" y="167">spine &#183; compiled</text>
+            <text class="cc-title" x="560" y="191">dispatch_compsys &#8594; Rust fn ptr</text>
+            <text class="cc-cite" x="560" y="211">machine code, in the binary &#183; no wordcode walk</text>
+            <text class="cc-cite" x="560" y="228">router.rs:57 &#183; compcore.rs:776</text>
+
+            <!-- ROW 2 RESOLVE LEAF -->
+            <rect class="cc-nz" x="40" y="260" width="380" height="96" rx="8"/>
+            <rect class="cc-chip-cost" x="352" y="271" width="56" height="18" rx="4"/>
+            <text class="cc-ct-cost" x="380" y="284" text-anchor="middle">FS SCAN</text>
+            <text class="cc-eye cc-eye-z" x="60" y="287">resolve leaf</text>
+            <text class="cc-title" x="60" y="311">scan $fpath for _git</text>
+            <text class="cc-cite" x="60" y="331">51 dirs &#183; stat per dir until hit</text>
+            <text class="cc-cite" x="60" y="348">against a ~48k-file completion corpus</text>
+
+            <rect class="cc-nr" x="540" y="260" width="380" height="96" rx="8"/>
+            <rect class="cc-chip-ok" x="852" y="271" width="56" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="880" y="284" text-anchor="middle">MMAP</text>
+            <text class="cc-eye cc-eye-r" x="560" y="287">resolve leaf</text>
+            <text class="cc-title" x="560" y="311">rkyv shard &#183; mmap zero-copy</text>
+            <text class="cc-cite" x="560" y="331">rkyv-mmap'd shards ~/.zshrs/*.rkyv &#183; no $fpath walk</text>
+            <text class="cc-cite" x="560" y="348">getfpfunc &#8594; try_dump_file &#183; exec.rs:811</text>
+
+            <!-- ROW 3 LOAD + RUN -->
+            <rect class="cc-nz" x="40" y="380" width="380" height="96" rx="8"/>
+            <rect class="cc-chip-cost" x="352" y="391" width="56" height="18" rx="4"/>
+            <text class="cc-ct-cost" x="380" y="404" text-anchor="middle">PARSE</text>
+            <text class="cc-eye cc-eye-z" x="60" y="407">load + run &#183; interpreted</text>
+            <text class="cc-title" x="60" y="431">autoload + parse _git, then</text>
+            <text class="cc-title" x="60" y="449">_arguments &#8594; _describe &#8594; _tags</text>
+            <text class="cc-cite" x="60" y="468">parse on first tab &#183; interpret specs</text>
+
+            <rect class="cc-nr" x="540" y="380" width="380" height="96" rx="8"/>
+            <rect class="cc-chip-ok" x="874" y="391" width="34" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="891" y="404" text-anchor="middle">JIT</text>
+            <text class="cc-eye cc-eye-r" x="560" y="407">load + run &#183; bytecode</text>
+            <text class="cc-title" x="560" y="431">fusevm bytecode + JIT</text>
+            <text class="cc-cite" x="560" y="451">hot chunks &#8594; native &#183; .fjit disk cache</text>
+            <text class="cc-cite" x="560" y="468">warm across launches &#183; Cargo.toml:103</text>
+
+            <!-- ROW 4 EMIT -->
+            <rect class="cc-nz" x="40" y="500" width="380" height="72" rx="8"/>
+            <text class="cc-eye cc-eye-m" x="60" y="527">emit</text>
+            <text class="cc-title" x="60" y="551">compadd</text>
+            <text class="cc-cite" x="60" y="565">C builtin</text>
+
+            <rect class="cc-nr" x="540" y="500" width="380" height="72" rx="8"/>
+            <rect class="cc-chip-ok" x="852" y="511" width="56" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="880" y="524" text-anchor="middle">NATIVE</text>
+            <text class="cc-eye cc-eye-m" x="560" y="527">emit</text>
+            <text class="cc-title" x="560" y="551">bin_compadd</text>
+            <text class="cc-cite" x="560" y="565">native</text>
+
+            <path class="cc-flow-z" d="M230,236 V260" marker-end="url(#ccahz)"/>
+            <path class="cc-flow-z" d="M230,356 V380" marker-end="url(#ccahz)"/>
+            <path class="cc-flow-z" d="M230,476 V500" marker-end="url(#ccahz)"/>
+            <path class="cc-flow-r" d="M730,236 V260" marker-end="url(#ccahr)"/>
+            <path class="cc-flow-r" d="M730,356 V380" marker-end="url(#ccahr)"/>
+            <path class="cc-flow-r" d="M730,476 V500" marker-end="url(#ccahr)"/>
+
+            <path class="cc-flow-z" d="M230,572 V596 H480 V624" marker-end="url(#ccah)"/>
+            <path class="cc-flow-r" d="M730,572 V596 H480 V624" marker-end="url(#ccah)"/>
+            <rect class="cc-node" x="300" y="624" width="360" height="46" rx="8"/>
+            <text class="cc-mid" x="480" y="652" text-anchor="middle">matches on screen</text>
+          </svg>
+        </div>
+
+        <p style="margin-top:1rem;color:var(--text-dim);font-family:'Share Tech Mono',ui-monospace,monospace;font-size:12.5px;">Same flow, expanded to every frame &mdash; the shapes are the point: zsh descends a deep interpreted stack; zshrs forks once at <code>dispatch_compsys</code> into native fn-pointers and a fusevm-Chunk leaf.</p>
+
+        <div class="cc-fig">
+            <svg viewBox="0 0 980 566" role="img" aria-label="Full call-stack trace: deep interpreted zsh stack versus shallow zshrs native dispatch">
+            <defs><marker id="s2ah" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--border)" stroke-width="1.4"/></marker><marker id="s2z" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--accent)" stroke-width="1.4"/></marker><marker id="s2r" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--cyan)" stroke-width="1.4"/></marker></defs>
+            <text class="cc-hd cc-eye-z" x="235" y="66" text-anchor="middle">ZSH — INTERPRETED STACK (deep)</text>
+            <text class="cc-hd cc-eye-r" x="735" y="66" text-anchor="middle">ZSHRS — NATIVE DISPATCH + VM LEAF (shallow)</text>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M40,124 V130 H51 V136" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M51,164 V170 H62 V176" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M62,204 V210 H73 V216" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M73,244 V250 H84 V256" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M84,284 V290 H95 V296" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M95,324 V330 H106 V336" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M106,364 V370 H117 V376" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M117,404 V410 H128 V416" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M128,444 V450 H139 V456" marker-end="url(#s2z)"/>
+            <path class="cc-flow-z" style="stroke-opacity:.55" d="M139,484 V490 H128 V496" marker-end="url(#s2z)"/>
+            <rect class="cc-nz" x="24" y="96" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="35" y="114">docompletion</text>
+            <rect class="cc-nz" x="35" y="136" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="46" y="154">callcompfunc</text>
+            <rect class="cc-chip-n" x="253" y="141" width="94" height="18" rx="4"/>
+            <text class="cc-ct-n" x="300" y="153" text-anchor="middle">compcore.c:544</text>
+            <rect class="cc-nz" x="46" y="176" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="57" y="194">doshfunc(_main_complete)</text>
+            <rect class="cc-chip-cost" x="264" y="181" width="46" height="18" rx="4"/>
+            <text class="cc-ct-cost" x="287" y="193" text-anchor="middle">INTERP</text>
+            <rect class="cc-nz" x="57" y="216" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="68" y="234">_main_complete</text>
+            <rect class="cc-nz" x="68" y="256" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="79" y="274">_complete</text>
+            <rect class="cc-nz" x="79" y="296" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="90" y="314">_normal → _dispatch</text>
+            <rect class="cc-nz" x="90" y="336" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="101" y="354">_git</text>
+            <rect class="cc-chip-cost" x="308" y="341" width="118" height="18" rx="4"/>
+            <text class="cc-ct-cost" x="367" y="353" text-anchor="middle">FPATH SCAN + PARSE</text>
+            <rect class="cc-nz" x="101" y="376" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="112" y="394">_arguments</text>
+            <rect class="cc-nz" x="112" y="416" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="123" y="434">_describe · _tags</text>
+            <rect class="cc-nz" x="123" y="456" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="134" y="474">_description · _message</text>
+            <rect class="cc-nz" x="112" y="496" width="210" height="28" rx="6"/>
+            <text class="cc-fn" x="123" y="514">compadd</text>
+            <rect class="cc-chip-n" x="330" y="501" width="64" height="18" rx="4"/>
+            <text class="cc-ct-n" x="362" y="513" text-anchor="middle">C BUILTIN</text>
+            <text class="cc-cite" x="24" y="546">every frame tree-walked · re-run each tab</text>
+            <rect class="cc-nr" x="515" y="96" width="205" height="28" rx="6"/>
+            <text class="cc-fn" x="526" y="114">callcompfunc</text>
+            <rect class="cc-chip-n" x="728" y="101" width="76" height="18" rx="4"/>
+            <text class="cc-ct-n" x="766" y="113" text-anchor="middle">compcore.rs</text>
+            <path class="cc-flow-r" style="stroke-opacity:.55" d="M531,124 V130 H542 V136" marker-end="url(#s2r)"/>
+            <rect class="cc-nr" x="526" y="136" width="205" height="28" rx="6"/>
+            <text class="cc-fn" x="537" y="154">body_runner</text>
+            <rect class="cc-chip-n" x="739" y="141" width="100" height="18" rx="4"/>
+            <text class="cc-ct-n" x="789" y="153" text-anchor="middle">compcore.rs:766</text>
+            <path class="cc-flow-r" style="stroke-opacity:.55" d="M542,164 V170 H553 V176" marker-end="url(#s2r)"/>
+            <rect class="cc-nr" x="537" y="176" width="205" height="28" rx="6"/>
+            <text class="cc-fn" x="548" y="194">dispatch_compsys</text>
+            <rect class="cc-chip-ok" x="750" y="181" width="124" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="812" y="193" text-anchor="middle">FORK · router.rs:57</text>
+            <path class="cc-flow-r" d="M553,204 V222 H610 V236" marker-end="url(#s2r)"/>
+            <path class="cc-flow-r" d="M553,204 V222 H835 V236" marker-end="url(#s2r)"/>
+            <rect class="cc-nr" x="520" y="236" width="190" height="96" rx="7"/>
+            <rect class="cc-chip-ok" x="650" y="245" width="52" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="676" y="257" text-anchor="middle">NATIVE</text>
+            <text class="cc-eye cc-eye-r" x="533" y="258">Some → Rust fn ptrs</text>
+            <text class="cc-fn2" x="533" y="276">_main_complete · _complete</text>
+            <text class="cc-fn2" x="533" y="291">_normal · _dispatch · _arguments</text>
+            <text class="cc-fn2" x="533" y="306">_describe · _tags</text>
+            <text class="cc-fn2" x="533" y="321">_description · _message</text>
+            <rect class="cc-nr" x="735" y="236" width="215" height="96" rx="7"/>
+            <rect class="cc-chip-ok" x="906" y="245" width="34" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="923" y="257" text-anchor="middle">VM</text>
+            <text class="cc-eye cc-eye-r" x="748" y="258">else → leaf</text>
+            <text class="cc-fn2" x="748" y="276">dispatch_function_call →</text>
+            <text class="cc-fn2" x="748" y="291">fusevm Chunk</text>
+            <text class="cc-fn2" x="748" y="306">bytecode + JIT</text>
+            <text class="cc-fn2" x="748" y="321">·fjit disk cache · warm</text>
+            <path class="cc-flow-r" d="M615,332 V344 H710 V356" marker-end="url(#s2r)"/>
+            <path class="cc-flow-r" d="M842,332 V344 H710 V356" marker-end="url(#s2r)"/>
+            <rect class="cc-nr" x="610" y="356" width="200" height="28" rx="6"/>
+            <text class="cc-fn" x="622" y="374">bin_compadd</text>
+            <rect class="cc-chip-ok" x="748" y="361" width="52" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="774" y="373" text-anchor="middle">NATIVE</text>
+            <text class="cc-cite" x="515" y="406">3 frames to native/VM · no interpreted descent</text>
+            </svg>
+        </div>
+
+        <p style="margin-top:1rem;color:var(--text-dim);font-family:'Share Tech Mono',ui-monospace,monospace;font-size:12.5px;">This is <b style="color:var(--text)">every autoloaded function</b>, not just completers &#8212; in zsh that is the majority of the function surface (all of compsys, ZLE widgets, prompt themes, <code>vcs_info</code>, hooks). On first call zsh must find it in <code>$fpath</code> then lex &#8594; parse &#8594; compile &#8594; interpret it; zshrs mmaps the already-compiled fusevm bytecode straight from the rkyv shard &#8212; the whole compile pipeline is skipped.</p>
+
+        <div class="cc-fig">
+            <svg viewBox="0 0 980 172" role="img" aria-label="First-call autoload: zsh fpath-search and compile pipeline versus zshrs bytecode already in the rkyv shard">
+            <defs><marker id="f3z" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--accent)" stroke-width="1.4"/></marker><marker id="f3r" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--cyan)" stroke-width="1.4"/></marker></defs>
+            <text class="cc-hd cc-eye-m" x="80" y="22" style="font-size:11px">FIRST CALL OF ANY AUTOLOADED FN &#183; fpath search + compile  vs  bytecode already in rkyv</text>
+            <text class="cc-eye cc-eye-z" x="80" y="46">zsh &#183; every step, on first call</text>
+            <rect class="cc-nz" x="80" y="50" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="140" y="69" text-anchor="middle">search $fpath</text>
+            <path class="cc-flow-z" d="M200,65 H224" marker-end="url(#f3z)"/>
+            <rect class="cc-nz" x="226" y="50" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="286" y="69" text-anchor="middle">read file</text>
+            <path class="cc-flow-z" d="M346,65 H370" marker-end="url(#f3z)"/>
+            <rect class="cc-nz" x="372" y="50" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="432" y="69" text-anchor="middle">lex</text>
+            <path class="cc-flow-z" d="M492,65 H516" marker-end="url(#f3z)"/>
+            <rect class="cc-nz" x="518" y="50" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="578" y="69" text-anchor="middle">parse</text>
+            <path class="cc-flow-z" d="M638,65 H662" marker-end="url(#f3z)"/>
+            <rect class="cc-nz" x="664" y="50" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="724" y="69" text-anchor="middle">compile</text>
+            <path class="cc-flow-z" d="M784,65 H808" marker-end="url(#f3z)"/>
+            <rect class="cc-nz" x="810" y="50" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="870" y="69" text-anchor="middle">interpret</text>
+            <text class="cc-eye cc-eye-r" x="80" y="114">zshrs &#183; bytecode ready in ~/.zshrs/*.rkyv</text>
+            <rect class="cc-nr" x="80" y="118" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="140" y="137" text-anchor="middle">mmap rkyv shard</text>
+            <rect class="cc-nr" x="226" y="118" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="286" y="137" text-anchor="middle">fusevm Chunk</text>
+            <rect class="cc-nr" x="372" y="118" width="412" height="30" rx="6" style="stroke-dasharray:5 4;opacity:.55"/>
+            <text class="cc-cite" x="578" y="137" text-anchor="middle">skipped &#8212; no lex &#183; no parse &#183; no compile</text>
+            <rect class="cc-nr" x="810" y="118" width="120" height="30" rx="6"/>
+            <text class="cc-fn" x="870" y="137" text-anchor="middle">run bytecode</text>
+            <path class="cc-flow-r" d="M200,133 H224" marker-end="url(#f3r)"/>
+            <path class="cc-flow-r" d="M346,133 H370" marker-end="url(#f3r)"/>
+            <path class="cc-flow-r" d="M784,133 H808" marker-end="url(#f3r)"/>
+            </svg>
+        </div>
+
+        <table class="arch-table">
+          <tr><th>Stage</th><th>zsh &mdash; every &lt;tab&gt;</th><th>zshrs</th></tr>
+          <tr><td>Spine</td><td><span class="highlight">interpret ~1,517 shell lines</span> (<code>_main_complete</code> &rarr; <code>_dispatch</code>)</td><td>native Rust fn pointer &mdash; compiled into the binary</td></tr>
+          <tr><td>Resolve leaf</td><td><span class="highlight">scan <code>$fpath</code></span> &mdash; 51 dirs, stat per dir until hit</td><td>rkyv-mmap'd shard (<code>~/.zshrs/*.rkyv</code>) + <code>.zwc</code> digest, mmap &mdash; no fpath walk</td></tr>
+          <tr><td>Load + run leaf</td><td><span class="highlight">autoload + parse</span> on first tab, interpret specs</td><td>fusevm bytecode + JIT &middot; <code>.fjit</code> disk cache, warm across launches</td></tr>
+          <tr><td>Emit</td><td><code>compadd</code> (C builtin)</td><td><code>bin_compadd</code> (native)</td></tr>
+        </table>
+
+        <p style="color:var(--text-muted);font-size:12px;font-family:'Share Tech Mono',ui-monospace,monospace;">
+          Sources: callcompfunc <code>compcore.c:544,:991</code> &middot; body-runner fork <code>compcore.rs:766&#8211;782</code> (native dispatch <code>:776</code>) &middot; router <code>router.rs:57&#8211;61</code> &middot; leaf resolution <code>exec.rs:811</code> (getfpfunc/try_dump_file) &middot; JIT disk cache <code>Cargo.toml:103</code>. Figures from this machine's fpath depth and completion corpus.
+        </p>
+      </section>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <section class="tutorial-section">
+        <h2><span class="section-num">[0x06c]</span> HOT-LOOP EXECUTION &mdash; SIGIL SCAN vs JIT</h2>
+
+        <p>Inside a loop, zsh re-does parameter expansion on every pass: <code>prefork</code> runs <code>stringsubst</code>/<code>paramsubst</code>, which scan each word character-by-character for sigils (<code>$</code>, <code>${...}</code>, expansion flags) and re-expand, then the wordcode is walked again. The scan is <code>O(tokens)</code> work repeated <code>&times;N</code>. zshrs resolves sigils to fusevm bytecode ops <em>once</em> at compile time; the hot loop is then JIT-compiled to native code (Cranelift, cached in <code>.fjit</code>), so each pass runs machine code with no re-scan.</p>
+
+        <div class="cc-fig">
+            <svg viewBox="0 0 980 452" role="img" aria-label="Hot-loop execution: zsh re-scans sigils and walks wordcode every iteration versus zshrs compile-once bytecode and JIT">
+            <defs><marker id="hlz" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--accent)" stroke-width="1.4"/></marker><marker id="hlr" markerWidth="9" markerHeight="9" refX="6.5" refY="4" orient="auto"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--cyan)" stroke-width="1.4"/></marker></defs>
+            <text class="cc-hd cc-eye-z" x="250" y="26" text-anchor="middle">ZSH — INTERPRET, RE-SCAN EVERY PASS</text>
+            <text class="cc-hd cc-eye-r" x="730" y="26" text-anchor="middle">ZSHRS — COMPILE ONCE, JIT THE HOT LOOP</text>
+            <rect class="cc-nz" x="40" y="44" width="420" height="38" rx="6"/>
+            <text class="cc-fn" x="60" y="67">parse → wordcode  (token strings, unresolved)</text>
+            <rect class="cc-nr" x="520" y="44" width="420" height="38" rx="6"/>
+            <text class="cc-fn" x="540" y="67">compile → fusevm bytecode  (sigils → ops)</text>
+            <rect class="cc-chip-ok" x="866" y="52" width="60" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="896" y="65" text-anchor="middle">ONCE</text>
+            <path class="cc-flow-z" d="M250,82 V104" marker-end="url(#hlz)"/>
+            <path class="cc-flow-r" d="M730,82 V104" marker-end="url(#hlr)"/>
+            <rect x="40" y="104" width="420" height="316" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.3" style="stroke-dasharray:6 5;opacity:.75"/>
+            <rect x="520" y="104" width="420" height="316" rx="10" fill="none" stroke="var(--cyan)" stroke-width="1.3" style="stroke-dasharray:6 5;opacity:.75"/>
+            <text class="cc-eye cc-eye-z" x="56" y="124">loop body  ×N iterations</text>
+            <text class="cc-eye cc-eye-r" x="536" y="124">loop body  ×N iterations</text>
+            <rect class="cc-nz" x="74" y="138" width="336" height="30" rx="6"/>
+            <text class="cc-fn" x="88" y="158">walk wordcode</text>
+            <path class="cc-flow-z" d="M242,168 V188" marker-end="url(#hlz)"/>
+            <rect class="cc-nz" x="74" y="188" width="336" height="30" rx="6"/>
+            <text class="cc-fn" x="88" y="208">sigil scan each token</text>
+            <rect class="cc-chip-cost" x="360" y="194" width="40" height="18" rx="4"/>
+            <text class="cc-ct-cost" x="380" y="207" text-anchor="middle">×N</text>
+            <path class="cc-flow-z" d="M242,218 V238" marker-end="url(#hlz)"/>
+            <rect class="cc-nz" x="74" y="238" width="336" height="30" rx="6"/>
+            <text class="cc-fn" x="88" y="258">prefork / paramsubst expand</text>
+            <path class="cc-flow-z" d="M242,268 V288" marker-end="url(#hlz)"/>
+            <rect class="cc-nz" x="74" y="288" width="336" height="30" rx="6"/>
+            <text class="cc-fn" x="88" y="308">glob</text>
+            <path class="cc-flow-z" d="M242,318 V338" marker-end="url(#hlz)"/>
+            <rect class="cc-nz" x="74" y="338" width="336" height="30" rx="6"/>
+            <text class="cc-fn" x="88" y="358">exec</text>
+            <path class="cc-flow-z" d="M74,368 H52 V150 H74" marker-end="url(#hlz)" style="opacity:.85"/>
+            <text class="cc-cite" x="60" y="412">sigils re-scanned every pass · O(tokens) × N</text>
+            <rect class="cc-nr" x="554" y="138" width="336" height="30" rx="6"/>
+            <text class="cc-fn" x="568" y="158">fused loop ops (AccumSumLoop…)</text>
+            <path class="cc-flow-r" d="M722,168 V188" marker-end="url(#hlr)"/>
+            <rect class="cc-nr" x="554" y="188" width="336" height="30" rx="6"/>
+            <text class="cc-fn" x="568" y="208">hot? → tracing JIT · Cranelift</text>
+            <rect class="cc-chip-ok" x="842" y="194" width="38" height="18" rx="4"/>
+            <text class="cc-ct-ok" x="861" y="207" text-anchor="middle">JIT</text>
+            <path class="cc-flow-r" d="M722,218 V238" marker-end="url(#hlr)"/>
+            <rect class="cc-nr" x="554" y="238" width="336" height="30" rx="6"/>
+            <text class="cc-fn" x="568" y="258">run native  (·fjit cached)</text>
+            <path class="cc-flow-r" d="M554,268 H532 V150 H554" marker-end="url(#hlr)" style="opacity:.85"/>
+            <rect class="cc-nr" x="554" y="290" width="336" height="70" rx="6" style="stroke-dasharray:5 4;opacity:.5"/>
+            <text class="cc-cite" x="572" y="315">no per-token sigil scan in the loop —</text>
+            <text class="cc-cite" x="572" y="333">expansion resolved once at compile time,</text>
+            <text class="cc-cite" x="572" y="351">hot path runs as cached native code</text>
+            <text class="cc-cite" x="540" y="412">scanned once at compile · O(1) per pass</text>
+            </svg>
+        </div>
+
+        <table class="arch-table">
+          <tr><th>Per loop pass</th><th>zsh</th><th>zshrs</th></tr>
+          <tr><td>Sigil / expansion scan</td><td><span class="highlight">re-scanned each pass</span> (<code>stringsubst</code> / <code>paramsubst</code>)</td><td>resolved to ops once at compile</td></tr>
+          <tr><td>Dispatch</td><td>walk wordcode (<code>prefork</code> &rarr; exec)</td><td>fused loop ops, single-dispatch</td></tr>
+          <tr><td>Hot loop</td><td>interpreted every iteration</td><td>tracing JIT &rarr; native (Cranelift), <code>.fjit</code> cached</td></tr>
+          <tr><td>Cost per pass</td><td><span class="highlight">O(tokens)</span></td><td>O(1)</td></tr>
+        </table>
+
+        <p style="color:var(--text-muted);font-size:12px;font-family:'Share Tech Mono',ui-monospace,monospace;">
+          Sources: zsh per-exec expansion <code>prefork</code> Src/exec.c:2545, <code>stringsubst</code>/<code>paramsubst</code> Src/subst.c &middot; zshrs tracing JIT <code>src/fusevm_bridge.rs:1203&#8211;1212</code> (<code>enable_tracing_jit</code>), fused loop ops (<code>AccumSumLoop</code>, <code>SlotIncLtIntJumpBack</code>).
+        </p>
       </section>
 
       <!-- ════════════════════════════════════════════════════════════ -->
