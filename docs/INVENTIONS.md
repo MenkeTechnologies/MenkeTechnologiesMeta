@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 233 candidates (numbered entries through 183 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 11g, 11h, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 257 candidates (numbered entries through 207 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 11g, 11h, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
 deep prior-art analysis in the appendix.
@@ -2719,6 +2719,527 @@ Managing many git repos is normally shell glue — `for d in */; do (cd $d; git 
 **183. zdbview — first terminal UI for rkyv archives with full CRUD write-back: eight recognized archive types edited in place with byte-identical re-serialization, structural fallback for the rest, in one binary that also does full SQLite CRUD** — `med`
 rkyv archives are **not self-describing** — the format stores layout and relative pointer offsets, no field names and no type tags — so there has never been a `sqlitebrowser`-equivalent for them: with no schema in the file, a generic reader has nothing to bind columns to, and inspecting a cache shard means writing a throwaway Rust program that links the producer's own types. zdbview closes that for the archives this stack actually produces, and goes past inspection to **editing**. It carries **faithful copies of the producer's archive types**, detects each by a magic word (or, for the header-less formats, a validation-gated try-decode attempted last so an unrelated archive falls through instead of mis-matching), validates with `rkyv::check_archived_root` — so a version/feature drift fails validation instead of silently decoding garbage — and renders real `(key, value)` records with per-entry scalar fields and a hex/text/disasm value pane. **Eight formats are recognized**, every script/heap cache the fusevm-hosted languages write: `ZRSC` (zshrs script) and `ZRAL` (zshrs autoload); `STRY` (strykelang, both the native-v4 six-field entry and the compat five-field layout under one magic); `AWKR` (awkrs); `VIML` (vimlrs); `ELSP` (elisprs heap image); and the two header-less caches recognized by try-decode — `pythonrs` bytecode (source-path keyed) and the shared `rubylang`/`arb` layout (u64 content-hash keyed). Recognized archives get **full CRUD**: create a record (`a`), update its value (`e`, text or `0x<hex>`), rename its key (`r`, map-keyed formats), delete it (`d`). Every edit deserializes the shard, mutates it, and re-serializes it, then writes the file back atomically (temp + rename); the re-serialization is **byte-identical** to what the producing host writes — round-tripped against all six real cache formats — so the host reads the edited shard with no rebuild. Edits target a record's **stable identity** (map key, or the u64 hash for the header-less formats), so an update or delete touches exactly one entry even when many share a display key (pythonrs stores 177 records under 33 distinct `<string>`/`<stdin>` sources). Anything unrecognized degrades to a structural view rather than an error: printable-string runs with byte offsets, plus an `xxd`-style hex/ascii dump. The same binary opens SQLite databases with **full generic CRUD** — tables with row counts, paginated rows, in-place cell edit, insert-with-defaults, rowid delete, arbitrary SQL, a schema view (CREATE statements), and **whole-table SQL-backed search** across every column (not just the loaded page) — and picks the backend by **header magic, not filename** (`SQLite format 3\0` is authoritative; a `.db` whose bytes aren't a SQLite header is opened as an archive), with extension used only for files too short to carry a header. Cross-cutting: a full-screen detail view with a scrollable value pane and an `auto`/`hex`/`text`/`disasm` render toggle, OSC-52 clipboard copy that works over SSH, non-interactive `--export json|csv` plus an interactive export key, and an MRU picker off `$XDG_CACHE_HOME/zdbview/recent`. An optional `disasm` build feature decodes a `chunk_blob` value as a `bincode`-encoded `fusevm::Chunk` using the **real fusevm types** — no vendored copy of the 267-variant `Op` enum, so no silent-misdecode risk; because bincode is version-sensitive it is correct only when the linked fusevm matches the version that wrote the cache and otherwise fails loudly and falls back to hex (off by default so the crate stays self-contained). *Basis:* `zdbview/src/formats.rs` (per-format magics + the copied `ScriptShard`/`StrykeShard`/`AutoloadShard`/`ElispShard`/`PyShard`/`HashShard` types pinned to rkyv 0.7 + `archive_le` + `size_32`, `try_decode` → `check_archived_root`, and the `edit_shard` deserialize→mutate→reserialize core behind `add_record`/`set_value`/`rename_record`/`delete_record`), `src/app.rs` (CRUD wired into the Records view with atomic write-back + reload, detail/schema/help screens, value-render toggle, whole-table search), `src/sqlite.rs` (`find_row`/`rowid_ordinal` whole-table search, `schema`, rowid-addressed CRUD), `src/disasm.rs` (feature-gated fusevm disassembly), `src/export.rs`, `src/clipboard.rs`, `src/rkyv_inspect.rs`, `src/store.rs`, `src/mru.rs`; ratatui 0.30 + rusqlite 0.40 (bundled) + rkyv 0.7, fusevm optional. **Test-verified:** `cargo test` → 20 passing — `formats::tests::full_crud_roundtrip_on_map_format` runs Create→Update→Rename→Delete and re-decodes at each step, `python_delete_removes_exactly_one_of_duplicate_sources` proves stable-identity deletes don't cascade across shared display keys, `delete_record_removes_and_reserializes`/`script_shard_roundtrips_through_try_decode`/`hash_shard_roundtrips` cover the archive round-trips, `tests/backend.rs` covers `sqlite_full_crud_roundtrip`, `rkyv_structural_strings_and_hex`, both detection paths and MRU dedup/order, plus search index math (`find_next`/`find_bytes`), export escaping, and base64 vectors; byte-identical re-serialization was additionally checked against every real on-disk cache via a harness. *Caveat:* a database TUI is a known category (`sqlitebrowser`, `litecli`, `harlequin`) and the SQLite half claims nothing new; the candidate-first is the **rkyv half** — GitHub repo search (`rkyv viewer|inspector|tui|dump|browser`), `gh search code` (`ratatui rkyv`), a crates.io sweep and web searches surfaced only the rkyv library and its docs, no archive viewer, and none with write-back. "None found," not proven; private and non-`rkyv`-named tools are outside what those indexes cover. Scope is honest: typed decode + CRUD covers **the eight registered formats**, not arbitrary archives (an unknown type still needs its Rust definition added to the registry); rename is offered only for the map-keyed formats; and disassembly is correct only when the linked fusevm version matches the cache's. Companion to the zshrs rkyv cache layer, whose shards it exists to inspect and edit. MIT.
 
+---
+
+## XI. zvcs — the version-control superset in depth
+
+The entries above cover zvcs's load-bearing claims: the FIFO coordinator (#173), the
+differential parity harness (#174), the zero-FFI push client (#179), the in-binary REPL
+(#180), AOP command interception (#181), and the fleet monitor (#182). What follows is the
+rest of the superset — the capabilities that exist because **one binary is the only `git` on
+the machine**, and because a coordinator daemon is already running behind it. Each is a
+distinct capability with its own module, its own verbs, and its own tests; none of them is
+reachable from stock git's architecture, where every invocation is an isolated process with
+no shared index, no daemon, and no cross-repo view.
+
+**184. First VCS with reactive automation on two axes — raw filesystem triggers on any directory and typed subscriptions to semantic repository events (zvcs `git ztrigger` / `git zon`)** — `med`
+Git's automation is pull-shaped: hooks fire only when *you* run a git command, so nothing
+happens between invocations. zvcs's daemon reacts to the machine instead. **`git ztrigger <DIR> <cmd>`**
+watches **any** directory recursively — it does not have to be a repository — and runs its command
+the instant a file under it changes, with a **leading-edge throttle** (default 500ms) so one save
+fires once rather than once per filesystem event, plus live views onto the fires (`ztrigger tail`
+streams them, `ztrigger top` is an in-place HUD of per-trigger counts and rate). **`git zon`** is the
+semantic half: it subscribes to *typed* events off the live feed — `commit`, `stage`, `status`,
+`reconcile`, optionally filtered by repo — and runs a command with `ZVCS_EVENT`/`ZVCS_REPO`/`ZVCS_DETAIL`/`ZVCS_SHA`
+in the environment, so a rule reads "when any repo commits, do X" rather than "when these bytes
+change". Both persist in the ledger (`triggers` / `subscriptions` tables), so they survive daemon
+restarts and are visible to every session. *Basis:* `zvcs/src/extensions/src/superset/trigger.rs`
+(the `ztrigger`/`zwatch` verbs, throttle, `~/.zvcs/fires.log` tail/top), `superset/zon.rs`
+(subscription registry + typed dispatch), `superset/watch.rs` (the `notify`-driven daemon reactor
+that fires all three reaction kinds with no debounce). **Test-verified:**
+`src/extensions/tests/trigger.rs::ztrigger_arms_dir_and_fires` and `::zwatch_indexes_without_a_command`
+drive the real daemon. *Caveat:* file watchers (`entr`, `watchexec`, `fswatch`) and event buses are
+old; the candidate-first is putting both *inside the VCS* — one binary that is `git`, watching
+non-repo directories and its own semantic feed, with the subscriptions stored in the same ledger the
+fleet verbs read. A command that itself commits can re-trigger its own subscription (documented; scope
+with `--kind`/`--repo`). "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**185. First git hook system that needs no `.git/hooks` file in any repository — config-declared hooks fired by a filesystem watcher, with a typed event context (zvcs)** — `med`
+A git hook is a file installed in every repo's `.git/hooks`; there is no way to say "for every repo
+on this machine, on commit, run X", which is why hook managers (husky, pre-commit, lefthook) exist to
+copy files into repos. zvcs inverts it: because every repo is in the daemon's index, the daemon watches
+them all and fires the hook named by **`[zvcs] hook` in the repo's merged config** — so one line in
+`~/.gitconfig` applies to every watched repo and any repo may override it in its own `.git/config`,
+with **nothing installed anywhere**. The hook is not a bare notification: it runs under `sh -c` with the
+repo as cwd and a **typed** event context — `ZVCS_EVENT` classified from the reflog (`commit`, `checkout`,
+`merge`, `pull`, `rebase`, `reset`, `clone`, … falling back to `ref-change`), plus `ZVCS_REPO`,
+`ZVCS_GIT_DIR`, `ZVCS_OLD_SHA`, `ZVCS_NEW_SHA`, `ZVCS_REF` — which is enough to write cross-repo
+reactive rules ("on commit in this repo, do X in repo Y"). A failing hook is recorded in the ledger and
+surfaced on the next `git` command, since a daemon-fired hook has no exit code to return.
+*Basis:* `zvcs/src/extensions/src/superset/hooks.rs` (the merged-config hook lookup, reflog event typing,
+env contract, ledger failure record), `superset/watch.rs` (per-repo ref-tree watches). **Test-verified:**
+`tests/hooks.rs::hook_fires_on_ref_change_in_watched_repo`, `tests/hook_event.rs::hook_receives_typed_commit_event`,
+`tests/watch_rescan.rs::a_repo_indexed_after_startup_is_picked_up_and_its_hook_fires`. *Caveat:* hooks and
+hook managers are prior art; the candidate-first is a hook system whose trigger is the *filesystem*, whose
+declaration is *git config*, and whose scope is *every indexed repo at once* — none of which git's per-repo
+`.git/hooks` model can express. Local-events only: it sees ref moves on this machine, not remote activity.
+"None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**186. First VCS with a declarative, machine-wide command policy layer that refuses commands before they run (zvcs `git zguard`)** — `med`
+Protecting a workflow in git means writing hook scripts per repo (and hoping nobody `--no-verify`s),
+or enforcing it server-side after the fact. zvcs adds a policy layer at the one place every command
+must pass — its own dispatcher. `git zguard deny 'push*--force*'` refuses a force-push before it runs;
+`git zguard warn 'rm*-rf*'` allows it with a warning; and rules can carry a **predicate** evaluated
+against the live repository — `--when detached` (no commits on a detached HEAD), `--when unsigned`
+(require signed commits), `--when protected` (no push while on `main`/`master`). Rules are
+`(action, pattern, predicate, message)` tuples persisted to `$ZVCS_HOME/guards.tsv`, machine-wide rather
+than per-repo, with `zguard list | rm | clear | test <cmd…>` for management and a dry `test` that answers
+"would this be refused" without running anything. The hot path costs a single `stat` when no rule is set.
+*Basis:* `zvcs/src/extensions/src/superset/guard.rs` (rule model, glob matcher, the `detached`/`unsigned`/`protected`
+predicates, TSV registry, `zguard`/`zpolicy` verbs), the pre-dispatch check in `src/extensions/src/dispatch.rs`.
+*Caveat:* the veto evolution of #181's around-advice, and pattern-based command policy exists in other
+domains (sudoers, `command_not_found` guards, CI required-checks); the candidate-first is a **VCS binary**
+carrying its own declarative refuse/warn policy that applies to every invocation of itself, including the
+ones a `.git/hooks` script never sees (`git log`, `git rm`, `git checkout`). Advisory only against a user
+who invokes a *different* git binary. "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**187. First live tiled operations dashboard built into a VCS — fleet, processes, semantic events, and every git command on the machine, on one mouse-driven screen (zvcs `git zdashboard`)** — `med`
+`git status` describes one repository at one instant. `zdashboard` is a full-screen, continuously
+refreshed console for the whole machine: a **fleet** tile (every indexed repo, most recently active
+first, read from the daemon status cache with the on-screen rows' HEAD state live-refreshed so nothing
+displayed is stale), a **processes** tile (each responsible process, its commit tally, live/dead state,
+last-commit age), an **events** feed (commits / stages / status changes / reconciles), and a **commands**
+feed (every git command run anywhere on the machine, attributed to the agent that ran it), with an
+aggregate header row. It is a real TUI, not a status dump: one tile is focused and its selected row is
+the cursor; `Tab` cycles tiles, `↑`/`↓`/`j`/`k`/`g`/`G` move within one, the **mouse** moves the cursor
+under the pointer, the wheel steps it, right-click opens a per-row detail popup, feeds stay pinned to
+the newest row until you scroll up, and **panes are resizable by dragging the divider** (or `H`/`L`/`J`/`K`,
+`=` to reset) with per-pane minimums. It shares ztop's 31-scheme theme system, palette editor, and F1
+help. Non-interactive callers keep an instant text summary (`--once` / `--json` / a non-tty stdout).
+*Basis:* `zvcs/src/extensions/src/superset/dashboard.rs` (the four tiles, cursor/mouse model ported from
+iftoprs, draggable dividers ported from zmax, theme integration, `--once`/`--json` paths), fed by
+`superset/statusd.rs`, `zppid.rs`, `zevents.rs`, `zcommands.rs`. **Test-verified:**
+`tests/profiling.rs::profiling_and_dashboard_reflect_state`; `tests/json_output.rs::read_verbs_emit_valid_json`
+covers the machine-readable path. *Caveat:* dashboards and TUIs are not novel, and this shares its
+substrate with #182; the candidate-first is the *composition inside a VCS* — repo state, process
+attribution, semantic events, and command history are four different observability domains, and only a
+binary that is simultaneously the fleet's git, its daemon, and its logger can show all four live at once.
+"None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**188. First VCS that attributes commits to the *responsible* process rather than the parent pid — stable per-agent identity across throwaway shells (zvcs `git zppid` / `git zprocs`)** — `med`
+When N automated agents drive git concurrently, the obvious identity — `getppid()` — is useless: an
+agent spawns a fresh `zsh -c …` per command, so every commit reports a different parent and the data
+degenerates into a flood of one-commit rows. zvcs walks the parent chain instead, **skipping transient
+wrapper shells** (a shell invoked with `-c`, which runs one command and exits) and stopping at the first
+durable process — a real program (agent, editor, daemon) or an interactive login shell. That pid is
+stable across every commit one agent makes, so N concurrent agents map to exactly N rows, each carrying
+that process's command name and cwd so the number is legible. Attribution happens at command time:
+`note_commit` is called by the dispatcher right after any commit-producing verb and credits the process
+**only when HEAD actually advanced**, so a no-op `commit` with nothing staged and a rejected merge count
+nothing. `zprocs` extends the same identity to a per-verb tally (which mutating verbs each agent ran, how
+often, first- and last-seen), keyed to the same session so it joins straight onto the process row.
+*Basis:* `zvcs/src/extensions/src/superset/zppid.rs` (the responsible-process walk, `COMMIT_VERBS`,
+`note_commit` HEAD-advanced check), the `ppids` and `proc_verbs` tables in `src/extensions/src/db.rs`,
+the dispatcher hook in `dispatch.rs`. *Caveat:* process-ancestry walks are standard systems programming
+(`pstree`, `ps -f`), and git records an author, not a process; the candidate-first is a VCS that makes
+*which running process produced this commit* a first-class, queryable dimension — the question that only
+becomes interesting once a fleet of automated agents shares one tree. Heuristic by construction: an agent
+that execs through an unusual supervisor may resolve to that supervisor. "None found," not proven; sweep
+non-exhaustive. A zvcs addition. MIT.
+
+**189. First git binary with a built-in, queryable audit trail of every git command run on the machine, attributed per agent (zvcs `git zaudit`)** — `med`
+Git keeps no record of commands. Shell history is per-shell, per-user, and unattributed; server-side
+logs see only pushes. Because zvcs is the sole `git` on the machine, every invocation passes through one
+dispatcher, and it logs time, the responsible agent, the repo, and the argv to `$ZVCS_HOME/commands.log`.
+`zcommands` (#182) is the live feed over that log; **`zaudit` is the historical, accountable side**: filter
+by agent, by repo, or by command; restrict to state-changing commands; or aggregate a `--summary` of who
+ran what. In a fleet of concurrent agents it answers the question no other VCS tooling can — "which agent
+ran `push --force` against which repo, and when" — without instrumenting any of the agents. Off by default;
+the hot path is a single `stat` when logging is disabled. *Basis:*
+`zvcs/src/extensions/src/superset/zaudit.rs` (filters, state-changing classification, `--summary`
+aggregation), `superset/zcommands.rs` (the log format and live feed), the `log_invocation` hook in
+`src/extensions/src/dispatch.rs`, agent identity from `superset/zppid.rs` (#188). *Caveat:* auditing is a
+solved problem *outside* the tool (shell audit daemons, `auditd`, CI logs, server hooks); the candidate-first
+is the VCS auditing *itself* — complete because the binary is the only git, and attributable because it
+already resolves the responsible process. It records commands run through this binary; a different git on
+`PATH` is invisible to it. "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**190. First VCS whose write verbs are asynchronous jobs on a supervised, cancellable, restartable ledger (zvcs `git zcommit` / `zpush` + `zjob` / `zqueue` / `zwait` / `zbarrier`)** — `med`
+`git commit` and `git push` are synchronous: the terminal blocks until the work finishes, and a failure
+in a scripted batch is a stack of retries. zvcs adds an async lane. `git zcommit` / `git zpush` build a
+job spec, hand it to the daemon over the socket, and return immediately with a job number; the daemon runs
+it off the caller's critical path in a **bounded worker pool** (at most *n* concurrent, the rest queued)
+and records every transition in the SQLite ledger (`queued` → `running` → terminal). Because jobs are
+ledger rows with cancellation handles, they are *controllable*: `zjob stop` aborts a running job by killing
+its child, or flips a still-queued job to `stopped` before a worker takes it; `zjob restart` clones the row,
+links it by `parent_job_id`, and re-enqueues it. The join half is a set of coordination verbs —
+`zqueue` shows what is in flight, `zwait` blocks until one repo's jobs drain, `zbarrier` until the whole
+queue is idle. Two safety properties matter: a job executes the **faithful porcelain** by spawning this
+same binary with the job's workdir as cwd (so async never forks a second implementation of `add`/`commit`/`push`),
+and if **no daemon is reachable the verb runs synchronously in-process** and is still recorded, so it always
+works. `zpush` additionally does a network-free pre-flight against the remote-tracking ref and refuses a
+diverged push before enqueue rather than failing asynchronously later. *Basis:*
+`zvcs/src/extensions/src/superset/queue.rs` (spec build, submit, synchronous fallback, pre-flight),
+`src/extensions/src/jobpool.rs` (bounded pool + `Cancel` registry + restart-by-clone),
+`src/extensions/src/jobrun.rs` (faithful-porcelain execution), `superset/coord.rs` (`zqueue`/`zwait`/`zbarrier`),
+the `jobs` table in `src/extensions/src/db.rs`. **Test-verified:**
+`tests/queue.rs::zcommit_is_queued_executed_and_recorded`, `tests/jobctl.rs::zjob_restart_and_stop_control`,
+`tests/zjobs_limit.rs`, `tests/zcommit_async_identity.rs`. *Caveat:* job queues are ancient and CI systems
+run VCS operations asynchronously all the time; the candidate-first is the *VCS itself* exposing its write
+verbs as supervised jobs with a durable ledger, cancellation, restart-with-lineage, and a synchronous
+fallback — where git's model is one process, one operation, one exit code. "None found," not proven; sweep
+non-exhaustive. A zvcs addition. MIT.
+
+**191. First cross-repository state barrier in a VCS — block until the whole tree is clean, idle, synced, or at a given commit (zvcs `git zwaitfor`)** — `med`
+Scripts that coordinate multi-repo work poll: `until git status --porcelain | grep -q .; do sleep 1; done`,
+per repo, with no notion of the tree as a whole. `git zwaitfor <condition>` makes the wait a first-class
+operation over the daemon's cached fleet state and exits 0 when the condition holds (1 on `--timeout`):
+`clean` — every indexed repo has nothing uncommitted; `idle` — no queued or running daemon jobs; `synced` —
+every repo is up-to-date with its upstream; and `<substr> <sha>` — the repo whose path contains `<substr>`
+is at that commit (prefix match). Where `zwait`/`zbarrier` (#190) are *job*-scoped, this is a barrier on
+**state**, which is what an orchestration script actually needs before it proceeds to the next phase.
+Because it reads the daemon's `repo_status` cache rather than walking every worktree, the check is
+constant-cost regardless of fleet size. *Basis:* `zvcs/src/extensions/src/superset/zwaitfor.rs` (the four
+conditions over cached `repo_status`, timeout handling), fed by `superset/statusd.rs` (#197).
+*Caveat:* barriers and wait-for-condition loops are elementary; the candidate-first is a VCS shipping a
+tree-wide state barrier as a verb, which presupposes both a machine-wide repo index and a daemon keeping
+status warm — neither of which exists in stock git. Requires the daemon to be maintaining status; without
+it the conditions have nothing to read. "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**192. First VCS with atomic whole-tree restore points and wall-clock time travel across a nested submodule tree (zvcs `git zsnapshot` / `zrestore` / `zrewind`)** — `med`
+A submodule tree has no single state: the parent records pointers, each submodule has its own HEAD, and
+putting the whole thing back to "how it was an hour ago" is a manual walk with a `reset --hard` per repo —
+if you can even reconstruct the targets. zvcs makes both forms one command. **`git zsnapshot <name>`**
+records the exact HEAD of the current repo and every nested submodule as one named restore point in the
+ledger; **`git zrestore <name>`** puts the entire tree back to those commits, and `zsnapshots` lists them.
+**`git zrewind <duration>`** needs no prior setup at all: for the repo and every nested submodule it reads
+each one's *reflog*, finds the HEAD it had `<duration>` ago, and resets to it — the whole tree to an
+arbitrary wall-clock moment, with `--dry-run` to preview and an explicit report of any repo whose reflog
+does not reach that far back. Both reuse the faithful ported `reset --hard`, so the restore is reflogged
+and therefore itself undoable, and `zrewind` refuses a dirty repo so uncommitted work is never clobbered.
+*Basis:* `zvcs/src/extensions/src/superset/snapshot.rs` (`zsnapshot`/`zrestore`/`zsnapshots` + the
+`snapshots` table), `superset/zrewind.rs` (per-repo reflog resolution at a timestamp, dry-run, dirty guard).
+**Test-verified:** `tests/snapshot.rs::snapshot_and_restore_tree` builds a real submodule tree, snapshots,
+moves it, and restores. *Caveat:* snapshots are the defining feature of other systems (ZFS, Time Machine,
+`git stash`-style savepoints) and a monorepo sidesteps the problem entirely; the candidate-first is
+*named and time-addressed restore points over a nested-submodule tree as one unit*, inside the VCS, using
+each repo's own reflog as the time index. `zrestore` is deliberately destructive to tracked changes (that
+is what restore means; untracked files survive), and `zrewind` can only reach as far back as the reflogs do.
+"None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**193. First tree-wide stash — parking uncommitted work across a repo and every nested submodule as one named unit (zvcs `git zstash`)** — `med`
+`git stash` is per-repository and does not reach a submodule's dirty state through the parent, so parking
+in-flight work across a deep tree means remembering which submodules were dirty and stashing each by hand —
+and remembering the same list to restore. `git zstash [<name>]` walks the current repo and every nested
+submodule, stashes each dirty one through the faithful ported `git stash push`, and records the whole set
+under one name (default `wip`); `git zunstash [<name>]` pops them back LIFO and `zstashes` lists what is
+parked. It complements #192: `zsnapshot` captures committed HEADs, `zstash` captures *uncommitted* work,
+and together they cover the two halves of a tree's state. The boundary is stated rather than faked: zvcs's
+`git stash pop` applies only onto an unchanged HEAD (3-way apply is not ported), so a repo whose HEAD moved
+in the meantime is **reported and its stash kept intact** rather than half-applied or lost. *Basis:*
+`zvcs/src/extensions/src/superset/zstash.rs` (tree walk, per-repo stash through the porcelain, the
+`stashes` table, LIFO restore, live-name guard). **Test-verified:**
+`tests/zstash.rs::zstash_parks_and_zunstash_restores` and `::zstash_refuses_reusing_a_live_name`.
+*Caveat:* stashing is core git and multi-repo tools can script a loop; the candidate-first is a *single
+named stash object spanning a whole submodule tree*, tracked in a ledger so the set is restorable as one
+unit. Restore is only guaranteed onto the commits the work was stashed on. "None found," not proven; sweep
+non-exhaustive. A zvcs addition. MIT.
+
+**194. First fleet-wide undo — one command that rewinds the last mutating operation across many repositories, dry-run by default and refusing to lose work (zvcs `git zrollback`)** — `med`
+`git reset --hard HEAD@{1}` undoes one repo's last operation; across a fleet, undoing a bad batch means
+running it by hand in every affected repo while deciding, per repo, whether it is safe. `git zrollback`
+does the whole selection at once: for every selected repo it resolves `HEAD@{steps}` from the reflog and
+rewinds to it — the last commit, merge, rebase, or reset — with three refusals built in. A repo is
+**skipped, not rolled back**, when its worktree is dirty (uncommitted work would be lost), when it is
+mid-operation (an in-flight merge/rebase), or when the rollback would diverge it from its remote (the
+commits being discarded are already pushed); `--force` overrides. It is **dry-run by default**: with no
+`--apply` it prints exactly what each repo would do and changes nothing. And because the underlying
+`reset --hard` is reflogged, a rollback is itself undoable. *Basis:*
+`zvcs/src/extensions/src/superset/zrollback.rs` (reflog resolution per repo, the dirty / mid-operation /
+diverged guards, dry-run default, `--force`), the shared selector grammar in `superset/select.rs`.
+*Caveat:* per-repo undo is git's own reflog and multi-repo runners (`mr`, `gita`) can loop a command; the
+candidate-first is *undo as a fleet operation with per-repo safety analysis* — the guards are the point,
+since a blind loop over `reset --hard` is exactly how a batch mistake becomes data loss. Bounded by what
+each reflog retains. "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**195. First machine-wide merged reflog — one time-ordered timeline of what moved in every repository, with per-step and since-a-point rewind (zvcs `git zlog` / `zundo` / `zsince`)** — `med`
+Git's reflog is per repository, so "what happened across this tree in the last hour" has no answer:
+you would open each repo's reflog and merge them by hand. `git zlog` merges the HEAD reflogs of **every
+indexed repo** into one machine-wide, time-ordered timeline — what moved, where, and when — which is the
+view a fleet of concurrent agents actually needs. `git zundo` rewinds a repo one step by reading its
+previous HEAD from the reflog and resetting to it (reusing the faithful porcelain reset, refusing on a
+dirty worktree so nothing is clobbered). `git zsince <duration|snapshot>` answers the delta question
+directly: everything that happened across the tree since a wall-clock offset (`90s`, `45m`, `2d`, `1h30m`)
+or since a named snapshot's creation time, filterable by kind and repo. *Basis:*
+`zvcs/src/extensions/src/superset/oplog.rs` (`zlog` merge across the repo index, `zundo` one-step rewind),
+`superset/zsince.rs` (duration/snapshot baseline over the event feed), `superset/zevents.rs` (the
+append-only `events` table the window is read from). **Test-verified:**
+`tests/oplog.rs::zlog_timeline_and_zundo_rewind`. *Caveat:* the reflog is git's; merging logs is
+elementary; the candidate-first is the VCS treating *every repo on the machine* as one reflog domain,
+which requires the repo index and the event feed that only the daemon maintains. Coverage is limited to
+indexed repos and what their reflogs retain. "None found," not proven; sweep non-exhaustive. A zvcs
+addition. MIT.
+
+**196. First one-command isolated worktree of an entire nested submodule tree, written in git's own linked-worktree format (zvcs `git zworktree`)** — `med`
+`git worktree add` gives one repository a second checkout; a submodule tree needs one per repo, wired by
+hand, and the result is easy to get subtly wrong. `git zworktree add <name>` provisions a **complete
+private checkout of the current repo and every nested submodule** under `<base>/<name>/` (default
+`~/.zvcs/worktrees`), each repo a real **linked git worktree** — its own index, HEAD, and working
+directory on a fresh `zwt/<name>` branch — that **shares the existing object store**, so nothing is
+re-cloned and stock git recognizes the result (`git worktree list`, `fsck`). That is what makes it useful
+for a fleet: each agent gets a tree that cannot collide with any other, at the cost of a checkout rather
+than a clone. Because gix has no worktree-creation API, the bookkeeping is written directly in git's
+format — `<gitdir>/worktrees/<name>/{HEAD,commondir,gitdir,index}` plus the worktree's `.git` file —
+which is why compatibility is a tested property rather than a hope. *Basis:*
+`zvcs/src/extensions/src/superset/zworktree.rs` (tree walk, per-repo linked-worktree creation, the
+git-format bookkeeping, the `worktrees` table). **Test-verified:**
+`tests/zworktree.rs::zworktree_isolated_tree_add_and_remove`,
+`::zworktree_add_writes_absolute_gitdir_for_relative_dest`, and
+`::zworktree_remove_rejects_path_traversal`; `tests/worktree_reuse.rs` covers reuse.
+*Caveat:* linked worktrees are git's feature and multi-repo tools can script the loop; the candidate-first
+is *the whole submodule tree provisioned as one isolated worktree by one verb*, with the linked-worktree
+metadata authored directly because the pure-Rust engine offers no API for it. "None found," not proven;
+sweep non-exhaustive. A zvcs addition (gitoxide engine vendored). MIT.
+
+**197. First VCS with a never-idle background status pool — every repository on the machine kept seconds-fresh by a parallel sweeper with a single-writer WAL split (zvcs `statusd`)** — `med`
+A dirtiness scan is the expensive part of `git status`, and doing it on demand across thousands of repos
+is unusable — which is why every multi-repo tool either shows stale data or blocks. zvcs runs a dedicated
+daemon pool that **never idles**: one worker per core, each pulling the next repo off a shared rotating
+cursor, computing its status, handing the result to a single writer thread, and immediately taking the
+next — no pauses and no sleep phase, so every repo's status is refreshed every few seconds. The
+compute/write split is the design point: the expensive worktree scan is parallel and read-only, while
+**one** writer batches results into SQLite, because WAL allows a single writer at a time and letting every
+worker write would thrash the write lock. Everything interactive reads that cache — `zdashboard` (#187),
+`ztop` (#182), `zstatus --all`, the `--dirty`/`--ahead`/`--behind` selectors, and `zwaitfor` (#191) — which
+is what makes those instant *and* accurate rather than one or the other. Status transitions also write
+`status` rows into the event feed via table triggers, so the reactive layer (#184) needs no extra plumbing.
+*Basis:* `zvcs/src/extensions/src/superset/statusd.rs` (the rotating-cursor pool, single-writer batching,
+`repo_status` maintenance), the `repo_status` table and its triggers in `src/extensions/src/db.rs`.
+**Test-verified:** `tests/statusd.rs::daemon_keeps_status_cache_warm`, `tests/status_daemon.rs`.
+*Caveat:* background indexers are common (Spotlight, IDE indexers, `updatedb`); the candidate-first is a
+*VCS* maintaining a machine-wide freshness invariant over repository state, with the parallel-read /
+single-writer split that a WAL database forces. It is a cache: a repo is fresh to within a sweep, not
+instantaneously, and on-screen rows are re-read live for exactly that reason. "None found," not proven;
+sweep non-exhaustive. A zvcs addition. MIT.
+
+**198. Fleet-wide secret scanning built into the VCS binary itself, fork-free across every indexed repo (zvcs `git zscan`)** — `low`
+Secret scanners are separate tools you remember to run (`gitleaks`, `trufflehog`, `detect-secrets`), which
+is why leaked credentials are usually found after the push. `git zscan` puts the scan in the binary that
+*is* git: it sweeps the tracked file content of every selected indexed repo **in parallel over the shared
+worker pool, with no `fork`/`exec` per repo**, for common credential patterns — AWS keys, private keys,
+provider tokens, and high-entropy `key = "…"` assignments — printing `path:line:pattern:snippet` per hit
+and exiting non-zero when anything is found, so the same verb doubles as a CI or pre-push gate. It reuses
+the native content scan `zgrep` already implements, so scanning a whole tree of repositories is one command
+at the speed of one process. *Basis:* `zvcs/src/extensions/src/superset/zscan.rs` (pattern set, entropy
+heuristic, non-zero exit), `superset/query.rs` (`parallel_map` and the shared native scan),
+`superset/select.rs` (the selector grammar that scopes it). *Caveat:* this is a **crowded category** and the
+detection itself claims nothing new — the pattern set is deliberately conventional; the only novel part is
+*where it lives*: inside the VCS, over a machine-wide repo index, fork-free. Tracked content only (no
+history rewrite scan, no full-history sweep), and pattern-based detection has the usual false-positive and
+false-negative profile. "None found" is not claimed for secret scanning at all. A zvcs addition. MIT.
+
+**199. First fleet-wide commit-signature gate — signature verification as a parallel policy check across every repository, with the payload reconstructed natively (zvcs `git zsigs`)** — `med`
+`git verify-commit` checks one commit in one repo, and "is anything unsigned anywhere in this tree" has
+no answer short of a scripted loop. `git zsigs` checks the top `-n` commits (HEAD by default) of every
+selected repo and flags any that are **not a good signature** — unsigned (`N`), bad (`B`), or unverifiable
+(`E`/`X`/`Y`/`R`) — printing `<code> <repo> <sha> <subject>` per offender and exiting non-zero if any is
+found, so it gates a push or a CI stage the way an unsigned-commit policy needs. Verification uses zvcs's
+shared signature substrate: the signature and the signed payload are **reconstructed natively** from the
+object (there is no shell-out to `git verify-commit`) and then handed to gpg or `ssh-keygen` — the same
+tools git itself invokes — so the trust decision stays with the user's existing keyring while the object
+handling stays in-process. *Basis:* `zvcs/src/extensions/src/superset/zsigs.rs` (fleet sweep, status codes,
+non-zero exit), `src/extensions/src/gitsig.rs` (native payload/signature reconstruction and the gpg /
+ssh-keygen bridge), `superset/select.rs` (scoping). *Caveat:* signature verification is git's own feature
+and CI systems enforce signing server-side; the candidate-first is *the whole fleet checked in one verb by
+the VCS binary*, with the verification payload rebuilt natively rather than delegated to another git.
+Trust ultimately rests on the external gpg / ssh-keygen result, and only the top `-n` commits per repo are
+inspected. "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**200. First VCS with a built-in scheduler for its own fleet commands, contention-free by construction (zvcs `git zsched`)** — `med`
+Recurring VCS maintenance normally lives outside the tool — a crontab entry, a systemd timer, a CI cron —
+each of which must re-derive which repos exist and how to reach them. `git zsched` puts the schedule in
+the tool: entries live in `$ZVCS_HOME/schedule.tsv` as `id \t interval_secs \t command`, and the daemon's
+scheduler thread fires each one on its interval across the fleet. The concurrency design is the interesting
+part and is deliberately asymmetric: **the CLI owns every write** to the file (`add` / `rm` / `clear`) and
+the daemon thread only ever *reads* it, tracking last-fire times in memory. That split means the two
+processes can never contend on the file, and the worst case of a lost in-memory timing update is one
+schedule firing a tick later — never a corrupted schedule set. Because the thread re-reads the file each
+tick, `zsched add`/`rm` take effect within one tick with no daemon reload. *Basis:*
+`zvcs/src/extensions/src/superset/zsched.rs` (the TSV format, CLI-owns-writes rule, in-memory fire
+tracking, per-tick re-read), `spawn_scheduler` there, started by `superset/zdaemon.rs:505`. *Caveat:* cron is
+fifty years old and `git maintenance` already schedules git's own housekeeping through the *system*
+scheduler; the candidate-first is a VCS hosting its own scheduler for *fleet-wide* verbs, with a
+single-writer file protocol chosen so scheduling can never race the daemon. Interval-based only — no cron
+expressions, no calendar semantics — and it fires only while the daemon runs. "None found," not proven;
+sweep non-exhaustive. A zvcs addition. MIT.
+
+**201. First git implementation with persistent, provably-never-stale caches for derived object data — tree diffs, blame runs, and abbreviations, precomputable before they are asked for (zvcs `git zprecache`)** — `med`
+Git recomputes derived data on every invocation: `log --stat` re-diffs each commit pair, `blame` re-walks
+the file's history, and every short SHA is re-derived against the object database. zvcs caches all three
+in the SQLite ledger — `treediff` (a tree pair's change list and per-file line tallies), `blame` (a
+commit/path/algorithm's run list), and `abbrev` (an OID's short form at a given length) — and **`git zprecache`**
+fills them for a repository's recent commits *before* anyone asks, leaving `log --stat`, `--numstat`,
+`--shortstat`, `--name-status`, and the abbreviated formats reading from the ledger instead of the object
+store. The daemon does the same work automatically whenever a watched repo's refs move (`zvcs.precache`,
+on by default), so the on-demand verb exists mainly for after a large clone or a fetch that landed while
+the daemon was down. The correctness argument is what makes this safe to do at all: **every cached value is
+a pure function of immutable inputs** — a commit's abbreviation is fixed once the object exists, and a tree
+pair's change list and line tallies are a pure function of two immutable trees — so there is no
+invalidation problem to get wrong, and nothing here guesses at what the user will run. *Basis:*
+`zvcs/src/extensions/src/superset/zprecache.rs` (the on-demand warm pass and its `--limit`/`--quiet` flags),
+the `treediff` / `blame` / `abbrev` tables in `src/extensions/src/db.rs`, `src/extensions/src/abbrev.rs`,
+the daemon precache path in `superset/watch.rs`. **Test-verified:**
+`tests/precache.rs::warmed_caches_render_exactly_what_the_cold_path_does` asserts the warm and cold paths
+produce identical output — the property the whole feature rests on — plus
+`::a_single_run_leaves_its_cache_rows_on_disk`, `::the_limit_bounds_how_much_is_warmed`,
+`::an_unborn_head_warms_nothing_without_failing`. *Caveat:* git has its own persistent accelerators
+(commit-graph, midx, `fsmonitor`, `core.untrackedCache`) and this is the same *idea*; the candidate-first
+is caching **rendered derived data** — diffs, blame runs, abbreviations — in a queryable database, with
+the immutability argument that makes staleness structurally impossible, and a verb that warms it ahead of
+demand. Cache hits require the ledger; a missing or read-only ledger degrades to the normal compute path.
+"None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**202. First multi-threaded `git log -p` / diff renderer — per-commit and per-blob patch rendering fanned across the machine, where git's diff machinery has no threading at all (zvcs)** — `med`
+Git's diff machinery is single-threaded: `git log -p` over a thousand commits renders every patch on one
+core while the rest of the box idles, and nothing about the work requires that — each entry is an
+independent tree-to-tree diff over objects that are immutable for the duration of a read-only command.
+zvcs fans that work out. Patch bodies for a batch of commits are rendered in parallel, and so are the
+per-delta bodies within a single large diff; workers pull from a **shared cursor** rather than taking a
+fixed slice, because one commit that rewrites a large file costs more than a hundred that touch a line
+each and a static split would leave every worker but that one idle. Two rules keep it from backfiring: a
+batch must carry a minimum number of items per worker (four commits; two deltas) or the sequential path is
+taken outright, and the worker count is capped by the machine's parallelism and pinned exactly by
+`ZVCS_THREADS` (`1` forces sequential) — because CI containers report the host's core count through
+`available_parallelism` while being cgroup-limited to far less, and benchmarks need the variable held
+still. Since neither `gix::Repository` nor the blob platform is `Sync`, each worker owns a handle clone
+that shares the underlying object store, so parallelism costs a handle rather than a re-open. *Basis:*
+`zvcs/src/extensions/src/porcelain/diff.rs` (`commit_patches` batch renderer and the per-delta fan-out),
+`src/extensions/src/porcelain/log.rs` (`render_span` parallel entry blocks), `src/extensions/src/threads.rs`
+(the `min_per_thread` rule, `available_parallelism` cap, `ZVCS_THREADS` override).
+*Caveat:* parallelism is not a novel idea and git parallelizes elsewhere (`pack-objects`, `index-pack`,
+`fsmonitor`, `checkout`); the candidate-first is specifically the **diff/log rendering path**, which
+upstream leaves single-threaded, being fanned across cores in a git-compatible binary. Output order is
+preserved and byte-parity with stock git is asserted by the #174 harness, so this is a pure latency change;
+gains are workload-dependent and small batches deliberately stay sequential. "None found," not proven;
+sweep non-exhaustive. A zvcs addition (gitoxide engine vendored). MIT.
+
+**203. A superset that documents and installs itself — man pages generated from the dispatch table, symlinks derived from it, and tests that fail when any of it drifts (zvcs `git zdashed` / `zdoctor` / `zverbs`)** — `med`
+A binary that invents 116 verbs stock git never had has a documentation problem no upstream man page can
+solve, and a compatibility problem the moment it replaces `git` on `PATH`: nothing else provides the dashed
+`git-<verb>` external forms tools still expect. zvcs generates both from its own dispatch tables.
+`superset/manpage.rs` holds one structured `Doc` per verb and renders real `man(1)` roff on demand, so
+`git help zsync` works with no prior setup, while `git zdashed` writes a `git-<verb>` symlink for **every**
+builtin and superset verb into `~/.zvcs/bin` — the verb set read from `PORCELAIN_VERBS` + `SUPERSET_VERBS`,
+never hardcoded — idempotently (a correct symlink is left alone, a stale one repointed, a real file never
+clobbered). `git zverbs` lists the live table, and `git zdoctor` checks the installation end to end: is
+this binary the `git` on `PATH`, is `$ZVCS_HOME` present, is the coordinator running, is there a ledger,
+are the man pages and dashed symlinks installed, is `~/.zvcs/man` on `MANPATH` — each OK/WARN/FAIL, exiting
+non-zero only on a hard failure so it is scriptable. The anti-drift property is enforced, not aspirational:
+tests fail the build when the documentation and the dispatch tables disagree. *Basis:*
+`zvcs/src/extensions/src/superset/manpage.rs` (the `DOCS` table and roff renderer), `superset/dashed.rs`
+(symlink installer driven by the dispatch tables), `superset/doctor.rs`, the `zverbs` verb (`print_verbs`, with `--json` for scripting and `--html` emitting the full `docs/reference.html`) in
+`src/extensions/src/dispatch.rs`. **Test-verified:** `tests/manpage.rs::docs_cover_exactly_the_superset_verbs`
+(no verb undocumented, no doc orphaned), `::html_reference_covers_every_verb`, `::roff_has_the_mandatory_sections`,
+`::install_all_writes_one_page_per_verb`; `tests/zverbs.rs::zverbs_lists_every_superset_verb`;
+`tests/docs_freshness.rs::quoted_verb_counts_match_the_dispatch_tables` and
+`::documented_zvcs_switches_match_the_ones_the_tree_reads` fail when prose counts or documented switches
+drift from the code. *Caveat:* generated man pages and shell-completion generators are common (clap,
+`help2man`); the candidate-first is the *closed loop* — one dispatch table is simultaneously the router, the
+man-page index, the symlink source, the health check, and the thing tests assert documentation against — in
+a binary that replaces `git`. "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+**204. First git implementation shipping the whole credential-helper suite inside the one binary, with a keychain helper that stops rewriting an unchanged secret (zvcs)** — `med`
+Stock git's credential helpers are separate executables — `git-credential-osxkeychain`,
+`git-credential-store`, `git-credential-cache` plus its `--daemon`, and the contrib `git-credential-netrc`
+Perl script — resolved off `PATH` and shipped, or not shipped, by whoever packaged git. zvcs implements all
+of them **as verbs of the single multicall binary**, so a machine with zvcs as its `git` has the full set by
+construction, cross-compiled with it: `credential` (fill/approve/reject), `credential-osxkeychain`,
+`credential-store`, `credential-cache`, `credential-cache--daemon`, and `credential-netrc`. The keychain
+helper is a port of git's `git-credential-osxkeychain.c` over Security.framework and carries two behaviors
+the original contrib helper does not: it **updates** an existing item instead of silently keeping the old
+secret on re-store (upstream's add-only version leaves a rotated credential permanently stale), and it
+**suppresses the write entirely when the secret has not changed** — both via git's own `capability[]`/`state[]`
+protocol and via a compare-before-write on the stored value, because a keychain *write* is a separate
+authorization from a *read* and rewriting an unchanged item on every fetch and push re-raises the macOS
+authorization dialog on each operation. It also stores `password_expiry_utc` and `oauth_refresh_token` in
+the item's data blob as upstream does, so an expiring OAuth token is refreshed on schedule rather than after
+it starts failing. *Basis:* `zvcs/src/extensions/src/porcelain/credential_osxkeychain.rs` (the
+Security.framework port, `encode_state_seen`, the duplicate-item compare-before-write, the expiry/refresh
+blob, upstream's `O_EXLOCK` self-lock), `credential.rs`, `credential_store.rs`, `credential_cache.rs`,
+`credential_cache__daemon.rs`, `credential_netrc.rs`, routed from `src/extensions/src/dispatch.rs`.
+**Test-verified:** `porcelain::credential_osxkeychain::tests` covers the state-token encoding and the stored-secret layout
+(`state_token_matches_upstream_encoding`, `state_from_get_blob_survives_the_round_trip_to_store`,
+`rotated_password_changes_the_state_token`, `secret_blob_appends_expiry_and_refresh_token_as_protocol_lines`);
+`tests/credential_config.rs` covers helper configuration. *Caveat:* credential helpers are git's own design
+and the protocol is git's; the candidate-first is *the complete suite living in one binary* rather than as
+separately-packaged executables, plus the write-suppression behavior, which is a correctness/UX fix over the
+contrib helper rather than a new capability. The keychain path is macOS-only by construction (it compiles to
+no-ops elsewhere, as git's helper is macOS-only too). "None found," not proven; sweep non-exhaustive. A zvcs
+addition. MIT.
+
+**205. First git implementation that waits out a foreign `index.lock` instead of failing on it — a fair queue that degrades to patience against stock git (zvcs)** — `med`
+Stock git's `index.lock` is `O_EXCL`: a contended writer does not wait, it *fails*
+(`fatal: Unable to create '.git/index.lock': File exists`), which under many concurrent writers is a
+thundering herd of retries with no fairness. #173 replaces that with a daemon FIFO for zvcs's own writers,
+but a mixed machine still has *foreign* lock holders — an IDE, a stock `git` invocation, another tool — and
+the FIFO cannot serialize what it does not mediate. So zvcs adds the missing half: before an index-mutating
+operation it **waits for a foreign `<git-dir>/index.lock` to clear**, within a budget
+(`ZVCS_INDEX_LOCK_WAIT_MS`, `0` disabling the wait entirely), and only if the lock outlasts the budget does
+it fall back to queueing behind the coordinator. The common case — a foreign writer holding the lock for
+milliseconds — becomes patience rather than a failure, which is what a scripted batch needs. The
+coordinator guard itself is RAII: dropping it on normal return, `?`, or panic sends `RELEASE`, and the
+daemon auto-releases on socket EOF, so a crashed holder can never wedge a repo; with no daemon reachable it
+degrades to a no-op guard and the operation runs exactly as stock git would. *Basis:*
+`zvcs/src/extensions/src/lock.rs` (`wait_for_foreign_index_lock` with the `ZVCS_INDEX_LOCK_WAIT_MS` budget,
+`RepoLock::acquire`, the RAII `Drop` that emits `RELEASE`, the no-daemon no-op path).
+**Test-verified:** `tests/index_lock_queue.rs::waits_out_a_foreign_lock_that_clears`,
+`::queues_when_the_lock_outlasts_the_wait`, `::a_queued_rerun_never_requeues_itself`,
+`::zero_wait_disables_the_budget`; `tests/lock_reentrant.rs`; `tests/daemon_race.rs::concurrent_start_on_stale_socket_yields_one_daemon`.
+*Caveat:* waiting on a lock is elementary and other VCSs block by default; the candidate-first is a
+*git-compatible* binary that keeps git's on-disk lock protocol (so stock git and IDEs interoperate with it
+byte-for-byte) while replacing the failure semantics with waiting and, beyond the budget, with a fair
+queue. It cannot make a *foreign* writer fair — only patient toward it. "None found," not proven; sweep
+non-exhaustive. A zvcs addition. MIT.
+
+**206. First VCS binary that is also a working shell for its own console — native, fork-free filesystem and process-state verbs plus a git-aware `ls` (zvcs `git zls` / `zcd` / the fs verbs)** — `low`
+Once `git zrepl` (#180) is a long-lived console, the shell's absence becomes the friction: you cannot
+change directory, set a variable, or copy a file without leaving it. zvcs adds those as verbs of the same
+binary. **Process-state verbs** persist across console lines because the console is one process — `zcd`
+navigates, `zenv NAME=VALUE` sets a variable every later line sees, `zunset` clears one, with `zpwd` and
+`zecho` rounding out the basics. **Filesystem verbs** (`zmkdir`, `ztouch`, `zrm`, `zcp`, `zmv`, `zcat`,
+`zln`) are implemented natively — no `fork`, no `/bin/sh` — so the console can create, copy, move, and
+remove without spawning anything. And **`git zls`** is a git-aware listing in the style of `eza --git`:
+each entry carries a two-column `[staged][unstaged]` status field using eza's letters (`N` new, `M`
+modified, `D` deleted, `R` renamed, `C` copied, `T` type-change, `U` conflicted, `I` ignored, `-`
+unchanged), with a **directory folding the status of everything beneath it** so a subtree with any change
+is visible at a glance, computed from the same gix status walk `git status` uses; outside a repo it
+degrades to a plain listing. *Basis:* `zvcs/src/extensions/src/superset/shell.rs` (process-state and
+native filesystem verbs), `superset/gitls.rs` (the folded two-column status listing over the shared status
+walk). **Test-verified:** `tests/shell.rs::zcd_persists_across_console_lines`,
+`::zenv_set_query_and_unset_round_trip`, `::zecho_joins_args_and_honors_dash_n`;
+`tests/fsops.rs::filesystem_verbs_roundtrip` and `::zrm_guards_and_force`;
+`tests/gitls.rs::zls_shows_two_column_git_status` and `::zls_outside_repo_omits_git_column`.
+*Caveat:* the weakest entry in this section, and honestly so — `eza --git` already does git-aware listing
+(and does more of it), and shell builtins are shell builtins. The only novel part is *where they live*:
+inside the git binary, so its own console is self-sufficient and the git-status column comes from the same
+in-process status engine rather than by parsing another program's output. Not a shell: no pipes, no
+redirection, no job control. "None found" is not claimed for git-aware listing. A zvcs addition. MIT.
+
+**207. First cross-repository coordination plane for automated agents — advisory leases, inter-agent messaging, contention analysis, and a fleet topology view (zvcs `git zclaim` / `zbroadcast` / `zcontend` / `zgraph`)** — `med`
+Git has no concept of a peer. When N automated agents share one tree, everything they need to avoid
+stepping on each other has to be invented outside the VCS. zvcs puts that plane in the binary, on the
+shared ledger. **Leases:** `git zclaim` records "this session is working this repo", `zunclaim` releases,
+`zwho` lists holders; the claim is race-safe via a primary key and attributed to the caller's session, and
+it is deliberately **advisory** — it coordinates intent, while physical serialization stays with the FIFO
+lane (#173). **Messaging:** `git zbroadcast` posts a message to every session or one (`--to`), and with no
+arguments prints this session's unread messages and marks them read — a pull inbox, so peer messaging costs
+nothing on the hot path; `git zhandoff <repo> <session>` reassigns a claim to another agent and leaves it a
+note. **Contention:** `git zcontend` joins three reads — who holds which lease, each repo's queued/running
+job depth, and their intersection — to answer "who is stepping on whom", the actively contested repos being
+exactly those both claimed and backed up. **Topology:** `git zgraph` shows the relationship git cannot see
+at all, because git only ever knows one repo: which local checkouts are the *same upstream* (a dup group —
+one `origin` URL, N working trees), which is how a fleet discovers that two agents are editing the same
+project in different directories. *Basis:* `zvcs/src/extensions/src/superset/claim.rs`
+(`zclaim`/`zunclaim`/`zwho` over the `claims` table, session identity from `crate::session_key`),
+`superset/zbroadcast.rs` (the `messages`/`message_reads` tables, `zhandoff`), `superset/zcontend.rs`
+(claims × job backlog), `superset/zgraph.rs` (origin-URL dup groups). **Test-verified:**
+`tests/claim.rs::claim_is_exclusive_across_sessions`, `tests/claim_force.rs`,
+`tests/select_filters.rs::selector_dirty_and_claimed_filters`, `tests/session_key.rs`.
+*Caveat:* advisory locking (`flock`, lease services), message queues, and dependency graphs are all
+long-established; the candidate-first is a *VCS* carrying an agent-coordination plane natively — leases,
+inbox, contention analysis, and same-upstream topology as verbs of the git binary, on the same ledger its
+other fleet verbs read. Advisory by design: a claim does not block a writer, and an agent that ignores the
+plane is unaffected by it. "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
 
 ---
 
