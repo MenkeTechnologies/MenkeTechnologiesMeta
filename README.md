@@ -7,12 +7,12 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-181-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-54_core-cyan.svg)](#tier-1--core-54)
+[![Submodules](https://img.shields.io/badge/submodules-183-blue.svg)](#0x01-submodule-map)
+[![Tier 1](https://img.shields.io/badge/tier_1-70_core-cyan.svg)](#tier-1--core-70)
 [![Tier 2](https://img.shields.io/badge/tier_2-34_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-34)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
-[![Tier 5](https://img.shields.io/badge/tier_5-14_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-14)
+[![Tier 5](https://img.shields.io/badge/tier_5-20_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-20)
 [![Tier 6](https://img.shields.io/badge/tier_6-22_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-22)
 [![Tier 7](https://img.shields.io/badge/tier_7-8_znative_plugins-blue.svg)](#tier-7--znative-plugins-8)
 [![Rust](https://img.shields.io/badge/rust-3.2M_LOC-orange.svg)](#0x09-code-volume)
@@ -21,7 +21,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 181 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 183 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -62,7 +62,7 @@
 git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git && cd MenkeTechnologiesMeta && git submodule foreach --recursive 'git checkout main 2>/dev/null || true'
 ```
 
-`--recurse-submodules` fetches all 181 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
+`--recurse-submodules` fetches all 183 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -82,9 +82,9 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 181 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 183 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
-### Tier 1 — Core (68)
+### Tier 1 — Core (70)
 
 The set of MenkeTechnologies projects that share the unified `strykelang`-authored documentation template (README header, ToC convention `[0xNN]`, `docs/index.html` chrome, `docs/report.html` engineering report, `man/man1/<name>.1` + `<name>all.1` man pages).
 
@@ -146,6 +146,8 @@ Seventeen languages share one self-authored execution engine — the [`fusevm`](
 | [`Audio-Haxor`](https://github.com/MenkeTechnologies/Audio-Haxor) | **Tauri v2 desktop GUI app** + JUCE engine. VST2/VST3/AU/CLAP scanner, sample vault, DAW project index, KVR version checker. **Paid product** — docs vendored locally. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/Audio-Haxor) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/Audio-Haxor/report)</sub> |
 | [`traderview`](https://github.com/MenkeTechnologies/traderview) | **Tauri v2 desktop GUI app** (sibling to Audio-Haxor) — TraderVue-style trading journal with embedded Postgres, vanilla JS + uPlot frontend. The same Rust workspace crates also ship a multi-user axum web service. **Paid product** — docs vendored locally. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/traderview) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/traderview/report)</sub> |
 | [`zpwr-daw`](https://github.com/MenkeTechnologies/zpwr-daw) | **DAW arranger + the 4th patch-graph plugin** (standalone app, VST3/AU/CLAP, and embeddable library) — one generalized grid engine over notes / arrangement / automation / trigger domains, with Arrangement & Session views, a swung step clock, MIDI/JSON export, and a JUCE-free C++ core exposing a C ABI + Rust bindings. Every track is a patch graph of `zpwr-patch-core` blocks (178 note-stream modules + the shared audio pack). Powers the CLIP tab in the JUCE plugins and the timelines in `ztranslator` / `Audio-Haxor`. **Private** — docs vendored to meta. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-daw) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-daw/report)</sub> |
+| [`zmusic`](https://github.com/MenkeTechnologies/zmusic) | **Play-along instrument trainer for keys, pads and drums** (Rust + Tauri v2 desktop app over a C++20 / JUCE 8 audio sidecar) — a Melodics superset that grades you against **your own** MIDI and audio instead of a closed subscription library: drop in a `.mid`, attach any backing track, and the notes fall toward a judgment line while every hit is scored. Charts are `zpwr-clip-engine` ClipSeq patterns — the same grid and sequencer engine as `zpwr-daw`, not a second note format — and the JUCE sidecar owns the scoring clock so MIDI input and playhead share one process. Ships a bundled `.mid` lesson library whose backing tracks are rendered from the same charts at the same tempo, so audio and grading targets align by construction. Consumes `zmusic-core`. **Paid product** — in the app-store. |
+| [`zmusic-core`](https://github.com/MenkeTechnologies/zmusic-core) | **Embeddable play-along trainer engine** (pure Rust, no GUI deps) behind `zmusic` — SMF import into a `Chart` that serializes to the same `[{s,l,n,len,v}]` pattern shape `zpwr-clip-engine` already schedules, controller-surface description, and the lesson-library / take-history store. Grading is deliberately excluded: it belongs to the process owning the audio device and MIDI input, so the JUCE sidecar decides every verdict off one clock and this crate holds only the shared vocabulary (`HitWindows` down, `Hit` / `TakeSummary` back up). Imports report what they had to approximate rather than absorbing it silently. Builds `rlib` + `staticlib` + `cdylib` so the same trainer embeds across the GUI stack. **Private.** |
 | [`zpwr-crate`](https://github.com/MenkeTechnologies/zpwr-crate) | **Shared sample-library "crate" browser** (Rust) — one source of truth for the audio stack's filesystem + SQLite/FTS5 sample scanner and faceted crate-query layer (category/pack/manufacturer/BPM/key filters, regex search, facets, incremental rescans). Scanner + schema + query code lifted verbatim from the Audio-Haxor backend with the Tauri glue stripped. Builds `rlib` + `staticlib` + `cdylib`: consumed natively by `Audio-Haxor` and over a C ABI by `zpwr-daw`, so both run identical indexing/browsing against the same schema. **Private** — internal shared library, not published to crates.io. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-crate) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-crate/report)</sub> |
 | [`zpwr-embed-terminal`](https://github.com/MenkeTechnologies/zpwr-embed-terminal) | **Shared embedded PTY terminal** (Rust) — one PTY-backed login-shell terminal (`portable-pty` core + xterm.js front end) extracted from Audio-Haxor so a single source of truth backs every desktop app. Builds `rlib` + `staticlib` + `cdylib`: `Audio-Haxor` / `traderview` / `ztranslator` use it natively (forwarding `on_output`/`on_exit` to `app.emit`), `zpwr-daw` drives it over the C ABI (`include/zpwr_embed_terminal.h`) from JUCE/C++. **Private** — internal shared library, not published to crates.io. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-embed-terminal) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-embed-terminal/report)</sub> |
 | [`zwire-host`](https://github.com/MenkeTechnologies/zwire-host) | **Chrome native-messaging host for `zwire`** (Rust) — one self-contained ~500 KB binary (no Python/`psutil`) that the `hud-internal` extension talks to over a single length-prefixed-JSON stdio pipe. Bridges the shared color scheme + visual-effect prefs to/from `~/.zwire`, streams live system stats (`sysinfo`: cpu / mem / net / disk / temp / battery / …) for the HUD statusbar, and runs a PTY login shell (`portable-pty`) behind the embedded terminal. Cross-platform (macOS / Linux / Windows). **Private** — internal shared binary, not published to crates.io. &middot; <sub>[docs](https://menketechnologies.github.io/MenkeTechnologiesMeta/zwire-host) · [report](https://menketechnologies.github.io/MenkeTechnologiesMeta/zwire-host/report)</sub> |
@@ -721,14 +723,14 @@ Measured fresh-clone size (checked-out tracked files + `.git/modules/`, after `g
 
 | Tier | Repos | Approx size |
 |---|---|---|
-| Tier 1 — Core | 68 | ~4.0 GB |
+| Tier 1 — Core | 70 | ~4.0 GB |
 | Tier 2 — Stryke ecosystem | 34 | ~42 MB |
 | Tier 3 — zsh-more-completions | 1 | ~325 MB |
 | Tier 4 — Zsh ecosystem plugins | 28 | ~24 MB |
 | Tier 5 — Editor / multiplexer plugins | 20 | ~15 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 22 | ~3.6 GB |
 | Tier 7 — znative plugins | 8 | ~424 KB |
-| **Total** | **181** | **~7.8 GB** |
+| **Total** | **183** | **~7.8 GB** |
 
 Each repo's size counts its own git object store, so a nested submodule's objects are counted again under every parent that vendors it — which is exactly what a recursive clone puts on disk. The bulk is `MenkeTechnologiesPublications/` (~1.2 GB — it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches all three a second time under it), `traderview/` (~675 MB), `zwire/` (~600 MB — the Chromium snapshot), `zmax-gui/` (~590 MB) and `zmax/` (~567 MB), `MenkeTechnologies.github.io/` (~506 MB — accumulated screenshot history), `Audio-Haxor/` (~425 MB — Tauri v2 frontend assets + JUCE C++), and `zpwr-fx/` (~337 MB). Cargo `target/` directories are `.gitignore`d and re-derived during build. Numbers refresh as repos add commits.
 
