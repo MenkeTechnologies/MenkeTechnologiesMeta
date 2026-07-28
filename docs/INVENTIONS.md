@@ -18,7 +18,7 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 259 candidates (numbered entries through 207 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 11g, 11h, 11i, 11j, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 262 candidates (numbered entries through 207 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 11g, 11h, 11i, 11j, the tclrs additions 11k, 11l, 11m, then 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
 deep prior-art analysis in the appendix.
@@ -131,33 +131,34 @@ persistence the README's survey of BWK/gawk/mawk/goawk/frawk/zawk finds in none.
 machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-conducted
 survey; the machine-code tier engages only for JIT-eligible numeric chunks.
 
-**11. Fifteen-language DAP debuggers on one shared VM** — `high`
-Fifteen of the seventeen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
-Ruby, arb, Python, PHP, JavaScript, Go, Java, Kotlin, Scala, Groovy)
+**11. Sixteen-language DAP debuggers on one shared VM** — `high`
+Sixteen of the seventeen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
+Ruby, arb, Python, PHP, JavaScript, Go, Java, Kotlin, Scala, Groovy, Tcl)
 ship a real Debug Adapter Protocol server (`--dap`
 over stdio or TCP) wrapping a shared line-stop / step / breakpoint / function-breakpoint /
 expression-evaluate debugger state machine —
-source-level interactive debugging for fifteen languages on a single VM substrate, including
+source-level interactive debugging for sixteen languages on a single VM substrate, including
 classic languages (AWK, VimL, zsh) that historically have **no** DAP debugger. *Basis:*
 `strykelang/.../dap.rs` (1997 L, the original the others were ported from);
 `awkrs/src/dap.rs` (1085 L) + `debugger.rs`; `zshrs/src/extensions/dap.rs` (879 L) +
 `tests/dap_integration.rs`; `pythonrs/src/dap.rs` (629 L); `node-js/src/dap.rs` (619 L);
 `phplang/src/dap.rs` (610 L); `rubylang/src/dap.rs` (606 L) + `tests/dap.rs`;
-`arb/src/dap.rs` (582 L); `go-rs/src/dap.rs` (572 L); `kotlinrs/src/dap.rs` (570 L);
+`tclrs/src/dap.rs` (590 L) + `tests/dap_session.rs`; `arb/src/dap.rs` (582 L);
+`go-rs/src/dap.rs` (572 L); `kotlinrs/src/dap.rs` (570 L);
 `javars/src/dap.rs` (568 L); `elisprs/src/dap.rs` (563 L); `groovyrs/src/dap.rs` (531 L);
 `scalars/src/dap.rs` (523 L); `vimlrs/src/dap.rs` (353 L);
 line tracking via debug-only markers.
 *Caveat:* the debuggers share design (ported from stryke's), not a single fusevm op —
 line tracking is per-frontend; variable drill-down depth varies by value model (awk =
-scalars + flat assoc only). Of the other two frontends, `rlang`/R ships only a handshake +
-run-to-completion adapter (`rlang/src/dap.rs`, 166 L — stepping pending) and `tclrs`/Tcl
-ships no adapter at all (phase 7), so neither is counted. Editor-side clients are partial, not per-language: IntelliJ DAP clients exist for
+scalars + flat assoc only). Of the remaining frontend, `rlang`/R ships only a handshake +
+run-to-completion adapter (`rlang/src/dap.rs`, 166 L — stepping pending), so it is not
+counted. Editor-side clients are partial, not per-language: IntelliJ DAP clients exist for
 stryke, zshrs, elisprs and vimlrs (`editors/intellij/.../dap/`), VS Code debug adapters for
 stryke, zshrs, awkrs and vimlrs (`vscode-*/package.json` `"debuggers"`); the rest are driven
 by any generic DAP client. Python/Ruby/PHP/JavaScript/Go/Java/Kotlin/Scala/Groovy already
 have mature DAP debuggers elsewhere, so the world-first leg is the classic-language
-debuggers (AWK/VimL/zsh) plus running all fifteen on one shared VM substrate — not DAP for
-those mainstream languages.
+debuggers (AWK/VimL/zsh) plus running all sixteen on one shared VM substrate — not DAP for
+those mainstream languages, and not for Tcl either, which has TclProDebug.
 
 **11a. Fused superinstructions collapsing whole counted/append loops into one dispatch** — `high`
 The opcode set includes macro-op superinstructions (`AccumSumLoop`, `SlotIncLtIntJumpBack`,
@@ -335,27 +336,84 @@ of `Tcl(n)`), the compiler with statically tracked stack depth (so `break`/`cont
 by a compile-time-known pop count rather than a runtime unwinder), `set` / `puts`
 (`-nonewline`) / `expr` / `incr` / `if`-`elseif`-`else` / `while` / `break` / `continue`
 plus command substitution of any of them, and the whole `expr(n)` operator set at `expr(n)`
-precedence compiled straight from a braced word with no runtime parse. Tcl semantics ride
+precedence compiled straight from a braced word with no runtime parse. Since then the
+frontend has grown the rest of the language surface — `proc` (parameters and locals as
+frame slots, defaults and a trailing `args` resolved at the call site), `for` / `foreach` /
+`switch`, `catch` / `error` / `return`, the `string` / `array` / `dict` ensembles, the list
+commands, and coroutines (`coroutine` / `yield` / `yieldto`, a coroutine being a second VM
+over the same chunk) — and the toolchain around it: a `tclrs` binary with a reedline REPL,
+`--lsp` and `--dap` servers, `_tclrs` completion, `man/man1/tclrs.1` + `tclrsall.1`, a
+generated `reference.html`, inline `rust {}` FFI, and `--dump-tokens` / `--dump-ast` /
+`--disasm`. Tcl semantics ride
 two hooks: a numeric hook for operands the VM cannot compute on natively (an operand that
 parses as a number is one; comparisons fall back to string order when it does not) and
 frontend extension ops for the operators whose Tcl meaning differs from the VM's generic
 one (`/` and `%` floored toward negative infinity, integral `**`, and a normalize op for
-Tcl's boolean and double formatting). *Basis:* `tclrs/src/parser.rs` (707 L),
-`compiler.rs` (565 L), `expr.rs` (397 L), `runtime.rs` (334 L); `Cargo.toml`
-`fusevm = "0.14.12"`; tclsh 9.0.4 is the specification and the suites diff against it
-directly — 27 word-splitting cases (`tests/differential_tclsh.rs`) and 69 whole programs
-(`tests/execution_differential.rs`) executed by both implementations and compared byte for
-byte, plus 14 rule-by-rule parser tests (`tests/dodekalogue.rs`), so no expected output in
-the repository is hand-written. *Caveat:* early — phase 2 of 7. The crate is a library:
-no `tclsh` binary, no LSP, no DAP, no completions, no man pages. `fusevm` is pulled with
-its default features, so the interpreter tier runs the chunk and no `cranelift-*` crate is
-linked yet (JIT/AOT are phase 6), which means the "shared JIT" leg of the claim is
-architectural rather than shipped. `proc`, arrays, lists, `{*}` expansion, math functions,
-and bignum are not built — each refused at compile time rather than approximated. Tcl has
-compiled to bytecode on its own engine since 8.0, so the defensible "first" is the narrower
+Tcl's boolean and double formatting). *Basis:* `tclrs/src/parser.rs` (773 L),
+`compiler.rs` (1289 L), `expr.rs` (421 L), `runtime.rs` (1481 L), 25 modules in all;
+`Cargo.toml` `fusevm = "0.14.20"` with `jit` / `jit-disk-cache` / `aot` / `ffi`;
+tclsh 9.0.4 is the specification and the suites diff against it
+directly — 17 test binaries in all (`tests/*.rs`), among them per-area differential suites
+for words, execution, procedures, lists, strings, arrays and coroutines, 14 rule-by-rule
+parser tests (`tests/dodekalogue.rs`), and a replayed corpus of the divergences a
+differential fuzzer found (`tests/parity_fuzz_findings.rs`, 18 tests), so no expected output
+in the repository is hand-written. *Caveat:* still early, and the refusals are named rather
+than approximated: `{*}` argument expansion is parsed and recorded on the word but refused
+when the command is lowered; math functions (`sqrt(4)` → `math function "sqrt" is not
+supported yet`) and bignum (`2**100` → `integer value too large to represent`) are not
+built; `--aot` is refused for a script using `catch` or a coroutine. Tcl has compiled to
+bytecode on its own engine since 8.0, so the defensible "first" is the narrower
 combination: Tcl lowered onto a *shared* multi-frontend bytecode VM, authored in Rust, with
 no Tcl runtime linked — not "first compiled Tcl" outright. "First" rests on a
 non-exhaustive prior-art sweep. MIT.
+
+**11k. Trace-JIT'd Tcl — hot Tcl loops reaching native machine code at run time** — `high`
+The frontend arms fusevm's three-tier Cranelift JIT on every VM it builds, and every loop is
+emitted rotated — entered at the test, closed by a conditional backward branch — because
+that is the one shape the tracing tier installs a trace for, so a hot loop inside a `proc`
+is trace-compiled while the script runs. *Basis:* `tclrs/src/compiler.rs`
+`Compiler::rotated_loop` (the single emitter `while` / `for` / `foreach` / `dict for` all
+go through); `src/runtime.rs` `install_hooks` → `vm.enable_tracing_jit()`; `src/tiers.rs`
+backs `--tiers`, which reports what a script reached rather than asserting it.
+**Build-verified:** `tclrs --tiers` on 3,000,000 iterations of `while {$i < $n} {incr i}`
+inside a `proc` reports `loop @7 trace-eligible=true traced=true` and `reaches native code
+true`. *Caveat:* the prior art is close — TclQuadcode compiles Tcl procedures to LLVM IR and
+native code, but is explicitly **ahead-of-time** ("currently too slow for JIT" by its own
+description) and runs on the standard Tcl runtime — so the novel leg is a *tracing JIT at
+run time* for Tcl on a VM shared with sixteen other languages, not native compilation of Tcl
+as such. The same loop at a script's top level traces nothing, because a top-level variable
+is a VM global; the project's README states this rather than hiding it.
+
+**11l. Tcl AOT-compiled to a standalone native binary carrying no Tcl interpreter** — `high`
+`tclrs --aot out script.tcl` sends the whole chunk through fusevm's closed-world compiler and
+links a native executable with no parser and no bytecode dispatch loop inside it. *Basis:*
+`tclrs/src/aot.rs` `compile_executable` → `fusevm::aot::compile_object` → link against
+`libtclrs.a` (`crate-type = ["rlib", "staticlib"]`), with `src/aot_runtime.rs`'s
+`fusevm_aot_register_builtins` hook installing the same runtime hooks the interpreter
+installs. **Build-verified:** `file` reports `Mach-O 64-bit executable arm64` and `otool -L`
+lists only CoreFoundation / libiconv / libSystem — no Tcl library of any kind — and the
+binary prints the right answer. *Caveat:* every existing way to ship a Tcl program as one
+file bundles the interpreter (starpack / tclkit, freeWrap, mktclapp links static Tcl libs,
+Tcl Dev Kit), and TclQuadcode's native code still runs on the standard Tcl runtime, so no
+prior art was found for a Tcl program compiled to native code with no interpreter present —
+recorded as "none found", not proven. Refused today for scripts using `catch` or a
+coroutine, which need a driver outside `VM::run`.
+
+**11m. Inline Rust blocks inside Tcl scripts** — `med`
+A `rust { pub extern "C" fn … }` block in a `.tcl` file compiles to a cached `cdylib` whose
+exports become ordinary Tcl commands. *Basis:* `tclrs/src/rust_ffi.rs` supplies the
+Tcl-flavored `fusevm::RustSugar` — the block is rewritten to `__rust_compile <base64>
+<line>` before parsing, padded to preserve line numbers — and `Compiler::cmd_rust_compile`
+registers it **while lowering it**, because this frontend resolves dispatch at compile time;
+`ext::FFI_CALL` is emitted for a name `fusevm::ffi` reports as exported. **Test-verified:**
+`tclrs/tests/rust_ffi.rs` — 7 tests pass (i64 and `*const c_char` signatures, a result used
+inside `expr`, a Tcl `proc` shadowing an export, a block that fails rustc failing the script
+with the line it was written on, arity refusal). *Caveat:* the *concept* has deep prior art
+in Tcl — critcl has embedded **C** in Tcl scripts, cached by checksum and dynamically
+linked, for two decades. The novel legs are the language (Rust), the shared `fusevm::ffi`
+substrate across seventeen frontends, and compile-time registration into a statically
+resolved dispatch; signatures are limited to fusevm's marshalling set (≤4 `i64` → `i64`,
+≤3 `f64` → `f64`, `*const c_char` → `i64` or `*const c_char`).
 
 **11e. arb — pipe-native UI-generating DSL that turns any Unix stream into a live TUI (and web) dashboard** — `med`
 arb is an original language (not a port) that drops into a Unix pipe and spawns a dynamic
