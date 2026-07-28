@@ -18,14 +18,14 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 258 candidates (numbered entries through 207 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 11g, 11h, 11i, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
+Total: 259 candidates (numbered entries through 207 plus lettered sub-entries — 11a, 11b, 11c, 11d, 11e, 11f, 11g, 11h, 11i, 11j, 12a, 13a, 28a, 40a, 40b, 40c, 40d, 40e, 89a, 104a, 114a, 144a, the
 zterminal additions 105a–105n, the zmax additions 120a–120s, 168a, 169a, and 170a). Marquee claims (the six
 original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
 deep prior-art analysis in the appendix.
 
 ---
 
-## I. Execution engine & language runtimes — fusevm + sixteen frontends
+## I. Execution engine & language runtimes — fusevm + seventeen frontends
 
 **1. ★ Solo-authored from-scratch JIT VM hosting twelve production language frontends** — `med`
 One person built the whole execution engine — a bytecode VM plus a 3-tier
@@ -33,13 +33,13 @@ One person built the whole execution engine — a bytecode VM plus a 3-tier
 AOT object compiler — and **twelve independent language frontends** (`strykelang`/Perl 5,
 `zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, `rlang`/R, `go-rs`/Go, and the
 original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode — with
-four more (`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy) at
-narrower language coverage, sixteen frontends in all. The
+five more (`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy,
+`tclrs`/Tcl) at narrower language coverage, seventeen frontends in all. The
 novelty is the combination: solo author **+** from-scratch VM with a genuine machine-code
 JIT **+** 12 mature frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
 mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
-`cranelift_object`; sixteen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
+`cranelift_object`; seventeen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
 (arb's compute core — its `calc` / expression layer — lowers to a `fusevm::Chunk` via
 `arb/src/expr.rs` and runs on the VM, while its widget / layout construction stays a native
 `ratatui` interpreter). `fusevm/src/op.rs` (~233 ops),
@@ -132,7 +132,7 @@ machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-cond
 survey; the machine-code tier engages only for JIT-eligible numeric chunks.
 
 **11. Fifteen-language DAP debuggers on one shared VM** — `high`
-Fifteen of the sixteen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
+Fifteen of the seventeen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
 Ruby, arb, Python, PHP, JavaScript, Go, Java, Kotlin, Scala, Groovy)
 ship a real Debug Adapter Protocol server (`--dap`
 over stdio or TCP) wrapping a shared line-stop / step / breakpoint / function-breakpoint /
@@ -149,9 +149,9 @@ classic languages (AWK, VimL, zsh) that historically have **no** DAP debugger. *
 line tracking via debug-only markers.
 *Caveat:* the debuggers share design (ported from stryke's), not a single fusevm op —
 line tracking is per-frontend; variable drill-down depth varies by value model (awk =
-scalars + flat assoc only). The sixteenth frontend, `rlang`/R, ships only a handshake +
-run-to-completion adapter (`rlang/src/dap.rs`, 166 L — stepping pending), so it is not
-counted. Editor-side clients are partial, not per-language: IntelliJ DAP clients exist for
+scalars + flat assoc only). Of the other two frontends, `rlang`/R ships only a handshake +
+run-to-completion adapter (`rlang/src/dap.rs`, 166 L — stepping pending) and `tclrs`/Tcl
+ships no adapter at all (phase 7), so neither is counted. Editor-side clients are partial, not per-language: IntelliJ DAP clients exist for
 stryke, zshrs, elisprs and vimlrs (`editors/intellij/.../dap/`), VS Code debug adapters for
 stryke, zshrs, awkrs and vimlrs (`vscode-*/package.json` `"debuggers"`); the rest are driven
 by any generic DAP client. Python/Ruby/PHP/JavaScript/Go/Java/Kotlin/Scala/Groovy already
@@ -318,6 +318,44 @@ not "first compiled Go" outright. It is an executor swap, not a `gc` replacement
 standard library is reimplemented natively package by package rather than vendored, and
 concurrency programs need the scheduler, so goroutine/channel/`select` code runs under
 `go run` rather than `go build`. "First" rests on a non-exhaustive prior-art sweep. MIT.
+
+**11j. First Tcl lowered onto a shared multi-language VM's bytecode (tclrs) — a pure frontend with no interpreter loop** — `low`
+tclrs is the seventeenth fusevm frontend and a **pure frontend**: it parses Tcl —
+resolving every substitution the grammar permits at parse time — and lowers each command
+straight to `fusevm::Chunk` bytecode. There is no interpreter loop and no code generator
+in the crate; execution belongs to the shared VM. Two properties of Tcl's grammar are what
+make ahead-of-time lowering pay: braces suppress substitution, so a braced body (an `if` or
+`while` body, a braced `expr` expression) is fully known at parse time and compiles once
+instead of being re-parsed per evaluation — words carry a `braced` flag for exactly that
+decision — and rule 11 rules out rescanning substituted values, so each character is
+processed once. Tcl's value model needs no object heap on top of fusevm's: strings,
+integers and floats map onto `Value` directly, and a value keeps its numeric representation
+until something demands its string form. Implemented: the parser (all twelve syntax rules
+of `Tcl(n)`), the compiler with statically tracked stack depth (so `break`/`continue` unwind
+by a compile-time-known pop count rather than a runtime unwinder), `set` / `puts`
+(`-nonewline`) / `expr` / `incr` / `if`-`elseif`-`else` / `while` / `break` / `continue`
+plus command substitution of any of them, and the whole `expr(n)` operator set at `expr(n)`
+precedence compiled straight from a braced word with no runtime parse. Tcl semantics ride
+two hooks: a numeric hook for operands the VM cannot compute on natively (an operand that
+parses as a number is one; comparisons fall back to string order when it does not) and
+frontend extension ops for the operators whose Tcl meaning differs from the VM's generic
+one (`/` and `%` floored toward negative infinity, integral `**`, and a normalize op for
+Tcl's boolean and double formatting). *Basis:* `tclrs/src/parser.rs` (707 L),
+`compiler.rs` (565 L), `expr.rs` (397 L), `runtime.rs` (334 L); `Cargo.toml`
+`fusevm = "0.14.12"`; tclsh 9.0.4 is the specification and the suites diff against it
+directly — 27 word-splitting cases (`tests/differential_tclsh.rs`) and 69 whole programs
+(`tests/execution_differential.rs`) executed by both implementations and compared byte for
+byte, plus 14 rule-by-rule parser tests (`tests/dodekalogue.rs`), so no expected output in
+the repository is hand-written. *Caveat:* early — phase 2 of 7. The crate is a library:
+no `tclsh` binary, no LSP, no DAP, no completions, no man pages. `fusevm` is pulled with
+its default features, so the interpreter tier runs the chunk and no `cranelift-*` crate is
+linked yet (JIT/AOT are phase 6), which means the "shared JIT" leg of the claim is
+architectural rather than shipped. `proc`, arrays, lists, `{*}` expansion, math functions,
+and bignum are not built — each refused at compile time rather than approximated. Tcl has
+compiled to bytecode on its own engine since 8.0, so the defensible "first" is the narrower
+combination: Tcl lowered onto a *shared* multi-frontend bytecode VM, authored in Rust, with
+no Tcl runtime linked — not "first compiled Tcl" outright. "First" rests on a
+non-exhaustive prior-art sweep. MIT.
 
 **11e. arb — pipe-native UI-generating DSL that turns any Unix stream into a live TUI (and web) dashboard** — `med`
 arb is an original language (not a port) that drops into a Unix pipe and spawns a dynamic
