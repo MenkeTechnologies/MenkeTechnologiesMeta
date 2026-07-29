@@ -143,10 +143,10 @@ const html = `<!DOCTYPE html>
        would leave an SVG child inheriting an unrelated colour, so the mark sets
        both of its colours explicitly here instead of relying on currentColor. */
     .brand-mark {
-      color: var(--cyan);
-      --neon: var(--accent);
-      width: 1.15em; height: 1.15em;
-      vertical-align: -0.2em;
+      color: var(--text);
+      --neon: var(--cyan);
+      width: 1.75em; height: 1.75em;
+      vertical-align: -0.55em;
       margin-right: 0.4em;
       filter: drop-shadow(0 0 8px var(--cyan-glow));
     }
@@ -156,7 +156,7 @@ const html = `<!DOCTYPE html>
   <header class="tutorial-header">
     <div class="tutorial-header-inner">
       <div>
-        <h1 class="tutorial-brand"><svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="round"><path d="M32 4 L58 18 V46 L32 60 L6 46 V18 Z"/></g><g fill="none" stroke="var(--neon, #00b0ff)" stroke-width="4.5" stroke-linejoin="miter" stroke-linecap="butt"><path d="M16 42 V23 L23 31 L30 23 V42"/><path d="M35 23 H48 M41.5 23 V42"/></g></svg>// DOC INVENTORY &amp; CHROME AUDIT</h1>
+        <h1 class="tutorial-brand"><svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><path d="M32 6 L55 19 V45 L32 58 L9 45 V19 Z"/><path d="M9 27 H2 M9 37 H2 M55 27 H62 M55 37 H62"/></g><g fill="none" stroke="var(--neon, #00b0ff)" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt"><path d="M19 40 V26 L25 32 L31 26 V40"/><path d="M35 26 H45 M40 26 V40"/></g></svg>// DOC INVENTORY &amp; CHROME AUDIT</h1>
         <nav class="tutorial-crumbs" aria-label="Breadcrumb">
 ${nav('Docs','index.html')}
           <span class="sep">/</span>
