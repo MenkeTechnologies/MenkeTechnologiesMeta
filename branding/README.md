@@ -80,17 +80,27 @@ Four branches sit under the parent: **MTAudio**, **MTPublishing**, **MTApp**,
 
 The system is a rule, not four separate ideas. The hex package and the MT
 monogram are byte-identical in all five marks — that is what makes them read as
-one family — and each branch varies exactly one element: the detail flanking the
-package. Nothing else moves: same 64-unit grid, same stroke weights, same
-45° geometry.
+one family — and the differentiator comes from a property of the hexagon itself:
+**it leaves its four diagonal corners empty.** Each branch fills that void with a
+different glyph type, at the same footprint, on the same grid, in its own accent.
 
-| Branch | Flanking detail | Void | Paper |
+| Branch | Corner glyph | Void | Paper |
 |---|---|---|---|
-| MenkeTechnologies | four even pins | `#00b0ff` | `#0069a8` |
-| MTAudio | uneven pins — a level meter | `#ff2a6d` | `#c4004f` |
-| MTPublishing | pins multiply into set text lines | `#ffb020` | `#8a5a00` |
-| MTApp | pins pull out to corner brackets | `#9d6bff` | `#5b2fb8` |
-| MTOpensource | the right pin forks | `#2ee65f` | `#157a33` |
+| MenkeTechnologies | none — four pins on the package edges | `#00b0ff` | `#0069a8` |
+| MTAudio | quarter arcs — curved | `#ff2a6d` | `#c4004f` |
+| MTPublishing | filled triangles — solid, page corners | `#ffb020` | `#8a5a00` |
+| MTApp | angular brackets — a viewport frame | `#9d6bff` | `#5b2fb8` |
+| MTOpensource | filled nodes — round, a graph vertex | `#2ee65f` | `#157a33` |
+
+**Draw the detail in the corner void, never against the package.** This is the
+rule the whole set turns on, and it was learned the expensive way: the first
+three branches varied the pin stubs and hugged the hex, and every one of them
+read as a double-stroke rendering artifact rather than a decision. Air around the
+glyph is what makes it look deliberate.
+
+**Mirror, do not repeat.** Each glyph is drawn once in the top-left void and
+mirrored into the other three with `transform`, so the four corners cannot drift
+out of symmetry when one is edited.
 
 MTAudio's magenta is inherited, not invented — `zpwr-daw/icon.svg` already ships
 `#ff2a6d` as the audio line's accent. MTApp does not take the GUI apps' cyan
