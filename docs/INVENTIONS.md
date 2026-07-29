@@ -27,16 +27,18 @@ deep prior-art analysis in the appendix.
 
 ## I. Execution engine & language runtimes — fusevm + seventeen frontends
 
-**1. ★ Solo-authored from-scratch JIT VM hosting twelve production language frontends** — `med`
+**1. ★ Solo-authored from-scratch JIT VM hosting seventeen production language frontends** — `med`
 One person built the whole execution engine — a bytecode VM plus a 3-tier
 (linear/block/tracing) Cranelift JIT emitting native machine code at runtime, and an
-AOT object compiler — and **twelve independent language frontends** (`strykelang`/Perl 5,
-`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, `rlang`/R, `go-rs`/Go, and the
-original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode — with
-five more (`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy,
-`tclrs`/Tcl) at narrower language coverage, seventeen frontends in all. The
+AOT object compiler — and **seventeen independent language frontends** (`strykelang`/Perl 5,
+`zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, `rlang`/R, `go-rs`/Go,
+`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy, `tclrs`/Tcl, and the
+original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode. Every
+one ships the full toolchain: a standalone binary, `--lsp` and `--dap` servers, shell
+completions, man pages, generated `reference.html`, inline Rust FFI, and
+`--dump-tokens`/`--dump-ast`/`--disasm` introspection. The
 novelty is the combination: solo author **+** from-scratch VM with a genuine machine-code
-JIT **+** 12 mature frontends. *Basis:* `fusevm/src/jit.rs` builds a
+JIT **+** 17 production frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
 mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
 `cranelift_object`; seventeen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
