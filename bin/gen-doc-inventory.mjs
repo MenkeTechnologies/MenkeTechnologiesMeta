@@ -148,8 +148,13 @@ const html = `<!DOCTYPE html>
        <text>, so without resetting it here the wordmark inside the lockup would
        render invisible; setting fill alone is not enough. */
     .brand-lockup {
-      color: var(--text);
-      --neon: var(--cyan);
+      /* Pinned to the brand palette, not --text and not the scheme cyan. --text
+         is #e0f0ff on the dark theme but #1e293b on the light one, so the
+         package rendered a near-black hex on white. The corporate mark also
+         should not restyle itself when someone picks a HUD scheme. Package is
+         the light tint, monogram the accent, so the monogram reads as figure. */
+      color: #8cdbff;
+      --neon: #00b0ff;
       height: 2.6em;
       width: auto;
       vertical-align: -0.95em;
@@ -160,7 +165,15 @@ const html = `<!DOCTYPE html>
       -webkit-text-fill-color: currentColor;
       font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
     }
-    .brand-lockup .lk2 { -webkit-text-fill-color: var(--cyan); }
+    .brand-lockup .lk2 { -webkit-text-fill-color: #00b0ff; }
+    /* On a light ground both step down one: the accent becomes the package and
+       the paper-safe value the monogram, keeping the monogram the darker of the
+       two. #00b0ff has too little contrast on white to carry the monogram. */
+    :root[data-theme="light"] .brand-lockup { color: #00b0ff; --neon: #0069a8; }
+    /* -webkit-text-fill-color wins over fill on SVG <text>, so the subtitle
+       needs its own light-ground value or it keeps the dark-ground cyan. */
+    :root[data-theme="light"] .brand-lockup .lk2 { -webkit-text-fill-color: #0069a8; }
+
   </style>
 </head>
 <body>
