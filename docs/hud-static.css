@@ -693,3 +693,79 @@ a:hover {
   .hub-scheme-strip-inner { flex-direction: column; align-items: stretch; }
   .hub-scheme-strip .scheme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ── Corporate mark ───────────────────────────────────────────────────────────
+   The full lockup: hex package, MT monogram, and the wordmark beside them. The
+   wordmark is part of the logo, not a caption next to it, which is why it lives
+   inside the same <svg> and not in an adjacent element.
+
+   Inline SVG rather than <img> so the mark can inherit: an <img> cannot follow
+   the colour scheme.
+
+   Defined here rather than per page. Seven pages carry this lockup, and each
+   used to repeat the rules in its own <style> block — where they drifted into
+   two variants and none of them ever animated. */
+.brand-lockup {
+  /* Follows the colour scheme, matching the storefront's treatment: a light
+     package with the saturated monogram inside it, so the package takes --cyan
+     and the monogram --accent. Both are scheme variables, so the mark recolours
+     with the HUD picker and inverts on the light theme without a second rule —
+     which is why the old hardcoded #8cdbff/#00b0ff pair, and the light-theme
+     overrides that pair needed, are gone.
+
+     Do not swap those two roles. Putting the accent on the package and the cyan
+     in the monogram inverts figure/ground and stops reading as the mark.
+
+     Neither value may be --text: it is #e0f0ff on the dark theme but #1e293b on
+     the light one, which rendered a near-black hex on white. Nothing in this
+     mark is allowed to go black. */
+  color: var(--cyan);
+  --neon: var(--accent);
+  height: 2.6em;
+  width: auto;
+  vertical-align: -0.95em;
+  margin-right: 0.5em;
+  filter: drop-shadow(0 0 8px var(--cyan-glow));
+}
+
+/* .tutorial-brand paints its own text with a clipped gradient and
+   -webkit-text-fill-color:transparent. That property also applies to SVG
+   <text>, so without resetting it the wordmark inside the lockup renders
+   invisible — setting fill alone is not enough.
+
+   The logo also sets its own face, not the page body font: Share Tech Mono
+   ships no bold weight, so font-weight:700 on the wordmark silently did nothing
+   and MENKE rendered as thin as its own subtitle. */
+.brand-lockup text {
+  -webkit-text-fill-color: currentColor;
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+/* -webkit-text-fill-color wins over fill on SVG <text>, so the subtitle needs
+   its own value or it keeps currentColor instead of the monogram's accent. */
+.brand-lockup .lk2 { -webkit-text-fill-color: var(--accent); }
+
+/* The lockup draws itself in on load: the package strokes on, then the pins and
+   the monogram follow.
+
+   pathLength="1" on each path normalises its length to 1 user unit, so one
+   dasharray works for all of them regardless of actual geometry. Without it the
+   dasharray has to exceed the true perimeter, and any excess is dead time at the
+   start where the dash has not reached the path yet and nothing is drawn.
+
+   The <text> is deliberately not animated — .tutorial-brand already runs its own
+   entrance over the whole header line, and stacking a second one on the wordmark
+   reads as two logos arriving separately. */
+@keyframes lk-draw { to { stroke-dashoffset: 0; } }
+
+.brand-lockup .lk-hex,
+.brand-lockup .lk-late {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: lk-draw 0.55s ease-out forwards;
+}
+.brand-lockup .lk-late { animation-delay: 0.4s; animation-duration: 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-lockup .lk-hex,
+  .brand-lockup .lk-late { animation: none; stroke-dashoffset: 0; }
+}
