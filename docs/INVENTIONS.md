@@ -42,7 +42,7 @@ mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
 `cranelift_object`; seventeen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
 (arb's compute core — its `calc` / expression layer — lowers to a `fusevm::Chunk` via
 `arb/src/expr.rs` and runs on the VM, while its widget / layout construction stays a native
-`ratatui` interpreter). `fusevm/src/op.rs` (~233 ops),
+`ratatui` interpreter). `fusevm/src/op.rs` (~234 ops),
 `host.rs`/`awk_host.rs` host-trait injection seam. *Caveat:* "None found", not proven —
 the deep search (see analysis) found no project meeting all three criteria but cannot
 cover private/defunct work; the nearest near-miss (Deegen) is contestable. JIT is
@@ -212,7 +212,7 @@ methods (`def self.m`), exceptions (`begin`/`rescue`/`ensure`, method-body and m
 default args, the standalone `ruby` binary + REPL, the rkyv bytecode cache, an AOP
 method-intercept registry, and an LSP server. *Basis:*
 `rubylang/src/{lexer,parser,compiler,host,cache,intercepts,lsp,dap,aot}.rs` (~6,989 L);
-`Cargo.toml` `fusevm = "0.14.10"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
+`Cargo.toml` `fusevm = "0.15.0"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
 harness (`cargo run --bin parity`) diffs a **35-snippet** corpus live against the reference
 `ruby`, and `tests/parity.rs` replays the frozen outputs in CI with no `ruby` installed.
 *Caveat:* mruby already compiles Ruby to bytecode (in C, since 2012) and Artichoke is a
@@ -235,7 +235,7 @@ REPL, the core builtin surface (`print`/`len`/`range`/`int`/`str`/`list`/`dict`/
 run, AOT compilation to a standalone native executable, an AOP method-intercept registry,
 a DAP debug server, and an LSP server. *Basis:*
 `pythonrs/src/{lexer,parser,compiler,host,cache,intercepts,lsp,dap,aot}.rs` (~5,999 L);
-`Cargo.toml` `fusevm = "0.14.10"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
+`Cargo.toml` `fusevm = "0.15.0"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
 harness (`cargo run --bin parity`, `src/bin/parity.rs`) diffs the example corpus live
 against the reference `python3`. *Caveat:* CPython already compiles Python to bytecode
 (in C, on its own VM) and PyPy JIT-compiles Python on RPython's own tracing JIT, while
@@ -278,7 +278,7 @@ target-gated off), R output routed through a capture buffer, exporting
 `rlang_eval` / `rlang_alloc` / `rlang_free` for a web-worker host (`wasm.rs`).
 *Basis:*
 `rlang/src/{lexer,parser,compiler,host,builtins,ffi,cache,intercepts,lsp,dap,repl,aot,aot_runtime,wasm}.rs`;
-`Cargo.toml` native `fusevm = { version = "0.14.10", features = ["jit",
+`Cargo.toml` native `fusevm = { version = "0.15.0", features = ["jit",
 "jit-disk-cache", "aot", "ffi"] }` with the wasm target on the bare interpreter, and
 `crate-type = ["rlib", "staticlib"]` (the wasm `cdylib` emitted on demand via `cargo
 rustc --crate-type cdylib --target wasm32-unknown-unknown`); a differential parity harness (`cargo run --bin
@@ -311,7 +311,7 @@ a clear error, not a silent miss — plus an LSP server, a DAP debug server, and
 `go-rs/src/compiler.rs` (3,930 L), `host.rs` (2,138 L), `parser.rs` (2,091 L),
 `lsp.rs` (624 L), `lexer.rs` (610 L), `dap.rs` (572 L), `aot_native.rs` (120 L), plus
 `pkg.rs` / `stdlib_vendor.rs` / `rust_ffi.rs`; `Cargo.toml`
-`fusevm = { version = "0.14.17", features = ["jit", "jit-disk-cache", "aot", "ffi"] }`.
+`fusevm = { version = "0.15.0", features = ["jit", "jit-disk-cache", "aot", "ffi"] }`.
 *Caveat:* the `gc` toolchain already compiles Go to native code, and TinyGo already
 lowers Go through LLVM — so the defensible "first" is the narrower combination: Go lowered
 onto a *shared* multi-frontend bytecode + Cranelift JIT + native AOT, authored in Rust,
@@ -351,7 +351,7 @@ frontend extension ops for the operators whose Tcl meaning differs from the VM's
 one (`/` and `%` floored toward negative infinity, integral `**`, and a normalize op for
 Tcl's boolean and double formatting). *Basis:* `tclrs/src/parser.rs` (773 L),
 `compiler.rs` (1289 L), `expr.rs` (421 L), `runtime.rs` (1481 L), 25 modules in all;
-`Cargo.toml` `fusevm = "0.14.20"` with `jit` / `jit-disk-cache` / `aot` / `ffi`;
+`Cargo.toml` `fusevm = "0.15.0"` with `jit` / `jit-disk-cache` / `aot` / `ffi`;
 tclsh 9.0.4 is the specification and the suites diff against it
 directly — 17 test binaries in all (`tests/*.rs`), among them per-area differential suites
 for words, execution, procedures, lists, strings, arrays and coroutines, 14 rule-by-rule
@@ -428,7 +428,7 @@ pipe architecture**: the TUI renders to `/dev/tty` and reads keys from `/dev/tty
 `vipe`), so stdout stays a clean data channel and `find / | arb | consumer` streams through
 untouched while the UI runs. The compute core **is wired to fusevm** — expressions and the
 `calc` op lower to a `fusevm::Chunk` and run on the VM + three-tier Cranelift JIT
-(`arb/src/expr.rs`; `Cargo.toml` depends on `fusevm = "0.14.10"` with `jit`). The
+(`arb/src/expr.rs`; `Cargo.toml` depends on `fusevm = "0.15.0"` with `jit`). The
 world-first framing is the **synthesis** — no prior tool is a pipe-native, dual-target
 (terminal + web), component-generating UI language with a shareable dashboard registry
 (each leg has prior art: Tcl'88 / Tk'88 / Expect'90, dasel, ratatui, Streamlit /
@@ -473,7 +473,7 @@ claims above are all in-tree and build-green. MIT.
 
 **12. Compiled Unix shell: bytecode VM, JIT, no tree-walker** — `high`
 First Unix shell whose entire execution model compiles every construct to register-based
-bytecode (fusevm, ~233 ops) and runs on a JIT'd VM, with the AST tree-walker **physically
+bytecode (fusevm, ~234 ops) and runs on a JIT'd VM, with the AST tree-walker **physically
 removed** rather than kept as a fallback. *Basis:* `docs/DESIGN_GOALS.md` §0x06 Phase F
 deletes `execute_simple/pipeline/list/compound/command_bg` (~1,275 LOC) from `src/exec.rs`;
 `tests/tree_walker_absent.rs` + `tests/no_tree_walker_dispatch.rs` (8 + 160 = 168 tests) pin absence
