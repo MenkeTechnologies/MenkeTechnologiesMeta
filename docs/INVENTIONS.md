@@ -36,7 +36,8 @@ AOT object compiler — and **seventeen independent language frontends** (`stryk
 original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode. Every
 one ships the full toolchain: a standalone binary, `--lsp` and `--dap` servers, shell
 completions, man pages, generated `reference.html`, inline Rust FFI, and
-`--dump-tokens`/`--dump-ast`/`--disasm` introspection. The
+`--dump-tokens`/`--dump-ast`/`--disasm` introspection, and the `--tiers` execution-tier
+report (#11n). The
 novelty is the combination: solo author **+** from-scratch VM with a genuine machine-code
 JIT **+** 17 production frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
@@ -416,6 +417,33 @@ linked, for two decades. The novel legs are the language (Rust), the shared `fus
 substrate across seventeen frontends, and compile-time registration into a statically
 resolved dispatch; signatures are limited to fusevm's marshalling set (≤4 `i64` → `i64`,
 ≤3 `f64` → `f64`, `*const c_char` → `i64` or `*const c_char`).
+
+**11n. `--tiers` — every frontend can be asked which JIT tier its own bytecode actually reached** — `med`
+`<binary> --tiers <script>` runs the program, then reports, per compiled chunk, whether the
+block tier holds native code for it, which loop headers the tracing tier compiled, which it
+blacklisted, and — when a tier refused — a histogram of the JIT-ineligible ops that caused
+the refusal. Shipped in **all seventeen** frontends. The point is that the report does not
+guess: it asks fusevm's own predicates, the same ones the compiler consults before doing the
+work, so "the JIT is enabled" and "the JIT compiled this" stop being the same sentence.
+*Basis:* `<repo>/src/tiers.rs` in sixteen frontends and `strykelang/strykelang/tiers.rs` in
+stryke — all seventeen tracked, 5,707 lines total; each queries
+`fusevm::JitCompiler::is_block_eligible` (`fusevm/src/jit.rs:8059`), `block_jit_is_compiled`
+(`:8069`), `find_jit_region` (`:8078`), `is_trace_eligible` (`:8231`), `trace_is_compiled`
+(`:8238`), and `trace_is_blacklisted` (`:8321`) after the run. `Report { chunks:
+Vec<ChunkTiers> }` carries one section per chunk, because a hot loop usually lives in a
+function body and reporting the main chunk alone answers the wrong question; the `== name ==`
+header is suppressed when a program compiled to exactly one chunk. What differs per frontend
+is only where the chunks come from — `Program` main plus functions for the dynamic
+frontends, BEGIN/rule/END for awkrs, script plus `functions_compiled` for zshrs, closure
+bodies walked off the host arena for elisprs, one chunk for the JVM frontends and go-rs.
+*Caveat:* not a first in the sense of "nobody reports JIT state" — every serious JIT has some
+introspection (`-XX:+PrintCompilation`, `--jit-debug`, `perf` annotations). The claim is
+narrower: one report format, one set of predicates, one implementation shape, answered
+identically by seventeen different languages, because the tier decisions are the shared
+engine's rather than each language's. Whether a given program reaches native code is a
+property of that program's loop shape, not of the frontend — several frontends lower loop
+bodies through `CallBuiltin`/`Extended`, which the tracer declines, and the report is what
+makes that visible instead of inferred.
 
 **11e. arb — pipe-native UI-generating DSL that turns any Unix stream into a live TUI (and web) dashboard** — `med`
 arb is an original language (not a port) that drops into a Unix pipe and spawns a dynamic
