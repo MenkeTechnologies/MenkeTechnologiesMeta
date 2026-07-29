@@ -109,3 +109,42 @@ because that is the parent's colour and the two would not separate.
 **Never edit the hex or the monogram in a branch file.** They are the family
 DNA; change them in `mark.svg` and propagate. A branch that redraws them stops
 reading as part of the set, which is the only thing holding the five together.
+
+### Consumers
+
+| Where | How the geometry gets there |
+|---|---|
+| `app-store/store.js` | `BRANCH_CORE` + `branchCorners()` restate the paths as inline SVG; branch picked per product by category. |
+| PDF covers | TikZ ports of these paths in each book's `scripts/reference_pdf_theme.tex` (`\mtmark`, `\mtcorners`, `\mtmark{audio,publishing,app,oss}`). |
+
+Neither consumer can `<img>` these files — one is a JS string, the other is
+LaTeX — so both restate the paths. That is the drift risk the geometry rules
+above exist to contain: change a path here and both copies must follow.
+
+**On a PDF cover the lockup is two marks: MTPublishing, then the branch of the
+product the book documents.** Every book, reference manual and plugin catalog is
+an MTPublishing product, so the left mark never varies; the right one is what
+says whether the thing being documented is an app, a plugin or open source.
+Books that document no product — the novels, the invention ledger — drop the
+second mark rather than borrow a branch they do not belong to.
+
+**The parent signs the cover once, above that row, as the full lockup**
+(`\mtlockup` — mark plus wordmark, horizontal). It stands where the author line
+used to, and there is no MENKETECHNOLOGIES rule under the branch marks any more:
+between a labelled third mark, a foot rule and the lockup, the cover was setting
+the same word three times.
+
+`\mtlockup` is a port of the app-store header's `svg.brand-lockup`
+(`app-store/index.html`), not a separate drawing — same 180×64 viewBox, MENKE at
+26 units on the y=32 baseline, TECHNOLOGIES at 9.5 on y=48, both left-aligned at
+x=78. It is specified in **grid units, not points**, and scaled as a whole, so
+the source's proportions survive any size change. SVG letter-spacing is a length
+and fontspec's `LetterSpace` is a percentage of the font size, so 6/26 and
+2.9/9.5 become 23 and 30.5.
+
+**In the TikZ port every y is `64 - y`** (SVG counts down the page, TikZ counts
+up) **and the accent is a named colour, never a literal hex.** The print builds
+rewrite `\definecolor` targets to greyscale for the black-ink interiors; a
+literal hex survives that rewrite as a stray colour object and bills the whole
+interior at the premium-colour rate. In black ink the four branches are told
+apart by the corner glyph's shape alone, which is what the shapes are for.
