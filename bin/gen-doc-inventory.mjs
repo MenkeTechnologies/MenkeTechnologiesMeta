@@ -108,6 +108,7 @@ const html = `<!DOCTYPE html>
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="MenkeTechnologiesMeta documentation inventory + chrome-sync audit — a complete clickable index of every HUD doc page under docs/, verifying each loads the shared hud-static.css + hud-theme.js + tutorial.css chrome, has a styled header, and has header nav links. Fake/unsynced/dead-end pages are flagged.">
   <title>MenkeTechnologiesMeta — Doc Inventory &amp; Chrome Audit</title>
+  <link rel="icon" type="image/svg+xml" href="brand/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
@@ -137,13 +138,25 @@ const html = `<!DOCTYPE html>
     .badge-bad { color: var(--red); border-color: var(--red); }
     .badge-api { color: var(--cyan); border-color: var(--cyan); }
     .inv-api a { color: var(--cyan); }
+    /* Corporate mark. .tutorial-brand paints its text with a clipped gradient
+       and -webkit-text-fill-color:transparent, which applies to glyphs only and
+       would leave an SVG child inheriting an unrelated colour, so the mark sets
+       both of its colours explicitly here instead of relying on currentColor. */
+    .brand-mark {
+      color: var(--cyan);
+      --neon: var(--accent);
+      width: 1.15em; height: 1.15em;
+      vertical-align: -0.2em;
+      margin-right: 0.4em;
+      filter: drop-shadow(0 0 8px var(--cyan-glow));
+    }
   </style>
 </head>
 <body>
   <header class="tutorial-header">
     <div class="tutorial-header-inner">
       <div>
-        <h1 class="tutorial-brand">// DOC INVENTORY &amp; CHROME AUDIT</h1>
+        <h1 class="tutorial-brand"><svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="round"><path d="M32 4 L58 18 V46 L32 60 L6 46 V18 Z"/></g><g fill="none" stroke="var(--neon, #00b0ff)" stroke-width="4.5" stroke-linejoin="miter" stroke-linecap="butt"><path d="M16 42 V23 L23 31 L30 23 V42"/><path d="M35 23 H48 M41.5 23 V42"/></g></svg>// DOC INVENTORY &amp; CHROME AUDIT</h1>
         <nav class="tutorial-crumbs" aria-label="Breadcrumb">
 ${nav('Docs','index.html')}
           <span class="sep">/</span>

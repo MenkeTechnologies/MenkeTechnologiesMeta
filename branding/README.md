@@ -1,0 +1,74 @@
+# MenkeTechnologies — corporate mark
+
+`DIE`: an MT monogram inside a hex package with pin stubs. This is the
+**company** mark. Products keep their own icons — the chamfered frame in
+`zwire/branding/icon.svg` and `zpwr-daw/icon.svg` is what unifies the product
+family, and this mark does not replace it.
+
+Selected from nine directions; see `../logos.html` for the full board.
+
+## Files
+
+| File | Use |
+|---|---|
+| `mark.svg` | Default. Anywhere at 32px and above. |
+| `mark-compact.svg` | 32px and below. Pin stubs dropped, strokes thickened. |
+| `mark-mono.svg` | One ink — print, foil, laser etch, anything that cannot carry the cyan. |
+| `favicon.svg` | Browser tabs only. Carries its own ground; hex dropped for the tile. |
+| `lockup.svg` | Mark plus wordmark, horizontal. |
+| `icon-1024.svg` | App icon on the house ground. |
+
+## Colour
+
+| Hex | Role |
+|---|---|
+| `#04060c` | Void — deepest ground |
+| `#0b1020` | Panel — icon ground, favicon ground |
+| `#8cdbff` | Package — the hex outline and pin stubs |
+| `#00b0ff` | Monogram — the MT |
+| `#0069a8` | Paper-safe monogram |
+
+All values are already in use in the product icons; nothing here is a new
+colour to maintain.
+
+`mark.svg`, `mark-compact.svg` and `lockup.svg` draw the package in
+`currentColor` and the monogram in `var(--neon)`. Set both from the host page
+and one file serves every ground:
+
+```css
+.brand-mark { color: #8cdbff; --neon: #00b0ff; }         /* dark ground */
+.brand-mark { color: #0b1020; --neon: #0069a8; }          /* light ground */
+```
+
+**On light grounds the monogram must be `#0069a8`, not `#00b0ff`.** Bright cyan
+on white does not carry enough contrast to read at any size.
+
+## Rules
+
+- **Clear space** — one hex width on every side. Nothing intrudes, including
+  the wordmark in a custom lockup.
+- **Minimum size** — 32px for `mark.svg`, 20px for `mark-compact.svg`, 16px for
+  `favicon.svg`. Below 32px the pin stubs fuse into the package edge, which is
+  what the compact variant exists to solve. Do not scale the full variant below
+  32px and hope.
+- **Below 20px, use `favicon.svg` and nothing else.** It drops the hex entirely
+  and lets the tile stand in as the package, because at 16px a stroked hex and
+  the monogram inside it compete for the same pixels and both turn to mush. This
+  was measured, not assumed — the earlier hex-in-tile favicon read as a solid
+  blob at 16px. `favicon.svg` is a tab icon, not a small mark; do not use it
+  anywhere the full variants fit.
+- **Keep the M and the T apart.** They sit 4 units clear at x=31 and x=35 and the
+  monogram is drawn with `stroke-linecap="butt"` to hold that. Square caps
+  extend every endpoint by half the stroke width, which closes the gap and fuses
+  the two letters into one blob — this is the specific failure the geometry is
+  shaped to avoid, so do not change the caps.
+- **Never set the package and the monogram to the same value** in the two-colour
+  variants. The MT reads as figure only because it is a different value from the
+  hex around it. If one ink is all that is available, use `mark-mono.svg`, which
+  is drawn to survive that by weight instead of by colour.
+- **Do not redraw the geometry.** `icon-1024.svg` scales the canonical 64-unit
+  paths by 16 rather than restating them at 1024, so it cannot drift. Any new
+  variant should do the same.
+- **Do not rotate, shear, add a drop shadow to the paths, or place the mark on a
+  photographic ground.** The glow filter in `icon-1024.svg` is the one sanctioned
+  effect and it belongs to that file only.

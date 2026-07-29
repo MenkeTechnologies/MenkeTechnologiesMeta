@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MenkeTechnologies — Identity Exploration</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='12'%20fill='%230b1020'/%3E%3Cg%20fill='none'%20stroke='%2300b0ff'%20stroke-width='6'%20stroke-linejoin='miter'%20stroke-linecap='butt'%3E%3Cpath%20d='M10%2045%20V21%20L20%2032%20L30%2021%20V45'/%3E%3Cpath%20d='M35%2021%20H54%20M44.5%2021%20V45'/%3E%3C/g%3E%3Cg%20fill='none'%20stroke='%238cdbff'%20stroke-width='4'%3E%3Cpath%20d='M0%2024%20H4%20M0%2040%20H4%20M64%2024%20H60%20M64%2040%20H60'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root {
+    /* inherited from zwire/branding/icon.svg + zpwr-daw/icon.svg */
+    --void-1: #0b1020;
+    --void-2: #04060c;
+    --cy: #00b0ff;
+    --cy-hi: #8cdbff;
+    --hot: #ff2a6d;
+    --cy-paper: #0069a8;
+
+    --bg: #eceff5;
+    --panel: #ffffff;
+    --ink: #0b1020;
+    --muted: #4d5a72;
+    --line: #d4dae6;
+    --accent: #0069a8;
+    --shadow: 0 1px 0 rgba(11,16,32,.05), 0 12px 32px -20px rgba(11,16,32,.45);
+
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --s1: .375rem; --s2: .75rem; --s3: 1.25rem; --s4: 2rem; --s5: 3.25rem; --s6: 5rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #04060c; --panel: #0a0f1c; --ink: #dbe7f5; --muted: #7b8ba6;
+      --line: #17203a; --accent: #35c8ff;
+      --shadow: 0 0 0 1px rgba(53,200,255,.04), 0 18px 44px -28px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #04060c; --panel: #0a0f1c; --ink: #dbe7f5; --muted: #7b8ba6;
+    --line: #17203a; --accent: #35c8ff;
+    --shadow: 0 0 0 1px rgba(53,200,255,.04), 0 18px 44px -28px rgba(0,0,0,.9);
+  }
+  :root[data-theme="light"] {
+    --bg: #eceff5; --panel: #ffffff; --ink: #0b1020; --muted: #4d5a72;
+    --line: #d4dae6; --accent: #0069a8;
+    --shadow: 0 1px 0 rgba(11,16,32,.05), 0 12px 32px -20px rgba(11,16,32,.45);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: var(--s4) var(--s3) var(--s6); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  h2 {
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+  p { margin: 0; }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s2) var(--s4);
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--s2);
+  }
+  .toolbar { display: flex; gap: var(--s2); align-items: center; }
+  .toggle {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  .toggle:hover { color: var(--ink); border-color: var(--accent); }
+  .toggle[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+  .toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- hero ---------- */
+  .hero {
+    margin-top: var(--s5);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s4);
+  }
+  @media (min-width: 860px) { .hero { grid-template-columns: 1.15fr .85fr; align-items: center; } }
+
+  .stage {
+    position: relative;
+    background:
+      radial-gradient(120% 90% at 30% 0%, #101a33 0%, var(--void-1) 45%, var(--void-2) 100%);
+    border-radius: 4px;
+    padding: var(--s5) var(--s4);
+    overflow: hidden;
+    color: var(--cy-hi);
+  }
+  .stage::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(0,176,255,.10) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0,176,255,.10) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(80% 70% at 50% 45%, #000 20%, transparent 100%);
+  }
+  .stage::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+    opacity: .55;
+  }
+  .lockup {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--s3);
+    justify-content: center;
+  }
+  .hero-mark { width: 116px; height: 116px; filter: drop-shadow(0 0 14px rgba(0,176,255,.55)); }
+  .hero-mark .stroke { stroke-dasharray: 220; stroke-dashoffset: 220; animation: draw 1.1s ease-out .15s forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .blink { animation: blink 1.1s steps(1) .9s infinite; }
+  @keyframes blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+
+  .wordmark { font-family: var(--mono); line-height: 1.05; }
+  .wordmark .l1 {
+    display: block;
+    font-size: clamp(1.6rem, 4.4vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: #eaf6ff;
+  }
+  .wordmark .l2 {
+    display: block;
+    font-size: clamp(.62rem, 1.6vw, .84rem);
+    letter-spacing: .46em;
+    text-transform: uppercase;
+    color: var(--cy);
+    margin-top: .5em;
+  }
+  .thesis { display: grid; gap: var(--s2); align-content: center; }
+  .thesis h1 { font-family: var(--mono); font-size: clamp(1.15rem, 2.4vw, 1.5rem); font-weight: 700; letter-spacing: -.01em; }
+  .thesis p { color: var(--muted); max-width: 46ch; }
+
+  /* ---------- section ---------- */
+  section { margin-top: var(--s6); }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s3);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--s2);
+    margin-bottom: var(--s4);
+    flex-wrap: wrap;
+  }
+  .sec-head p { color: var(--muted); font-size: 13.5px; max-width: 60ch; }
+
+  /* ---------- mark grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--s3);
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    box-shadow: var(--shadow);
+    display: grid;
+    overflow: hidden;
+  }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; }
+  .tile {
+    aspect-ratio: 1 / .82;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+  .tile.void {
+    background: linear-gradient(160deg, var(--void-1), var(--void-2));
+    color: var(--cy-hi);
+    --neon: var(--cy);
+    --flare: var(--hot);
+  }
+  .tile.paper {
+    background: #f4f6fa;
+    color: #0b1020;
+    --neon: var(--cy-paper);
+    --flare: #c4004f;
+    border-left: 1px solid var(--line);
+  }
+  .tile svg { width: 58%; height: auto; transition: transform .25s ease, filter .25s ease; }
+  .card:hover .tile.void svg { filter: drop-shadow(0 0 9px rgba(0,176,255,.7)); }
+  .card:hover .tile svg { transform: scale(1.05); }
+  body.grid-on .tile::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(0,176,255,.22) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0,176,255,.22) 1px, transparent 1px);
+    background-size: 12.5% 15.2%;
+  }
+  body.grid-on .tile.paper::before { background-image:
+      linear-gradient(to right, rgba(0,105,168,.22) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0,105,168,.22) 1px, transparent 1px); }
+
+  .meta { padding: var(--s3); display: grid; gap: var(--s1); border-top: 1px solid var(--line); }
+  .meta-top { display: flex; align-items: baseline; gap: .6em; }
+  .idx { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .1em; }
+  .name { font-family: var(--mono); font-size: .95rem; font-weight: 700; letter-spacing: .08em; }
+  .why { color: var(--muted); font-size: 13.5px; }
+  .scales {
+    display: flex; align-items: flex-end; gap: var(--s2);
+    margin-top: var(--s1); padding-top: var(--s2);
+    border-top: 1px dashed var(--line);
+  }
+  .scales .chip { display: grid; justify-items: center; gap: 4px; color: var(--muted); }
+  .chip svg { color: var(--ink); --neon: var(--accent); --flare: var(--hot); display: block; }
+  .chip span { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; }
+  .verdict {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 2px;
+    align-self: center;
+    white-space: nowrap;
+  }
+  .v-ok { color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+  .v-warn { color: #b06a00; border: 1px solid rgba(176,106,0,.45); }
+  @media (prefers-color-scheme: dark) { .v-warn { color: #ffb020; border-color: rgba(255,176,32,.4); } }
+  :root[data-theme="dark"] .v-warn { color: #ffb020; border-color: rgba(255,176,32,.4); }
+  :root[data-theme="light"] .v-warn { color: #b06a00; border-color: rgba(176,106,0,.45); }
+
+  /* ---------- applications ---------- */
+  .apps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--s3); }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: var(--s3);
+    display: grid;
+    gap: var(--s2);
+    box-shadow: var(--shadow);
+  }
+  .panel h3 { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  .panel .note { font-size: 13px; color: var(--muted); }
+
+  .appicon {
+    width: 128px; height: 128px;
+    border-radius: 28px;
+    background: radial-gradient(120% 100% at 30% 0%, #16233f, var(--void-1) 55%, var(--void-2));
+    display: grid; place-items: center;
+    color: var(--cy-hi);
+    --neon: var(--cy); --flare: var(--hot);
+    box-shadow: inset 0 0 0 1px rgba(0,176,255,.22), 0 10px 30px -14px rgba(0,0,0,.8);
+  }
+  .appicon svg { width: 62%; filter: drop-shadow(0 0 8px rgba(0,176,255,.5)); }
+
+  .favistrip { display: flex; align-items: flex-end; gap: var(--s2); }
+  .favi {
+    background: var(--void-2);
+    display: grid; place-items: center;
+    color: var(--cy-hi); --neon: var(--cy); --flare: var(--hot);
+    border-radius: 2px; padding: 3px;
+  }
+
+  .mono-row { display: flex; gap: var(--s2); flex-wrap: wrap; }
+  .mono-swatch { width: 76px; height: 76px; display: grid; place-items: center; border-radius: 2px; }
+  .mono-swatch svg { width: 60%; }
+  .sw-black { background: #f4f6fa; color: #000; --neon: #000; --flare: #000; }
+  .sw-white { background: #04060c; color: #fff; --neon: #fff; --flare: #fff; }
+  .sw-cy    { background: var(--cy); color: #04060c; --neon: #04060c; --flare: #04060c; }
+
+  .term {
+    background: var(--void-2);
+    border-radius: 4px;
+    border: 1px solid #12203a;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: #b9d8ef;
+    overflow-x: auto;
+  }
+  .term-bar { display: flex; gap: 6px; padding: 8px 10px; border-bottom: 1px solid #12203a; align-items: center; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #1d2c47; }
+  .term-bar .title { margin-left: auto; font-size: 10px; letter-spacing: .16em; color: #4a6383; text-transform: uppercase; }
+  .term-body { padding: 12px 14px; display: grid; gap: 6px; white-space: nowrap; }
+  .term-body .line { display: flex; align-items: center; gap: 8px; }
+  .term-body svg { width: 15px; height: 15px; color: var(--cy-hi); --neon: var(--cy); --flare: var(--hot); flex: none; }
+  .term-body .dim { color: #4a6383; }
+
+  /* ---------- spec ---------- */
+  .spec { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--s3); }
+  .swatches { display: grid; gap: 8px; }
+  .sw {
+    display: flex; align-items: center; gap: var(--s2);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .sw i { width: 26px; height: 26px; border-radius: 2px; flex: none; border: 1px solid var(--line); }
+  .sw .role { color: var(--muted); margin-left: auto; text-transform: uppercase; font-size: 10px; letter-spacing: .1em; }
+  dl.rules { display: grid; gap: 10px; margin: 0; font-size: 13px; }
+  dl.rules dt { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  dl.rules dd { margin: 2px 0 0; color: var(--muted); }
+
+  footer {
+    margin-top: var(--s6);
+    border-top: 1px solid var(--line);
+    padding-top: var(--s2);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex; justify-content: space-between; gap: var(--s3); flex-wrap: wrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-mark .stroke { animation: none; stroke-dashoffset: 0; }
+    .blink { animation: none; }
+    .card:hover .tile svg { transform: none; }
+    * { transition: none !important; }
+  }
+
+  /* standalone-page additions (the artifact host supplied these) */
+  html { color-scheme: light dark; }
+  img, svg { display: block; max-width: 100%; }
+  code {
+    font-family: var(--mono);
+    font-size: .92em;
+    padding: .1em .35em;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+  }
+  .why code { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+</style>
+</head>
+<body>
+
+<!-- ============ mark sprite sheet ============ -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="m-prompt" viewBox="0 0 64 64">
+      <path d="M8 47 V20 L26 38 L44 20 V47" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="miter" stroke-linecap="square"/>
+      <rect class="blink" x="50" y="38" width="9" height="9" fill="var(--neon)"/>
+    </symbol>
+
+    <symbol id="m-redirect" viewBox="0 0 64 64">
+      <g fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="miter" stroke-linecap="square">
+        <path d="M10 18 L24 32 L10 46"/>
+        <path d="M28 18 L42 32 L28 46"/>
+      </g>
+      <rect x="47" y="41" width="12" height="6" fill="var(--neon)"/>
+    </symbol>
+
+    <symbol id="m-block" viewBox="0 0 64 64">
+      <mask id="mk-block">
+        <rect x="0" y="0" width="64" height="64" fill="#000"/>
+        <rect x="8" y="8" width="48" height="48" rx="4" fill="#fff"/>
+        <path d="M20 44 V23 L32 35 L44 23 V44" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="miter" stroke-linecap="square"/>
+      </mask>
+      <rect x="8" y="8" width="48" height="48" rx="4" fill="currentColor" mask="url(#mk-block)"/>
+      <rect x="8" y="8" width="48" height="48" rx="4" fill="none" stroke="var(--neon)" stroke-width="2"/>
+    </symbol>
+
+    <symbol id="m-trace" viewBox="0 0 64 64">
+      <path d="M11 50 V25 L18 18 L32 32 L46 18 L53 25 V50" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      <g fill="var(--neon)">
+        <circle cx="11" cy="50" r="4.5"/>
+        <circle cx="53" cy="50" r="4.5"/>
+        <circle cx="32" cy="32" r="4.5"/>
+      </g>
+    </symbol>
+
+    <symbol id="m-die" viewBox="0 0 64 64">
+      <g stroke="currentColor" fill="none" stroke-width="4" stroke-linejoin="round" stroke-linecap="butt">
+        <path d="M32 6 L55 19 V45 L32 58 L9 45 V19 Z"/>
+        <path d="M9 27 H2 M9 37 H2 M55 27 H62 M55 37 H62"/>
+      </g>
+      <g fill="none" stroke="var(--neon)" stroke-width="4.5" stroke-linejoin="miter" stroke-linecap="square">
+        <path d="M19 40 V25 L26 32 L33 25 V40"/>
+        <path d="M36 25 H46 M41 25 V40"/>
+      </g>
+    </symbol>
+
+    <symbol id="m-channel" viewBox="0 0 64 64">
+      <path d="M12 14 V50 M52 14 V50" stroke="currentColor" stroke-width="6" stroke-linecap="square" fill="none"/>
+      <path d="M22 19 L32 43 L42 19" fill="none" stroke="var(--neon)" stroke-width="5" stroke-linejoin="miter" stroke-linecap="square"/>
+    </symbol>
+
+    <symbol id="m-tear" viewBox="0 0 64 64">
+      <clipPath id="cl-t1"><rect x="0" y="0" width="64" height="26"/></clipPath>
+      <clipPath id="cl-t2"><rect x="0" y="26" width="64" height="10"/></clipPath>
+      <clipPath id="cl-t3"><rect x="0" y="36" width="64" height="28"/></clipPath>
+      <g fill="none" stroke-width="6" stroke-linejoin="miter" stroke-linecap="square">
+        <path d="M12 47 V18 L32 38 L52 18 V47" stroke="currentColor" clip-path="url(#cl-t1)"/>
+        <path d="M12 47 V18 L32 38 L52 18 V47" stroke="currentColor" clip-path="url(#cl-t3)"/>
+        <g clip-path="url(#cl-t2)">
+          <path d="M12 47 V18 L32 38 L52 18 V47" stroke="var(--flare)" transform="translate(-3,0)" opacity=".85"/>
+          <path d="M12 47 V18 L32 38 L52 18 V47" stroke="var(--neon)" transform="translate(9,0)" opacity=".85"/>
+          <path d="M12 47 V18 L32 38 L52 18 V47" stroke="currentColor" transform="translate(3,0)"/>
+        </g>
+      </g>
+    </symbol>
+
+    <symbol id="m-stack" viewBox="0 0 64 64">
+      <g fill="currentColor">
+        <rect x="6" y="22" width="8" height="26"/>
+        <rect x="17" y="34" width="8" height="14"/>
+        <rect x="28" y="28" width="8" height="20"/>
+        <rect x="39" y="34" width="8" height="14"/>
+        <rect x="50" y="22" width="8" height="26"/>
+      </g>
+      <g fill="var(--neon)">
+        <rect x="6" y="15" width="8" height="4"/>
+        <rect x="17" y="27" width="8" height="4"/>
+        <rect x="28" y="21" width="8" height="4"/>
+        <rect x="39" y="27" width="8" height="4"/>
+        <rect x="50" y="15" width="8" height="4"/>
+      </g>
+    </symbol>
+
+    <symbol id="m-chamfer" viewBox="0 0 64 64">
+      <path d="M18 6 H46 L58 18 V46 L46 58 H18 L6 46 V18 Z" fill="none" stroke="var(--neon)" stroke-width="3.5" stroke-linejoin="miter"/>
+      <g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square">
+        <path d="M6 24 V18 L12 18"/><path d="M58 24 V18 L52 18"/>
+        <path d="M6 40 V46 L12 46"/><path d="M58 40 V46 L52 46"/>
+      </g>
+      <path d="M20 43 V22 L32 34 L44 22 V43" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="miter" stroke-linecap="square"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">MenkeTechnologies · identity exploration · nine marks</p>
+    <div class="toolbar">
+      <button class="toggle" id="gridBtn" type="button" aria-pressed="false">Construction grid</button>
+      <button class="toggle" id="themeBtn" type="button">Theme: auto</button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="stage">
+      <div class="lockup">
+        <svg class="hero-mark" viewBox="0 0 64 64" role="img" aria-label="MenkeTechnologies mark: an MT monogram inside a hex chip package">
+          <g fill="none" stroke="#8cdbff" stroke-width="4" stroke-linejoin="round">
+            <path class="stroke" d="M32 6 L55 19 V45 L32 58 L9 45 V19 Z"/>
+            <path d="M9 27 H2 M9 37 H2 M55 27 H62 M55 37 H62"/>
+          </g>
+          <g fill="none" stroke="#00b0ff" stroke-width="3.5" stroke-linejoin="miter" stroke-linecap="butt">
+            <path d="M19 40 V26 L25 32 L31 26 V40"/>
+            <path d="M35 26 H45 M40 26 V40"/>
+          </g>
+        </svg>
+        <span class="wordmark">
+          <span class="l1">MENKE</span>
+          <span class="l2">Technologies</span>
+        </span>
+      </div>
+    </div>
+    <div class="thesis">
+      <p class="eyebrow">The read · selected 05 DIE</p>
+      <h1>Nine marks cut from the stack. 05 DIE is the one that shipped.</h1>
+      <p>Every mark below is an <strong>M</strong> constructed from something that already exists in the stack — a prompt, a redirect operator, a block cursor, a copper trace, a silicon die, a pipe, a bytecode stack. Nine directions, each shown on the void ground and on paper, because a corporate mark has to survive both.</p>
+      <p>Palette and geometry are inherited from the existing app icons rather than invented, so the corporate mark lands in the same family as the products it sits above. <strong>05 DIE</strong> was selected: an MT monogram inside a hex package with pin stubs, the only mark here carrying both initials. Production files are in <code>branding/</code>.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>The marks</h2>
+      <p>Left tile: void ground, neon cyan. Right tile: paper ground with the darkened cyan — bright <code>#00b0ff</code> fails on white, so the system carries a paper-safe variant. Toggle the construction grid to check every vertex lands on the 8-unit lattice.</p>
+    </div>
+
+    <div class="grid">
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 01, Prompt"><use href="#m-prompt"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-prompt"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">01</span><span class="name">PROMPT</span></div>
+          <p class="why">The M is drawn at exactly 45°, then a block cursor sits on the same baseline waiting for input. The company reads as a live shell.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-prompt"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-prompt"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-prompt"/></svg><span>32</span></span>
+            <span class="verdict v-ok">Holds at 16px</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 02, Redirect"><use href="#m-redirect"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-redirect"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">02</span><span class="name">REDIRECT</span></div>
+          <p class="why">Two chevrons — the append operator <code>&gt;&gt;</code> — with the cursor underscore. Reads as an M sideways and as syntax head-on.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-redirect"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-redirect"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-redirect"/></svg><span>32</span></span>
+            <span class="verdict v-ok">Holds at 16px</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 03, Block"><use href="#m-block"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-block"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">03</span><span class="name">BLOCK</span></div>
+          <p class="why">Inverted: the M is knocked out of a filled block cursor, ringed in cyan. The heaviest mark here — strongest at app-icon size.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-block"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-block"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-block"/></svg><span>32</span></span>
+            <span class="verdict v-ok">Holds at 16px</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 04, Trace"><use href="#m-trace"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-trace"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">04</span><span class="name">TRACE</span></div>
+          <p class="why">The M routed like copper: chamfered corners, via pads at the three terminations. Hardware register, not software.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-trace"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-trace"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-trace"/></svg><span>32</span></span>
+            <span class="verdict v-warn">Pads fuse below 24px</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 05, Die"><use href="#m-die"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">05</span><span class="name">DIE</span><span class="verdict v-ok" style="margin-left:auto">Selected</span></div>
+          <p class="why">MT monogram set inside a hex package with pin stubs. The only mark carrying both initials — and the most literal.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg><span>32</span></span>
+            <span class="verdict v-warn">Needs 32px+</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 06, Channel"><use href="#m-channel"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-channel"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">06</span><span class="name">CHANNEL</span></div>
+          <p class="why">Two pipe characters with a V flowing between them. The M emerges from the negative space rather than being drawn.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-channel"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-channel"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-channel"/></svg><span>32</span></span>
+            <span class="verdict v-ok">Holds at 16px</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 07, Tear"><use href="#m-tear"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-tear"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">07</span><span class="name">TEAR</span></div>
+          <p class="why">One scanline band displaced, fringed magenta and cyan — the channel-split artifact. The most overtly cyberpunk, and the least reproducible in one ink.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-tear"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-tear"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-tear"/></svg><span>32</span></span>
+            <span class="verdict v-warn">Breaks in 1-color</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 08, Stack"><use href="#m-stack"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-stack"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">08</span><span class="name">STACK</span></div>
+          <p class="why">Five columns whose heights spell the M, each capped by a detached cyan cell. Bar chart, VU meter, and bytecode frames at once.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-stack"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-stack"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-stack"/></svg><span>32</span></span>
+            <span class="verdict v-ok">Holds at 16px</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="tiles">
+          <div class="tile void"><svg viewBox="0 0 64 64" role="img" aria-label="Mark 09, Chamfer"><use href="#m-chamfer"/></svg></div>
+          <div class="tile paper"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-chamfer"/></svg></div>
+        </div>
+        <div class="meta">
+          <div class="meta-top"><span class="idx">09</span><span class="name">CHAMFER</span></div>
+          <p class="why">The continuity option: the cut-corner frame and bracket ticks already shipping on the product icons, with the corporate M inside.</p>
+          <div class="scales">
+            <span class="chip"><svg width="16" height="16" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-chamfer"/></svg><span>16</span></span>
+            <span class="chip"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-chamfer"/></svg><span>24</span></span>
+            <span class="chip"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-chamfer"/></svg><span>32</span></span>
+            <span class="verdict v-warn">Ticks drop below 32px</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>05 DIE in use</h2>
+      <p>The selected direction, shipped. Production files live in <code>branding/</code> and the geometry below is those files, not a mockup. The monogram uses butt linecaps so the four-unit gap between the M and the T holds: square caps extend every endpoint by half the stroke width and fuse the two letters into one blob.</p>
+    </div>
+
+    <div class="apps">
+      <div class="panel">
+        <h3>App icon · 1024 → 128</h3>
+        <div class="appicon"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></div>
+        <p class="note">Same squircle radius and ground gradient as the shipping product icons.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Favicon reduction</h3>
+        <div class="favistrip">
+          <span class="favi" style="width:48px;height:48px"><svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></span>
+          <span class="favi" style="width:32px;height:32px"><svg width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></span>
+          <span class="favi" style="width:24px;height:24px"><svg width="18" height="18" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></span>
+          <span class="favi" style="width:16px;height:16px"><svg width="13" height="13" viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></span>
+        </div>
+        <p class="note">At 16px the cursor becomes a single lit pixel block — which is still the right read.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Single-ink reproduction</h3>
+        <div class="mono-row">
+          <span class="mono-swatch sw-black"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></span>
+          <span class="mono-swatch sw-white"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></span>
+          <span class="mono-swatch sw-cy"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg></span>
+        </div>
+        <p class="note">Black on stock, knockout white, and cyan-ground reversal. No gradient required.</p>
+      </div>
+
+      <div class="panel" style="grid-column: 1 / -1;">
+        <h3>As a prompt glyph</h3>
+        <div class="term">
+          <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="title">zshrs</span></div>
+          <div class="term-body">
+            <div class="line"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg><span>cargo build</span></div>
+            <div class="line"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg><span class="dim">~/RustRoverProjects</span><span>git status</span></div>
+            <div class="line"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#m-die"/></svg><span class="blink" style="color:var(--cy)">▌</span></div>
+          </div>
+        </div>
+        <p class="note">The mark doubles as the prompt character in first-party tooling — the identity gets used thousands of times a day instead of once on a README.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Spec</h2>
+      <p>Everything below is already in use somewhere in the codebase; nothing here is a new value to maintain.</p>
+    </div>
+    <div class="spec">
+      <div class="panel">
+        <h3>Palette</h3>
+        <div class="swatches">
+          <span class="sw"><i style="background:#04060c"></i>#04060C<span class="role">void</span></span>
+          <span class="sw"><i style="background:#0b1020"></i>#0B1020<span class="role">panel</span></span>
+          <span class="sw"><i style="background:#00b0ff"></i>#00B0FF<span class="role">cyan</span></span>
+          <span class="sw"><i style="background:#8cdbff"></i>#8CDBFF<span class="role">highlight</span></span>
+          <span class="sw"><i style="background:#0069a8"></i>#0069A8<span class="role">paper-safe</span></span>
+          <span class="sw"><i style="background:#ff2a6d"></i>#FF2A6D<span class="role">flare</span></span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Geometry</h3>
+        <dl class="rules">
+          <dt>Grid</dt><dd>64 × 64 units, all vertices on the 8-unit lattice.</dd>
+          <dt>Diagonals</dt><dd>Exactly 45°. The apex sits 18 units in and 18 units down.</dd>
+          <dt>Stroke</dt><dd>6 units, miter joins, square caps. Never rounded.</dd>
+          <dt>Clear space</dt><dd>One cursor width — 9 units — on every side.</dd>
+        </dl>
+      </div>
+      <div class="panel">
+        <h3>Type</h3>
+        <dl class="rules">
+          <dt>Wordmark</dt><dd>Monospace, 700, +0.04em. MENKE set solid; TECHNOLOGIES tracked to +0.46em to match the cap width above it.</dd>
+          <dt>Why mono</dt><dd>A company that builds shells sets its own name in the face its users read all day.</dd>
+          <dt>Lockup</dt><dd>Mark height equals the two-line wordmark height. Gap equals one mark width ÷ 4.</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>MenkeTechnologies</span>
+    <span>9 marks · 1 recommendation · palette inherited from shipping icons</span>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var gridBtn = document.getElementById('gridBtn');
+    gridBtn.addEventListener('click', function () {
+      var on = document.body.classList.toggle('grid-on');
+      gridBtn.setAttribute('aria-pressed', String(on));
+    });
+
+    var modes = ['auto', 'dark', 'light'];
+    var themeBtn = document.getElementById('themeBtn');
+    var i = 0;
+    themeBtn.addEventListener('click', function () {
+      i = (i + 1) % modes.length;
+      var mode = modes[i];
+      if (mode === 'auto') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', mode);
+      }
+      themeBtn.textContent = 'Theme: ' + mode;
+    });
+  })();
+</script>
+</body>
+</html>
