@@ -90,7 +90,7 @@ different glyph type, at the same footprint, on the same grid, in its own accent
 | MTAudio | quarter arcs — curved | `#ff2a6d` | `#c4004f` |
 | MTPublishing | filled triangles — solid, page corners | `#ffb020` | `#8a5a00` |
 | MTApp | angular brackets — a viewport frame | `#9d6bff` | `#5b2fb8` |
-| MTOpensource | filled nodes — round, a graph vertex | `#2ee65f` | `#157a33` |
+| MTOpensource | paired bars of uneven height | `#2ee65f` | `#157a33` |
 
 **Draw the detail in the corner void, never against the package.** This is the
 rule the whole set turns on, and it was learned the expensive way: the first
