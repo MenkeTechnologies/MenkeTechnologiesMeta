@@ -72,3 +72,30 @@ on white does not carry enough contrast to read at any size.
 - **Do not rotate, shear, add a drop shadow to the paths, or place the mark on a
   photographic ground.** The glow filter in `icon-1024.svg` is the one sanctioned
   effect and it belongs to that file only.
+
+## Branch marks
+
+Four branches sit under the parent: **MTAudio**, **MTPublishing**, **MTApp**,
+**MTOpensource**. Files are in `branches/`; the board is `../logos-branches.html`.
+
+The system is a rule, not four separate ideas. The hex package and the MT
+monogram are byte-identical in all five marks — that is what makes them read as
+one family — and each branch varies exactly one element: the detail flanking the
+package. Nothing else moves: same 64-unit grid, same stroke weights, same
+45° geometry.
+
+| Branch | Flanking detail | Void | Paper |
+|---|---|---|---|
+| MenkeTechnologies | four even pins | `#00b0ff` | `#0069a8` |
+| MTAudio | uneven pins — a level meter | `#ff2a6d` | `#c4004f` |
+| MTPublishing | pins multiply into set text lines | `#ffb020` | `#8a5a00` |
+| MTApp | pins pull out to corner brackets | `#9d6bff` | `#5b2fb8` |
+| MTOpensource | the right pin forks | `#2ee65f` | `#157a33` |
+
+MTAudio's magenta is inherited, not invented — `zpwr-daw/icon.svg` already ships
+`#ff2a6d` as the audio line's accent. MTApp does not take the GUI apps' cyan
+because that is the parent's colour and the two would not separate.
+
+**Never edit the hex or the monogram in a branch file.** They are the family
+DNA; change them in `mark.svg` and propagate. A branch that redraws them stops
+reading as part of the set, which is the only thing holding the five together.
