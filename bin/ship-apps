@@ -103,7 +103,14 @@ fn App::zgui_paths($d) {
 fn App::make_dmg($appbundle, $out, $volname) {
     val $stage = Sh::cap("mktemp -d")
     Sh::run("cp -R '$appbundle' '$stage/' && ln -s /Applications '$stage/Applications' && rm -f '$out'")
-    Sh::run("hdiutil create -volname '$volname' -srcfolder '$stage' -ov -format UDZO -quiet '$out' 2>/dev/null")
+    # hdiutil auto-sizes -srcfolder from ALLOCATED blocks, but the copy into the image writes
+    # LOGICAL bytes — a bundle carrying a sparse file (zcontainer ships a 2 GiB rootfs.img that
+    # occupies 257 MB) overflows the image and dies with "No space left on device", silently
+    # dropping the dmg from the release. Size from the logical byte total instead. The slack
+    # costs nothing: UDZO compresses the unused space away.
+    val $bytes = Sh::cap("find '$appbundle' -type f -exec stat -f %z {} + | paste -sd+ - | bc")
+    val $size  = $bytes > 0 ? "-size #{int($bytes / 1048576) + 400}m" : ""
+    Sh::run("hdiutil create -volname '$volname' -srcfolder '$stage' -ov -format UDZO $size -quiet '$out' 2>/dev/null")
     Sh::run("rm -rf '$stage'")
     (-s $out) ? 1 : 0        # parens required: bare `-s` collides with the s/// operator; also = success only if the dmg exists
 }
