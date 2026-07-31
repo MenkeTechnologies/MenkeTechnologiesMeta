@@ -52,7 +52,7 @@ in [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md).
 | **ztunnel** | ✓ | 125 | · | · | ✓ | · | ✓ |
 | **zoffice** | ✓ | 199 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **zthrottle** | ✓ | 91 | ✓ | ✓ | ✓ | · | ✓ |
-| **zlatex** | ✓ | 55 | ✓ | · | ✓ | · | ✓ |
+| **zlatex** | ✓ | 65 | ✓ | · | ✓ | · | ✓ |
 | **zgo** | ✓ | 140 | · | · | ✓ | · | ✓ |
 | **traderview** | ✓ | 1732 | · | · | ✓ | · | ✓ |
 | **zphoto** | ✓ | 101 | ✓ | ✓ | ✓ | · | ✓ |
@@ -83,7 +83,7 @@ are the generalized ports of zwire's `zstatus.js` / `ztmux.js`.
 mount the appShell, so it has no automation-bus socket, no hooks editor, and no editor vim (vim
 runs *inside* it). Embedded-terminal component is n/a for the same reason.
 
-⁵ **zlatex**'s 55 was read the same way every other number here was — from the RUNNING app over
+⁵ **zlatex**'s 65 was read the same way every other number here was — from the RUNNING app over
 its automation-bus socket (`serve("zlatex")` in `app/src-tauri/src/bus.rs`), not counted from
 source. It is the union of the engine surface (`zlatex_core::commands::COMMANDS`) and the verbs
 the webview registers, so it is also proof the frontend booted: a dead webview returns the engine
