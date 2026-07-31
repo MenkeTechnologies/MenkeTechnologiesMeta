@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zlatex-core — an embeddable pure-Rust LaTeX math engine: TeX box-and-glue typesetting over a font's OpenType MATH metrics, a render tree, and outline-based SVG, PNG and PDF export. No TeX distribution, no subprocess.">
-  <title>zlatex-core — Embeddable LaTeX Math Engine</title>
+  <meta name="description" content="zlatex-core — an embeddable pure-Rust LaTeX engine: text mode, Knuth-Plass line breaking, page building, cross-references, and TeX box-and-glue math over a font's OpenType MATH metrics. No TeX distribution, no subprocess.">
+  <title>zlatex-core — Embeddable LaTeX Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
     <header class="tutorial-header">
       <div class="tutorial-header-inner">
         <div>
-          <h1 class="tutorial-brand">ZLATEX-CORE // LATEX MATH ENGINE</h1>
+          <h1 class="tutorial-brand">ZLATEX-CORE // LATEX ENGINE</h1>
           <nav class="tutorial-crumbs" aria-label="Breadcrumb">
             <span class="current">Docs</span>
             <span class="sep">/</span>
@@ -42,7 +42,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zlatex-core" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line">// catcodes · macros · math grammar · box &amp; glue · opentype math · render tree · export</p>
+          <p class="docs-build-line">// catcodes · macros · text &amp; math grammars · line breaking · pages · references · export</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -54,7 +54,7 @@
       </div>
     </header>
     <main class="docs-main">
-      <p class="lede">zlatex-core is the math engine behind <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zlatex/">zlatex</a>. LaTeX source goes in; positioned ink comes out — as a render tree a WebView paints, or as self-contained SVG, PNG or PDF. There is no external TeX distribution, no subprocess and nothing to install: the tokenizer, the math grammar and TeX's box-and-glue layout are all here, and the layout parameters are read from the font's own OpenType <strong>MATH</strong> table rather than hardcoded.</p>
+      <p class="lede">zlatex-core is the typesetting engine behind <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zlatex/">zlatex</a>. A <code>.tex</code> source goes in; laid-out pages come out — as a render tree a WebView paints, or as a multi-page PDF, per-page SVG or PNG. It sets <strong>documents</strong>: text mode with paragraphs, TeX's line-breaking algorithm, page breaking, sectioning and counters, lists, tables, floats, cross-references and a table of contents — plus the math engine, reached for every <code>$…$</code> and display. There is no external TeX distribution, no subprocess and nothing to install, and the math layout parameters are read from the font's own OpenType <strong>MATH</strong> table rather than hardcoded.</p>
 
       <div class="card-grid">
         <div class="card"><h3>TeX's algorithm</h3><p>The Chapter 17 conversion with Appendix G placement: the 8&times;8 atom-class spacing table, the Bin&rarr;Ord reclassification, script shift-and-clearance rules, fraction and radical construction, delimiter growth.</p></div>
@@ -64,11 +64,13 @@
       </div>
 
       <h2 class="reg-h">The pipeline</h2>
-      <pre class="code">source ──▶ tokenize ──▶ expand ──▶ parse ──▶ mlist_to_hlist ──▶ flatten ──▶ RenderDoc
-           (catcodes)   (macros)   (atoms)   (boxes + spacing)  (absolute)
-                                                    ▲
-                                          OpenType MATH constants
-                                            + glyph metrics</pre>
+      <pre class="code">.tex ─▶ tokenize ─▶ expand ─▶ textmode ─▶ line-break ─▶ page-break ─▶ pass 2 ─▶ RenderDoc
+        (catcodes)  (macros)   (blocks)   (Knuth-Plass)  (vertical)   (refs)     (pages)
+                                   │                                     ▲
+                                   └─▶ math mode ─▶ mlist_to_hlist ──────┘
+                                       ($…$, displays)   ▲
+                                                OpenType MATH constants
+                                                  + glyph metrics</pre>
 
       <h2 class="reg-h">Modules</h2>
       <table>
@@ -76,6 +78,8 @@
         <tbody>
           <tr><td><code>lex</code></td><td>TeX's mouth: category codes, control sequences, comments, <code>\def</code> / <code>\newcommand</code> / <code>\let</code> expansion with a recursion bound</td></tr>
           <tr><td><code>parse</code> &middot; <code>symbols</code> &middot; <code>atom</code></td><td>The math-mode grammar, the control-sequence table, and the math-list model (atoms, fields, fractions, radicals, matrices)</td></tr>
+          <tr><td><code>textmode</code> &middot; <code>doc</code></td><td>The text-mode grammar and the document model: preamble, paragraphs, sectioning, lists, tables, floats, bibliography</td></tr>
+          <tr><td><code>linebreak</code> &middot; <code>typeset</code></td><td>Knuth&ndash;Plass total-fit line breaking, and the page builder with its second reference-resolving pass</td></tr>
           <tr><td><code>style</code> &middot; <code>font</code></td><td>The eight math styles and their transitions; glyph boxes, MATH constants, and Unicode math-alphabet mapping</td></tr>
           <tr><td><code>boxes</code> &middot; <code>mlist</code></td><td>The box model (width / height / depth) and the layout itself</td></tr>
           <tr><td><code>render</code> &middot; <code>export</code></td><td>The render tree the frontend paints, and the outline-based exporters</td></tr>
@@ -91,7 +95,7 @@ zlatex palette</pre>
       <h2 class="reg-h">Read on</h2>
       <p class="lede">The <a href="report.html">engineering report</a> covers the layout rules, the coverage, and the limits. The <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zlatex/">zlatex app docs</a> cover the desktop editor built on this engine.</p>
 
-      <footer class="doc-footer">MenkeTechnologies &middot; zlatex-core &middot; embeddable LaTeX math engine</footer>
+      <footer class="doc-footer">MenkeTechnologies &middot; zlatex-core &middot; embeddable LaTeX engine</footer>
     </main>
   </div>
   <script src="../hud-theme.js"></script>
