@@ -52,7 +52,7 @@ in [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md).
 | **ztunnel** | ✓ | 125 | · | · | ✓ | · | ✓ |
 | **zoffice** | ✓ | 199 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **zthrottle** | ✓ | 91 | ✓ | ✓ | ✓ | · | ✓ |
-| **zlatex** | ✓ | —⁵ | ✓ | · | ✓ | · | ✓ |
+| **zlatex** | ✓ | 55 | ✓ | · | ✓ | · | ✓ |
 | **zgo** | ✓ | 140 | · | · | ✓ | · | ✓ |
 | **traderview** | ✓ | 1732 | · | · | ✓ | · | ✓ |
 | **zphoto** | ✓ | 101 | ✓ | ✓ | ✓ | · | ✓ |
@@ -83,12 +83,12 @@ are the generalized ports of zwire's `zstatus.js` / `ztmux.js`.
 mount the appShell, so it has no automation-bus socket, no hooks editor, and no editor vim (vim
 runs *inside* it). Embedded-terminal component is n/a for the same reason.
 
-⁵ **zlatex** is newly added and has not been through a live catalog run yet, so its Bus-verbs
-cell is empty rather than guessed: the number in this column is read from the RUNNING app by
-`bin/gen-gui-actions-live`, never counted from source. Its socket is wired
-(`app/src-tauri/src/bus.rs` calls `serve("zlatex")`), and the engine side of the surface is
-`zlatex_core::commands::COMMANDS`. It mounts the powerline bar but not the tmux tiling WM — a
-two-pane editor/preview does not tile.
+⁵ **zlatex**'s 55 was read the same way every other number here was — from the RUNNING app over
+its automation-bus socket (`serve("zlatex")` in `app/src-tauri/src/bus.rs`), not counted from
+source. It is the union of the engine surface (`zlatex_core::commands::COMMANDS`) and the verbs
+the webview registers, so it is also proof the frontend booted: a dead webview returns the engine
+verbs alone. It mounts the powerline bar but not the tmux tiling WM — a two-pane editor/preview
+does not tile.
 
 ⁴ **zcontainer** is the one row that is **not reproducible from source**. The live catalog in
 `GUI_SCRIPT_ACTIONS.md` lists 25 `zcontainer` verbs, but **no bus code exists on any git ref**: there
