@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zlatex — a desktop LaTeX equation editor (LaTeXiT port) in Rust, built as a Tauri v2 app behind a cyberpunk HUD, over the embeddable zlatex-core typesetter. No TeX distribution required. Overview and roadmap.">
+  <title>zlatex — LaTeX Equation Editor in Rust</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+    .card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); padding: 14px 16px; }
+    .card h3 { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 13px; letter-spacing: 1px; margin: 0 0 6px; }
+    .card p { color: var(--text-dim); font-size: 12.5px; line-height: 1.6; margin: 0; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZLATEX // LATEX EQUATION EDITOR</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zlatex" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">// editor · live preview · symbol palettes · equation library · svg · png · pdf</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Engineering Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zlatex" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="lede">zlatex is a desktop LaTeX equation editor modeled on <strong>LaTeXiT</strong> — a Tauri v2 app behind the shared cyberpunk HUD, over the embeddable <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zlatex-core/">zlatex-core</a> typesetter. Type a formula on the left, watch it set on the right, and drag the result out as a self-contained image. There is <strong>no TeX distribution behind the curtain</strong>: the tokenizer, the macro expander, the math grammar and TeX's box-and-glue layout are all compiled into the app, and so is the math font.</p>
+
+      <div class="card-grid">
+        <div class="card"><h3>Live typesetting</h3><p>Every keystroke re-typesets through the engine and the preview repaints from a render tree — not a rasterized image, and not a round trip through an external process.</p></div>
+        <div class="card"><h3>Preview &harr; source</h3><p>Every glyph run carries the byte span of the source that produced it. Click a glyph to select its source; move the caret to highlight the ink it produces.</p></div>
+        <div class="card"><h3>Export that stays editable</h3><p>SVG and PNG are drawn from glyph outlines, so no viewer needs the font. An exported PDF carries its own LaTeX source, so dropping the file back in reopens an editable equation.</p></div>
+        <div class="card"><h3>Shared HUD</h3><p>zgui-core widgets throughout: the ⌘K palette, the fzf filter with matched-character highlighting, the embedded terminal, the file browser, and the stryke hooks editor — the same Monaco bundle, in LaTeX mode.</p></div>
+      </div>
+
+      <h2 class="reg-h">In the window</h2>
+      <p class="lede">A toolbar (display / inline &middot; size &middot; color &middot; zoom &middot; symbol palettes &middot; library &middot; save &middot; SVG &middot; PNG &middot; PDF &middot; copy &middot; page view), a Monaco editor pane in LaTeX mode with snippet completion, a diagnostics strip that underlines what did not parse, and the preview pane — either a bare equation or paginated page sheets. The settings panel is the shell's single ⚙ panel; the native macOS menu bar carries the same actions the palette does.</p>
+
+      <h2 class="reg-h">Build</h2>
+      <pre class="code">pnpm install     # in app/ — pulls the pinned zgui-core + the Tauri CLI
+pnpm dev         # tauri dev
+pnpm build       # tauri build
+cargo test --manifest-path crates/zlatex-core/Cargo.toml</pre>
+
+      <h2 class="reg-h">Where it goes next</h2>
+      <p class="lede">See the <a href="report.html">engineering report</a> for the app's structure and the shared modules it mounts, the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zlatex-core/">engine docs</a> for the typesetting pipeline, and the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella for the wider desktop stack.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zlatex &middot; LaTeX equation editor in Rust</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

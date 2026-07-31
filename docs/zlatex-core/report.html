@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="zlatex-core engineering report — the typesetting rules implemented, how OpenType MATH replaces TFM fontdimens, the render tree, the exporters, the test strategy, and the honest limits.">
+  <title>zlatex-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 12.5px; }
+    th, td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; vertical-align: top; color: var(--text-dim); }
+    th { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 11.5px; letter-spacing: 1px; }
+    td code { font-family: 'Share Tech Mono', monospace; color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12.5px; line-height: 1.7; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZLATEX-CORE // ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <a href="index.html">Docs</a>
+            <span class="sep">/</span>
+            <span class="current">Engineering Report</span>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/zlatex-core" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">// layout rules · math table · render tree · export · tests · limits</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Docs</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zlatex-core" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="lede">This engine implements TeX's math typesetting with one substitution: where TeX reads its parameters from TFM <code>fontdimen</code>s (<code>\sigma1&ndash;22</code>, <code>\xi1&ndash;13</code>), this reads the OpenType <strong>MATH</strong> table's MathConstants through <code>ttf-parser</code>. Same algorithm, parameters sourced from the face the user is actually setting in — which is what keeps the engine's measurements and the renderer's painting from drifting apart.</p>
+
+      <h2 class="reg-h">The rules that carry the visual weight</h2>
+      <table>
+        <thead><tr><th>Rule</th><th>What it decides</th></tr></thead>
+        <tbody>
+          <tr><td>Inter-atom spacing</td><td>The 8&times;8 atom-class table (thin / medium / thick, suppressed in script styles), applied after a Bin atom that binds nothing on its left — or is followed by a relation, closer or punctuation — is demoted to Ord</td></tr>
+          <tr><td>Scripts</td><td>Shift-up and shift-down with the drop-from-nucleus, bottom-min, top-max, gap-min and bottom-max-with-subscript constraints, so <code>x_i^2</code> never collides; a symbol nucleus carries its scripts off its own baseline, a composite one drops them relative to its extent</td></tr>
+          <tr><td>Fractions</td><td>Numerator and denominator shifts per style, clearances measured to the rule's edges (or one gap between the two boxes when there is no rule, as in <code>\atop</code> and <code>\binom</code>), everything straddling the math axis</td></tr>
+          <tr><td>Radicals</td><td>The surd chosen from the face's vertical variant chain to cover the radicand plus the gap, the rule and the glyph's own ascender; the degree raised by the face's degree-bottom-raise percentage</td></tr>
+          <tr><td>Delimiters</td><td><code>\left…\right</code> sized by TeX's <code>\delimiterfactor</code> / <code>\delimitershortfall</code> rule, grown through the variant chain, centred on the axis, and scaled only when the face runs out of variants</td></tr>
+          <tr><td>Large operators</td><td>Display-style operators taken at the face's display size and centred on the axis; limits stacked above and below with the MATH gap and baseline-rise minimums</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Alphabets are code points, not styling</h2>
+      <p class="note"><code>\mathbb{R}</code> is U+211D, not an <code>R</code> in a different font. Every alphabet maps into the real Unicode math blocks, including the letterlike holes (<code>C H N P Q R Z</code> for double-struck, the script and fraktur exceptions, and math italic's <code>h</code> = U+210E PLANCK CONSTANT). Any face carrying the glyphs works, and copied text stays meaningful.</p>
+
+      <h2 class="reg-h">The render tree</h2>
+      <p class="note">Output is a <code>RenderDoc</code>: page geometry in inches plus blocks, matching the zoffice render model field for field so one frontend renderer serves both. An equation block is a box (width, baseline, height, in points) holding absolutely positioned glyph runs and rules — and every run carries the <strong>byte span of the source that produced it</strong>, which is what lets a preview click map back to an editor selection.</p>
+
+      <h2 class="reg-h">Export</h2>
+      <table>
+        <thead><tr><th>Format</th><th>How it is drawn</th><th>Self-contained</th></tr></thead>
+        <tbody>
+          <tr><td>SVG</td><td>Glyph outlines as <code>&lt;path&gt;</code>, rules as <code>&lt;rect&gt;</code></td><td>Yes, with a face loaded</td></tr>
+          <tr><td>PNG</td><td>The same outlines rasterized (tiny-skia)</td><td>Yes</td></tr>
+          <tr><td>PDF</td><td>Outlines as filled paths in the content stream (lopdf)</td><td>Yes &mdash; and it carries its LaTeX source in the info dictionary</td></tr>
+        </tbody>
+      </table>
+      <p class="note">No font is embedded in the exports, because none is needed: the glyphs are already curves. The source riding inside the PDF is what makes a dropped file reopen as an editable equation rather than paste as a picture.</p>
+
+      <h2 class="reg-h">Test strategy</h2>
+      <p class="note">Two layers, on purpose. The unit tests run <em>metric-less</em> — a nominal box for every glyph — so they assert structure: the spacing-table entries against the TeXbook's, the style transitions against Appendix G, that a superscript raises the box and a subscript deepens it, that <code>\atop</code> draws no rule where <code>\frac</code> draws one, that a leading <code>-</code> is reclassified, that an unknown control sequence still previews. The integration tests run against the vendored Latin Modern Math face and pin what only a real face can: the MATH-constant field mapping (re-read independently from the same table and compared), per-character advances, delimiter growth, outline-based export, and a PDF source round-trip.</p>
+
+      <h2 class="reg-h">Honest limits</h2>
+      <table>
+        <thead><tr><th>Limit</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Math mode only</td><td>This sets formulas. No paragraph line breaking, no page breaking, no sectioning, bibliography or cross-references</td></tr>
+          <tr><td>No packages</td><td><code>\usepackage</code> is not implemented; the symbol table and the environment list are the vocabulary</td></tr>
+          <tr><td>Faces without a MATH table guess</td><td>Layout falls back to generic em fractions and delimiters scale instead of stepping through a variant chain</td></tr>
+          <tr><td>No line breaking inside an equation</td><td>A long formula produces one wide box</td></tr>
+        </tbody>
+      </table>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; zlatex-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
