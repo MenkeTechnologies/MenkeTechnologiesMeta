@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="ztorrent-core engineering report — module map, command surface, FFI exports, dependency footprint and test status for the embeddable BitTorrent client engine. In active development; figures derived from the crate source.">
+  <title>ztorrent-core — Engineering Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 22px; }
+    .hero-stat { text-align: center; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-card); padding: 14px; }
+    .hero-stat .num { display: block; font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 26px; color: var(--cyan); text-shadow: 0 0 12px var(--cyan-glow); line-height: 1.1; }
+    .hero-stat .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .3px; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; }
+    th { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; }
+    td:first-child { color: var(--text); }
+    .note { color: var(--text-dim); font-size: 12px; line-height: 1.6; }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZTORRENT-CORE // ENGINEERING REPORT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="ztorrent_port_report.html">Port Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/ztorrent-core" target="_blank" rel="noopener noreferrer">Source</a>
+          </nav>
+          <p class="docs-build-line">// module map · command surface · FFI exports · test status</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="index.html">Home</a>
+          <a class="btn btn-secondary" href="ztorrent_port_report.html">Port Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/ztorrent-core" target="_blank" rel="noopener noreferrer">Source</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <section class="hero-stats">
+        <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version</span></div>
+        <div class="hero-stat"><span class="num">19</span><span class="lbl">modules</span></div>
+        <div class="hero-stat"><span class="num">53</span><span class="lbl">engine commands</span></div>
+        <div class="hero-stat"><span class="num">104</span><span class="lbl">tests (95 Rust + 9 webui)</span></div>
+        <div class="hero-stat"><span class="num">71.9%</span><span class="lbl">Transmission coverage</span></div>
+      </section>
+
+      <h2 class="reg-h">Module map</h2>
+      <table>
+        <thead><tr><th>Module</th><th>Owns</th></tr></thead>
+        <tbody>
+          <tr><td>lib</td><td>The <code>Engine</code>, the dotted command surface, Transmission-shaped torrent rows, engine events</td></tr>
+          <tr><td>model &middot; store</td><td>Persisted torrents, queue order, labels, per-torrent limits and seeding rules, per-file flags; atomic JSON writes</td></tr>
+          <tr><td>settings</td><td>Transmission&rsquo;s session keys under their wire names, partial-merge semantics, effective speed limits</td></tr>
+          <tr><td>queue</td><td>Which torrents may run: download/seed slots, stalled detection, bandwidth-priority ordering, queue moves</td></tr>
+          <tr><td>seeding</td><td>Ratio and idle stop rules across the three Transmission modes (global / per torrent / unlimited)</td></tr>
+          <tr><td>scheduler</td><td>Turtle-mode time windows, including overnight windows and the weekday bitfield</td></tr>
+          <tr><td>blocklist &middot; watchdir</td><td>P2P-plaintext / CIDR rules as merged sorted ranges; watch-dir polling that waits for a file&rsquo;s size to settle</td></tr>
+          <tr><td>bencode &middot; metainfo &middot; create &middot; magnet</td><td>Span-preserving bencode, <code>.torrent</code> read/write, piece hashing, magnet parse/build</td></tr>
+          <tr><td>session</td><td>The librqbit boundary: session options, add/pause/resume/remove, stats, peers, piece map</td></tr>
+          <tr><td>rpc</td><td>Transmission RPC method translation onto the engine&rsquo;s commands</td></tr>
+          <tr><td>ffi &middot; tauri_plugin</td><td>The C ABI (<code>ztr_invoke</code>) and the Tauri command/event bridge</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Dependency footprint</h2>
+      <table>
+        <thead><tr><th>Crate</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>serde &middot; serde_json</td><td>The JSON command surface and every persisted file</td></tr>
+          <tr><td>thiserror &middot; dirs</td><td>The error envelope; platform data directories</td></tr>
+          <tr><td>sha1 &middot; hex</td><td>Info-hashes and piece hashing (format layer, present in the pure build)</td></tr>
+          <tr><td>librqbit &middot; tokio &middot; url &middot; anyhow</td><td>The wire half, behind the <code>net</code> feature: peers, HTTP/UDP trackers, DHT, magnet metadata, UPnP</td></tr>
+          <tr><td>tauri</td><td>Optional, for hosts that mount the engine as app commands</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Bencode, the metainfo reader/writer, magnet handling and the whole policy layer are written here rather than pulled in, which is why <code>--no-default-features</code> builds and tests with no sockets, no TLS and no async runtime.</p>
+
+      <h2 class="reg-h">FFI surface</h2>
+      <table>
+        <thead><tr><th>Export</th><th>Contract</th></tr></thead>
+        <tbody>
+          <tr><td>ztr_init</td><td>Initialize the process-global engine and wire its event sink; returns <code>{"ok":true}</code> or an error envelope</td></tr>
+          <tr><td>ztr_invoke</td><td>One command + JSON args &rarr; JSON result or <code>{"error":{"tag","message"}}</code></td></tr>
+          <tr><td>ztr_commands</td><td>The command list as JSON, so a host builds its menu from the ABI rather than a hardcoded copy</td></tr>
+          <tr><td>ztr_set_event_callback</td><td>Install a C callback for engine events; the JSON pointer is valid for the call only</td></tr>
+          <tr><td>ztr_string_free</td><td>Release any string this ABI returned</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="reg-h">Test status</h2>
+      <p class="note">95 Rust tests pass on the default (<code>net</code>) build and 90 on <code>--no-default-features</code> — the difference is the session module&rsquo;s own unit tests. The webui carries 9 headless tests (a DOM shim plus a recording engine bridge) that assert the scaffold, the boot command sequence, that every call goes through the <code>ztr_invoke</code> bridge, and that the view feeds the host shell without binding a global key. A drift guard reads <code>Engine::invoke</code>&rsquo;s own source and fails if the published command list and the accepted commands disagree.</p>
+
+      <h2 class="reg-h">Known gaps</h2>
+      <p class="note">Re-verify of local data and tracker reannounce have no entry point in the wire layer, so they are reported missing rather than stubbed. Per-torrent speed, peer and sequential-download settings are stored and editable but only the session-wide limiter is applied. The RPC surface is in-process: there is no HTTP listener, authentication or bundled web client. Each of these is a row in the <a href="ztorrent_port_report.html">port report</a>, which is generated from a hand-assessed manifest and audited against the source.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; ztorrent-core &middot; engineering report</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

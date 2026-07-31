@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="ztorrent — a desktop BitTorrent client (Transmission port) in Rust, built as a Tauri v2 app behind a cyberpunk HUD, consuming the embeddable ztorrent-core engine. Overview and roadmap.">
+  <title>ztorrent — Desktop BitTorrent Client in Rust</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+    .card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); padding: 14px 16px; }
+    .card h3 { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 13px; letter-spacing: 1px; margin: 0 0 6px; }
+    .card p { color: var(--text-dim); font-size: 12.5px; line-height: 1.6; margin: 0; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+    .status-note { color: var(--text-dim); font-size: 12px; line-height: 1.6; border: 1px dashed var(--border); border-radius: 5px; padding: 10px 14px; margin: 8px 0 18px; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZTORRENT // DESKTOP BITTORRENT CLIENT</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/ztorrent" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          <p class="docs-build-line">// torrents · files · peers · trackers · queue · seeding limits · turtle scheduler · blocklists · watch folders</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Engineering Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/ztorrent" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="lede">ztorrent is a desktop BitTorrent client modeled on <strong>Transmission</strong> — a Tauri v2 app behind the shared cyberpunk HUD, over the embeddable <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/ztorrent-core/">ztorrent-core</a> engine. Add torrents from a file, a magnet link or a watched folder; filter and sort a live torrent table; drive per-file selection, seeding rules, queue position and speed limits from the details pane; and reach every one of those actions from the ⌘K palette or the native menu bar. Transmission coverage is 71.9% of an enumerated feature set, tracked row by row in the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/ztorrent-core/ztorrent_port_report.html">port report</a>.</p>
+
+      <div class="card-grid">
+        <div class="card"><h3>Transmission&rsquo;s model</h3><p>Session keys under their own wire names, the three-mode seeding limits, download and seed queues with stalled detection, and the turtle scheduler — including the overnight window that trips most reimplementations.</p></div>
+        <div class="card"><h3>One engine</h3><p>Everything is a command on ztorrent-core, so the app, an embedding host and a C ABI host behave identically — and a Transmission remote can drive the same engine over the RPC surface.</p></div>
+        <div class="card"><h3>Shared HUD</h3><p>zgui-core widgets throughout: the ⌘K palette, sortable and resizable tables, the fzf filter with matched-character highlighting, the embedded terminal, the file browser and the stryke hooks editor.</p></div>
+        <div class="card"><h3>Local, and quiet</h3><p>No account, no telemetry, no cloud sync. The session lives in a JSON file you can read, beside the settings file that carries Transmission&rsquo;s own key names.</p></div>
+      </div>
+
+      <h2 class="reg-h">In the window</h2>
+      <p class="lede">A toolbar (add file &middot; add magnet &middot; start &middot; stop &middot; remove &middot; turtle &middot; filter), a status-filter sidebar with live counts and labels, the torrent table (name &middot; size &middot; progress &middot; status &middot; rates &middot; ratio &middot; ETA &middot; peers &middot; queue), a details pane (Info &middot; Files &middot; Peers &middot; Trackers &middot; Options), and a status bar carrying the aggregate rates, the session ratio and the turtle indicator. The settings panel is the shell&rsquo;s single ⚙ panel, filled with Transmission&rsquo;s preference groups: Downloads, Speed, Queue and seeding, Network, Blocklist.</p>
+
+      <h2 class="reg-h">Build</h2>
+      <pre class="code">pnpm install     # in app/ — pulls the pinned zgui-core + the Tauri CLI
+pnpm dev         # tauri dev
+pnpm build       # tauri build
+pnpm test        # engine + webui suites</pre>
+
+      <h2 class="reg-h">Where it goes next</h2>
+      <p class="lede">See the <a href="report.html">engineering report</a> for the app&rsquo;s structure and the shared modules it mounts, the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/ztorrent-core/ztorrent_port_report.html">port report</a> for feature-by-feature Transmission coverage, and the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella for the wider desktop stack.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; ztorrent &middot; desktop BitTorrent client in Rust</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>

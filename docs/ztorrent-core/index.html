@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="ztorrent-core — the embeddable BitTorrent client engine behind ztorrent. Session model, download/seed queue, ratio and idle seeding limits, turtle scheduler, blocklists, watch directories, .torrent create/parse and Transmission RPC behind one command surface. No GUI deps; builds as rlib, staticlib and cdylib to embed in any host.">
+  <title>ztorrent-core — Embeddable BitTorrent Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
+  <style>
+    .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
+    .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 16px 0; }
+    .card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); padding: 14px 16px; }
+    .card h3 { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 13px; letter-spacing: 1px; margin: 0 0 6px; }
+    .card p { color: var(--text-dim); font-size: 12.5px; line-height: 1.6; margin: 0; }
+    .reg-h { font-family: 'Orbitron', sans-serif; color: var(--accent); font-size: 15px; letter-spacing: 1px; margin: 24px 0 8px; }
+    pre.code { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 12px 14px; overflow-x: auto; font-family: 'Share Tech Mono', monospace; font-size: 12.5px; color: var(--text); }
+    .doc-footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 11px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="app" id="docsApp">
+    <div class="crt-scanline" id="crtH" aria-hidden="true"></div>
+    <div class="crt-scanline-v" id="crtV" aria-hidden="true"></div>
+    <header class="tutorial-header">
+      <div class="tutorial-header-inner">
+        <div>
+          <h1 class="tutorial-brand">ZTORRENT-CORE // EMBEDDABLE BITTORRENT ENGINE</h1>
+          <nav class="tutorial-crumbs" aria-label="Breadcrumb">
+            <span class="current">Docs</span>
+            <span class="sep">/</span>
+            <a href="report.html">Engineering Report</a>
+            <span class="sep">/</span>
+            <a href="https://github.com/MenkeTechnologies/ztorrent-core" target="_blank" rel="noopener noreferrer">Source</a>
+          </nav>
+          <p class="docs-build-line">// torrents · files · peers · trackers · queue · seeding limits · turtle scheduler · blocklists — the core behind ztorrent, embeddable in any host</p>
+        </div>
+        <div class="tutorial-toolbar">
+          <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
+          <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
+          <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="report.html">Engineering Report</a>
+          <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/ztorrent-core" target="_blank" rel="noopener noreferrer">Source</a>
+        </div>
+      </div>
+    </header>
+    <main class="docs-main">
+      <p class="lede">ztorrent-core is the embeddable engine behind <strong>ztorrent</strong>, a Transmission-style BitTorrent client. It owns the session model (torrents, files, peers, trackers, labels), the policy Transmission applies above the wire — the download/seed queue, ratio and idle seeding limits, the alt-speed (turtle) scheduler, blocklists and watch directories — plus <code>.torrent</code> parse/create, magnet handling and a Transmission RPC compatibility layer, and exposes all of them through <em>one</em> command surface (<code>Engine::invoke</code>), so every host drives identical behaviour. The peer wire protocol itself is <code>librqbit</code>, behind the default <code>net</code> feature. The crate builds as <code>rlib</code> for native Rust/Tauri hosts and as <code>staticlib</code>/<code>cdylib</code> for non-Rust hosts over a C ABI. This project is in active development; current Transmission coverage is 71.9% of an enumerated feature set.</p>
+
+      <div class="card-grid">
+        <div class="card"><h3>Embeddable</h3><p>One command surface — <code>Engine::invoke(cmd, args_json)</code> — drives every host identically: native Rust, a Tauri command, or a C/C++ host over the FFI (<code>ztr_invoke</code>).</p></div>
+        <div class="card"><h3>Byte-exact formats</h3><p>The bencode decoder keeps every value&rsquo;s source span, so a torrent&rsquo;s info-hash is SHA-1 over the <em>original</em> <code>info</code> bytes rather than a re-encode — the difference between a handshake peers accept and one they drop.</p></div>
+        <div class="card"><h3>Feature-Gated Net</h3><p>The <code>net</code> feature carries the BitTorrent session. Build <code>--no-default-features</code> for a pure core that compiles in headless CI with zero sockets; the model, the queue/seeding/scheduler policy and the <code>.torrent</code>/magnet formats still work.</p></div>
+        <div class="card"><h3>Honest Status</h3><p>The port report is hand-assessed and audited: a capability whose engine works but whose UI is incomplete is <em>partial</em>, and the generator can only flag or downgrade a row, never upgrade one.</p></div>
+      </div>
+
+      <h2 class="reg-h">Quick start</h2>
+      <pre class="code">use ztorrent_core::Engine;
+use serde_json::json;
+
+let mut engine = Engine::new()?;
+
+// One dotted command surface for every host.
+engine.invoke("session.start", &amp;json!({}))?;
+engine.invoke("torrent.add", &amp;json!({ "magnet": "magnet:?xt=urn:btih:&hellip;" }))?;
+let rows = engine.invoke("torrent.list", &amp;json!({}))?;
+
+// The policy layer is callable on its own — no session required.
+engine.invoke("scheduler.evaluate", &amp;json!({ "utc_offset": -18000 }))?;
+engine.invoke("seeding.check", &amp;json!({}))?;</pre>
+
+      <h2 class="reg-h">Surfaces</h2>
+      <p class="lede">Depend on the <code>rlib</code> and call <code>Engine</code> directly, or go through <code>Engine::invoke</code> with JSON for parity across hosts. Enable the <code>tauri</code> feature to mount the engine as Tauri app commands (<code>ztr_invoke</code> + <code>setup</code>), with events emitted on <code>ztr-event</code>. Link the <code>staticlib</code>/<code>cdylib</code> and call <code>ztr_invoke</code> from a C ABI host. A Transmission remote can drive the engine through <code>rpc.request</code>, which answers in Transmission&rsquo;s own envelope. Asynchronous facts (torrent added, download complete, a seeding limit firing) are pushed to the host through an installed event sink.</p>
+
+      <h2 class="reg-h">The mountable GUI</h2>
+      <p class="lede"><code>webui/ztorrent.{js,css}</code> is the client view every host mounts: toolbar, status-filter sidebar with live counts, a sortable and resizable torrent table with fuzzy filtering, and a details pane (Info &middot; Files &middot; Peers &middot; Trackers &middot; Options). It feeds the host&rsquo;s single command palette and settings panel instead of binding a global key of its own, so an embed reads as part of its host rather than a competing mini-app.</p>
+
+      <h2 class="reg-h">Where it goes next</h2>
+      <p class="lede">See the <a href="report.html">engineering report</a> for the module map, dependency footprint, FFI surface and test status, the <a href="ztorrent_port_report.html">port report</a> for feature-by-feature Transmission coverage, and the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella for the wider stack this engine plugs into.</p>
+
+      <footer class="doc-footer">MenkeTechnologies &middot; ztorrent-core &middot; embeddable BitTorrent client engine</footer>
+    </main>
+  </div>
+  <script src="../hud-theme.js"></script>
+</body>
+</html>
