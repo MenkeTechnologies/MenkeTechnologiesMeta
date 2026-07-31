@@ -130,6 +130,8 @@ fn App::deploy_one($app) {
 
     if ($do_build) {
         p "=== build $app ($bd) — .app only, no dmg popup ==="
+        Sh::run("rm -f '$log'")   # one fresh log per run: the pin report AND the build both append
+
         # Pin EVERY zgui-core worktree under the app (top-level AND the ones nested inside
         # engine-core submodules, which feed the frontend via copy-webui) to latest zgui-core
         # main before building — the git phase above only reaches the app's own declared
@@ -141,7 +143,10 @@ fn App::deploy_one($app) {
         # Default builder is `pnpm tauri build`. Apps that need something else (e.g. traderview
         # drives cargo-tauri + frontend-dist isolation) ship scripts/deploy-build.sh.
         val $bcmd = -x "$bd/scripts/deploy-build.sh" ? "./scripts/deploy-build.sh" : "pnpm tauri build --bundles app"
-        if (!Sh::run("cd '$bd' && $bcmd > '$log' 2>&1")) { warn "$app: BUILD FAILED (see $log)"; return "x $app build-failed" }
+        # APPEND, never truncate: the zgui pin report above was written to this same log, and a
+        # `>` here erased it — so a "zgui SKIP: dirty/unavailable" (the app then embeds a STALE
+        # zgui-core and ships looking successful) left no trace to find afterwards.
+        if (!Sh::run("cd '$bd' && $bcmd >> '$log' 2>&1")) { warn "$app: BUILD FAILED (see $log)"; return "x $app build-failed" }
     }
 
     val $appbundle = Sh::cap("find '$d' -path '*/release/bundle/macos/*.app' -type d 2>/dev/null | head -1")
