@@ -36,6 +36,7 @@ MANIFEST=(
   "zftp|tauri|#39ff14|FTP|ZFTP|zftp/app/src-tauri/icons"
   "zgo|tauri|#d300c5|GO|ZGO|zgo/app/src-tauri/icons"
   "zreq|tauri|#ffea00|REQ|ZREQ|zreq/app/src-tauri/icons"
+  "ztorrent|tauri|#b2ff00|TOR|ZTORRENT|ztorrent/app/src-tauri/icons"
   "ztranslator|tauri|#1de9b6|TR|ZTRANSLATOR|ztranslator/app/src-tauri/icons"
   "ztunnel|tauri|#7c4dff|TUN|ZTUNNEL|ztunnel/app/src-tauri/icons"
   "zthrottle|tauri|#ff4500|ZT|ZTHROTTLE|zthrottle/app/src-tauri/icons"

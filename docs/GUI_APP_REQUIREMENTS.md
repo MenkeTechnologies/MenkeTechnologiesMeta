@@ -34,6 +34,8 @@ create it in a submodule and route every app through it.
 | zcontainer | Tauri v2 (`app/` workspace) | `zcontainer` |
 | zreq | Tauri v2 (`app/` workspace) | `zreq` |
 | zthrottle | Tauri v2 (`app/` workspace) | `zthrottle` |
+| zlatex | Tauri v2 (`app/` workspace, engine-hosted view) | `zlatex` |
+| ztorrent | Tauri v2 (`app/` workspace) | `ztorrent` |
 | zterminal | native OpenGL renderer (not Tauri) | `zterminal` |
 | zwire | Chromium superset (not Tauri) | `zwire` |
 | zpwr-daw | JUCE `WebBrowserComponent` (BinaryData) | `zpwr-daw` (vendored at `zpwr-clip-engine`) |
