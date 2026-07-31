@@ -58,10 +58,10 @@
     <main class="docs-main">
       <section class="hero-stats">
         <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version</span></div>
-        <div class="hero-stat"><span class="num">25</span><span class="lbl">modules</span></div>
-        <div class="hero-stat"><span class="num">64</span><span class="lbl">engine commands</span></div>
-        <div class="hero-stat"><span class="num">158</span><span class="lbl">tests (146 Rust + 12 webui)</span></div>
-        <div class="hero-stat"><span class="num">89.5%</span><span class="lbl">Transmission coverage</span></div>
+        <div class="hero-stat"><span class="num">26</span><span class="lbl">modules</span></div>
+        <div class="hero-stat"><span class="num">66</span><span class="lbl">engine commands</span></div>
+        <div class="hero-stat"><span class="num">174</span><span class="lbl">tests (161 Rust + 13 webui)</span></div>
+        <div class="hero-stat"><span class="num">94.7%</span><span class="lbl">Transmission coverage</span></div>
       </section>
 
       <h2 class="reg-h">Module map</h2>
@@ -74,7 +74,7 @@
           <tr><td>queue</td><td>Which torrents may run: download/seed slots, stalled detection, bandwidth-priority ordering, queue moves</td></tr>
           <tr><td>seeding</td><td>Ratio and idle stop rules across the three Transmission modes (global / per torrent / unlimited)</td></tr>
           <tr><td>scheduler</td><td>Turtle-mode time windows, including overnight windows and the weekday bitfield</td></tr>
-          <tr><td>blocklist &middot; watchdir &middot; groups</td><td>P2P-plaintext / CIDR rules as merged sorted ranges; watch-dir polling that waits for a file&rsquo;s size to settle; coloured auto-assign groups</td></tr><tr><td>verify &middot; tracker</td><td>The engine&rsquo;s own payload re-hash, and HTTP/UDP tracker announces with per-tracker seeders, leechers, interval and failure text</td></tr><tr><td>log &middot; power</td><td>The capped message log, and the IOKit wake lock held while a torrent transfers (macOS)</td></tr>
+          <tr><td>blocklist &middot; watchdir &middot; groups</td><td>P2P-plaintext / CIDR rules as merged sorted ranges; watch-dir polling that waits for a file&rsquo;s size to settle; coloured auto-assign groups</td></tr><tr><td>verify &middot; tracker</td><td>The engine&rsquo;s own payload re-hash, and HTTP/UDP tracker announces with per-tracker seeders, leechers, interval and failure text</td></tr><tr><td>log &middot; power &middot; natpmp</td><td>The capped message log; the wake lock held while a torrent transfers (IOKit on macOS, SetThreadExecutionState on Windows); and NAT-PMP port mapping (RFC 6886) beside the wire layer's UPnP</td></tr>
           <tr><td>bencode &middot; metainfo &middot; create &middot; magnet</td><td>Span-preserving bencode, <code>.torrent</code> read/write, piece hashing, magnet parse/build</td></tr>
           <tr><td>session</td><td>The librqbit boundary: session options, add/pause/resume/remove, stats, peers, piece map</td></tr>
           <tr><td>rpc &middot; rpcserver</td><td>Transmission RPC method translation, and the HTTP listener that serves it: CSRF session id, Basic auth, wildcard whitelist, optional web root</td></tr>
@@ -108,10 +108,10 @@
       </table>
 
       <h2 class="reg-h">Test status</h2>
-      <p class="note">146 Rust tests pass on the default (<code>net</code>) build and 139 on <code>--no-default-features</code> — the difference is the wire modules&rsquo; own unit tests, including a listener that answers over a real loopback socket. The webui carries 12 headless tests (a DOM shim plus a recording engine bridge) that assert the scaffold, the boot command sequence, that every call goes through the <code>ztr_invoke</code> bridge, and that the view feeds the host shell without binding a global key. A drift guard reads <code>Engine::invoke</code>&rsquo;s own source and fails if the published command list and the accepted commands disagree.</p>
+      <p class="note">161 Rust tests pass on the default (<code>net</code>) build and 152 on <code>--no-default-features</code> — the difference is the wire modules&rsquo; own unit tests, including a listener that answers over a real loopback socket. The webui carries 13 headless tests (a DOM shim plus a recording engine bridge) that assert the scaffold, the boot command sequence, that every call goes through the <code>ztr_invoke</code> bridge, and that the view feeds the host shell without binding a global key. A drift guard reads <code>Engine::invoke</code>&rsquo;s own source and fails if the published command list and the accepted commands disagree.</p>
 
       <h2 class="reg-h">Known gaps</h2>
-      <p class="note">One row is still missing outright: a peer&rsquo;s client name, because the wire layer&rsquo;s peer snapshot carries counters and state but no peer id. The remaining partials are honest halves — per-torrent speed, peer and sequential-download settings are stored and editable but only the session-wide limiter is applied; renaming inside a torrent requires it to be stopped; sleep prevention is macOS-only; the web root is served but no separate browser build is shipped. Each is a row in the <a href="ztorrent_port_report.html">port report</a>, which is generated from a hand-assessed manifest and audited against the source.</p>
+      <p class="note">What is left is what the wire layer does not expose. One row is missing outright — a peer&rsquo;s client name, because librqbit&rsquo;s peer snapshot carries counters and state but no peer id. Nine of the ten remaining partials are the same shape: sequential download, per-torrent and global peer caps, PEX, local peer discovery, &micro;TP, the encryption policy, the <code>.part</code> suffix and BitTorrent v2 transfers are all settings this engine stores, reports and round-trips, with no knob on the other side to apply them to. Closing them means patching the wire crate rather than writing more here, and the report says so per row instead of claiming the feature. The tenth is sleep prevention on Linux, which needs a session-bus inhibitor. Every row is generated from a hand-assessed manifest and audited against the source.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; ztorrent-core &middot; engineering report</footer>
     </main>
