@@ -60,8 +60,8 @@
         <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version</span></div>
         <div class="hero-stat"><span class="num">26</span><span class="lbl">modules</span></div>
         <div class="hero-stat"><span class="num">66</span><span class="lbl">engine commands</span></div>
-        <div class="hero-stat"><span class="num">174</span><span class="lbl">tests (161 Rust + 13 webui)</span></div>
-        <div class="hero-stat"><span class="num">94.7%</span><span class="lbl">Transmission coverage</span></div>
+        <div class="hero-stat"><span class="num">176</span><span class="lbl">tests (163 Rust + 13 webui)</span></div>
+        <div class="hero-stat"><span class="num">97.4%</span><span class="lbl">Transmission coverage</span></div>
       </section>
 
       <h2 class="reg-h">Module map</h2>
@@ -76,7 +76,7 @@
           <tr><td>scheduler</td><td>Turtle-mode time windows, including overnight windows and the weekday bitfield</td></tr>
           <tr><td>blocklist &middot; watchdir &middot; groups</td><td>P2P-plaintext / CIDR rules as merged sorted ranges; watch-dir polling that waits for a file&rsquo;s size to settle; coloured auto-assign groups</td></tr><tr><td>verify &middot; tracker</td><td>The engine&rsquo;s own payload re-hash, and HTTP/UDP tracker announces with per-tracker seeders, leechers, interval and failure text</td></tr><tr><td>log &middot; power &middot; natpmp</td><td>The capped message log; the wake lock held while a torrent transfers (IOKit on macOS, SetThreadExecutionState on Windows); and NAT-PMP port mapping (RFC 6886) beside the wire layer's UPnP</td></tr>
           <tr><td>bencode &middot; metainfo &middot; create &middot; magnet</td><td>Span-preserving bencode, <code>.torrent</code> read/write, piece hashing, magnet parse/build</td></tr>
-          <tr><td>session</td><td>The librqbit boundary: session options, add/pause/resume/remove, stats, peers, piece map</td></tr>
+          <tr><td>session</td><td>The wire boundary (a vendored librqbit fork): session options, add/pause/resume/remove, stats, peers, piece map, file order</td></tr>
           <tr><td>rpc &middot; rpcserver</td><td>Transmission RPC method translation, and the HTTP listener that serves it: CSRF session id, Basic auth, wildcard whitelist, optional web root</td></tr>
           <tr><td>ffi &middot; tauri_plugin</td><td>The C ABI (<code>ztr_invoke</code>) and the Tauri command/event bridge</td></tr>
         </tbody>
@@ -108,10 +108,10 @@
       </table>
 
       <h2 class="reg-h">Test status</h2>
-      <p class="note">161 Rust tests pass on the default (<code>net</code>) build and 152 on <code>--no-default-features</code> — the difference is the wire modules&rsquo; own unit tests, including a listener that answers over a real loopback socket. The webui carries 13 headless tests (a DOM shim plus a recording engine bridge) that assert the scaffold, the boot command sequence, that every call goes through the <code>ztr_invoke</code> bridge, and that the view feeds the host shell without binding a global key. A drift guard reads <code>Engine::invoke</code>&rsquo;s own source and fails if the published command list and the accepted commands disagree.</p>
+      <p class="note">163 Rust tests pass on the default (<code>net</code>) build and 152 on <code>--no-default-features</code> — the difference is the wire modules&rsquo; own unit tests, including a listener that answers over a real loopback socket. The webui carries 13 headless tests (a DOM shim plus a recording engine bridge) that assert the scaffold, the boot command sequence, that every call goes through the <code>ztr_invoke</code> bridge, and that the view feeds the host shell without binding a global key. A drift guard reads <code>Engine::invoke</code>&rsquo;s own source and fails if the published command list and the accepted commands disagree.</p>
 
       <h2 class="reg-h">Known gaps</h2>
-      <p class="note">What is left is what the wire layer does not expose. One row is missing outright — a peer&rsquo;s client name, because librqbit&rsquo;s peer snapshot carries counters and state but no peer id. Nine of the ten remaining partials are the same shape: sequential download, per-torrent and global peer caps, PEX, local peer discovery, &micro;TP, the encryption policy, the <code>.part</code> suffix and BitTorrent v2 transfers are all settings this engine stores, reports and round-trips, with no knob on the other side to apply them to. Closing them means patching the wire crate rather than writing more here, and the report says so per row instead of claiming the feature. The tenth is sleep prevention on Linux, which needs a session-bus inhibitor. Every row is generated from a hand-assessed manifest and audited against the source.</p>
+      <p class="note">Nothing is missing outright any more. Six rows are partial, each for a stated reason: peer-connection encryption (MSE/PE) and BitTorrent v2 transfers are protocol work the wire layer has not done; a <em>global</em> peer cap does not exist there (it caps per torrent); the <code>.part</code> suffix needs a storage-layer rename the trait has no hook for; the disk-cache setting lost its home when the wire layer dropped its deferred-write buffer — the audit caught that stale claim and downgraded it; and sleep prevention on Linux needs a session-bus inhibitor. Every row is generated from a hand-assessed manifest and audited against the source, which is how that stale claim surfaced.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; ztorrent-core &middot; engineering report</footer>
     </main>
