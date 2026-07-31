@@ -231,6 +231,15 @@ jobs:
         # project. Cross-references to sibling repos in body text ARE fine —
         # the check is scoped to <title> and the canonical breadcrumb only.
         run: bash tests/docs-brand-consistency.sh
+      - name: Every desktop app must open with no network
+        # Twelve apps shipped an index.html whose first paint waited on a
+        # Google Fonts stylesheet, with a CSP whitelisting the CDN to let it
+        # through — while zgui-core already vendored the same two typefaces as
+        # @font-face rules over .ttf files it ships. A render-blocking CDN
+        # fetch on the boot path fails offline and stalls first paint behind a
+        # captive portal. This gate rejects any external host in a served
+        # HTML/CSS load or in an app's CSP.
+        run: bash tests/apps-open-offline.sh
       - name: Every Rust release.yml targeting tap must reference HOMEBREW_TAP_TOKEN
         # Catches the 2026-05-30 powerliners pattern: 4 release cycles
         # (v0.0.7 → v0.1.1) completed the build job + GH Release but
