@@ -40,6 +40,7 @@ MANIFEST=(
   "ztranslator|tauri|#1de9b6|TR|ZTRANSLATOR|ztranslator/app/src-tauri/icons"
   "ztunnel|tauri|#7c4dff|TUN|ZTUNNEL|ztunnel/app/src-tauri/icons"
   "zthrottle|tauri|#ff4500|ZT|ZTHROTTLE|zthrottle/app/src-tauri/icons"
+  "zlatex|tauri|#00b8d4|TeX|ZLATEX|zlatex/app/src-tauri/icons"
   "zmax-gui|tauri|#aa00ff|ZE|ZMAX|zmax-gui/app/src-tauri/icons"
   "zphoto|tauri|#ff1493|ZP|ZPHOTO|zphoto/app/src-tauri/icons"
   "zpwr-synth|juce|#ff56e2|SYN|ZPWR-SYNTH|zpwr-synth/resources"
