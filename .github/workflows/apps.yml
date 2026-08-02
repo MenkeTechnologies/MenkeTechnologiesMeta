@@ -40,6 +40,22 @@ jobs:
         with:
           workspaces: app
 
+      # actions/checkout's token authenticates the CHECKOUT only; cargo does its
+      # own git fetches with libgit2 and sees no credential. src-tauri
+      # git-depends on the private MenkeTechnologies/zpwr-account, and cargo
+      # resolves the whole workspace graph even when that package is excluded
+      # from the build — so without this the run dies in resolution with
+      # "failed to authenticate when downloading repository". Hand cargo the
+      # same PAT through the git CLI.
+      - name: Authenticate cargo for private git dependencies
+        env:
+          SUBMODULE_PAT: ${{ secrets.SUBMODULE_PAT }}
+        run: |
+          git config --global \
+            url."https://x-access-token:${SUBMODULE_PAT}@github.com/".insteadOf \
+            "https://github.com/"
+          echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
+
       # src-tauri (traderview-desktop) needs GTK/Webkit + has no lib tests, so
       # it is excluded from the Linux workspace build, mirroring the app's CI.
       - name: cargo check
