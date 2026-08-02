@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="vscode-zsh — engineering report. TextMate grammar generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars), filetype detection, language-server integration via zshrs --lsp, and how the grammar is verified with vscode-textmate.">
+  <meta name="description" content="vscode-zsh — engineering report. TextMate grammar generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars), filetype detection, language-server integration via zshrs --lsp, running and full debugging through the connect-back zshrs --dap adapter, and how the grammar is verified with vscode-textmate.">
   <title>vscode-zsh — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,7 +46,7 @@
             <a href="https://github.com/MenkeTechnologies/zshrs" target="_blank" rel="noopener noreferrer">zshrs</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            VS Code / VSCodium support for zshrs &middot; standalone TextMate grammar generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars) &middot; LSP via zshrs --lsp &middot; verified with vscode-textmate
+            VS Code / VSCodium support for zshrs &middot; standalone TextMate grammar generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars) &middot; LSP via zshrs --lsp &middot; run + debug via zshrs --dap &middot; verified with vscode-textmate
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -60,7 +60,7 @@
     <main class="tutorial-main">
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle"><strong>vscode-zsh</strong> is the VS Code / VSCodium extension for <strong>zshrs</strong> &mdash; the first-ever Rust rewrite of zsh, a compiled, JIT'd, massively parallel shell. It ships a declarative language contribution (filetype, grammar, editor config), an LSP client that launches <code>zshrs --lsp</code>, and a TextMate grammar that is <strong>generated</strong> from the zshrs binary's own reflection tables.</p>
+      <p class="tutorial-subtitle"><strong>vscode-zsh</strong> is the VS Code / VSCodium extension for <strong>zshrs</strong> &mdash; the first-ever Rust rewrite of zsh, a compiled, JIT'd, massively parallel shell. It ships a declarative language contribution (filetype, grammar, editor config), an LSP client that launches <code>zshrs --lsp</code>, a TextMate grammar that is <strong>generated</strong> from the zshrs binary's own reflection tables, and &mdash; since <strong>0.2.0</strong> &mdash; execution and full debugging driven by zshrs's own debug adapter, <code>zshrs --dap</code>.</p>
       <p class="tutorial-subtitle"><strong>Design principle:</strong> the grammar owns its own <code>zshrs</code> language id and <code>source.zshrs</code> scope &mdash; not a <code>shellscript</code> reskin, not a hand-picked subset. <code>scripts/gen_grammar.sh</code> dumps <code>zshrs --dump-reflection</code> (<code>.builtins</code>, <code>.extensions</code>, <code>.special_vars</code>, <code>.keywords</code>) from the live binary and emits a single <code>source.zshrs</code> grammar carrying the real shell surface. The zshrs world-first extensions get their own scope (<code>support.function.extension.zshrs</code>). Regenerate after a zshrs upgrade and it stays in sync.</p>
 
       <div class="stat-grid">
@@ -72,6 +72,9 @@
         <div class="stat-card"><div class="stat-val accent">3</div><div class="stat-label">Detection paths (ext + filename + shebang)</div></div>
         <div class="stat-card"><div class="stat-val">7</div><div class="stat-label">Tokenizer assertions</div></div>
         <div class="stat-card"><div class="stat-val">~9</div><div class="stat-label">Grammar size (KB)</div></div>
+        <div class="stat-card"><div class="stat-val green">2</div><div class="stat-label">Commands (run + debug)</div></div>
+        <div class="stat-card"><div class="stat-val accent">5</div><div class="stat-label">Launch attributes</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Headless test suites</div></div>
       </div>
 
       <hr class="section-rule">
@@ -79,12 +82,17 @@
       <table class="parity-table">
         <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
         <tbody>
-          <tr><td><code>package.json</code></td><td>Extension manifest &mdash; <code>contributes.languages</code> (id <code>zshrs</code>, zsh extensions + dotfile filenames, shebang <code>firstLine</code>), <code>contributes.grammars</code> (<code>source.zshrs</code>), <code>contributes.configuration</code> (LSP settings), and the <code>vscode-languageclient</code> dependency.</td></tr>
+          <tr><td><code>package.json</code></td><td>Extension manifest &mdash; <code>contributes.languages</code> (id <code>zshrs</code>, zsh extensions + dotfile filenames, shebang <code>firstLine</code>), <code>contributes.grammars</code> (<code>source.zshrs</code>), <code>contributes.configuration</code> (<code>zshrs.path</code>, <code>zshrs.lsp.enabled</code>, <code>zshrs.lsp.args</code>), <code>contributes.commands</code> (<code>zshrs.run</code>, <code>zshrs.debug</code>) with their keybinding and editor-title / palette menus, <code>contributes.breakpoints</code>, <code>contributes.debuggers</code> (type <code>zshrs</code>, its launch attributes, initial configuration and snippet), and the <code>vscode-languageclient</code> dependency.</td></tr>
           <tr><td><code>language-configuration.json</code></td><td>Line comment <code>#</code>, brackets, auto-closing / surrounding pairs, word pattern, and brace-based <code>indentationRules</code>.</td></tr>
-          <tr><td><code>extension.js</code></td><td>Activates on <code>onLanguage:zshrs</code> and starts a <code>LanguageClient</code> running <code>zshrs --lsp</code> over stdio. Missing binary &rarr; one non-fatal warning; highlighting still works.</td></tr>
+          <tr><td><code>extension.js</code></td><td>Activates on <code>onLanguage:zshrs</code> (and on debug resolve) and starts a <code>LanguageClient</code> running <code>zshrs --lsp</code> over stdio. Missing binary &rarr; one non-fatal warning; highlighting still works. Also registers the <code>zshrs.run</code> and <code>zshrs.debug</code> commands, the debug configuration provider that fills in the active file when there is no <code>launch.json</code>, and the debug adapter descriptor factory.</td></tr>
+          <tr><td><code>lib/resolveBinary.js</code></td><td>Resolves <code>zshrs</code> to an absolute path from <code>$PATH</code> plus <code>~/.cargo/bin</code>, <code>/opt/homebrew/bin</code>, <code>/usr/local/bin</code> and <code>~/.local/bin</code>. A GUI-launched editor inherits no shell <code>$PATH</code>, so a bare <code>zshrs</code> fails to spawn and takes the language server and the debugger with it. <code>vscode</code>-free, so it is unit-tested headlessly.</td></tr>
+          <tr><td><code>lib/dapBridge.js</code></td><td>The connect-back bridge. <code>zshrs --dap HOST:PORT</code> is a TCP <em>client</em> &mdash; it dials into a listener the IDE provides, as it already does in JetBrains &mdash; while VS Code wants to be the client connecting to a <code>DebugAdapterServer</code>. This runs a rendezvous server both ends connect to and pipes the two sockets together. Also <code>vscode</code>-free.</td></tr>
           <tr><td><code>syntaxes/zshrs.tmLanguage.json</code></td><td>Generated TextMate grammar &mdash; comments, shebang, strings / here-docs, numbers, sigil variables, command substitution, control + declaration keywords, 137 builtins, 113 extensions, 245 special vars, and operators / pipes / redirects.</td></tr>
           <tr><td><code>scripts/gen_grammar.sh</code></td><td>Regenerates the grammar from <code>zshrs --dump-reflection</code>. Builtins exclude keyword and extension names; names are emitted longest-first so the alternation never matches a prefix of a longer name.</td></tr>
           <tr><td><code>scripts/tokenize_test.js</code></td><td>Loads the grammar under <code>vscode-textmate</code> + <code>vscode-oniguruma</code> (the engine VS Code itself uses) and asserts the scope of 7 sample tokens.</td></tr>
+          <tr><td><code>scripts/resolver_test.js</code></td><td>Binary resolution against a temporary <code>PATH</code>: an executable is found, a non-executable file is not, and the fallback directories are searched.</td></tr>
+          <tr><td><code>scripts/activate_test.js</code></td><td>Drives <code>extension.js</code> against a stub <code>vscode</code> module and asserts the runtime wiring: the LSP is spawned as bare <code>zshrs --lsp</code> with no <code>--stdio</code>, a missing binary never constructs the <code>LanguageClient</code>, run and debug are both registered under the <code>zshrs</code> debug type, and the configuration provider fills in the active file.</td></tr>
+          <tr><td><code>scripts/dapbridge_test.js</code></td><td>Pipes a DAP <code>initialize</code> through the bridge to a real <code>zshrs --dap</code> and asserts the response comes back. Skips when the binary is unavailable, so the CI Linux runner still passes.</td></tr>
         </tbody>
       </table>
 
@@ -105,6 +113,21 @@
       </table>
 
       <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">&amp;</span>RUN &amp; DEBUG</h2>
+      <p class="tutorial-subtitle"><strong>Run</strong> is the simple half: <code>zshrs: Run File</code> saves the active script and executes <code>zshrs &lt;file&gt;</code> in an integrated terminal, reachable from <code>Ctrl+F5</code>, the editor-title <strong>▶</strong>, or the command palette. <strong>Debug</strong> is the interesting half, because zshrs's debug adapter does not speak stdio: <code>zshrs --dap HOST:PORT</code> is a TCP <em>client</em> that dials into a listener the IDE provides &mdash; the model it already uses under JetBrains. VS Code expects the opposite, connecting outward to a <code>DebugAdapterServer</code>. <code>lib/dapBridge.js</code> reconciles the two with a rendezvous server: both VS Code and zshrs connect to it and their sockets are piped together, so DAP traffic flows transparently and the session behaves like any other VS Code debug session.</p>
+      <table class="parity-table">
+        <thead><tr><th>Surface</th><th>Contribution</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Run</td><td class="ok">zshrs.run</td><td><code>Ctrl+F5</code> (<code>editorLangId == zshrs</code>), editor-title <code>navigation@1</code>, command palette</td></tr>
+          <tr><td>Debug</td><td class="ok">zshrs.debug</td><td><code>F5</code>, editor-title <code>navigation@2</code>, command palette</td></tr>
+          <tr><td>Breakpoints</td><td class="ok">contributes.breakpoints</td><td>Gutter breakpoints enabled for the <code>zshrs</code> language</td></tr>
+          <tr><td>Debug type</td><td class="ok">zshrs</td><td>Launch attributes <code>program</code>, <code>args</code>, <code>cwd</code>, <code>stopOnEntry</code>, <code>zshrsPath</code></td></tr>
+          <tr><td>No <code>launch.json</code></td><td class="ok">DebugConfigurationProvider</td><td>An empty configuration is resolved to the active file, so <code>F5</code> works unconfigured</td></tr>
+          <tr><td>Binary</td><td class="ok">lib/resolveBinary.js</td><td>Absolute-path resolution from <code>$PATH</code> + the common install dirs, for GUI-launched editors</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">#</span>VERIFICATION</h2>
       <p class="tutorial-subtitle">The generated grammar is loaded under the exact engine VS Code uses at runtime &mdash; <code>vscode-textmate</code> driving <code>vscode-oniguruma</code> &mdash; and a sample is tokenized with the resulting scopes asserted. This proves the builtin / extension / special-var alternations compile under oniguruma and classify tokens correctly, with extensions matched ahead of plain builtins so a name such as <code>base64</code> resolves to <code>support.function.extension.zshrs</code>.</p>
       <table class="parity-table">
@@ -118,6 +141,7 @@
           <tr><td><code>$out</code> (interpolated var)</td><td class="ok">variable.other.interpolated.zshrs</td></tr>
         </tbody>
       </table>
+      <p class="tutorial-subtitle">Three further suites run headless alongside it, all under <code>node --test</code>: <code>resolver_test.js</code> resolves the binary against a temporary <code>PATH</code>, <code>activate_test.js</code> drives <code>extension.js</code> against a stub <code>vscode</code> module to pin the runtime contract (bare <code>zshrs --lsp</code>, no client on a missing binary, run + debug registered under the <code>zshrs</code> type, active file filled in for an empty configuration), and <code>dapbridge_test.js</code> pipes a DAP <code>initialize</code> through the bridge to a real <code>zshrs --dap</code>, skipping when the binary is unavailable. CI additionally validates the JSON manifests, shellchecks the scripts, and packages the <code>.vsix</code> to confirm the runtime dependency is bundled.</p>
 
     </main>
   </div>

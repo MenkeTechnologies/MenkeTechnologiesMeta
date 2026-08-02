@@ -60,13 +60,14 @@
           <tr><td><code>native_menu.rs</code></td><td>App / Edit / File / Equation / Insert / View / Window / Help; every id round-trips to the same handler the ⌘K palette calls</td></tr>
           <tr><td><code>bus.rs</code></td><td>The GUI Automation Bus socket, so <code>App::open("zlatex")</code> can drive the app; engine commands route Rust-direct, appShell verbs forward into the webview</td></tr>
           <tr><td><code>stryke_lsp.rs</code> &middot; <code>sidecar.rs</code></td><td>Runs the app's stryke lifecycle hooks and backs the hooks editor's language server</td></tr>
-          <tr><td><code>frontend/index.html</code> &middot; <code>main.js</code></td><td>Mounts the one <code>ZGui.appShell</code>, feeds it the equation commands, and wires the file / print / export menu actions</td></tr>
-          <tr><td><code>frontend/zlatex-view.js</code> &middot; <code>preview.js</code></td><td>The equation view itself — vendored from <code>crates/zlatex-core/frontend</code>, never forked</td></tr>
+          <tr><td><code>main.rs</code> &middot; recent documents</td><td><code>recent_documents</code> / <code>remember_recent</code> / <code>clear_recents</code> / <code>open_recent_path</code>, backing Open Recent (⇧⌘O) out of a list in the host's app-config dir rather than WebView storage, with vanished files dropped</td></tr>
+          <tr><td><code>frontend/index.html</code> &middot; <code>main.js</code></td><td>Mounts the one <code>ZGui.appShell</code>, feeds it the document commands — typeset, outline, Open Recent, TeX Live packages, export — and wires the file / print / export menu actions</td></tr>
+          <tr><td><code>frontend/zlatex-view.js</code> &middot; <code>preview.js</code></td><td>The editor + document view itself, with the zpdf viewer bar under the pages — vendored from <code>crates/zlatex-core/frontend</code>, never forked</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Where the engine ends and the host begins</h2>
-      <p class="note">Typesetting &mdash; text mode, line breaking, page building, references, math &mdash; plus the symbol palettes, the library and the export renderers all live in the engine and are reachable as JSON commands. The host owns exactly three things the engine cannot do: show a save panel and write the chosen file (<code>zl_export_to_file</code>), show an open panel and read a <code>.tex</code> file or recover the source from a PDF this app wrote (<code>open_equation_file</code>), and render for the native macOS print panel (<code>print_report</code>).</p>
+      <p class="note">Typesetting &mdash; text mode, hyphenation, line breaking, page building, footnotes, floats, <code>\input</code> / <code>\include</code> splicing, references, math &mdash; plus the symbol palettes, the library, the TeX Live package manager and the export renderers all live in the engine and are reachable as JSON commands. The host owns only what the engine cannot do: show a save panel and write the chosen file (<code>zl_export_to_file</code>), show an open panel and read a <code>.tex</code> file or recover the source from a PDF this app wrote (<code>open_equation_file</code>), keep the recent-documents list on disk (<code>recent_documents</code> and friends), and render for the native macOS print panel (<code>print_report</code>).</p>
 
       <h2 class="reg-h">Shared modules it mounts</h2>
       <table>
@@ -75,20 +76,20 @@
           <tr><td>zgui-core</td><td>The widget toolkit and the app shell (palette, settings, colourscheme, splash, powerline)</td></tr>
           <tr><td>zpwr-embed-terminal</td><td>The PTY terminal pane (Ctrl+` / ⌘T)</td></tr>
           <tr><td>zpwr-file-browser</td><td>The multi-pane file browser overlay (⌘B) over the host's fs backend</td></tr>
-          <tr><td>zpwr-hooks-editor</td><td>The Monaco editor — twice: the stryke hooks overlay (⌘⇧H), and the equation pane itself in LaTeX mode</td></tr>
+          <tr><td>zpwr-hooks-editor</td><td>The Monaco editor — twice: the stryke hooks overlay (⌘⇧H), and the document pane itself in LaTeX mode</td></tr>
           <tr><td>zpwr-i18n</td><td>The interface localization runtime</td></tr>
           <tr><td>zgui-bridge &middot; zwire-host</td><td>The automation-bus socket and the live system stats behind the powerline bar</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">One editor, two grammars</h2>
-      <p class="note">The equation pane is not a second editor. It is the same shared <code>zpwr-hooks-editor</code> bundle every app in the family ships, created with <code>language: 'latex'</code> — a LaTeX Monarch grammar and snippet completion instead of the stryke grammar and its language server. The theme, the vim and emacs keymaps and the Monaco instance are shared; the handle adds <code>insert</code>, <code>selectRange</code> and <code>onSelection</code>, which is what maps the preview back to the source.</p>
+      <p class="note">The document pane is not a second editor. It is the same shared <code>zpwr-hooks-editor</code> bundle every app in the family ships, created with <code>language: 'latex'</code> — a LaTeX Monarch grammar and snippet completion instead of the stryke grammar and its language server. The LaTeX mode knows the document it is editing: inside <code>\ref{…}</code> it completes from the <code>\label</code>s the file defines, inside <code>\cite{…}</code> from its <code>\bibitem</code> keys, and its sectioning is registered as document symbols. The theme, the vim and emacs keymaps and the Monaco instance are shared; the handle adds <code>insert</code>, <code>selectRange</code> and <code>onSelection</code>, which is what maps the preview back to the source, plus a <code>bindKey</code> that takes <code>CmdOrCtrl+Shift+O</code> back from Monaco's own Go to Symbol so Open Recent fires with the editor focused.</p>
 
       <h2 class="reg-h">Hook points</h2>
       <p class="note">The app publishes three stryke hook points — <code>equation.typeset</code>, <code>equation.exported</code> and <code>equation.saved</code> — so a script can post-process an exported file, index what was saved, or react to a formula being set. They are edited in the shared hooks overlay and run through the app's stryke runner.</p>
 
       <h2 class="reg-h">Test status</h2>
-      <p class="note">The engine's suite runs unit tests metric-less (structure only: spacing table, style transitions, script placement, parser totality) plus integration tests against the vendored Latin Modern Math face, which pin the OpenType MATH field mapping against an independent read of the same table and check that exports are outline-based and that a PDF's source round-trips. The host itself is thin by design and carries no logic worth a second suite.</p>
+      <p class="note">The engine's suite runs unit tests metric-less (structure only: spacing table, style transitions, script placement, line-breaker behaviour, hyphenation against <code>tex \showhyphens</code>, parser totality) plus integration tests against the vendored Latin Modern faces, which pin the OpenType MATH field mapping against an independent read of the same table, typeset a whole paper into pages with no line past the right margin and no unresolved reference, and check that exports are outline-based and that a multi-page PDF's source round-trips. The host itself is thin by design and carries no logic worth a second suite.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zlatex &middot; engineering report</footer>
     </main>

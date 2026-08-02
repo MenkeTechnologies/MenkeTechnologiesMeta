@@ -1,0 +1,80 @@
+#!/usr/bin/env sh
+# sync-doc-mirrors — refresh the GitHub Pages doc mirrors under docs/<repo>/
+# from each submodule's own docs/ directory.
+#
+# docs/ is served by .github/workflows/pages.yml WITHOUT submodules, so every
+# per-project page has to exist as a real file in the meta repo. Each mirror is
+# a verbatim copy of the submodule's docs/*.html with one rewrite: the shared
+# chrome lives at docs/ root, so a page one level down references it as ../.
+# Without the rewrite the mirrored page loads unstyled.
+#
+# Only files that already exist on BOTH sides are refreshed — this script never
+# invents a mirror for a page the meta repo has not chosen to publish, and never
+# deletes a meta-authored page that has no submodule counterpart.
+#
+# Usage:  ./bin/sync-doc-mirrors [--dry-run] [repo ...]
+set -eu
+
+META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$META_ROOT"
+
+if [ ! -f .gitmodules ]; then
+  echo "sync-doc-mirrors: $(pwd) has no .gitmodules — wrong directory?" >&2
+  exit 1
+fi
+
+DRY=0
+if [ "${1:-}" = "--dry-run" ]; then DRY=1; shift; fi
+
+if [ $# -gt 0 ]; then
+  REPOS="$*"
+else
+  REPOS=$(find docs -mindepth 1 -maxdepth 1 -type d -not -name .git \
+          -exec basename {} \; | sort)
+fi
+
+changed=0
+scanned=0
+
+for repo in $REPOS; do
+  [ -d "docs/$repo" ] || continue
+  [ -d "$repo/docs" ] || continue
+
+  for src in "$repo"/docs/*.html; do
+    [ -f "$src" ] || continue
+    dst="docs/$repo/$(basename "$src")"
+    # Never create a mirror the meta repo has not already published.
+    [ -f "$dst" ] || continue
+    scanned=$((scanned + 1))
+
+    tmp="$dst.sync.$$"
+    # Shared chrome sits at docs/ root; a mirror one level down needs ../.
+    # Anchored to the exact attribute so a same-named file elsewhere in the
+    # page body is left alone.
+    perl -pe '
+      s{(<link\b[^>]*\bhref=")(hud-static\.css|tutorial\.css)(")}{$1../$2$3}g;
+      s{(<script\b[^>]*\bsrc=")(hud-theme\.js)(")}{$1../$2$3}g;
+    ' "$src" > "$tmp"
+
+    if cmp -s "$tmp" "$dst"; then
+      rm -f "$tmp"
+      continue
+    fi
+
+    changed=$((changed + 1))
+    if [ "$DRY" -eq 1 ]; then
+      echo "STALE  $dst"
+      rm -f "$tmp"
+    else
+      mv "$tmp" "$dst"
+      echo "SYNCED $dst"
+    fi
+  done
+done
+
+echo "---"
+if [ "$DRY" -eq 1 ]; then
+  echo "sync-doc-mirrors: $scanned mirrored pages checked, $changed stale"
+else
+  echo "sync-doc-mirrors: $scanned mirrored pages checked, $changed refreshed"
+fi

@@ -56,10 +56,10 @@
       <section class="hero-stats">
         <div class="hero-stat"><span class="num">0.1.0</span><span class="lbl">version</span></div>
         <div class="hero-stat"><span class="num">3</span><span class="lbl">crate-types (rlib · staticlib · cdylib)</span></div>
-        <div class="hero-stat"><span class="num">103</span><span class="lbl">engine commands</span></div>
+        <div class="hero-stat"><span class="num">191</span><span class="lbl">engine commands</span></div>
         <div class="hero-stat"><span class="num">4</span><span class="lbl">C-ABI exports</span></div>
       </section>
-      <p class="note">zemail-core is in active development. The figures on this page are derived from the crate source as it stands today (<code>Cargo.toml</code>, <code>src/lib.rs</code>, <code>src/ffi.rs</code>): version, crate-types, the dotted commands matched in <code>Engine::invoke</code>, and the exported C symbols. The "planned" column lists work that is not yet implemented — it is a roadmap, not a claim of coverage.</p>
+      <p class="note">zemail-core is in active development. The figures on this page are derived from the crate source as it stands today (<code>Cargo.toml</code>, <code>src/commands.rs</code>, <code>src/ffi.rs</code>): version, crate-types, the dotted commands in the <code>COMMANDS</code> table (kept in lockstep with <code>Engine::invoke</code>'s match arms by a drift-guard test), and the exported C symbols. The "planned" column lists work that is not yet implemented — it is a roadmap, not a claim of coverage.</p>
 
       <h2 class="reg-h">Module map</h2>
       <table>
@@ -67,31 +67,45 @@
         <tbody>
           <tr><td>lib (Engine)</td><td>one dotted command surface via <code>Engine::invoke</code>; event sink; folder seeding</td><td>more dispatch coverage as modules grow</td></tr>
           <tr><td>model</td><td>account · identity · server config · folder · message · contact · filter types</td><td>richer flags, threading model</td></tr>
-          <tr><td>store</td><td>profile load/save; import eml · mbox · maildir</td><td>persistent message store, indexing</td></tr>
-          <tr><td>mime</td><td>RFC 5322 / MIME parsing via <code>mail-parser</code></td><td>compose · attachment encoding</td></tr>
-          <tr><td>search</td><td>in-memory query over messages</td><td>full-text index, saved searches</td></tr>
+          <tr><td>store</td><td>profile load/save; persisted message store (<code>messages.json</code>); import eml · mbox · maildir; mbox export</td><td>—</td></tr>
+          <tr><td>mime</td><td>RFC 5322 / MIME parsing via <code>mail-parser</code></td><td>—</td></tr>
+          <tr><td>encoding</td><td>outbound MIME: RFC 5322 builder (<code>message.build_rfc5322</code>), RFC 2047 header encode, quoted-printable, <code>format=flowed</code> (RFC 3676)</td><td>—</td></tr>
+          <tr><td>search</td><td>in-memory query over messages + persisted named queries (saved searches)</td><td>—</td></tr>
           <tr><td>gloda</td><td>global relevance-ranked search over an inverted TF-IDF index of the whole store (Thunderbird Gloda analogue); dependency-free</td><td>persistent index, phrase queries</td></tr>
           <tr><td>filters</td><td>conditions + actions (mark · star · label · move · delete)</td><td>scheduled runs, more conditions</td></tr>
           <tr><td>junk</td><td>adaptive junk filter — multinomial naive-Bayes over message tokens; trained counts persist in the profile</td><td>header features, per-account models</td></tr>
           <tr><td>mailapps</td><td>cross-app pure logic: categorize · unsubscribe extraction and the stateful surface for snooze · send-later · mute · VIP · pin · scheduled send · self-destruct · Screener · templates · follow-up (Gmail, Apple Mail, Outlook, ProtonMail, Hey, Spark/Superhuman, RFC 8058)</td><td>richer rules, server-side sync</td></tr>
-          <tr><td>calendar</td><td>iCalendar (RFC 5545) meeting-invite parsing + <code>METHOD:REPLY</code> RSVP generation (Thunderbird/Lightning, Outlook, Apple Mail); pure string handling</td><td>recurrence rules, free/busy</td></tr>
-          <tr><td>addressbook</td><td>vCard import/export; contacts</td><td>groups, autocomplete, dedupe</td></tr>
+          <tr><td>threading</td><td>JWZ conversation threading (References / In-Reply-To reply tree) + list-aware canonical-subject normalization</td><td>—</td></tr>
+          <tr><td>thread_reconstruct</td><td>⭐ rebuild a who-wrote-what timeline from <em>one</em> message's quote nesting (<code>&gt;</code>-depth + <code>On … wrote:</code> / Outlook blocks)</td><td>—</td></tr>
+          <tr><td>quote_audit</td><td>⭐ Quote Integrity Audit — verify a reply's quoted text against the original it claims to quote; flag altered wording, changed figures, flipped negations, fabricated lines</td><td>—</td></tr>
+          <tr><td>roster_audit</td><td>⭐ Conversation Roster Audit — diff the To/Cc roster across a whole thread; flag who was silently CC'd in, silently dropped, or quietly demoted To→Cc</td><td>—</td></tr>
+          <tr><td>sender_identity</td><td>⭐ Sender Identity Firewall — per-sender behavioural baselines (DKIM selectors, envelope sources, header field-order, MIME structure, send-hour histogram, writing-style sketch) + offline impersonation / account-takeover scoring</td><td>—</td></tr>
+          <tr><td>provenance</td><td>⭐ Document Revision Ledger — BLAKE3-address every attachment across the archive (rayon-parallel, incremental), group revisions into rename-stable document families, and report stale holders / forks / resurrections / domain crossings; persists to its own <code>ledger.json</code></td><td>—</td></tr>
+          <tr><td>revision_diff</td><td>⭐ Revision Delta Ledger — extract each revision's text (plain text + HTML in-crate, richer formats via host-registered backends), align consecutive revisions with <code>quote_audit</code>'s line matcher, and join material-drift / silent-revert / stale-on-a-moved-term findings onto the holder graph</td><td>—</td></tr>
+          <tr><td>phishing</td><td>⭐ explainable phishing risk score — auth failures, display-name spoofing, brand impersonation, punycode/homoglyph domains, urgency language, link-text↔href mismatch, each with its own reason</td><td>—</td></tr>
+          <tr><td>headers</td><td><code>Authentication-Results</code> (RFC 8601) + <code>DKIM-Signature</code> (RFC 6376) analysis</td><td>—</td></tr>
+          <tr><td>sieve</td><td>Sieve (RFC 5228) script parsing + filter → Sieve export</td><td>—</td></tr>
+          <tr><td>calendar</td><td>iCalendar (RFC 5545) meeting-invite parsing + <code>METHOD:REPLY</code> RSVP generation (Thunderbird/Lightning, Outlook, Apple Mail); VTODO · VJOURNAL · VALARM · VTIMEZONE parsing; free/busy merge; pure string handling</td><td>—</td></tr>
+          <tr><td>recurrence</td><td>RRULE expansion (FREQ/INTERVAL/COUNT/UNTIL/BYDAY) over self-contained proleptic-Gregorian date math — no <code>chrono</code></td><td>—</td></tr>
+          <tr><td>addressbook</td><td>vCard 3.0 ↔ 4.0 import/export; contacts; <code>KIND:group</code> cards; duplicate detection + merge</td><td>—</td></tr>
           <tr><td>carddav (feature <code>carddav</code>)</td><td>CardDAV address-book pull/push of vCards over WebDAV (<code>ureq</code> native-tls + <code>quick_xml</code>), reusing the addressbook parser</td><td>incremental sync, ctag/etag</td></tr>
-          <tr><td>net (feature <code>net</code>)</td><td>IMAP sync · SMTP send over one native-tls stack</td><td>incremental sync, OAuth, idle</td></tr>
+          <tr><td>net (feature <code>net</code>)</td><td>IMAP sync · SMTP send over one native-tls stack: UID-delta incremental fetch, folder discovery, server-side SEARCH, flag write-back, RFC 2177 IDLE, POP3 download, XOAUTH2 for IMAP + SMTP, and a stateless <code>smtp_send_one</code> for transactional mail</td><td>—</td></tr>
           <tr><td>openpgp (feature <code>openpgp</code>)</td><td>OpenPGP crypto via rPGP (pure-Rust): keygen, detached sign/verify, encrypt/decrypt over ASCII armor</td><td>key discovery, subkey management</td></tr>
           <tr><td>smime (feature <code>smime</code>)</td><td>S/MIME crypto — CMS (RFC 5652) over X.509 + RSA via RustCrypto: gen cert, sign/verify, encrypt/decrypt (PEM / base64 DER)</td><td>cert chain validation, AES-GCM</td></tr>
           <tr><td>error</td><td>engine <code>Result</code> + <code>Error</code> with stable machine tags for a <code>{error:{tag,message}}</code> FFI envelope</td><td>more granular tags</td></tr>
           <tr><td>util</td><td>dependency-free helpers — a standard Base64 (RFC 4648) codec for the JSON/FFI boundary</td><td>—</td></tr>
           <tr><td>ffi</td><td>C ABI: <code>zml_init</code> · <code>zml_invoke</code> · <code>zml_set_event_callback</code> · <code>zml_string_free</code></td><td>header generation, richer event payloads</td></tr>
-          <tr><td>tauri_plugin (feature <code>tauri</code>)</td><td>Tauri v2 plugin glue for GUI hosts</td><td>mountable webui component</td></tr>
+          <tr><td>tauri_plugin (feature <code>tauri</code>)</td><td>Tauri v2 plugin glue for GUI hosts; the mountable view ships beside it as <code>frontend/zemail.js</code> (<code>mountZemail(root)</code>)</td><td>—</td></tr>
+          <tr><td>commands</td><td>the <code>COMMANDS</code> table — every dotted command <code>Engine::invoke</code> accepts, for automation-bus discovery; a drift-guard test fails if it falls behind <code>invoke</code></td><td>—</td></tr>
         </tbody>
       </table>
+      <p class="note">The crate carries <strong>52 source modules</strong>; the map above lists the principal ones. The remainder cover the protocol and analysis surfaces reached only through <code>invoke</code> — <code>imap_parse</code>, <code>jmap</code>, <code>dsn</code>, <code>tnef</code>, <code>sniff</code>, <code>tracking</code>, <code>policy</code>, <code>priority</code>, <code>schedule</code>, <code>querylang</code>, <code>quoting</code>, <code>listmgmt</code>, <code>mailmerge</code>, <code>mailto</code>, <code>forward</code>, <code>digest</code>, <code>html</code>, <code>addr_validate</code>, <code>contactphoto</code> and <code>crypto_mime</code>.</p>
 
       <h2 class="reg-h">Build surfaces</h2>
       <p class="note">The crate declares <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>. The <code>rlib</code> links natively into Rust/Tauri hosts; the <code>staticlib</code>/<code>cdylib</code> expose the C ABI for non-Rust hosts. The default <code>net</code> feature pulls in <code>imap</code>, <code>native-tls</code> and <code>lettre</code>; building <code>--no-default-features</code> yields a pure core with zero TLS/network deps that compiles in headless CI. The optional <code>tauri</code> feature adds the GUI plugin layer.</p>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="note">The crate carries 35 in-source unit tests across the engine and its modules: the command surface (version reporting, default-folder seeding, account add/list/remove, an import-then-filter flow, unknown-command error tagging), plus module-level tests in <code>store</code>, <code>mime</code>, <code>search</code>, <code>filters</code>, <code>addressbook</code>, <code>util</code>, <code>gloda</code>, <code>junk</code>, <code>carddav</code>, <code>openpgp</code>, <code>smime</code> and <code>mailapps</code>. Tests for the pure core run without network access and are intended to pass identically in a headless Linux CI; the <code>net</code> module's transport is feature-gated so the default test path needs no live mail server.</p>
+      <p class="note">The crate carries <strong>202 in-source unit tests</strong> plus <strong>55 integration tests</strong> (<code>tests/integration.rs</code>) — 257 in all — across the engine and its modules: the command surface (version reporting, default-folder seeding, account add/list/remove, an import-then-filter flow, unknown-command error tagging, and a drift guard asserting <code>COMMANDS</code> covers every <code>invoke</code> arm), plus module-level tests in <code>store</code>, <code>mime</code>, <code>search</code>, <code>filters</code>, <code>addressbook</code>, <code>util</code>, <code>gloda</code>, <code>junk</code>, <code>mailapps</code>, <code>threading</code>, <code>thread_reconstruct</code>, <code>quote_audit</code>, <code>roster_audit</code>, <code>sender_identity</code>, <code>provenance</code>, <code>revision_diff</code>, <code>tnef</code> and <code>tracking</code>. Those counts are the default feature set; the <code>carddav</code>, <code>openpgp</code> and <code>smime</code> modules carry their own tests behind their feature flags. Tests for the pure core run without network access and are intended to pass identically in a headless Linux CI; the <code>net</code> module's transport is feature-gated so the default test path needs no live mail server.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zemail-core &middot; engineering report</footer>
     </main>

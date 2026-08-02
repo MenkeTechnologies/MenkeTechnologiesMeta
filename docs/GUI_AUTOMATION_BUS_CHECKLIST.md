@@ -5,16 +5,18 @@ Work list to bring every app onto the bus defined in [`GUI_AUTOMATION_BUS.md`](G
 [`GUI_APP_ARCHITECTURE.md`](GUI_APP_ARCHITECTURE.md) (core/host ownership) and
 [`GUI_POLISH_GATE_CHECKLIST.md`](GUI_POLISH_GATE_CHECKLIST.md).
 
-**Status (2026-07-11): Track A substrate built, sockets wired on 15 Tauri apps.**
+**Status (2026-08-02): Track A substrate built, sockets wired on 19 Tauri apps.**
 Phase 0A shipped — `zgui-bridge` (Rust socket crate), `zgui-core/webui/automation.js` +
-`automation-host.js`, and per-app `bus.rs` all exist. Fifteen apps open their socket
-(`serve("<app>")` + `bus::start` verified at the call site): **Audio-Haxor, traderview, zcite,
-zmax-gui, zemail, zftp, zgo, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztranslator,
-ztunnel**. **`zcontainer` is NOT wired** — it declares the `zgui-bridge` dep
-(`app/src-tauri/Cargo.toml:22`) but has no `bus.rs` and never calls `serve`. The live verb surface is
-generated into [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) — **4308 engine verbs across 17 apps**
-+ 15 shared appShell verbs. Per-app power-user surface coverage (bars / vim / hooks) is in
-[`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
+`automation-host.js`, and per-app `bus.rs` all exist. Nineteen apps open their socket
+(`serve("<app>")` verified at the call site): **Audio-Haxor, traderview, zcite, zcontainer, zemail,
+zftp, zgo, zlatex, zmax-gui, zmusic, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztorrent,
+ztranslator, ztunnel**. `zcontainer` is now wired too — `app/src-tauri/src/bus.rs:145` calls
+`serve("zcontainer", handler)`, closing the catalog/source discrepancy noted below. The only Track A
+apps off the `zgui-bridge` socket are `zwire` (its own native bus) and `zterminal` (no webview
+shell). The live verb surface is generated into [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) —
+**stale: the two copies of that catalog have diverged and neither covers `zlatex`, `zmusic` or
+`ztorrent`; re-run `bin/gen-gui-actions-live` before quoting a verb total.** Per-app power-user
+surface coverage (bars / vim / hooks) is in [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
 
 Still open: typed-verb `register({app,verbs})` surfaces exist only for **traderview** + **zwire**;
 the other socket-wired apps run a **webview-forward** `bus.rs` (forward every verb to the webview →
@@ -22,7 +24,7 @@ the other socket-wired apps run a **webview-forward** `bus.rs` (forward every ve
 **Track B (JUCE) substrate is still unbuilt** — the `sock`/`verbs` cells below are current for
 Track A only; do not read the Track B matrix as started.
 
-## Roster (22 apps, two tracks)
+## Roster (25 apps, two tracks)
 
 Derived from `app-store/store.js` — recompute, don't trust the literal:
 ```
@@ -32,12 +34,12 @@ perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"
 perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"'"'"]Audio Plugins['"'"'"]/gs){print "$1\n"}' app-store/store.js
 ```
 
-- **Track A — Tauri / webview (19):** `zpdf`, `zphoto`, `zemail`, `zstation`, `zoffice`, `Audio-Haxor`,
-  `traderview`, `ztranslator`, `zcite`, `zreq`, `ztunnel`, `zthrottle`, `zgo`, `zftp`, `zcontainer`,
-  `zterminal`, `zwire`, `zpwr-daw`, plus `zmax-gui` — socket-wired (`app/src-tauri/src/bus.rs`) and
-  publishing 30 verbs, though it is not in the store's `Desktop Apps` category. Uses `ZGui.automation`
+- **Track A — Tauri / webview (22):** the store's `Desktop Apps` category, which now also carries
+  `zmax-gui`: `Audio-Haxor`, `traderview`, `zcite`, `zcontainer`, `zemail`, `zftp`, `zgo`, `zlatex`,
+  `zmax-gui`, `zmusic`, `zoffice`, `zpdf`, `zphoto`, `zpwr-daw`, `zreq`, `zstation`, `zterminal`,
+  `zthrottle`, `ztorrent`, `ztranslator`, `ztunnel`, `zwire`. Uses `ZGui.automation`
   (JS) + `zgui-bridge` (Rust socket) + `run_stryke_hook`.
-- **Track B — JUCE (4):** `zpwr-daw`, `zpwr-synth`, `zpwr-fx`, `zpwr-midi-fx`. No webview, no Tauri
+- **Track B — JUCE (4):** `zpwr-daw` plus the store's three `Audio Plugins` — `zpwr-synth`, `zpwr-fx`, `zpwr-midi-fx`. No webview, no Tauri
   `invoke` — the surface, socket host, and stryke embedding are **C++ / C-ABI**.
 - **`zpwr-daw` is in both** — its Tauri shell rides Track A; its JUCE `ClipEngine` rides Track B. The two
   surfaces namespace under one bus name (`zpwr-daw.timeline.*` shell, `zpwr-daw.clip.*` engine).
@@ -121,7 +123,7 @@ site are flipped. **verbs** ✅ = the app's verb surface is enumerated in
 | --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | zcite ⭐ | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zreq ⭐ | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
-| zcontainer² | ✅ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ✅ |
+| zcontainer² | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zemail | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zftp | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zgo | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
@@ -137,6 +139,9 @@ site are flipped. **verbs** ✅ = the app's verb surface is enumerated in
 | traderview | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | Audio-Haxor | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
 | zmax-gui | ✅ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ✅ |
+| zlatex³ | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| zmusic³ | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
+| ztorrent³ | ◐ | ☐ | ☐ | ✅ | ☐ | ☐ | ☐ | ☐ |
 | zpwr-daw (shell) | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 
 ¹ zwire scripts through its **own** native bus (`zwire-host/src/zbus.rs`, 161 verbs), not the
@@ -144,10 +149,14 @@ site are flipped. **verbs** ✅ = the app's verb surface is enumerated in
 transport. zterminal is N/A: native terminal, no webview shell, not on this bus (see
 [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md)).
 
-² zcontainer's 25 verbs appear in the live-generated `GUI_SCRIPT_ACTIONS.md` catalog, but **no bus
-code exists in git** for it: it declares the `zgui-bridge` dep (`app/src-tauri/Cargo.toml:22`) yet
-ships no `bus.rs` and never calls `serve`. Its `sock` box stays ☐ until the call site lands; the
-catalog/source discrepancy needs resolving.
+² zcontainer's bus code has landed — `app/src-tauri/src/bus.rs:145` calls `serve("zcontainer",
+handler)`, so the 25 verbs the catalog lists are now reproducible from source and `sock` is ✅. (It
+was previously the one row where the catalog and the tree disagreed.)
+
+³ `zlatex`, `zmusic` and `ztorrent` all call `serve("<app>")` (`app/src-tauri/src/bus.rs:184`,
+`:214`, `:183`), so their sockets are wired, but they post-date the last `gen-gui-actions-live` run
+and appear in neither copy of `GUI_SCRIPT_ACTIONS.md` — `verbs` stays ◐ and `docs` ☐ until the
+catalog is regenerated.
 
 ## Status matrix — Track B (JUCE)
 
@@ -166,7 +175,9 @@ catalog/source discrepancy needs resolving.
 2. **Pilots ⭐ `zcite` + `zreq`** — highest existing action counts (206 / 151), rich state, natural cross-app
    pair. Prove in-proc + out-of-proc + one cross-app script (`zcite` selection → `zreq` request) before
    fan-out.
-3. **Fan out Track A** — remaining 16 apps, one session each (16-pane workflow).
+3. **Fan out Track A** — sockets are now wired on all 19 `zgui-bridge` apps; what remains per app is
+   promoting webview-forwarded verbs into typed `register({app,verbs})` surfaces (only `traderview`
+   has them today, 12 call sites) and filling the `state`/`evt`/`cores`/`in-proc`/`out-proc` columns.
 4. **Phase 0B** (Track B substrate) — in parallel with Track A fan-out; the plugin-instance addressing is
    the gating unknown.
 5. **Track B apps** — `zpwr-daw` engine first (already has the C ABI), then the three plugins.

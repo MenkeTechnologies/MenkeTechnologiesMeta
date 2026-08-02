@@ -50,6 +50,8 @@
             <span class="sep">/</span>
             <span class="current">MS Office Audit</span>
             <span class="sep">/</span>
+            <a href="port_report.html">Port Report</a>
+            <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zoffice-core" target="_blank" rel="noopener noreferrer">Source</a>
           </nav>
           <p class="docs-build-line">// what Word &middot; Excel &middot; PowerPoint &middot; Access do, mapped against what the zoffice engine implements &mdash; status derived from source symbols, not asserted</p>
@@ -60,6 +62,7 @@
           <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
           <a class="btn btn-secondary" href="index.html">Docs</a>
           <a class="btn btn-secondary" href="report.html">Engineering Report</a>
+          <a class="btn btn-secondary" href="port_report.html">Port Report</a>
         </div>
       </div>
     </header>
@@ -71,7 +74,7 @@
       <div class="card-grid">
         <div class="card"><h3>Tier 1 &mdash; Read</h3><p><span class="s-full">FULL.</span> All six apps parse real ODF/OOXML packages: text, formatting, tables, styles, charts, animations, formulas, database catalogs. This is where zoffice is strongest &mdash; close to LibreOffice-grade coverage on the read path.</p></div>
         <div class="card"><h3>Tier 2 &mdash; Lossless patch</h3><p><span class="s-part">NARROW.</span> <code>replace_lossless</code> (find/replace) and <code>set_cell_lossless</code> (single cell) edit the <em>original</em> package XML in place, preserving all formatting &mdash; but only for those narrow operations.</p></div>
-        <div class="card"><h3>Tier 3 &mdash; Full save</h3><p><span class="s-part">CLOSING.</span> Full-save fidelity is being closed incrementally. <code>save_xlsx</code> preserves formulas, merged cells, named ranges and number-vs-text cell types, and <code>save_ods</code> now writes the ODF spreadsheet with the same fidelity as xlsx (values, number/text types, formulas, merged ranges, named ranges); <code>save_docx</code> / <code>save_odt</code> preserve every paragraph property (alignment, indent, spacing, shading, page-break, heading &amp; list level) and full run-level character formatting (bold, italic, underline, strike, font, size, color, caps, super/subscript, letter-spacing). Still dropped: cell number-formats / styles, tables, images.</p></div>
+        <div class="card"><h3>Tier 3 &mdash; Full save</h3><p><span class="s-part">CLOSING.</span> Full-save fidelity is being closed incrementally. <code>save_xlsx</code> preserves formulas, merged cells, named ranges and number-vs-text cell types, and <code>save_ods</code> now writes the ODF spreadsheet with the same fidelity as xlsx (values, number/text types, formulas, merged ranges, named ranges); <code>save_docx</code> / <code>save_odt</code> preserve every paragraph property (alignment, indent, spacing, shading, page-break, heading &amp; list level), full run-level character formatting (bold, italic, underline, strike, font, size, color, caps, super/subscript, letter-spacing, hyperlinks), and tables with cell merges, shading and page geometry. Still dropped: Calc cell number-formats / styles, and images.</p></div>
       </div>
 
       <p class="lede legend">
@@ -85,8 +88,8 @@
         <thead><tr><th>Component</th><th>MS app</th><th>Read</th><th>Write / edit</th><th>Estimated parity</th></tr></thead>
         <tbody>
           <tr><td>Calc</td><td>Excel</td><td><span class="s-full">&#10003; full</span> &mdash; 300+ functions, formula eval</td><td><span class="s-part">&#9680;</span> 1-cell lossless; full save (xlsx + ods) keeps formulas/merges/named-ranges/types</td><td>~55% (read-weighted)</td></tr>
-          <tr><td>Writer</td><td>Word</td><td><span class="s-full">&#10003; full</span> &mdash; all structures parsed</td><td><span class="s-part">&#9680;</span> find/replace lossless; full save keeps paragraph properties</td><td>~35%</td></tr>
-          <tr><td>Impress</td><td>PowerPoint</td><td><span class="s-full">&#10003; full</span> &mdash; slides, animations, media</td><td><span class="s-part">&#9680;</span> text + positioned shapes save (pptx + odp) + add slide</td><td>~25%</td></tr>
+          <tr><td>Writer</td><td>Word</td><td><span class="s-full">&#10003; full</span> &mdash; all structures parsed</td><td><span class="s-part">&#9680;</span> find/replace + table-cell lossless; full save keeps paragraph properties, run formatting and tables</td><td>~35%</td></tr>
+          <tr><td>Impress</td><td>PowerPoint</td><td><span class="s-full">&#10003; full</span> &mdash; slides, animations, media</td><td><span class="s-part">&#9680;</span> text + positioned shapes save (pptx + odp) · add / delete / reorder slide</td><td>~25%</td></tr>
           <tr><td>Base</td><td>Access</td><td><span class="s-part">&#9680;</span> <code>.odb</code> only, embedded HSQLDB</td><td><span class="s-none">&#9675;</span> no DDL/DML write</td><td>~10%</td></tr>
         </tbody>
       </table>
@@ -113,11 +116,14 @@
           <tr><td>Frozen panes</td><td>full</td><td><span class="s-part">&#9680;</span> read flag only</td><td><code>has_frozen_panes</code></td></tr>
           <tr><td>Sheet protection</td><td>full</td><td><span class="s-part">&#9680;</span> read/enumerated</td><td><code>sheet_protections</code></td></tr>
           <tr><td>Worksheet insert / delete</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no add/remove sheet API</td></tr>
-          <tr><td>Sparklines</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
-          <tr><td>Slicers / timelines</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
-          <tr><td>Macros (VBA)</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Sparklines</td><td>full</td><td><span class="s-part">&#9680;</span> read, no editor</td><td><code>sparklines</code> &mdash; <code>x14:sparklineGroups</code> &rarr; kind + data range + location cell</td></tr>
+          <tr><td>Slicers / timelines</td><td>full</td><td><span class="s-part">&#9680;</span> read, no editor</td><td><code>slicers</code> &mdash; <code>xl/slicers</code> + <code>xl/timelines</code> &rarr; kind, name, caption</td></tr>
+          <tr><td>Macros (VBA)</td><td>full</td><td><span class="s-part">&#9680;</span> modules extracted, not executed</td><td><code>ole2::vba_modules</code> reads <code>vbaProject.bin</code>; no Basic interpreter</td></tr>
           <tr><td>Power Query / Power Pivot</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
-          <tr><td>Solver / Goal Seek</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Solver / Goal Seek</td><td>full</td><td><span class="s-part">&#9680;</span> Goal Seek implemented; no Solver</td><td><code>goal_seek</code> &mdash; single-input search against a target value</td></tr>
+          <tr><td>Root-cause attribution</td><td>&mdash; (no MS equivalent)</td><td><span class="s-full">&#10003;</span> <code>calc.rootcause</code></td><td>revision diff + dependency cone + counterfactual re-evaluation &rarr; ranked causes with contribution shares</td></tr>
+          <tr><td>Recalc critical path</td><td>&mdash; (Trace Precedents is one hop)</td><td><span class="s-full">&#10003;</span> <code>calc.critical_path</code></td><td>longest formula dependency chain over the workbook DAG</td></tr>
+          <tr><td>Dependency blast radius</td><td>&mdash; (Trace Dependents is one hop)</td><td><span class="s-full">&#10003;</span> <code>calc.impact_map</code></td><td>transitive dependent count per cell + the keystone cell</td></tr>
           <tr><td>Export</td><td>PDF</td><td><span class="s-full">&#10003;</span> PDF, HTML, Markdown, CSV</td><td><code>calc.pdf</code>, <code>to_html/to_markdown/to_csv</code></td></tr>
         </tbody>
       </table>
@@ -128,8 +134,8 @@
         <thead><tr><th>Feature group</th><th>Word</th><th>zoffice Writer</th><th>Evidence / note</th></tr></thead>
         <tbody>
           <tr><td>Open formats</td><td>docx, doc, rtf, odt, txt</td><td><span class="s-full">&#10003;</span> odt, docx, doc, rtf, fodt</td><td>OOXML + ODF + legacy OLE2 + RTF read</td></tr>
-          <tr><td>Save formats</td><td>full-fidelity</td><td><span class="s-part">&#9680;</span> docx/odt keep all paragraph props; find/replace lossless</td><td><code>save_docx</code> / <code>save_odt</code> write alignment/indent/spacing/shading/page-break/heading/list; run-level char formatting + tables still dropped</td></tr>
-          <tr><td>Character formatting</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>bold, italic, underline, strike, color, highlight, font, size, super/subscript, caps &mdash; writer.rs:80</td></tr>
+          <tr><td>Save formats</td><td>full-fidelity</td><td><span class="s-part">&#9680;</span> docx/odt keep paragraph props, run formatting and tables; find/replace + table-cell lossless</td><td><code>save_docx</code> / <code>save_odt</code> write alignment/indent/spacing/shading/page-break/heading/list, run bold/italic/underline/size/color/hyperlink, and <code>w:tbl</code> with cell merges + shading; images still dropped</td></tr>
+          <tr><td>Character formatting</td><td>full</td><td><span class="s-full">&#10003;</span> read + written back</td><td>bold, italic, underline, strike, color, highlight, font, size, super/subscript, caps &mdash; <code>Run</code></td></tr>
           <tr><td>Paragraph formatting</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>alignment, indent, spacing, shading, page breaks</td></tr>
           <tr><td>Tables</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>cells, borders, colors, merges, row/col spans</td></tr>
           <tr><td>Lists</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>nesting levels, ordered vs bullet</td></tr>
@@ -140,12 +146,14 @@
           <tr><td>Footnotes / endnotes</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>footnotes</code></td></tr>
           <tr><td>Content controls / form fields</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>content_controls</code></td></tr>
           <tr><td>Styles</td><td>full catalog + edit</td><td><span class="s-part">&#9680;</span> read catalog, not editable</td><td>distinct paragraph styles enumerated</td></tr>
-          <tr><td>Track changes</td><td>full accept/reject</td><td><span class="s-part">&#9680;</span> read authors + counts, no accept/reject</td><td><code>revision_authors</code>, writer.rs:331</td></tr>
-          <tr><td>Mail merge</td><td>full execute</td><td><span class="s-part">&#9680;</span> fields extracted, not executed</td><td><code>merge_fields</code></td></tr>
-          <tr><td>In-place editing</td><td>full WYSIWYG</td><td><span class="s-none">&#9675;</span> absent</td><td>no inline edit; whole-document replace only</td></tr>
-          <tr><td>TOC / references / citations</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no TOC/citation generation</td></tr>
-          <tr><td>Spell / grammar check</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
-          <tr><td>Macros (VBA)</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Track changes</td><td>full accept/reject</td><td><span class="s-full">&#10003;</span> read authors + accept / reject</td><td><code>revision_authors</code>, <code>accept_revision</code>, <code>reject_revision</code></td></tr>
+          <tr><td>Mail merge</td><td>full execute</td><td><span class="s-full">&#10003;</span> fields extracted and executed</td><td><code>merge_fields</code> enumerates; <code>mail_merge</code> substitutes a record into a copy of the document</td></tr>
+          <tr><td>In-place editing</td><td>full WYSIWYG</td><td><span class="s-part">&#9680;</span> structural edit, not WYSIWYG</td><td><code>edit_paragraph</code> / <code>insert_paragraph</code> / <code>edit_table_cell</code> / <code>replace_lossless</code>; no live layout-accurate editing surface</td></tr>
+          <tr><td>Page arranger</td><td>&mdash; (Word has no page sorter)</td><td><span class="s-full">&#10003;</span> reorder pages</td><td><code>reorder_pages</code> + the shared <code>ZGui.arrange</code> overlay in the desktop shell</td></tr>
+          <tr><td>TOC / references / citations</td><td>full</td><td><span class="s-part">&#9680;</span> read, no generation</td><td><code>toc</code> reads the TOC entries; <code>bibliography</code> reads citation sources; neither regenerates the field</td></tr>
+          <tr><td>Spell / grammar check</td><td>full</td><td><span class="s-part">&#9680;</span> spell only, caller-supplied dictionary</td><td><code>spell_check</code> &mdash; no bundled dictionaries, no grammar model</td></tr>
+          <tr><td>Macros (VBA)</td><td>full</td><td><span class="s-part">&#9680;</span> modules extracted, not executed</td><td><code>ole2::vba_modules</code>; no Basic interpreter</td></tr>
+          <tr><td>Structural merge / blame</td><td>&mdash; (opaque blob to git)</td><td><span class="s-full">&#10003;</span> <code>writer.merge3</code>, <code>writer.blame</code></td><td>git-native 3-way structural merge driver + per-paragraph revision attribution</td></tr>
           <tr><td>Export</td><td>PDF</td><td><span class="s-full">&#10003;</span> PDF, HTML, Markdown</td><td><code>writer.pdf</code>, <code>to_html/to_markdown</code></td></tr>
         </tbody>
       </table>
@@ -156,23 +164,23 @@
         <thead><tr><th>Feature group</th><th>PowerPoint</th><th>zoffice Impress</th><th>Evidence / note</th></tr></thead>
         <tbody>
           <tr><td>Open formats</td><td>pptx, ppt, odp</td><td><span class="s-full">&#10003;</span> pptx, odp, ppt, fodp</td><td>OOXML + ODF + legacy binary read</td></tr>
-          <tr><td>Save formats</td><td>full-fidelity</td><td><span class="s-part">&#9680;</span> pptx + odp minimal text-shape</td><td><code>save_pptx</code> / <code>save_odp</code></td></tr>
+          <tr><td>Save formats</td><td>full-fidelity</td><td><span class="s-part">&#9680;</span> pptx + odp text and positioned shapes</td><td><code>save_pptx</code> / <code>save_odp</code> write each shape's text plus its x/y/w/h; masters, media and charts are not re-emitted</td></tr>
           <tr><td>Slides</td><td>full</td><td><span class="s-full">&#10003;</span> read + add blank</td><td><code>add_slide</code> appends empty</td></tr>
-          <tr><td>Slide delete / reorder</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no <code>delete_slide</code> / reorder</td></tr>
+          <tr><td>Slide delete / reorder</td><td>full</td><td><span class="s-full">&#10003;</span> delete + slide-sorter reorder</td><td><code>delete_slide</code> (drops the slide with its notes), <code>reorder_slides</code> + the shared <code>ZGui.arrange</code> overlay</td></tr>
           <tr><td>Layouts / masters</td><td>full + edit</td><td><span class="s-part">&#9680;</span> read, not editable</td><td><code>layout_names</code>, <code>master_count</code></td></tr>
-          <tr><td>Placeholders</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>layout_placeholders</code></td></tr>
+          <tr><td>Placeholders</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>placeholders</code></td></tr>
           <tr><td>Shapes</td><td>full + edit</td><td><span class="s-part">&#9680;</span> read geometry + text; positioned shapes written back on save</td><td>x/y/w/h positioning read + written back (pptx + odp)</td></tr>
           <tr><td>Text extraction</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>plain_text</code></td></tr>
-          <tr><td>Media (audio / video)</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>embedded clips per slide, impress.rs:111</td></tr>
+          <tr><td>Media (audio / video)</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>embedded clips per slide &mdash; <code>media</code></td></tr>
           <tr><td>Tables on slides</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>rows &times; columns</td></tr>
           <tr><td>Speaker notes</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>per-slide notes</td></tr>
           <tr><td>WordArt</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td>text + warp preset</td></tr>
           <tr><td>Charts</td><td>full</td><td><span class="s-part">&#9680;</span> read + render, no edit</td><td><code>charts_render</code></td></tr>
-          <tr><td>Animations</td><td>full</td><td><span class="s-part">&#9680;</span> read effect types, no edit</td><td><code>animations</code>, impress.rs:851</td></tr>
-          <tr><td>Transitions</td><td>full</td><td><span class="s-part">&#9680;</span> read effect types, no edit</td><td><code>transitions</code>, impress.rs:827</td></tr>
-          <tr><td>SmartArt / diagrams</td><td>full</td><td><span class="s-none">&#9675;</span> stub &mdash; enumerated, not rendered</td><td>impress.rs:640</td></tr>
+          <tr><td>Animations</td><td>full</td><td><span class="s-part">&#9680;</span> read effect types, no edit</td><td><code>animations</code></td></tr>
+          <tr><td>Transitions</td><td>full</td><td><span class="s-part">&#9680;</span> read effect types, no edit</td><td><code>transitions</code></td></tr>
+          <tr><td>SmartArt / diagrams</td><td>full</td><td><span class="s-part">&#9680;</span> enumerated, not rendered</td><td><code>smartart</code> extracts each <code>dgm:pt</code> node text; no diagram layout/render engine</td></tr>
           <tr><td>Master editing</td><td>full</td><td><span class="s-none">&#9675;</span> absent (read-only)</td><td>&mdash;</td></tr>
-          <tr><td>Slideshow / presenter view</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no live present mode</td></tr>
+          <tr><td>Slideshow / presenter view</td><td>full</td><td><span class="s-part">&#9680;</span> presenter data, no live show</td><td><code>presenter_view</code> builds the presenter model (current + next slide text, notes, slide N of M); no full-screen present mode</td></tr>
           <tr><td>Export</td><td>PDF</td><td><span class="s-full">&#10003;</span> PDF, HTML, Markdown</td><td><code>impress.pdf</code></td></tr>
         </tbody>
       </table>
@@ -183,13 +191,13 @@
         <thead><tr><th>Feature group</th><th>Access</th><th>zoffice Base</th><th>Evidence / note</th></tr></thead>
         <tbody>
           <tr><td>Open formats</td><td>accdb, mdb</td><td><span class="s-part">&#9680;</span> .odb only</td><td>no Access-native accdb/mdb reader</td></tr>
-          <tr><td>Table catalog + data</td><td>full</td><td><span class="s-full">&#10003;</span> read (embedded HSQLDB)</td><td>base.rs:106; INSERT rows from HSQLDB script</td></tr>
-          <tr><td>SQL SELECT execution</td><td>full</td><td><span class="s-full">&#10003;</span> over embedded store</td><td><code>query()</code>, base.rs:129</td></tr>
-          <tr><td>Schema / foreign keys</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>hsqldb_script</code> &rarr; CREATE TABLE / FK</td></tr>
-          <tr><td>Query designer</td><td>full visual</td><td><span class="s-part">&#9680;</span> catalog + run, no designer</td><td>saved queries listed</td></tr>
-          <tr><td>Forms / reports</td><td>full designer</td><td><span class="s-part">&#9680;</span> catalog names only</td><td>base.rs:115</td></tr>
-          <tr><td>External DSN / ODBC</td><td>full</td><td><span class="s-part">&#9680;</span> catalog visible, not queryable</td><td>connection URI parsed</td></tr>
-          <tr><td>Write (DDL / DML)</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>no table/query/form edit</td></tr>
+          <tr><td>Table catalog + data</td><td>full</td><td><span class="s-full">&#10003;</span> read (embedded HSQLDB)</td><td><code>list_tables</code>, <code>table_rows</code> &mdash; INSERT rows from the HSQLDB script</td></tr>
+          <tr><td>SQL SELECT execution</td><td>full</td><td><span class="s-full">&#10003;</span> over embedded store</td><td><code>query</code>, <code>run_query</code>, <code>run_query_with_params</code>, <code>run_saved_query</code></td></tr>
+          <tr><td>Schema / foreign keys</td><td>full</td><td><span class="s-full">&#10003;</span> read</td><td><code>hsqldb_script</code> &rarr; CREATE TABLE / FK; <code>table_schema</code>, <code>table_constraints</code>, <code>relationships</code>, <code>indexes</code>, <code>views</code>, <code>triggers</code>, <code>sequences</code></td></tr>
+          <tr><td>Query designer</td><td>full visual</td><td><span class="s-part">&#9680;</span> catalog + run, no designer</td><td><code>list_queries</code>, <code>query_definitions</code>, <code>run_saved_query</code></td></tr>
+          <tr><td>Forms / reports</td><td>full designer</td><td><span class="s-part">&#9680;</span> catalog names + metadata only</td><td><code>list_forms_reports</code>, <code>component_metadata</code></td></tr>
+          <tr><td>External DSN / ODBC</td><td>full</td><td><span class="s-part">&#9680;</span> catalog visible, not queryable</td><td><code>data_source</code> parses the connection URI</td></tr>
+          <tr><td>Write (DDL / DML)</td><td>full</td><td><span class="s-none">&#9675;</span> parsed, never persisted</td><td><code>parse_dml</code> reads INSERT / UPDATE / DELETE into a typed <code>Dml</code>; nothing writes an <code>.odb</code> back &mdash; the one remaining <em>planned</em> engine gap in Base</td></tr>
         </tbody>
       </table>
 
@@ -201,7 +209,10 @@
           <tr><td>Draw (vector graphics)</td><td><span class="s-part">&#9680;</span> read .odg + SVG export + save .odg with shape geometry, no in-place edit</td><td>shapes, layers, gradients, connectors; <code>export_svg</code> / <code>save_odg</code> (rect/ellipse/line/&hellip; with svg:x/y/w/h)</td></tr>
           <tr><td>Math (formula editor)</td><td><span class="s-part">&#9680;</span> read StarMath &rarr; MathML, no edit</td><td><code>math.render</code>, <code>to_starmath</code></td></tr>
           <tr><td>Embedded terminal</td><td><span class="s-full">&#10003;</span> PTY shell in-app</td><td>zpwr-embed-terminal; Office has none</td></tr>
-          <tr><td>Command palette</td><td><span class="s-full">&#10003;</span> &#8984;K fzf-ranked</td><td>app.js:1568; beyond Office "Tell&nbsp;me"</td></tr>
+          <tr><td>Command palette</td><td><span class="s-full">&#10003;</span> &#8984;K fzf-ranked</td><td><code>commandRegistry()</code> in <code>webui/app.js</code>; beyond Office "Tell&nbsp;me"</td></tr>
+          <tr><td>Structural VCS (<code>zmerge</code> / <code>zblame</code>)</td><td><span class="s-full">&#10003;</span> git merge driver + per-paragraph blame</td><td><code>writer.merge3</code>, <code>writer.blame</code>, <code>scripts/git-zoffice-merge</code>; Office treats <code>.docx</code> as an opaque blob</td></tr>
+          <tr><td>Formula-graph analysis</td><td><span class="s-full">&#10003;</span> critical path · blast radius · root cause</td><td><code>calc.critical_path</code>, <code>calc.impact_map</code>, <code>calc.rootcause</code>; Excel's Trace arrows are one hop</td></tr>
+          <tr><td>Page / slide arrangers</td><td><span class="s-full">&#10003;</span> drag-reorder overlay</td><td><code>Document::reorder_pages</code> + <code>Presentation::reorder_slides</code>, driven by the shared <code>ZGui.arrange</code> overlay; Word has no page sorter</td></tr>
         </tbody>
       </table>
 
@@ -209,12 +220,14 @@
       <table class="aud">
         <thead><tr><th>Feature</th><th>MS Office</th><th>zoffice</th><th>Note</th></tr></thead>
         <tbody>
-          <tr><td>PDF export</td><td>full</td><td><span class="s-full">&#10003;</span> all apps</td><td>wkhtmltopdf backend</td></tr>
-          <tr><td>Localization (i18n)</td><td>full</td><td><span class="s-full">&#10003;</span> 29 locales</td><td>zpwr-i18n runtime</td></tr>
+          <tr><td>PDF export</td><td>full</td><td><span class="s-full">&#10003;</span> all apps</td><td>pure-Rust PDF 1.4 writer (<code>src/pdf.rs</code>, base-14 Helvetica) &mdash; no external converter, no spawned process</td></tr>
+          <tr><td>Localization (i18n)</td><td>full</td><td><span class="s-full">&#10003;</span> 27 locales</td><td>zpwr-i18n runtime; catalogs in <code>crates/zpwr-i18n/i18n/</code></td></tr>
           <tr><td>Print dialog</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>PDF export only, no print UI</td></tr>
-          <tr><td>Save button (desktop app)</td><td>full</td><td><span class="s-none">&#9675;</span> stub</td><td>engine <code>save()</code> exists; no app Save wiring</td></tr>
+          <tr><td>Save button (desktop app)</td><td>full</td><td><span class="s-full">&#10003;</span> wired</td><td><code>office_save_text</code> plus the per-app mutators among the shell's 169 registered Tauri commands</td></tr>
           <tr><td>Cloud co-authoring</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
-          <tr><td>Macros / scripting (VBA)</td><td>full</td><td><span class="s-none">&#9675;</span> absent</td><td>&mdash;</td></tr>
+          <tr><td>Macros / scripting (VBA)</td><td>full</td><td><span class="s-part">&#9680;</span> modules extracted, not executed</td><td><code>ole2::vba_modules</code>; no Basic interpreter</td></tr>
+          <tr><td>Package encryption</td><td>full</td><td><span class="s-full">&#10003;</span> read + write</td><td>MS-OFFCRYPTO Agile + Standard (<code>src/crypto.rs</code>) and ODF package encryption (<code>src/crypto_odf.rs</code>), pure RustCrypto</td></tr>
+          <tr><td>Digital signatures</td><td>full</td><td><span class="s-full">&#10003;</span> verify + sign (no signing UI)</td><td><code>src/dsig.rs</code> &mdash; <code>verify_part_digests</code> (integrity), <code>verify_signatures</code> (RSA <code>SignatureValue</code>), <code>verify_cert_chain</code>, <code>sign_ooxml</code> / <code>sign_odf</code>; hand-rolled Canonical XML, no external C14N dep</td></tr>
           <tr><td>Accessibility (screen reader)</td><td>full</td><td><span class="s-none">&#9675;</span> unverified</td><td>not audited in engine surface</td></tr>
           <tr><td>Copilot / generative AI</td><td>present</td><td><span class="s-none">&#9675;</span> absent</td><td>MS Copilot state is past my knowledge cutoff &mdash; flagged, not independently verified</td></tr>
         </tbody>

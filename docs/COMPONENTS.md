@@ -8,7 +8,7 @@ every GUI app embeds the full shared component set it needs.
 > vim / hooks editor) — as opposed to which submodules it embeds — see
 > [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
 
-_Last reconciled: 2026-07-12._
+_Last reconciled: 2026-08-02, from each app's `.gitmodules` at the SHAs this meta repo pins._
 
 ## Components
 
@@ -31,8 +31,8 @@ _Last reconciled: 2026-07-12._
 | **zpdf-core** | Embeddable pure-Rust PDF engine — parse/edit/annotate/sign/embed, no GUI deps; native + C ABI. Engine behind `zpdf` |
 | **zphoto-core** | Embeddable pure-Rust raster-imaging engine — layers/selections/filters/export, no GUI deps; native + C ABI. Engine behind `zphoto` |
 | **ztmux-core** | Embeddable pure-Rust terminal/tmux engine (PTY + tmux wire-protocol control), no GUI deps. Engine behind `zterminal` |
-| **zgui-bridge** | GUI Automation Bus host — one Unix socket per app exposing its verbs/state/events (what `stryke-app` drives). Mounted by 17 apps |
-| **zwire-host** | Native-messaging / system-stats / PTY host binary shared with `zwire`. Mounted by 10 apps (`zreq`, `zoffice`, `zpdf`, `zftp`, `zphoto`, `zemail`, `zthrottle`, `zlatex`, `zmax-gui`, `zwire`) |
+| **zgui-bridge** | GUI Automation Bus host — one Unix socket per app exposing its verbs/state/events (what `stryke-app` drives). Mounted by 19 apps (`Audio-Haxor`, `traderview`, `zcite`, `zcontainer`, `zemail`, `zftp`, `zgo`, `zlatex`, `zmax-gui`, `zmusic`, `zoffice`, `zpdf`, `zphoto`, `zreq`, `zstation`, `zthrottle`, `ztorrent`, `ztranslator`, `ztunnel`) |
+| **zwire-host** | Native-messaging / system-stats / PTY host binary shared with `zwire`. Mounted by 16 apps (`zcite`, `zcontainer`, `zemail`, `zftp`, `zlatex`, `zmax-gui`, `zmusic`, `zoffice`, `zpdf`, `zphoto`, `zreq`, `zstation`, `zthrottle`, `ztorrent`, `ztunnel`, `zwire`) |
 | **zpwr-modal-editor** | Shared Vim/Emacs modal-editing surface. Mounted by `zoffice` + `zemail` |
 
 ## Consumption matrix
@@ -51,7 +51,7 @@ no column here; see the component table above for their consumers.
 
 | App | clip-engine | patch-core | embed-terminal | hooks-editor | crate | ztranslator | file-browser | i18n | algo | office-core | mail-core | pdf-core |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ |
 | **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — |
 | **ztranslator** | ✓ | — | ✓ | ✓ | ✓ | _(source)_ | ✓ | ✓ | — | — | — | — |
 | **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | — | — |
@@ -60,18 +60,20 @@ no column here; see the component table above for their consumers.
 | **zpwr-midi-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zoffice** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | _(source)_ | — | — |
 | **zemail** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | _(source)_ | ✓ |
-| **zpdf** | — | — | ✓ | ✓ | — | — | ✓ | — | — | — | — | _(source)_ |
-| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zpdf** | — | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | — | _(source)_ |
+| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | — |
 | **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zgo** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zftp** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | **zcontainer** | — | — | — | ✓ | — | — | ✓ | — | — | — | — | — |
 | **zstation** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | — | — | — |
-| **zphoto** | — | — | — | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zphoto** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **ztunnel** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zthrottle** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zlatex** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zmax-gui** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zmax-gui** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | ✓ |
+| **zmusic** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **ztorrent** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zwire** | — | — | — | ✓¹ | — | — | — | — | — | — | — | — |
 | **zterminal** | — | — | — | — | — | — | — | — | — | — | — | — |
 
@@ -99,8 +101,8 @@ than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`,
   "ztranslator" matrix column marks apps embedding either, since both carry the view.
 - **zpdf:** from-scratch PDF editor (Tauri v2) porting the Adobe Acrobat Pro + macOS Preview feature
   set; `zpdf` + `zpdf-core` are meta submodules, `zpdf` embeds `zpdf-core` (nested) plus the standard
-  component set. `zpdf-core` is *not* universal — outside `zpdf` itself, only `Audio-Haxor`, `zemail`
-  and `zftp` mount it.
+  component set. `zpdf-core` is *not* universal — outside `zpdf` itself, only `Audio-Haxor`, `zemail`,
+  `zftp` and `zmax-gui` mount it.
 - **zoffice / zemail:** GUI apps (Tauri v2, cyberpunk HUD) — `zoffice` replaces MS Office
   (documents/spreadsheets/presentations), `zemail` is a desktop mail client. Both ship a Tauri app
   shell (`frontend/` + `app/src-tauri`) and a `pnpm t` suite driving their engines `zoffice-core` /
@@ -114,8 +116,8 @@ than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`,
   `embed-terminal` component is n/a since it is itself the terminal. Both are **paid products** in the
   app-store. `zphoto-core` / `ztmux-core` follow the same `-core` embed model as `zpdf-core`; they have
   no matrix column of their own since they are app-specific engines.
-- **Ported Tauri apps (zgo / zftp / zcontainer / zstation):** the four newest ported GUI apps —
-  `zgo` (Alfred), `zftp` (Cyberduck), `zcontainer` (Docker Desktop + Lens), `zstation` (Station) —
+- **Ported Tauri apps (zgo / zftp / zcontainer / zstation):** `zgo` (Alfred), `zftp` (Cyberduck),
+  `zcontainer` (Docker Desktop + Lens), `zstation` (Station) —
   follow the same full-GUI-app convention as the rows above: the standard set (embed-terminal /
   hooks / file-browser / i18n / office-core / mail-core / pdf-core) shows the intended embed, not
   necessarily what each app's `.gitmodules` has wired yet. Current variable-column wiring is
@@ -123,7 +125,14 @@ than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`,
   `office-core` / `mail-core` / `pdf-core` in `.gitmodules`; `zcontainer` wires `zcontainer-core`,
   `zpwr-file-browser`, `zpwr-hooks-editor`, `zgui-core` and `zgui-bridge` — so both of its matrix ✓s
   are real wiring, and it mounts no `embed-terminal` / `i18n` yet.
-- **Not consumed by any GUI app:** `zpwr-theme`, `zpwr-jobs`, `zpwr-license` (tooling/editor).
+- **Not consumed by any GUI app:** `zpwr-theme`, `zpwr-jobs`, `zpwr-license`, `zpwr-account` — no
+  submodule in the tree mounts any of them (tooling / editor theme / commercial back end). The
+  account service goes the other way: `zpwr-account` itself mounts `zgui-core` for its portal.
+- **zmusic / ztorrent (new rows):** both wire the same standard Tauri set —
+  `zpwr-clip-engine`, `zpwr-embed-terminal`, `zpwr-hooks-editor`, `zpwr-file-browser`, `zpwr-i18n`,
+  plus `zgui-core`, `zgui-bridge` and `zwire-host`. `zmusic` additionally mounts `zdsp-core`
+  directly (the only Tauri app that does). Their own engines `zmusic-core` / `ztorrent-core` follow
+  the app-specific `-core` model and have no matrix column, same as `zphoto-core` / `ztmux-core`.
 - **patch-core** is JUCE-plugin-only (daw + synth/fx/midi-fx); the Tauri apps don't use it.
 - **zgui-core (extracted):** the shared `window.ZGui` chrome toolkit (shell/settings/dialog/table/
   command-palette/fzf/colorscheme/notification) pulled out of Audio-Haxor / zreq / `zpwr-patch-core` so
@@ -137,8 +146,8 @@ than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`,
   half of `ZGui.viz`), `LockFreeStreamSource` (RT-safe streaming + glitch-free stream→RAM hot-swap),
   and `DspStereoFileSource` (the transport-ready orchestrator composing all of the above; the app
   implements the `InsertChain` plugin-rack interface). Consumers `add_subdirectory(zdsp-core)` and link
-  `zdsp::core` (JUCE must already be present — the lib does not fetch it). Mounted directly by only
-  Audio-Haxor and `zpwr-patch-core`; the plugin apps (`zpwr-daw` / `zpwr-synth` / `zpwr-fx` /
+  `zdsp::core` (JUCE must already be present — the lib does not fetch it). Mounted directly by
+  Audio-Haxor, `zmusic` and `zpwr-patch-core`; the plugin apps (`zpwr-daw` / `zpwr-synth` / `zpwr-fx` /
   `zpwr-midi-fx`) get it transitively through their `zpwr-patch-core` mount. What
   stays in each app: file-format wiring, IPC/transport plumbing, plugin scanning, and the `InsertChain`
   implementation. **Paid product** — proprietary (`UNLICENSED`). Not a GUI-app webui component, so it's

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zoffice engineering report — implemented status and module breakdown for the from-scratch Rust office suite (documents, spreadsheets, presentations) built on Tauri v2 and the zoffice-core engine, with DOCX/ODT, XLSX/ODS, and PPTX/ODP I/O and 551 tests.">
+  <meta name="description" content="zoffice engineering report — implemented status and module breakdown for the from-scratch Rust office suite (documents, spreadsheets, presentations) built on Tauri v2 and the zoffice-core engine, with DOCX/ODT, XLSX/ODS, and PPTX/ODP I/O and 970 tests.">
   <title>zoffice — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,10 +57,11 @@
         <div class="hero-stat"><span class="num">3</span><span class="lbl">app classes (docs · sheets · slides)</span></div>
         <div class="hero-stat"><span class="num">1</span><span class="lbl">shared engine (zoffice-core)</span></div>
         <div class="hero-stat"><span class="num">v2</span><span class="lbl">Tauri desktop shell</span></div>
-        <div class="hero-stat"><span class="num">551</span><span class="lbl">tests in zoffice-core</span></div>
-        <div class="hero-stat"><span class="num">43.5k</span><span class="lbl">Rust lines in the engine</span></div>
+        <div class="hero-stat"><span class="num">970</span><span class="lbl">tests in zoffice-core</span></div>
+        <div class="hero-stat"><span class="num">78.9k</span><span class="lbl">Rust lines in the engine</span></div>
+        <div class="hero-stat"><span class="num">169</span><span class="lbl">Tauri commands in the shell</span></div>
       </section>
-      <p class="note">This is an honest, source-verified report. zoffice is under active development, but the engine is real: <code>zoffice-core</code> implements DOCX/ODT, XLSX/ODS, and PPTX/ODP read/write across <code>writer.rs</code>, <code>calc.rs</code>, and <code>impress.rs</code>, and ships 551 tests over roughly 43,500 lines of Rust. The counts on this page are recomputed from source and updated as the engine and the desktop shell take shape.</p>
+      <p class="note">This is an honest, source-verified report. zoffice is under active development, but the engine is real: <code>zoffice-core</code> implements DOCX/ODT, XLSX/ODS, and PPTX/ODP read/write across <code>writer.rs</code>, <code>calc.rs</code>, and <code>impress.rs</code>, and ships 970 tests over roughly 78,900 lines of Rust. The counts on this page are recomputed from source and updated as the engine and the desktop shell take shape.</p>
 
       <h2 class="reg-h">What zoffice is</h2>
       <p class="note">A from-scratch office suite in Rust covering the office triad — documents, spreadsheets, and presentations — packaged as a Tauri v2 desktop app behind a cyberpunk HUD, built to replace Microsoft Office. The editing engine is factored out as <code>zoffice-core</code> so the same engine can be embedded inside the other MenkeTechnologies apps rather than living only in the desktop binary. The suite interoperates with the Microsoft Office and OpenDocument document, spreadsheet, and presentation formats, with DOCX/ODT, XLSX/ODS, and PPTX/ODP I/O implemented in the engine today.</p>
@@ -73,13 +74,13 @@
           <tr><td>spreadsheets</td><td>cell/grid model · formulas · XLSX/ODS read/write (<code>calc.rs</code>)</td><td>implemented</td></tr>
           <tr><td>presentations</td><td>slide model · PPTX/ODP read/write (<code>impress.rs</code>)</td><td>implemented</td></tr>
           <tr><td>zoffice-core</td><td>shared editing engine, GUI-free, embeddable in host apps</td><td>implemented</td></tr>
-          <tr><td>desktop shell</td><td>Tauri v2 app · cyberpunk HUD front-end</td><td>in progress</td></tr>
+          <tr><td>desktop shell</td><td>Tauri v2 app · cyberpunk HUD front-end · 169 registered commands (open/save, editing, inspectors, page &amp; slide arrangers, embedded terminal)</td><td>implemented</td></tr>
         </tbody>
       </table>
-      <p class="note">The document, spreadsheet, and presentation format handlers are implemented in <code>zoffice-core</code> (<code>writer.rs</code>, <code>calc.rs</code>, <code>impress.rs</code>); the desktop shell that wires them into the Tauri app is still being built out. The split between the desktop app (<code>zoffice</code>) and the engine (<code>zoffice-core</code>) is the load-bearing architectural decision: the engine carries the document model and editing operations with no GUI dependency, so the same code can power both the desktop suite and embeds in the other MenkeTechnologies apps.</p>
+      <p class="note">The document, spreadsheet, and presentation format handlers are implemented in <code>zoffice-core</code> (<code>writer.rs</code>, <code>calc.rs</code>, <code>impress.rs</code>), and the desktop shell wires them through 169 Tauri commands (<code>app/src-tauri/src/lib.rs</code>, <code>generate_handler!</code>) — including the Writer page-sorter (<code>writer_pages</code> / <code>writer_reorder</code>) and the Impress slide-sorter (<code>impress_reorder</code>). The split between the desktop app (<code>zoffice</code>) and the engine (<code>zoffice-core</code>) is the load-bearing architectural decision: the engine carries the document model and editing operations with no GUI dependency, so the same code can power both the desktop suite and embeds in the other MenkeTechnologies apps.</p>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="note">The counts on this page are recomputed from source, not asserted from memory. The engine carries <strong>551</strong> tests (<code>grep -rEn "#\[(tokio::)?test\]" zoffice-core/src zoffice-core/tests | wc -l</code>) across roughly <strong>43,500</strong> lines of Rust (<code>find zoffice-core -name '*.rs' -not -path '*/target/*' | xargs wc -l</code>). Format support is verifiable in <code>writer.rs</code> (DOCX/ODT), <code>calc.rs</code> (XLSX/ODS), and <code>impress.rs</code> (PPTX/ODP). These numbers will be refreshed from source as the engine and the desktop shell evolve.</p>
+      <p class="note">The counts on this page are recomputed from source, not asserted from memory. The engine carries <strong>970</strong> tests (<code>grep -rEn "#\[(tokio::)?test\]" zoffice-core/src zoffice-core/tests | wc -l</code>) across roughly <strong>78,900</strong> lines of Rust (<code>find zoffice-core -name '*.rs' -not -path '*/target/*' | xargs wc -l</code> → 78,947). The desktop shell registers <strong>169</strong> Tauri commands (the <code>generate_handler!</code> list in <code>app/src-tauri/src/lib.rs</code>). Format support is verifiable in <code>writer.rs</code> (DOCX/ODT), <code>calc.rs</code> (XLSX/ODS), and <code>impress.rs</code> (PPTX/ODP). These numbers will be refreshed from source as the engine and the desktop shell evolve.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zoffice &middot; engineering report</footer>
     </main>

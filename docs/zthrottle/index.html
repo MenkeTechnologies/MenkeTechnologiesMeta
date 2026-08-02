@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="hud-static.css">
-  <link rel="stylesheet" href="tutorial.css">
+  <link rel="stylesheet" href="../hud-static.css">
+  <link rel="stylesheet" href="../tutorial.css">
   <style>
     .docs-main { max-width: 72rem; margin: 0 auto; padding: 0 1.2rem 4rem; }
     .lede { color: var(--text); font-size: 14px; line-height: 1.7; margin: 12px 0 22px; }
@@ -77,15 +77,15 @@ pnpm --dir app tauri build    # release bundle</pre>
       <p class="lede">The GUI is a thin Tauri v2 shell; every calculation lives in <a href="https://github.com/MenkeTechnologies/zthrottle-core" target="_blank" rel="noopener noreferrer"><code>zthrottle-core</code></a>. The engine exposes one dotted command surface (<code>zth_invoke</code>) for benchmarks, and a lock-free worker pool for the monitor data harvest so a minutes-long storage scan never blocks the UI. Because the engine carries the served frontend, the same benchmark and monitor code embeds inside the other MenkeTechnologies apps. See the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella for the wider stack.</p>
 
       <h2 class="reg-h">The storage index — full scan once, then hooks</h2>
-      <p class="lede">The persistent directory index is built by a single full filesystem walk on first launch (or a wiped DB), streamed to the UI and committed in batches so it survives a mid-walk restart. After that, the fs-watch hook is the only thing that <em>automatically</em> writes to it: an FSEvents / inotify watch on <code>$HOME</code>, debounced, drives a targeted <code>update_paths</code> that re-sizes only the changed directories and bubbles the delta up to their ancestors &mdash; never a whole-tree re-walk. A freshly-built <code>target/</code> is discovered by re-walking from its nearest already-indexed ancestor. The GUI reads the index instantly on every open: no scan-on-open, no loading screen. Every other write &mdash; refresh, reindex, delete, a junk-pattern edit (one SQL pass, no re-walk), a size freshen &mdash; is a button the user pressed.</p>
+      <p class="lede">The persistent directory index is built by a single full filesystem walk on first launch (or a wiped DB), streamed to the UI and committed in batches so it survives a mid-walk restart. After that, the fs-watch hook is the only thing that <em>automatically</em> writes to it: an FSEvents / inotify watch on <code>$HOME</code>, debounced, drives a targeted <code>update_paths</code> that re-sizes every changed directory (the changed paths are deduped to a set first, so a build's thousands of duplicate events collapse to the distinct dirs that matter &mdash; and <em>all</em> of them are updated, not a capped subset) and bubbles the delta up to their ancestors &mdash; never a whole-tree re-walk. A freshly-built <code>target/</code> is discovered by re-walking from its nearest already-indexed ancestor. If a burst is too large to track precisely or the watcher drops events (inotify queue overflow), one incremental refresh reconciles the whole home subtree; and if the recursive watch can't be established at all, the index degrades to a low-frequency incremental reconcile rather than going stale. On macOS the walk never descends <code>/System/Volumes/Data</code> &mdash; the firmlink twin of the canonical tree &mdash; so nothing is indexed (or counted) twice, and delete candidates are deduped on the canonical path so junk indexed under either form still surfaces. The GUI reads the index instantly on every open: no scan-on-open, no loading screen. Every other write &mdash; refresh, reindex, delete, a junk-pattern edit (one SQL pass, no re-walk), a size freshen &mdash; is a button the user pressed, and every recalculation is a visible &#9881; JOBS row: the drawer's size freshen runs as a <code>tree.resize</code> job and each fs-watch burst lands as a <code>tree.update</code> row. The db file is kept honest too: pruned rows only freelist pages in SQLite, so after any complete walk the engine VACUUMs when &ge;25% of a &ge;40&nbsp;MB file is dead space, truncates the WAL, and a schema bump vacuums the dropped table away instead of leaving a full-size husk.</p>
       <figure class="arch-fig">
-        <img src="index-arch.svg" alt="zthrottle storage-index architecture: a one-time full scan builds the SQLite index; then the fs-watch hook (update_paths) is the only automatic writer, with user actions (refresh, reindex, delete, pattern edit, freshen) manual. Audit verdict: PASS." loading="lazy">
-        <figcaption>Full scan once &rarr; the fs-watch hook keeps the SQLite index live. Audit: <code>update_paths</code> is the only automatic writer; the full walk runs once (cold DB or manual rebuild), with no periodic re-walk.</figcaption>
+        <img src="index-arch.svg" alt="zthrottle storage-index architecture: a one-time full scan builds the SQLite index; then the fs-watch hook drives targeted update_paths, with an incremental refresh reconciling on burst overflow, dropped events, or a watcher that can't start; user actions (refresh, reindex, delete, pattern edit, freshen) stay manual." loading="lazy">
+        <figcaption>Full scan once &rarr; the fs-watch hook keeps the SQLite index live via targeted <code>update_paths</code>, with an incremental refresh as the reconcile path when a burst overflows, events are dropped, or the watcher can't start &mdash; so the map is always current without a manual re-walk.</figcaption>
       </figure>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zthrottle &middot; system stress + benchmark + contention profiler</footer>
     </main>
   </div>
-  <script src="hud-theme.js"></script>
+  <script src="../hud-theme.js"></script>
 </body>
 </html>

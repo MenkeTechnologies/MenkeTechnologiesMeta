@@ -53,13 +53,13 @@
       <p class="status-note">Status: in development. The desktop shell builds (Tauri v2) and mounts the engine; the engine's exact per-feature Postman coverage is hand-assessed conservatively in the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zreq-core/zreq_port_report.html" target="_blank" rel="noopener noreferrer">zreq-core port report</a> (a generator that can only flag overclaims, never inflate). This page describes the architecture and roadmap.</p>
 
       <h2 class="reg-h">What zreq is</h2>
-      <p class="note">zreq is a from-scratch desktop API client (Postman port) written in Rust. The desktop shell is a <strong>Tauri v2</strong> application with a cyberpunk HUD front-end and an embedded terminal. The API-client logic is factored out into a separate, embeddable engine, <a href="https://github.com/MenkeTechnologies/zreq-core" target="_blank" rel="noopener noreferrer">zreq-core</a>, so the same engine can be reused inside the other MenkeTechnologies GUI apps without dragging GUI or platform dependencies into them. It is a paid product, created by MenkeTechnologies.</p>
+      <p class="note">zreq is a from-scratch desktop API client (Postman port) written in Rust. The desktop shell is a <strong>Tauri v2</strong> application with a cyberpunk HUD front-end and, alongside the API client, an embedded terminal, a file browser, a stryke hooks editor with its own language server, a clip sequencer, and an in-process system monitor. The API-client logic is factored out into a separate, embeddable engine, <a href="https://github.com/MenkeTechnologies/zreq-core" target="_blank" rel="noopener noreferrer">zreq-core</a>, so the same engine can be reused inside the other MenkeTechnologies GUI apps without dragging GUI or platform dependencies into them. It is a paid product, created by MenkeTechnologies.</p>
 
       <h2 class="reg-h">Two-layer split</h2>
       <table>
         <thead><tr><th>layer</th><th>repository</th><th>responsibility</th></tr></thead>
         <tbody>
-          <tr><td>desktop app</td><td>zreq (this repo)</td><td>Tauri v2 shell, cyberpunk HUD front-end, embedded terminal, action-to-engine wiring</td></tr>
+          <tr><td>desktop app</td><td>zreq (this repo)</td><td>Tauri v2 shell, cyberpunk HUD front-end, embedded terminal, file browser, stryke hooks editor + language server, clip sequencer, in-process system monitor, action-to-engine wiring</td></tr>
           <tr><td>API engine</td><td>zreq-core</td><td>embeddable API-client logic (collections, requests, environments, auth, HTTP, history, codegen, import/export), decoupled from any GUI</td></tr>
         </tbody>
       </table>
@@ -79,8 +79,14 @@
           <tr><td>Tauri v2 shell</td><td>implemented</td><td>desktop window, IPC bridge, engine + embedded-terminal commands wired</td></tr>
           <tr><td>zreq-core integration</td><td>implemented</td><td>mounts the embeddable engine + its webui as the single source of API-client logic</td></tr>
           <tr><td>Cyberpunk HUD UI</td><td>implemented</td><td>shared MenkeTechnologies HUD design language (this docs site uses it)</td></tr>
-          <tr><td>Command palette / i18n</td><td>planned</td><td>shared zpwr-i18n catalog + palette across the desktop stack</td></tr>
-          <tr><td>Request cancellation &amp; collection runner</td><td>planned</td><td>tracked in the zreq-core port report as missing</td></tr>
+          <tr><td>Command palette / i18n</td><td>implemented</td><td>ZGui palette + native menu bar; the shared zpwr-i18n catalog is synced into the served frontend before each dev/build and selectable from Settings</td></tr>
+          <tr><td>Collection runner</td><td>implemented in engine</td><td><code>runner.run</code> — runs a collection's requests in order, once per data-file iteration (JSON or CSV rows)</td></tr>
+          <tr><td>Causal Session Replay</td><td>implemented in engine</td><td><code>session.record</code> / <code>provenance</code> / <code>blastradius</code> / <code>counterfactual</code>; the recording persists beside the workspace</td></tr>
+          <tr><td>Stryke hooks</td><td>implemented</td><td>hooks editor window (<code>open_hooks_editor</code>, ⌘⇧H / dashboard tile / palette), the <code>run_stryke_hook</code> + <code>run_bash</code> runners, and a stryke language server over <code>stryke_lsp_start</code> / <code>_send</code> / <code>_stop</code></td></tr>
+          <tr><td>File browser</td><td>implemented</td><td>the <code>zpwr-file-browser</code> crate mounted as <code>fs_*</code> commands — listing, info, grep, diff, duplicate-find, hashing, xattrs, compress/extract, chmod, secure delete, git status</td></tr>
+          <tr><td>Clip sequencer</td><td>implemented</td><td>the shared <code>zpwr-clip-engine</code> mounted as <code>clip_seq_pattern</code> / <code>_transport</code> / <code>_play</code> / <code>_step</code> / <code>_poll_events</code> / <code>_export_midi</code></td></tr>
+          <tr><td>System stats</td><td>implemented</td><td><code>zwire-host</code> linked in-process for the HUD's live system monitor — no native-messaging hop</td></tr>
+          <tr><td>Request cancellation</td><td>planned</td><td>tracked in the zreq-core port report as missing</td></tr>
         </tbody>
       </table>
 

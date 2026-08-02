@@ -48,7 +48,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/arb" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line">arb v0.0.4 · pipe → dynamic TUI/web · original language on fusevm + Cranelift JIT · jq/xpath/css/yq superset · Tcl/Tk-flavored DSL · MIT · in active development</p>
+          <p class="docs-build-line">arb v0.1.2 · pipe → dynamic TUI/web · original language on fusevm + Cranelift JIT · jq/xpath/css/yq superset · Tcl/Tk-flavored DSL · MIT · in active development</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -77,7 +77,7 @@
         <article class="doc-entry" id="doc-widgets-1">
           <h3><a class="doc-anchor" href="#doc-widgets-1">#</a> <code>text</code></h3>
           <p>Shows the last stream line, or a scalar/top-pair result, in a bordered pane.</p>
-          <pre><code class="lang-arb">text .t  ·  source .t { in | last }</code></pre>
+          <pre><code class="lang-arb">text .t  ·  source .t { in; last }</code></pre>
         </article>
         <article class="doc-entry" id="doc-widgets-2">
           <h3><a class="doc-anchor" href="#doc-widgets-2">#</a> <code>tail</code></h3>
@@ -92,75 +92,145 @@
         <article class="doc-entry" id="doc-widgets-4">
           <h3><a class="doc-anchor" href="#doc-widgets-4">#</a> <code>gauge</code></h3>
           <p>Renders a scalar as a progress bar filled to value/max (-max, default 100).</p>
-          <pre><code class="lang-arb">gauge .cpu -max 100  ·  source .cpu { in | field 3 | sum }</code></pre>
+          <pre><code class="lang-arb">gauge .cpu -max 100  ·  source .cpu { in; field 3; sum }</code></pre>
         </article>
         <article class="doc-entry" id="doc-widgets-5">
           <h3><a class="doc-anchor" href="#doc-widgets-5">#</a> <code>bars</code></h3>
           <p>Horizontal bar chart of tally/count pairs; -top caps the number of bars (def 20).</p>
-          <pre><code class="lang-arb">bars .top  ·  source .top { in | field 1 | tally }</code></pre>
+          <pre><code class="lang-arb">bars .top  ·  source .top { in; field 1; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-widgets-6">
           <h3><a class="doc-anchor" href="#doc-widgets-6">#</a> <code>histo</code></h3>
           <p>Bar chart of value-distribution pairs; same rendering as bars, -top caps bars.</p>
-          <pre><code class="lang-arb">histo .h  ·  source .h { in | field 2 | tally }</code></pre>
+          <pre><code class="lang-arb">histo .h  ·  source .h { in; field 2; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-widgets-7">
           <h3><a class="doc-anchor" href="#doc-widgets-7">#</a> <code>spark</code></h3>
           <p>Compact braille sparkline of the numeric series, newest points that fit width.</p>
-          <pre><code class="lang-arb">spark .s  ·  source .s { in | field 2 }</code></pre>
+          <pre><code class="lang-arb">spark .s  ·  source .s { in; field 2 }</code></pre>
         </article>
         <article class="doc-entry" id="doc-widgets-8">
           <h3><a class="doc-anchor" href="#doc-widgets-8">#</a> <code>chart</code></h3>
           <p>Braille line chart of the numeric series with auto-scaled x/y axes.</p>
-          <pre><code class="lang-arb">chart .c  ·  source .c { in | field 2 }</code></pre>
+          <pre><code class="lang-arb">chart .c  ·  source .c { in; field 2 }</code></pre>
         </article>
         <article class="doc-entry" id="doc-widgets-9">
-          <h3><a class="doc-anchor" href="#doc-widgets-9">#</a> <code>table</code></h3>
+          <h3><a class="doc-anchor" href="#doc-widgets-9">#</a> <code>linegauge</code></h3>
+          <p>Thin one-line progress bar (value/max) for tight cells — a compact gauge.</p>
+          <pre><code class="lang-arb">linegauge .load -max 8  ·  source .load { in; count }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-10">
+          <h3><a class="doc-anchor" href="#doc-widgets-10">#</a> <code>scatter</code></h3>
+          <p>Braille scatter plot of the numeric series (higher resolution than spark).</p>
+          <pre><code class="lang-arb">scatter .lat  ·  source .lat { in; field 2 }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-11">
+          <h3><a class="doc-anchor" href="#doc-widgets-11">#</a> <code>sparkline</code></h3>
+          <p>Block-bar sparkline (ratatui Sparkline) of the numeric series; fixed-height bars.</p>
+          <pre><code class="lang-arb">sparkline .rps  ·  source .rps { in; rate }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-12">
+          <h3><a class="doc-anchor" href="#doc-widgets-12">#</a> <code>map</code></h3>
+          <p>Braille world map plotting `lon lat` points from the stream (-res high|low).</p>
+          <pre><code class="lang-arb">map .geo  ·  source .geo { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-13">
+          <h3><a class="doc-anchor" href="#doc-widgets-13">#</a> <code>calendar</code></h3>
+          <p>Month calendar; days appearing as YYYY-MM-DD in the stream are highlighted.</p>
+          <pre><code class="lang-arb">calendar .cal  ·  source .cal { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-14">
+          <h3><a class="doc-anchor" href="#doc-widgets-14">#</a> <code>logview</code></h3>
+          <p>Log tail tinted by detected level (ERROR/WARN/INFO/DEBUG); theme-aware.</p>
+          <pre><code class="lang-arb">logview .log  ·  source .log { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-15">
+          <h3><a class="doc-anchor" href="#doc-widgets-15">#</a> <code>heatmap</code></h3>
+          <p>Numeric series as a grid of shade-scaled cells (GitHub-contribution style).</p>
+          <pre><code class="lang-arb">heatmap .h  ·  source .h { in; field lat }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-16">
+          <h3><a class="doc-anchor" href="#doc-widgets-16">#</a> <code>treemap</code></h3>
+          <p>Tally/count pairs as proportional labeled rectangles across the palette.</p>
+          <pre><code class="lang-arb">treemap .t  ·  source .t { in; field svc; tally }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-17">
+          <h3><a class="doc-anchor" href="#doc-widgets-17">#</a> <code>gantt</code></h3>
+          <p>`label start end` lines as horizontal bars on a shared time axis.</p>
+          <pre><code class="lang-arb">gantt .g  ·  source .g { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-18">
+          <h3><a class="doc-anchor" href="#doc-widgets-18">#</a> <code>diff</code></h3>
+          <p>Lines tinted by leading char: + add (green), - remove (red), @ hunk.</p>
+          <pre><code class="lang-arb">diff .d  ·  source .d { in }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-19">
+          <h3><a class="doc-anchor" href="#doc-widgets-19">#</a> <code>logo</code></h3>
+          <p>The ratatui braille wordmark, centered — a decorative splash.</p>
+          <pre><code class="lang-arb">logo .brand</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-20">
+          <h3><a class="doc-anchor" href="#doc-widgets-20">#</a> <code>clear</code></h3>
+          <p>A blank spacer (occupies a grid cell without drawing) to open space.</p>
+          <pre><code class="lang-arb">clear .gap</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-21">
+          <h3><a class="doc-anchor" href="#doc-widgets-21">#</a> <code>rule</code></h3>
+          <p>A divider line in the theme accent (horizontal, or -dir vertical).</p>
+          <pre><code class="lang-arb">rule .sep</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-22">
+          <h3><a class="doc-anchor" href="#doc-widgets-22">#</a> <code>table</code></h3>
           <p>Columnar table of records; -cols sets headers, newest rows that fit are shown.</p>
           <pre><code class="lang-arb">table .rows -cols "a,b,c"  ·  source .rows { in }</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-10">
-          <h3><a class="doc-anchor" href="#doc-widgets-10">#</a> <code>tabs</code></h3>
+        <article class="doc-entry" id="doc-widgets-23">
+          <h3><a class="doc-anchor" href="#doc-widgets-23">#</a> <code>tabs</code></h3>
           <p>Tab bar from -tabs {a b}; first tab selected (labelled selector, no per-tab body).</p>
           <pre><code class="lang-arb">tabs .t -tabs {a b c}</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-11">
-          <h3><a class="doc-anchor" href="#doc-widgets-11">#</a> <code>block</code></h3>
+        <article class="doc-entry" id="doc-widgets-24">
+          <h3><a class="doc-anchor" href="#doc-widgets-24">#</a> <code>block</code></h3>
           <p>Bordered container box rendering its bound stream content as a list.</p>
           <pre><code class="lang-arb">block .b -title Logs  ·  source .b { in }</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-12">
-          <h3><a class="doc-anchor" href="#doc-widgets-12">#</a> <code>frame</code></h3>
+        <article class="doc-entry" id="doc-widgets-25">
+          <h3><a class="doc-anchor" href="#doc-widgets-25">#</a> <code>frame</code></h3>
           <p>Framed container rendering its bound stream content as a list.</p>
           <pre><code class="lang-arb">frame .f  ·  source .f { in }</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-13">
-          <h3><a class="doc-anchor" href="#doc-widgets-13">#</a> <code>input</code></h3>
+        <article class="doc-entry" id="doc-widgets-26">
+          <h3><a class="doc-anchor" href="#doc-widgets-26">#</a> <code>input</code></h3>
           <p>Editable text field; its value is spliced into pipelines via apply .name.</p>
           <pre><code class="lang-arb">input .q  ·  out { apply .q }</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-14">
-          <h3><a class="doc-anchor" href="#doc-widgets-14">#</a> <code>select</code></h3>
+        <article class="doc-entry" id="doc-widgets-27">
+          <h3><a class="doc-anchor" href="#doc-widgets-27">#</a> <code>select</code></h3>
           <p>Interactive fuzzy-select over the stream; type to filter, Tab marks, Enter emits.</p>
           <pre><code class="lang-arb">select .k -prompt pick  ·  source .k { in }</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-15">
-          <h3><a class="doc-anchor" href="#doc-widgets-15">#</a> <code>filter</code></h3>
+        <article class="doc-entry" id="doc-widgets-28">
+          <h3><a class="doc-anchor" href="#doc-widgets-28">#</a> <code>sel</code></h3>
+          <p>In-dashboard selection list over its own source; the highlighted row is published as .&lt;path&gt;.sel.</p>
+          <pre><code class="lang-arb">sel .ps  ·  source .ps { in }  ·  out { where match(.ps.sel) }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-widgets-29">
+          <h3><a class="doc-anchor" href="#doc-widgets-29">#</a> <code>filter</code></h3>
           <p>Labelled filter control; its value drives where match(.name) / apply.</p>
           <pre><code class="lang-arb">filter .q  ·  out { where match(.q) }</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-16">
-          <h3><a class="doc-anchor" href="#doc-widgets-16">#</a> <code>facet</code></h3>
+        <article class="doc-entry" id="doc-widgets-30">
+          <h3><a class="doc-anchor" href="#doc-widgets-30">#</a> <code>facet</code></h3>
           <p>Multi-select of values (-opts or distinct -field); drives where &lt;field&gt; in .name.</p>
           <pre><code class="lang-arb">facet .lv -field level  ·  out { where level in .lv }</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-17">
-          <h3><a class="doc-anchor" href="#doc-widgets-17">#</a> <code>slider</code></h3>
+        <article class="doc-entry" id="doc-widgets-31">
+          <h3><a class="doc-anchor" href="#doc-widgets-31">#</a> <code>slider</code></h3>
           <p>Numeric control (-min/-max/-step) driving where &lt;field&gt; &lt; .name; arrows adjust.</p>
           <pre><code class="lang-arb">slider .th -field lat -max 5  ·  out { where lat &lt; .th }</code></pre>
         </article>
-        <article class="doc-entry" id="doc-widgets-18">
-          <h3><a class="doc-anchor" href="#doc-widgets-18">#</a> <code>check</code></h3>
+        <article class="doc-entry" id="doc-widgets-32">
+          <h3><a class="doc-anchor" href="#doc-widgets-32">#</a> <code>check</code></h3>
           <p>Boolean toggle (-label); its value is the string "1" or "0".</p>
           <pre><code class="lang-arb">check .on -label live</code></pre>
         </article>
@@ -171,572 +241,582 @@
         <article class="doc-entry" id="doc-query-verbs-1">
           <h3><a class="doc-anchor" href="#doc-query-verbs-1">#</a> <code>find</code></h3>
           <p>Parse stream as HTML, emit the outer HTML of each element matching the selector.</p>
-          <pre><code class="lang-arb">in.html | find a | attr href</code></pre>
+          <pre><code class="lang-arb">in.html; find a; attr href</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-2">
           <h3><a class="doc-anchor" href="#doc-query-verbs-2">#</a> <code>attr</code></h3>
           <p>From element fragments, emit each element's named attribute; drop those lacking it.</p>
-          <pre><code class="lang-arb">in.html | find a | attr href</code></pre>
+          <pre><code class="lang-arb">in.html; find a; attr href</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-3">
           <h3><a class="doc-anchor" href="#doc-query-verbs-3">#</a> <code>text</code></h3>
           <p>From element fragments, emit each element's inner text; non-elements pass through.</p>
-          <pre><code class="lang-arb">in.html | find h2 | text</code></pre>
+          <pre><code class="lang-arb">in.html; find h2; text</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-4">
           <h3><a class="doc-anchor" href="#doc-query-verbs-4">#</a> <code>match</code></h3>
           <p>Keep lines matching the regex.</p>
-          <pre><code class="lang-arb">in | match /ERROR/</code></pre>
+          <pre><code class="lang-arb">in; match /ERROR/</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-5">
           <h3><a class="doc-anchor" href="#doc-query-verbs-5">#</a> <code>grep</code></h3>
           <p>Keep lines matching the regex.</p>
-          <pre><code class="lang-arb">in | grep /ERROR/</code></pre>
+          <pre><code class="lang-arb">in; grep /ERROR/</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-6">
           <h3><a class="doc-anchor" href="#doc-query-verbs-6">#</a> <code>reject</code></h3>
           <p>Drop lines matching the regex.</p>
-          <pre><code class="lang-arb">in | reject /^#/</code></pre>
+          <pre><code class="lang-arb">in; reject /^#/</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-7">
           <h3><a class="doc-anchor" href="#doc-query-verbs-7">#</a> <code>grepv</code></h3>
           <p>Drop lines matching the regex.</p>
-          <pre><code class="lang-arb">in | grepv /^#/</code></pre>
+          <pre><code class="lang-arb">in; grepv /^#/</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-8">
           <h3><a class="doc-anchor" href="#doc-query-verbs-8">#</a> <code>field</code></h3>
           <p>Replace each line with a selected field (whitespace column or JSON key path).</p>
-          <pre><code class="lang-arb">in.json | field status | tally</code></pre>
+          <pre><code class="lang-arb">in.json; field status; tally</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-9">
           <h3><a class="doc-anchor" href="#doc-query-verbs-9">#</a> <code>fields</code></h3>
           <p>Project multiple 1-based whitespace columns, space-joined, in the given order.</p>
-          <pre><code class="lang-arb">in | fields 1 3</code></pre>
+          <pre><code class="lang-arb">in; fields 1 3</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-10">
           <h3><a class="doc-anchor" href="#doc-query-verbs-10">#</a> <code>each</code></h3>
           <p>Flatten JSON-array lines into one line per element; non-array lines pass through.</p>
-          <pre><code class="lang-arb">in.json | field users | each | field name</code></pre>
+          <pre><code class="lang-arb">in.json; field users; each; field name</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-11">
           <h3><a class="doc-anchor" href="#doc-query-verbs-11">#</a> <code>count</code></h3>
           <p>Reduce to the current line count (scalar).</p>
-          <pre><code class="lang-arb">in | count</code></pre>
+          <pre><code class="lang-arb">in; count</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-12">
           <h3><a class="doc-anchor" href="#doc-query-verbs-12">#</a> <code>rate</code></h3>
           <p>Reduce to lines-per-second over the elapsed window (scalar).</p>
-          <pre><code class="lang-arb">in | rate</code></pre>
+          <pre><code class="lang-arb">in; rate</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-13">
           <h3><a class="doc-anchor" href="#doc-query-verbs-13">#</a> <code>tally</code></h3>
           <p>Group identical lines and count them, sorted by count desc then key asc.</p>
-          <pre><code class="lang-arb">in | field status | tally</code></pre>
+          <pre><code class="lang-arb">in; field status; tally</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-14">
           <h3><a class="doc-anchor" href="#doc-query-verbs-14">#</a> <code>sum</code></h3>
           <p>Sum of lines parsed as numbers; non-numeric lines are ignored (scalar).</p>
-          <pre><code class="lang-arb">in | field 3 | sum</code></pre>
+          <pre><code class="lang-arb">in; field 3; sum</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-15">
           <h3><a class="doc-anchor" href="#doc-query-verbs-15">#</a> <code>min</code></h3>
           <p>Minimum of numeric lines, or 0 if none (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | min</code></pre>
+          <pre><code class="lang-arb">in; field 2; min</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-16">
           <h3><a class="doc-anchor" href="#doc-query-verbs-16">#</a> <code>max</code></h3>
           <p>Maximum of numeric lines, or 0 if none (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | max</code></pre>
+          <pre><code class="lang-arb">in; field 2; max</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-17">
           <h3><a class="doc-anchor" href="#doc-query-verbs-17">#</a> <code>avg</code></h3>
           <p>Mean of numeric lines, or 0 if none (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | avg</code></pre>
+          <pre><code class="lang-arb">in; field 2; avg</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-18">
           <h3><a class="doc-anchor" href="#doc-query-verbs-18">#</a> <code>keys</code></h3>
           <p>Flatten a JSON object's keys into one line each; non-object lines pass through.</p>
-          <pre><code class="lang-arb">in.json | keys | tally</code></pre>
+          <pre><code class="lang-arb">in.json; keys; tally</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-19">
           <h3><a class="doc-anchor" href="#doc-query-verbs-19">#</a> <code>vals</code></h3>
           <p>Flatten a JSON object's values into one line each; non-object lines pass through.</p>
-          <pre><code class="lang-arb">in.json | vals</code></pre>
+          <pre><code class="lang-arb">in.json; vals</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-20">
           <h3><a class="doc-anchor" href="#doc-query-verbs-20">#</a> <code>pick</code></h3>
           <p>Project a JSON object to the named keys, keeping order; missing keys dropped.</p>
-          <pre><code class="lang-arb">in.json | pick ts msg</code></pre>
+          <pre><code class="lang-arb">in.json; pick ts msg</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-21">
           <h3><a class="doc-anchor" href="#doc-query-verbs-21">#</a> <code>sort</code></h3>
           <p>Sort the lines; -n sorts numerically, -r reverses.</p>
-          <pre><code class="lang-arb">in | tally | sort -n -r</code></pre>
+          <pre><code class="lang-arb">in; tally; sort -n -r</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-22">
           <h3><a class="doc-anchor" href="#doc-query-verbs-22">#</a> <code>uniq</code></h3>
           <p>Drop duplicate lines globally, keeping the first occurrence.</p>
-          <pre><code class="lang-arb">in | sort | uniq</code></pre>
+          <pre><code class="lang-arb">in; sort; uniq</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-23">
           <h3><a class="doc-anchor" href="#doc-query-verbs-23">#</a> <code>rev</code></h3>
           <p>Reverse the order of the lines.</p>
-          <pre><code class="lang-arb">in | rev</code></pre>
+          <pre><code class="lang-arb">in; rev</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-24">
           <h3><a class="doc-anchor" href="#doc-query-verbs-24">#</a> <code>first</code></h3>
           <p>Keep only the first line.</p>
-          <pre><code class="lang-arb">in | first</code></pre>
+          <pre><code class="lang-arb">in; first</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-25">
           <h3><a class="doc-anchor" href="#doc-query-verbs-25">#</a> <code>last</code></h3>
           <p>Keep only the last line.</p>
-          <pre><code class="lang-arb">in | last</code></pre>
+          <pre><code class="lang-arb">in; last</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-26">
           <h3><a class="doc-anchor" href="#doc-query-verbs-26">#</a> <code>upper</code></h3>
           <p>Uppercase each line.</p>
-          <pre><code class="lang-arb">in | upper</code></pre>
+          <pre><code class="lang-arb">in; upper</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-27">
           <h3><a class="doc-anchor" href="#doc-query-verbs-27">#</a> <code>lower</code></h3>
           <p>Lowercase each line.</p>
-          <pre><code class="lang-arb">in | lower</code></pre>
+          <pre><code class="lang-arb">in; lower</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-28">
           <h3><a class="doc-anchor" href="#doc-query-verbs-28">#</a> <code>trim</code></h3>
           <p>Strip leading and trailing whitespace from each line.</p>
-          <pre><code class="lang-arb">in | trim</code></pre>
+          <pre><code class="lang-arb">in; trim</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-29">
           <h3><a class="doc-anchor" href="#doc-query-verbs-29">#</a> <code>replace</code></h3>
           <p>Regex replace-all per line (replace /RE/ TO); TO may use $1 captures.</p>
-          <pre><code class="lang-arb">in | replace /foo/ bar</code></pre>
+          <pre><code class="lang-arb">in; replace /foo/ bar</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-30">
           <h3><a class="doc-anchor" href="#doc-query-verbs-30">#</a> <code>join</code></h3>
           <p>Collapse all lines into one, joined by a separator (default a space).</p>
-          <pre><code class="lang-arb">in | field 1 | join ,</code></pre>
+          <pre><code class="lang-arb">in; field 1; join ,</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-31">
           <h3><a class="doc-anchor" href="#doc-query-verbs-31">#</a> <code>nth</code></h3>
           <p>Keep only the Nth line (1-based).</p>
-          <pre><code class="lang-arb">in | nth 3</code></pre>
+          <pre><code class="lang-arb">in; nth 3</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-32">
           <h3><a class="doc-anchor" href="#doc-query-verbs-32">#</a> <code>take</code></h3>
           <p>Keep the first N lines.</p>
-          <pre><code class="lang-arb">in | tally | take 10</code></pre>
+          <pre><code class="lang-arb">in; tally; take 10</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-33">
           <h3><a class="doc-anchor" href="#doc-query-verbs-33">#</a> <code>drop</code></h3>
           <p>Drop the first N lines.</p>
-          <pre><code class="lang-arb">in | drop 1</code></pre>
+          <pre><code class="lang-arb">in; drop 1</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-34">
           <h3><a class="doc-anchor" href="#doc-query-verbs-34">#</a> <code>calc</code></h3>
           <p>Reduce to a scalar from an arithmetic expression over the line count (x).</p>
-          <pre><code class="lang-arb">in | count | calc x * 100</code></pre>
+          <pre><code class="lang-arb">in; count; calc x * 100</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-35">
           <h3><a class="doc-anchor" href="#doc-query-verbs-35">#</a> <code>where</code></h3>
           <p>Keep lines whose numeric value / field predicate holds (fusevm or Rust eval).</p>
-          <pre><code class="lang-arb">in.json | where lat &lt; 5</code></pre>
+          <pre><code class="lang-arb">in.json; where lat &lt; 5</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-36">
           <h3><a class="doc-anchor" href="#doc-query-verbs-36">#</a> <code>map</code></h3>
           <p>Replace each line with an expression's value (field-aware; x = line-as-number).</p>
-          <pre><code class="lang-arb">in | map x * 2</code></pre>
+          <pre><code class="lang-arb">in; map x * 2</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-37">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-37">#</a> <code>sort_by</code></h3>
-          <p>Stable-sort JSON records by FIELD (numeric if all parse, else lexicographic).</p>
-          <pre><code class="lang-arb">in.json | sort_by ts</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-37">#</a> <code>via</code></h3>
+          <p>Fan the stream across a supervised pool of actor NAME in parallel (via NAME * N; reply is the output line).</p>
+          <pre><code class="lang-arb">in; via sq * 8</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-38">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-38">#</a> <code>unique_by</code></h3>
-          <p>Keep the first record per distinct FIELD value, preserving input order.</p>
-          <pre><code class="lang-arb">in.json | unique_by id</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-38">#</a> <code>sort_by</code></h3>
+          <p>Stable-sort JSON records by FIELD (numeric if all parse, else lexicographic).</p>
+          <pre><code class="lang-arb">in.json; sort_by ts</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-39">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-39">#</a> <code>count_by</code></h3>
-          <p>Group JSON records by FIELD and count; value-&gt;count sorted by count desc.</p>
-          <pre><code class="lang-arb">in.json | count_by level</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-39">#</a> <code>unique_by</code></h3>
+          <p>Keep the first record per distinct FIELD value, preserving input order.</p>
+          <pre><code class="lang-arb">in.json; unique_by id</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-40">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-40">#</a> <code>group_by</code></h3>
-          <p>Group lines by FIELD into one JSON-array line per value, keys ascending.</p>
-          <pre><code class="lang-arb">in.json | group_by level</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-40">#</a> <code>count_by</code></h3>
+          <p>Group JSON records by FIELD and count; value-&gt;count sorted by count desc.</p>
+          <pre><code class="lang-arb">in.json; count_by level</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-41">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-41">#</a> <code>min_by</code></h3>
-          <p>Emit the single record whose numeric FIELD is smallest.</p>
-          <pre><code class="lang-arb">in.json | min_by lat</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-41">#</a> <code>group_by</code></h3>
+          <p>Group lines by FIELD into one JSON-array line per value, keys ascending.</p>
+          <pre><code class="lang-arb">in.json; group_by level</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-42">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-42">#</a> <code>max_by</code></h3>
-          <p>Emit the single record whose numeric FIELD is largest.</p>
-          <pre><code class="lang-arb">in.json | max_by lat</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-42">#</a> <code>min_by</code></h3>
+          <p>Emit the single record whose numeric FIELD is smallest.</p>
+          <pre><code class="lang-arb">in.json; min_by lat</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-43">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-43">#</a> <code>has</code></h3>
-          <p>Keep only JSON-object lines that contain KEY; all other lines are dropped.</p>
-          <pre><code class="lang-arb">in.json | has error</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-43">#</a> <code>max_by</code></h3>
+          <p>Emit the single record whose numeric FIELD is largest.</p>
+          <pre><code class="lang-arb">in.json; max_by lat</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-44">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-44">#</a> <code>entries</code></h3>
-          <p>Expand each JSON object into one key/value object line per key (jq to_entries).</p>
-          <pre><code class="lang-arb">in.json | entries</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-44">#</a> <code>has</code></h3>
+          <p>Keep only JSON-object lines that contain KEY; all other lines are dropped.</p>
+          <pre><code class="lang-arb">in.json; has error</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-45">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-45">#</a> <code>flatten</code></h3>
-          <p>Emit each element of JSON-array lines, one level deeper than each.</p>
-          <pre><code class="lang-arb">in.json | flatten</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-45">#</a> <code>entries</code></h3>
+          <p>Expand each JSON object into one key/value object line per key (jq to_entries).</p>
+          <pre><code class="lang-arb">in.json; entries</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-46">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-46">#</a> <code>add</code></h3>
-          <p>Reduce a JSON array line to one value (sum numbers, else concat their strings).</p>
-          <pre><code class="lang-arb">in.json | add</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-46">#</a> <code>flatten</code></h3>
+          <p>Emit each element of JSON-array lines, one level deeper than each.</p>
+          <pre><code class="lang-arb">in.json; flatten</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-47">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-47">#</a> <code>over</code></h3>
-          <p>Keep lines parsing as a number strictly greater than N; drop non-numeric.</p>
-          <pre><code class="lang-arb">in | field 2 | over 100</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-47">#</a> <code>add</code></h3>
+          <p>Reduce a JSON array line to one value (sum numbers, else concat their strings).</p>
+          <pre><code class="lang-arb">in.json; add</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-48">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-48">#</a> <code>under</code></h3>
-          <p>Keep numeric lines strictly less than N; drop non-numeric lines.</p>
-          <pre><code class="lang-arb">in | field 2 | under 10</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-48">#</a> <code>over</code></h3>
+          <p>Keep lines parsing as a number strictly greater than N; drop non-numeric.</p>
+          <pre><code class="lang-arb">in; field 2; over 100</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-49">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-49">#</a> <code>between</code></h3>
-          <p>Keep numeric lines x where lo &lt;= x &lt;= hi inclusive; drop non-numeric lines.</p>
-          <pre><code class="lang-arb">in | between 1 10</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-49">#</a> <code>under</code></h3>
+          <p>Keep numeric lines strictly less than N; drop non-numeric lines.</p>
+          <pre><code class="lang-arb">in; field 2; under 10</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-50">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-50">#</a> <code>enumerate</code></h3>
-          <p>Prefix each line with its 1-based index and a tab.</p>
-          <pre><code class="lang-arb">in | enumerate</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-50">#</a> <code>between</code></h3>
+          <p>Keep numeric lines x where lo &lt;= x &lt;= hi inclusive; drop non-numeric lines.</p>
+          <pre><code class="lang-arb">in; between 1 10</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-51">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-51">#</a> <code>words</code></h3>
-          <p>Split each line on whitespace and emit one word per line.</p>
-          <pre><code class="lang-arb">in | words | tally</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-51">#</a> <code>enumerate</code></h3>
+          <p>Prefix each line with its 1-based index and a tab.</p>
+          <pre><code class="lang-arb">in; enumerate</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-52">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-52">#</a> <code>dedup</code></h3>
-          <p>Collapse runs of adjacent identical lines to one (classic uniq).</p>
-          <pre><code class="lang-arb">in | dedup</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-52">#</a> <code>words</code></h3>
+          <p>Split each line on whitespace and emit one word per line.</p>
+          <pre><code class="lang-arb">in; words; tally</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-53">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-53">#</a> <code>tailn</code></h3>
-          <p>Keep only the last N lines.</p>
-          <pre><code class="lang-arb">in | tailn 5</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-53">#</a> <code>dedup</code></h3>
+          <p>Collapse runs of adjacent identical lines to one (classic uniq).</p>
+          <pre><code class="lang-arb">in; dedup</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-54">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-54">#</a> <code>pad</code></h3>
-          <p>Right-pad each line with spaces to a minimum visible width N (no truncation).</p>
-          <pre><code class="lang-arb">in | pad 10</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-54">#</a> <code>tailn</code></h3>
+          <p>Keep only the last N lines.</p>
+          <pre><code class="lang-arb">in; tailn 5</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-55">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-55">#</a> <code>lpad</code></h3>
-          <p>Left-pad each line with spaces to a minimum width N.</p>
-          <pre><code class="lang-arb">in | lpad 8</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-55">#</a> <code>pad</code></h3>
+          <p>Right-pad each line with spaces to a minimum visible width N (no truncation).</p>
+          <pre><code class="lang-arb">in; pad 10</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-56">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-56">#</a> <code>grepf</code></h3>
-          <p>Keep lines whose FIELD (JSON key or 1-based column) matches the regex.</p>
-          <pre><code class="lang-arb">in.json | grepf status /5\d\d/</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-56">#</a> <code>lpad</code></h3>
+          <p>Left-pad each line with spaces to a minimum width N.</p>
+          <pre><code class="lang-arb">in; lpad 8</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-57">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-57">#</a> <code>apply</code></h3>
-          <p>Placeholder replaced at render by the pipeline typed into input .name; else no-op.</p>
-          <pre><code class="lang-arb">source .out { in | apply .q }</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-57">#</a> <code>grepf</code></h3>
+          <p>Keep lines whose FIELD (JSON key or 1-based column) matches the regex.</p>
+          <pre><code class="lang-arb">in.json; grepf status /5\d\d/</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-58">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-58">#</a> <code>basename</code></h3>
-          <p>Path basename: the part after the last / (the whole line if none).</p>
-          <pre><code class="lang-arb">in | basename</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-58">#</a> <code>apply</code></h3>
+          <p>Placeholder replaced at render by the pipeline typed into input .name; else no-op.</p>
+          <pre><code class="lang-arb">source .out { in; apply .q }</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-59">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-59">#</a> <code>dirname</code></h3>
-          <p>Path dirname: the part before the last / (. if none).</p>
-          <pre><code class="lang-arb">in | dirname</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-59">#</a> <code>basename</code></h3>
+          <p>Path basename: the part after the last / (the whole line if none).</p>
+          <pre><code class="lang-arb">in; basename</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-60">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-60">#</a> <code>commafy</code></h3>
-          <p>Group a numeric line's integer part with thousands separators; else pass through.</p>
-          <pre><code class="lang-arb">in | sum | commafy</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-60">#</a> <code>dirname</code></h3>
+          <p>Path dirname: the part before the last / (. if none).</p>
+          <pre><code class="lang-arb">in; dirname</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-61">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-61">#</a> <code>bytes</code></h3>
-          <p>Humanize a byte count (1024-based): 1536 -&gt; 1.5 KB; non-numeric passes through.</p>
-          <pre><code class="lang-arb">in | field 2 | bytes</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-61">#</a> <code>commafy</code></h3>
+          <p>Group a numeric line's integer part with thousands separators; else pass through.</p>
+          <pre><code class="lang-arb">in; sum; commafy</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-62">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-62">#</a> <code>duration</code></h3>
-          <p>Humanize seconds: 3661 -&gt; 1h 1m; non-numeric lines pass through.</p>
-          <pre><code class="lang-arb">in | field 2 | duration</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-62">#</a> <code>bytes</code></h3>
+          <p>Humanize a byte count (1024-based): 1536 -&gt; 1.5 KB; non-numeric passes through.</p>
+          <pre><code class="lang-arb">in; field 2; bytes</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-63">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-63">#</a> <code>flip</code></h3>
-          <p>Reverse the Unicode characters of each line.</p>
-          <pre><code class="lang-arb">in | flip</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-63">#</a> <code>duration</code></h3>
+          <p>Humanize seconds: 3661 -&gt; 1h 1m; non-numeric lines pass through.</p>
+          <pre><code class="lang-arb">in; field 2; duration</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-64">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-64">#</a> <code>b64</code></h3>
-          <p>Base64-encode each line.</p>
-          <pre><code class="lang-arb">in | b64</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-64">#</a> <code>flip</code></h3>
+          <p>Reverse the Unicode characters of each line.</p>
+          <pre><code class="lang-arb">in; flip</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-65">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-65">#</a> <code>b64d</code></h3>
-          <p>Base64-decode each line; invalid or non-UTF8 lines pass through unchanged.</p>
-          <pre><code class="lang-arb">in | b64d</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-65">#</a> <code>b64</code></h3>
+          <p>Base64-encode each line.</p>
+          <pre><code class="lang-arb">in; b64</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-66">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-66">#</a> <code>hex</code></h3>
-          <p>Lowercase hex-encode each line, two hex digits per UTF-8 byte.</p>
-          <pre><code class="lang-arb">in | hex</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-66">#</a> <code>b64d</code></h3>
+          <p>Base64-decode each line; invalid or non-UTF8 lines pass through unchanged.</p>
+          <pre><code class="lang-arb">in; b64d</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-67">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-67">#</a> <code>unhex</code></h3>
-          <p>Decode a hex string to UTF-8; on any error the line passes through unchanged.</p>
-          <pre><code class="lang-arb">in | unhex</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-67">#</a> <code>hex</code></h3>
+          <p>Lowercase hex-encode each line, two hex digits per UTF-8 byte.</p>
+          <pre><code class="lang-arb">in; hex</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-68">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-68">#</a> <code>urlenc</code></h3>
-          <p>Percent-encode each line, escaping every non-alphanumeric byte (RFC 3986).</p>
-          <pre><code class="lang-arb">in | urlenc</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-68">#</a> <code>unhex</code></h3>
+          <p>Decode a hex string to UTF-8; on any error the line passes through unchanged.</p>
+          <pre><code class="lang-arb">in; unhex</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-69">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-69">#</a> <code>urldec</code></h3>
-          <p>Percent-decode each line to UTF-8; invalid UTF-8 passes through unchanged.</p>
-          <pre><code class="lang-arb">in | urldec</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-69">#</a> <code>urlenc</code></h3>
+          <p>Percent-encode each line, escaping every non-alphanumeric byte (RFC 3986).</p>
+          <pre><code class="lang-arb">in; urlenc</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-70">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-70">#</a> <code>extract</code></h3>
-          <p>Emit the first regex match per line (group 1 if any); drop lines with no match.</p>
-          <pre><code class="lang-arb">in | extract /(\d+)/</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-70">#</a> <code>urldec</code></h3>
+          <p>Percent-decode each line to UTF-8; invalid UTF-8 passes through unchanged.</p>
+          <pre><code class="lang-arb">in; urldec</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-71">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-71">#</a> <code>split</code></h3>
-          <p>Explode each line by the literal DELIM into multiple lines (one part per line).</p>
-          <pre><code class="lang-arb">in | split ,</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-71">#</a> <code>extract</code></h3>
+          <p>Emit the first regex match per line (group 1 if any); drop lines with no match.</p>
+          <pre><code class="lang-arb">in; extract /(\d+)/</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-72">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-72">#</a> <code>substr</code></h3>
-          <p>Character substring [A,B) 0-based, clamped to the line length.</p>
-          <pre><code class="lang-arb">in | substr 0 8</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-72">#</a> <code>split</code></h3>
+          <p>Explode each line by the literal DELIM into multiple lines (one part per line).</p>
+          <pre><code class="lang-arb">in; split ,</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-73">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-73">#</a> <code>chars</code></h3>
-          <p>Explode each line into one output line per Unicode character.</p>
-          <pre><code class="lang-arb">in | chars</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-73">#</a> <code>substr</code></h3>
+          <p>Character substring [A,B) 0-based, clamped to the line length.</p>
+          <pre><code class="lang-arb">in; substr 0 8</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-74">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-74">#</a> <code>title</code></h3>
-          <p>Title-case each line: capitalize each word's first letter, lowercase the rest.</p>
-          <pre><code class="lang-arb">in | title</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-74">#</a> <code>chars</code></h3>
+          <p>Explode each line into one output line per Unicode character.</p>
+          <pre><code class="lang-arb">in; chars</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-75">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-75">#</a> <code>repeat</code></h3>
-          <p>Replace each line with its content repeated N times, concatenated.</p>
-          <pre><code class="lang-arb">in | repeat 3</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-75">#</a> <code>title</code></h3>
+          <p>Title-case each line: capitalize each word's first letter, lowercase the rest.</p>
+          <pre><code class="lang-arb">in; title</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-76">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-76">#</a> <code>set</code></h3>
-          <p>Set key K to string value V in each JSON object line; non-objects pass through.</p>
-          <pre><code class="lang-arb">in.json | set env prod</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-76">#</a> <code>repeat</code></h3>
+          <p>Replace each line with its content repeated N times, concatenated.</p>
+          <pre><code class="lang-arb">in; repeat 3</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-77">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-77">#</a> <code>del</code></h3>
-          <p>Remove key K from each JSON object line; non-object lines pass through.</p>
-          <pre><code class="lang-arb">in.json | del debug</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-77">#</a> <code>set</code></h3>
+          <p>Set key K to string value V in each JSON object line; non-objects pass through.</p>
+          <pre><code class="lang-arb">in.json; set env prod</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-78">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-78">#</a> <code>rename</code></h3>
-          <p>Rename JSON object key OLD to NEW, keeping the value; no-op if OLD absent.</p>
-          <pre><code class="lang-arb">in.json | rename ts time</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-78">#</a> <code>del</code></h3>
+          <p>Remove key K from each JSON object line; non-object lines pass through.</p>
+          <pre><code class="lang-arb">in.json; del debug</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-79">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-79">#</a> <code>default</code></h3>
-          <p>Set string key K to V only when K is absent from the JSON object.</p>
-          <pre><code class="lang-arb">in.json | default env dev</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-79">#</a> <code>rename</code></h3>
+          <p>Rename JSON object key OLD to NEW, keeping the value; no-op if OLD absent.</p>
+          <pre><code class="lang-arb">in.json; rename ts time</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-80">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-80">#</a> <code>merge</code></h3>
-          <p>Reduce all JSON object lines into one object (later keys win); emits one line.</p>
-          <pre><code class="lang-arb">in.json | merge</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-80">#</a> <code>default</code></h3>
+          <p>Set string key K to V only when K is absent from the JSON object.</p>
+          <pre><code class="lang-arb">in.json; default env dev</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-81">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-81">#</a> <code>floor</code></h3>
-          <p>Floor each numeric line to the nearest lower integer; non-numeric passes through.</p>
-          <pre><code class="lang-arb">in | floor</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-81">#</a> <code>merge</code></h3>
+          <p>Reduce all JSON object lines into one object (later keys win); emits one line.</p>
+          <pre><code class="lang-arb">in.json; merge</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-82">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-82">#</a> <code>ceil</code></h3>
-          <p>Round each numeric line up to the nearest integer; non-numeric passes through.</p>
-          <pre><code class="lang-arb">in | ceil</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-82">#</a> <code>floor</code></h3>
+          <p>Floor each numeric line to the nearest lower integer; non-numeric passes through.</p>
+          <pre><code class="lang-arb">in; floor</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-83">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-83">#</a> <code>round</code></h3>
-          <p>Round each numeric line to the nearest integer.</p>
-          <pre><code class="lang-arb">in | round</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-83">#</a> <code>ceil</code></h3>
+          <p>Round each numeric line up to the nearest integer; non-numeric passes through.</p>
+          <pre><code class="lang-arb">in; ceil</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-84">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-84">#</a> <code>abs</code></h3>
-          <p>Absolute value of each numeric line.</p>
-          <pre><code class="lang-arb">in | delta | abs</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-84">#</a> <code>round</code></h3>
+          <p>Round each numeric line to the nearest integer.</p>
+          <pre><code class="lang-arb">in; round</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-85">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-85">#</a> <code>clamp</code></h3>
-          <p>Clamp each numeric line into the inclusive range [LO, HI]; non-numeric untouched.</p>
-          <pre><code class="lang-arb">in | clamp 0 100</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-85">#</a> <code>abs</code></h3>
+          <p>Absolute value of each numeric line.</p>
+          <pre><code class="lang-arb">in; delta; abs</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-86">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-86">#</a> <code>len</code></h3>
-          <p>Replace each line with its character count.</p>
-          <pre><code class="lang-arb">in | len</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-86">#</a> <code>clamp</code></h3>
+          <p>Clamp each numeric line into the inclusive range [LO, HI]; non-numeric untouched.</p>
+          <pre><code class="lang-arb">in; clamp 0 100</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-87">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-87">#</a> <code>wc</code></h3>
-          <p>Replace each line with its word count.</p>
-          <pre><code class="lang-arb">in | wc</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-87">#</a> <code>len</code></h3>
+          <p>Replace each line with its character count.</p>
+          <pre><code class="lang-arb">in; len</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-88">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-88">#</a> <code>index</code></h3>
-          <p>Keep only the Nth line (1-based); out-of-range yields no lines.</p>
-          <pre><code class="lang-arb">in | index 3</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-88">#</a> <code>length</code></h3>
+          <p>jq length: array element count / object key count / string char count / |number| / null 0; non-JSON falls back to char count.</p>
+          <pre><code class="lang-arb">in.json; length</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-89">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-89">#</a> <code>cut</code></h3>
-          <p>Split each line by DELIM and keep the Nth (1-based) field.</p>
-          <pre><code class="lang-arb">in | cut , 2</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-89">#</a> <code>wc</code></h3>
+          <p>Replace each line with its word count.</p>
+          <pre><code class="lang-arb">in; wc</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-90">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-90">#</a> <code>contains</code></h3>
-          <p>Keep lines containing a literal substring.</p>
-          <pre><code class="lang-arb">in | contains error</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-90">#</a> <code>index</code></h3>
+          <p>Keep only the Nth line (1-based); out-of-range yields no lines.</p>
+          <pre><code class="lang-arb">in; index 3</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-91">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-91">#</a> <code>starts</code></h3>
-          <p>Keep lines starting with a literal prefix.</p>
-          <pre><code class="lang-arb">in | starts GET</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-91">#</a> <code>cut</code></h3>
+          <p>Split each line by DELIM and keep the Nth (1-based) field.</p>
+          <pre><code class="lang-arb">in; cut , 2</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-92">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-92">#</a> <code>ends</code></h3>
-          <p>Keep lines ending with a literal suffix.</p>
-          <pre><code class="lang-arb">in | ends .json</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-92">#</a> <code>contains</code></h3>
+          <p>Keep lines containing a literal substring.</p>
+          <pre><code class="lang-arb">in; contains error</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-93">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-93">#</a> <code>nonempty</code></h3>
-          <p>Drop empty or whitespace-only lines.</p>
-          <pre><code class="lang-arb">in | nonempty</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-93">#</a> <code>starts</code></h3>
+          <p>Keep lines starting with a literal prefix.</p>
+          <pre><code class="lang-arb">in; starts GET</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-94">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-94">#</a> <code>numeric</code></h3>
-          <p>Keep only lines that parse as a number.</p>
-          <pre><code class="lang-arb">in | numeric | avg</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-94">#</a> <code>ends</code></h3>
+          <p>Keep lines ending with a literal suffix.</p>
+          <pre><code class="lang-arb">in; ends .json</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-95">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-95">#</a> <code>distinct</code></h3>
-          <p>Reduce to the count of distinct lines (scalar).</p>
-          <pre><code class="lang-arb">in | distinct</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-95">#</a> <code>nonempty</code></h3>
+          <p>Drop empty or whitespace-only lines.</p>
+          <pre><code class="lang-arb">in; nonempty</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-96">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-96">#</a> <code>sample</code></h3>
-          <p>Keep every Nth line (1-based).</p>
-          <pre><code class="lang-arb">in | sample 10</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-96">#</a> <code>numeric</code></h3>
+          <p>Keep only lines that parse as a number.</p>
+          <pre><code class="lang-arb">in; numeric; avg</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-97">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-97">#</a> <code>range</code></h3>
-          <p>Max minus min of numeric lines (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | range</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-97">#</a> <code>distinct</code></h3>
+          <p>Reduce to the count of distinct lines (scalar).</p>
+          <pre><code class="lang-arb">in; distinct</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-98">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-98">#</a> <code>bins</code></h3>
-          <p>Bucket numeric lines into N equal-width ranges -&gt; (range, count) pairs.</p>
-          <pre><code class="lang-arb">in | bins 10</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-98">#</a> <code>sample</code></h3>
+          <p>Keep every Nth line (1-based).</p>
+          <pre><code class="lang-arb">in; sample 10</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-99">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-99">#</a> <code>cumsum</code></h3>
-          <p>Running cumulative total of the numeric series.</p>
-          <pre><code class="lang-arb">in | cumsum</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-99">#</a> <code>range</code></h3>
+          <p>Max minus min of numeric lines (scalar).</p>
+          <pre><code class="lang-arb">in; field 2; range</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-100">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-100">#</a> <code>delta</code></h3>
-          <p>Consecutive differences of the numeric series (n values -&gt; n-1 deltas).</p>
-          <pre><code class="lang-arb">in | delta</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-100">#</a> <code>bins</code></h3>
+          <p>Bucket numeric lines into N equal-width ranges -&gt; (range, count) pairs.</p>
+          <pre><code class="lang-arb">in; bins 10</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-101">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-101">#</a> <code>ewma</code></h3>
-          <p>Exponentially-weighted moving average, smoothing factor alpha in (0,1]; s0=x0.</p>
-          <pre><code class="lang-arb">in | ewma 0.3</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-101">#</a> <code>cumsum</code></h3>
+          <p>Running cumulative total of the numeric series.</p>
+          <pre><code class="lang-arb">in; cumsum</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-102">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-102">#</a> <code>sma</code></h3>
-          <p>Simple moving average over a trailing window of N (length-preserving).</p>
-          <pre><code class="lang-arb">in | sma 5</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-102">#</a> <code>delta</code></h3>
+          <p>Consecutive differences of the numeric series (n values -&gt; n-1 deltas).</p>
+          <pre><code class="lang-arb">in; delta</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-103">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-103">#</a> <code>median</code></h3>
-          <p>Median of numeric lines (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | median</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-103">#</a> <code>ewma</code></h3>
+          <p>Exponentially-weighted moving average, smoothing factor alpha in (0,1]; s0=x0.</p>
+          <pre><code class="lang-arb">in; ewma 0.3</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-104">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-104">#</a> <code>percentile</code></h3>
-          <p>Nth percentile (0-100) of numeric values, linear interpolation between ranks.</p>
-          <pre><code class="lang-arb">in | percentile 95</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-104">#</a> <code>sma</code></h3>
+          <p>Simple moving average over a trailing window of N (length-preserving).</p>
+          <pre><code class="lang-arb">in; sma 5</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-105">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-105">#</a> <code>p50</code></h3>
-          <p>50th percentile (median) of the numeric values (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | p50</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-105">#</a> <code>median</code></h3>
+          <p>Median of numeric lines (scalar).</p>
+          <pre><code class="lang-arb">in; field 2; median</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-106">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-106">#</a> <code>p90</code></h3>
-          <p>90th percentile of the numeric values (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | p90</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-106">#</a> <code>percentile</code></h3>
+          <p>Nth percentile (0-100) of numeric values, linear interpolation between ranks.</p>
+          <pre><code class="lang-arb">in; percentile 95</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-107">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-107">#</a> <code>p95</code></h3>
-          <p>95th percentile of the numeric values (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | p95</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-107">#</a> <code>p50</code></h3>
+          <p>50th percentile (median) of the numeric values (scalar).</p>
+          <pre><code class="lang-arb">in; field 2; p50</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-108">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-108">#</a> <code>p99</code></h3>
-          <p>99th percentile of the numeric values, for latency tails (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | p99</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-108">#</a> <code>p90</code></h3>
+          <p>90th percentile of the numeric values (scalar).</p>
+          <pre><code class="lang-arb">in; field 2; p90</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-109">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-109">#</a> <code>stddev</code></h3>
-          <p>Population standard deviation of numeric lines (scalar).</p>
-          <pre><code class="lang-arb">in | field 2 | stddev</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-109">#</a> <code>p95</code></h3>
+          <p>95th percentile of the numeric values (scalar).</p>
+          <pre><code class="lang-arb">in; field 2; p95</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-110">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-110">#</a> <code>product</code></h3>
-          <p>Product of numeric lines (scalar).</p>
-          <pre><code class="lang-arb">in | product</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-110">#</a> <code>p99</code></h3>
+          <p>99th percentile of the numeric values, for latency tails (scalar).</p>
+          <pre><code class="lang-arb">in; field 2; p99</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-111">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-111">#</a> <code>append</code></h3>
-          <p>Suffix every line with a literal string.</p>
-          <pre><code class="lang-arb">in | append !</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-111">#</a> <code>stddev</code></h3>
+          <p>Population standard deviation of numeric lines (scalar).</p>
+          <pre><code class="lang-arb">in; field 2; stddev</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-112">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-112">#</a> <code>prepend</code></h3>
-          <p>Prefix every line with a literal string.</p>
-          <pre><code class="lang-arb">in | prepend &gt;&gt;</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-112">#</a> <code>product</code></h3>
+          <p>Product of numeric lines (scalar).</p>
+          <pre><code class="lang-arb">in; product</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-113">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-113">#</a> <code>slice</code></h3>
-          <p>Keep lines from index A to B inclusive (1-based).</p>
-          <pre><code class="lang-arb">in | slice 1 10</code></pre>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-113">#</a> <code>append</code></h3>
+          <p>Suffix every line with a literal string.</p>
+          <pre><code class="lang-arb">in; append !</code></pre>
         </article>
         <article class="doc-entry" id="doc-query-verbs-114">
-          <h3><a class="doc-anchor" href="#doc-query-verbs-114">#</a> <code>sel</code></h3>
+          <h3><a class="doc-anchor" href="#doc-query-verbs-114">#</a> <code>prepend</code></h3>
+          <p>Prefix every line with a literal string.</p>
+          <pre><code class="lang-arb">in; prepend &gt;&gt;</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-115">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-115">#</a> <code>slice</code></h3>
+          <p>Keep lines from index A to B inclusive (1-based).</p>
+          <pre><code class="lang-arb">in; slice 1 10</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-query-verbs-116">
+          <h3><a class="doc-anchor" href="#doc-query-verbs-116">#</a> <code>sel</code></h3>
           <p>Parse stream as HTML, emit each CSS-selector match's text (or -attr value).</p>
-          <pre><code class="lang-arb">in.html | sel { div.card h2 }</code></pre>
+          <pre><code class="lang-arb">in.html; sel { div.card h2 }</code></pre>
         </article>
       </section>
 
@@ -755,12 +835,12 @@
         <article class="doc-entry" id="doc-directives-3">
           <h3><a class="doc-anchor" href="#doc-directives-3">#</a> <code>source</code></h3>
           <p>Attach a query pipeline (body must start with in) as a widget's data source.</p>
-          <pre><code class="lang-arb">source .status { in.json | field status | tally }</code></pre>
+          <pre><code class="lang-arb">source .status { in.json; field status; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-directives-4">
           <h3><a class="doc-anchor" href="#doc-directives-4">#</a> <code>search</code></h3>
           <p>Attach a select widget's fuzzy-match key pipeline; the row still shows source.</p>
-          <pre><code class="lang-arb">search .k { in | field 2 }</code></pre>
+          <pre><code class="lang-arb">search .k { in; field 2 }</code></pre>
         </article>
         <article class="doc-entry" id="doc-directives-5">
           <h3><a class="doc-anchor" href="#doc-directives-5">#</a> <code>bind</code></h3>
@@ -788,9 +868,64 @@
           <pre><code class="lang-arb">grid .cpu -row 0 -col 0 -span 2</code></pre>
         </article>
         <article class="doc-entry" id="doc-directives-10">
-          <h3><a class="doc-anchor" href="#doc-directives-10">#</a> <code>configure</code></h3>
+          <h3><a class="doc-anchor" href="#doc-directives-10">#</a> <code>rows</code></h3>
+          <p>Size the grid's row tracks: N fixed cells, N% percentage, or N*/* proportional weight.</p>
+          <pre><code class="lang-arb">rows "1 2 1"</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-11">
+          <h3><a class="doc-anchor" href="#doc-directives-11">#</a> <code>cols</code></h3>
+          <p>Size the grid's column tracks: N fixed cells, N% percentage, or N*/* weight.</p>
+          <pre><code class="lang-arb">cols "20 * 2*"</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-12">
+          <h3><a class="doc-anchor" href="#doc-directives-12">#</a> <code>gap</code></h3>
+          <p>Blank cells between grid rows/columns (default 0).</p>
+          <pre><code class="lang-arb">gap 1</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-13">
+          <h3><a class="doc-anchor" href="#doc-directives-13">#</a> <code>layout</code></h3>
+          <p>Auto-tile direction when no widget has a grid cell (horizontal | vertical).</p>
+          <pre><code class="lang-arb">layout horizontal</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-14">
+          <h3><a class="doc-anchor" href="#doc-directives-14">#</a> <code>theme</code></h3>
+          <p>Set the color palette: one of 31 built-ins (see arb --list-themes) or `theme custom c1..c6`.</p>
+          <pre><code class="lang-arb">theme neon-noir</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-15">
+          <h3><a class="doc-anchor" href="#doc-directives-15">#</a> <code>configure</code></h3>
           <p>Merge new -opts into an already-declared widget (build-time; later keys win).</p>
           <pre><code class="lang-arb">.cpu configure -max 200</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-16">
+          <h3><a class="doc-anchor" href="#doc-directives-16">#</a> <code>actor</code></h3>
+          <p>Declare a message-handling actor with a single scalar state and one handler per message.</p>
+          <pre><code class="lang-arb">actor sq(state) { on job(x) { reply x * x } }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-17">
+          <h3><a class="doc-anchor" href="#doc-directives-17">#</a> <code>on</code></h3>
+          <p>A message handler inside an actor body: on MSG(params) { stmts; reply EXPR }.</p>
+          <pre><code class="lang-arb">on job(x) { reply x * 2 }</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-18">
+          <h3><a class="doc-anchor" href="#doc-directives-18">#</a> <code>reply</code></h3>
+          <p>Inside a handler, send an expression's value back to an ask/via caller.</p>
+          <pre><code class="lang-arb">reply state + x</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-19">
+          <h3><a class="doc-anchor" href="#doc-directives-19">#</a> <code>spawn</code></h3>
+          <p>Bind a session actor: spawn NAME = ACTOR(init); tell/ask drive it (distinct from the spawn CMD source).</p>
+          <pre><code class="lang-arb">spawn w = worker(0)</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-20">
+          <h3><a class="doc-anchor" href="#doc-directives-20">#</a> <code>pool</code></h3>
+          <p>Bind a supervised session pool: pool NAME = ACTOR * N (a dead worker is respawned).</p>
+          <pre><code class="lang-arb">pool p = worker * 8</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-directives-21">
+          <h3><a class="doc-anchor" href="#doc-directives-21">#</a> <code>supervise</code></h3>
+          <p>Set a ref's crash policy: supervise NAME { on crash { restart | stop } } (default restart).</p>
+          <pre><code class="lang-arb">supervise p { on crash { restart } }</code></pre>
         </article>
       </section>
 
@@ -826,6 +961,16 @@
           <p>Set an input .name widget's value; with out { apply .name } reshapes the live pipe.</p>
           <pre><code class="lang-arb">bind C-a set .q ERROR</code></pre>
         </article>
+        <article class="doc-entry" id="doc-bind-expect-actions-7">
+          <h3><a class="doc-anchor" href="#doc-bind-expect-actions-7">#</a> <code>tell</code></h3>
+          <p>Post a message to a session actor/pool, fire-and-forget: tell REF MSG(args).</p>
+          <pre><code class="lang-arb">bind C-t tell w job(5)</code></pre>
+        </article>
+        <article class="doc-entry" id="doc-bind-expect-actions-8">
+          <h3><a class="doc-anchor" href="#doc-bind-expect-actions-8">#</a> <code>ask</code></h3>
+          <p>Ask a session actor/pool and store the reply into control .CTRL: ask .CTRL REF MSG(args).</p>
+          <pre><code class="lang-arb">bind C-a ask .out p job(.th)</code></pre>
+        </article>
       </section>
 
       <section class="tutorial-section" id="ch-input-modes">
@@ -838,47 +983,47 @@
         <article class="doc-entry" id="doc-input-modes-2">
           <h3><a class="doc-anchor" href="#doc-input-modes-2">#</a> <code>in.json</code></h3>
           <p>Begin the pipeline reading stdin (JSON-lines intent; a marker, same as in).</p>
-          <pre><code class="lang-arb">source .s { in.json | field status | tally }</code></pre>
+          <pre><code class="lang-arb">source .s { in.json; field status; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-input-modes-3">
           <h3><a class="doc-anchor" href="#doc-input-modes-3">#</a> <code>in.html</code></h3>
           <p>Begin the pipeline reading stdin as HTML (marker, same as in; use with sel/find).</p>
-          <pre><code class="lang-arb">source .s { in.html | find a | attr href }</code></pre>
+          <pre><code class="lang-arb">source .s { in.html; find a; attr href }</code></pre>
         </article>
         <article class="doc-entry" id="doc-input-modes-4">
           <h3><a class="doc-anchor" href="#doc-input-modes-4">#</a> <code>in.xml</code></h3>
           <p>Begin the pipeline reading stdin as XML (marker, same as in).</p>
-          <pre><code class="lang-arb">source .s { in.xml | find item | text }</code></pre>
+          <pre><code class="lang-arb">source .s { in.xml; find item; text }</code></pre>
         </article>
         <article class="doc-entry" id="doc-input-modes-5">
           <h3><a class="doc-anchor" href="#doc-input-modes-5">#</a> <code>in.logfmt</code></h3>
           <p>Begin the pipeline reading stdin as logfmt (marker, same as in).</p>
-          <pre><code class="lang-arb">source .s { in.logfmt | field level | tally }</code></pre>
+          <pre><code class="lang-arb">source .s { in.logfmt; field level; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-input-modes-6">
           <h3><a class="doc-anchor" href="#doc-input-modes-6">#</a> <code>in.csv</code></h3>
           <p>Begin the pipeline treating stdin as CSV: the header row keys each data row into a JSON object (field NAME works).</p>
-          <pre><code class="lang-arb">source .rows { in.csv | field name | tally }</code></pre>
+          <pre><code class="lang-arb">source .rows { in.csv; field name; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-input-modes-7">
           <h3><a class="doc-anchor" href="#doc-input-modes-7">#</a> <code>in.tsv</code></h3>
-          <p>Begin the pipeline treating stdin as TSV: a tab-separated header + rows into JSON objects.</p>
-          <pre><code class="lang-arb">source .rows { in.tsv | field 2 | tally }</code></pre>
+          <p>Begin the pipeline treating stdin as TSV: a tab-separated header keys each data row into a JSON object (field NAME works).</p>
+          <pre><code class="lang-arb">source .rows { in.tsv; field name; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-input-modes-8">
           <h3><a class="doc-anchor" href="#doc-input-modes-8">#</a> <code>in.yaml</code></h3>
           <p>Begin the pipeline parsing stdin as YAML (--- multi-doc), emitting each document as a JSON line.</p>
-          <pre><code class="lang-arb">source .s { in.yaml | field status | tally }</code></pre>
+          <pre><code class="lang-arb">source .s { in.yaml; field status; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-input-modes-9">
           <h3><a class="doc-anchor" href="#doc-input-modes-9">#</a> <code>in.yml</code></h3>
           <p>Alias of in.yaml: parse stdin as YAML into JSON lines.</p>
-          <pre><code class="lang-arb">source .s { in.yml | field status | tally }</code></pre>
+          <pre><code class="lang-arb">source .s { in.yml; field status; tally }</code></pre>
         </article>
         <article class="doc-entry" id="doc-input-modes-10">
           <h3><a class="doc-anchor" href="#doc-input-modes-10">#</a> <code>in.toml</code></h3>
           <p>Begin the pipeline parsing stdin as one TOML document, emitted as a JSON object line.</p>
-          <pre><code class="lang-arb">source .cfg { in.toml | field version }</code></pre>
+          <pre><code class="lang-arb">source .cfg { in.toml; field version }</code></pre>
         </article>
       </section>
 
@@ -977,8 +1122,8 @@
         </article>
         <article class="doc-entry" id="doc-preset-19">
           <h3><a class="doc-anchor" href="#doc-preset-19">#</a> <code>clickhouse</code></h3>
-          <p>query_log dashboard from clickhouse-client TSV output</p>
-          <pre><code class="lang-arb">clickhouse-client -q "SELECT type, query_duration_ms, query FROM system.query_log" | arb -p clickhouse</code></pre>
+          <p>query_log dashboard from clickhouse-client TSVWithNames output</p>
+          <pre><code class="lang-arb">clickhouse-client --format=TSVWithNames -q "SELECT type, query_duration_ms, query FROM system.query_log" | arb -p clickhouse</code></pre>
         </article>
         <article class="doc-entry" id="doc-preset-20">
           <h3><a class="doc-anchor" href="#doc-preset-20">#</a> <code>cloudformation</code></h3>

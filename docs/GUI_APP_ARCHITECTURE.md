@@ -231,12 +231,13 @@ fine. Two layers, defense in depth.
 
 | Repo | Hosting | Action |
 | --- | --- | --- |
-| Audio‑Haxor | app‑hosted | zgui at `frontend/lib/zgui-core` (already ✓); it is the top‑level shell |
-| zterm | app‑hosted (include_dir) | zgui at `frontend/lib/zgui-core` (done ✓) |
+| zoffice, zterminal, zthrottle, zlatex, zmusic | placement ✓ | already declare `zgui-core` at the required `frontend/lib/zgui-core` |
+| Audio‑Haxor | app‑hosted | it is the top‑level shell, but its `zgui-core` is still at `crates/zgui-core` — move it to `frontend/lib/zgui-core` |
 | ztranslator, zemail | resolved | ztranslator is engine‑hosted (`ztranslator-core/frontend`); zemail is app‑hosted (`zemail/frontend`) |
 | zpdf, zgo, zcontainer | engine‑hosted | rename core `webui → frontend`; zgui at `<core>/frontend/lib`; wrapper embeds none; `frontendDist → <core>/frontend` |
-| zreq, ztunnel, zoffice, zftp, zmax‑gui, zcite | wired ✓ | all embed `zgui-core` and mount `appShell` — but at `crates/zgui-core`, not the required `frontend/lib/zgui-core` (see §placement note) |
-| zpwr‑daw | not wired | the only remaining app with no `zgui-core` embed; add it, mount `appShell`, domain UI becomes a `*-view.js` |
+| traderview, zreq, ztunnel, zftp, zmax‑gui, zcite, zphoto, zstation, ztorrent | wired ✓ | all embed `zgui-core` and mount `appShell` — but at `crates/zgui-core`, not the required `frontend/lib/zgui-core` (see §placement note) |
+| zwire | native | vendors `zgui-core` at `extensions/hud-internal/lib/zgui-core`; own chrome, not the appShell |
+| zpwr‑daw | not wired | the only remaining app with no `zgui-core` embed at all; add it, mount `appShell`, domain UI becomes a `*-view.js` |
 
 Each migration: place zgui → (rename webui→frontend if a core) → wire shell in `index.html` only →
 declare `zguiView` → run the gate → bump pointers (`<core>` → `<app>` → meta).

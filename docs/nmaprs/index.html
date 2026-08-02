@@ -136,7 +136,7 @@
             <span class="sep">/</span>
             <a href="https://docs.rs/nmaprs" target="_blank" rel="noopener noreferrer">docs.rs</a>
           </nav>
-          <p class="docs-build-line">nmaprs v0.1.9 · Rust + tokio + pnet · IPv4 + IPv6 raw half-open TCP · pipelined recv + 16-shard send per family · nmap-os-db MatchPoints scoring · nmap-service-probes (TLS via rustls)</p>
+          <p class="docs-build-line">nmaprs v0.1.10 · Rust + tokio + pnet · IPv4 + IPv6 raw half-open TCP · pipelined recv + 16-shard send per family · nmap-os-db MatchPoints scoring · nmap-service-probes (TLS via rustls)</p>
           <p class="docs-build-line">128 CLI options · nmap-compatible XML / -oN / -oG / -oS / -oA · --resume JSON checkpoints · SOCKS4 + HTTP CONNECT proxies · hickory-resolver DNS</p>
         </div>
         <div class="tutorial-toolbar">
@@ -185,10 +185,10 @@ sudo nmaprs --iL hosts.txt -oG out.gnmap # batch w/ grepable output
 # resume after Ctrl-C
 sudo nmaprs --resume nmaprs.checkpoint.json
 
-# nmap-compatible pipelines
-sudo nmaprs -oX - target | xmllint --format -
-sudo nmaprs -oG - target | grep '/open/'</pre>
-        <p>Full reference: <a href="https://github.com/MenkeTechnologies/nmaprs#readme">README</a> or <code>man nmaprsall</code> (1028-line full reference under <code>man/man1/nmaprsall.1</code>). Short form: <code>man nmaprs</code>. Zsh completions ship via <code>nmaprs --completions zsh</code> if built.</p>
+# nmap-compatible artifacts (-oX / -oG take a real path, not `-`)
+sudo nmaprs -oX scan.xml target &amp;&amp; xmllint --format scan.xml
+sudo nmaprs -oG scan.gnmap target &amp;&amp; grep '/open/' scan.gnmap</pre>
+        <p>Full reference: <a href="https://github.com/MenkeTechnologies/nmaprs#readme">README</a> or <code>man nmaprsall</code> (1037-line full reference under <code>man/man1/nmaprsall.1</code>). Short form: <code>man nmaprs</code>. Zsh completions ship as the <code>completions/_nmaprs</code> file in the repo &mdash; put that directory on <code>fpath</code> before <code>compinit</code>; there is no <code>--completions</code> generator flag.</p>
       </section>
 
       <section class="tutorial-section">
@@ -261,7 +261,8 @@ nmaprs -p U:53,T:22,8000-9000  # mixed UDP/TCP
 nmaprs -p T:22,U:53 -sS -sU    # SYN scan TCP, UDP scan UDP
 nmaprs -F                   # top-100 (embedded freq list)
 nmaprs --top-ports 1000     # top-N by frequency
-nmaprs --port-ratio 0.001   # all ports with ratio &ge; threshold
+nmaprs --port-ratio 0.25    # leading round(R x table length) of the ranked list, R in (0,1]
+nmaprs -r -p 1-1024         # scan ports in order (default shuffles them)
 
 # raw TCP flag override (only when scan type is raw TCP)
 nmaprs -sS --scanflags 'SYN ACK URG'    # custom flag set</pre>
@@ -330,23 +331,21 @@ nmaprs -sS --stats-every 30s target</pre>
 
       <section class="tutorial-section">
         <h2>Evasion (raw scans only)</h2>
-        <p>All flags below are wired <strong>at the packet level</strong> for raw TCP scans (<code>-sS</code>, <code>-sN</code>, <code>-sF</code>, <code>-sX</code>, <code>-sM</code>, <code>-sA</code>, <code>-sW</code>):</p>
+        <p>The flags below are wired <strong>at the packet level</strong> for raw TCP scans (<code>-sS</code>, <code>-sN</code>, <code>-sF</code>, <code>-sX</code>, <code>-sM</code>, <code>-sA</code>, <code>-sW</code>):</p>
 <pre>nmaprs -sS -g 53 target                  # spoofed source port (DNS-friendly)
-nmaprs -sS --ttl 33 target               # custom IP TTL
-nmaprs -sS --badsum target               # bad TCP/UDP/SCTP checksum
+nmaprs -sS --badsum target               # bad TCP checksum
 nmaprs -sS -D RND:5,ME,1.2.3.4 target    # decoy cloak (RND:N = N random)
-nmaprs -sS -S 192.0.2.1 -e eth0 target   # spoof source IP (needs --send-eth)
+nmaprs -sS -S 192.0.2.1 target           # spoof source IP
 nmaprs -sS --data DEADBEEFCAFE target    # raw hex payload appended
 nmaprs -sS --data-string 'GET / HTTP/1.0' target
-nmaprs -sS --data-length 64 target       # N random payload bytes
-nmaprs -sS -f target                     # fragment (8-byte chunks)
-nmaprs -sS --mtu 24 target               # custom fragment MTU
+nmaprs -sS --data-length 64 target       # N zero payload bytes
 nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP frames</pre>
+        <p><strong>Accepted but not yet applied.</strong> <code>--ttl</code>, <code>-f</code> / <code>--mtu</code>, <code>--ip-options</code>, <code>-e</code>, <code>--send-eth</code> / <code>--send-ip</code>, <code>--packet-trace</code> and <code>--system-dns</code> parse and validate (<code>--mtu</code> must be a multiple of 8) so nmap command lines run unchanged, but they do not change the emitted packets, the interface used for ARP discovery, or the resolver.</p>
       </section>
 
       <section class="tutorial-section">
         <h2>Host discovery probes &mdash; exact defaults</h2>
-        <p>Discovery runs <strong>before</strong> the port scan unless you pass <code>-Pn</code> / <code>--no-ping</code>. On local IPv4 subnets, <code>-PR</code> ARP ping runs automatically (turn off with <code>--disable-arp-ping</code>). Default discovery (no explicit <code>-P*</code>) runs raw ICMP echo in parallel with raw TCP SYN to ports <strong>443</strong> and <strong>80</strong>, falling back to TCP connect if raw fails.</p>
+        <p>Discovery runs <strong>before</strong> the port scan unless you pass <code>-Pn</code> / <code>--no-ping</code>. On local IPv4 subnets, ARP ping runs automatically (turn off with <code>--disable-arp-ping</code>); it has no flag of its own, and nmap's <code>-PR</code> is not accepted. Default discovery (no explicit <code>-P*</code>) runs raw ICMP echo in parallel with raw TCP SYN to ports <strong>443</strong> and <strong>80</strong>, falling back to TCP connect if raw fails.</p>
         <table class="parity-table">
           <thead><tr><th>Flag</th><th>Probe &amp; default</th></tr></thead>
           <tbody>
@@ -357,7 +356,7 @@ nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP fram
             <tr><td><code>-PO</code></td><td>IP-protocol ping; default protocols <strong>1,2,4</strong>; open or closed &rarr; up. Privileged.</td></tr>
             <tr><td><code>-PE</code></td><td>ICMP echo request (the classic ping).</td></tr>
             <tr><td><code>-PP</code> / <code>-PM</code></td><td>ICMP timestamp / address-mask requests (IPv4 only, Unix raw); reply &rarr; up. Skipped with a warning on non-Unix.</td></tr>
-            <tr><td><code>-PR</code></td><td>ARP ping; auto on local IPv4 subnets. <code>--disable-arp-ping</code> opts out.</td></tr>
+            <tr><td>(no flag)</td><td>ARP ping; automatic on local IPv4 subnets. <code>--disable-arp-ping</code> opts out. nmap's <code>-PR</code> is not a recognised nmaprs flag.</td></tr>
           </tbody>
         </table>
       </section>
@@ -368,7 +367,7 @@ nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP fram
           <li><strong>Auto privilege detect.</strong> nmaprs checks <code>geteuid()</code>. Unprivileged, the default downgrades SYN &rarr; TCP connect (<code>-sT</code>); <code>--privileged</code> forces raw even when not root, <code>--unprivileged</code> forces connect.</li>
           <li><strong>Raw-only modes need root.</strong> <code>-sO</code>, <code>-sI</code>, and SCTP (<code>-sY</code> / <code>-sZ</code>) are rejected when unprivileged &mdash; run them under <code>sudo</code>.</li>
           <li><strong>Raw send failures fall back per family.</strong> SYN / NULL / FIN / Xmas / Maimon retry as TCP connect on outright raw-socket failure (PERM, EAFNOSUPPORT). <code>-sA</code> / <code>-sW</code> do <em>not</em> fall back &mdash; connect can't produce ACK/Window states.</li>
-          <li><strong>Windows.</strong> Only TCP connect + UDP via system sockets are built; raw modes are unavailable (no <code>pnet</code> raw).</li>
+          <li><strong>Windows.</strong> Only the non-Unix fallbacks exist &mdash; TCP connect + UDP via system sockets; raw modes are unavailable. CI builds and tests Linux + macOS only, and no Windows release binary is published.</li>
           <li><strong>OS / version DB.</strong> <code>-O</code> and <code>-sV</code> read <code>nmap-os-db</code> / <code>nmap-service-probes</code> from <code>--datadir</code> (default <code>./data</code>). Without the DB present, <code>-O</code> falls back to the ICMP-TTL heuristic.</li>
           <li><strong>OS detection preconditions.</strong> IPv4 raw OS scoring needs both an <strong>open</strong> and a <strong>closed</strong> TCP port in the results (nmap's own requirement); otherwise it degrades to the TTL guess.</li>
         </ul>
@@ -390,8 +389,9 @@ nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP fram
             <tr><td>Host discovery (<code>-P*</code>, ARP auto)</td><td class="ok">Implemented</td></tr>
             <tr><td>IPv6 (<code>-6</code>)</td><td class="ok">Implemented</td></tr>
             <tr><td>Traceroute (system binary, concurrent)</td><td class="ok">Implemented</td></tr>
-            <tr><td><code>--resume</code> JSON checkpoint</td><td class="ok">Implemented</td></tr>
-            <tr><td>Evasion (<code>-g</code>, <code>--ttl</code>, <code>--badsum</code>, <code>-D</code>, <code>-S</code>, <code>--data*</code>, <code>-f</code>/<code>--mtu</code>, <code>--spoof-mac</code>)</td><td class="ok">Implemented (packet-level)</td></tr>
+            <tr><td><code>--resume</code> JSON checkpoint</td><td class="ok">Implemented &mdash; every port-scan kind</td></tr>
+            <tr><td>Evasion (<code>-g</code>, <code>--badsum</code>, <code>-D</code>, <code>-S</code>, <code>--data*</code>, <code>--spoof-mac</code>)</td><td class="ok">Implemented (packet-level)</td></tr>
+            <tr><td><code>--ttl</code>, <code>-f</code>/<code>--mtu</code>, <code>--ip-options</code>, <code>-e</code>, <code>--send-eth</code>/<code>--send-ip</code>, <code>--packet-trace</code>, <code>--system-dns</code></td><td class="part">Parsed and validated for CLI parity; not applied to packets or interface/resolver selection</td></tr>
             <tr><td><code>--proxies</code> / <code>--proxy</code> (SOCKS4 + HTTP CONNECT)</td><td class="ok">Implemented</td></tr>
             <tr><td><code>--dns-servers</code> (hickory-resolver)</td><td class="ok">Implemented</td></tr>
             <tr><td>Auto privilege detect (<code>geteuid</code>)</td><td class="ok">Implemented</td></tr>
@@ -404,7 +404,7 @@ nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP fram
             <tr><td>NSE Lua runtime</td><td class="miss">Not implemented (use <a href="https://nmap.org/">nmap</a>)</td></tr>
           </tbody>
         </table>
-        <p>Full parity table (50+ rows) lives in the <a href="https://github.com/MenkeTechnologies/nmaprs#0x01-truth-table--read-this">README "TRUTH TABLE"</a> section.</p>
+        <p>Full parity table (47 rows) lives in the <a href="https://github.com/MenkeTechnologies/nmaprs#0x01-truth-table--read-this">README "TRUTH TABLE"</a> section.</p>
       </section>
 
       <section class="tutorial-section">
@@ -446,9 +446,9 @@ nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP fram
 c/expr_match.cpp           # upstream nmap fingerprint expr_match (linked via build.rs)
 data/                      # embedded top_ports.txt + nmap_ip_protocols_fast.txt
 man/man1/
-&#9500;&#9472;&#9472; nmaprs.1            # man page &mdash; short reference (506 lines, roff)
-&#9492;&#9472;&#9472; nmaprsall.1         # man page &mdash; full reference (1028 lines)</pre>
-        <p>Two binaries (<code>nmaprs</code> + <code>nms</code> &mdash; same code, short alias), two man pages (<code>man nmaprs</code> short / <code>man nmaprsall</code> full), zsh completions in <code>completions/_nmaprs</code> (completes both names), a Criterion microbenchmark in <code>benches/scan.rs</code>, and a vs-nmap harness in <code>scripts/benchmark_vs_nmap.sh</code>. Dual-licensed <code>MIT OR Apache-2.0</code>.</p>
+&#9500;&#9472;&#9472; nmaprs.1            # man page &mdash; short reference (499 lines, roff)
+&#9492;&#9472;&#9472; nmaprsall.1         # man page &mdash; full reference (1037 lines)</pre>
+        <p>Two binaries (<code>nmaprs</code> + <code>nms</code> &mdash; same code, short alias), two man pages (<code>man nmaprs</code> short / <code>man nmaprsall</code> full), zsh completions in <code>completions/_nmaprs</code> (completes both names), a Criterion microbenchmark in <code>benches/scan.rs</code>, and a vs-nmap harness in <code>scripts/benchmark_vs_nmap.sh</code>. Licensed <code>MIT</code>.</p>
       </section>
 
       <section class="tutorial-section">
@@ -470,10 +470,10 @@ man/man1/
         <table class="parity-table">
           <thead><tr><th>Platform</th><th>Status</th></tr></thead>
           <tbody>
-            <tr><td>Linux (x86_64 + aarch64)</td><td class="ok">All scan types, raw + connect</td></tr>
-            <tr><td>macOS (arm64 + x86_64)</td><td class="ok">All scan types; IPv6 <code>-sO</code> requires Unix raw (works)</td></tr>
-            <tr><td>FreeBSD</td><td class="ok">All scan types</td></tr>
-            <tr><td>Windows</td><td class="part">TCP connect + UDP via system socket only; raw modes not built (no <code>pnet</code> raw)</td></tr>
+            <tr><td>Linux (x86_64 + aarch64)</td><td class="ok">All scan types, raw + connect. Built and tested in CI; gnu + musl release binaries.</td></tr>
+            <tr><td>macOS (arm64 + x86_64)</td><td class="ok">All scan types; IPv6 <code>-sO</code> requires Unix raw (works). Built and tested in CI; release binaries for both arches.</td></tr>
+            <tr><td>Other Unix (FreeBSD, &hellip;)</td><td class="part">The <code>cfg(unix)</code> paths apply, so all scan types should build &mdash; not covered by CI or the release matrix.</td></tr>
+            <tr><td>Windows</td><td class="part">Only the <code>cfg(windows)</code> / <code>cfg(not(unix))</code> fallbacks exist (system-socket TCP connect + UDP, system <code>ping</code>/<code>tracert</code>); raw modes are unavailable. Not built or tested in CI and no release binary is published.</td></tr>
           </tbody>
         </table>
       </section>

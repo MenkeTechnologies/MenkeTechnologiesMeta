@@ -79,7 +79,7 @@
             <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            Single static Rust binary &middot; two transports, one dispatcher &middot; 45 commands &middot; also a library &middot; macOS · Linux · Windows
+            Single static Rust binary &middot; two transports, one dispatcher &middot; 65 commands &middot; also a library &middot; macOS · Linux · Windows
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -98,13 +98,13 @@
       <p class="tutorial-subtitle">Two transports feed one dispatcher (<code>src/session.rs</code>): a native-messaging stdio framing and a local-socket daemon (Unix domain socket on macOS/Linux, named pipe on Windows). Every capability &mdash; sysinfo, filesystem crawl/watch/tail, exec, background jobs, process tools, a pub/sub bus that federates across TCP-peered hosts, PTY terminals and a per-app kv store &mdash; is reachable over either transport, and the crate is also a <code>zwire_host</code> library so sibling hosts can embed it.</p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">v0.3.8</div><div class="stat-label">Version</div></div>
-        <div class="stat-card"><div class="stat-val cyan">17</div><div class="stat-label">src .rs files</div></div>
-        <div class="stat-card"><div class="stat-val green">3,047</div><div class="stat-label">Source lines</div></div>
-        <div class="stat-card"><div class="stat-val cyan">45</div><div class="stat-label">Protocol commands</div></div>
+        <div class="stat-card"><div class="stat-val">v0.3.15</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val cyan">25</div><div class="stat-label">src .rs files</div></div>
+        <div class="stat-card"><div class="stat-val green">5,947</div><div class="stat-label">Source lines</div></div>
+        <div class="stat-card"><div class="stat-val cyan">65</div><div class="stat-label">Protocol commands</div></div>
         <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Transports</div></div>
-        <div class="stat-card"><div class="stat-val green">17</div><div class="stat-label">Capabilities</div></div>
-        <div class="stat-card"><div class="stat-val cyan">5</div><div class="stat-label">Dependencies</div></div>
+        <div class="stat-card"><div class="stat-val green">18</div><div class="stat-label">Capabilities</div></div>
+        <div class="stat-card"><div class="stat-val cyan">8</div><div class="stat-label">Dependencies</div></div>
         <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Platforms</div></div>
       </div>
 
@@ -125,20 +125,24 @@
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>COMMAND SURFACE</h2>
-      <p>45 protocol commands, all reachable over both transports. The <code>hello</code> reply advertises which capability tags were compiled in so a client can feature-test.</p>
+      <p>65 host commands, all reachable over both transports &mdash; the surface <code>SURFACE_VERBS</code> advertises on <code>App::open("zwire")-&gt;verbs()</code>, alongside the 100 <code>browser.*</code> verbs the Chromium HUD executes. The <code>hello</code> reply advertises which capability tags were compiled in so a client can feature-test.</p>
+      <p>Every verb declares a reversibility class, published as <code>rev</code>: <code>inverse</code> (a compensation exists), <code>pure</code> (reads only &mdash; runs but is not journaled), or <code>irreversible</code> (the default). While a transaction is open every reversible call is journaled; <code>txn_abort</code> compensates the journal in reverse order and fires the <code>txn-aborted</code> hook event, and calling an <code>irreversible</code> verb is refused at call time with <code>verb not reversible: &lt;id&gt;</code> so a chain fails fast instead of stranding itself half-undone. Compensation for <code>browser.*</code> verbs is replayed by the HUD service worker, which captured each step's pre-state; the host contributes the order.</p>
       <table class="arch-table">
         <thead><tr><th>Group</th><th>Commands</th></tr></thead>
         <tbody>
-          <tr><td>Discovery &amp; kv</td><td><code>hello</code>, <code>hostinfo</code>, <code>kv_set</code>, <code>kv_get</code>, <code>kv_merge</code>, <code>kv_del</code>, <code>kv_keys</code></td></tr>
-          <tr><td>System stats</td><td><code>sysinfo_once</code>, <code>sysinfo_start</code>, <code>sysinfo_stop</code></td></tr>
+          <tr><td>Discovery, log &amp; kv</td><td><code>hello</code>, <code>ping</code>, <code>hostinfo</code>, <code>hostlog</code>, <code>kv_set</code>, <code>kv_get</code>, <code>kv_merge</code>, <code>kv_del</code>, <code>kv_keys</code></td></tr>
+          <tr><td>System stats</td><td><code>sysinfo_once</code>, <code>sysinfo_start</code>, <code>sysinfo_stop</code>, <code>meter_stream</code></td></tr>
           <tr><td>Filesystem</td><td><code>fs_read</code>, <code>fs_write</code>, <code>fs_append</code>, <code>fs_list</code>, <code>fs_walk</code>, <code>fs_stat</code>, <code>fs_mkdir</code>, <code>fs_rm</code></td></tr>
           <tr><td>Watch &amp; tail</td><td><code>fs_watch</code>, <code>fs_tail</code>, <code>watch_stop</code>, <code>watch_list</code></td></tr>
           <tr><td>Exec &amp; OS</td><td><code>exec</code>, <code>open</code>, <code>clipboard_get</code>, <code>clipboard_set</code>, <code>notify</code></td></tr>
           <tr><td>Background jobs</td><td><code>job_start</code>, <code>job_list</code>, <code>job_result</code>, <code>job_poll</code></td></tr>
           <tr><td>Process tools</td><td><code>ps</code>, <code>kill</code>, <code>which</code></td></tr>
           <tr><td>Pub/sub bus</td><td><code>sub</code>, <code>unsub</code>, <code>pub</code></td></tr>
-          <tr><td>Host-to-host peering</td><td><code>peers</code>, <code>peer_connect</code>, <code>remote</code></td></tr>
+          <tr><td>Host-to-host peering</td><td><code>peers</code>, <code>peer</code>, <code>peer_connect</code>, <code>remote</code></td></tr>
           <tr><td>PTY terminals</td><td><code>pty_spawn</code>, <code>pty_write</code>, <code>pty_resize</code>, <code>pty_kill</code></td></tr>
+          <tr><td>Lifecycle hooks</td><td><code>hooks_list</code>, <code>hooks_events</code>, <code>hooks_save</code>, <code>hooks_delete</code>, <code>hooks_set_enabled</code>, <code>hooks_get_script</code>, <code>hooks_set_script</code>, <code>hooks_script_path</code>, <code>hooks_test_run</code>, <code>hook_fire</code></td></tr>
+          <tr><td>stryke scripting &amp; LSP</td><td><code>stryke_run</code>, <code>stryke_lsp_start</code>, <code>stryke_lsp_send</code>, <code>stryke_lsp_stop</code></td></tr>
+          <tr><td>Transactions</td><td><code>txn_begin</code>, <code>txn_commit</code>, <code>txn_abort</code></td></tr>
           <tr><td>Legacy zwire bridge</td><td><code>get</code> + <code>scheme</code>/<code>ui</code> keys over <code>~/.zwire/hud-scheme</code> and <code>~/.zwire/hud-ui.json</code></td></tr>
         </tbody>
       </table>
@@ -165,10 +169,10 @@
       <table class="arch-table">
         <thead><tr><th>Item</th><th>Value</th></tr></thead>
         <tbody>
-          <tr><td>Version</td><td>0.3.8</td></tr>
+          <tr><td>Version</td><td>0.3.14</td></tr>
           <tr><td>License</td><td>MIT</td></tr>
           <tr><td>Binary size</td><td>~500 KB (release: <code>opt-level = "z"</code>, LTO, stripped, <code>panic = "abort"</code>)</td></tr>
-          <tr><td>Dependencies</td><td><code>serde_json</code>, <code>base64</code>, <code>sysinfo</code> (optional), <code>portable-pty</code> (optional), <code>interprocess</code> (Windows only)</td></tr>
+          <tr><td>Dependencies</td><td><code>serde</code>, <code>serde_json</code>, <code>toml</code>, <code>base64</code>, <code>sysinfo</code> (optional), <code>portable-pty</code> (optional), <code>tauri</code> (optional), <code>interprocess</code> (Windows only)</td></tr>
           <tr><td>Features</td><td><code>sysinfo-caps</code> (live stats + <code>ps</code>/<code>kill</code>), <code>pty</code> (terminals); both default-on, both droppable for a light embed</td></tr>
           <tr><td>Platforms</td><td>macOS · Linux · Windows (all three in CI; battery reporting macOS-only via <code>pmset</code>)</td></tr>
           <tr><td>Consumers</td><td><a href="https://github.com/MenkeTechnologies/zwire">zwire</a> (native-messaging), <code>zpwrchrome-host</code> (library embed)</td></tr>

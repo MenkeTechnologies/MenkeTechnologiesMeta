@@ -64,17 +64,20 @@
       <table>
         <thead><tr><th>path</th><th>role</th></tr></thead>
         <tbody>
-          <tr><td>app/src-tauri</td><td>thin Tauri host: registers <code>zftp_invoke</code> + terminal commands; <code>setup</code> mounts the engine</td></tr>
+          <tr><td>app/src-tauri</td><td>thin Tauri host: registers <code>zftp_invoke</code> + terminal + the app-layer overlay commands (<code>nettools.rs</code>, <code>srvtools.rs</code>, <code>sites.rs</code>, <code>filetools.rs</code>, <code>xfer.rs</code>, <code>creds.rs</code>) and the native menu; <code>setup</code> mounts the engine</td></tr>
           <tr><td>crates/zftp-core</td><td>the embeddable file-transfer engine (submodule, <code>tauri</code> feature)</td></tr>
           <tr><td>crates/zpwr-embed-terminal</td><td>shared embedded PTY terminal (submodule)</td></tr>
           <tr><td>crates/zpwr-i18n</td><td>shared i18n runtime (submodule)</td></tr>
-          <tr><td>frontend</td><td>app shell; webui/terminal/i18n assets synced from the submodules before each dev/build</td></tr>
+          <tr><td>crates/…</td><td>the rest of the shared stack, all submodules: <code>zgui-core</code>, <code>zgui-bridge</code>, <code>zwire-host</code>, <code>zpwr-file-browser</code>, <code>zpwr-hooks-editor</code>, and the <code>zpdf-core</code> / <code>zemail-core</code> / <code>zoffice-core</code> engines (see <code>.gitmodules</code>)</td></tr>
+          <tr><td>frontend</td><td>app shell; engine-view/terminal/i18n assets synced from the submodules before each dev/build</td></tr>
           <tr><td>scripts</td><td>clean · bust · rebuild · nuke (cyberpunk-styled, ported from Audio-Haxor)</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Front-end surface</h2>
-      <p class="note">The HUD (mounted from <code>zftp-core/webui</code>) renders a bookmark list with live status dots, a connect/disconnect action, a remote-file browser with a name filter, a transfer queue with per-transfer progress, a live log viewer, a connect-to-server modal (enter a <code>scheme://user@host/path</code> URL), a command palette, and the shared embedded terminal. It drives the engine entirely through <code>invoke('zftp_invoke', { cmd, args })</code> and listens for <code>zftp-event</code>; all wiring is CSP-safe (no inline handlers).</p>
+      <p class="note">The HUD (mounted from <code>zftp-core/frontend</code>) renders a bookmark list with live status dots, a connect/disconnect action, a remote-file browser with a name filter, a transfer queue with per-transfer progress, a live log viewer, a connect-to-server modal (enter a <code>scheme://user@host/path</code> URL), a command palette, and the shared embedded terminal. It drives the engine entirely through <code>invoke('zftp_invoke', { cmd, args })</code> and listens for <code>zftp-event</code>; all wiring is CSP-safe (no inline handlers).</p>
+      <p class="note">An app-owned <strong>Network Toolkit</strong> overlay (<code>frontend/nettools.js</code>, ⇧⌘N / ⌘K palette) adds host-side server testing and discovery: DNS resolve, a TCP reachability probe with latency, a parallel scan of the well-known file-transfer ports, the local outbound IP, and importable entries from <code>~/.ssh/config</code>, <code>~/.ssh/*.pub</code> and <code>~/.netrc</code> (secrets never surfaced). It calls the app-local <code>nettools.rs</code> commands directly (not <code>zftp_invoke</code>) and is fully CSP-safe.</p>
+      <p class="note">An app-owned <strong>Transfer Planner</strong> overlay (<code>frontend/planner.js</code>, ⇧⌘P / ⌘K palette) surfaces the <em>engine's own</em> transfer-planning commands — <code>transfer.estimate</code> (preflight cost/ETA), <code>queue.schedule</code> (weighted-fair scheduler), <code>transfer.segments</code>, <code>transfer.backoff</code> and <code>transfer.resume_check</code> — that the mounted view never exposes. Unlike the other overlays it dispatches through the engine via <code>zftp_invoke</code>; every command is pure-compute, so it works with no live transport. Adds no Rust (those commands are already registered) and is fully CSP-safe.</p>
 
       <h2 class="reg-h">Roadmap</h2>
       <table>

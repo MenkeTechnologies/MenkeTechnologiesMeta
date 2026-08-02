@@ -84,7 +84,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
           </nav>
-          <p class="docs-build-line">single static Rust binary (~500 KB) &middot; sysinfo &middot; fs &middot; exec &middot; pty &middot; kv &middot; jobs &middot; bus &middot; peer &middot; 45 commands &middot; two transports, one dispatcher &middot; also a library</p>
+          <p class="docs-build-line">single static Rust binary (~500 KB) &middot; sysinfo &middot; fs &middot; exec &middot; pty &middot; kv &middot; jobs &middot; bus &middot; peer &middot; 65 commands &middot; two transports, one dispatcher &middot; also a library</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -133,7 +133,10 @@
             <tr><td>Host-to-host peering</td><td><code>peers</code> / <code>peer_connect</code> / <code>remote</code> &mdash; a mesh of TCP-peered daemons that federates the bus across machines and runs a request on another host</td></tr>
             <tr><td>PTY terminals</td><td><code>pty_spawn</code> / <code>pty_write</code> / <code>pty_resize</code> / <code>pty_kill</code>, multiplexed by <code>id</code></td></tr>
             <tr><td>Key/value store</td><td><code>kv_set</code> / <code>kv_get</code> / <code>kv_merge</code> / <code>kv_del</code> / <code>kv_keys</code> &mdash; a per-app JSON store under <code>~/.&lt;app&gt;/kv/</code></td></tr>
-            <tr><td>Discovery</td><td><code>hello</code> (feature-test <code>caps</code>), <code>hostinfo</code> (os, arch, kernel, hostname, user, cpus, mem, LAN ip)</td></tr>
+            <tr><td>Discovery</td><td><code>hello</code> (feature-test <code>caps</code>), <code>ping</code>, <code>hostinfo</code> (os, arch, kernel, hostname, user, cpus, mem, LAN ip), <code>hostlog</code></td></tr>
+            <tr><td>Lifecycle hooks</td><td><code>hooks_list</code> / <code>hooks_events</code> / <code>hooks_save</code> / <code>hooks_delete</code> / <code>hooks_set_enabled</code> / <code>hooks_get_script</code> / <code>hooks_set_script</code> / <code>hooks_script_path</code> / <code>hooks_test_run</code> / <code>hook_fire</code> &mdash; scripts bound to host events</td></tr>
+            <tr><td>stryke scripting &amp; LSP</td><td><code>stryke_run</code> runs a script through a bundled sidecar (the browser never spawns it directly); <code>stryke_lsp_start</code> / <code>stryke_lsp_send</code> / <code>stryke_lsp_stop</code> bridge the language server</td></tr>
+            <tr><td>Transactions</td><td><code>txn_begin</code> / <code>txn_commit</code> / <code>txn_abort</code> &mdash; a chain of automation-bus calls that unwinds itself on failure. Each verb publishes a <code>rev</code> class (<code>inverse</code>, <code>pure</code>, <code>irreversible</code>); an <code>irreversible</code> verb is refused at call time while a transaction is open</td></tr>
           </tbody>
         </table>
       </section>
@@ -194,6 +197,10 @@ cargo clippy --all-targets -- -D warnings</pre>
             <tr><td><code>src/exec.rs</code> / <code>src/jobs.rs</code> / <code>src/procs.rs</code></td><td>run-to-completion exec; background jobs; <code>ps</code>/<code>kill</code>/<code>which</code></td></tr>
             <tr><td><code>src/sysmon.rs</code> / <code>src/osops.rs</code></td><td>the sysinfo stream monitor; open/clipboard/notify/hostinfo</td></tr>
             <tr><td><code>src/pty.rs</code> / <code>src/bus.rs</code> / <code>src/store.rs</code></td><td>multiplexed PTY sessions; pub/sub bus; per-app kv store</td></tr>
+            <tr><td><code>src/hooks.rs</code> / <code>src/hostlog.rs</code></td><td>lifecycle hook registry, storage and firing; the host's own log ring</td></tr>
+            <tr><td><code>src/stryke_runner.rs</code> / <code>src/stryke_lsp.rs</code></td><td>the bundled stryke sidecar runner and the language-server bridge</td></tr>
+            <tr><td><code>src/zbus.rs</code> / <code>src/txn.rs</code></td><td>the automation surface (<code>SURFACE_VERBS</code>, the <code>rev</code> reversibility table, the NDJSON <code>call</code>/<code>get</code>/<code>verbs</code>/<code>sub</code> + <code>begin</code>/<code>commit</code>/<code>abort</code>/<code>undo</code> frames); the transaction journal with one monotonic seq clock across all open transactions</td></tr>
+            <tr><td><code>src/theme_watch.rs</code> / <code>src/tauri_theme.rs</code></td><td>live theme-file watching and the Tauri-side theme surface</td></tr>
             <tr><td><code>src/api.rs</code></td><td>the light library surface (<code>walk</code>, <code>exec</code>, …) for embedders with <code>default-features = false</code></td></tr>
           </tbody>
         </table>

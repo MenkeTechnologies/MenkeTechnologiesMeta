@@ -54,29 +54,47 @@
     </header>
     <main class="docs-main">
       <section class="hero-stats">
-        <div class="hero-stat"><span class="num">16</span><span class="lbl">engine modules</span></div>
+        <div class="hero-stat"><span class="num">24</span><span class="lbl">engine modules</span></div>
         <div class="hero-stat"><span class="num">1</span><span class="lbl">PDF dependency (lopdf, MIT)</span></div>
-        <div class="hero-stat"><span class="num">160</span><span class="lbl">integration tests</span></div>
+        <div class="hero-stat"><span class="num">293</span><span class="lbl">integration tests</span></div>
         <div class="hero-stat"><span class="num">0</span><span class="lbl">C++ / AGPL deps</span></div>
       </section>
       <p class="note">Live feature coverage against the Adobe-Acrobat / Apple-Preview surface is tracked in the <a href="https://menketechnologies.github.io/zpdf/zpdf_port_report.html">port report</a>, where status is derived from source. This page covers the engine's structure, not the feature count.</p>
 
       <h2 class="reg-h">Module map</h2>
       <table>
-        <thead><tr><th>module</th><th>implemented now</th><th>planned</th></tr></thead>
+        <thead><tr><th>module</th><th>implemented now</th></tr></thead>
         <tbody>
-          <tr><td>doc</td><td>open · save · from_bytes · to_bytes · version · metadata get/set · merge</td><td>—</td></tr>
-          <tr><td>page</td><td>page_count · page_numbers · rotate · page_rotation · delete_pages · reorder_pages · extract_pages/split_by_count · crop_page · watermark_text</td><td>—</td></tr>
-          <tr><td>text</td><td>extract_text · extract_all_text · edit_text · find_replace_text · ocr_page</td><td>—</td></tr>
-          <tr><td>annot</td><td>add_note · annotation_count · add_markup (highlight · ink · stamp) · draw_rect/draw_line/draw_path (shapes) · add_measure</td><td>—</td></tr>
-          <tr><td>form</td><td>has_acroform · form_fields · set_field (fill) · flatten_form · create_text_field/checkbox/radio (create fields) · export_fdf/import_fdf · export_xfa/set_xfa_datasets (XFA)</td><td>—</td></tr>
-          <tr><td>sign</td><td>is_signed · signature_count · has_permissions_dict · sign (certificate) · verify_signatures · add_timestamp</td><td>—</td></tr>
-          <tr><td>security</td><td>is_encrypted · encrypt · decrypt · redact · sanitize</td><td>—</td></tr>
+          <tr><td>doc</td><td>open · save · from_bytes · to_bytes · version · metadata + XMP · merge · overlay_page · n_up · outline/bookmarks · layers (OCG/OCMD) · portfolio · repair · preflight · accessibility_check · tag_pdf_ua · optimize · compare · named destinations · build_toc_page</td></tr>
+          <tr><td>page</td><td>page_count · page_numbers · rotate_page/rotate_all · delete_pages · reorder_pages · swap_pages · move_page · extract_pages · insert_pages/replace_pages · crop_page · resize_all_pages · page boxes · add_header_footer · bates_number · watermark_text/watermark_image · split_by_bookmarks/_count/_size/_ranges/_odd_even · booklet_order · flip_page · duplicate_pages · split_page_grid · add_printer_marks · transitions</td></tr>
+          <tr><td>linearize</td><td>linearize — self-contained fast-web-view writer: /Linearized dict, dual /Prev-linked xref, per-page hint stream</td></tr>
+          <tr><td>text</td><td>extract_text · extract_all_text · extract_text_in_region · search · add_text · add_text_lines (multi-line box, page-rotation aware, any embedded face + fill colour) · edit_text · find_replace_text · add_image/replace_image</td></tr>
+          <tr><td>ocr</td><td>ocr_page · ocr_page_words · make_searchable — pure-Rust template match against a compiled-in bitmap font, no model or network</td></tr>
+          <tr><td>render</td><td>render_page · export_page_png · page_bitmap · page_thumbnail/generate_thumbnails · print_to_pdf · to_grayscale · invert_colors · adjust_image/adjust_page/stylize_page · auto_crop_margins · detect_skew_angle/deskew_page · binarize · split_scanned_images · extract_images · downsample_images · contact_sheet · page_visual_difference/mark_visual_differences · flatten_transparency · flatten_annotations · color_separations · list_inks/ink_coverage · stamp_rgba</td></tr>
+          <tr><td>annot</td><td>add_note · add_markup · add_ink/erase_ink_at · undo_last_annot · list_annotations + per-annotation property setters · apply_redactions · links (add_link · goto · remote · launch · named action) · add_callout · add_measure · attach_file · highlight_search · FDF/XFDF/CSV comment import-export</td></tr>
+          <tr><td>media</td><td>add_sound · add_screen · add_movie · add_3d · add_rich_media</td></tr>
+          <tr><td>form</td><td>has_acroform · form_fields · field_widgets · set_field · create_text_field/checkbox/choice/radio_group/signature/push_button · field property setters · validate_fields · reset_form · clear_signature · add_submit_button · flatten_form · FDF/XFDF import-export · XFA (has_xfa · xfa_datasets · set_xfa_datasets · export_xfa)</td></tr>
+          <tr><td>sign</td><td>is_signed · signature_count · has_permissions_dict · add_typed_signature · sign/sign_visible/sign_image · certify · add_timestamp · verify_signatures/verify_full</td></tr>
+          <tr><td>security</td><td>is_encrypted · permissions · encrypt · encrypt_aes256(_with_permissions) · encrypt_pubkey(_multi) · decrypt · decrypt_pubkey · redact/redact_search/redact_regex · verify_redaction · sanitize</td></tr>
+          <tr><td>convert</td><td>from_jpeg_images · export_html/export_markdown/export_docx/export_xlsx/export_pptx · to_pdf_a · to_pdf_x · convert_to_cmyk · set_output_intent</td></tr>
+          <tr><td>font</td><td>add_text_with_font (Type0 subset, /ToUnicode) · list_fonts · extract_fonts · unembed_fonts · system_fonts</td></tr>
+          <tr><td>layout</td><td>reading_order · text_run_boxes · search_run_rects · restyle_text · move_text · export_page_svg · reflow · auto_tag · auto_link_urls</td></tr>
+          <tr><td>insight</td><td>extract_tables/extract_table_cells · auto_outline · word_diff · structure_diff · similarity_score · scan_pii/redact_pii · hidden_content_audit · content_fingerprint · readability_stats</td></tr>
+          <tr><td>livecalc</td><td>live_table · live_table_view · live_table_set · live_table_preview — dirty-subgraph recalc written back into the page's own content stream</td></tr>
+          <tr><td>actions</td><td>apply_actions — replay a serializable Action batch over a document</td></tr>
+          <tr><td>barcode</td><td>add_barcode (Code 128-B) · add_qr_code · add_data_matrix</td></tr>
+          <tr><td>js</td><td>run_javascript · recalculate_fields — boa_engine with a minimal Acrobat form JS API</td></tr>
+          <tr><td>prepress</td><td>document_id/regenerate_document_id · set_trapped · set_reading_direction · page_boxes/set_all_page_boxes · set_layer_locked · field Format/Keystroke/Validate JS + list_field_actions · set_field_rich_value · list_output_intents · object_stats</td></tr>
+          <tr><td>fidelity</td><td>copy_fidelity_audit — per-glyph text-recoverability map and a weighted document copy-fidelity score</td></tr>
+          <tr><td>vcs</td><td>vcs_commit/log/diff/checkout/bisect · vcs_blame/vcs_blame_lines · vcs_branch/vcs_branches/vcs_switch · vcs_merge/vcs_merge_resolve (three-way structural merge) · number_blame · edit_value_tracked</td></tr>
+          <tr><td>redact_audit</td><td>redaction_leak_audit — painter's-model scan for text a later opaque fill covers but leaves extractable, plus unjustified invisible text</td></tr>
+          <tr><td>revision</td><td>revision_history · revision_bytes — walk the incremental-update layers and materialize any prior revision's exact bytes</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="note">The test suite builds valid PDFs in memory with <code>lopdf</code> (no external fixtures) and drives the public <code>Pdf</code> API: page counting, a Unicode metadata save/reopen round-trip, rotation normalization and out-of-range handling, annotation persistence across a save/load cycle, and confirmation that every unimplemented capability returns a typed error rather than panicking or silently succeeding. Runs identically in a headless Linux CI.</p>
+      <p class="note">293 integration tests across <code>tests/engine.rs</code>, <code>livecalc.rs</code>, <code>prepress.rs</code>, <code>revision.rs</code> and <code>text_runs.rs</code> build valid PDFs in memory with <code>lopdf</code> and drive the public <code>Pdf</code> API: a Unicode metadata save/reopen round-trip, rotation normalization and out-of-range rejection, annotation persistence and the markup family's subtypes, form and XFA fill round-trips, the document-timestamp digest binding over its <code>/ByteRange</code>, incremental-update revision reconstruction, and per-revision number blame. A further 47 unit tests sit beside the code they cover — including the copy-fidelity and redaction-leak audits, and a drift guard (<code>commands_cover_invoke_arms</code>) that fails if the published command list and <code>zpdf_invoke</code>'s match arms diverge.</p>
+      <p class="note">The only binary fixtures are compiled in with <code>include_bytes!</code>: an AES-256 (V5/R6) file written by <strong>qpdf</strong> and a public-key-encrypted file written by <strong>pyHanko</strong>, so the encryption paths are validated against outside implementations rather than only against themselves, plus a public-domain TTF for the font-embedding tests. Nothing is fetched and nothing is shelled out to, so the suite runs identically in a headless Linux CI.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zpdf-core &middot; engineering report</footer>
     </main>

@@ -95,41 +95,48 @@
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
       <p class="tutorial-subtitle"><strong>zpwr-modal-editor</strong> is the shared <strong>Vim / Emacs modal-editing editor</strong> of the MenkeTechnologies app stack &mdash; one TypeScript source of truth for the vim and emacs editing modes, vendored from <a href="https://github.com/brijeshb42/monaco-vim" target="_blank" rel="noopener noreferrer"><code>monaco-vim</code></a> and <a href="https://github.com/aioutecism/monaco-emacs" target="_blank" rel="noopener noreferrer"><code>monaco-emacs</code></a> and adapted so we own them outright. The source lives in <code>src/</code> and each consuming app bundles it with its own <code>monaco-editor</code> dependency.</p>
-      <p class="tutorial-subtitle">The design turns on a <strong>surface adapter</strong>: the vim engine talks only to a CodeMirror-shaped adapter, so the same ~7.1k-line engine can drive a Monaco editor today and a raw DOM surface later. The bundle is produced with esbuild (IIFE, ES2020, minified) and exposes a single <code>window.ZModal</code> facade &mdash; <code>create</code> (Monaco-backed mount) plus the Monaco-agnostic <code>attachVim</code> / <code>attachEmacs</code> primitives.</p>
+      <p class="tutorial-subtitle">The design turns on a <strong>surface adapter</strong>: the vim engine talks only to a CodeMirror-shaped adapter, so the same ~7.1k-line engine drives either surface unchanged. Both adapters now ship &mdash; <code>monaco_adapter</code> over a Monaco editor, and <code>dom_adapter</code> over a plain <code>contenteditable</code> element with no Monaco at all &mdash; and the bundler emits a bundle for each. Both are esbuild IIFE (ES2020, minified) and both expose a single <code>window.ZModal</code> facade: <code>create</code> / <code>attachVim</code> / <code>attachEmacs</code> on the Monaco build, <code>attach</code> / <code>attachVim</code> / <code>snippets</code> on the DOM build. A consumer loads one or the other, never both.</p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">v0.1.0</div><div class="stat-label">Version</div></div>
-        <div class="stat-card"><div class="stat-val cyan">12</div><div class="stat-label">src .ts files</div></div>
-        <div class="stat-card"><div class="stat-val green">10,202</div><div class="stat-label">src lines</div></div>
+        <div class="stat-card"><div class="stat-val">v0.2.0</div><div class="stat-label">Version</div></div>
+        <div class="stat-card"><div class="stat-val cyan">17</div><div class="stat-label">src .ts files</div></div>
+        <div class="stat-card"><div class="stat-val green">12,030</div><div class="stat-label">src lines</div></div>
         <div class="stat-card"><div class="stat-val cyan">7,135</div><div class="stat-label">vim engine lines</div></div>
-        <div class="stat-card"><div class="stat-val">1,314</div><div class="stat-label">monaco adapter lines</div></div>
+        <div class="stat-card"><div class="stat-val">1,119</div><div class="stat-label">monaco adapter lines</div></div>
+        <div class="stat-card"><div class="stat-val cyan">1,089</div><div class="stat-label">dom adapter lines</div></div>
         <div class="stat-card"><div class="stat-val green">1,329</div><div class="stat-label">emacs engine lines</div></div>
         <div class="stat-card"><div class="stat-val cyan">2</div><div class="stat-label">Modal engines</div></div>
-        <div class="stat-card"><div class="stat-val">1</div><div class="stat-label">Surface adapters</div></div>
-        <div class="stat-card"><div class="stat-val green">3</div><div class="stat-label">Facade methods</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Surface adapters</div></div>
+        <div class="stat-card"><div class="stat-val green">3</div><div class="stat-label">Facade methods / build</div></div>
         <div class="stat-card"><div class="stat-val cyan">0</div><div class="stat-label">External runtime deps</div></div>
         <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">License</div></div>
       </div>
-      <p class="tutorial-subtitle" style="font-size:11px;opacity:0.7;">Counts derived from the repo: <code>src/**/*.ts</code> = 12 files / 10,202 lines; vim engine <code>engine/vim/keymap_vim.ts</code> = 7,135; <code>adapters/monaco_adapter.ts</code> = 1,314; <code>engine/emacs/*.ts</code> = 1,329; modal engines = vim + emacs; surface adapters = monaco (dom = next milestone); <code>window.ZModal</code> methods = <code>create</code> + <code>attachVim</code> + <code>attachEmacs</code>; runtime deps = 0 (lodash replaced by a local util).</p>
+      <p class="tutorial-subtitle" style="font-size:11px;opacity:0.7;">Counts derived from the repo: <code>src/**/*.ts</code> = 17 files / 12,030 lines; vim engine <code>engine/vim/keymap_vim.ts</code> = 7,135; <code>adapters/monaco_adapter.ts</code> = 1,119 and <code>adapters/dom_adapter.ts</code> = 1,089 (both over the shared 232-line <code>adapters/cm_core.ts</code>); <code>engine/emacs/*.ts</code> = 1,329; modal engines = vim + emacs; surface adapters = monaco + dom; <code>window.ZModal</code> methods = <code>create</code> + <code>attachVim</code> + <code>attachEmacs</code> (Monaco build) / <code>attach</code> + <code>attachVim</code> + <code>snippets</code> (DOM build); runtime deps = 0 (lodash replaced by a local util).</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
-      <p class="tutorial-subtitle">One engine source, built per consumer, behind a swappable surface adapter. The entry wires the Monaco theme + worker and the facade; the vim engine is bolted onto whichever adapter class it imports; the bundler runs inside each app to resolve its own Monaco dep and emit vendored IIFE artifacts.</p>
+      <p class="tutorial-subtitle">One engine source, built per consumer, behind a swappable surface adapter. There are two entries: <code>src/index.ts</code> wires the Monaco theme + worker and the Monaco facade, <code>src/index-dom.ts</code> the Monaco-free one. The vim engine is bolted onto whichever adapter class it imports &mdash; the DOM build aliases its <code>../../adapters/monaco_adapter</code> import to <code>dom_adapter.ts</code> at bundle time, so the vendored 7k-line engine is reused byte-for-byte and the bundle never pulls in Monaco. The bundler runs inside each app to resolve its own Monaco dep and emit vendored IIFE artifacts.</p>
       <table class="arch-table">
         <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
         <tbody>
           <tr><td>Vim engine</td><td>the full CodeMirror vim keymap (motions, operators, registers, marks, ex commands, search, macros) vendored via <code>monaco-vim</code>; it references its host editor only through the adapter it imports as "CodeMirror"</td></tr>
-          <tr><td>Surface adapter</td><td><code>monaco_adapter.ts</code> implements the CodeMirror API (cursor, selections, ranges, marks, operations, scrolling) over a Monaco editor; a <code>dom_adapter</code> implementing the same API would drive a textarea / contenteditable with no Monaco</td></tr>
+          <tr><td>Adapter core</td><td><code>adapters/cm_core.ts</code> &mdash; the surface-agnostic half of the CodeMirror shim (word/char classification, <code>Pos</code>, signals, bracket matching, key lookup / keymaps, <code>Marker</code>, <code>StringStream</code>). It imports no Monaco, which is what lets the DOM bundle exist</td></tr>
+          <tr><td>Monaco adapter</td><td><code>monaco_adapter.ts</code> implements the CodeMirror API (cursor, selections, ranges, marks, operations, scrolling) over a Monaco editor</td></tr>
+          <tr><td>DOM adapter</td><td><code>dom_adapter.ts</code> implements the same API over a plain <code>contenteditable</code> element. The host's block-level descendants are "lines"; inline nodes (span / a / img) are transparent text; <code>&lt;br&gt;</code> is a hard break; columns are character offsets into a line's concatenated text, with the index rebuilt lazily after any edit. Intra-line edits go through <code>execCommand</code>, preserving surrounding inline formatting and riding the browser's native undo; multi-line / structural edits rebuild the affected blocks as plain paragraphs</td></tr>
+          <tr><td>Rich linewise yank/put</td><td>reading a range caches each fully-covered line's inline HTML keyed by its plain text, and rebuilding a line whose text matches restores it from that HTML &mdash; so <code>yy</code>+<code>p</code> and <code>dd</code>+<code>p</code> keep font / colour / size instead of dropping to plain text. Bounded FIFO of 256 lines; yanks spanning more than 200 lines are skipped. Entirely in <code>dom_adapter.ts</code> &mdash; the vendored vim core is untouched</td></tr>
           <tr><td>Emacs engine</td><td><code>monaco-emacs</code>' extension &mdash; keybindings, kill-ring, mark, incremental search &mdash; coupled directly to the Monaco editor API; rides the Monaco adapter only</td></tr>
+          <tr><td>Insert-mode completion</td><td><code>completion.ts</code> &mdash; a popup for the DOM editor, fed by a per-field source (<code>attach({ completion })</code> or <code>host.zmodalCompletion</code>) plus the snippet store. Its keydown listener captures on <code>document</code> so it consumes <kbd>Tab</kbd> / <kbd>Enter</kbd> / arrows before the Vim engine's host-level capture sees them, and only while the popup is open &mdash; with no source configured every key flows to Vim unchanged</td></tr>
+          <tr><td>Snippets</td><td><code>snippets.ts</code> &mdash; <code>{ trigger, body }</code> pairs in <code>localStorage</code>, offered by the completion popup. Bodies resolve <code>$DATE</code> / <code>$TIME</code> / <code>$DATETIME</code> / <code>$DATE_ISO</code> / <code>$YEAR</code> at insertion time; a body flagged <code>stryke</code> is a stryke script that is RUN on expansion, its output inserted, via an evaluator the host registers once (absent &rarr; inserts <code>""</code>). Ships its own manager UI</td></tr>
           <tr><td>No runtime deps</td><td>the two <code>lodash</code> helpers monaco-emacs used (<code>throttle</code>, <code>kebabCase</code>) are replaced by <code>engine/emacs/localutil.ts</code>, so the package carries zero external runtime deps</td></tr>
-          <tr><td>Facade</td><td><code>window.ZModal</code> &mdash; <code>create</code> (Monaco-backed mount) + <code>attachVim</code> / <code>attachEmacs</code> (Monaco-agnostic primitives) + <code>VimMode</code> / <code>EmacsExtension</code> / <code>StatusBar</code></td></tr>
+          <tr><td>Facade</td><td><code>window.ZModal</code> &mdash; Monaco build: <code>create</code> + <code>attachVim</code> / <code>attachEmacs</code> + <code>VimMode</code> / <code>EmacsExtension</code> / <code>StatusBar</code>. DOM build: <code>attach</code> + <code>attachVim</code> + <code>snippets</code> + <code>VimMode</code> / <code>StatusBar</code></td></tr>
           <tr><td>Build</td><td>esbuild IIFE, ES2020, minified; codicon <code>.ttf</code> inlined as a data URL; runs inside the consumer, writes to its <code>frontend/lib</code></td></tr>
         </tbody>
       </table>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FACADE SURFACE</h2>
-      <p>The bundle exposes one global, <code>window.ZModal</code>. <code>create</code> is the convenience mount (news up a Monaco editor and applies a mode); <code>attachVim</code> / <code>attachEmacs</code> are the primitives it is built on, for hosts that already own a Monaco editor and must not bundle a second one.</p>
+      <p>Both bundles expose one global, <code>window.ZModal</code> &mdash; a consumer loads whichever it needs, never both.</p>
+      <p><strong>Monaco build</strong> (<code>modal-editor.bundle.js</code>): <code>create</code> is the convenience mount (news up a Monaco editor and applies a mode); <code>attachVim</code> / <code>attachEmacs</code> are the primitives it is built on, for hosts that already own a Monaco editor and must not bundle a second one.</p>
       <table class="arch-table">
         <thead><tr><th>Method</th><th>Role</th></tr></thead>
         <tbody>
@@ -139,22 +146,47 @@
           <tr><td><code>VimMode</code> / <code>EmacsExtension</code> / <code>StatusBar</code></td><td>the underlying classes, re-exported for advanced use</td></tr>
         </tbody>
       </table>
+      <p><strong>DOM build</strong> (<code>modal-editor-dom.bundle.js</code>): vim only, over a <code>contenteditable</code> element, with no Monaco anywhere in the bundle.</p>
+      <table class="arch-table">
+        <thead><tr><th>Method</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>attach(host, opts)</code></td><td>attach modal editing to an existing contenteditable element. <code>opts</code>: <code>mode</code> (<code>'default'</code> | <code>'vim'</code>, default vim), <code>statusBar</code>, <code>onChange</code>, <code>readOnly</code>, <code>completion</code>. Returns a handle (<code>adapter</code> / <code>host</code> / <code>getValue</code> / <code>focus</code> / <code>setMode</code> / <code>isVim</code> / <code>destroy</code>); <code>setMode('default')</code> detaches the engine and hands typing back to the browser</td></tr>
+          <tr><td><code>attachVim(host, statusEl?)</code></td><td>the lower-level primitive: attach vim to an element and return the adapter (<code>.dispose()</code> detaches)</td></tr>
+          <tr><td><code>snippets</code></td><td>the snippet store &mdash; <code>list</code> / <code>add</code> / <code>remove</code> / <code>expand</code> / <code>match</code> / <code>openManager</code> / <code>setEvaluator</code> / <code>runStryke</code></td></tr>
+          <tr><td><code>VimMode</code> / <code>StatusBar</code></td><td>the underlying classes, re-exported for advanced use</td></tr>
+        </tbody>
+      </table>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">*</span>INSERT-MODE COMPLETION &amp; SNIPPETS</h2>
+      <p>The DOM editor grows a completion popup in INSERT mode: it takes the word before the caret and queries a per-field source, merged with any matching snippet triggers. The source is supplied either as <code>attach({ completion })</code> or per element as <code>host.zmodalCompletion</code> (read at query time), so a generic mount can attach fields whose candidate lists it does not know. <code>CompletionConfig</code> also carries <code>separators</code> (token terminators), <code>minChars</code> (default 1) and <code>maxItems</code> (default 8). With no source configured the popup never opens and every key &mdash; <kbd>Tab</kbd> included &mdash; reaches the Vim engine unchanged.</p>
+      <table class="arch-table">
+        <thead><tr><th>Key</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>Tab</kbd> / <kbd>Enter</kbd></td><td>accept the selected candidate</td></tr>
+          <tr><td><kbd>Ctrl-N</kbd> / <kbd>&darr;</kbd></td><td>next candidate</td></tr>
+          <tr><td><kbd>Ctrl-P</kbd> / <kbd>&uarr;</kbd></td><td>previous candidate</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>dismiss</td></tr>
+        </tbody>
+      </table>
+      <p>Snippets are <code>{ trigger, body }</code> pairs persisted in <code>localStorage</code> per app WebView, created and edited through the built-in manager (<code>snippets.openManager()</code>) so the feature is self-contained in the editor. Bodies resolve <code>$DATE</code>, <code>$TIME</code>, <code>$DATETIME</code>, <code>$DATE_ISO</code> and <code>$YEAR</code> at insertion time. A snippet flagged <code>stryke</code> is a stryke script rather than literal text: on expansion its body is run through an evaluator the host registers once with <code>snippets.setEvaluator(fn)</code> (e.g. wired to a <code>run_stryke_hook</code> Tauri command) and the script's output is what lands in the document. Stryke candidates resolve asynchronously on accept; with no evaluator registered they insert the empty string.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">!</span>INTEGRATION &mdash; ONE MONACO PER PAGE</h2>
-      <p>The default build bundles its own Monaco. If a host page also loads another Monaco bundle (e.g. <code>zpwr-hooks-editor</code>), a WebKit / WKWebView content process can crash on the second full Monaco &mdash; the window renders <strong>fully blank</strong> (the content process is gone). Chromium tolerates two Monacos on one page; WebKit does not. This is an integration constraint, not a bug in the engine. Two supported patterns:</p>
+      <p>The Monaco build bundles its own Monaco. If a host page also loads another Monaco bundle (e.g. <code>zpwr-hooks-editor</code>), a WebKit / WKWebView content process can crash on the second full Monaco &mdash; the window renders <strong>fully blank</strong> (the content process is gone). Chromium tolerates two Monacos on one page; WebKit does not. This is an integration constraint, not a bug in the engine. Three supported patterns:</p>
       <table class="arch-table">
         <thead><tr><th>Pattern</th><th>How</th></tr></thead>
         <tbody>
-          <tr><td>Share one Monaco</td><td>the app creates its Monaco editor and calls <code>attachVim(editor)</code> / <code>attachEmacs(editor)</code>; no second Monaco is bundled. A <code>monaco-editor</code>-external build variant (the clean way to ship this) is the next packaging task.</td></tr>
+          <tr><td>DOM build</td><td><code>modal-editor-dom.bundle.js</code> sidesteps the constraint entirely for vim &mdash; in-place modal editing on the app's existing contenteditable pages with no Monaco at all. This is what the word / ppt / spreadsheet surfaces load, alongside the hooks editor's Monaco.</td></tr>
+          <tr><td>Share one Monaco</td><td>the app creates its Monaco editor and calls <code>attachVim(editor)</code> / <code>attachEmacs(editor)</code>; no second Monaco is bundled. A <code>monaco-editor</code>-external variant of the Monaco bundle (the clean way to ship this) is still an open packaging task.</td></tr>
           <tr><td>Be the only Monaco</td><td>use <code>create(...)</code> (bundles Monaco) only in apps that don't already load one.</td></tr>
-          <tr><td>DOM adapter</td><td>the planned <code>dom_adapter</code> sidesteps the constraint entirely for vim &mdash; in-place modal editing on a page surface with no Monaco at all.</td></tr>
         </tbody>
       </table>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">/</span>BUNDLER &amp; RESOLVE FIXES</h2>
-      <p><code>scripts/build-modal-editor.mjs</code> emits two bundles &mdash; <code>modal-editor.bundle.js</code> (+ <code>.css</code>) and <code>modal-editor.worker.js</code> &mdash; and carries esbuild resolve overrides so the vendored engines and Monaco resolve to ESM rather than AMD <code>define()</code> builds that throw in the WebView. Bare <code>monaco-editor</code> imports (the vendored monaco-emacs <code>require()</code>s it) are pinned to <code>esm/vs/editor/edcore.main.js</code> &mdash; the same lean ESM instance the entry uses &mdash; instead of the AMD min build. Deep <code>monaco-editor/esm/*</code> subpaths without a file extension get <code>.js</code> appended and resolve to the package dir directly (the package <code>exports</code> map only resolves extensioned paths). The build defaults its output to <code>&lt;cwd&gt;/frontend/lib</code> and honors <code>MODAL_EDITOR_OUT</code>. Because the vim/emacs engines are vendored, the consumer needs only <code>esbuild</code> + <code>monaco-editor</code> in devDependencies &mdash; no <code>monaco-vim</code> / <code>monaco-emacs</code>.</p>
+      <p><code>scripts/build-modal-editor.mjs</code> emits three artifacts &mdash; <code>modal-editor.bundle.js</code> (+ <code>.css</code>), <code>modal-editor.worker.js</code> and <code>modal-editor-dom.bundle.js</code> &mdash; and carries esbuild resolve overrides so the vendored engines and Monaco resolve to ESM rather than AMD <code>define()</code> builds that throw in the WebView. Bare <code>monaco-editor</code> imports (the vendored monaco-emacs <code>require()</code>s it) are pinned to <code>esm/vs/editor/edcore.main.js</code> &mdash; the same lean ESM instance the entry uses &mdash; instead of the AMD min build. Deep <code>monaco-editor/esm/*</code> subpaths without a file extension get <code>.js</code> appended and resolve to the package dir directly (the package <code>exports</code> map only resolves extensioned paths). The build defaults its output to <code>&lt;cwd&gt;/frontend/lib</code> and honors <code>MODAL_EDITOR_OUT</code>. Because the vim/emacs engines are vendored, the consumer needs only <code>esbuild</code> + <code>monaco-editor</code> in devDependencies &mdash; no <code>monaco-vim</code> / <code>monaco-emacs</code>.</p>
+      <p>The DOM bundle is built by a second, tiny plugin rather than a second copy of the engine: <code>vim-dom-adapter-alias</code> rewrites the engine's hard <code>adapters/monaco_adapter</code> import to <code>adapters/dom_adapter.ts</code>. It uses no <code>monaco-resolve-fix</code>, so nothing in that bundle can reach Monaco. Setting <code>MODAL_EDITOR_DOM_ONLY=1</code> emits <em>only</em> that bundle and skips the <code>monaco-editor</code> presence check &mdash; a DOM-only consumer needs no <code>monaco-editor</code> dependency at all. Otherwise the bundler fails fast with the resolved path when <code>node_modules/monaco-editor</code> is missing, rather than producing a broken artifact.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">$</span>CI GATES</h2>

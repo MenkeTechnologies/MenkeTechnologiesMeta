@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zdbview — terminal inspector and CRUD editor for rkyv archives and SQLite databases. One binary: generic SQLite CRUD by rowid, key/value decoding for 8 recognized rkyv cache formats with structural fallback, whole-table search, detail view, CSV/JSON export, OSC 52 clipboard, recent-files picker.">
+  <meta name="description" content="zdbview — terminal inspector and CRUD editor for rkyv archives and SQLite databases. One binary: generic SQLite CRUD by rowid, key/value decoding for 10 recognized rkyv cache formats with structural fallback, whole-table search, detail view, output in the sqlite3 shell's modes plus a replayable .dump, database report with integrity check and foreign-key lint, VACUUM INTO backup, OSC 52 clipboard, recent-files picker.">
   <title>zdbview — Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -92,7 +92,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zdbview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
           </nav>
-          <p class="docs-build-line" id="zdbviewBuildLine">zdbview v0.4.0 · ratatui + crossterm TUI · generic SQLite CRUD by rowid · 8 recognized rkyv cache formats with structural fallback · full rkyv CRUD write-back (atomic, byte-identical re-serialization) · whole-table search · CSV/JSON export · OSC 52 clipboard</p>
+          <p class="docs-build-line" id="zdbviewBuildLine">zdbview v0.12.0 · whole-disk index of shards and databases, kept until the disk changes · ratatui + crossterm TUI · generic SQLite CRUD by rowid or primary key · any cell editable as bytes · 10 recognized rkyv cache formats with structural fallback · full rkyv CRUD write-back (atomic, byte-identical re-serialization) · whole-table search with per-column filters · the sqlite3 shell's dot-commands and output modes · <code>.dbinfo</code>/<code>.intck</code>/<code>.lint</code>/<code>.expert</code> reports · off-thread paging, counting and search with per-core row counts · off-thread column statistics and frequency · table and index designers with SQLite's documented rebuild · buffered edits with write / revert · the eighteen editable pragmas · per-table column hiding, freezing and display formats · find and replace, insert values, save filter as view · conditional formats · SQL editor tabs, files, execute-line and stop · new / in-memory / read-only databases, extensions, projects · foreign-key navigation · CSV import · <code>VACUUM INTO</code> backup · page-level <code>.recover</code> · live per-table write attribution and a WAL history walker · OSC 52 clipboard</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -172,6 +172,23 @@ zdbview</pre>
       </section>
 
       <section class="tutorial-section">
+        <h2>Large databases</h2>
+        <p>Nothing the grid does waits on a scan of the whole table. Measured on a 23 GB SQLite file with a 300 MB WAL, 6.5M rows in the table being browsed and a filter matching 270k of them — development build on both sides, so the ratios are what to read:</p>
+        <table class="doc-table">
+          <thead><tr><th>Operation</th><th>Before</th><th>Now</th></tr></thead>
+          <tbody>
+            <tr><td>Open, first page drawn</td><td>—</td><td>4 ms</td></tr>
+            <tr><td>First page under a filter</td><td>4.16 s</td><td>28 ms</td></tr>
+            <tr><td>Step to the next / previous page</td><td>grows with the page number</td><td>21 / 36 ms</td></tr>
+            <tr><td>Last page (<code>G</code>)</td><td>9.6 s</td><td>1 ms</td></tr>
+            <tr><td>Exact row count behind a filter</td><td>9.2 s, blocking</td><td>1.6 s, in the background</td></tr>
+          </tbody>
+        </table>
+        <p>Pages, exact counts and <code>n</code>/<code>N</code> searches each run on a worker with its own read-only connection, so a scan cannot block the display — and browsing a database another process is writing can never make zdbview checkpoint its WAL. Every request carries a generation, and each connection runs a progress handler that abandons its statement once that generation is stale, so typing a filter costs one query rather than one per keystroke.</p>
+        <p>The total is never scanned for: a page fetches one row more than it shows, which is all that is needed to know whether another page exists, and the title reads <code>501+</code> until the background count lands. Paging steps by cursor rather than by offset — <code>LIMIT n OFFSET k</code> makes SQLite walk and discard <em>k</em> matching rows, 6.2 s at offset 269000 against 26 ms at the start — and the last page is read backwards from the end. The exact count is taken on every core by cutting the table into rowid ranges; the cuts are arithmetic, because finding balanced ones means walking the whole index, which cost 5.8 s of cold reads on that file.</p>
+      </section>
+
+      <section class="tutorial-section">
         <h2>rkyv — recognized key/value, or structural fallback</h2>
         <p>An rkyv archive is a memory image of a Rust value plus a root pointer. The format stores no field names, no type tags and no embedded schema — the originating Rust type <em>is</em> the schema. zdbview closes that gap with a <strong>format registry</strong>: for archives it recognizes it carries a faithful, byte-compatible copy of the producer's archive type, detects the format by its magic header, validates with <code>rkyv::check_archived_root</code>, and decodes real key/value records. Anything it does not recognize falls back to the raw structural views.</p>
         <table class="doc-table">
@@ -183,22 +200,24 @@ zdbview</pre>
             <tr><td>3 — Hex</td><td><code>xxd</code>-style dump: 16 bytes per line as <code>offset&nbsp;&nbsp;hex&nbsp;&nbsp;|ascii|</code>.</td></tr>
           </tbody>
         </table>
-        <p><strong>Recognized formats</strong> — the script and heap caches the fusevm-hosted languages write, all rkyv 0.7:</p>
+        <p><strong>Recognized formats</strong> — every magic the registry knows, with the little-endian <code>u32</code> as it appears in the header. The magic sits wherever rkyv placed the root, which is near the <em>end</em> of the file, not at offset 0:</p>
         <table class="doc-table">
-          <thead><tr><th>Format</th><th>Magic</th><th>Detected by</th><th>Record key</th></tr></thead>
+          <thead><tr><th>Format</th><th>Magic</th><th>u32 (LE)</th><th>Detected by</th><th>Record key</th></tr></thead>
           <tbody>
-            <tr><td>zshrs script cache</td><td><code>ZRSC</code></td><td>magic</td><td>script path</td></tr>
-            <tr><td>zshrs autoload cache</td><td><code>ZRAL</code></td><td>magic</td><td>function name</td></tr>
-            <tr><td>strykelang script cache</td><td><code>STRY</code></td><td>magic (native + compat layout)</td><td>script path</td></tr>
-            <tr><td>awkrs script cache</td><td><code>AWKR</code></td><td>magic</td><td>script path</td></tr>
-            <tr><td>vimlrs script cache</td><td><code>VIML</code></td><td>magic</td><td>script path</td></tr>
-            <tr><td>elisprs heap-image cache</td><td><code>ELSP</code></td><td>magic</td><td>script path</td></tr>
-            <tr><td>pythonrs bytecode cache</td><td><em>none</em></td><td>validated try-decode</td><td>source path</td></tr>
-            <tr><td>rubylang / arb script cache</td><td><em>none</em></td><td>validated try-decode</td><td>u64 content hash</td></tr>
+            <tr><td>zshrs script cache</td><td><code>ZRSC</code></td><td><code>0x5A525343</code></td><td>magic</td><td>script path</td></tr>
+            <tr><td>zshrs autoload cache</td><td><code>ZRAL</code></td><td><code>0x5A52414C</code></td><td>magic</td><td>function name</td></tr>
+            <tr><td>zshrs canonical shard</td><td><code>ZSHS</code></td><td><code>0x5A534853</code></td><td>magic, or a validated unstamped header (the recorder writes <code>magic = 0</code>)</td><td><code>section/key</code>, <code>section[i]</code>, <code>extras/&lt;sub&gt;/&lt;key&gt;</code></td></tr>
+            <tr><td>zshrs system shard</td><td><code>ZSHS</code></td><td><code>0x5A534853</code></td><td>magic — second layout under the same magic, a flat blob map</td><td>entry key</td></tr>
+            <tr><td>strykelang script cache</td><td><code>STRY</code></td><td><code>0x53545259</code></td><td>magic (native v4 + compat layout)</td><td>script path</td></tr>
+            <tr><td>awkrs script cache</td><td><code>AWKR</code></td><td><code>0x41574B52</code></td><td>magic</td><td>script path</td></tr>
+            <tr><td>vimlrs script cache</td><td><code>VIML</code></td><td><code>0x56494D4C</code></td><td>magic</td><td>script path</td></tr>
+            <tr><td>elisprs heap-image cache</td><td><code>ELSP</code></td><td><code>0x454C5350</code></td><td>magic</td><td>script path</td></tr>
+            <tr><td>pythonrs bytecode cache</td><td><em>none</em></td><td>—</td><td>validated try-decode</td><td>source path</td></tr>
+            <tr><td>rubylang / arb script cache</td><td><em>none</em></td><td>—</td><td>validated try-decode</td><td>u64 content hash</td></tr>
           </tbody>
         </table>
         <p>Magic-bearing formats are matched by header; the header-less hash-keyed shards are attempted last and gated by rkyv validation, so an unrelated archive falls through to the structural view instead of mis-decoding. Adding a format is a single registry entry: copy the producer's archive type — same rkyv version (0.7) and features (<code>validation</code>, <code>archive_le</code>, <code>size_32</code>), same field order and types — and map its magic, or add a validated try-decode for a header-less one.</p>
-        <p class="doc-note">The Records view is read-only in the UI. <code>formats.rs</code> already carries a validated delete-and-reserialize path with tests, but no key is bound to it — writing a shard back means reproducing the producer's exact layout, and a wrong write corrupts a cache the producer then mmaps.</p>
+        <p class="doc-note">The Records view is editable: <code>a</code> add, <code>e</code> edit, <code>r</code> rename, <code>d</code> delete. Each change deserializes the shard, mutates the owned value, re-serializes the whole archive and swaps it in atomically (temp + rename). Because the registry types are byte-compatible with the producer, the re-serialized archive is byte-identical to what the producing host would have written, so it keeps reading the shard normally — verified by round-tripping every real cache. Unrecognized archives stay structural and read-only, because guessing field boundaries in an untyped image would produce plausible, wrong output.</p>
       </section>
 
       <section class="tutorial-section">
@@ -210,12 +229,24 @@ zdbview</pre>
             <tr><td>j k / arrows</td><td>Move; <code>&larr;</code>/<code>&rarr;</code> move the selected column in the row grid</td></tr>
             <tr><td>gg / G</td><td>First / last — across pages, not just the visible rows</td></tr>
             <tr><td>Ctrl-f / Ctrl-b</td><td>Page forward / back (also PageDown / PageUp)</td></tr>
-            <tr><td>/</td><td>Search</td></tr>
-            <tr><td>n / N</td><td>Next / previous match — in the displayed order, so sorting is respected</td></tr>
-            <tr><td>e a d :</td><td>Edit cell / insert row / delete row / SQL (SQLite)</td></tr>
+            <tr><td>/</td><td>Filter the list as you type — <code>Enter</code> keeps it, <code>Esc</code> clears it</td></tr>
+            <tr><td>n / N</td><td>Next / previous match — in the displayed order, so sorting and the active filter are both respected</td></tr>
+            <tr><td>e a d</td><td>Edit cell / insert row / delete row (SQLite) — a blob cell opens in the hex editor, since bytes have no text form; rows are addressed by <code>rowid</code> or, in a <code>WITHOUT ROWID</code> table, by primary key</td></tr>
+            <tr><td>E</td><td>Edit the cell as bytes whatever it holds — the only way to put binary into a cell that is not already a blob (SQLite)</td></tr>
+            <tr><td>:</td><td>SQL editor — multi-line, Tab completion, transcript, history, per-statement timing, <code>Alt-e</code>/<code>F5</code> for the query plan, and the shell's dot-commands (SQLite)</td></tr>
             <tr><td>s</td><td>Sort by the column under the cursor: ascending &rarr; descending &rarr; off (SQLite)</td></tr>
             <tr><td>&lt; / &gt;</td><td>Move the sort to the previous / next column, keeping the direction</td></tr>
-            <tr><td>S</td><td>Schema view for the selected table (SQLite)</td></tr>
+            <tr><td>H / U, f, #, m / M</td><td>Hide the cursor column / show all, freeze columns to the cursor, show the rowid column, step the column's display format — DB Browser's Browse Data settings, kept per table (SQLite)</td></tr>
+            <tr><td>Ctrl-n, Ctrl-h, Ctrl-e, Ctrl-r / F5, Ctrl-p</td><td>Set the cell to NULL, copy it as a hex + ASCII dump, open its bytes in an external application, re-read the database, print through <code>lpr</code> (SQLite)</td></tr>
+            <tr><td>!</td><td>Conditional formats for the cursor column — rules that paint a cell when its value matches, first match wins (SQLite)</td></tr>
+            <tr><td>r, i, V, z / Z, L</td><td>Find and replace in the cursor column, insert a row value by value, save the filter as a view, clear the sorting / the filter, unlock a view for editing (SQLite)</td></tr>
+            <tr><td>P</td><td>Edit the eighteen pragmas that decide how the file is written — DB Browser's Edit Pragmas tab; every change is read back, so a value SQLite would not take is reported as it landed (SQLite)</td></tr>
+            <tr><td>W / Ctrl-s, R</td><td>Write / revert the unwritten changes — every edit is buffered until it is written, as in DB Browser (SQLite)</td></tr>
+            <tr><td>S</td><td>Schema — every object with its <code>CREATE</code> statement, and the table / index designers that edit them: <code>Enter</code> edit, <code>a</code> new table, <code>i</code> new index, <code>d</code> drop, <code>y</code> copy the statement (SQLite)</td></tr>
+            <tr><td>D</td><td>Database report — <code>.dbinfo</code> pragmas and object counts, then <code>i</code> integrity check, <code>Q</code> quick check, <code>f</code> foreign-key lint, <code>v</code>/<code>z</code>/<code>r</code> VACUUM/ANALYZE/REINDEX (SQLite)</td></tr>
+            <tr><td>F</td><td>Follow the foreign key under the cursor to the row it references (SQLite)</td></tr>
+            <tr><td>A</td><td>Column statistics — rows, nulls, distinct, numeric cells, longest, min/max, mean; <code>Enter</code> for a column's frequency table (SQLite)</td></tr>
+            <tr><td>Y</td><td>Copy the selected row as an <code>INSERT</code> statement (SQLite)</td></tr>
             <tr><td>0 1 2 3</td><td>Records / Info / Strings / Hex (rkyv — <code>0</code> only when the format was recognized)</td></tr>
             <tr><td>a e r d</td><td>Create / hex-edit value / rename key / delete record (rkyv Records)</td></tr>
             <tr><td>i Tab o x ^s</td><td>Inside the hex editor: EDIT mode / hex&harr;ascii column / insert / delete / save</td></tr>
@@ -223,6 +254,8 @@ zdbview</pre>
             <tr><td>v</td><td>Cycle how a value renders on the detail screen: auto / hex / text / disasm</td></tr>
             <tr><td>y</td><td>Copy the cell, value or record key to the clipboard (OSC 52 — works over SSH)</td></tr>
             <tr><td>x</td><td>Export the current table as CSV, or all records as JSON, to a file</td></tr>
+            <tr><td>w</td><td>Write monitor — live writes to every known shard and database, with the selected database's WAL tail in a second frame (also from the picker); <code>t</code> swaps that frame for bytes written per table, <code>F</code> walks the log</td></tr>
+            <tr><td>o</td><td>Back to the file list — open another file without restarting</td></tr>
             <tr><td>c</td><td>Color-scheme chooser — live preview, <code>Enter</code> saves, <code>Esc</code> restores</td></tr>
             <tr><td>C</td><td>Palette editor for the six base colors</td></tr>
             <tr><td>h / ?</td><td>Help overlay; any key closes it</td></tr>
@@ -254,11 +287,121 @@ zdbview</pre>
 
       <section class="tutorial-section">
         <h2>Export</h2>
-        <p>Interactive <code>x</code> writes the current table (CSV) or all decoded records (JSON) to a file in the working directory. The same rendering is available non-interactively, which is what makes zdbview scriptable:</p>
-<pre>zdbview data.db --export json      # { table: [ {col: val, …}, … ] } for every table
-zdbview data.db --export csv       # the first table as RFC-4180 CSV
-zdbview cache.rkyv --export json   # decoded records; each value blob as lowercase hex</pre>
+        <p>Interactive <code>x</code> writes the current table (CSV) or all decoded records (JSON) to a file in the working directory. Non-interactively, <code>--export</code> takes the sqlite3 shell's output modes and <code>--table</code> restricts it to one table, which is what makes zdbview scriptable:</p>
+<pre>zdbview data.db --export json               # { table: [ {col: val, …}, … ] } for every table
+zdbview data.db --export csv                # the first table as RFC-4180 CSV
+zdbview data.db --export tsv                # .mode tabs — tabs and newlines escaped, never raw
+zdbview data.db --export markdown           # .mode markdown — padded GitHub table
+zdbview data.db --export line               # .mode line — one column per line
+zdbview data.db --export insert             # .mode insert — one INSERT per row
+zdbview data.db --export sql                # .dump — schema plus data, replayable
+zdbview data.db --export csv --table users  # just that table
+zdbview cache.rkyv --export json            # decoded records; each value blob as lowercase hex</pre>
         <p class="doc-note">CSV and JSON are emitted by a dependency-free writer in <code>export.rs</code> — quoting and escaping are covered by unit tests. <code>--export</code> never starts the TUI, so it is safe in a pipeline.</p>
+        <p><code>--export sql</code> is <code>.dump</code>, and it — like <code>insert</code> mode — reads values from the database rather than from the grid, so a blob comes out as <code>x'…'</code> and a real keeps its decimal point. The display string for a blob is a <em>description</em> of it (<code>&lt;blob 2 bytes&gt;</code>), which is useless in SQL, so everything that writes SQL uses the exact form. Virtual tables are the case that makes a naive dump unreplayable: <code>CREATE VIRTUAL TABLE</code> runs the module's constructor and builds the shadow tables, which the dump would then create a second time. zdbview does what the shell does — writes the <code>sqlite_schema</code> row directly under <code>PRAGMA writable_schema=ON</code> and emits the shadow tables with <code>CREATE TABLE IF NOT EXISTS</code> — so an FTS5 index survives the round trip and still answers <code>MATCH</code>. Checked line-for-line against <code>sqlite3 .dump</code>: identical content, differing only in the order <code>sqlite_master</code> is walked.</p>
+        <p><code>--backup FILE</code> copies a database with <code>VACUUM INTO</code> (the shell's <code>.backup</code>), the one consistent way to copy a file that may have writers. An existing target is an error, not an overwrite.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Which table is being written, live</h2>
+        <p>In the write monitor, <code>t</code> swaps the bottom frame for a per-table breakdown of the bytes written since it opened. This is the thing no other SQLite tool shows: <strong>not how big a table is, but which one is being written to right now.</strong></p>
+        <p>It works because a WAL frame header carries the page number it rewrote, and a page can be traced to the b-tree that owns it. Every table's and index's root page is walked straight out of the file to build a page&nbsp;→&nbsp;owner map. The file alone is the <em>past</em> in WAL mode — a table created but not yet checkpointed is not even in its schema — so the log's newest image of each page is applied over the file before the walk; without that, every page reads as unmapped. Each sample reads only the frame headers written since the last one, so the cost does not grow with the log's length, and the map is re-read when a checkpoint restarts the log or a frame names a page it does not cover.</p>
+        <p><code>written</code> is the total since the monitor opened; <code>rate</code> is what the last sample attributed, so a table that has stopped reads as idle while its total stays — that pair is what answers "which table is being written fastest right now".</p>
+        <p class="doc-note">Indexes are named as indexes, and a page the map cannot place is shown as <code>page N (unmapped)</code> rather than being charged to a table it might not belong to. A database in rollback-journal mode gets no breakdown: a journal records the pages it is <em>about to</em> change, not the ones it did.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Walking the log</h2>
+        <p><code>F</code> in the monitor opens the log as a history. A frame does not merely say that a page changed — it carries the whole page image, so the rows that write put there are decoded and shown beside the frame list, labelled with the table's column names. <code>j</code>/<code>k</code> step one frame (down is <em>back</em> in time), <code>[</code> and <code>]</code> jump a whole transaction, <code>g</code>/<code>G</code> reach the newest and oldest frame, and <code>/</code> filters the log by table, page number or <code>commit</code> — stepping then walks only what is listed, which is what makes a log of tens of thousands of frames usable.</p>
+        <p class="doc-note">A value that continues onto an overflow page says so rather than showing a truncated string — the rest is in a different frame — and a page that is not a table leaf (interior node, index page, overflow) is named as what it is instead of pretending to hold rows. This is the only view that reads frame <em>payloads</em>, so it decodes one frame at a time on a keypress: a 190&nbsp;MB log holds tens of thousands of frames and each payload is a whole page.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Tabs, files and results in the editor</h2>
+        <p>The rest of DB Browser's Execute SQL tab, on the Alt chords so every printable key stays part of the statement: <code>Alt-t</code>/<code>Alt-w</code> open and close a tab, <code>Alt-[</code>/<code>Alt-]</code> move between them, <code>Alt-o</code>/<code>Alt-s</code> load and save a <code>.sql</code> file, <code>Alt-l</code> runs only the line the cursor is on, <code>Alt-;</code> comments it, <code>Alt-f</code>/<code>Alt-r</code> find and replace inside the statement, <code>Alt-x</code> exports the last result set as CSV or JSON by extension, <code>Alt-v</code> saves the statement that produced it as a view, and <code>Alt-W</code> wraps the transcript. Each tab keeps its own statement, transcript and file, and the tab strip is the pane's title.</p>
+        <p class="doc-note">A statement runs on the thread that draws, so nothing else can watch the keyboard while it does — SQLite's progress handler is the one place that gets control back periodically, so that is where the stop key is read. It polls without blocking every few thousand VM instructions, and <code>Esc</code> aborts the statement; the transcript then says it was stopped rather than that it failed.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Dot-commands in the editor</h2>
+        <p>A line starting with <code>.</code> is a dot-command, as in <code>sqlite3</code>; <code>Tab</code> completes them and <code>.help</code> lists what is implemented: <code>.tables</code>, <code>.schema</code>, <code>.indexes</code>, <code>.dump</code>, <code>.databases</code>, <code>.attach</code>/<code>.detach</code>, <code>.mode</code>, <code>.headers</code>, <code>.output</code>/<code>.once</code>, <code>.timer</code>, <code>.eqp</code>, <code>.import</code>, <code>.read</code>, <code>.backup</code>, <code>.expert</code>, <code>.vacuum</code>/<code>.analyze</code>/<code>.reindex</code>, <code>.quit</code>. <code>.mode</code> renders a result set through the same writers <code>--export</code> uses; <code>list</code> is the grid the editor draws.</p>
+        <p class="doc-note"><code>.expert</code> is not <code>sqlite3_expert</code> — rusqlite exposes no binding for it. It reads the plan the planner actually produced plus the columns the statement compares on, and names an index for each table chosen for a full scan. A column is attributed to a table only when no other table in the statement has one by that name, so an ambiguous join reports the scan without guessing.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>What the grid shows</h2>
+        <p>The Browse Data settings DB Browser keeps per table, kept the same way: <code>H</code> hides the cursor column and <code>U</code> brings them all back, <code>f</code> freezes the columns up to the cursor at the left edge, <code>#</code> shows the <code>rowid</code> as a leading column, and <code>m</code>/<code>M</code> step the column's display format. A wide table scrolls sideways under the cursor while the frozen columns stay put; a frozen column is marked <code>▏</code> in its header and a formatted one <code>ƒ</code>.</p>
+        <p>The nineteen display formats are DB Browser's: decimal, exponent, hex blob, hex number, octal, round, lower and upper case, dd/mm/yyyy, julian day, unix epoch (UTC and local), Apple NSDate, Java milliseconds, WebKit/Chromium microseconds (UTC and local), the Windows OLE date, and DB Browser's <em>Set encoding</em> pair — text as latin-1 and as windows-1252 — plus a custom expression, where <code>%1</code> stands for the column.</p>
+        <p class="doc-note">A format is SQL, not a rendering rule, which is how DB Browser does it and what makes <em>hex blob</em> possible at all: the grid receives cells that are already display strings, so a blob has become <code>&lt;blob 12 bytes&gt;</code> before anything could format it. The column keeps its own name in the result, so sorting, filtering, paging and editing still address the raw value — a hex-formatted integer column sorts <code>1, 2, a</code>, not the <code>1, 10, 2</code> that sorting the displayed strings would give. Two of the formats are DB Browser's <em>Set encoding</em>: they read the stored bytes as ISO-8859-1 or Windows-1252 rather than UTF-8, which SQLite cannot do itself — the value comes back as <code>hex()</code> and is decoded on this side, the only way to read bytes that are not valid UTF-8 at all. <em>SpatiaLite Geometry to SVG</em> is the one DB Browser format not implemented; it needs the SpatiaLite extension loaded to mean anything.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Files, extensions and projects</h2>
+<pre>zdbview --new fresh.db          # create an empty database and open it
+zdbview --memory                # a database that never reaches a disk
+zdbview data.db --readonly      # a read-only connection: every edit is refused
+zdbview data.db --import-sql schema.sql        # run a script in, and exit
+zdbview data.db --load-extension ./ext.dylib   # load an extension first
+zdbview --project session.zdbp  # open the database a project names, as it was left</pre>
+        <p><code>--readonly</code> opens a different connection rather than checking a flag at the edit, so no key handler can write through it by accident. <code>--import-sql</code> runs the whole script inside one savepoint, so a script that fails half way leaves the database exactly as it was. <code>--new</code> refuses to overwrite an existing file and forces a page out, so what it made is a database rather than an empty file. In the editor, <code>.load FILE</code> loads an extension; <code>O</code> on the database report runs <code>PRAGMA optimize</code> and lists what SQLite decided was worth doing; <code>Ctrl-p</code> prints the table by piping it to <code>lpr</code>.</p>
+        <p class="doc-note"><code>.project save FILE</code> and <code>.project open FILE</code> write and read a project — everything about a session that is not in the database: what each grid is set to show, what is filtered and sorted, and the statements left in the editor's tabs. DB Browser writes XML; zdbview writes one tab-separated directive per line, so a project can be read and edited by a person, and a directive this version does not know is skipped rather than refused.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Conditional formats</h2>
+        <p><code>!</code> manages the rules that paint a column's cells when their value matches — DB Browser's Conditional Formats. <code>a</code> adds a rule, <code>Enter</code> edits its condition, <code>c</code> cycles the colour, <code>b</code> toggles bold, <code>d</code> drops it and <code>J</code>/<code>K</code> reorder; the first rule that matches wins, so the order is part of the meaning.</p>
+        <p class="doc-note">A condition is DB Browser's filter vocabulary: an operator and a value (<code>&gt; 5</code>, <code>= done</code>, <code>&lt;&gt; 0</code>, <code>like a%</code>), <code>null</code> / <code>not null</code>, or bare text meaning "contains". A comparison is numeric when both sides read as numbers and textual otherwise, so <code>&gt; 9</code> matches <code>10</code> — which comparing the strings would not. DB Browser's font and alignment settings have no meaning in a terminal grid; colour and bold do.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Working on the data</h2>
+        <p><code>r</code> finds and replaces in the cursor column, asking in two steps because a terminal has one prompt line — and counting between them, so a term that matches nothing never reaches the second question. It works over the rows the active filter leaves, matches substrings, and lands in the edit buffer like every other write, so <code>R</code> takes it back.</p>
+        <p><code>i</code> inserts a row value by value — it exists next to <code>a</code> because a column starts <code>NULL</code> and stays there unless something is typed, so <code>NULL</code> and the empty string stay apart; <code>n</code> puts a column back to <code>NULL</code>. <code>V</code> saves the current filter as a view, writing its patterns in as literals since a view cannot carry parameters. <code>z</code> and <code>Z</code> clear the sorting and the filter, and <code>Ctrl-y</code> copies the column's name.</p>
+        <p class="doc-note"><code>L</code> unlocks a view for editing, and reports what SQLite would do rather than pretending the lock is zdbview's to lift: a view can only be written to through <code>INSTEAD OF</code> triggers, so editing one without them is refused with that reason.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Editable pragmas</h2>
+        <p><code>D</code> prints the pragmas that describe a file; <code>P</code> edits the other kind — the eighteen settings DB Browser puts in its Edit Pragmas tab, which decide how the database is written rather than what is in it: <code>auto_vacuum</code>, <code>automatic_index</code>, <code>case_sensitive_like</code>, <code>checkpoint_fullfsync</code>, <code>foreign_keys</code>, <code>fullfsync</code>, <code>ignore_check_constraints</code>, <code>journal_mode</code>, <code>journal_size_limit</code>, <code>locking_mode</code>, <code>max_page_count</code>, <code>page_size</code>, <code>recursive_triggers</code>, <code>secure_delete</code>, <code>synchronous</code>, <code>temp_store</code>, <code>user_version</code> and <code>wal_autocheckpoint</code>. <code>j</code>/<code>k</code> select, <code>Space</code> cycles a flag or a named set, <code>Enter</code> types a number.</p>
+        <p class="doc-note">Every change is read back, because SQLite accepts a pragma it will not apply rather than raising: <code>journal_mode</code> will not change inside a transaction, <code>max_page_count</code> clamps to the pages already in use, <code>page_size</code> and <code>auto_vacuum</code> only take effect on the next <code>VACUUM</code>, and an unrecognised value is ignored outright. What the screen shows is what the database reported afterwards. <code>case_sensitive_like</code> has no query form at all, so it shows a dash until this session sets it.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Writing and reverting</h2>
+        <p>Every edit — a cell, a row, an import, a schema change, a statement typed into the editor — is buffered until it is written: changes belong to the session, not to the file, until <code>W</code> (or <code>Ctrl-s</code>) commits them. <code>R</code> throws them all away and puts the database back to what it was when the first unwritten edit was made. Both are one savepoint, so a schema edit and a hundred cell edits revert together. The status line carries a marker while anything is unwritten, and leaving the file asks first, because closing the connection would roll the savepoint back.</p>
+        <p class="doc-note">Pages normally come from reader threads on their own connections, and no connection can see another's open transaction — so while anything is pending the page is fetched on the store's own connection instead, or an edited cell would still show its old value. <code>VACUUM</code>, <code>ANALYZE</code>, <code>REINDEX</code> and <code>--backup</code> refuse to run with unwritten changes: they rewrite the whole file and cannot run inside a transaction. The one-shot command-line paths write before exiting, since there is no user there to ask.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Schema editing</h2>
+        <p><code>S</code> lists every object with its <code>CREATE</code> statement — DB Browser's Database Structure tab — and the cursor selects one: <code>Enter</code> opens the designer for a table or an index, <code>a</code> starts a new table, <code>i</code> a new index on the selected table, <code>d</code> drops the object after asking, and <code>y</code> copies its statement.</p>
+        <p>Both designers are grids of fields with the SQL they will run shown underneath: arrows move by row and field, <code>Enter</code> edits a field, <code>Space</code> toggles a flag, <code>a</code>/<code>d</code> add and drop a column, <code>J</code>/<code>K</code> reorder, <code>W</code> writes and <code>Esc</code> cancels. The table designer covers type, <code>PRIMARY KEY</code>, <code>AUTOINCREMENT</code>, <code>NOT NULL</code>, <code>UNIQUE</code>, <code>DEFAULT</code>, <code>COLLATE</code>, <code>CHECK</code> and <code>REFERENCES</code>, plus <code>WITHOUT ROWID</code> and <code>STRICT</code>.</p>
+        <p>The definition is parsed from the object's own statement, never from the pragmas: <code>PRAGMA table_info</code> cannot see <code>COLLATE</code>, <code>CHECK</code>, <code>UNIQUE</code>, <code>REFERENCES</code> or a generated expression, so a rebuild driven by it would silently drop all five.</p>
+        <p class="doc-note">Only renaming the table, renaming a column, appending one and dropping one are native <code>ALTER TABLE</code>; anything else is the rebuild SQLite documents — copy into a new table, drop the old one, rename the new one into place, put the indexes, triggers and views back. It runs as one transaction with foreign keys off and <code>PRAGMA foreign_key_check</code> before the commit, so an edit that would orphan a child row is refused and changes nothing. Views and triggers are dropped before the swap because the rename validates the whole schema, and one pointing at the dropped table fails it.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Following a foreign key</h2>
+        <p><code>F</code> on a foreign-key column jumps to the row it references — the navigation a schema gives you for free, and what DB Browser and Datasette both link. The parent column comes from <code>PRAGMA foreign_key_list</code>, resolved to the parent's primary key when the pragma leaves it empty; a dangling key, a <code>NULL</code> key and a non-key column are each reported rather than followed.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Column statistics and frequency</h2>
+        <p><code>A</code> describes every column of the current table — rows, nulls, distinct values, how many cells SQLite actually stores as numbers, the longest value, the extremes, and the mean of the numeric cells. That <em>numeric</em> count is the only place a column declared <code>INTEGER</code> but holding text shows up, because a declared type in SQLite is an affinity hint rather than a constraint. <code>Enter</code> on a column adds its most common values with bars, so a glance says whether the column is skewed.</p>
+        <p class="doc-note">Every column costs one pass over the table, and a wide blob column costs more than a second of it on a real database — 1.6s for <code>count(DISTINCT body)</code> across 46,716 rows of a 196&nbsp;MB cache. The pass therefore runs on its own connection on a background thread: the screen opens saying <code>analyzing …</code> and fills in when the work lands, so the UI never blocks.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Import</h2>
+        <p><code>--import rows.csv --table people</code> loads a CSV (or TSV, chosen by extension) into an existing table — the shell's <code>.import</code>. The header row names the columns, so a file ordered differently from the table still lands correctly, and a header naming a column the table does not have is an error rather than a silent drop. The whole file is one transaction, so a row with the wrong field count rolls all of it back. The reader is RFC 4180 by hand, like the writers: quoted fields may hold the separator, newlines and doubled quotes, and CRLF or a missing final newline are both accepted.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Recovery</h2>
+        <p><code>--recover</code> (and <code>.recover</code> in the editor) salvages what a file still holds by reading <strong>pages</strong> — it never opens the database, so it works on a file SQLite refuses, and it walks every page rather than only those reachable from <code>sqlite_master</code>, which is what brings back rows a corrupt b-tree root has orphaned.</p>
+        <p class="doc-note">Measured against a 400-row database with its table root zeroed — SQLite answers <code>database disk image is malformed</code> — <code>sqlite3 .recover</code> emits 400 inserts and so does this, and the replayed script holds data identical to the original. Truncated to 20 of 35 pages, both recover the same 226 rows. A 20&nbsp;KB value spanning overflow pages comes back whole.</p>
+        <p>Rows on pages that cannot be attributed to a table go to a <code>lost_and_found</code> table carrying the page each came from, and every assumption the pass made is written into the script as a comment. Indexes are not recovered — the script replays their <code>CREATE INDEX</code> statements — and the file is never modified.</p>
+        <p>A <code>WITHOUT ROWID</code> table keeps its rows in an <strong>index b-tree</strong>, so three page kinds are read, not one: table leaves, index leaves (where the key record <em>is</em> the row) and index interiors, which unlike table interiors carry key payloads of their own. Index cells also keep far less of their payload on the page than table cells, and the two size formulas are not interchangeable. Measured on a 300-row keyed table with its root zeroed: <code>sqlite3 .recover</code> brings back 298 rows and so does this, replaying to <code>key-0000</code>…<code>key-0299</code>.</p>
       </section>
 
       <section class="tutorial-section">
@@ -279,12 +422,47 @@ zdbview cache.rkyv --export json   # decoded records; each value blob as lowerca
             <tr><td>[FILE]</td><td>File to open; with none, the recent-files picker opens</td></tr>
             <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--sqlite</td><td>Force the SQLite backend</td></tr>
             <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--rkyv</td><td>Force the rkyv / binary inspector (conflicts with <code>--sqlite</code>)</td></tr>
-            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--export FORMAT</td><td>Dump the file to stdout and exit — <code>json</code> or <code>csv</code>; requires a file argument</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--export FORMAT</td><td>Dump the file to stdout and exit — <code>json</code>, <code>csv</code>, <code>tsv</code>, <code>markdown</code>, <code>insert</code>, <code>line</code> or <code>sql</code>; requires a file argument</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--table TABLE</td><td>Restrict <code>--export</code> to one table</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--backup FILE</td><td>Copy the database with <code>VACUUM INTO</code> and exit</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--import FILE</td><td>Load a CSV (or TSV, by extension) into <code>--table</code> and exit</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--recover</td><td>Salvage rows page by page to stdout as SQL, without opening the database</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--import-sql FILE</td><td>Run a file of SQL into the database and exit</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--new FILE</td><td>Create an empty database and open it</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--memory</td><td>Open a database that lives only in memory (conflicts with <code>--new</code>)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--readonly</td><td>Open read-only: every edit is refused</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--load-extension FILE</td><td>Load a SQLite extension before opening (repeatable)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--project FILE</td><td>Open the database a project names, with its settings</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--theme NAME</td><td>Colour scheme for this run (see <code>--list-themes</code>)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--list-themes</td><td>Preview every scheme with its palette and exit</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--scan DIR</td><td>Scan <code>DIR</code> instead of the default roots (repeatable)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--no-scan</td><td>Skip the scan; list only recent files (conflicts with <code>--scan</code>)</td></tr>
+            <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;--rescan</td><td>Walk again now, ignoring the saved scan (conflicts with <code>--no-scan</code>)</td></tr>
             <tr><td>-h, --help</td><td>Print usage</td></tr>
             <tr><td>-V, --version</td><td>Print the version</td></tr>
           </tbody>
         </table>
         <p class="doc-note">Man pages ship in the repo: <code>man/man1/zdbview.1</code> and the all-in-one <code>man/man1/zdbviewall.1</code>. The zsh completion is <code>completions/_zdbview</code>.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>DB Browser for SQLite parity</h2>
+        <p>The comparison below is against the action set taken out of DB Browser for SQLite 3.13.1 itself — the <code>setObjectName</code> strings in its binary — rather than from its documentation, so it is what the program actually has.</p>
+        <p><strong>Ported:</strong> new / in-memory / read-only databases, attach and detach, write and revert changes, compact, export to CSV / JSON / SQL, import from CSV and from a SQL script, projects, recent files; create and modify table, create index, delete object, copy CREATE statement, row counts, refresh; the Browse Data tab — per-column filters, sorting, hide / show / freeze columns, the rowid column, display formats including a custom expression, conditional formats, find and replace, insert values, set to NULL, copy column name, copy with hex/ASCII, open in external application, save filter as view, unlock view editing, clear filters and sorting; Edit Pragmas; the Execute SQL tab — tabs, open and save <code>.sql</code>, execute all, execute current line, stop, toggle comment, find and replace, word wrap, export results, save results as view; integrity check, quick check, foreign-key check, optimize, load extension, print.</p>
+        <table class="doc-table">
+          <thead><tr><th>Not ported</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>SQLCipher encryption</td><td>Needs a SQLCipher build of SQLite in place of the bundled one, which changes what every release binary links against</td></tr>
+            <tr><td>dbhub.io remote</td><td>A network client for a third-party service</td></tr>
+            <tr><td>Rich-text cell formatting</td><td>A terminal grid has no rich text; conditional formats cover colour</td></tr>
+            <tr><td>Image / PDF preview of a blob, print image, plot pane</td><td>No image surface in a terminal — <code>Ctrl-e</code> hands the bytes to an application that has one</td></tr>
+            <tr><td>Import CSV from the clipboard</td><td>A terminal can write the system clipboard (OSC 52) but not read it</td></tr>
+            <tr><td>Print the database structure or the SQL transcript</td><td>Only the table prints; the rest is what <code>.schema</code> and the transcript already show</td></tr>
+            <tr><td>SpatiaLite Geometry to SVG</td><td>Needs the SpatiaLite extension loaded to mean anything</td></tr>
+            <tr><td>Select whole column</td><td>Selection is a mouse-drag idea; <code>Ctrl-y</code> copies the name and <code>x</code> exports the data</td></tr>
+            <tr><td>Docks, toolbars, drag-and-drop SQL options</td><td>Qt window furniture with nothing behind it</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <section class="tutorial-section">

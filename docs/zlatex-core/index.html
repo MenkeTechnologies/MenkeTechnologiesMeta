@@ -42,7 +42,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zlatex-core" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line">// catcodes · macros · text &amp; math grammars · line breaking · pages · references · export</p>
+          <p class="docs-build-line">// catcodes · macros · text &amp; math grammars · line breaking · hyphenation · pages · footnotes · floats · references · packages · export</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -54,14 +54,14 @@
       </div>
     </header>
     <main class="docs-main">
-      <p class="lede">zlatex-core is the typesetting engine behind <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zlatex/">zlatex</a>. A <code>.tex</code> source goes in; laid-out pages come out — as a render tree a WebView paints, or as a multi-page PDF, per-page SVG or PNG. It sets <strong>documents</strong>: text mode with paragraphs, TeX's line-breaking algorithm, page breaking, sectioning and counters, lists, tables, floats, cross-references and a table of contents — plus the math engine, reached for every <code>$…$</code> and display. There is no external TeX distribution, no subprocess and nothing to install, and the math layout parameters are read from the font's own OpenType <strong>MATH</strong> table rather than hardcoded.</p>
+      <p class="lede">zlatex-core is the typesetting engine behind <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zlatex/">zlatex</a>. A <code>.tex</code> source goes in; laid-out pages come out — as a render tree a WebView paints, or as a multi-page PDF, per-page SVG or PNG. It sets <strong>documents</strong>: text mode with paragraphs hyphenated and broken by TeX's own algorithms, page breaking, sectioning and counters, lists, tables, floats that move whole to the next page, footnotes set under their rule at the foot of the page their marker landed on, cross-references and a table of contents — plus the math engine, reached for every <code>$…$</code>, <code>\(…\)</code> and display. <code>\input</code> and <code>\include</code> are spliced before parsing, so a <strong>book split across chapter files</strong> typesets as one book. There is no external TeX distribution, no subprocess and nothing to install, and the math layout parameters are read from the font's own OpenType <strong>MATH</strong> table rather than hardcoded.</p>
 
       <div class="card-grid">
         <div class="card"><h3>TeX's algorithm</h3><p>The Chapter 17 conversion with Appendix G placement: the 8&times;8 atom-class spacing table, the Bin&rarr;Ord reclassification, script shift-and-clearance rules, fraction and radical construction, delimiter growth.</p></div>
         <div class="card"><h3>Font-sourced parameters</h3><p>Where TeX reads TFM <code>fontdimen</code>s, this reads MathConstants. The engine's measurements and the renderer's painting come from one face, so they cannot drift apart.</p></div>
         <div class="card"><h3>Total by design</h3><p>An unknown control sequence becomes a visible error box plus a diagnostic, never an abort — the editor calls this on every keystroke, and a half-typed formula still previews.</p></div>
-        <div class="card"><h3>Speaks TeX Live</h3><p>The package database is read first-hand: the local installation's <code>texlive.tlpdb</code> joined against a mirror's, and a package installed by pulling its <code>.tar.xz</code> container into the app's own texmf. No <code>tlmgr</code>, no <code>perl</code>, no root.</p></div>
         <div class="card"><h3>Embeddable</h3><p>Builds <code>rlib</code>, <code>staticlib</code> and <code>cdylib</code>, with one JSON command bus and a headless CLI, so a GUI host, a C ABI host and a shell pipeline all reach the same surface.</p></div>
+        <div class="card"><h3>Real TeX Live packages</h3><p>The engine speaks the TeX Live database format directly — the local <code>texlive.tlpdb</code> joined against the mirror's — installs a package's <code>.tar.xz</code> into its own <code>texmf</code> store, and mines a <code>.sty</code> for the macros it defines. No <code>tlmgr</code>, no <code>perl</code>, no root; what could not be honoured is reported rather than pretended.</p></div>
       </div>
 
       <h2 class="reg-h">The pipeline</h2>
@@ -80,21 +80,22 @@
           <tr><td><code>lex</code></td><td>TeX's mouth: category codes, control sequences, comments, <code>\def</code> / <code>\newcommand</code> / <code>\let</code> expansion with a recursion bound</td></tr>
           <tr><td><code>parse</code> &middot; <code>symbols</code> &middot; <code>atom</code></td><td>The math-mode grammar, the control-sequence table, and the math-list model (atoms, fields, fractions, radicals, matrices)</td></tr>
           <tr><td><code>textmode</code> &middot; <code>doc</code></td><td>The text-mode grammar and the document model: preamble, paragraphs, sectioning, lists, tables, floats, bibliography</td></tr>
-          <tr><td><code>linebreak</code> &middot; <code>typeset</code></td><td>Knuth&ndash;Plass total-fit line breaking, and the page builder with its second reference-resolving pass</td></tr>
+          <tr><td><code>linebreak</code> &middot; <code>hyphen</code> &middot; <code>typeset</code></td><td>Knuth&ndash;Plass total-fit line breaking, Liang's algorithm over TeX's own pattern file feeding it discretionaries, and the page builder with its floats, footnotes and second reference-resolving pass</td></tr>
+          <tr><td><code>include</code></td><td><code>\input</code> / <code>\include</code> splicing: the <code>\includeonly</code> list, a page break around each <code>\include</code>, a nesting limit and a cycle guard</td></tr>
           <tr><td><code>style</code> &middot; <code>font</code></td><td>The eight math styles and their transitions; glyph boxes, MATH constants, and Unicode math-alphabet mapping</td></tr>
           <tr><td><code>boxes</code> &middot; <code>mlist</code></td><td>The box model (width / height / depth) and the layout itself</td></tr>
           <tr><td><code>render</code> &middot; <code>export</code></td><td>The render tree the frontend paints, and the outline-based exporters</td></tr>
-          <tr><td><code>packages</code> &middot; <code>tlnet</code></td><td>The support registry and <code>.sty</code> macro ingestion, and the TeX&nbsp;Live repository: the local and mirror <code>texlive.tlpdb</code> read directly, containers unpacked into the app's own texmf</td></tr>
+          <tr><td><code>packages</code> &middot; <code>tlnet</code></td><td>The per-package support tier a <code>\usepackage</code> list is scanned against, <code>.sty</code> macro ingestion, and the TeX Live databases, mirror and installer behind them</td></tr>
           <tr><td><code>library</code> &middot; <code>commands</code> &middot; <code>cli</code></td><td>The equation history store, the JSON command bus, and its argv front end</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Use it</h2>
-      <pre class="code">zlatex typeset source='\frac{1}{2}' size_pt=14
-zlatex typeset source_file=paper.tex
+      <pre class="code">zlatex typeset source_file=paper.tex             # a whole document → pages
+zlatex typeset source='\frac{1}{2}' size_pt=14   # a formula → one equation box
+zlatex export.pdf source_file=paper.tex          # multi-page pdf
 zlatex export.svg source='x^2 + y^2 = z^2' font=assets/latinmodern-math.otf
-zlatex packages.scan source_file=paper.tex
-zlatex packages.install name=cleveref
+zlatex packages.scan source_file=paper.tex       # what this document needs
 zlatex palette</pre>
 
       <h2 class="reg-h">Read on</h2>

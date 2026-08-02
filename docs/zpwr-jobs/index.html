@@ -133,6 +133,15 @@
   <b>draft_letter.stk</b>              # AI letter drafter (the `ai` builtin)
   lib/<b>CoverLetter.stk</b>            # pure text + parse helpers (unit-tested)
   t/                             # unit tests — `s test` (stryke only, runs in CI)
+  resume.html                    # base resume source          -> pdf
+  resume-tech.html               # + per-role tech stacks      -> pdf
+  resume-fulltime.html           # full-time roles only        -> pdf
+  resume-noselfemployed.html     # minus the self-employed role-> pdf
+  resume-nocounts.html           # minus every count           -> pdf
+  clients.html                   # selected projects &amp; work (CV)-> pdf
+  <b>render-pdf.js</b>                  # headless-Chrome CDP renderer for all six
+  render-resume.sh               # wrapper -> `node render-pdf.js resume`
+  render-cv.sh                   # wrapper -> `node render-pdf.js cv`
   docs/                          # this HUD documentation
   jobs/
     &lt;JOB&gt;/
@@ -274,6 +283,28 @@ Second body paragraph &hellip;</pre>
           </tbody>
         </table>
         <p>Both come straight from native Rust inside <code>stryke-office</code> &mdash; there is no <code>soffice</code> conversion step and no python.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>The resume &amp; CV PDFs &mdash; a separate path</h2>
+        <p>Cover letters go through stryke-office. The resume and the CV do not: they are authored as HTML and printed by headless Chrome over the Chrome DevTools Protocol. The reason is narrow &mdash; Chrome's <code>--print-to-pdf</code> cannot render a page-number footer, so <code>render-pdf.js</code> drives <code>Page.printToPDF</code> directly for <code>displayHeaderFooter</code> + <code>footerTemplate</code>. One script renders every variant.</p>
+<pre>node render-pdf.js &lt;doc&gt; [--open]
+./render-resume.sh [--open]     # wrapper -&gt; node render-pdf.js resume
+./render-cv.sh     [--open]     # wrapper -&gt; node render-pdf.js cv</pre>
+        <p>Six documents are defined, keyed by the first argument:</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td><code>resume</code></td><td><code>resume.html</code> &mdash; the base resume, single-column and ATS-clean</td></tr>
+            <tr><td><code>resume-tech</code></td><td><code>resume-tech.html</code> &mdash; the resume plus a per-role tech-stack line</td></tr>
+            <tr><td><code>resume-ft</code></td><td><code>resume-fulltime.html</code> &mdash; full-time roles only</td></tr>
+            <tr><td><code>resume-nose</code></td><td><code>resume-noselfemployed.html</code> &mdash; the base resume minus the self-employed role</td></tr>
+            <tr><td><code>resume-nc</code></td><td><code>resume-nocounts.html</code> &mdash; the base resume minus every product / language / book / invention count</td></tr>
+            <tr><td><code>cv</code></td><td><code>clients.html</code> &mdash; selected projects &amp; work</td></tr>
+          </tbody>
+        </table>
+        <p>Each entry carries its own output filename, footer label and PDF DOCINFO metadata (<code>Title</code> / <code>Author</code> / <code>Subject</code> / <code>Keywords</code>). The three variants that share the base resume's keyword surface inherit its <code>Keywords</code> rather than restating them. Metadata is stamped in a second pass through Ghostscript; if <code>gs</code> fails, the un-stamped PDF is kept and a warning printed rather than losing the render.</p>
+        <p>Geometry is fixed in the script &mdash; US Letter, 0.5&Prime; side and top margins, 0.6&Prime; bottom, <code>printBackground</code> on, <code>preferCSSPageSize</code> off. After writing, it reports the page count via <code>pdfinfo</code> and, for the documents that declare an <code>atsCheck</code> string, asserts that the contact line still survives <code>pdftotext</code> extraction &mdash; so a layout change cannot silently make the resume unreadable to an applicant-tracking system.</p>
+        <p>Chrome is launched <code>--headless=new</code> on port 9411 and killed when the render completes. Its binary path is hardcoded to the macOS Chrome bundle, so this path is macOS-only as written. The prerequisites are Chrome, Ghostscript (<code>gs</code>) and poppler (<code>pdfinfo</code> / <code>pdftotext</code>) &mdash; none of which the cover-letter pipeline touches.</p>
       </section>
 
       <section class="tutorial-section">

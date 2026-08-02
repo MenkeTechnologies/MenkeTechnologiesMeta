@@ -64,17 +64,27 @@
       <table>
         <thead><tr><th>path</th><th>role</th></tr></thead>
         <tbody>
-          <tr><td>app/src-tauri</td><td>thin Tauri host: registers <code>ztn_invoke</code> + terminal commands; <code>setup</code> mounts the engine</td></tr>
-          <tr><td>crates/ztunnel-core</td><td>the embeddable VPN engine (submodule, <code>tauri</code> feature)</td></tr>
+          <tr><td>app/src-tauri</td><td>Tauri host: registers <code>ztn_invoke</code> + terminal, prefs, licence, powerline and file-browser commands; <code>setup</code> mounts the engine</td></tr>
+          <tr><td>app/src-tauri/src/net_diag.rs</td><td>app-local host-OS diagnostics: DNS lookup, TCP check, port scan, ping, traceroute, interfaces, routes, public IP</td></tr>
+          <tr><td>app/src-tauri/src/net_tools.rs</td><td>app-local probe bench: TLS cert inspect, DNS-over-HTTPS, path-MTU discovery, speedtest, HTTP headers, VPN config parse</td></tr>
+          <tr><td>app/src-tauri/src/net_scan.rs</td><td>app-local LAN/registry recon: subnet calc, ping sweep, ARP table, reverse DNS, RDAP, TCP port knock</td></tr>
+          <tr><td>app/src-tauri/src/net_mon.rs</td><td>app-local monitor &amp; audit: netstat socket table, firewall ruleset, HTTP benchmark, TLS cipher scan, DNS record dump, AXFR test</td></tr>
+          <tr><td>app/src-tauri/src/ssh_tunnel.rs</td><td>app-local SSH port-forwarding manager: profiles, sessions, reachability, keys, <code>~/.ssh/config</code> import/export</td></tr>
+          <tr><td>app/src-tauri/src/impact.rs</td><td>Connect Impact Preview host collector — composes the sibling probes into the <code>HostSnapshot</code> the engine correlates</td></tr>
+          <tr><td>crates/ztunnel-core</td><td>the embeddable VPN engine (submodule, <code>tauri</code> + <code>wgprobe</code> features)</td></tr>
+          <tr><td>crates/zgui-core · zgui-bridge</td><td>shared GUI toolkit + IPC bridge (submodules)</td></tr>
           <tr><td>crates/zpwr-embed-terminal</td><td>shared embedded PTY terminal (submodule)</td></tr>
           <tr><td>crates/zpwr-i18n</td><td>shared i18n runtime (submodule)</td></tr>
-          <tr><td>frontend</td><td>app shell; webui/terminal/i18n assets synced from the submodules before each dev/build</td></tr>
-          <tr><td>scripts</td><td>clean · bust · rebuild · nuke (cyberpunk-styled, ported from Audio-Haxor)</td></tr>
+          <tr><td>crates/zpwr-file-browser · zpwr-hooks-editor</td><td>shared file browser + Monaco hooks editor (submodules)</td></tr>
+          <tr><td>crates/zwire-host</td><td>shared sysmon reader behind the powerline status bar (submodule)</td></tr>
+          <tr><td>frontend</td><td>app shell + the app-owned bench front-ends; webui/terminal/i18n assets synced from the submodules before each dev/build</td></tr>
+          <tr><td>scripts</td><td>clean · bust · rebuild · nuke · test · ship-check · deploy · localinstall · release-macos · i18n-sort/audit (cyberpunk-styled, ported from Audio-Haxor)</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Front-end surface</h2>
-      <p class="note">The HUD (mounted from <code>ztunnel-core/webui</code>) renders a configuration list with live status dots, a connect/disconnect action, a status/throughput grid, per-connection options (route-all, tunnel DNS, auto-reconnect, connect-at-launch), a live log viewer, an import modal (paste <code>.ovpn</code> / WireGuard <code>.conf</code>), a command palette, and the shared embedded terminal. It drives the engine entirely through <code>invoke('ztn_invoke', { cmd, args })</code> and listens for <code>ztn-event</code>; all wiring is CSP-safe (no inline handlers).</p>
+      <p class="note">The HUD (mounted from the engine's webui) renders a configuration list with live status dots, a connect/disconnect action, a status/throughput grid, per-connection options (route-all, tunnel DNS, auto-reconnect, connect-at-launch), a live log viewer, an import modal (paste <code>.ovpn</code> / WireGuard <code>.conf</code>), a ⌘K command palette, a native menu bar, and the shared embedded terminal. It drives the engine entirely through <code>invoke('ztn_invoke', { cmd, args })</code> and listens for <code>ztn-event</code>; all wiring is CSP-safe (no inline handlers or styles).</p>
+      <p class="note">Beside it the repository owns its own bench front-ends under <code>frontend/</code>, each a tabbed HUD modal on the ⌘K palette. Four drive the app-local Rust above — <code>net-diag.js</code>, <code>net-tools.js</code>, <code>net-scan.js</code>, <code>net-mon.js</code> — plus <code>ssh-tunnels.js</code>. Six add no Rust at all and wire the engine's analytical command surface directly: <code>vpn-toolkit.js</code> (WireGuard keypair, handshake probe, config security lint, tunnel MTU/MSS, path MTU, IP classify, range→CIDR, obfuscation catalog), <code>config-lab.js</code> (parse, migrate, redact, normalize, inline blocks, PUSH_REPLY, log analyze), <code>routing-lab.js</code> (subnet/VLSM/aggregate/contains, route conflicts &amp; coverage, AllowedIPs dedup &amp; build, ULA, EUI-64, NAT64), <code>dns-lab.js</code> (resolver classify, query wire, blocklist match, bootstrap plan, split-horizon), <code>crypto-lab.js</code> (Noise layout, handshake timers, cookie/MAC, IPsec proposal, TS narrowing, proxy plan, static key) and <code>ops-lab.js</code> (data budget, usage rollup, uptime/SLA, link quality, quality ranking, failover plan, port forward, MSS clamp, app policy, reconnect backoff, feature matrix, platform probe). <code>impact-preview.js</code> renders the Connect Impact Preview verdict sheet (⌘⇧I).</p>
 
       <h2 class="reg-h">Roadmap</h2>
       <table>
@@ -83,9 +93,13 @@
           <tr><td>App shell + HUD + engine wiring</td><td>implemented</td></tr>
           <tr><td>Config import/parse (OpenVPN/.tblk/WireGuard)</td><td>implemented in engine</td></tr>
           <tr><td>Connection manager + logs + throughput</td><td>implemented in engine</td></tr>
-          <tr><td>Privileged helper (utun/tun, routing, DNS)</td><td>planned — macOS SMAppService / Linux polkit</td></tr>
-          <tr><td>OpenVPN process supervision + WireGuard data path</td><td>planned</td></tr>
-          <tr><td>On-demand connect, network monitoring, full preferences</td><td>planned</td></tr>
+          <tr><td>Host-OS benches (diagnostics · tools · scan · monitor) + SSH tunnels</td><td>implemented — app-local Tauri commands, engine-independent</td></tr>
+          <tr><td>Engine benches (VPN toolkit · config · routing · DNS · crypto · ops labs)</td><td>implemented — front-end only, over <code>ztn_invoke</code></td></tr>
+          <tr><td>WireGuard handshake probe (<code>wg.probe</code> / <code>wg.probe_all</code>)</td><td>implemented in engine — <code>wgprobe</code> feature, device-free and unprivileged</td></tr>
+          <tr><td>Connect Impact Preview (pre-connect blast radius)</td><td>implemented — host collector <code>impact.rs</code> + engine <code>vpn.impact_preview</code></td></tr>
+          <tr><td>OpenVPN process supervision + WireGuard data path</td><td>implemented in engine — the unprivileged half; device/route creation still gated on the helper</td></tr>
+          <tr><td>Privileged helper (utun/tun, routing, DNS)</td><td>planned — macOS SMAppService / Linux polkit; until then connect reports <code>needs_privilege</code></td></tr>
+          <tr><td>On-demand connect, full preferences</td><td>planned</td></tr>
         </tbody>
       </table>
 
