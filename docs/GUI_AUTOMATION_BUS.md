@@ -306,9 +306,14 @@ across apps, and a vendor-authored automation language each **predate this separ
 *conjunction*, under constraints. Prior-art absence below is **non-exhaustive**. The bus is **built**:
 **19 apps** call `zgui_bridge::serve` and expose the surface today — Audio-Haxor, traderview, zcite,
 zcontainer, zemail, zftp, zgo, zlatex, zmax-gui, zmusic, zoffice, zpdf, zphoto, zreq, zstation,
-zthrottle, ztorrent, ztranslator, ztunnel. `zcontainer` is wired now too
-(`app/src-tauri/src/bus.rs:145`); `zwire` is scriptable through its own native bus rather than this
-socket, and `zterminal` has no webview shell. Track B (JUCE plugins) is still unbuilt.
+zthrottle, ztorrent, ztranslator, ztunnel. `zcontainer` routes its own engine Rust-direct on the same
+socket (`app/src-tauri/src/bus.rs:210`), so its `docker.*` / `k8s.*` / `vm.*` / `analyze.*` vocabulary
+is callable by name; `ztranslator` does the same for the engine behind `tauri-plugin-ztranslator` —
+its stateless `ztr_*` commands resolve Rust-direct and the stateful ones go through the plugin's own
+command so the host wrapper (event sink, persistence, log) still runs; `zmax-gui` dispatches its own
+host command surface by name alongside the webview verbs. `zwire` is scriptable through its own
+native bus rather than this socket, and `zterminal` has no webview shell. Track B (JUCE plugins) is
+still unbuilt.
 
 The four nearest prior arts, and why each fails a load-bearing leg:
 
