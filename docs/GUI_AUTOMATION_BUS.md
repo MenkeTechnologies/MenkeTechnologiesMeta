@@ -281,10 +281,10 @@ Then fan out to zemail, zcontainer, zftp, zstation, zterminal, the rest.
 This is a **combination** first, not a single new capability. Embedding a language in an app, scripting
 across apps, and a vendor-authored automation language each **predate this separately**. The claim is the
 *conjunction*, under constraints. Prior-art absence below is **non-exhaustive**. The bus is **built**:
-**15 apps** call `zgui_bridge::serve` and expose the surface today — Audio-Haxor, traderview, zcite,
-zmax-gui, zemail, zftp, zgo, zoffice, zpdf, zphoto, zreq, zstation, zthrottle, ztranslator, ztunnel.
-**zcontainer is not wired** — it declares the `zgui-bridge` dep (`app/src-tauri/Cargo.toml:22`) but has
-no `bus.rs` and never calls `serve`. Track B (JUCE plugins) is still unbuilt.
+all **19 Tauri apps** call `zgui_bridge::serve` and expose the surface today — Audio-Haxor, traderview,
+zcite, zcontainer, zemail, zftp, zgo, zlatex, zmax-gui, zmusic, zoffice, zpdf, zphoto, zreq, zstation,
+zthrottle, ztorrent, ztranslator, ztunnel — each with a `bus.rs` at `app/src-tauri/src/bus.rs`
+(`src-tauri/src/bus.rs` for Audio-Haxor and traderview). Track B (JUCE plugins) is still unbuilt.
 
 The four nearest prior arts, and why each fails a load-bearing leg:
 

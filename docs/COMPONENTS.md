@@ -8,7 +8,7 @@ every GUI app embeds the full shared component set it needs.
 > vim / hooks editor) — as opposed to which submodules it embeds — see
 > [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
 
-_Last reconciled: 2026-07-12._
+_Last reconciled: 2026-08-12._
 
 ## Components
 
@@ -31,8 +31,8 @@ _Last reconciled: 2026-07-12._
 | **zpdf-core** | Embeddable pure-Rust PDF engine — parse/edit/annotate/sign/embed, no GUI deps; native + C ABI. Engine behind `zpdf` |
 | **zphoto-core** | Embeddable pure-Rust raster-imaging engine — layers/selections/filters/export, no GUI deps; native + C ABI. Engine behind `zphoto` |
 | **ztmux-core** | Embeddable pure-Rust terminal/tmux engine (PTY + tmux wire-protocol control), no GUI deps. Engine behind `zterminal` |
-| **zgui-bridge** | GUI Automation Bus host — one Unix socket per app exposing its verbs/state/events (what `stryke-app` drives). Mounted by 17 apps |
-| **zwire-host** | Native-messaging / system-stats / PTY host binary shared with `zwire`. Mounted by 10 apps (`zreq`, `zoffice`, `zpdf`, `zftp`, `zphoto`, `zemail`, `zthrottle`, `zlatex`, `zmax-gui`, `zwire`) |
+| **zgui-bridge** | GUI Automation Bus host — one Unix socket per app exposing its verbs/state/events (what `stryke-app` drives). Mounted by all 19 Tauri apps |
+| **zwire-host** | Native-messaging / system-stats / PTY host binary shared with `zwire`. Mounted by 15 apps (`zoffice`, `zemail`, `zpdf`, `zphoto`, `zstation`, `zcite`, `zreq`, `zftp`, `zcontainer`, `ztunnel`, `zthrottle`, `zmax-gui`, `zlatex`, `zmusic`, `ztorrent`) plus `zwire` itself |
 | **zpwr-modal-editor** | Shared Vim/Emacs modal-editing surface. Mounted by `zoffice` + `zemail` |
 
 ## Consumption matrix
@@ -51,7 +51,7 @@ no column here; see the component table above for their consumers.
 
 | App | clip-engine | patch-core | embed-terminal | hooks-editor | crate | ztranslator | file-browser | i18n | algo | office-core | mail-core | pdf-core |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| **Audio-Haxor** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ |
 | **traderview** | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — |
 | **ztranslator** | ✓ | — | ✓ | ✓ | ✓ | _(source)_ | ✓ | ✓ | — | — | — | — |
 | **zpwr-daw** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | — | — |
@@ -60,18 +60,20 @@ no column here; see the component table above for their consumers.
 | **zpwr-midi-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zoffice** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | _(source)_ | — | — |
 | **zemail** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | _(source)_ | ✓ |
-| **zpdf** | — | — | ✓ | ✓ | — | — | ✓ | — | — | — | — | _(source)_ |
-| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zpdf** | — | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | — | _(source)_ |
+| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | — |
 | **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zgo** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zftp** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
 | **zcontainer** | — | — | — | ✓ | — | — | ✓ | — | — | — | — | — |
 | **zstation** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | — | — | — |
-| **zphoto** | — | — | — | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zphoto** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **ztunnel** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zthrottle** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **zlatex** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zmax-gui** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zmusic** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **ztorrent** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zmax-gui** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | ✓ |
 | **zwire** | — | — | — | ✓¹ | — | — | — | — | — | — | — | — |
 | **zterminal** | — | — | — | — | — | — | — | — | — | — | — | — |
 
@@ -99,8 +101,8 @@ than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`,
   "ztranslator" matrix column marks apps embedding either, since both carry the view.
 - **zpdf:** from-scratch PDF editor (Tauri v2) porting the Adobe Acrobat Pro + macOS Preview feature
   set; `zpdf` + `zpdf-core` are meta submodules, `zpdf` embeds `zpdf-core` (nested) plus the standard
-  component set. `zpdf-core` is *not* universal — outside `zpdf` itself, only `Audio-Haxor`, `zemail`
-  and `zftp` mount it.
+  component set. `zpdf-core` is *not* universal — outside `zpdf` itself, only `Audio-Haxor`, `zemail`,
+  `zftp` and `zmax-gui` mount it.
 - **zoffice / zemail:** GUI apps (Tauri v2, cyberpunk HUD) — `zoffice` replaces MS Office
   (documents/spreadsheets/presentations), `zemail` is a desktop mail client. Both ship a Tauri app
   shell (`frontend/` + `app/src-tauri`) and a `pnpm t` suite driving their engines `zoffice-core` /

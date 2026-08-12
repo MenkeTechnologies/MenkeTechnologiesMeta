@@ -5,27 +5,26 @@ GUI app — the exact surface `App::open("<app>")->verbs()` returns over the
 [GUI Automation Bus](GUI_AUTOMATION_BUS.md): the LIVE runtime surface (appShell verbs +
 per-app `opts.commands` + dynamically-registered verbs), read from each running app.
 
-**4308 actions** across **17 apps**. Read from each app's live bus
+**4375 actions** across **16 apps**. Read from each app's live bus
 surface by `bin/gen-gui-actions-live` — do not hand-edit. Requires every app open when generated.
 
 | App | Verbs | Surface |
 | --- |:--:| --- |
-| [`traderview`](#traderview) | 1732 | TradingView-style charting/trading terminal — view tiles + shortcut actions |
-| [`zpdf`](#zpdf) | 649 | Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact |
-| [`audio-haxor`](#audio-haxor) | 239 | Audio analyzer / DAW-project generator — spectrum, DSP, .als generation |
-| [`zemail`](#zemail) | 208 | Thunderbird-style mail client — accounts, folders, messages, PGP/S-MIME, search |
-| [`zcite`](#zcite) | 206 | Zotero-style reference manager — library, collections, citations, PDF, sync |
-| [`zoffice`](#zoffice) | 199 | LibreOffice-style office engine — writer/calc/impress over ODF/OOXML |
+| [`traderview`](#traderview) | 1748 | TradingView-style charting/trading terminal — view tiles + shortcut actions |
+| [`zpdf`](#zpdf) | 689 | Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact |
+| [`audio-haxor`](#audio-haxor) | 241 | Audio analyzer / DAW-project generator — spectrum, DSP, .als generation |
+| [`zoffice`](#zoffice) | 228 | LibreOffice-style office engine — writer/calc/impress over ODF/OOXML |
+| [`zemail`](#zemail) | 216 | Thunderbird-style mail client — accounts, folders, messages, PGP/S-MIME, search |
+| [`zcite`](#zcite) | 209 | Zotero-style reference manager — library, collections, citations, PDF, sync |
+| [`zftp`](#zftp) | 183 | Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync |
 | [`zwire`](#zwire) | 161 | Chromium-superset browser — tabs, windows, tab-groups, downloads, reading list, power |
-| [`zftp`](#zftp) | 160 | Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync |
-| [`zreq`](#zreq) | 151 | Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocket |
-| [`zgo`](#zgo) | 140 | Alfred-style launcher — script-filter workflows and system commands |
-| [`ztunnel`](#ztunnel) | 125 | Tunnelblick-style VPN client — OpenVPN / WireGuard config + control |
-| [`zphoto`](#zphoto) | 101 | Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions |
-| [`zthrottle`](#zthrottle) | 91 | System monitor / process & network throttling |
-| [`ztranslator`](#ztranslator) | 54 | BOME-style MIDI/keyboard translator — presets, translators, rules, HID |
-| [`zstation`](#zstation) | 37 | Station-style multi-app workspace — boards, tiles, panes |
-| [`zmax-gui`](#zmax-gui) | 30 |  |
+| [`zreq`](#zreq) | 152 | Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocket |
+| [`zgo`](#zgo) | 144 | Alfred-style launcher — script-filter workflows and system commands |
+| [`zphoto`](#zphoto) | 105 | Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions |
+| [`ztunnel`](#ztunnel) | 100 | Tunnelblick-style VPN client — OpenVPN / WireGuard config + control |
+| [`ztranslator`](#ztranslator) | 65 | BOME-style MIDI/keyboard translator — presets, translators, rules, HID |
+| [`zthrottle`](#zthrottle) | 57 | System monitor / process & network throttling |
+| [`zstation`](#zstation) | 52 | Station-style multi-app workspace — boards, tiles, panes |
 | [`zcontainer`](#zcontainer) | 25 | Docker Desktop + Lens-style container / Kubernetes manager |
 
 ---
@@ -33,9 +32,9 @@ surface by `bin/gen-gui-actions-live` — do not hand-edit. Requires every app o
 ## traderview
 
 TradingView-style charting/trading terminal — view tiles + shortcut actions  
-**1732 verbs** · live bus surface · call as `App::open("traderview")->call("<verb>", %args)`
+**1748 verbs** · live bus surface · call as `App::open("traderview")->call("<verb>", %args)`
 
-**`(top-level)`** (1726)
+**`(top-level)`** (1732)
 
 ```
 action:abc_pattern_run
@@ -44,6 +43,7 @@ action:accounts_focus_name
 action:accounts_overview_refresh
 action:acf_run
 action:active_share_run
+action:activity_heatmap
 action:ad_normality_run
 action:ad_oscillator_run
 action:add_bookmark
@@ -148,6 +148,7 @@ action:edit_undo
 action:effective_spread_run
 action:escape
 action:execution_scheduler_run
+action:export_view
 action:focus_search
 action:footprint_demo
 action:footprint_run
@@ -241,6 +242,7 @@ action:open_new_tab
 action:open_news_for_symbol
 action:open_options_for_symbol
 action:open_research_for_symbol
+action:open_scheduler
 action:open_settings
 action:open_type_run
 action:optimal_f_compute
@@ -278,9 +280,11 @@ action:screener_run
 action:second_order_greeks_run
 action:series_smoother_run
 action:setups_by_setup_run
+action:show_cheatsheet
 action:signal_decomposition_run
 action:spread_tracker_demo
 action:spread_tracker_run
+action:start_tour
 action:stop_loss_backtest_run
 action:strategy_alerts_evaluate_now
 action:strategy_alerts_focus_name
@@ -1689,6 +1693,7 @@ view:trade-compare
 view:trade-efficiency
 view:trade-expectancy
 view:trade-plan-checklist
+view:trade-timeline
 view:trades
 view:traditional-ira-deduction
 view:trailing-stop-percent
@@ -1766,23 +1771,33 @@ view:zmijewski-score
 view:ztranslator
 ```
 
-**`app`** (6)
+**`app`** (16)
 
 ```
+app.backtestOverfitPbo
+app.copySessionSummary
+app.edgeFragility
 app.fileBrowser
 app.hideTerminal
 app.hooksEditor
 app.killTerminal
+app.quickAlertFinder
+app.quickTradeFinder
+app.sessionSnapshot
+app.shapleyEdge
+app.symbolSwitcher
+app.tagExplorer
 app.terminal
 app.toggleSequencer
+app.watchlistQuickAdd
 ```
 
 ## zpdf
 
 Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact  
-**649 verbs** · live bus surface · call as `App::open("zpdf")->call("<verb>", %args)`
+**689 verbs** · live bus surface · call as `App::open("zpdf")->call("<verb>", %args)`
 
-**`(top-level)`** (309)
+**`(top-level)`** (324)
 
 ```
 accessibility_check
@@ -1822,6 +1837,7 @@ adjust_image
 adjust_page
 apply_actions
 apply_redactions
+assemble_pages
 attach_file
 attachments
 auto_crop_margins
@@ -1842,6 +1858,7 @@ compare
 contact_sheet
 content_fingerprint
 convert_to_cmyk
+copy_fidelity_audit
 create_checkbox
 create_choice_field
 create_from_images
@@ -1899,6 +1916,7 @@ export_xlsx
 extract_attachment
 extract_fonts
 extract_images
+extract_page_temp
 extract_tables
 extract_text
 extract_text_in_region
@@ -1973,6 +1991,7 @@ recompress_streams
 redact_pii
 redact_regex
 redact_search
+redaction_leak_audit
 reflow
 regenerate_document_id
 remove_blank_pages
@@ -1990,6 +2009,8 @@ resize_all_pages
 resize_page
 restyle_text
 reverse_pages
+revision_extract
+revision_history
 rotate_all
 rotate_page
 run_javascript
@@ -2084,6 +2105,15 @@ unembed_fonts
 validate_fields
 validate_pdf_a
 validate_pdf_ua
+vcs_bisect
+vcs_blame
+vcs_blame_lines
+vcs_checkout
+vcs_commit
+vcs_diff
+vcs_head
+vcs_log
+vcs_page_objects
 verify_full
 verify_redaction
 verify_signatures
@@ -2096,7 +2126,7 @@ xfa_packets
 xmp_metadata
 ```
 
-**`appshell`** (340)
+**`appshell`** (365)
 
 ```
 appshell.crt.off
@@ -2110,13 +2140,15 @@ appshell.hooks
 appshell.neon.off
 appshell.neon.on
 appshell.palette
-appshell.recent:/Users/wizard/Desktop/Resume2026.pdf
-appshell.recent:/Users/wizard/Desktop/pdf/beginningperl.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/gui-automation-bus/docs/book.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/gui-automation-bus/docs/reference.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/inventions/docs/book.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/zwire/docs/book.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/zpwr-jobs/Resume2026.pdf
+appshell.recent:/Users/tommy/Desktop/A-80_OM.pdf
+appshell.recent:/Users/tommy/Desktop/JacobMenke2026.pdf
+appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/allovance/Allovance_JacobMenke.pdf
+appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/block/Block_JacobMenke.pdf
+appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/ford/Ford_JacobMenke.pdf
+appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/reuters-lead/Reuters_JacobMenke.pdf
+appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/reuters/Reuters_JacobMenke.pdf
+appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/siemens/Siemens_JacobMenke.pdf
+appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/trinityhealth/TrinityHealth_JacobMenke.pdf
 appshell.scheme-arctic
 appshell.scheme-crimson
 appshell.scheme-cyberpunk
@@ -2133,6 +2165,7 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
+appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
@@ -2160,6 +2193,7 @@ appshell.zp.cmd_annot_rect
 appshell.zp.cmd_annot_subject
 appshell.zp.cmd_annots_lock
 appshell.zp.cmd_annots_print
+appshell.zp.cmd_assemble
 appshell.zp.cmd_attach_file
 appshell.zp.cmd_attachments
 appshell.zp.cmd_auto_crop
@@ -2185,6 +2219,7 @@ appshell.zp.cmd_clear_sig
 appshell.zp.cmd_compare
 appshell.zp.cmd_contact_sheet
 appshell.zp.cmd_convert_cmyk
+appshell.zp.cmd_copy_fidelity
 appshell.zp.cmd_create_from_images
 appshell.zp.cmd_create_layer
 appshell.zp.cmd_create_ocmd
@@ -2217,6 +2252,7 @@ appshell.zp.cmd_encrypt_cert
 appshell.zp.cmd_encrypt_multi
 appshell.zp.cmd_encrypt_perms
 appshell.zp.cmd_export_comments_xfdf
+appshell.zp.cmd_export_dialog
 appshell.zp.cmd_export_fdf
 appshell.zp.cmd_export_svg
 appshell.zp.cmd_export_xfa
@@ -2311,6 +2347,7 @@ appshell.zp.cmd_recompress
 appshell.zp.cmd_redact_pii
 appshell.zp.cmd_redact_regex
 appshell.zp.cmd_redact_search
+appshell.zp.cmd_redaction_leak
 appshell.zp.cmd_reflow
 appshell.zp.cmd_regen_doc_id
 appshell.zp.cmd_region_text
@@ -2320,6 +2357,8 @@ appshell.zp.cmd_remove_js
 appshell.zp.cmd_rename_bookmark
 appshell.zp.cmd_rename_field
 appshell.zp.cmd_rename_layer
+appshell.zp.cmd_render_cache
+appshell.zp.cmd_render_jobs
 appshell.zp.cmd_reorder_pages
 appshell.zp.cmd_repair
 appshell.zp.cmd_replace_image
@@ -2328,6 +2367,7 @@ appshell.zp.cmd_reset_form
 appshell.zp.cmd_resize_all
 appshell.zp.cmd_resize_page
 appshell.zp.cmd_retarget_bookmark
+appshell.zp.cmd_revision_history
 appshell.zp.cmd_rotate_all_ccw
 appshell.zp.cmd_rotate_all_cw
 appshell.zp.cmd_run_js
@@ -2394,6 +2434,7 @@ appshell.zp.draw_brush
 appshell.zp.draw_eraser
 appshell.zp.draw_gradient
 appshell.zp.draw_rect
+appshell.zp.draw_signature
 appshell.zp.export_csv
 appshell.zp.export_excel
 appshell.zp.export_html
@@ -2401,11 +2442,15 @@ appshell.zp.export_image
 appshell.zp.export_markdown
 appshell.zp.export_ppt
 appshell.zp.export_word
+appshell.zp.expose
 appshell.zp.extract_page
+appshell.zp.goto_page
+appshell.zp.guided_tour
 appshell.zp.image_adjust
 appshell.zp.impose_2up
 appshell.zp.impose_4up
 appshell.zp.impose_8up
+appshell.zp.jump_outline
 appshell.zp.mark_caret
 appshell.zp.mark_highlight
 appshell.zp.mark_ink
@@ -2422,6 +2467,7 @@ appshell.zp.mark_strikeout
 appshell.zp.mark_textbox
 appshell.zp.mark_underline
 appshell.zp.merge_pdf
+appshell.zp.mru_tab
 appshell.zp.open_file_browser
 appshell.zp.open_hooks_editor
 appshell.zp.open_pdf
@@ -2433,20 +2479,29 @@ appshell.zp.save
 appshell.zp.save_as
 appshell.zp.save_grayscale
 appshell.zp.save_inverted
+appshell.zp.shortcuts_ref
 appshell.zp.tab_bookmarks
+appshell.zp.tab_compare
 appshell.zp.tab_fields
+appshell.zp.tab_insights
 appshell.zp.tab_metadata
 appshell.zp.tab_page
 appshell.zp.tab_text
+appshell.zp.tab_timeline
 appshell.zp.toggle_terminal
+appshell.zp.vcs_bisect
+appshell.zp.vcs_blame
+appshell.zp.vcs_commit
+appshell.zp.vcs_history
+appshell.zp.zoom_preset
 ```
 
 ## audio-haxor
 
 Audio analyzer / DAW-project generator — spectrum, DSP, .als generation  
-**239 verbs** · live bus surface · call as `App::open("audio-haxor")->call("<verb>", %args)`
+**241 verbs** · live bus surface · call as `App::open("audio-haxor")->call("<verb>", %args)`
 
-**`app`** (239)
+**`app`** (241)
 
 ```
 app.alsCancelGenerate
@@ -2540,10 +2595,12 @@ app.importVideos
 app.killTerminal
 app.moveTagBar
 app.nextTrack
+app.openCrateBuilder
 app.openDataDir
 app.openLogFile
 app.openNextUpdate
 app.openPrefsFile
+app.openReleaseWizard
 app.openUpdate
 app.prevTrack
 app.refreshCacheStats
@@ -2690,10 +2747,283 @@ app.toggleShuffle
 app.vizFullscreen
 ```
 
+## zoffice
+
+LibreOffice-style office engine — writer/calc/impress over ODF/OOXML  
+**228 verbs** · live bus surface · call as `App::open("zoffice")->call("<verb>", %args)`
+
+**`(top-level)`** (6)
+
+```
+diff
+info
+inspect
+meta
+open
+pagesetup
+```
+
+**`appshell`** (125)
+
+```
+appshell.activity_timeline
+appshell.base_catalog
+appshell.base_run_query
+appshell.calc_batch_edit
+appshell.calc_chart_data
+appshell.calc_column_stats
+appshell.calc_comments
+appshell.calc_cond_formats
+appshell.calc_critical_path
+appshell.calc_edit_cell
+appshell.calc_eval
+appshell.calc_export_formulas
+appshell.calc_features
+appshell.calc_formulas_view
+appshell.calc_impact_map
+appshell.calc_jump
+appshell.calc_named_ranges
+appshell.calc_overview
+appshell.calc_pivots
+appshell.calc_print_setups
+appshell.calc_protections
+appshell.calc_sheet_states
+appshell.calc_sort
+appshell.calc_tables
+appshell.calc_validations
+appshell.close_document
+appshell.cmd_palette
+appshell.crt.off
+appshell.crt.on
+appshell.crt.toggle
+appshell.doc_dashboard
+appshell.doc_properties
+appshell.draw_connectors
+appshell.edit_doc_properties
+appshell.engine_info
+appshell.export_document
+appshell.extract_plain_text
+appshell.files
+appshell.files.close
+appshell.files.open
+appshell.find_in_doc
+appshell.gui-scripts
+appshell.hooks
+appshell.impress_add_slide
+appshell.impress_chart_data
+appshell.impress_edit_slide
+appshell.impress_export_hyperlinks
+appshell.impress_extract_text
+appshell.impress_graphic_objects
+appshell.impress_hyperlinks_view
+appshell.impress_insert_slide
+appshell.impress_layout_names
+appshell.impress_layouts
+appshell.impress_remove_slide
+appshell.impress_shapes
+appshell.impress_slide_size
+appshell.impress_slide_tables
+appshell.impress_speaker_notes
+appshell.impress_storyboard
+appshell.impress_text_analytics
+appshell.impress_transitions
+appshell.math_starmath
+appshell.neon.off
+appshell.neon.on
+appshell.open_document
+appshell.open_preferences
+appshell.open_recent
+appshell.page_setup
+appshell.palette
+appshell.reload_document
+appshell.replace_in_doc
+appshell.scheme-arctic
+appshell.scheme-crimson
+appshell.scheme-cyberpunk
+appshell.scheme-ember
+appshell.scheme-matrix
+appshell.scheme-midnight
+appshell.scheme-toxic
+appshell.scheme-vapor
+appshell.search_all_recent
+appshell.settings
+appshell.shortcuts
+appshell.shortcuts_help
+appshell.snippets
+appshell.switch_base
+appshell.switch_calc
+appshell.switch_draw
+appshell.switch_impress
+appshell.switch_math
+appshell.switch_writer
+appshell.terminal
+appshell.terminal.close
+appshell.terminal.open
+appshell.theme.dark
+appshell.theme.light
+appshell.theme.toggle
+appshell.tmux-keys
+appshell.tmux-layouts
+appshell.toggle-statusbar
+appshell.toggle-theme
+appshell.writer_blame
+appshell.writer_bookmarks
+appshell.writer_compare
+appshell.writer_edit_paragraph
+appshell.writer_edit_table_cell
+appshell.writer_embedded_media
+appshell.writer_export_comments
+appshell.writer_export_hyperlinks
+appshell.writer_field_codes
+appshell.writer_footnotes
+appshell.writer_form_fields
+appshell.writer_formatting
+appshell.writer_hyperlinks_view
+appshell.writer_insert_paragraph
+appshell.writer_list_formats
+appshell.writer_merge
+appshell.writer_revision_authors
+appshell.writer_revisions_timeline
+appshell.writer_sections
+appshell.writer_settings
+appshell.writer_structure
+appshell.writer_style_catalog
+appshell.writer_table_content
+appshell.writer_text_analytics
+appshell.writer_word_count
+```
+
+**`base`** (3)
+
+```
+base.open
+base.query
+base.tables
+```
+
+**`calc`** (30)
+
+```
+calc.cells
+calc.charts
+calc.charts_detail
+calc.charts_render
+calc.comments
+calc.conditional_formats
+calc.critical_path
+calc.csv
+calc.edit_cell
+calc.eval
+calc.evaluate
+calc.find
+calc.formulas
+calc.html
+calc.impact_map
+calc.markdown
+calc.merge3
+calc.named_ranges
+calc.open
+calc.pdf
+calc.pivot_tables
+calc.print_setups
+calc.render
+calc.replace
+calc.replace_lossless
+calc.sheet_protections
+calc.sheet_states
+calc.sort
+calc.tables
+calc.validations
+```
+
+**`draw`** (8)
+
+```
+draw.connectors
+draw.find
+draw.html
+draw.markdown
+draw.open
+draw.render
+draw.replace
+draw.svg
+```
+
+**`impress`** (21)
+
+```
+impress.charts_detail
+impress.charts_render
+impress.find
+impress.graphic_objects
+impress.html
+impress.hyperlinks
+impress.layout_names
+impress.layouts
+impress.markdown
+impress.merge3
+impress.open
+impress.pdf
+impress.render
+impress.replace
+impress.replace_lossless
+impress.shapes
+impress.slide_notes
+impress.slide_size
+impress.tables
+impress.text
+impress.transitions
+```
+
+**`math`** (3)
+
+```
+math.open
+math.render
+math.starmath
+```
+
+**`writer`** (32)
+
+```
+writer.blame
+writer.bookmark_text
+writer.comment_details
+writer.comments
+writer.content_controls
+writer.edit_table_cell
+writer.fields
+writer.find
+writer.footnotes
+writer.html
+writer.hyperlinks_text
+writer.images
+writer.inline_images
+writer.links
+writer.list_formats
+writer.markdown
+writer.merge3
+writer.notes
+writer.open
+writer.pdf
+writer.render
+writer.replace
+writer.replace_lossless
+writer.revision_authors
+writer.runs
+writer.sections
+writer.settings
+writer.structure
+writer.style_definitions
+writer.table_grids
+writer.tables
+writer.text
+```
+
 ## zemail
 
 Thunderbird-style mail client — accounts, folders, messages, PGP/S-MIME, search  
-**208 verbs** · live bus surface · call as `App::open("zemail")->call("<verb>", %args)`
+**216 verbs** · live bus surface · call as `App::open("zemail")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -2711,14 +3041,15 @@ account.remove
 account.update
 ```
 
-**`address`** (2)
+**`address`** (3)
 
 ```
+address.known
 address.to_ascii
 address.validate
 ```
 
-**`appshell`** (30)
+**`appshell`** (31)
 
 ```
 appshell.crt.off
@@ -2748,6 +3079,7 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
+appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
@@ -2863,6 +3195,14 @@ html.sanitize
 html.to_text
 ```
 
+**`identity`** (3)
+
+```
+identity.baseline
+identity.evaluate
+identity.scan_folder
+```
+
 **`imap`** (12)
 
 ```
@@ -2924,7 +3264,7 @@ list.remove
 list.virtual_folders
 ```
 
-**`message`** (34)
+**`message`** (37)
 
 ```
 message.action_items
@@ -2948,8 +3288,11 @@ message.parse_mdn
 message.phishing_scan
 message.pin
 message.priority_rank
+message.quote_audit
 message.reading_time
+message.reconstruct_thread
 message.remove_label
+message.roster_audit
 message.save_draft
 message.set_aside
 message.set_flags
@@ -3121,7 +3464,7 @@ vip.remove
 ## zcite
 
 Zotero-style reference manager — library, collections, citations, PDF, sync  
-**206 verbs** · live bus surface · call as `App::open("zcite")->call("<verb>", %args)`
+**209 verbs** · live bus surface · call as `App::open("zcite")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -3195,7 +3538,7 @@ backup.prune
 backup.restore
 ```
 
-**`bib`** (10)
+**`bib`** (12)
 
 ```
 bib.author_substitute
@@ -3207,6 +3550,8 @@ bib.csl
 bib.csl_document
 bib.disambiguate
 bib.sort_key
+bib.style_diff
+bib.style_fit
 bib.styles
 ```
 
@@ -3321,10 +3666,11 @@ import.zotero_rdf
 inbox.import
 ```
 
-**`integrity`** (1)
+**`integrity`** (2)
 
 ```
 integrity.check
+integrity.roundtrip
 ```
 
 **`item`** (24)
@@ -3514,430 +3860,10 @@ zotero.push
 zotero.verify
 ```
 
-## zoffice
-
-LibreOffice-style office engine — writer/calc/impress over ODF/OOXML  
-**199 verbs** · live bus surface · call as `App::open("zoffice")->call("<verb>", %args)`
-
-**`(top-level)`** (6)
-
-```
-diff
-info
-inspect
-meta
-open
-pagesetup
-```
-
-**`appshell`** (103)
-
-```
-appshell.base_catalog
-appshell.base_run_query
-appshell.calc_batch_edit
-appshell.calc_chart_data
-appshell.calc_column_stats
-appshell.calc_comments
-appshell.calc_cond_formats
-appshell.calc_edit_cell
-appshell.calc_eval
-appshell.calc_export_formulas
-appshell.calc_features
-appshell.calc_named_ranges
-appshell.calc_overview
-appshell.calc_pivots
-appshell.calc_print_setups
-appshell.calc_protections
-appshell.calc_sheet_states
-appshell.calc_sort
-appshell.calc_tables
-appshell.calc_validations
-appshell.close_document
-appshell.crt.off
-appshell.crt.on
-appshell.crt.toggle
-appshell.doc_properties
-appshell.draw_connectors
-appshell.edit_doc_properties
-appshell.engine_info
-appshell.export_document
-appshell.extract_plain_text
-appshell.files
-appshell.files.close
-appshell.files.open
-appshell.find_in_doc
-appshell.gui-scripts
-appshell.hooks
-appshell.impress_add_slide
-appshell.impress_chart_data
-appshell.impress_edit_slide
-appshell.impress_export_hyperlinks
-appshell.impress_extract_text
-appshell.impress_graphic_objects
-appshell.impress_insert_slide
-appshell.impress_layout_names
-appshell.impress_layouts
-appshell.impress_remove_slide
-appshell.impress_shapes
-appshell.impress_slide_size
-appshell.impress_slide_tables
-appshell.impress_speaker_notes
-appshell.impress_transitions
-appshell.math_starmath
-appshell.neon.off
-appshell.neon.on
-appshell.open_document
-appshell.page_setup
-appshell.palette
-appshell.reload_document
-appshell.replace_in_doc
-appshell.scheme-arctic
-appshell.scheme-crimson
-appshell.scheme-cyberpunk
-appshell.scheme-ember
-appshell.scheme-matrix
-appshell.scheme-midnight
-appshell.scheme-toxic
-appshell.scheme-vapor
-appshell.settings
-appshell.shortcuts
-appshell.switch_base
-appshell.switch_calc
-appshell.switch_draw
-appshell.switch_impress
-appshell.switch_math
-appshell.switch_writer
-appshell.terminal
-appshell.terminal.close
-appshell.terminal.open
-appshell.theme.dark
-appshell.theme.light
-appshell.theme.toggle
-appshell.tmux-layouts
-appshell.toggle-statusbar
-appshell.toggle-theme
-appshell.writer_bookmarks
-appshell.writer_compare
-appshell.writer_edit_paragraph
-appshell.writer_embedded_media
-appshell.writer_export_comments
-appshell.writer_export_hyperlinks
-appshell.writer_field_codes
-appshell.writer_footnotes
-appshell.writer_form_fields
-appshell.writer_formatting
-appshell.writer_insert_paragraph
-appshell.writer_list_formats
-appshell.writer_revision_authors
-appshell.writer_sections
-appshell.writer_settings
-appshell.writer_structure
-appshell.writer_style_catalog
-appshell.writer_table_content
-appshell.writer_word_count
-```
-
-**`base`** (3)
-
-```
-base.open
-base.query
-base.tables
-```
-
-**`calc`** (27)
-
-```
-calc.cells
-calc.charts
-calc.charts_detail
-calc.charts_render
-calc.comments
-calc.conditional_formats
-calc.csv
-calc.edit_cell
-calc.eval
-calc.evaluate
-calc.find
-calc.formulas
-calc.html
-calc.markdown
-calc.named_ranges
-calc.open
-calc.pdf
-calc.pivot_tables
-calc.print_setups
-calc.render
-calc.replace
-calc.replace_lossless
-calc.sheet_protections
-calc.sheet_states
-calc.sort
-calc.tables
-calc.validations
-```
-
-**`draw`** (8)
-
-```
-draw.connectors
-draw.find
-draw.html
-draw.markdown
-draw.open
-draw.render
-draw.replace
-draw.svg
-```
-
-**`impress`** (20)
-
-```
-impress.charts_detail
-impress.charts_render
-impress.find
-impress.graphic_objects
-impress.html
-impress.hyperlinks
-impress.layout_names
-impress.layouts
-impress.markdown
-impress.open
-impress.pdf
-impress.render
-impress.replace
-impress.replace_lossless
-impress.shapes
-impress.slide_notes
-impress.slide_size
-impress.tables
-impress.text
-impress.transitions
-```
-
-**`math`** (3)
-
-```
-math.open
-math.render
-math.starmath
-```
-
-**`writer`** (29)
-
-```
-writer.bookmark_text
-writer.comment_details
-writer.comments
-writer.content_controls
-writer.fields
-writer.find
-writer.footnotes
-writer.html
-writer.hyperlinks_text
-writer.images
-writer.inline_images
-writer.links
-writer.list_formats
-writer.markdown
-writer.notes
-writer.open
-writer.pdf
-writer.render
-writer.replace
-writer.replace_lossless
-writer.revision_authors
-writer.runs
-writer.sections
-writer.settings
-writer.structure
-writer.style_definitions
-writer.table_grids
-writer.tables
-writer.text
-```
-
-## zwire
-
-Chromium-superset browser — tabs, windows, tab-groups, downloads, reading list, power  
-**161 verbs** · live bus surface · call as `App::open("zwire")->call("<verb>", %args)`
-
-**`(top-level)`** (62)
-
-```
-clipboard_get
-clipboard_set
-exec
-fs_append
-fs_list
-fs_mkdir
-fs_read
-fs_rm
-fs_stat
-fs_tail
-fs_walk
-fs_watch
-fs_write
-get
-hello
-hook_fire
-hooks_delete
-hooks_events
-hooks_get_script
-hooks_list
-hooks_save
-hooks_script_path
-hooks_set_enabled
-hooks_set_script
-hooks_test_run
-hostinfo
-hostlog
-job_list
-job_poll
-job_result
-job_start
-kill
-kv_del
-kv_get
-kv_keys
-kv_merge
-kv_set
-meter_stream
-notify
-open
-peer
-peer_connect
-peers
-ping
-ps
-pty_kill
-pty_resize
-pty_spawn
-pty_write
-pub
-stryke_lsp_send
-stryke_lsp_start
-stryke_lsp_stop
-stryke_run
-sub
-sysinfo_once
-sysinfo_start
-sysinfo_stop
-unsub
-watch_list
-watch_stop
-which
-```
-
-**`browser`** (99)
-
-```
-browser.activate
-browser.addHistoryUrl
-browser.addReadingList
-browser.allowSleep
-browser.bookmarkFolder
-browser.bookmarkTab
-browser.cancelDownload
-browser.centerWindow
-browser.clearAllData
-browser.clearCache
-browser.clearCacheAndCookies
-browser.clearCookies
-browser.clearDownloads
-browser.clearHistory
-browser.clearPasswords
-browser.closeDuplicates
-browser.closeLeft
-browser.closeOthers
-browser.closeRight
-browser.closeTab
-browser.closeWindow
-browser.collapseGroups
-browser.deleteHistoryUrl
-browser.detectLanguage
-browser.disableExtension
-browser.discardTab
-browser.download
-browser.duplicateTab
-browser.enableExtension
-browser.expandGroups
-browser.extensionOptions
-browser.firstTab
-browser.fullscreenWindow
-browser.goBack
-browser.goForward
-browser.gotoTab
-browser.groupTabs
-browser.home
-browser.incognitoWindow
-browser.keepAwake
-browser.keepDisplayAwake
-browser.lastTab
-browser.launchApp
-browser.maximizeWindow
-browser.mergeWindows
-browser.minimizeWindow
-browser.moveTabFirst
-browser.moveTabLast
-browser.moveTabLeft
-browser.moveTabRight
-browser.moveWindowNextDisplay
-browser.muteAll
-browser.muteOthers
-browser.muteTab
-browser.newTab
-browser.newWindow
-browser.nextTab
-browser.nextWindow
-browser.notify
-browser.open
-browser.openDownload
-browser.openTab
-browser.pauseDownload
-browser.pinAll
-browser.pinTab
-browser.prevTab
-browser.prevWindow
-browser.reload
-browser.reloadAll
-browser.reloadHard
-browser.removeBookmark
-browser.removeReadingList
-browser.reopenTab
-browser.restoreWindow
-browser.resumeDownload
-browser.retryDownload
-browser.screenshot
-browser.showDownload
-browser.showDownloads
-browser.snapBottom
-browser.snapBottomLeft
-browser.snapBottomRight
-browser.snapLeft
-browser.snapRight
-browser.snapTop
-browser.snapTopLeft
-browser.snapTopRight
-browser.sortTabs
-browser.tabToNewWindow
-browser.tmux
-browser.ungroupTabs
-browser.uninstallExtension
-browser.unmuteAll
-browser.unmuteTab
-browser.unpinAll
-browser.unpinTab
-browser.zoomIn
-browser.zoomOut
-browser.zoomReset
-```
-
 ## zftp
 
 Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync  
-**160 verbs** · live bus surface · call as `App::open("zftp")->call("<verb>", %args)`
+**183 verbs** · live bus surface · call as `App::open("zftp")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -3945,15 +3871,30 @@ Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync
 version
 ```
 
-**`appshell`** (37)
+**`appshell`** (53)
 
 ```
+appshell.Compare directories
 appshell.Connect selected
 appshell.Connect to server
+appshell.Copy remote path
 appshell.Disconnect selected
+appshell.Discover LAN
+appshell.Erasure disperse
+appshell.Erasure reconstruct
+appshell.Estimate transfer
+appshell.Export bookmarks
+appshell.Go to path
+appshell.Import bookmarks
 appshell.List directory
+appshell.New folder
 appshell.Preferences
 appshell.Reload
+appshell.Remove bookmark
+appshell.Resolve name clashes
+appshell.Session monitor
+appshell.Swarm audit
+appshell.Swarm replicate
 appshell.Toggle terminal
 appshell.crt.off
 appshell.crt.on
@@ -3982,6 +3923,7 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
+appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
@@ -4081,6 +4023,14 @@ discovery.scan
 
 ```
 edit.map
+```
+
+**`erasure`** (3)
+
+```
+erasure.disperse
+erasure.plan
+erasure.reconstruct
 ```
 
 **`filter`** (5)
@@ -4269,6 +4219,15 @@ ssh.config_resolve
 ssh.fingerprint
 ```
 
+**`swarm`** (4)
+
+```
+swarm.audit
+swarm.fetch
+swarm.replicate
+swarm.schedule
+```
+
 **`swift`** (1)
 
 ```
@@ -4319,10 +4278,186 @@ webdav.parse_multistatus
 webdav.propfind_body
 ```
 
+## zwire
+
+Chromium-superset browser — tabs, windows, tab-groups, downloads, reading list, power  
+**161 verbs** · live bus surface · call as `App::open("zwire")->call("<verb>", %args)`
+
+**`(top-level)`** (62)
+
+```
+clipboard_get
+clipboard_set
+exec
+fs_append
+fs_list
+fs_mkdir
+fs_read
+fs_rm
+fs_stat
+fs_tail
+fs_walk
+fs_watch
+fs_write
+get
+hello
+hook_fire
+hooks_delete
+hooks_events
+hooks_get_script
+hooks_list
+hooks_save
+hooks_script_path
+hooks_set_enabled
+hooks_set_script
+hooks_test_run
+hostinfo
+hostlog
+job_list
+job_poll
+job_result
+job_start
+kill
+kv_del
+kv_get
+kv_keys
+kv_merge
+kv_set
+meter_stream
+notify
+open
+peer
+peer_connect
+peers
+ping
+ps
+pty_kill
+pty_resize
+pty_spawn
+pty_write
+pub
+stryke_lsp_send
+stryke_lsp_start
+stryke_lsp_stop
+stryke_run
+sub
+sysinfo_once
+sysinfo_start
+sysinfo_stop
+unsub
+watch_list
+watch_stop
+which
+```
+
+**`browser`** (99)
+
+```
+browser.activate
+browser.addHistoryUrl
+browser.addReadingList
+browser.allowSleep
+browser.bookmarkFolder
+browser.bookmarkTab
+browser.cancelDownload
+browser.centerWindow
+browser.clearAllData
+browser.clearCache
+browser.clearCacheAndCookies
+browser.clearCookies
+browser.clearDownloads
+browser.clearHistory
+browser.clearPasswords
+browser.closeDuplicates
+browser.closeLeft
+browser.closeOthers
+browser.closeRight
+browser.closeTab
+browser.closeWindow
+browser.collapseGroups
+browser.deleteHistoryUrl
+browser.detectLanguage
+browser.disableExtension
+browser.discardTab
+browser.download
+browser.duplicateTab
+browser.enableExtension
+browser.expandGroups
+browser.extensionOptions
+browser.firstTab
+browser.fullscreenWindow
+browser.goBack
+browser.goForward
+browser.gotoTab
+browser.groupTabs
+browser.home
+browser.incognitoWindow
+browser.keepAwake
+browser.keepDisplayAwake
+browser.lastTab
+browser.launchApp
+browser.maximizeWindow
+browser.mergeWindows
+browser.minimizeWindow
+browser.moveTabFirst
+browser.moveTabLast
+browser.moveTabLeft
+browser.moveTabRight
+browser.moveWindowNextDisplay
+browser.muteAll
+browser.muteOthers
+browser.muteTab
+browser.newTab
+browser.newWindow
+browser.nextTab
+browser.nextWindow
+browser.notify
+browser.open
+browser.openDownload
+browser.openTab
+browser.pauseDownload
+browser.pinAll
+browser.pinTab
+browser.prevTab
+browser.prevWindow
+browser.reload
+browser.reloadAll
+browser.reloadHard
+browser.removeBookmark
+browser.removeReadingList
+browser.reopenTab
+browser.restoreWindow
+browser.resumeDownload
+browser.retryDownload
+browser.screenshot
+browser.showDownload
+browser.showDownloads
+browser.snapBottom
+browser.snapBottomLeft
+browser.snapBottomRight
+browser.snapLeft
+browser.snapRight
+browser.snapTop
+browser.snapTopLeft
+browser.snapTopRight
+browser.sortTabs
+browser.tabToNewWindow
+browser.tmux
+browser.ungroupTabs
+browser.uninstallExtension
+browser.unmuteAll
+browser.unmuteTab
+browser.unpinAll
+browser.unpinTab
+browser.zoomIn
+browser.zoomOut
+browser.zoomReset
+```
+
 ## zreq
 
 Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocket  
-**151 verbs** · live bus surface · call as `App::open("zreq")->call("<verb>", %args)`
+**152 verbs** · live bus surface · call as `App::open("zreq")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -4330,7 +4465,7 @@ Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocke
 version
 ```
 
-**`appshell`** (30)
+**`appshell`** (31)
 
 ```
 appshell.crt.off
@@ -4360,6 +4495,7 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
+appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
@@ -4768,7 +4904,7 @@ xml.to_json
 ## zgo
 
 Alfred-style launcher — script-filter workflows and system commands  
-**140 verbs** · live bus surface · call as `App::open("zgo")->call("<verb>", %args)`
+**144 verbs** · live bus surface · call as `App::open("zgo")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -4801,12 +4937,13 @@ calc.eval
 calc.vars
 ```
 
-**`clipboard`** (4)
+**`clipboard`** (5)
 
 ```
 clipboard.add
 clipboard.clear
 clipboard.list
+clipboard.remove
 clipboard.search
 ```
 
@@ -4945,10 +5082,13 @@ learn.record
 list.filter
 ```
 
-**`match`** (1)
+**`match`** (4)
 
 ```
 match.filter
+match.minquery
+match.stability
+match.trajectory
 ```
 
 **`math`** (1)
@@ -5180,31 +5320,86 @@ workflow.remove
 workflow.run
 ```
 
-## ztunnel
+## zphoto
 
-Tunnelblick-style VPN client — OpenVPN / WireGuard config + control  
-**125 verbs** · live bus surface · call as `App::open("ztunnel")->call("<verb>", %args)`
+Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions  
+**105 verbs** · live bus surface · call as `App::open("zphoto")->call("<verb>", %args)`
 
-**`(top-level)`** (1)
-
-```
-version
-```
-
-**`appshell`** (28)
+**`appshell`** (105)
 
 ```
+appshell.addLayer
+appshell.addMaskFromSel
+appshell.addMaskWhite
+appshell.addText
+appshell.applyMask
+appshell.autoContrast
+appshell.blackWhite
+appshell.boxBlur
+appshell.brightnessContrast
+appshell.colorBalance
+appshell.convertGray
+appshell.convertIndexed
+appshell.cropImage
+appshell.cropToSel
 appshell.crt.off
 appshell.crt.on
 appshell.crt.toggle
+appshell.curvesDlg
+appshell.delActive
+appshell.deleteImage
+appshell.desaturate
+appshell.dropShadow
+appshell.dupActive
+appshell.edge
+appshell.emboss
+appshell.equalize
+appshell.exposure
 appshell.files
 appshell.files.close
 appshell.files.open
+appshell.fillLayer
+appshell.flatten
+appshell.flipH
+appshell.flipLayerH
+appshell.flipLayerV
+appshell.flipV
+appshell.gamma
+appshell.gaussianBlur
+appshell.glow
+appshell.gradientMap
 appshell.gui-scripts
+appshell.histogram
 appshell.hooks
+appshell.hueSaturation
+appshell.invert
+appshell.invertMask
+appshell.layerFromVisible
+appshell.levelsDlg
+appshell.median
+appshell.mergeVisible
+appshell.motionBlur
 appshell.neon.off
 appshell.neon.on
+appshell.newImage
+appshell.noiseF
+appshell.offsetLayer
+appshell.openImage
 appshell.palette
+appshell.pixelate
+appshell.posterize
+appshell.redo
+appshell.removeMask
+appshell.resizeCanvas
+appshell.ripple
+appshell.rotate180
+appshell.rotate270
+appshell.rotate90
+appshell.rotateLayer
+appshell.saveImage
+appshell.saveJpeg
+appshell.scaleImage
+appshell.scaleLayer
 appshell.scheme-arctic
 appshell.scheme-crimson
 appshell.scheme-cyberpunk
@@ -5213,15 +5408,42 @@ appshell.scheme-matrix
 appshell.scheme-midnight
 appshell.scheme-toxic
 appshell.scheme-vapor
+appshell.selectAll
+appshell.selectInvert
+appshell.selectNone
+appshell.sepia
 appshell.settings
+appshell.sharpen
 appshell.shortcuts
+appshell.solarize
+appshell.spread
+appshell.temperature
 appshell.terminal
 appshell.terminal.close
 appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
+appshell.threshold
+appshell.tmux-keys
+appshell.tmux-layouts
+appshell.toggle-statusbar
 appshell.toggle-theme
+appshell.undo
+appshell.valueInvert
+appshell.vibrance
+appshell.vignette
+```
+
+## ztunnel
+
+Tunnelblick-style VPN client — OpenVPN / WireGuard config + control  
+**100 verbs** · live bus surface · call as `App::open("ztunnel")->call("<verb>", %args)`
+
+**`(top-level)`** (1)
+
+```
+version
 ```
 
 **`config`** (16)
@@ -5289,14 +5511,16 @@ ipsec.profile
 log.analyze
 ```
 
-**`multihop`** (2)
+**`multihop`** (4)
 
 ```
 multihop.chain
+multihop.mtu_budget
+multihop.rekey_schedule
 multihop.validate
 ```
 
-**`net`** (11)
+**`net`** (12)
 
 ```
 net.cidr_aggregate
@@ -5308,6 +5532,7 @@ net.pmtu_discover
 net.range_to_cidrs
 net.subnet_info
 net.subnet_split
+net.tcp_meltdown
 net.tunnel_mtu
 net.ula
 ```
@@ -5430,86 +5655,55 @@ wg.noise_layout
 wg.pubkey
 ```
 
-## zphoto
+## ztranslator
 
-Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions  
-**101 verbs** · live bus surface · call as `App::open("zphoto")->call("<verb>", %args)`
+BOME-style MIDI/keyboard translator — presets, translators, rules, HID  
+**65 verbs** · live bus surface · call as `App::open("ztranslator")->call("<verb>", %args)`
 
-**`appshell`** (101)
+**`appshell`** (65)
 
 ```
-appshell.addLayer
-appshell.addMaskFromSel
-appshell.addMaskWhite
-appshell.addText
-appshell.applyMask
-appshell.autoContrast
-appshell.blackWhite
-appshell.boxBlur
-appshell.brightnessContrast
-appshell.colorBalance
-appshell.convertGray
-appshell.convertIndexed
-appshell.cropImage
-appshell.cropToSel
+appshell.addPreset
+appshell.addTranslator
+appshell.analyzer
+appshell.bulkToggle
+appshell.capture
+appshell.code
+appshell.conflicts
+appshell.copySel
 appshell.crt.off
 appshell.crt.on
 appshell.crt.toggle
-appshell.curvesDlg
-appshell.delActive
-appshell.deleteImage
-appshell.desaturate
-appshell.dropShadow
-appshell.dupActive
-appshell.edge
-appshell.emboss
-appshell.equalize
-appshell.exposure
+appshell.cutSel
+appshell.delSel
+appshell.dupSel
+appshell.exportBmtp
+appshell.feedback
 appshell.files
 appshell.files.close
 appshell.files.open
-appshell.fillLayer
-appshell.flatten
-appshell.flipH
-appshell.flipLayerH
-appshell.flipLayerV
-appshell.flipV
-appshell.gamma
-appshell.gaussianBlur
-appshell.glow
-appshell.gradientMap
+appshell.grantAccess
 appshell.gui-scripts
-appshell.histogram
+appshell.help
 appshell.hooks
-appshell.hueSaturation
-appshell.invert
-appshell.invertMask
-appshell.layerFromVisible
-appshell.levelsDlg
-appshell.median
-appshell.mergeVisible
-appshell.motionBlur
+appshell.import
+appshell.jsonView
+appshell.loadJson
+appshell.midiPorts
+appshell.midiRef
 appshell.neon.off
 appshell.neon.on
-appshell.newImage
-appshell.noiseF
-appshell.offsetLayer
-appshell.openImage
+appshell.new
 appshell.palette
-appshell.pixelate
-appshell.posterize
-appshell.redo
-appshell.removeMask
-appshell.resizeCanvas
-appshell.ripple
-appshell.rotate180
-appshell.rotate270
-appshell.rotate90
-appshell.rotateLayer
-appshell.saveImage
-appshell.saveJpeg
-appshell.scaleImage
-appshell.scaleLayer
+appshell.panic
+appshell.pasteSel
+appshell.presetJump
+appshell.presetMgr
+appshell.properties
+appshell.refreshPorts
+appshell.renameSel
+appshell.routes
+appshell.saveJson
 appshell.scheme-arctic
 appshell.scheme-crimson
 appshell.scheme-cyberpunk
@@ -5518,33 +5712,28 @@ appshell.scheme-matrix
 appshell.scheme-midnight
 appshell.scheme-toxic
 appshell.scheme-vapor
-appshell.selectAll
-appshell.selectInvert
-appshell.selectNone
-appshell.sepia
+appshell.sequencer
 appshell.settings
-appshell.sharpen
 appshell.shortcuts
-appshell.solarize
-appshell.spread
-appshell.temperature
+appshell.showLog
+appshell.showMonitor
+appshell.start
+appshell.stats
+appshell.stop
+appshell.terminal
+appshell.terminal.close
+appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
-appshell.threshold
-appshell.tmux-layouts
-appshell.toggle-statusbar
 appshell.toggle-theme
-appshell.undo
-appshell.valueInvert
-appshell.vibrance
-appshell.vignette
+appshell.verify
 ```
 
 ## zthrottle
 
 System monitor / process & network throttling  
-**91 verbs** · live bus surface · call as `App::open("zthrottle")->call("<verb>", %args)`
+**57 verbs** · live bus surface · call as `App::open("zthrottle")->call("<verb>", %args)`
 
 **`(top-level)`** (2)
 
@@ -5562,57 +5751,18 @@ alerts.remove
 alerts.set
 ```
 
-**`appshell`** (37)
-
-```
-appshell.bench-cpu
-appshell.bench-disk
-appshell.bench-mem
-appshell.bench-net
-appshell.crt.off
-appshell.crt.on
-appshell.crt.toggle
-appshell.files
-appshell.files.close
-appshell.files.open
-appshell.gui-scripts
-appshell.history-clear
-appshell.hooks
-appshell.neon.off
-appshell.neon.on
-appshell.palette
-appshell.run-all
-appshell.run-contention
-appshell.scheme-arctic
-appshell.scheme-crimson
-appshell.scheme-cyberpunk
-appshell.scheme-ember
-appshell.scheme-matrix
-appshell.scheme-midnight
-appshell.scheme-toxic
-appshell.scheme-vapor
-appshell.settings
-appshell.shortcuts
-appshell.terminal
-appshell.terminal.close
-appshell.terminal.open
-appshell.theme.dark
-appshell.theme.light
-appshell.theme.toggle
-appshell.tmux-layouts
-appshell.toggle-statusbar
-appshell.toggle-theme
-```
-
-**`bench`** (6)
+**`bench`** (9)
 
 ```
 bench.all
 bench.contention
 bench.cpu
 bench.disk
+bench.interference
 bench.mem
 bench.net
+bench.recovery
+bench.spectrum
 ```
 
 **`drives`** (2)
@@ -5697,74 +5847,10 @@ sys.smart
 sys.users
 ```
 
-## ztranslator
-
-BOME-style MIDI/keyboard translator — presets, translators, rules, HID  
-**54 verbs** · live bus surface · call as `App::open("ztranslator")->call("<verb>", %args)`
-
-**`appshell`** (54)
-
-```
-appshell.addPreset
-appshell.addTranslator
-appshell.capture
-appshell.code
-appshell.copySel
-appshell.crt.off
-appshell.crt.on
-appshell.crt.toggle
-appshell.cutSel
-appshell.delSel
-appshell.dupSel
-appshell.exportBmtp
-appshell.files
-appshell.files.close
-appshell.files.open
-appshell.grantAccess
-appshell.gui-scripts
-appshell.help
-appshell.hooks
-appshell.import
-appshell.loadJson
-appshell.midiPorts
-appshell.neon.off
-appshell.neon.on
-appshell.new
-appshell.palette
-appshell.panic
-appshell.pasteSel
-appshell.properties
-appshell.refreshPorts
-appshell.renameSel
-appshell.saveJson
-appshell.scheme-arctic
-appshell.scheme-crimson
-appshell.scheme-cyberpunk
-appshell.scheme-ember
-appshell.scheme-matrix
-appshell.scheme-midnight
-appshell.scheme-toxic
-appshell.scheme-vapor
-appshell.sequencer
-appshell.settings
-appshell.shortcuts
-appshell.showLog
-appshell.showMonitor
-appshell.start
-appshell.stop
-appshell.terminal
-appshell.terminal.close
-appshell.terminal.open
-appshell.theme.dark
-appshell.theme.light
-appshell.theme.toggle
-appshell.toggle-theme
-```
-
 ## zstation
 
 Station-style multi-app workspace — boards, tiles, panes  
-**37 verbs** · live bus surface · call as `App::open("zstation")->call("<verb>", %args)`
+**52 verbs** · live bus surface · call as `App::open("zstation")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -5787,9 +5873,19 @@ board.set_icon
 board.switch
 ```
 
-**`layout`** (1)
+**`convoy`** (4)
 
 ```
+convoy.go
+convoy.list
+convoy.remove
+convoy.set
+```
+
+**`layout`** (2)
+
+```
+layout.arrange
 layout.save
 ```
 
@@ -5863,43 +5959,24 @@ toast.clear
 toast.list
 ```
 
-## zmax-gui
-
-**30 verbs** · live bus surface · call as `App::open("zmax-gui")->call("<verb>", %args)`
-
-**`appshell`** (30)
+**`trail`** (4)
 
 ```
-appshell.crt.off
-appshell.crt.on
-appshell.crt.toggle
-appshell.files
-appshell.files.close
-appshell.files.open
-appshell.gui-scripts
-appshell.hooks
-appshell.neon.off
-appshell.neon.on
-appshell.palette
-appshell.scheme-arctic
-appshell.scheme-crimson
-appshell.scheme-cyberpunk
-appshell.scheme-ember
-appshell.scheme-matrix
-appshell.scheme-midnight
-appshell.scheme-toxic
-appshell.scheme-vapor
-appshell.settings
-appshell.shortcuts
-appshell.terminal
-appshell.terminal.close
-appshell.terminal.open
-appshell.theme.dark
-appshell.theme.light
-appshell.theme.toggle
-appshell.tmux-layouts
-appshell.toggle-statusbar
-appshell.toggle-theme
+trail.list
+trail.remove
+trail.set
+trail.step
+```
+
+**`wiring`** (6)
+
+```
+wiring.add
+wiring.list
+wiring.process
+wiring.remove
+wiring.set_enabled
+wiring.update
 ```
 
 ## zcontainer
