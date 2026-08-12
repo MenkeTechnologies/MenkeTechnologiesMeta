@@ -59,11 +59,11 @@ per app. `zpwr-embed-terminal/webui/terminal.js` is the reference pattern.
 | --- | --- | --- |
 | Embedded terminal | `zpwr-embed-terminal` submodule (`webui/terminal.{js,css}` + `xterm.{js,css}` + bundled font) | Tauri: copy script → `frontend/`; JUCE: BinaryData |
 | Stryke Hooks editor | `zpwr-hooks-editor` submodule (`hooks-editor.bundle.{js,css}` + worker, Monaco) | built bundle vendored per app |
-| Command palette | `zpwr-patch-core/webui/command-palette.js` | imported by the shell `index.html` |
-| Fuzzy filter (fzf) | `zpwr-patch-core` `fzf` matcher (`fzfMatch`) | one matcher, reused by every filter + the palette |
-| Shared theme/styles | `zpwr-patch-core/webui/css/cyberpunk.css` (design tokens) | the cyberpunk shell + token variables |
+| Command palette | `zgui-core/webui/command-palette.js` (`ZGui.palette`; `ZGui.appShell` registers ⌘K itself) | imported by the shell `index.html` |
+| Fuzzy filter (fzf) | `zgui-core/webui/fzf.js` — `ZGui.fzf.fzfMatch(query, text)` (`fzf.js:152`) | one matcher, reused by every filter + the palette |
+| Shared theme/styles | `zgui-core/webui/cyberpunk.css` (design tokens) — the JUCE plugins still read the equivalent `zpwr-patch-core/webui/css/cyberpunk.css` | the cyberpunk shell + token variables |
 | Arrangement grid | `zpwr-clip-engine/webui/grid` (`createGrid`, `grid-core.js` + `domains/*.js`) | one renderer/model/interactions, N host-supplied domains |
-| File browser | `Audio-Haxor/frontend/js/file-browser.js` → promote to a shared submodule | multi-pane browser over a host-provided fs backend (shim) |
+| File browser | `zpwr-file-browser` submodule (`webui/` front end + the `crate/` Rust `fs` backend) — the promotion out of Audio-Haxor is done | multi-pane browser over a host-provided fs backend (shim) |
 
 ## Requirements
 

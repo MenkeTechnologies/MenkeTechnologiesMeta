@@ -53,19 +53,25 @@
     <main class="docs-main">
       <p class="status-note">Status: in development. The desktop shell builds and mounts the engine; the engine's per-feature port status is tracked honestly in the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zreq-core/zreq_port_report.html" target="_blank" rel="noopener noreferrer">zreq-core port report</a>. Nothing here claims a capability that is not in the codebase.</p>
 
-      <p class="lede"><strong>zreq</strong> is a from-scratch API client (Postman port) written in Rust — a <strong>Tauri v2</strong> desktop application behind a cyberpunk HUD. Collections, environments, variables, auth, request bodies, history, code generation and curl/Postman/OpenAPI import run locally, with no cloud account. Its engine is extracted as <a href="https://github.com/MenkeTechnologies/zreq-core" target="_blank" rel="noopener noreferrer"><code>zreq-core</code></a>, an embeddable library so the same engine can be reused inside the other MenkeTechnologies GUI apps. It is a paid product, created by MenkeTechnologies.</p>
+      <p class="lede"><strong>zreq</strong> is a from-scratch API client (Postman port) written in Rust — a <strong>Tauri v2</strong> desktop application behind a cyberpunk HUD. Collections, environments, variables, auth, request bodies, multi-workspace management, history, per-request last-response restore, a collection runner, code generation and curl/Postman/OpenAPI/HAR/Insomnia/Bruno/HTTPie import all run locally, with no cloud account. Its engine is extracted as <a href="https://github.com/MenkeTechnologies/zreq-core" target="_blank" rel="noopener noreferrer"><code>zreq-core</code></a>, an embeddable library so the same engine can be reused inside the other MenkeTechnologies GUI apps. It is a paid product, created by MenkeTechnologies.</p>
 
       <div class="card-grid">
         <div class="card"><h3>Rust + Tauri v2</h3><p>A native desktop shell rather than an Electron app — the UI is a Tauri v2 WebView, the HTTP egress and all logic are Rust.</p></div>
         <div class="card"><h3>Embeddable core</h3><p>The API-client engine lives in <code>zreq-core</code>, decoupled from the GUI, so the same code embeds in other MenkeTechnologies apps over one JSON command surface.</p></div>
         <div class="card"><h3>Local &amp; owned</h3><p>No cloud workspace, no sign-in. Collections, environments and history persist as JSON on your machine.</p></div>
-        <div class="card"><h3>Cyberpunk HUD</h3><p>The same HUD design language used across the MenkeTechnologies desktop stack — Orbitron / Share Tech Mono, CRT scanlines, neon accents, embedded terminal.</p></div>
+        <div class="card"><h3>Cyberpunk HUD</h3><p>The same HUD design language used across the MenkeTechnologies desktop stack — Orbitron / Share Tech Mono, CRT scanlines, neon accents, embedded terminal, file browser, stryke hooks editor. ⌘Enter sends the request from anywhere in the window, Postman-style.</p></div>
+        <div class="card"><h3>Protocol panels</h3><p>Beyond HTTP: interactive WebSocket and gRPC panels, a GraphQL Explorer that introspects a schema and runs queries, an OAuth 2.0 token manager (client-credentials / password / refresh) and a structural JSON response-diff panel.</p></div>
+        <div class="card"><h3>Tools workbench</h3><p>Local-only utilities beside the request pane — JWT decode/sign, encode/decode converters, hashes and HMAC, JSONPath/JMESPath, JSON↔XML, JSON-Schema validate/infer, secret scan, PKCE, CBOR/MessagePack/protobuf codecs, assertions, fuzzing, HAR analyze, OpenAPI diff/mock, cache and retry simulation, collection lint and export.</p></div>
+        <div class="card"><h3>Causal Session Replay</h3><p>Mines the recorded session's real request-to-request data flow by value provenance, then pins one edit and re-executes only the requests it actually reaches, diffed against the recording — <code>session.provenance</code> / <code>blastradius</code> / <code>counterfactual</code> in the engine.</p></div>
+        <div class="card"><h3>Localized</h3><p>The interface localizes through the shared <code>zpwr-i18n</code> runtime; every locale it ships is selectable from Settings → ZREQ · Interface → Language, switching live and remembering the choice.</p></div>
       </div>
 
       <h2 class="reg-h">Architecture</h2>
-      <p class="lede">zreq splits into two layers: the desktop application (<code>zreq</code>, this repository) and the engine (<code>zreq-core</code>). The application owns the Tauri v2 shell, the HUD front-end and an embedded terminal, and wires user actions to the engine. The engine owns the API-client logic (collections, requests, environments, auth, HTTP execution, history, codegen, import/export) and is designed to be embedded by other host GUIs without dragging in any GUI or platform dependencies.</p>
+      <p class="lede">zreq splits into two layers: the desktop application (<code>zreq</code>, this repository) and the engine (<code>zreq-core</code>). The application owns the Tauri v2 shell, the HUD front-end and the subsystems that sit beside the API client — an embedded terminal, a file browser, a stryke hooks editor with its own language server, a clip sequencer and an in-process system monitor — and wires user actions to the engine. The engine owns the API-client logic (collections, requests, environments, auth, HTTP execution, history, codegen, import/export) and is designed to be embedded by other host GUIs without dragging in any GUI or platform dependencies.</p>
       <pre class="code">'zreq (desktop app)'
-  └── Tauri v2 shell + cyberpunk HUD front-end + embedded terminal
+  └── Tauri v2 shell + cyberpunk HUD front-end
+        + embedded terminal · file browser · stryke hooks editor + LSP
+        + clip sequencer · system monitor
         └── consumes 'zreq-core' (embeddable API-client engine)</pre>
 
       <h2 class="reg-h">Where it goes next</h2>

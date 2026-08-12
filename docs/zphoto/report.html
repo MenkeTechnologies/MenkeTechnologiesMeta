@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zphoto engineering report — module map and verification policy for the from-scratch Rust image editor (Tauri v2 desktop app over the zphoto-core engine). Real engine: ~367 raster + 32 vector commands on a shared layer stack, 440+ tests.">
+  <meta name="description" content="zphoto engineering report — module map and verification policy for the from-scratch Rust image editor (Tauri v2 desktop app over the zphoto-core engine). Real engine: 444 raster + 114 vector commands on a shared layer stack, 681 tests.">
   <title>zphoto — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,7 +59,7 @@
       </div>
     </header>
     <main class="docs-main">
-      <div class="status-banner"><strong>Status: engine implemented, GUI in progress.</strong> <code>zphoto-core</code> is a working pure-Rust engine — roughly 367 raster commands and 32 vector commands over one shared layer stack, exercised by 440+ <code>#[test]</code> functions. Per-command coverage is derived from source and tracked in the <a href="zphoto_port_report.html">port report</a>; this page describes the engine's structure, not a marketing claim.</div>
+      <div class="status-banner"><strong>Status: engine implemented, GUI shipping.</strong> <code>zphoto-core</code> is a working pure-Rust engine — 444 raster commands and 114 vector commands over one shared layer stack, exercised by 681 <code>#[test]</code> functions. Per-command coverage is derived from source and tracked in the <a href="zphoto_port_report.html">port report</a>; this page describes the engine's structure, not a marketing claim.</div>
 
       <h2 class="reg-h">Architecture</h2>
       <p class="note"><strong>zphoto</strong> is the GUI — a from-scratch image editor delivered as a <strong>Tauri v2</strong> desktop app with a cyberpunk HUD. It consumes <strong><a href="https://github.com/MenkeTechnologies/zphoto-core">zphoto-core</a></strong>, the embeddable pure-Rust engine that owns the document and layer model and every pixel and path operation. The defining decision is a <strong>single shared layer stack</strong>: the Illustrator-style vector commands composite onto the same layers as the Photoshop-style raster commands, rather than maintaining a separate vector document. The split keeps the app layer thin — the desktop GUI, the C FFI, and the Tauri plugin all call the same op surface.</p>
@@ -70,12 +70,14 @@
         <thead><tr><th>module</th><th>responsibility</th><th>status</th></tr></thead>
         <tbody>
           <tr><td>model</td><td>document + layer stack model — the shared raster/vector compositing surface</td><td><span class="tag">implemented</span></td></tr>
-          <tr><td>ops</td><td>command dispatch surface (~55 ops) that the GUI, FFI, and Tauri plugin all call</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>ops</td><td>73 pixel operators (point / colour adjustments) behind the <code>op.*</code> commands</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>filter</td><td>raster filters — blur · sharpen · noise · distort · stylize · render</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>fill</td><td>solid · gradient · pattern fills over 8/16/32-bit pixels</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>paint</td><td>brush · eraser · clone / heal · smudge · paint primitives</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>vector</td><td>Bézier paths · shapes · strokes / fills · boolean ops on the shared layer stack</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>text</td><td>point / area type · type on a path · rasterize into layers</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>program</td><td>edit-program compiler — analyse a recorded action, fuse adjacent LUT steps, apply (<code>program.*</code>)</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>solve</td><td>Constraint Solve — fit a program's parameters to pinned sampler target colours (<code>program.solve</code>)</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>codec</td><td>decode / encode raster formats into and out of the document model</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>b64</td><td>base64 transport of image buffers across the FFI / IPC boundary</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>ffi</td><td>C FFI surface for embedding the engine outside Rust</td><td><span class="tag">implemented</span></td></tr>
@@ -85,7 +87,7 @@
       </table>
 
       <h2 class="reg-h">Roadmap</h2>
-      <p class="note">The <a href="zphoto_port_report.html">port report</a> is the scoreboard: it enumerates the Photoshop / Illustrator command surface (~367 raster + 32 vector) and tracks status per command. Work proceeds area by area, and no command is marked done without a verifiable engine symbol:</p>
+      <p class="note">The <a href="zphoto_port_report.html">port report</a> is the scoreboard: it enumerates the Photoshop / Illustrator command surface (444 raster + 114 vector) and tracks status per command. Work proceeds area by area, and no command is marked done without a verifiable engine symbol:</p>
       <ol class="phases">
         <li><b>Raster core</b> — document / layer model, blend modes, codecs, and the filter / adjustment / fill / paint command surface across 8/16/32-bit depth.</li>
         <li><b>Selections &amp; masks</b> — marquee / lasso / wand / color-range selections and layer masks feeding the raster commands.</li>
@@ -96,7 +98,7 @@
       </ol>
 
       <h2 class="reg-h">Verification policy</h2>
-      <p class="note">Status is never asserted from a roadmap. A command counts as done only when a real, non-stub symbol exists in the engine and the port report can cite it. The engine ships 440+ <code>#[test]</code> functions; tests build documents in memory (no external fixtures) and confirm that every still-unimplemented command returns a typed error rather than panicking or silently succeeding — runnable on headless Linux CI.</p>
+      <p class="note">Status is never asserted from a roadmap. A command counts as done only when a real, non-stub symbol exists in the engine and the port report can cite it. The engine ships 681 <code>#[test]</code> functions; tests build documents in memory (no external fixtures) and confirm that every still-unimplemented command returns a typed error rather than panicking or silently succeeding — runnable on headless Linux CI.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zphoto &middot; engineering report &middot; <a href="https://github.com/MenkeTechnologies/zphoto">zphoto</a> &middot; <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></footer>
     </main>

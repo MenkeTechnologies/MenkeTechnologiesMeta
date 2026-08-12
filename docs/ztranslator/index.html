@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="ztranslator — documentation. Embeddable real-time MIDI translation engine in pure Rust: MIDI/keystroke/mouse/AppleScript routing, signed-32-bit rules VM, BOME .bmtp import, JSON project model. Hosted by a GUI/CLI application.">
+  <meta name="description" content="ztranslator — documentation. Embeddable real-time MIDI translation engine in pure Rust: MIDI/keystroke/mouse/AppleScript routing, signed-32-bit rules VM, BOME .bmtp import, JSON project model, and a pure music / MIDI 2.0 layer (theory, tuning, MPE, SysEx, SMF, UMP, groove, generators). Hosted by a GUI/CLI application.">
   <title>ztranslator &mdash; Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,8 +70,8 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/ztranslator" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line">Embeddable engine &middot; MIDI / keystroke / mouse / AppleScript routing &middot; signed-32-bit rules VM &middot; BOME <code>.bmtp</code> import &middot; JSON project model &middot; pure Rust</p>
-          <p class="docs-build-line"><span>12,426 source lines &middot; 9,955 code &middot; 37 Rust files &middot; 161 tests (128 inline + 33 integration)</span></p>
+          <p class="docs-build-line">Embeddable engine &middot; MIDI / keystroke / mouse / AppleScript routing &middot; signed-32-bit rules VM &middot; BOME <code>.bmtp</code> import &middot; JSON project model &middot; music / MIDI 2.0 layer &middot; pure Rust</p>
+          <p class="docs-build-line"><span>13,062 source lines &middot; 10,556 code &middot; 40 Rust files &middot; 161 tests (128 inline + 33 integration)</span></p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -148,6 +148,21 @@ engine.open_input("nanoKONTROL2 SLIDER/KNOB")?;</pre>
       </section>
 
       <section class="tutorial-section">
+        <h2>Music &amp; MIDI 2.0 layer</h2>
+        <p>Twenty pure, side-effect-free modules sit on top of the raw MIDI byte. They hold no state and open no ports, so each is unit-tested in isolation and callable from a rule, from the host, or from the editor. Nothing in this layer has a BOME counterpart &mdash; BOME treats a note as a bare 0&ndash;127 integer.</p>
+        <div class="cat-grid">
+          <div class="cat-card"><h4>theory.rs &middot; spelling.rs &middot; voicing.rs</h4><p>Note name &harr; MIDI number (scientific pitch), chord construction, in-scale enumeration; key-signature-aware enharmonic spelling (<code>Eb</code>, not <code>D#</code>, in flat keys); inversion, drop voicings, open/close spacing, voice leading.</p></div>
+          <div class="cat-card"><h4>tuning.rs &middot; mpe.rs</h4><p>12-TET frequency math, cents &harr; pitch-bend, Scala <code>.scl</code> scale files, MIDI Tuning Standard 3-byte frequencies + real-time single-note tuning SysEx; MPE zone layout, the MPE Configuration Message, per-note bend-range setup, least-loaded voice allocation.</p></div>
+          <div class="cat-card"><h4>gm.rs &middot; drummap.rs &middot; ccmap.rs</h4><p>The 128 GM Level 1 programs and 16 families plus Bank-Select-then-Program-Change builders; the GM percussion map and drum-note remapping; CC assignment names, MSB/LSB 14-bit pairing, and the seven Channel Mode messages (CC 120&ndash;127).</p></div>
+          <div class="cat-card"><h4>sysex.rs &middot; smf.rs &middot; stream.rs</h4><p>SysEx identity request, GM / Roland GS / Yamaha XG resets, Universal Real Time master volume, Roland checksums, 8&harr;7-bit packing; Standard MIDI File variable-length quantities, <code>MThd</code> header, <code>MTrk</code> writer; running-status stream parse + re-serialize with interleaved real-time bytes.</p></div>
+          <div class="cat-card"><h4>midi2.rs &middot; chanmatrix.rs</h4><p>MIDI 2.0 Universal MIDI Packet codecs (type <code>0x2</code> and <code>0x4</code>), spec-accurate min-center-max 7&harr;16-bit scaling, (N)RPN build / parse; 16-bit channel allow / block masks and a 16&times;16 routing matrix that drops, passes, or fans a channel-voice message out.</p></div>
+          <div class="cat-card"><h4>transform.rs &middot; smooth.rs</h4><p>Response curves, quantize, analog deadzone, slew limiting, musical-scale snap, transpose, 14-bit packing; exponential moving average, median filter, hysteresis, and an interpolation ramp for CC fades.</p></div>
+          <div class="cat-card"><h4>timing.rs &middot; clock.rs</h4><p>BPM &harr; 24-PPQN clock interval, Song Position Pointer pack / unpack, debounce and auto-repeat; tap tempo, note-value (<code>1/8.</code>, <code>1/8t</code>, &hellip;) durations, tick &harr; millisecond at arbitrary PPQ, bar/beat/tick location.</p></div>
+          <div class="cat-card"><h4>generators.rs &middot; groove.rs &middot; arp.rs</h4><p>LFO with six shapes including sample-and-hold, and an ADSR envelope, both returning a MIDI value for a given phase / elapsed time; swing quantize, named groove templates, chord strum, note-repeat rolls with a velocity ramp, velocity compression; arpeggiator orders (up / down / updown / downup / converge, octaves) and a step-sequencer step + gate model.</p></div>
+        </div>
+      </section>
+
+      <section class="tutorial-section">
         <h2>Outgoing actions &amp; platforms</h2>
         <p>The <code>Outgoing</code> enum has 41 variants:</p>
         <div class="cat-grid">
@@ -165,14 +180,15 @@ engine.open_input("nanoKONTROL2 SLIDER/KNOB")?;</pre>
 
       <section class="tutorial-section">
         <h2>Architecture</h2>
-        <p>The crate is 37 Rust files, 12,426 source lines (9,955 code). See the <a href="report.html">engineering report</a> for the full subsystem and per-file breakdown.</p>
+        <p>The crate is 40 Rust files &mdash; 37 under <code>src/</code> plus 3 integration modules under <code>tests/</code> &mdash; totalling 13,062 source lines (10,556 code). See the <a href="report.html">engineering report</a> for the full subsystem and per-file breakdown.</p>
         <div class="cat-grid">
-          <div class="cat-card"><h4>engine/</h4><p>Worker-thread engine: input ports, dispatch loop, all non-MIDI trigger sources, MIDI clock + MTC generators, event sink, timer scheduler, outgoing delay (4,180 lines).</p></div>
-          <div class="cat-card"><h4>rules.rs</h4><p>Rules compiler + signed-32-bit integer VM (723 lines).</p></div>
-          <div class="cat-card"><h4>bmtp/</h4><p>BOME <code>.bmtp</code> import + export: INI, XML payloads, options, unsigned re-serialize, lossless passthrough (1,540 lines).</p></div>
-          <div class="cat-card"><h4>model.rs</h4><p><code>Project / Preset / Translator</code> model, 39 Outgoing + 26 Incoming variants, JSON load/save (1,323 lines).</p></div>
-          <div class="cat-card"><h4>actions/ + keycodes.rs</h4><p>macOS <code>CGEvent</code> keystroke / mouse / AppleScript + say / afplay / pbcopy (716 lines).</p></div>
-          <div class="cat-card"><h4>sources.rs + serial.rs</h4><p>OSC / Art-Net / sACN / RTP-MIDI codecs + serial framing (396 lines).</p></div>
+          <div class="cat-card"><h4>music / MIDI 2.0 layer</h4><p>Twenty pure modules with no BOME counterpart: <code>theory</code>, <code>spelling</code>, <code>voicing</code>, <code>tuning</code>, <code>mpe</code>, <code>gm</code>, <code>drummap</code>, <code>ccmap</code>, <code>chanmatrix</code>, <code>sysex</code>, <code>smf</code>, <code>stream</code>, <code>midi2</code>, <code>transform</code>, <code>smooth</code>, <code>timing</code>, <code>clock</code>, <code>generators</code>, <code>groove</code>, <code>arp</code> (4,154 lines).</p></div>
+          <div class="cat-card"><h4>engine/</h4><p>Worker-thread engine: input ports, dispatch loop, all non-MIDI trigger sources, MIDI clock + MTC generators, event sink, timer scheduler, outgoing delay (3,626 lines).</p></div>
+          <div class="cat-card"><h4>bmtp/</h4><p>BOME <code>.bmtp</code> import + export: INI, XML payloads, options, unsigned re-serialize, lossless passthrough (1,396 lines).</p></div>
+          <div class="cat-card"><h4>model.rs</h4><p><code>Project / Preset / Translator</code> model, 41 Outgoing + 28 Incoming variants, JSON load/save (1,184 lines).</p></div>
+          <div class="cat-card"><h4>rules.rs</h4><p>Rules compiler + signed-32-bit integer VM (644 lines).</p></div>
+          <div class="cat-card"><h4>actions/ + keycodes.rs</h4><p>macOS <code>CGEvent</code> keystroke / mouse / AppleScript + say / afplay / pbcopy (705 lines).</p></div>
+          <div class="cat-card"><h4>sources.rs + serial.rs</h4><p>OSC / Art-Net / sACN / RTP-MIDI codecs + serial framing (386 lines).</p></div>
         </div>
       </section>
 

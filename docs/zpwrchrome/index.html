@@ -247,7 +247,7 @@
       <div class="features">
         <div class="feature"><strong>MRU tracking</strong>Cross-window most-recently-used stack. Survives service-worker restarts.</div>
         <div class="feature"><strong>Cmd+Y history</strong>Replaces Chrome's chrome://history with an fzf-fuzzy search over up to 5000 URLs. Backspace deletes.</div>
-        <div class="feature"><strong>Cmd+E modal</strong>JetBrains-style Recent Files overlay injected into the active page.</div>
+        <div class="feature"><strong>Cmd+E MRU switch</strong>One keystroke back to the previously active tab, across windows. Re-pushes the live active tab and drops dead ids first, so a service-worker suspend can't leave it aimed at a closed tab.</div>
         <div class="feature"><strong>UNIX <code>pass</code> integration</strong>Replaces browserpass via a Rust native host. Walks <code>~/.password-store</code>, autofills active-tab login forms, copies user / pw / OTP with 45 s clipboard auto-clear (matches <code>pass -c</code>). React/Vue/Lit-safe autofill.</div>
         <div class="feature"><strong>Segmented download accelerator</strong>Multi-connection HTTP/HTTPS download accelerator (IDM / aria2 / axel class). Splits each file into N byte-range segments fetched over N concurrent <code>Range</code> connections to beat single-stream throughput, with retry / resume, Chrome cookies + User-Agent forwarded for logged-in URLs. Live queue UI, right-click <em>Download with zpwrchrome</em>. Pure-Rust, ureq + rustls, no <code>aria2</code> binary.</div>
         <div class="feature"><strong>Filtered popup</strong>Live filter over open + closed tabs, ↑↓/Enter/Del nav.</div>
@@ -504,7 +504,7 @@
         <tr class="user-set">
           <td><code>pass-fill-identity</code></td>
           <td><span class="muted">user-set</span></td>
-          <td>Fill whatever identity fields the active tab has — profile (name/address/email/phone/…) AND credit-card (cc-number/cc-exp/cc-csc/cardholder/…) in one keystroke. Picks the best-matching profile/* and creditcard/* entries (picker if multiple, last-used cached per host).</td>
+          <td>Fill whatever identity fields the active tab has — login (username/password), profile (name/address/email/phone/…) AND credit-card (cc-number/cc-exp/cc-csc/cardholder/…) in one keystroke. Picks the best-matching profile/* and creditcard/* entries plus a host-matched login entry (picker if multiple, last-used cached per host).</td>
         </tr>
         <tr class="user-set">
           <td><code>pass-fill-profile</code></td>
@@ -628,7 +628,7 @@
         <code>pass</code>, GPG, and segmented downloads can't run inside an MV3 service
         worker, so a small Rust binary handles them over Chrome native messaging
         (length-prefixed JSON on stdio). It is a strict 1:1 port of
-        <code>browserpass-native</code> v3.1.2 with <strong>six additive Rust tool families</strong>
+        <code>browserpass-native</code> v3.1.2 with <strong>seven additive Rust tool families</strong>
         layered on top &mdash; matched <em>before</em> the ported upstream switch, so a stock
         browserpass client still gets byte-identical upstream behavior.
         Install and register it for your extension ID:
@@ -643,9 +643,10 @@
         exits &mdash; one process per request, mirroring upstream. It handles the upstream
         browserpass actions <code>configure</code>, <code>list</code>, <code>tree</code>,
         <code>fetch</code>, <code>save</code>, <code>delete</code>, <code>echo</code>; the six
-        additive tool families &mdash; <code>otp</code>, <code>search</code>,
+        additive non-download tool families &mdash; <code>otp</code>, <code>search</code>,
         <code>host.crawl</code> / <code>host.exec</code> (via <code>zwire_host::api</code>),
-        <code>run.spawn</code>, and <code>zcite.save</code>; and the download-manager
+        <code>run.spawn</code>, <code>pass.unlock</code> / <code>pass.lock</code> /
+        <code>pass.status</code>, and <code>zcite.save</code>; and the download-manager
         actions <code>dl.add</code> / <code>dl.list</code> / <code>dl.pause</code> /
         <code>dl.resume</code> / <code>dl.cancel</code> / <code>dl.remove</code> /
         <code>dl.clear</code> / <code>dl.openDir</code> / <code>dl.openFile</code> /
@@ -785,7 +786,7 @@
   </main>
 
   <footer>
-    zpwrchrome v0.22.24 · MIT · MenkeTechnologies ·
+    zpwrchrome v0.22.40 · MIT · MenkeTechnologies ·
     <a href="https://github.com/MenkeTechnologies/zpwrchrome">github.com/MenkeTechnologies/zpwrchrome</a>
   </footer>
   <script src="../hud-theme.js"></script>

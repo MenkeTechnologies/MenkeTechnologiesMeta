@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-daw — Engineering report. A standalone DAW arranger engine: 14,883 C/C++ lines + 6,922 JavaScript lines + 396 Rust lines (tokei), one generalized grid with 6 domains, a pure C++ ClipEngine with a swung audio-thread step clock, a C ABI for Rust hosts, and byte-identical C++/JS Type-0 MIDI export. 63 arranger features mapped to file:line.">
+  <meta name="description" content="zpwr-daw — Engineering report. A standalone DAW arranger engine: 14,883 C/C++ lines + 6,922 JavaScript lines + 396 Rust lines (tokei), one generalized grid with 7 domains, a pure C++ ClipEngine with a swung audio-thread step clock, a C ABI for Rust hosts, and byte-identical C++/JS Type-0 MIDI export. 173 arranger features mapped to file:line.">
   <title>zpwr-daw &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,7 +75,7 @@
             <a href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            DAW arranger engine &middot; one generalized grid, 6 domains &middot; pure C++ <code>ClipEngine</code> + swung audio-thread step clock &middot; C ABI for Rust hosts &middot; byte-identical C++/JS Type-0 MIDI export
+            DAW arranger engine &middot; one generalized grid, 7 domains &middot; pure C++ <code>ClipEngine</code> + swung audio-thread step clock &middot; C ABI for Rust hosts &middot; byte-identical C++/JS Type-0 MIDI export
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -99,11 +99,11 @@
         <div class="stat-card"><div class="stat-val">14,883</div><div class="stat-label">C / C++ Lines</div></div>
         <div class="stat-card"><div class="stat-val accent">6,922</div><div class="stat-label">JavaScript Lines</div></div>
         <div class="stat-card"><div class="stat-val">396</div><div class="stat-label">Rust Lines</div></div>
-        <div class="stat-card"><div class="stat-val accent">63</div><div class="stat-label">Arranger Features</div></div>
-        <div class="stat-card"><div class="stat-val green">57</div><div class="stat-label">Arranger Ported</div></div>
-        <div class="stat-card"><div class="stat-val accent">202</div><div class="stat-label">Premiere Features</div></div>
-        <div class="stat-card"><div class="stat-val green">200</div><div class="stat-label">Premiere Ported (0 gap)</div></div>
-        <div class="stat-card"><div class="stat-val green">81</div><div class="stat-label">Test Cases (JS+Rust+C++)</div></div>
+        <div class="stat-card"><div class="stat-val accent">173</div><div class="stat-label">Arranger Features</div></div>
+        <div class="stat-card"><div class="stat-val green">167</div><div class="stat-label">Arranger Ported</div></div>
+        <div class="stat-card"><div class="stat-val accent">217</div><div class="stat-label">Premiere Features</div></div>
+        <div class="stat-card"><div class="stat-val green">213</div><div class="stat-label">Premiere Ported (0 gap)</div></div>
+        <div class="stat-card"><div class="stat-val green">2,081</div><div class="stat-label">Test Cases (JS+Rust+C++)</div></div>
       </div>
 
       <div style="margin:1.2rem 0;">
@@ -150,15 +150,15 @@
       <p class="tutorial-subtitle">One renderer, one interaction model, N domain bindings, two transport bridges. The frontend calls an injected <code>nf</code>; the bridge decides JUCE-vs-Tauri. The pure C++ <code>ClipEngine</code> sits below both: linked directly by the JUCE plugins, reached over the C ABI by the Rust/Tauri hosts. The same engine, driven from a JUCE <code>processBlock</code> audio callback or a Rust-side timer.</p>
 
       <pre style="margin:0.5rem 0;padding:1rem;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-dim);font-size:11px;line-height:1.7;overflow-x:auto;">
-  webui/grid/  (one renderer + one interaction model + one value model)
+  libs/zpwr-clip-engine/webui/grid/  (one renderer + one interaction model + one value model)
        │
        ▼
   ┌──────────────┐   bound to a domain   ┌──────────────────────────────────┐
   │  grid engine │──────────────────────▶│ domains/  notes · arranger ·      │
   │  render loop │                       │           automation · triggers · │
-  │  hit-test    │                       │           autolanes · launcher    │
-  │  all gestures│                       └──────────────────────────────────┘
-  │  popover     │
+  │  hit-test    │                       │           autolanes · launcher ·  │
+  │  all gestures│                       │           highway                 │
+  │  popover     │                       └──────────────────────────────────┘
   └──────┬───────┘
          │  nf(name)(...args)
          ▼
@@ -196,7 +196,7 @@
       <!-- SECTION 4: GRID ENGINE & DOMAINS        -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>GRID ENGINE &amp; DOMAINS</h2>
-      <p class="tutorial-subtitle">A <strong>domain</strong> supplies everything that differs (lanes, time-axis cells, value type, which gestures apply, serialize shape); the grid engine supplies everything shared (render loop, hit-test, all gestures, popover bulk-edit, persistence). The single most important merge detail: <code>value.type</code> selects the edit-drag axis &mdash; <code>'length'</code> &rarr; horizontal right-edge note resize, <code>'unit'</code> &rarr; vertical top-band value height, <code>'bool'</code> &rarr; click toggle. There are 6 domain files under <code>webui/grid/domains/</code>.</p>
+      <p class="tutorial-subtitle">A <strong>domain</strong> supplies everything that differs (lanes, time-axis cells, value type, which gestures apply, serialize shape); the grid engine supplies everything shared (render loop, hit-test, all gestures, popover bulk-edit, persistence). The single most important merge detail: <code>value.type</code> selects the edit-drag axis &mdash; <code>'length'</code> &rarr; horizontal right-edge note resize, <code>'unit'</code> &rarr; vertical top-band value height, <code>'bool'</code> &rarr; click toggle. There are 7 domain files under <code>libs/zpwr-clip-engine/webui/grid/domains/</code>.</p>
 
       <table class="file-table">
         <thead><tr><th>Domain</th><th>Lanes &times; cells</th><th>Value</th><th>Serialize shape</th></tr></thead>
@@ -204,11 +204,12 @@
           <tr><td style="color:var(--accent);">notes.js</td><td>pitch lanes &times; step cells</td><td><code>length</code></td><td>the CLIP piano-roll, <code>[{s,l,n,len,v}]</code> ClipSeq shape</td></tr>
           <tr><td style="color:var(--accent);">arranger.js</td><td>tracks &times; bars</td><td>clip ids</td><td>the DAW arrangement; double-click a clip drills into its notes</td></tr>
           <tr><td style="color:var(--accent);">automation.js</td><td>macro lanes &times; 8-bar blocks</td><td><code>unit</code> 0..1</td><td>the ALS section-overrides timeline, <code>{param:{bar:value}}</code>, resizable sections</td></tr>
-          <tr><td style="color:var(--accent);">triggers.js</td><td>action lanes &times; time slots</td><td><code>bool</code></td><td>ztranslator (provisional, pending the ztranslator contract)</td></tr>
+          <tr><td style="color:var(--accent);">triggers.js</td><td>action lanes &times; time slots</td><td><code>bool</code></td><td>verified logic clips &mdash; a cell carries <code>{ source, rules }</code>, statically verified through <code>ztr_verify_source</code> before it can arm</td></tr>
           <tr><td style="color:var(--accent);">autolanes.js</td><td>MPE / CC lanes</td><td>per-block</td><td>Pitch Bend / CC74 / Channel Pressure as their real MIDI messages</td></tr>
           <tr><td style="color:var(--accent);">launcher.js</td><td>scene grid</td><td>clip slots</td><td>the Session clip launcher (scenes, follow actions)</td></tr>
+          <tr><td style="color:var(--accent);">highway.js</td><td>keys / pads / drums lanes &times; steps</td><td><code>length</code></td><td>read-only play-along note highway over the same ClipSeq pattern the editor domains edit; renders verdicts, never grades</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">DOMAINS</td><td class="num" colspan="3">6 files in <code>webui/grid/domains/</code></td></tr></tfoot>
+        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">DOMAINS</td><td class="num" colspan="3">7 files in <code>libs/zpwr-clip-engine/webui/grid/domains/</code></td></tr></tfoot>
       </table>
 
       <h3 style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);letter-spacing:1.5px;margin:1.5rem 0 0.5rem;">// INTERACTION PARITY CHECKLIST (REGRESSION CONTRACT)</h3>
@@ -262,15 +263,15 @@
       <!-- SECTION 7: ARRANGER PORT COVERAGE       -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">^</span>ARRANGER PORT COVERAGE</h2>
-      <p class="tutorial-subtitle">The detailed per-feature coverage audit lives in the <a href="arranger_port_report.html">DAW Arranger Port Report</a>: every arranger feature across Ableton Live, FL Studio, Logic, Cubase/Studio One, Bitwig and Pro Tools, mapped to where it lives in this engine. It is a citation-backed coverage map &mdash; every <strong>PORTED</strong> row names the exact <code>file:line</code>; there is no &lsquo;100% / 0 gaps&rsquo; claim. The audio-clip features are a phased JUCE build (Phase 1 import + waveform done in the webui and verified; playback + DSP, phases 2&ndash;7, stay <strong>GAP</strong> until built in a compiled plugin and heard).</p>
+      <p class="tutorial-subtitle">The detailed per-feature coverage audit lives in the <a href="arranger_port_report.html">DAW Arranger Port Report</a>: every arranger feature across Ableton Live, FL Studio, Logic, Cubase/Studio One, Bitwig and Pro Tools, mapped to where it lives in this engine. It is a citation-backed coverage map &mdash; every <strong>PORTED</strong> row names the exact <code>file:line</code>; there is no self-assigned score. The audio-clip features are built and render-verified headlessly (objective Goertzel measurement of fades, crossfades and warp timing), so they are <strong>PARTIAL</strong> rather than GAP &mdash; the outstanding item is the subjective audible sign-off through a compiled plugin. Nothing audio is marked PORTED until it has been heard.</p>
 
       <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));">
-        <div class="stat-card"><div class="stat-val accent">63</div><div class="stat-label">In-scope Features</div></div>
-        <div class="stat-card"><div class="stat-val green">57</div><div class="stat-label">Ported</div></div>
-        <div class="stat-card"><div class="stat-val">0</div><div class="stat-label">Partial</div></div>
-        <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Gap (audio-clip phases 2&ndash;7)</div></div>
+        <div class="stat-card"><div class="stat-val accent">173</div><div class="stat-label">In-scope Features</div></div>
+        <div class="stat-card"><div class="stat-val green">167</div><div class="stat-label">Ported</div></div>
+        <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Partial (audio-clip rows)</div></div>
+        <div class="stat-card"><div class="stat-val">0</div><div class="stat-label">Gap</div></div>
       </div>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">Counts read directly from <code>docs/arranger_port_report.html</code> (&ldquo;63 in-scope features &middot; 57 ported &middot; 0 partial &middot; 6 gap&rdquo;). Every MIDI-arranger feature is ported; the 6 gaps are the unverifiable audio-clip playback/DSP phases that need a compiled plugin and a human listening.</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">Counts read directly from <code>docs/arranger_port_report.html</code> (&ldquo;173 in-scope features &middot; 167 ported &middot; 6 partial &middot; 0 gap&rdquo;). Every MIDI-arranger feature is ported; the 6 PARTIAL rows are the audio-clip playback/DSP features that are render-verified headlessly but stay short of PORTED until a human has heard them out of a compiled plugin.</p>
 
       <hr class="section-rule">
 
@@ -278,15 +279,15 @@
       <!-- SECTION 7b: PREMIERE / VIDEO EDITOR     -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">~</span>VIDEO EDITOR &middot; PREMIERE PORT COVERAGE</h2>
-      <p class="tutorial-subtitle">A <code>video</code> clip is just another thing the arranger carries, so dropping a <strong>video track type</strong> onto the shared timeline turned the DAW into a non-linear video editor on the same canvas &mdash; making zpwr-daw <strong>the first DAW that is also a full video editor</strong>. The whole Adobe Premiere Pro surface was then built out against it, area by area, until <strong>0 features remain gap</strong>. The per-feature audit is the <a href="premiere_port_report.html">Adobe Premiere Pro Port Report</a>: every <strong>PORTED</strong> row names the exact <code>file:line</code> in <code>libs/zpwr-clip-engine/webui</code> where it lives &mdash; the citation is the proof, not a self-assigned score. The 2 <strong>PARTIAL</strong> rows are shipped-with-a-limitation, not missing (native sample-accurate audio DSP wants a compiled plugin; Productions multi-user wants a shared-storage sync transport).</p>
+      <p class="tutorial-subtitle">A <code>video</code> clip is just another thing the arranger carries, so dropping a <strong>video track type</strong> onto the shared timeline turned the DAW into a non-linear video editor on the same canvas &mdash; making zpwr-daw <strong>the first DAW that is also a full video editor</strong>. The whole Adobe Premiere Pro surface was then built out against it, area by area, until <strong>0 features remain gap</strong>. The per-feature audit is the <a href="premiere_port_report.html">Adobe Premiere Pro Port Report</a>: every <strong>PORTED</strong> row names the exact <code>file:line</code> in <code>libs/zpwr-clip-engine/webui</code> where it lives &mdash; the citation is the proof, not a self-assigned score. The 4 <strong>PARTIAL</strong> rows are shipped-with-a-limitation, not missing (native sample-accurate audio DSP wants a compiled plugin; Productions multi-user wants a shared-storage sync transport).</p>
 
       <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(13rem,1fr));">
-        <div class="stat-card"><div class="stat-val accent">202</div><div class="stat-label">Catalogued Features</div></div>
-        <div class="stat-card"><div class="stat-val green">200</div><div class="stat-label">Ported (cited)</div></div>
-        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Partial (limitation stated)</div></div>
+        <div class="stat-card"><div class="stat-val accent">217</div><div class="stat-label">Catalogued Features</div></div>
+        <div class="stat-card"><div class="stat-val green">213</div><div class="stat-label">Ported (cited)</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Partial (limitation stated)</div></div>
         <div class="stat-card"><div class="stat-val">0</div><div class="stat-label">Gap</div></div>
       </div>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">Counts read directly from <code>docs/premiere_port_report.html</code> (&ldquo;202 Premiere features &middot; 200 ported &middot; 2 partial &middot; 0 gap&rdquo;), generated by <code>scripts/gen_premiere_port_report.py</code>. Coverage spans media/project, timeline editing, source-clip trim, monitors, motion/compositing/keying, effects &amp; transitions, Lumetri color, audio, titles/Essential Graphics, multicam and export/Media Encoder.</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">Counts read directly from <code>docs/premiere_port_report.html</code> (&ldquo;217 Premiere features &middot; 213 ported &middot; 4 partial &middot; 0 gap&rdquo;), generated by <code>scripts/gen_premiere_port_report.py</code>. Coverage spans media/project, timeline editing, source-clip trim, monitors, motion/compositing/keying, effects &amp; transitions, Lumetri color, audio, titles/Essential Graphics, multicam and export/Media Encoder.</p>
 
       <hr class="section-rule">
 
@@ -299,13 +300,13 @@
       <table class="file-table">
         <thead><tr><th>Surface</th><th>Where</th><th class="num">Cases</th><th>What it pins</th></tr></thead>
         <tbody>
-          <tr><td style="color:var(--accent);">JavaScript</td><td><code>webui/grid/tests/*.mjs</code></td><td class="num">66</td><td><code>node --test</code> over 9 files: grid (15), tempo (15), arranger (9), midi (6), project (6), bank (5), autolanes (4), sequencer (4), launcher (2). Model, domains, layout/hit math, MIDI round-trip.</td></tr>
-          <tr><td style="color:var(--accent);">Rust</td><td><code>bindings/rust/zpwr-clip-engine/tests/integration.rs</code></td><td class="num">7</td><td><code>#[test]</code> functions driving the engine through the safe FFI wrapper: set pattern, transport, advance, poll events, MIDI render.</td></tr>
-          <tr><td style="color:var(--accent);">C++</td><td><code>tests/MidiModulesTest.cpp</code></td><td class="num">8</td><td><code>check(bool, what)</code> assertions: the registry builds, every module is finite + leaves no hung notes (ons == offs), newer modules behave as specified.</td></tr>
+          <tr><td style="color:var(--accent);">JavaScript</td><td><code>libs/zpwr-clip-engine/webui/grid/tests/*.mjs</code></td><td class="num">1955</td><td><code>node --test</code> over 338 files. Model, domains, layout/hit math, MIDI round-trip.</td></tr>
+          <tr><td style="color:var(--accent);">Rust</td><td><code>bindings/rust/zpwr-clip-engine/tests/integration.rs</code></td><td class="num">10</td><td><code>#[test]</code> functions driving the engine through the safe FFI wrapper: set pattern, transport, advance, poll events, MIDI render.</td></tr>
+          <tr><td style="color:var(--accent);">C++</td><td><code>tests/*.cpp</code></td><td class="num">116</td><td><code>check</code> / <code>CHECK</code> assertions across <code>MidiModulesTest.cpp</code> (registry builds, every module is finite + leaves no hung notes), <code>audio_dsp_test.cpp</code> and <code>audio_clip_render_test.cpp</code> (the two ctest-registered audio suites).</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">81</td><td>across the JS / Rust / C++ layers</td></tr></tfoot>
+        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">2081</td><td>across the JS / Rust / C++ layers</td></tr></tfoot>
       </table>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">JS: <code>grep -cE "^\s*(test|it)\("</code> over <code>webui/grid/tests/*.mjs</code> = 66. Rust: <code>grep -c "#[test]"</code> over <code>bindings/</code> = 7. C++: <code>check(</code> call sites in <code>tests/MidiModulesTest.cpp</code> = 8. The exporters are additionally cross-checked by round-trip parsing inside the JS and Rust suites.</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">JS: <code>grep -cE "^\s*(test|it)\("</code> over <code>libs/zpwr-clip-engine/webui/grid/tests/*.mjs</code> = 1955 across 338 files. Rust: <code>grep -c "#[test]"</code> over <code>bindings/</code> = 10. C++: <code>grep -cE "\b(check|CHECK)\s*\("</code> over <code>tests/*.cpp</code> = 116 (8 + 42 + 66). The exporters are additionally cross-checked by round-trip parsing inside the JS and Rust suites.</p>
 
       <hr class="section-rule">
 
@@ -349,7 +350,7 @@
     </main>
 
     <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
-      ZPWR-DAW ENGINEERING REPORT &middot; 25,749 LINES (TOKEI) &middot; 14,883 C/C++ &middot; 6,922 JAVASCRIPT &middot; 396 RUST &middot; 6 GRID DOMAINS &middot; 63 ARRANGER FEATURES (57 PORTED) &middot; 81 TEST CASES &middot; C ABI &middot; TYPE-0 MIDI EXPORT &middot; MENKETECHNOLOGIES
+      ZPWR-DAW ENGINEERING REPORT &middot; 25,749 LINES (TOKEI) &middot; 14,883 C/C++ &middot; 6,922 JAVASCRIPT &middot; 396 RUST &middot; 7 GRID DOMAINS &middot; 173 ARRANGER FEATURES (167 PORTED) &middot; 2,081 TEST CASES &middot; C ABI &middot; TYPE-0 MIDI EXPORT &middot; MENKETECHNOLOGIES
     </footer>
   </div>
 

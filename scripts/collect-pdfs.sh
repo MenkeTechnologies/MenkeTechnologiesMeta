@@ -41,7 +41,12 @@ MANIFEST="$OUT/MANIFEST.md"
 pages() { # deterministic via pdfinfo (poppler); mdls is a Spotlight-timing-dependent fallback
   local n=""
   if command -v pdfinfo >/dev/null 2>&1; then
-    n=$(pdfinfo "$1" 2>/dev/null | awk '/^Pages:/{print $2; exit}')
+    # LC_ALL=C: a PDF whose metadata carries an invalid byte (zgui-core's Title
+    # does) makes BSD awk abort with "towc: multibyte conversion failure" on the
+    # Title line, before it ever reaches Pages: — so the page count came back
+    # empty, mdls also failed, and the document was recorded as 0 pages. Byte
+    # semantics make awk indifferent to the encoding of lines it does not match.
+    n=$(pdfinfo "$1" 2>/dev/null | LC_ALL=C awk '/^Pages:/{print $2; exit}')
   fi
   if [[ -z $n ]]; then
     n=$(mdls -name kMDItemNumberOfPages -raw "$1" 2>/dev/null | grep -Eo '^[0-9]+' || true)

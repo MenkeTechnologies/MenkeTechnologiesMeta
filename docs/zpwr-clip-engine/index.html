@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-clip-engine — the shared DAW arranger/sequencer and clip grid for the MenkeTechnologies app stack, extracted from zpwr-daw. One canvas grid with swappable domains (arranger, piano-roll, launcher, automation) plus a pure-C++17 header-only C-ABI engine (zpc_clip_*) consumed natively by the daw and via Rust FFI by the Tauri apps.">
+  <meta name="description" content="zpwr-clip-engine — the shared DAW arranger/sequencer and clip grid for the MenkeTechnologies app stack, extracted from zpwr-daw. One canvas grid with swappable domains (arranger, piano-roll, launcher/session, automation, automation lanes, logic triggers, highway) plus a pure-C++17 header-only C-ABI engine (zpc_clip_*) consumed natively by the daw and via Rust FFI by the Tauri apps.">
   <title>zpwr-clip-engine — Shared Arranger / Sequencer + Clip Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,10 +58,10 @@
     <main class="docs-main">
       <div class="status-banner"><strong>Shared component.</strong> "One arranger, every app, one grid — content swapped, never re-implemented." The sequencer/arranger frontend and its scheduling engine were extracted verbatim from <a href="https://github.com/MenkeTechnologies/zpwr-daw">zpwr-daw</a>; hosts mount the grid through a single entry point, <code>initClipSeq({ nf, getCAT })</code>, and supply a backend.</div>
 
-      <p class="lede">zpwr-clip-engine is the shared DAW arranger / sequencer for the MenkeTechnologies GUI app stack. It is one canvas-2D grid with swappable <strong>domains</strong> — arranger, notes/piano-roll, launcher/session, automation lanes — plus the clip palette, MIDI export, and project/bank serialization. The <strong>real scheduling engine lives here too</strong> (<code>engine/</code>): the pattern → events → step/transport/MIDI scheduler, extracted from zpwr-daw as a pure-C++17, header-only <strong>C ABI</strong> (<code>zpc_clip_*</code>) — header-only <code>ClipEngine</code> + <code>MidiFile</code>, no JUCE, no external deps. Created by MenkeTechnologies.</p>
+      <p class="lede">zpwr-clip-engine is the shared DAW arranger / sequencer for the MenkeTechnologies GUI app stack. It is one canvas-2D grid with swappable <strong>domains</strong> — arranger, notes/piano-roll, launcher/session, the ALS automation timeline, arrangement automation lanes, verified logic clips, and the play-along highway — plus the clip palette, MIDI export, and project/bank serialization. The <strong>real scheduling engine lives here too</strong> (<code>engine/</code>): the pattern → events → step/transport/MIDI scheduler, extracted from zpwr-daw as a pure-C++17, header-only <strong>C ABI</strong> (<code>zpc_clip_*</code>) — header-only <code>ClipEngine</code> + <code>MidiFile</code>, no JUCE, no external deps. Created by MenkeTechnologies.</p>
 
       <div class="card-grid">
-        <div class="card"><h3>One grid, swappable domains</h3><p>A single canvas grid renders arranger, piano-roll, launcher/session, and automation-lane domains — content is swapped, never re-implemented per app.</p></div>
+        <div class="card"><h3>One grid, swappable domains</h3><p>A single canvas grid renders all seven domains — arranger, piano-roll, launcher/session, the ALS automation timeline, arrangement automation lanes, verified logic clips and the play-along highway — content is swapped, never re-implemented per app.</p></div>
         <div class="card"><h3>One engine, every consumer</h3><p>The <code>zpc_clip_*</code> C ABI builds two ways from one source: <code>libzpwr_clip_engine_static.a</code> (the daw links it natively) and <code>libzpwr_clip_engine.dylib</code>/<code>.so</code> (the Tauri apps load it through a Rust FFI wrapper).</p></div>
         <div class="card"><h3>Mount through one entry</h3><p>Hosts call <code>initClipSeq({ nf, getCAT })</code> and supply a backend; the <code>nf</code> functions bridge the grid to whichever engine the host uses.</p></div>
         <div class="card"><h3>No JUCE, no deps</h3><p>The engine is header-only C++17 (<code>ClipEngine</code> + <code>MidiFile</code>) with no JUCE and no external dependencies — so it embeds in native and Tauri hosts alike.</p></div>
@@ -72,7 +72,7 @@
       <ul class="feat">
         <li><b>zpwr-daw</b> (JUCE / C++) — drives the grid through native <code>nf</code> functions backed by this engine plus its own audio voices / per-track instruments (real sound).</li>
         <li><b>Tauri apps</b> (Audio-Haxor, traderview, ztranslator) — bridge <code>nf</code> → the C ABI via a Rust FFI wrapper.</li>
-        <li><b>Domains</b> — arranger, notes / piano-roll, launcher / session, automation lanes.</li>
+        <li><b>Domains</b> — the seven modules under <code>webui/grid/domains/</code>: arranger, notes / piano-roll, launcher / session, the ALS automation timeline, arrangement automation lanes, verified logic clips, and the play-along highway.</li>
         <li><b>Clip palette</b> — the swappable clip bank shared across domains.</li>
         <li><b>MIDI export</b> — pattern/event data written out via the engine's <code>MidiFile</code>.</li>
         <li><b>Serialization</b> — project / bank save &amp; load.</li>
@@ -80,7 +80,7 @@
 
       <h2 class="reg-h">Mounting</h2>
       <p class="lede">A host mounts the shared grid through one entry point and supplies its backend bridge:</p>
-      <pre class="code">import { initClipSeq } from './webui/grid/index.js';
+      <pre class="code">import { initClipSeq } from './webui/clip/clip-seq.js';
 
 // nf = the host's bridge functions (native in the daw, FFI in Tauri apps);
 // getCAT = the host's content/category provider for the clip palette

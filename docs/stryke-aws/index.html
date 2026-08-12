@@ -245,7 +245,7 @@ make install</pre>
           <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
           <tbody>
             <tr><td>Dynamo::get $table, $key, %opts</td><td>\%item | undef</td></tr>
-            <tr><td>Dynamo::put $table, $item, %opts</td><td><code>{ ok: 1 }</code></td></tr>
+            <tr><td>Dynamo::put $table, $item, %opts</td><td>1 | 0</td></tr>
             <tr><td>Dynamo::delete $table, $key, %opts</td><td>1 | 0</td></tr>
             <tr><td>Dynamo::query $table, %opts</td><td>@items &mdash; opts: key_condition, values, names, filter, index, limit</td></tr>
             <tr><td>Dynamo::scan $table, %opts</td><td>@items &mdash; opts: filter, values, limit</td></tr>
@@ -265,14 +265,14 @@ make install</pre>
         <table class="api-tbl">
           <thead><tr><th>Fn</th><th>Returns / notes</th></tr></thead>
           <tbody>
-            <tr><td>SQS::send $queue, $body, %opts</td><td>\%resp &mdash; opts: delay_seconds, dedup_id, group_id</td></tr>
-            <tr><td>SQS::receive $queue, %opts</td><td>@messages &mdash; opts: max, wait, visibility</td></tr>
-            <tr><td>SQS::delete $queue, $receipt, %opts</td><td><code>{ ok: 1 }</code></td></tr>
+            <tr><td>SQS::send $queue, $body, %opts</td><td>$message_id &mdash; <code>delay_seconds</code> / <code>dedup_id</code> / <code>group_id</code> deferred (die)</td></tr>
+            <tr><td>SQS::receive $queue, %opts</td><td>@messages &mdash; opts: max; <code>wait</code> / <code>visibility</code> deferred (die)</td></tr>
+            <tr><td>SQS::delete $queue, $receipt, %opts</td><td><code>{ deleted: 1 | 0 }</code></td></tr>
             <tr><td>SQS::list %opts</td><td>@urls (prefix filter deferred)</td></tr>
             <tr><td>SQS::purge $queue, %opts</td><td>1 | 0 &mdash; delete all messages</td></tr>
             <tr><td>SQS::attrs $queue, %opts</td><td>\%attributes &mdash; GetQueueAttributes (All)</td></tr>
-            <tr><td>SQS::set_attrs $queue, $attributes, %opts</td><td>\%resp &mdash; SetQueueAttributes</td></tr>
-            <tr><td>SQS::change_visibility $queue, $receipt, $timeout, %opts</td><td>\%resp</td></tr>
+            <tr><td>SQS::set_attrs $queue, $attributes, %opts</td><td>1 | 0 &mdash; SetQueueAttributes</td></tr>
+            <tr><td>SQS::change_visibility $queue, $receipt, $timeout, %opts</td><td>1 | 0</td></tr>
             <tr><td>SQS::pump $queue, %opts</td><td>$count &mdash; callback + auto-delete on success</td></tr>
           </tbody>
         </table>
@@ -507,6 +507,14 @@ s test t/                                           # creds-aware end-to-end
 export STRYKE_AWS_TEST_BUCKET=my-test-bucket
 export STRYKE_AWS_TEST_TABLE=stryke-aws-demo        # PK `id: S`
 export STRYKE_AWS_TEST_QUEUE=https://sqs.us-east-1.amazonaws.com/.../my-q
+
+# CloudWatch Logs PutLogEvents round-trip (both must be set; group + stream must exist):
+export STRYKE_AWS_TEST_LOG_GROUP=/stryke-aws/test
+export STRYKE_AWS_TEST_LOG_STREAM=test-stream
+
+# Create/delete lifecycle tests (creates + tears down a real bucket and
+# DynamoDB table — off by default so a shared account is safe):
+export STRYKE_AWS_TEST_MUTATE=1
 s test t/</pre>
         <p>The suite skips cleanly when the cdylib isn't installed, when credentials are missing, or when the per-service env vars are unset. The dev workflow targets &mdash; <code>make</code> (release build), <code>make debug</code>, <code>make test</code>, <code>make install</code>, <code>make clean</code> &mdash; wrap the same steps.</p>
       </section>

@@ -126,6 +126,7 @@
           <tbody>
             <tr><td>Editor</td><td>Monaco's <code>edcore.main</code> bundle &mdash; all editor contributions (suggest, hover, find, folding, multi-cursor, minimap, command palette) but <strong>no</strong> bundled languages</td></tr>
             <tr><td>stryke language</td><td>stryke is a Perl-5 superset, so it reuses Monaco's Perl Monarch grammar (<code>basic-languages/perl</code>) for tokenization + the bracket/comment language config, registered under the <code>stryke</code> language id</td></tr>
+            <tr><td>latex language</td><td>a second grammar in the same bundle, selected with <code>create({ language: 'latex' })</code> &mdash; control words/symbols, math shifts, <code>%</code> comments, brace matching, <code>$</code>/brace auto-closing, snippet completion for the structural constructs, <code>\ref</code>/<code>\cite</code> completion driven by the document's own <code>\label</code>s and <code>\bibitem</code> keys, and a <code>\part</code>&hellip;<code>\subparagraph</code> outline. No language server is attached (see below)</td></tr>
             <tr><td>Modal editing</td><td>Default / Vim / Emacs via <code>monaco-vim</code> and <code>monaco-emacs</code>, switchable at runtime through <code>setMode</code>; the vim status/command line renders into a caller-supplied element</td></tr>
             <tr><td>Language intelligence</td><td>completion / hover / diagnostics / definitions / references / rename / signature help / document symbols / code actions / semantic tokens come from the stryke language server (<code>stryke --lsp</code>) over a caller-supplied transport &mdash; the editor speaks LSP JSON-RPC directly via a thin adapter, not monaco-languageclient</td></tr>
             <tr><td>Theme</td><td><code>stryke-cyberpunk</code> &mdash; neon on near-black, matching the apps' aesthetic, with the suggest/hover widgets styled explicitly</td></tr>
@@ -150,13 +151,39 @@
   onChange: (text) =&gt; save(text),    // fires on every edit with full text
   mode: 'vim',                       // 'default' | 'vim' | 'emacs'
   statusBar: vimStatusEl,            // optional element for the vim status/command line
+  language: 'stryke',                // 'stryke' (default) | 'latex'
 });
 
 handle.getValue();        // current text
 handle.setValue(text);    // replace text
 handle.focus();
 handle.setMode('emacs');  // switch modal mode at runtime
+handle.language();        // which grammar this editor was created with
+handle.insert(text);      // undoable insert at the caret (palette-style)
+handle.selectRange(a, b); // select + reveal by document offset
+handle.onSelection(fn);   // fires with (from, to) offsets as the caret moves
+handle.bindKey(spec, fn); // take a key back from Monaco, this editor only
 handle.destroy();         // dispose editor, model, markers, LSP didClose</pre>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Editing LaTeX in the same editor</h2>
+        <p>Pass <code>language: 'latex'</code> and the editor mounts the LaTeX Monarch grammar instead of the stryke one &mdash; same Monaco instance, same <code>stryke-cyberpunk</code> theme, same vim/emacs keymaps. The stryke language server speaks stryke, so a LaTeX buffer is never opened against it: omit <code>uri</code> and the LSP layer stays off entirely.</p>
+        <p>What a LaTeX buffer gets instead, all computed locally from the model:</p>
+        <table class="example-tbl">
+          <tbody>
+            <tr><td>Structural snippets</td><td>typing <code>\</code> offers <code>\frac</code>, <code>\dfrac</code>, <code>\binom</code>, <code>\sqrt</code>, <code>\left&hellip;\right</code>, <code>\sum</code>, <code>\prod</code>, <code>\int</code>, <code>\lim</code>, <code>pmatrix</code>, <code>cases</code>, <code>aligned</code>, accents &hellip; as tab-stop snippets</td></tr>
+            <tr><td>Cross-references</td><td>inside <code>\ref{}</code> / <code>\eqref</code> / <code>\pageref</code> / <code>\autoref</code> / <code>\cref</code> / <code>\vref</code> the document's own <code>\label</code>s complete (with the line each is defined on); inside <code>\cite{}</code> / <code>\citep</code> / <code>\citet</code> / <code>\citeauthor</code> / <code>\citeyear</code> / <code>\nocite</code> its <code>\bibitem</code> keys do. No project index &mdash; the open model is the source of truth</td></tr>
+            <tr><td>Outline</td><td><code>\part</code>, <code>\chapter</code>, <code>\section</code>, <code>\subsection</code>, <code>\subsubsection</code>, <code>\paragraph</code>, <code>\subparagraph</code> (starred forms included) become document symbols, so Go to Symbol navigates by sectioning rather than by line</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Taking a key back from Monaco</h2>
+        <p>Monaco binds a lot of keys, and a host accelerator can collide with one &mdash; <code>⇧⌘O</code> is Monaco's Go to Symbol, which opens its <code>@</code> quick access. <code>bindKey</code> overrides the binding <em>inside one editor</em>, for that editor's lifetime, without changing it for every other app on the bundle.</p>
+<pre>handle.bindKey('CmdOrCtrl+Shift+O', () =&gt; app.openOwnSymbolPalette());</pre>
+        <p>The spec is an Electron-style string: <code>Cmd</code> / <code>Ctrl</code> / <code>CmdOrCtrl</code> / <code>Meta</code> all map to Monaco's <code>CtrlCmd</code>, plus <code>Shift</code> and <code>Alt</code> / <code>Option</code>; the last segment is the key (a single letter or digit, or a Monaco <code>KeyCode</code> name such as <code>Enter</code> or <code>Escape</code>). Returns <code>false</code> when the key cannot be parsed.</p>
       </section>
 
       <section class="tutorial-section">
@@ -180,7 +207,7 @@ await window.HooksEditor.whenReady(); // true once the stryke initialize handsha
             <tr><td><code>receive(message)</code></td><td>feed one raw JSON-RPC message from the server to the client</td></tr>
             <tr><td><code>clientReady()</code></td><td>transport connected (a <code>send</code> function is installed)</td></tr>
             <tr><td><code>whenReady()</code></td><td>promise resolving <code>true</code> once the stryke <code>initialize</code> handshake completed</td></tr>
-            <tr><td><code>create(parent, opts)</code></td><td>mount an editor; returns a handle with <code>getValue</code> / <code>setValue</code> / <code>focus</code> / <code>setMode</code> / <code>destroy</code></td></tr>
+            <tr><td><code>create(parent, opts)</code></td><td>mount an editor; returns a handle with <code>getValue</code> / <code>setValue</code> / <code>focus</code> / <code>setMode</code> / <code>language</code> / <code>insert</code> / <code>selectRange</code> / <code>bindKey</code> / <code>onSelection</code> / <code>destroy</code></td></tr>
           </tbody>
         </table>
       </section>

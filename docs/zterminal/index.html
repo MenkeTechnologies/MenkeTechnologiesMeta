@@ -161,7 +161,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zterminal" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line">zterminal v0.29.7 · Linux · BSD · macOS · Windows · OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas renderer · xterm-compatible VT · native tiling splits · inline graphics (Kitty / Sixel / iTerm2) · first-class tmux over the native wire protocol</p>
+          <p class="docs-build-line">zterminal v0.29.9 · Linux · BSD · macOS · Windows · OpenGL&nbsp;ES&nbsp;2.0 glyph-atlas renderer · xterm-compatible VT · native tiling splits · inline graphics (Kitty / Sixel / iTerm2) · first-class tmux over the native wire protocol</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -275,11 +275,47 @@ sudo installer -pkg target/release/osx/Zterminal-&lt;version&gt;.pkg -target /</
           <h3>First terminal emulator with a custom, live telemetry dashboard</h3>
           <p>zterminal ships an in-app <strong>dashboard</strong> — a live, polling telemetry surface built from a real component library (<code>zgui-core</code>): PTY throughput, render timing, scrollback, the full tmux summary (clients, sessions, windows, panes, server identity), and system metrics, rendered with gauges, sparklines, donuts, meters, tables, and stat strips. It doubles as a showcase of the component library. No terminal emulator ships a custom dashboard of this kind.</p>
         </div>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator to diff a command's output against its previous run</h3>
+          <p>Every command block is captured through OSC&nbsp;133, so a re-run can be compared to the run before it. <code>zterminal_core/src/diff.rs</code> diffs the two printed outputs in place — no <code>tee</code> to a file, no manual <code>diff</code>, and it works retroactively on blocks you never planned to compare.</p>
+        </div>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator to trend a number from a command's output across runs</h3>
+          <p>Pick a numeric column or field out of a command's printed output and <code>zterminal_core/src/metric.rs</code> tracks it across every recorded run of that command, so a latency, a size or a count becomes a series without wrapping the command in a script.</p>
+        </div>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator to sort a command's printed output by column</h3>
+          <p><code>zterminal_core/src/column.rs</code> re-sorts a finished command's output by any detected column, in place in the scrollback — the output is re-rendered sorted rather than re-run through <code>sort</code>.</p>
+        </div>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator to compare broadcast output across panes while the command runs</h3>
+          <p>With input broadcast to several panes, zterminal streams a per-line consensus across them and flags the pane that diverges, live, as the command runs (<code>⌃⌘G</code>) — the fleet-wide "which host is different" question answered without collecting logs afterwards.</p>
+        </div>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator to keep a command's output queryable after it leaves the buffer</h3>
+          <p>The command-block ledger (<code>crates/zterminal-ledger</code>) durably captures blocks, so diff, trend and sort still work on output that has been evicted from the scrollback. Durable capture is an opt-in switch on the Commands tab.</p>
+        </div>
+
+        <div class="first-card">
+          <span class="badge">World-first</span>
+          <h3>First terminal emulator to run a relational query — including a cross-command JOIN — over its own captured output</h3>
+          <p><code>zterminal_core/src/query.rs</code> treats captured command blocks as relations: the printed output of two different commands can be JOINed on a shared column, retroactively, inside the terminal.</p>
+        </div>
       </section>
 
       <section class="tutorial-section" id="shortcuts">
         <h2>Control panel &amp; shortcuts</h2>
-        <p>zterminal hosts an in-process GUI suite (rendered in an embedded WebView) for configuration and inspection. All of its state and logs live under <code>~/.zterminal</code>. The control panel has Settings, Dashboard, tmux, Keybindings, Logs, and About tabs.</p>
+        <p>zterminal hosts an in-process GUI suite (rendered in an embedded WebView) for configuration and inspection. All of its state and logs live under <code>~/.zterminal</code>. The control panel has 19 tabs — Settings, Dashboard, Commands, Sessions, Layouts, Profiles, Keybindings, Triggers, Hints, Snippets, Processes, Recent dirs, Env vars, Logs, About, and the four tmux surfaces (config, sessions, buffers, keys).</p>
         <table class="ref-table">
           <thead>
             <tr><th>Shortcut</th><th>Opens</th></tr>
@@ -289,11 +325,14 @@ sudo installer -pkg target/release/osx/Zterminal-&lt;version&gt;.pkg -target /</
             <tr><td class="keys"><code>⌃⌘D</code></td><td>Control panel — Dashboard tab (telemetry / sessions / system)</td></tr>
             <tr><td class="keys"><code>⌘K</code></td><td>Command palette — searchable window/tab/terminal/panel/pane actions</td></tr>
             <tr><td class="keys"><code>⌘R</code></td><td>Shell-history palette — fuzzy-search history, insert the pick at the prompt</td></tr>
+            <tr><td class="keys"><code>⌘↑</code> / <code>⌘↓</code></td><td>Jump to the previous / next shell prompt (OSC&nbsp;133 shell integration)</td></tr>
+            <tr><td class="keys"><code>⌘⇧O</code></td><td>Select the most recently finished command&rsquo;s output (OSC&nbsp;133)</td></tr>
             <tr><td class="keys"><code>⌘E</code></td><td>Switch to the most-recently-used other tab (MRU quick-switch)</td></tr>
             <tr><td class="keys"><code>⌃⌘E</code></td><td>Exposé — tile grid of every zterminal window <strong>and</strong> tmux pane; click to focus</td></tr>
             <tr><td class="keys"><code>⌃⌘P</code></td><td>Search all tmux panes — grep every pane's scrollback, jump to a match</td></tr>
             <tr><td class="keys"><code>⌃⌘B</code></td><td>Broadcast — send-keys to a selected set of tmux panes / toggle synchronize-panes</td></tr>
             <tr><td class="keys"><code>⌃⌘S</code></td><td>Sessions — save / restore the full tmux layout (replaces tmux-resurrect)</td></tr>
+            <tr><td class="keys"><code>⌃⌘G</code></td><td>Fan-out divergence &mdash; live per-line consensus across the panes a broadcast went to</td></tr>
             <tr><td class="keys"><code>⌃⌘`</code></td><td>Quake dropdown — global hotkey, a terminal that slides down from the top</td></tr>
           </tbody>
         </table>
@@ -372,7 +411,7 @@ imgcat picture.png                <span class="comment"># iTerm2's imgcat</span>
         </ol>
         <p>On Windows: <code>%APPDATA%\zterminal\zterminal.toml</code>. Configuration is documented in <code>man 5 zterminal</code>.</p>
         <h3>terminfo</h3>
-        <p>zterminal sets <code>TERM</code> to <code>zterminal</code> when that terminfo entry is installed, otherwise it falls back to <code>xterm-256color</code>. The terminfo source ships in <a href="https://github.com/MenkeTechnologies/zterminal/blob/main/extra/zterminal.info"><code>extra/zterminal.info</code></a>.</p>
+        <p>zterminal sets <code>TERM</code> to <code>zterminal</code> when that terminfo entry is installed, otherwise it falls back to <code>xterm-256color</code>. The terminfo source ships in <a href="https://github.com/MenkeTechnologies/zterminal/blob/main/extra/Zterminal.info"><code>extra/Zterminal.info</code></a>.</p>
       </section>
 
       <section class="tutorial-section">

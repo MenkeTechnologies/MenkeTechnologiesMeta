@@ -42,6 +42,8 @@
             <span class="sep">/</span>
             <a href="audit.html">MS Office Audit</a>
             <span class="sep">/</span>
+            <a href="port_report.html">Port Report</a>
+            <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zoffice-core" target="_blank" rel="noopener noreferrer">Source</a>
           </nav>
           <p class="docs-build-line">// module map · dependency footprint · test status</p>
@@ -52,6 +54,7 @@
           <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
           <a class="btn btn-secondary" href="index.html">Home</a>
           <a class="btn btn-secondary" href="audit.html">MS Office Audit</a>
+          <a class="btn btn-secondary" href="port_report.html">Port Report</a>
           <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/zoffice-core" target="_blank" rel="noopener noreferrer">Source</a>
         </div>
       </div>
@@ -59,8 +62,9 @@
     <main class="docs-main">
       <section class="hero-stats">
         <div class="hero-stat"><span class="num">6</span><span class="lbl">office apps modeled</span></div>
-        <div class="hero-stat"><span class="num">14</span><span class="lbl">engine modules</span></div>
-        <div class="hero-stat"><span class="num">46</span><span class="lbl">integration tests</span></div>
+        <div class="hero-stat"><span class="num">18</span><span class="lbl">engine modules</span></div>
+        <div class="hero-stat"><span class="num">104</span><span class="lbl">bus commands</span></div>
+        <div class="hero-stat"><span class="num">970</span><span class="lbl">tests (66 integration)</span></div>
         <div class="hero-stat"><span class="num">0</span><span class="lbl">C++ / AGPL / UNO deps</span></div>
       </section>
       <p class="note"><strong>Status from source, stated honestly.</strong> zoffice-core both reads and writes ODF and OOXML packages today: editing, saving, a real recursive-descent Calc formula evaluator, presentation authoring (<code>add_slide</code>), and the Base database backend (catalog reads plus <code>SELECT</code> queries over the embedded store) all have real bodies — there are no remaining <code>Error::NotImplemented</code> stubs in the module code. The module map below marks exactly what is implemented now versus planned. Status is derived from the actual <code>fn</code> symbols in <code>src/</code> — a capability is done only once its body exists, and the test suite pins that out-of-range and unknown-command paths return a typed error rather than panicking or silently succeeding.</p>
@@ -69,17 +73,25 @@
       <table>
         <thead><tr><th>module</th><th>implemented now</th><th>planned / stubbed</th></tr></thead>
         <tbody>
-          <tr><td>writer</td><td>open .odt / .docx · paragraphs · plain_text · word_count · insert_paragraph / edit_paragraph · save_docx / save_odt · style_definitions / style_count</td><td>—</td></tr>
-          <tr><td>calc</td><td>open .ods / .xlsx · sheets · rows · cells · shared-string + ref resolution · evaluate (recursive-descent formulas: SUM / IF / VLOOKUP …) · set_cell · save_xlsx / save_ods · sort_sheet</td><td>—</td></tr>
-          <tr><td>impress</td><td>open .odp / .pptx · slides · per-slide text · plain_text · add_slide · save_pptx / save_odp</td><td>—</td></tr>
+          <tr><td>writer</td><td>open .odt / .docx / .doc / .rtf / .fodt · paragraphs · plain_text · word_count · insert_paragraph / edit_paragraph / edit_table_cell · replace_lossless · reorder_pages · save_docx / save_odt (paragraph props, run formatting, tables) · toc · bibliography · spell_check · mail_merge · accept_revision / reject_revision · fields_by_paragraph · blame</td><td>—</td></tr>
+          <tr><td>calc</td><td>open .ods / .xlsx / .xls / .fods / .csv · sheets · rows · cells · shared-string + ref resolution · evaluate (recursive-descent formulas: SUM / IF / VLOOKUP …) · set_cell · save_xlsx / save_ods (formulas, merges, named ranges) · sort_sheet · goal_seek · pivot_compute · sparklines · slicers · critical_path · impact_map · rootcause</td><td>—</td></tr>
+          <tr><td>impress</td><td>open .odp / .pptx / .ppt / .fodp · slides · per-slide text · plain_text · add_slide / delete_slide / reorder_slides · presenter_view · animations · transitions · smartart · save_pptx / save_odp</td><td>—</td></tr>
           <tr><td>draw</td><td>open .odg · pages · shapes · shape_count · to_svg / export_svg · save / save_odg</td><td>—</td></tr>
           <tr><td>math</td><td>open .odf · MathML + StarMath annotation extraction · to_starmath · layout</td><td>—</td></tr>
-          <tr><td>base</td><td>open .odb · tables · queries · query / run_query (SELECT over embedded HSQLDB store)</td><td>write / save .odb</td></tr>
+          <tr><td>base</td><td>open .odb · tables · schema · relationships · views · triggers · queries · query / run_query (SELECT over embedded HSQLDB store) · parse_dml</td><td>write / save .odb</td></tr>
+          <tr><td>merge</td><td>merge3 / merge3_with — 3-way structural merge with per-paragraph provenance · FieldReconciler hook · set_reconciler</td><td>calc / impress models</td></tr>
+          <tr><td>crypto · crypto_odf</td><td>MS-OFFCRYPTO Agile + Standard and ODF package encryption — is_encrypted / decrypt / encrypt, pure RustCrypto</td><td>—</td></tr>
+          <tr><td>dsig</td><td>XML-DSig — signer_info · verify_part_digests · verify_signatures · verify_cert_chain · sign_ooxml / sign_odf (hand-rolled Canonical XML)</td><td>—</td></tr>
+          <tr><td>ole2</td><td>OLE2 / Compound File Binary container reader + writer — the substrate for the legacy <code>.doc</code> / <code>.xls</code> / <code>.ppt</code> paths · <code>vba_modules</code> extraction</td><td>VBA execution</td></tr>
+          <tr><td>pdf</td><td>minimal PDF 1.4 writer — the "Export to PDF" backend for every app (base-14 Helvetica, no external converter)</td><td>—</td></tr>
+          <tr><td>render</td><td>format-neutral render tree that preserves visual formatting — page geometry, runs with their own bold/italic/font/size/colour, per-cell table borders/fills, inline images as base64 for a sandboxed WebView</td><td>—</td></tr>
+          <tr><td>meta</td><td>document properties across ODF <code>meta.xml</code>, OOXML <code>docProps/core.xml</code> and flat ODF — read, patch, and <code>DocMeta::save</code> write-back</td><td>—</td></tr>
           <tr><td>format</td><td>read_part · list_parts · text_blocks · ext (shared ZIP/XML substrate)</td><td>—</td></tr>
+          <tr><td>commands</td><td><code>COMMANDS</code> — the 104-name bus surface, pinned to <code>Engine::invoke</code>'s match arms by a drift-guard test</td><td>—</td></tr>
           <tr><td>error</td><td>typed errors · JSON envelope · missing_arg helper</td><td>—</td></tr>
         </tbody>
       </table>
-      <p class="note">The <code>lib</code> root adds the <code>Engine</code> JSON dispatcher (<code>info</code>, <code>open</code> auto-detect, and the per-app <code>&lt;app&gt;.open</code> / <code>.text</code> / <code>calc.cells</code> commands) plus <code>App</code> / <code>app_for</code> extension routing; <code>ffi</code> exposes the C ABI (<code>zoffice_invoke</code> / <code>zoffice_string_free</code>) in the staticlib/cdylib artifacts.</p>
+      <p class="note">The <code>lib</code> root adds the <code>Engine</code> JSON dispatcher (<code>info</code>, <code>open</code> auto-detect, and the per-app <code>&lt;app&gt;.open</code> / <code>.text</code> / <code>calc.cells</code> commands) plus <code>App</code> / <code>app_for</code> extension routing; <code>ffi</code> exposes the C ABI (<code>zoffice_invoke</code> / <code>zoffice_string_free</code>) in the staticlib/cdylib artifacts. Feature-level status per LibreOffice / Microsoft Office capability lives in the generated <a href="port_report.html">port report</a>.</p>
 
       <h2 class="reg-h">Dependency footprint</h2>
       <table>
@@ -90,12 +102,16 @@
           <tr><td>serde · serde_json</td><td>model serialization + the JSON command boundary</td></tr>
           <tr><td>thiserror</td><td>typed error enum</td></tr>
           <tr><td>dirs</td><td>platform paths</td></tr>
+          <tr><td>flate2</td><td>raw DEFLATE of ODF entries around AES-256-CBC</td></tr>
+          <tr><td>aes · cbc · sha1 · sha2 · hmac · getrandom</td><td>MS-OFFCRYPTO Agile + Standard and ODF package encryption (RustCrypto)</td></tr>
+          <tr><td>x509-cert · rsa</td><td>XML-DSig signer-certificate parsing + RSA signature verify/sign</td></tr>
+          <tr><td>regex</td><td>the Calc <code>REGEX()</code> worksheet function and wildcard <code>SEARCH</code></td></tr>
         </tbody>
       </table>
-      <p class="note">No LibreOffice/UNO runtime, no C++ FFI, no copyleft. Crate types: <code>rlib</code> for native Rust/Tauri hosts; <code>staticlib</code> + <code>cdylib</code> for the C ABI. Two crates carry the whole reader/writer surface because every office document is a ZIP of XML parts.</p>
+      <p class="note">16 direct dependencies, every one pure Rust: no LibreOffice/UNO runtime, no C++ FFI, no system libraries, no copyleft. Crate types: <code>rlib</code> for native Rust/Tauri hosts; <code>staticlib</code> + <code>cdylib</code> for the C ABI. Two of them (<code>zip</code> + <code>quick-xml</code>) carry the whole reader/writer surface because every office document is a ZIP of XML parts; the rest exist for encrypted packages, digital signatures, and one worksheet function.</p>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="note">46 integration tests build minimal valid office packages in memory (ODF or OOXML — both are just ZIP-of-XML), write each to a temp file, and drive the public API: docx and odt paragraph extraction and authoring round-trips (<code>edit_paragraph</code> → <code>save_docx</code> / <code>save_odt</code>), xlsx shared-string + cell-reference resolution and a <code>set_cell</code> → <code>save_xlsx</code> round-trip, ods cell parsing with computed refs, Calc formula evaluation (arithmetic, the function library, <code>VLOOKUP</code>, text/compare, <code>sort_sheet</code>), pptx multi-slide text plus <code>add_slide</code> and <code>save_pptx</code> round-trips, odg page/shape counting and a <code>save_odg</code> round-trip, math MathML → StarMath, Base catalog reads and queries, the <code>Engine</code> JSON dispatcher plus its <code>info</code> descriptor, and a guard that out-of-range targets and unknown commands return a typed error rather than panicking. No external fixtures; runs identically in a headless Linux CI.</p>
+      <p class="note">970 tests ship with the engine (<code>grep -rEn "#\[(tokio::)?test\]" src tests | wc -l</code>): 904 in-module unit tests plus 66 integration tests in <code>tests/engine.rs</code>. The 66 integration tests build minimal valid office packages in memory (ODF or OOXML — both are just ZIP-of-XML), write each to a temp file, and drive the public API: docx and odt paragraph extraction and authoring round-trips (<code>edit_paragraph</code> → <code>save_docx</code> / <code>save_odt</code>), xlsx shared-string + cell-reference resolution and a <code>set_cell</code> → <code>save_xlsx</code> round-trip, ods cell parsing with computed refs, Calc formula evaluation (arithmetic, the function library, <code>VLOOKUP</code>, text/compare, <code>sort_sheet</code>), pptx multi-slide text plus <code>add_slide</code> and <code>save_pptx</code> round-trips, odg page/shape counting and a <code>save_odg</code> round-trip, math MathML → StarMath, Base catalog reads and queries, the <code>Engine</code> JSON dispatcher plus its <code>info</code> descriptor, and a guard that out-of-range targets and unknown commands return a typed error rather than panicking. No external fixtures; runs identically in a headless Linux CI.</p>
       <pre class="code">cargo test
 cargo build   # rlib + staticlib + cdylib</pre>
 

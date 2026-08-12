@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zphoto — a from-scratch image editor in Rust (Tauri v2 desktop app) porting Adobe Photoshop + Illustrator. One engine (zphoto-core): ~367 raster commands (8/16/32-bit) and 32 vector commands sharing a single layer stack, with a cyberpunk HUD front end.">
+  <meta name="description" content="zphoto — a from-scratch image editor in Rust (Tauri v2 desktop app) porting Adobe Photoshop + Illustrator. One engine (zphoto-core): 444 raster commands (8/16/32-bit) and 114 vector commands sharing a single layer stack, with a cyberpunk HUD front end.">
   <title>zphoto — Cyberpunk Image Editor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,9 +59,9 @@
       </div>
     </header>
     <main class="docs-main">
-      <div class="status-banner"><strong>Status: engine implemented, GUI in progress.</strong> zphoto-core is a working Rust engine — ~367 raster commands and 32 vector commands over a shared layer stack, covered by 440+ tests. The desktop GUI is the Tauri v2 HUD front end on top of it. Live, source-derived feature coverage is tracked in the <a href="zphoto_port_report.html">Photoshop + Illustrator port report</a>; no capability is claimed without a real engine symbol behind it.</div>
+      <div class="status-banner"><strong>Status: engine implemented, GUI shipping.</strong> zphoto-core is a working Rust engine — 444 raster commands and 114 vector commands over a shared layer stack, covered by 681 tests. The desktop GUI is the Tauri v2 HUD front end on top of it, with a native macOS menu bar, an embedded terminal, a hooks editor, a file browser and 27 locales. Live, source-derived feature coverage is tracked in the <a href="zphoto_port_report.html">Photoshop + Illustrator port report</a>; no capability is claimed without a real engine symbol behind it.</div>
 
-      <p class="lede">zphoto is a from-scratch image editor written in Rust, porting the union of <strong>Adobe Photoshop</strong> and <strong>Adobe Illustrator</strong> into a single tool. One engine — <a href="https://github.com/MenkeTechnologies/zphoto-core">zphoto-core</a> — provides both halves: roughly <strong>367 raster commands</strong> (a Photoshop / GIMP port operating at 8-, 16-, and 32-bit depth) and <strong>32 vector commands</strong> (an Illustrator port), and crucially the vector side shares the very same layer stack as the raster side rather than living in a separate document model. The app is a <strong>Tauri v2</strong> desktop front end with a cyberpunk HUD. Created by MenkeTechnologies.</p>
+      <p class="lede">zphoto is a from-scratch image editor written in Rust, porting the union of <strong>Adobe Photoshop</strong> and <strong>Adobe Illustrator</strong> into a single tool. One engine — <a href="https://github.com/MenkeTechnologies/zphoto-core">zphoto-core</a> — provides both halves: <strong>444 raster commands</strong> (a Photoshop / GIMP port operating at 8-, 16-, and 32-bit depth) and <strong>114 vector commands</strong> (an Illustrator port), and crucially the vector side shares the very same layer stack as the raster side rather than living in a separate document model. The app is a <strong>Tauri v2</strong> desktop front end with a cyberpunk HUD. Created by MenkeTechnologies.</p>
 
       <div class="card-grid">
         <div class="card"><h3>Photoshop + Illustrator</h3><p>One binary covering a raster editor (filters, adjustments, blend modes, masks, selections, paint) and a vector editor (paths, shapes, strokes/fills, boolean ops), each row in the port report naming its source app.</p></div>
@@ -99,15 +99,19 @@ use serde_json::json;
 
 let engine = Engine::new();
 
-engine.invoke("layer.add", &amp;json!({ "name": "overlay" }))?;
-engine.invoke("filter.gaussian_blur", &amp;json!({ "radius": 4.0 }))?;
-engine.invoke("adjust.levels", &amp;json!({ "black": 12, "white": 240 }))?;
-let png = engine.invoke("io.export", &amp;json!({ "format": "png" }))?;</pre>
+let doc = engine.invoke("image.new", &amp;json!({ "width": 1920, "height": 1080 }))?;
+let image = doc["id"].clone();
+let layer = engine.invoke("layer.add", &amp;json!({ "image": image, "name": "overlay" }))?;
+let layer = layer["id"].clone();
+engine.invoke("filter.gaussian_blur", &amp;json!({ "image": image, "layer": layer, "radius": 4.0 }))?;
+engine.invoke("op.levels", &amp;json!({ "image": image, "layer": layer, "in_low": 0.05, "in_high": 0.94 }))?;
+let png = engine.invoke("image.save", &amp;json!({ "image": image, "format": "png" }))?;</pre>
       <div class="card-grid">
         <div class="card"><h3>codec</h3><p>Decode / encode raster formats into and out of the in-memory document model.</p></div>
         <div class="card"><h3>filter / fill / paint</h3><p>The raster command surface — filters, adjustments, fills, and brush/paint operations over 8/16/32-bit pixels.</p></div>
         <div class="card"><h3>vector</h3><p>Bézier paths, shapes, strokes/fills and boolean ops, composited onto the same layer stack as raster.</p></div>
-        <div class="card"><h3>model / ops</h3><p>The document and layer model and the dispatch surface (~55 ops) that the GUI, FFI, and Tauri plugin all call.</p></div>
+        <div class="card"><h3>model / ops</h3><p>The document and layer model plus the 73 pixel operators behind the <code>op.*</code> commands, which the GUI, FFI, and Tauri plugin all reach through one <code>Engine::invoke</code>.</p></div>
+        <div class="card"><h3>program / solve</h3><p>The edit-program compiler (fuse a recorded action's tone steps into one bit-exact LUT) and Constraint Solve (fit its parameters to pinned target colours).</p></div>
         <div class="card"><h3>text</h3><p>Type layout — point / area type and type on a path — rasterized into layers.</p></div>
         <div class="card"><h3>ffi / tauri_plugin</h3><p>A C FFI and a Tauri plugin surface so the engine embeds in the desktop GUI and in other MenkeTechnologies apps.</p></div>
       </div>

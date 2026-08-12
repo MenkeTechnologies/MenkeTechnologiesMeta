@@ -9,10 +9,12 @@ Concrete tasks to drive all **14 Desktop Apps** to **PASS** on
 `Audio-Haxor` (reference), `traderview`, `ztranslator`, `zpwr-daw`, `zpdf`, `zemail`,
 `zoffice`, `zreq`, `ztunnel`, `zgo`, `zftp`, `zcite`, `zterminal`, `zcontainer`.
 
-> **Roster drift (2026-07-12):** `app-store/store.js` now lists **18** `category: 'Desktop Apps'`
-> ids — the four additions **`zphoto`**, **`zstation`**, **`zwire`**, and **`zthrottle`** postdate
-> this gate snapshot and are **not yet measured**. Run the Phase F audit to fold them into the matrix
-> before treating this checklist as complete.
+> **Roster drift (2026-08-02):** `app-store/store.js` now lists **22** `category: 'Desktop Apps'`
+> ids — eight of them postdate this gate snapshot and are **not yet measured**: **`zphoto`**,
+> **`zstation`**, **`zwire`**, **`zthrottle`**, **`zlatex`**, **`zmusic`**, **`ztorrent`** and
+> **`zmax-gui`** (the last was already shipping but was not in that store category at snapshot
+> time). Run the Phase F audit to fold them into the matrix before treating this checklist as
+> complete.
 
 > **Embeds (Phase B + Phase C) are NOT complete** — the universal component set has real holes
 > (`zterminal` embeds none of the four; `zcontainer` has no `zpwr-embed-terminal`; `zpwr-daw` has no
@@ -86,10 +88,11 @@ Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) 
   `zpwr-file-browser` is in **12/14** — absent in **zpwr-daw** and **zterminal**; `zpwr-i18n` is
   absent only in **zterminal** (zpdf and zcontainer get it transitively, vendored inside
   `zpdf-core` / `zcontainer-core`). `zterminal/.gitmodules` holds only `frontend/lib/zgui-core` and
-  `crates/ztmux-core` — nothing else. The cross-cutting engines are **not** universal either:
-  `zpdf-core` is embedded by zemail, zftp and Audio-Haxor (plus zpdf itself); `zoffice-core` by
-  zemail and zftp (plus zoffice itself); `zemail-core` by zftp (plus zemail itself). No other app
-  embeds any of the three.
+  `crates/ztmux-core` — nothing else. The cross-cutting engines are **not** universal either, though
+  `zoffice-core` has spread since the snapshot: as of 2026-08-02 `zpdf-core` is embedded by
+  Audio-Haxor, zemail, zftp and zmax-gui (plus zpdf itself); `zoffice-core` by Audio-Haxor, zcite,
+  zemail, zftp, zmax-gui and zpdf (plus zoffice itself); `zemail-core` by zftp alone (plus zemail
+  itself). `zmax-gui` is outside the 14-app snapshot roster.
 - **Command palette (R1)** present in **13/14** — everything except `zterminal`. Nine apps get it
   from `ZGui.appShell`, which registers ⌘K itself (`zgui-core/webui/app-shell.js:313`): zpdf,
   zemail, zoffice, zreq, ztunnel, zftp, zcite, zcontainer, and zgo (Preferences window — see **‡**).

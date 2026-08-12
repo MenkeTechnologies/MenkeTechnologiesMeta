@@ -188,12 +188,18 @@ boot, opens a **Unix domain socket**:
 ```
 $XDG_RUNTIME_DIR/zgui/<app>.sock          # Linux
 $TMPDIR/zgui/<app>.sock                    # macOS (XDG_RUNTIME_DIR usually unset)
+/tmp/zgui/<app>.sock                       # fallback when neither is set
+\\.\pipe\<app>.sock                        # Windows (named pipe, same leaf name)
 ```
 
-`App::open("zcite")` dials `zgui/zcite.sock`. The socket host is a **shared Rust helper** (new crate
-`zgui-bridge`, or a module reused by every app backend) so per-app cost is `bridge::serve(app_name,
-surface)` in `main` — one line. Precedent: you already talk a raw wire protocol straight to a socket in
-zterminal (tmux imsg, no subprocess); this is the same discipline.
+The directory is created `0700` (`zgui-bridge/src/sockpath.rs:17-31`) and a stale socket from a
+crashed prior run is removed before bind (`lib.rs:57`).
+
+`App::open("zcite")` dials `zgui/zcite.sock`. The socket host is the **shared Rust crate**
+`zgui-bridge`, so per-app cost is `zgui_bridge::serve(app_name, handler)` in `main` — one line
+(`zgui-bridge/src/lib.rs:272`), returning an `Arc<Bridge>` the app keeps for `emit`. Precedent: you
+already talk a raw wire protocol straight to a socket in zterminal (tmux imsg, no subprocess); this
+is the same discipline.
 
 ### 7.1 Wire protocol
 
@@ -220,6 +226,22 @@ Newline-delimited JSON frames, request/response + a subscription stream. Deliber
 `id` correlates reply to request; `sub` correlates pushed events to the subscription. The in-process
 transport speaks the same frames over the host callback (no socket), so `stryke-app` has one codec.
 
+### 7.2 Transactions (shipped)
+
+`zgui-bridge` also carries a journaling/compensation layer, so a multi-verb script can be rolled
+back. Four more request frames (`zgui-bridge/src/proto.rs:28-42`), same `reply` response shape:
+
+```
+→ {"t":"begin","id":5,"txn":1}      # journal every subsequent call on this connection under txn 1
+→ {"t":"commit","id":6,"txn":1}     # close the txn, discard its journal, run no compensation
+→ {"t":"abort","id":7,"txn":1}      # compensate every journaled entry in reverse order, then discard
+→ {"t":"undo","id":8,"verb":"library.add","args":{...},"result":{...}}   # compensate one verb out of band
+```
+
+The journal itself is `zgui_bridge::Journal` (`lib.rs:156-213`) — `begin` / `record` / `commit` /
+`take_reversed` — and a compensation that fails is surfaced as a `CompensationFailure`
+(`lib.rs:145`) rather than swallowed.
+
 ## 8. Layer 5 — front-ends onto the bus
 
 All three surfaces get `App` in scope and use the **same** module — no per-surface logic:
@@ -235,7 +257,8 @@ All three surfaces get `App` in scope and use the **same** module — no per-sur
 
 ## 9. Security
 
-- Socket lives in the per-user runtime dir, mode **0600**; no network listener, ever.
+- Socket lives in the per-user runtime dir, mode **0600** (`zgui-bridge/src/lib.rs:60`) inside a
+  **0700** `zgui/` directory (`sockpath.rs:28`); no network listener, ever.
 - Out-of-process `call` requires the target app to be **running** (dial fails → `die`); no launch-on-demand
   in v1.
 - Verbs are an **allow-list**: only what an app registered in `ZGui.automation.register` is reachable.
@@ -281,10 +304,23 @@ Then fan out to zemail, zcontainer, zftp, zstation, zterminal, the rest.
 This is a **combination** first, not a single new capability. Embedding a language in an app, scripting
 across apps, and a vendor-authored automation language each **predate this separately**. The claim is the
 *conjunction*, under constraints. Prior-art absence below is **non-exhaustive**. The bus is **built**:
-all **19 Tauri apps** call `zgui_bridge::serve` and expose the surface today — Audio-Haxor, traderview,
-zcite, zcontainer, zemail, zftp, zgo, zlatex, zmax-gui, zmusic, zoffice, zpdf, zphoto, zreq, zstation,
-zthrottle, ztorrent, ztranslator, ztunnel — each with a `bus.rs` at `app/src-tauri/src/bus.rs`
-(`src-tauri/src/bus.rs` for Audio-Haxor and traderview). Track B (JUCE plugins) is still unbuilt.
+**19 apps** call `zgui_bridge::serve` and expose the surface today — Audio-Haxor, traderview, zcite,
+zcontainer, zemail, zftp, zgo, zlatex, zmax-gui, zmusic, zoffice, zpdf, zphoto, zreq, zstation,
+zthrottle, ztorrent, ztranslator, ztunnel. `zcontainer` routes its own engine Rust-direct on the same
+socket (`app/src-tauri/src/bus.rs:210`), so its `docker.*` / `k8s.*` / `vm.*` / `analyze.*` vocabulary
+is callable by name; `ztranslator` does the same for the engine behind `tauri-plugin-ztranslator` —
+its stateless `ztr_*` commands resolve Rust-direct and the stateful ones go through the plugin's own
+command so the host wrapper (event sink, persistence, log) still runs; `zmax-gui` dispatches its own
+host command surface by name alongside the webview verbs. `zwire` is scriptable through its own
+native bus rather than this socket, and so is `zterminal` — it has no webview shell, but it is **not**
+off the automation story: `zterminal/src/zbus.rs` is 1,658 lines spawned at `main.rs:223`, publishing
+its own verb surface (including `pane_await`, `zbus.rs:210`). An earlier revision of this paragraph
+implied otherwise.
+
+**Track B (JUCE) is no longer unbuilt.** `zpwr-daw` hosts the bus natively through
+`app/src/DawBus.h` (616 lines, a JUCE-free C++ port of the `zgui-bridge` transport), started from
+`PluginEditor.cpp:506` and torn down first in the destructor at `:492` — the first JUCE host on the
+bus. `zpwr-synth`, `zpwr-fx` and `zpwr-midi-fx` remain unwired.
 
 The four nearest prior arts, and why each fails a load-bearing leg:
 

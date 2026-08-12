@@ -111,11 +111,11 @@
         <div class="stat-card"><div class="stat-val">128</div><div class="stat-label">CLI options</div></div>
         <div class="stat-card"><div class="stat-val accent">16</div><div class="stat-label">Concurrent shards / family</div></div>
         <div class="stat-card"><div class="stat-val">11</div><div class="stat-label">Scan techniques</div></div>
-        <div class="stat-card"><div class="stat-val">9</div><div class="stat-label">Discovery probes (-P*)</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Discovery probe flags (-P*)</div></div>
         <div class="stat-card"><div class="stat-val green">5</div><div class="stat-label">Output formats (nmap-compatible)</div></div>
         <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Binaries (nmaprs + nms)</div></div>
         <div class="stat-card"><div class="stat-val accent">30</div><div class="stat-label">src modules (lib.rs)</div></div>
-        <div class="stat-card"><div class="stat-val">1,028</div><div class="stat-label">man nmaprsall lines</div></div>
+        <div class="stat-card"><div class="stat-val">1,037</div><div class="stat-label">man nmaprsall lines</div></div>
       </div>
 
       <hr class="section-rule">
@@ -127,7 +127,7 @@
           <tr><th>Layer</th><th>Implementation</th></tr>
         </thead>
         <tbody>
-          <tr><td>Raw socket I/O</td><td><code>pnet</code> + <code>socket2</code> &mdash; IPv4 layer-3 datagrams, IPv6 raw via <code>IPPROTO_RAW</code> + <code>IPV6_HDRINCL</code> on Unix</td></tr>
+          <tr><td>Raw socket I/O</td><td><code>pnet</code> / <code>pnet_sys</code> plus direct <code>libc</code> calls (<code>poll</code>, <code>fcntl</code>, <code>geteuid</code>) &mdash; IPv4 layer-3 datagrams, IPv6 raw via <code>IPPROTO_RAW</code> + <code>IPV6_HDRINCL</code> on Unix</td></tr>
           <tr><td>Async runtime</td><td><code>tokio</code> multi-thread &mdash; one reactor pool, raw recv lives on dedicated thread (not the reactor)</td></tr>
           <tr><td>Mixed IPv4 + IPv6 dispatch</td><td><code>tokio::join</code> &mdash; both engines concurrent; per-<code>IpAddr</code> host-timeout clock shared</td></tr>
           <tr><td>Sharding</td><td>Up to 16 concurrent pipelines per family, bounded by <code>effective_probe_concurrency()</code> from timing template / <code>--max-parallelism</code></td></tr>
@@ -159,13 +159,14 @@
           <tr><td>Idle scan (<code>-sI zombie[:probeport]</code>)</td><td class="ok">Implemented &mdash; IPv4 only, sequential IP-ID sampling; IPv6 skipped (warning)</td></tr>
           <tr><td>FTP bounce (<code>-b user:pass@host:port</code>)</td><td class="ok">Implemented &mdash; IPv4 only (<code>PORT</code> command); 150/125/250 &rarr; <code>open</code>, 425/426/421 &rarr; <code>closed</code></td></tr>
           <tr><td>IP protocol (<code>-sO</code>)</td><td class="ok">Implemented &mdash; IPv4 + IPv6 on Unix; <code>-p</code> is protocol numbers 0..=255; <code>-F</code> uses <code>nmap-protocols</code></td></tr>
-          <tr><td>Discovery (<code>-PS</code>/<code>-PA</code>/<code>-PU</code>/<code>-PY</code>/<code>-PE</code>/<code>-PP</code>/<code>-PM</code>/<code>-PO</code>/<code>-PR</code>)</td><td class="ok">Implemented &mdash; ARP auto on local IPv4 subnets (<code>--disable-arp-ping</code> to opt out)</td></tr>
+          <tr><td>Discovery (<code>-PS</code>/<code>-PA</code>/<code>-PU</code>/<code>-PY</code>/<code>-PE</code>/<code>-PP</code>/<code>-PM</code>/<code>-PO</code>)</td><td class="ok">Implemented &mdash; ARP auto on local IPv4 subnets (<code>--disable-arp-ping</code> to opt out); no <code>-PR</code> flag, the ARP probe is automatic</td></tr>
           <tr><td>Ping scan (<code>-sn</code>)</td><td class="ok">Implemented &mdash; raw ICMP via <code>pnet</code>, falls back to system <code>ping</code>; output formats write host-up lines</td></tr>
           <tr><td>IPv6 (<code>-6</code>)</td><td class="ok">Implemented &mdash; targets + scans including raw SYN when privileged</td></tr>
           <tr><td>Traceroute (<code>--traceroute</code>)</td><td class="ok">Implemented &mdash; system <code>traceroute</code>/<code>tracert</code>; up to <code>min(parallelism, 32)</code> concurrent</td></tr>
           <tr><td><code>--iL</code> / <code>--iR</code> / <code>--exclude</code> / <code>--excludefile</code></td><td class="ok">Implemented &mdash; parallel resolution preserving order</td></tr>
-          <tr><td><code>--resume</code> (JSON checkpoint)</td><td class="ok">Implemented &mdash; TCP connect, UDP, raw half-open TCP, IP protocol scan</td></tr>
-          <tr><td>Evasion (<code>-g</code>, <code>--ttl</code>, <code>--badsum</code>, <code>-D</code>, <code>-S</code>, <code>--data*</code>, <code>-f</code>/<code>--mtu</code>, <code>--spoof-mac</code>)</td><td class="ok">Implemented &mdash; wired at the packet level for raw TCP scans</td></tr>
+          <tr><td><code>--resume</code> (JSON checkpoint)</td><td class="ok">Implemented &mdash; filtered off the work list before dispatch, so every port-scan kind honours it: TCP connect, UDP, raw half-open TCP, SCTP, IP protocol, idle, FTP bounce</td></tr>
+          <tr><td>Evasion (<code>-g</code>, <code>--badsum</code>, <code>-D</code>, <code>-S</code>, <code>--data*</code>, <code>--spoof-mac</code>)</td><td class="ok">Implemented &mdash; wired at the packet level for raw TCP scans</td></tr>
+          <tr><td><code>--ttl</code>, <code>-f</code>/<code>--mtu</code>, <code>--ip-options</code>, <code>-e</code>, <code>--send-eth</code>/<code>--send-ip</code>, <code>--packet-trace</code>, <code>--system-dns</code></td><td class="part">Parsed only &mdash; accepted and validated so nmap command lines run unchanged; not applied to the emitted packets, the ARP interface choice, or resolver selection</td></tr>
           <tr><td><code>--proxies</code> / <code>--proxy</code></td><td class="ok">Implemented &mdash; SOCKS4 + HTTP CONNECT for TCP connect scans</td></tr>
           <tr><td><code>--dns-servers</code></td><td class="ok">Implemented &mdash; hickory-resolver, custom resolver IPs comma-separated</td></tr>
           <tr><td>Auto privilege detect (<code>geteuid</code>)</td><td class="ok">Implemented &mdash; downgrade SYN&rarr;connect when unprivileged; <code>--privileged</code> forces raw</td></tr>
@@ -227,7 +228,7 @@
         <li><strong><code>-PY</code></strong> (default port <strong>80</strong>) &mdash; SCTP INIT; INIT-ACK / ABORT &rarr; up; privileged; IPv4/IPv6 merged independently on partial failure.</li>
         <li><strong><code>-PO</code></strong> (default protocols <strong>1,2,4</strong>) &mdash; IP-protocol ping; open or closed &rarr; up; privileged.</li>
         <li><strong><code>-PP</code> / <code>-PM</code></strong> &mdash; ICMP timestamp / address-mask requests (IPv4 only, Unix raw via <code>icmp_ping.rs</code>); reply &rarr; up; <code>connect_timeout</code> bounds the wait; skipped with a warning on non-Unix.</li>
-        <li><strong><code>-PR</code></strong> &mdash; ARP ping; auto on local IPv4 subnets unless <code>--disable-arp-ping</code>.</li>
+        <li><strong>ARP ping</strong> &mdash; automatic on local IPv4 subnets unless <code>--disable-arp-ping</code>; there is no <code>-PR</code> flag to request it explicitly.</li>
       </ul>
 
       <h3 style="color:var(--cyan); font-family:'Orbitron',sans-serif; letter-spacing:1.5px; margin-top:1.2rem;">// IDLE &amp; FTP-BOUNCE INDIRECT SCANS</h3>
@@ -237,7 +238,7 @@
       </ul>
 
       <h3 style="color:var(--cyan); font-family:'Orbitron',sans-serif; letter-spacing:1.5px; margin-top:1.2rem;">// EVASION AT PACKET LEVEL</h3>
-      <p>Source-port spoofing, custom TTL, bad checksums, decoys, source-IP spoofing, custom payload (hex / string / random length), fragmentation (<code>-f</code>, <code>--mtu</code>), and MAC spoofing on ARP discovery frames are all wired <strong>into the raw IPv4 packet construction</strong> for <code>-sS</code> / <code>-sN</code> / <code>-sF</code> / <code>-sX</code> / <code>-sM</code> / <code>-sA</code> / <code>-sW</code>. These are not wrappers around an external <code>scapy</code>-style helper &mdash; they manipulate the packet bytes nmaprs writes to the raw socket.</p>
+      <p>Source-port spoofing, bad checksums, decoys, source-IP spoofing, and custom payload (hex / string / fixed length) are wired <strong>into the raw IPv4 packet construction</strong> for <code>-sS</code> / <code>-sN</code> / <code>-sF</code> / <code>-sX</code> / <code>-sM</code> / <code>-sA</code> / <code>-sW</code>; MAC spoofing applies to the ARP discovery frames. These are not wrappers around an external <code>scapy</code>-style helper &mdash; they manipulate the packet bytes nmaprs writes to the raw socket. <strong>Not yet applied:</strong> <code>--ttl</code>, <code>-f</code> / <code>--mtu</code> fragmentation, and <code>--ip-options</code> are parsed and validated for CLI parity only.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">!</span>WHEN TO USE NMAP INSTEAD</h2>
@@ -259,12 +260,12 @@
       <table class="parity-table">
         <thead><tr><th>Item</th><th>Value</th></tr></thead>
         <tbody>
-          <tr><td>License</td><td>MIT OR Apache-2.0 (dual)</td></tr>
+          <tr><td>License</td><td>MIT</td></tr>
           <tr><td>Author</td><td><a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a></td></tr>
           <tr><td>Repository</td><td><a href="https://github.com/MenkeTechnologies/nmaprs">github.com/MenkeTechnologies/nmaprs</a></td></tr>
           <tr><td>Crate</td><td><a href="https://crates.io/crates/nmaprs">crates.io/crates/nmaprs</a></td></tr>
           <tr><td>API docs</td><td><a href="https://docs.rs/nmaprs">docs.rs/nmaprs</a></td></tr>
-          <tr><td>Man pages</td><td><code>man nmaprs</code> (506 lines, short ref) + <code>man nmaprsall</code> (1028 lines, full ref)</td></tr>
+          <tr><td>Man pages</td><td><code>man nmaprs</code> (499 lines, short ref) + <code>man nmaprsall</code> (1037 lines, full ref)</td></tr>
           <tr><td>Issues</td><td><a href="https://github.com/MenkeTechnologies/nmaprs/issues">github.com/MenkeTechnologies/nmaprs/issues</a></td></tr>
         </tbody>
       </table>

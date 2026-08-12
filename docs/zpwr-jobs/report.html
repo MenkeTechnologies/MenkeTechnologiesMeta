@@ -132,6 +132,34 @@
       <h2 class="tutorial-title"><span class="step-hash">/</span>SCOPE &amp; LIMITS</h2>
       <p><strong>One-page invariant:</strong> a cover letter must never exceed a single page. The renderer enforces it — after laying out the PDF it checks the final cursor against the printable height ($PH &minus; margin) and <em>aborts without writing</em> if the content overflows, exceeds <code>max_words</code>, or falls under <code>min_words</code>. This guard is measured on the PDF layout and gates both formats (the docx tracks it as a proxy; Word reflows independently). Length is tuned via <code>max_paragraphs</code> / <code>max_words</code> / <code>min_words</code> / <code>body_size</code> / <code>head_size</code> / <code>line_height</code> / <code>margin</code>.</p>
       <p>Tailoring — mapping a posting to the candidate's real accomplishments — is done per job in <code>letter.txt</code>, either by hand or AI-drafted by <code>draft_letter.stk</code> under explicit rules (real resume facts only, never fabricate employers/titles/dates/metrics; treat resume omissions as space constraints, not capability gaps). <code>cover_letter_pipeline.stk</code> itself stays a deterministic renderer, not a generator of claims. The docx uses the resume's serif font (config <code>body_font</code>, default Cambria) and full UTF-8; the pdf approximates with a base-14 serif (config <code>pdf_font</code>, default Times) and folded ASCII, the documented cost of shipping with zero font embedding and zero external binaries.</p>
+      <p><strong>Scope of the "zero external binaries" claim:</strong> it describes the cover-letter path, which is the pipeline this report is about. The repo also carries a second, unrelated renderer for the resume and CV, and that one is not binary-free &mdash; see below.</p>
+
+      <hr class="section-rule">
+      <h2 class="tutorial-title"><span class="step-hash">%</span>THE RESUME / CV RENDERER</h2>
+      <p>The resume and CV deliberately do not go through stryke-office. They are authored as HTML and printed by headless Chrome over the Chrome DevTools Protocol, for one reason: Chrome's <code>--print-to-pdf</code> cannot render a page-number footer, so <code>render-pdf.js</code> drives <code>Page.printToPDF</code> itself to get <code>displayHeaderFooter</code> + <code>footerTemplate</code>. It is a single script covering all six documents rather than one script per variant.</p>
+      <table class="arch-table">
+        <thead><tr><th><code>&lt;doc&gt;</code></th><th>Source</th><th>Contents</th></tr></thead>
+        <tbody>
+          <tr><td><code>resume</code></td><td><code>resume.html</code></td><td>the base resume — single-column, ATS-clean</td></tr>
+          <tr><td><code>resume-tech</code></td><td><code>resume-tech.html</code></td><td>the resume plus a per-role tech-stack line</td></tr>
+          <tr><td><code>resume-ft</code></td><td><code>resume-fulltime.html</code></td><td>full-time roles only</td></tr>
+          <tr><td><code>resume-nose</code></td><td><code>resume-noselfemployed.html</code></td><td>the base resume minus the self-employed role</td></tr>
+          <tr><td><code>resume-nc</code></td><td><code>resume-nocounts.html</code></td><td>the base resume minus every product / language / book / invention count</td></tr>
+          <tr><td><code>cv</code></td><td><code>clients.html</code></td><td>selected projects &amp; work</td></tr>
+        </tbody>
+      </table>
+      <table class="arch-table">
+        <thead><tr><th>Decision</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>CDP instead of <code>--print-to-pdf</code></td><td>the flag has no footer hook at all; <code>Page.printToPDF</code> takes an HTML <code>footerTemplate</code> with <code>pageNumber</code> / <code>totalPages</code> spans, which is the whole reason for the extra machinery. Chrome is spawned <code>--headless=new</code> on port 9411, driven over the page target's websocket, and killed when the render completes.</td></tr>
+          <tr><td>Ghostscript metadata pass</td><td>CDP writes no DOCINFO, so a second pass pipes a <code>pdfmark</code> block through <code>gs</code> to stamp <code>Title</code> / <code>Author</code> / <code>Subject</code> / <code>Keywords</code>. Metadata strings are ASCII-only with parentheses escaped, since they become PostScript string literals. If <code>gs</code> fails the un-stamped PDF is restored and a warning printed &mdash; the render is never lost to the metadata step.</td></tr>
+          <tr><td>Shared keyword surface</td><td>the ATS keyword list is defined once; the tech variant reads it directly and the full-time / no-self-employed / no-counts variants are assigned it after the table is built, so a keyword is never maintained in four places.</td></tr>
+          <tr><td>ATS extraction assertion</td><td>a resume that renders beautifully but doesn't extract is worthless. Each resume document declares an <code>atsCheck</code> string and the script asserts it survives <code>pdftotext</code>, so a layout change can't silently break machine readability. The CV sets it to <code>null</code> and is skipped.</td></tr>
+          <tr><td>Fixed geometry in code</td><td>US Letter, 0.5&Prime; side and top margins, 0.6&Prime; bottom, <code>printBackground</code> on and <code>preferCSSPageSize</code> off &mdash; the script owns the page box so an edit to a stylesheet cannot silently change the paper size. Page count is reported from <code>pdfinfo</code> after each render.</td></tr>
+          <tr><td>macOS-only, by construction</td><td>the Chrome binary path is hardcoded to the macOS bundle and the script exits early when it is absent. Prerequisites are Chrome, Ghostscript and poppler; none are needed by the cover-letter pipeline, and none are checked by <code>s test</code>.</td></tr>
+        </tbody>
+      </table>
+      <p>The script's own <code>usage:</code> line names only <code>&lt;resume|cv&gt;</code>; the four variant keys work but are not listed there.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">$</span>SOURCE MAP</h2>
@@ -144,6 +172,9 @@
           <tr><td>draft_letter.stk</td><td>AI letter drafter — <code>ai</code> builtin + structured schema &rarr; <code>letter.txt</code>; <code>--render</code> chains the renderer, redrafts shorter on overflow</td></tr>
           <tr><td>lib/CoverLetter.stk</td><td>pure text/parse helpers (fold, wrap, parse, split, word-count, token, formats validation, letter assembly) — unit-tested</td></tr>
           <tr><td>t/</td><td>unit tests for <code>lib/</code> — run with <code>s test</code> (stryke only, no stryke-office, CI-safe)</td></tr>
+          <tr><td>render-pdf.js</td><td>the resume / CV renderer — headless Chrome over the DevTools Protocol; six documents keyed by argv, page-number footer, Ghostscript metadata stamp, <code>pdfinfo</code> page count, <code>pdftotext</code> ATS check</td></tr>
+          <tr><td>render-resume.sh / render-cv.sh</td><td>thin bash wrappers over <code>node render-pdf.js resume</code> / <code>cv</code></td></tr>
+          <tr><td>resume*.html, clients.html</td><td>the HTML sources for those six PDFs — base resume, tech-stack variant, full-time-only, no-self-employed, no-counts, and the CV</td></tr>
           <tr><td>config.toml</td><td>identity (username, name, contact, accent, ink, fonts) + generator behavior + letter content params; parsed by stryke <code>toml_decode</code></td></tr>
           <tr><td>resume.txt</td><td>candidate facts + the style every letter matches</td></tr>
           <tr><td>jobs/&lt;JOB&gt;/job_desc.txt</td><td>raw posting (reference / tailoring source)</td></tr>

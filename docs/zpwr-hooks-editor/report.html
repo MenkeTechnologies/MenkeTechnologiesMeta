@@ -96,39 +96,43 @@
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
       <p class="tutorial-subtitle"><strong>zpwr-hooks-editor</strong> is the shared <strong>stryke Hooks code editor</strong> of the MenkeTechnologies app stack &mdash; one JavaScript source of truth for a <a href="https://github.com/microsoft/monaco-editor" target="_blank" rel="noopener noreferrer">Monaco</a> editor wired with <code>monaco-vim</code>, <code>monaco-emacs</code> and a thin stryke-LSP adapter. It was extracted from the Audio-Haxor frontend so the editor is no longer duplicated across apps; the source lives in <code>src/</code> and each consuming app bundles it with its own <code>monaco-*</code> dependencies.</p>
       <p class="tutorial-subtitle">The bundle is produced with esbuild (IIFE, ES2020, minified) and exposes a single <code>window.HooksEditor</code> facade. Language intelligence &mdash; completion, hover, diagnostics, definitions, references, rename, signature help, document symbols, code actions, semantic tokens &mdash; comes from the stryke language server (<code>stryke --lsp</code>) over a caller-supplied transport, mapped onto Monaco's provider/marker APIs by a thin LSP JSON-RPC client.</p>
+      <p class="tutorial-subtitle">Two Monarch grammars ship in the one bundle, picked per editor with <code>create({ language })</code>: <code>stryke</code> (the default, Perl tokens plus the full language server) and <code>latex</code> (grammar, structural snippets, document-driven <code>\ref</code>/<code>\cite</code> completion and a sectioning outline, with no language server). An app that edits LaTeX &mdash; zlatex's equation pane &mdash; reuses this editor instead of forking a second one, so the theme, the vim/emacs keymaps and the Monaco instance stay shared.</p>
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">v0.1.0</div><div class="stat-label">Version</div></div>
         <div class="stat-card"><div class="stat-val cyan">3</div><div class="stat-label">src .mjs files</div></div>
-        <div class="stat-card"><div class="stat-val green">810</div><div class="stat-label">src lines</div></div>
+        <div class="stat-card"><div class="stat-val green">1091</div><div class="stat-label">src lines</div></div>
         <div class="stat-card"><div class="stat-val cyan">4</div><div class="stat-label">.mjs files (src + scripts)</div></div>
-        <div class="stat-card"><div class="stat-val green">898</div><div class="stat-label">.mjs lines (src + scripts)</div></div>
+        <div class="stat-card"><div class="stat-val green">1179</div><div class="stat-label">.mjs lines (src + scripts)</div></div>
         <div class="stat-card"><div class="stat-val cyan">13</div><div class="stat-label">LSP providers</div></div>
+        <div class="stat-card"><div class="stat-val cyan">2</div><div class="stat-label">Monarch grammars</div></div>
         <div class="stat-card"><div class="stat-val">5</div><div class="stat-label">Facade methods</div></div>
         <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Consumer apps</div></div>
         <div class="stat-card"><div class="stat-val cyan">4</div><div class="stat-label">Pinned devDeps</div></div>
         <div class="stat-card"><div class="stat-val">private</div><div class="stat-label">Tier</div></div>
       </div>
-      <p class="tutorial-subtitle" style="font-size:11px;opacity:0.7;">Counts derived from the repo: <code>src/*.mjs</code> = 3 files / 810 lines; with <code>scripts/build-hooks-editor.mjs</code> = 4 files / 898 lines; <code>register&hellip;Provider</code> call sites = 13; <code>window.HooksEditor</code> methods = 5; consumers Audio-Haxor + traderview + ztranslator + zpwr-daw = 4; <code>devDependencies</code> in <code>package.json</code> = 4.</p>
+      <p class="tutorial-subtitle" style="font-size:11px;opacity:0.7;">Counts derived from the repo: <code>src/*.mjs</code> = 3 files / 1091 lines; with <code>scripts/build-hooks-editor.mjs</code> = 4 files / 1179 lines; <code>register&hellip;Provider(LANG_ID</code> call sites = 13 (plus 3 <code>LATEX_ID</code> providers, 16 registrations in all); <code>monaco.languages.setMonarchTokensProvider</code> call sites = 2; <code>window.HooksEditor</code> methods = 5; consumers Audio-Haxor + traderview + ztranslator + zpwr-daw = 4; <code>devDependencies</code> in <code>package.json</code> = 4.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">~</span>ARCHITECTURE</h2>
-      <p class="tutorial-subtitle">One editor source, built per consumer. The entry registers the stryke language, the cyberpunk theme, the vim/emacs keymaps and the LSP&#8596;Monaco provider mappings; the bundler runs inside each app to resolve its own Monaco deps and emit vendored IIFE artifacts.</p>
+      <p class="tutorial-subtitle">One editor source, built per consumer. The entry registers the stryke and latex languages, the cyberpunk theme, the vim/emacs keymaps and the LSP&#8596;Monaco provider mappings; the bundler runs inside each app to resolve its own Monaco deps and emit vendored IIFE artifacts.</p>
       <table class="arch-table">
         <thead><tr><th>Layer</th><th>Implementation</th></tr></thead>
         <tbody>
           <tr><td>Editor core</td><td>Monaco <code>edcore.main</code> &mdash; all editor contributions (suggest, hover, find, folding, multi-cursor, minimap, command palette), no bundled languages</td></tr>
           <tr><td>stryke language</td><td>stryke is a Perl-5 superset, so it reuses Monaco's Perl Monarch grammar + language config (<code>basic-languages/perl</code>) registered under the <code>stryke</code> language id; server semantic tokens overlay the Monarch highlighting</td></tr>
+          <tr><td>latex language</td><td>a second Monarch grammar in the same bundle, selected with <code>create({ language: 'latex' })</code> &mdash; control words/symbols, math shifts, <code>%</code> comments, brace/bracket matching and <code>$</code>/brace auto-closing. Three <code>LATEX_ID</code> providers: snippet completion for the structural constructs (<code>\frac</code>, <code>\sqrt</code>, <code>\left&hellip;\right</code>, <code>\sum</code>, <code>pmatrix</code>, <code>cases</code>, &hellip;), cross-reference completion that offers the document's own <code>\label</code>s inside <code>\ref{}</code> and its <code>\bibitem</code> keys inside <code>\cite{}</code>, and a document-symbol provider that turns <code>\part</code>&hellip;<code>\subparagraph</code> into the outline. No language server is attached &mdash; the stryke server speaks stryke, so a LaTeX buffer is never opened against it</td></tr>
           <tr><td>Modal editing</td><td><code>monaco-vim</code> + <code>monaco-emacs</code>, switched at runtime via <code>setMode('default'|'vim'|'emacs')</code>; vim status/command line rendered into a caller element</td></tr>
           <tr><td>LSP client</td><td><code>createLspCore</code> &mdash; a thin JSON-RPC client (<code>init</code>/<code>notify</code>/<code>request</code>/<code>receive</code>/<code>connected</code>/<code>isInitialized</code>/<code>onDiagnostics</code>/<code>ready</code>) over a host-supplied transport; the entry maps it onto Monaco's 13 provider registrations + diagnostic markers</td></tr>
           <tr><td>Facade</td><td><code>window.HooksEditor</code> &mdash; <code>initClient</code> / <code>receive</code> / <code>clientReady</code> / <code>whenReady</code> / <code>create</code></td></tr>
+          <tr><td>Editor handle</td><td>returned by <code>create</code> &mdash; <code>getValue</code> / <code>setValue</code> / <code>focus</code> / <code>setMode</code> / <code>language</code> / <code>insert</code> / <code>selectRange</code> / <code>bindKey</code> / <code>onSelection</code> / <code>destroy</code>. <code>bindKey(spec, handler)</code> takes a key back from Monaco for this editor's lifetime (Electron-style spec, e.g. <code>"CmdOrCtrl+Shift+O"</code>, which is otherwise Monaco's Go to Symbol); returns <code>false</code> on an unparseable spec</td></tr>
           <tr><td>Build</td><td>esbuild IIFE, ES2020, minified; codicon <code>.ttf</code> inlined as a data URL; runs inside the consumer, writes to its <code>frontend/lib</code></td></tr>
         </tbody>
       </table>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>LSP PROVIDER SURFACE</h2>
-      <p>The entry registers 13 Monaco language providers, each mapping a stryke-LSP method onto Monaco's provider API (LSP positions/ranges are 0-based, Monaco 1-based; kinds and severities are translated). Diagnostics arrive as server notifications and are applied as Monaco model markers.</p>
+      <p>The entry registers 13 Monaco language providers against the <code>stryke</code> language id, each mapping a stryke-LSP method onto Monaco's provider API (LSP positions/ranges are 0-based, Monaco 1-based; kinds and severities are translated). Diagnostics arrive as server notifications and are applied as Monaco model markers. The <code>latex</code> id carries 3 further providers of its own (two completion, one document symbol) that are computed locally from the model and never touch the server.</p>
       <table class="arch-table">
         <thead><tr><th>Monaco provider</th><th>Role</th></tr></thead>
         <tbody>
