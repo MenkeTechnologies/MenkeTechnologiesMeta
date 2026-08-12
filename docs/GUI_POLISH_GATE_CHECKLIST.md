@@ -1,138 +1,119 @@
 # GUI Polish Gate — Close-Out Checklist
 
-Concrete tasks to drive all **14 Desktop Apps** to **PASS** on
+Concrete tasks to drive all **22 Desktop Apps** to **PASS** on
 [`GUI_POLISH_GATE.md`](GUI_POLISH_GATE.md) (G1–G4) and
 [`GUI_APP_REQUIREMENTS.md`](GUI_APP_REQUIREMENTS.md) (R1–R10).
 [`COMPONENTS.md`](COMPONENTS.md) holds the authoritative embed matrix; this is the work list.
 
-**Roster (the 14 Desktop Apps measured in the 2026-06-30 snapshot below):**
-`Audio-Haxor` (reference), `traderview`, `ztranslator`, `zpwr-daw`, `zpdf`, `zemail`,
-`zoffice`, `zreq`, `ztunnel`, `zgo`, `zftp`, `zcite`, `zterminal`, `zcontainer`.
-
-> **Roster drift (2026-08-02):** `app-store/store.js` now lists **22** `category: 'Desktop Apps'`
-> ids — eight of them postdate this gate snapshot and are **not yet measured**: **`zphoto`**,
-> **`zstation`**, **`zwire`**, **`zthrottle`**, **`zlatex`**, **`zmusic`**, **`ztorrent`** and
-> **`zmax-gui`** (the last was already shipping but was not in that store category at snapshot
-> time). Run the Phase F audit to fold them into the matrix before treating this checklist as
-> complete.
-
-> **Embeds (Phase B + Phase C) are NOT complete** — the universal component set has real holes
-> (`zterminal` embeds none of the four; `zcontainer` has no `zpwr-embed-terminal`; `zpwr-daw` has no
-> `zpwr-file-browser`), and the cross-cutting `zoffice-core` / `zemail-core` / `zpdf-core` engines
-> are embedded by only three apps between them (see "Reads from the matrix" below). Close-out work is
-> therefore both the remaining embeds (Phase B/C) and the non-embed gate surface: shared shell
-> convergence (Phase A), i18n proof tests (Phase D), pnpm script parity (Phase E), and R1–R10
-> conformance verification (Phase F).
+**Roster — all 22 `category: 'Desktop Apps'` ids in `app-store/store.js`:**
+`Audio-Haxor` (reference), `traderview`, `ztranslator`, `zpwr-daw`, `zpdf`, `zemail`, `zoffice`,
+`zreq`, `ztunnel`, `zgo`, `zftp`, `zcite`, `zterminal`, `zcontainer`, `zphoto`, `zstation`, `zwire`,
+`zthrottle`, `zlatex`, `zmusic`, `ztorrent`, `zmax-gui`.
 
 ---
 
-## Status matrix (2026-06-30)
+## Status matrix (2026-08-12) — measured from code
 
-Measured from each app's `.gitmodules` (embeds) + a frontend grep (UI surfaces) +
-`package.json` (scripts).
+Every cell below was **re-measured from source**, one agent per app, each required to cite
+`file:line`. This replaces the 2026-06-30 snapshot, which covered 14 apps and — as the correction
+log records — was **wrong**, not merely stale, on several rows.
 
-**Cell legend** — what a value means:
+The columns are the requirement ids themselves (R1–R10, G1–G4) rather than the previous
+abbreviations, because that is the granularity the audit actually measured. Where the old matrix's
+`set` / `clr` columns had no corresponding measurement they are not carried forward as guesses.
 
 | Value | Meaning |
 | :--: | --- |
-| **✓** | present (via the canonical shared source) |
-| **✗** | absent |
-| **~** | present but **not** via the shared source — still a **FAIL** (e.g. a per-app fork or a substring filter) |
-| **?** | not yet audited — resolve in Phase F; **not** counted as PASS |
-| **N/A** | not relevant to this app |
+| **✓** | measured PASS, via the canonical shared source |
+| **✗** | measured FAIL |
+| **◐** | partial — real but incomplete, or present via a per-app implementation rather than the shared source |
+| **N/A** | not applicable to this app's substrate, with a stated reason |
 
-**Column legend** — what each column is, and which gate it serves:
+| App | R1 pal | R2 hooks | R3 term | R4 tokens | R5 tiles/tabs | R6 logo | R7 fzf | R8 tables | R9 grid | R10 fb | G1 | G2 | G3 | G4 |
+| --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| Audio-Haxor | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | ◐ | ◐ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ |
+| traderview | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | ◐ | ✓ | ✓ | ◐ | ◐ | ✗ | ✓ |
+| ztranslator | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ✗ | ◐ |
+| zpwr-daw | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ✓ | ✗ | ◐ | ◐ | ✗ | ◐ |
+| zpdf | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | ◐ |
+| zemail | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ✓ | ✓ |
+| zoffice | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ◐ | ◐ | ✓ | ✓ |
+| zreq | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | ✓ |
+| ztunnel | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
+| zgo | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✓ | ✓ | ✓ | ◐ | ◐ | ✗ | ◐ |
+| zftp | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ✓ |
+| zcite | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | N/A | ✓ | ◐ | ◐ | ◐ | ✓ |
+| zterminal | ✓ | ✗ | N/A | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ✗ | ◐ | ◐ | ✗ | ◐ |
+| zcontainer | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ◐ | ◐ | ✗ | ◐ |
+| zphoto | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ◐ | ◐ | ◐ | ✓ |
+| zstation | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ✗ | ✓ |
+| zwire | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✗ | ◐ | ◐ | ✗ | ◐ |
+| zthrottle | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ◐ | ◐ | ✗ | ✓ |
+| zlatex | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ✗ | ✓ |
+| zmusic | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ✗ | ✗ | ◐ |
+| ztorrent | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ✗ | ✓ |
+| zmax-gui | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ✗ | ✓ |
 
-| Col | Dimension | Canonical source | Gate |
-| --- | --- | --- | :--: |
-| **pal** | Command palette — **Cmd/Ctrl+K** (app-owned; cores only offer items) | end-app shell | R1 |
-| **hk** | Stryke hooks editor (Monaco) | `zpwr-hooks-editor` | R2 |
-| **tm** | Embedded PTY terminal (xterm) | `zpwr-embed-terminal` | R3 |
-| **sty** | Shared cyberpunk styles / design tokens | `cyberpunk.css` tokens | R4 |
-| **set** | Settings panel — **Cmd/Ctrl+,** (app-owned; cores only offer items) | end-app shell | G1 |
-| **clr** | Colorscheme / theme switcher | haxor theme switch + R4 tokens | R4 / G1 |
-| **hdr** | Logo top-left + shared header strip | shared header | R6 |
-| **fzf** | Fuzzy filters w/ matched-char highlight | shared `fzfMatch` | R7 |
-| **tbl** | Sortable + resizable tables | shared table component | R8 |
-| **grd** | Arrangement grid (`createGrid` + a domain) | `zpwr-clip-engine` | R9 |
-| **fb** | Multi-pane file browser | `zpwr-file-browser` | R10 |
-| **i18n** | Localized: 27 locales + 18 proof tests | `zpwr-i18n` | G3 |
-| **scr** | Extended pnpm scripts (`test`/`doc`/`ship-check`/`deploy`/`i18n:*`) | haxor `package.json` | G4 |
-| **-core** | Own `-core` engine embedded (native + C ABI) | the app's `-core` | G2 |
+### Substrate notes (why a cell is N/A, not a gap)
 
-| App | pal | hk | tm | sty | set | clr | hdr | fzf | tbl | grd | fb | i18n | scr | -core |
-| --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:| --- |
-| Audio-Haxor | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | (app) |
-| traderview | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ~ | — |
-| ztranslator | ✓ | ✓ | ✓ | ? | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | `ztranslator-core` |
-| zpwr-daw | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ † | `zpwr-clip-engine` |
-| zpdf | ✓ | ✓ | ✓ | ? | ✓ | ? | ? | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | `zpdf-core` |
-| zemail | ✓ | ✓ | ✓ | ? | ✓ | ? | ? | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | `zemail-core` |
-| zoffice | ✓ | ✓ | ✓ | ? | ✓ | ? | ? | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | `zoffice-core` |
-| zreq | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | N/A | ✓ | ~ | ✗ | `zreq-core` |
-| ztunnel | ✓ | ✓ | ✓ | ? | ✓ | ? | ? | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | `ztunnel-core` |
-| zgo | ✓ ‡ | ✓ | ✓ | ? | ✓ ‡ | ? | ? | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | `zgo-core` |
-| zftp | ✓ | ✓ | ✓ | ? | ✓ | ? | ? | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | (app) |
-| zcite | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | N/A | ✓ | ~ | ~ | `zcite-core` |
-| zterminal | ✗ | ✗ | N/A | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | (app) |
-| zcontainer | ✓ | ✓ | ✗ | ~ | ✓ | ✗ | ~ | ✓ | ✓ | ✗ | ✓ | ~ | ✗ | `zcontainer-core` |
-
-**‡** `zgo`'s `ZGui.appShell` is mounted on its **Preferences** window
-(`zgo-core/frontend/prefs.js:255`), not on the main launcher window (`zgo.html` loads
-`launcher.js` + `user-commands.js`, no `app-shell.js`) — the launcher *is* zgo's command surface.
-
-**Reads from the matrix:**
-- **Embeds (G2 + the universal set) are NOT done.** Read from each app's `.gitmodules`:
-  `zpwr-embed-terminal` is in **12/14** — absent in **zcontainer** (a real gap) and in `zterminal`
-  (N/A — it *is* the terminal); `zpwr-hooks-editor` is in **13/14** — absent in **zterminal**;
-  `zpwr-file-browser` is in **12/14** — absent in **zpwr-daw** and **zterminal**; `zpwr-i18n` is
-  absent only in **zterminal** (zpdf and zcontainer get it transitively, vendored inside
-  `zpdf-core` / `zcontainer-core`). `zterminal/.gitmodules` holds only `frontend/lib/zgui-core` and
-  `crates/ztmux-core` — nothing else. The cross-cutting engines are **not** universal either, though
-  `zoffice-core` has spread since the snapshot: as of 2026-08-02 `zpdf-core` is embedded by
-  Audio-Haxor, zemail, zftp and zmax-gui (plus zpdf itself); `zoffice-core` by Audio-Haxor, zcite,
-  zemail, zftp, zmax-gui and zpdf (plus zoffice itself); `zemail-core` by zftp alone (plus zemail
-  itself). `zmax-gui` is outside the 14-app snapshot roster.
-- **Command palette (R1)** present in **13/14** — everything except `zterminal`. Nine apps get it
-  from `ZGui.appShell`, which registers ⌘K itself (`zgui-core/webui/app-shell.js:313`): zpdf,
-  zemail, zoffice, zreq, ztunnel, zftp, zcite, zcontainer, and zgo (Preferences window — see **‡**).
-  Audio-Haxor, traderview, ztranslator and zpwr-daw ship their own palettes — the A1 convergence
-  target, not a missing surface.
-- **Settings panel (⌘,)** — same shape: `appShell` registers it (`app-shell.js:315`), so the same
-  **13/14** have it and only `zterminal` lacks it.
-- **fzf filters (R7)** — the shared `ZGui.fzf` is called by **8/14**: zpwr-daw (via
-  `zpwr-patch-core`), zemail, zreq, ztunnel, zftp, zcite, zterminal, zcontainer. Audio-Haxor,
-  traderview, ztranslator and zpdf run their own matcher (the A2 convergence target); zoffice and
-  zgo have no fuzzy filter.
-- **Sortable/resizable tables (R8)** — `ZGui.dataTable` / `ZGui.table` in **11/14**: Audio-Haxor,
-  zpdf, zemail, zoffice, zreq, ztunnel, zgo, zftp, zcite, zterminal, zcontainer. Absent in
-  traderview, ztranslator and zpwr-daw.
-- **Extended scripts (G4)** — **haxor + ztranslator + zpwr-daw** have the relevant set, and so do
-  **zpdf, zemail, ztunnel and zftp** (each ships `test` + `test:js` + `test:rust`, `doc` +
-  `doc:open` + `doc:sync`, `ship-check`, `deploy` and `i18n:sort`); traderview partial; zoffice,
-  zreq, zgo, zcite, zcontainer and zterminal still stop at `test` / `test:rust`. (The
-  `dev`/`build`/`nuke`/`clean`/`bust`/`rebuild` basics ARE ported across all 14; `scr` tracks the
-  `test`/`doc`/`ship-check`/`deploy`/`i18n:*` families.) **†** zpwr-daw is JUCE, so its `scr` is the
-  JUCE-relevant subset — `test` (ctest + JS), `test:js`, `ship-check`, `deploy`; `tauri:build:ci`,
-  `cargo doc`, and `i18n:*` are **N/A** (no Tauri/Cargo/catalogs). ztranslator's `i18n:*` is likewise
-  deferred until it has catalogs.
-- **`zcite` and `zreq` are R1–R10 green** (R9 = N/A, no timeline content): every view surface runs
-  on `zgui-core` widgets, and they embed terminal/hooks/file-browser/i18n. They do **not** embed
-  `zoffice-core` / `zemail-core` / `zpdf-core` — none of the three is in either app's `.gitmodules`,
-  so there are no office/mail/pdf views. Remaining for PASS: those three engines (G2), the 18 i18n
-  proof tests (`i18n` = `~`) and the extended pnpm script surface (`scr`).
-- **`zterminal`** embeds **none** of the universal set — its `.gitmodules` has only `zgui-core` and
-  `ztmux-core`. It does use `ZGui.fzf` + `ZGui.dataTable` in its settings frontend, but it has no
-  hooks editor, no file browser, no `zpwr-i18n`, and no appShell (hence no ⌘K / ⌘,).
-- **`zcontainer`** mounts `ZGui.appShell` (`zcontainer-core/frontend/zcontainer.js`), so it has the
-  ⌘K palette and ⌘, settings, and it uses `ZGui.fzf` + `ZGui.dataTable`. It embeds `zpwr-hooks-editor`
-  and `zpwr-file-browser`; the real gap is `zpwr-embed-terminal` (not a submodule anywhere in the
-  app). It still has a hand-rolled skin (not the shared tokens/header) and its script surface is only
-  `test` + `test:rust` on top of the dev/build basics.
-- **`?` columns** (R4 shared-token sourcing, R6 shared header, colorschemes on the newer apps) need a
-  per-app audit — see Phase F. They are not counted as PASS until ticked.
+- **zterminal R3 = N/A** — it *is* the terminal. Embedding `zpwr-embed-terminal` (xterm.js over a PTY
+  shim) would put a second, worse emulator inside the first.
+- **zcite R9 = N/A** — a reference manager has no sequence-ordered timeline content to put on a grid.
+- **zterminal** is a native OpenGL renderer and **zwire** a Chromium superset; where a requirement
+  presumes a Tauri WebView, their rows record the requirement's *intent*, not the Tauri mechanism.
+- **zpwr-daw** is a JUCE `WebBrowserComponent` host: `tauri*` and `test:rust` are N/A to its G4.
 
 ---
+
+## Correction log — ledger claims this audit measured FALSE
+
+Recorded so the doc's failure mode is visible, not just its numbers. Each was verified at the file.
+
+| Claim in the previous ledger | Measured reality |
+| --- | --- |
+| `zterminal` is `✗` on palette, settings, shared styles, header, tiles, colorscheme | **All six PASS.** Palette at `zterminal/src/config/bindings.rs:686` (⌘K → `Action::OpenCommandPalette`), ⌘, at `:721`, shared `all.css` at `settings/frontend/index.html:8`, `ZGui.header.build` at `zterminal-settings.js:799`, `ZGui.tileGrid` at `dashboard/dashboard.js:46` |
+| `zterminal` is "N/A — not on this bus" (`GUI_AUTOMATION_BUS_CHECKLIST.md`) | **On a bus.** `zterminal/src/zbus.rs` is 1,658 lines spawned at `main.rs:223`, publishing ~200 verbs with enforced reversibility |
+| `Audio-Haxor` consumes `ZGui.dataTable` / `ZGui.table` (R8) | **Zero call sites in app code.** Sorting is `frontend/js/sort-persist.js:5`, resizing `frontend/js/columns.js:17` — hand-rolled, and the origin the shared component was extracted *from* |
+| `zoffice` is `✗` on fzf filters (R7) | **PASS** — 10 `ZGui.fzf` sites across `app.js` and `zoffice-ext.js` |
+| `zreq` R9 is `N/A` | **PASS** — `zreq-core/webui/run-arrangement.js` already drives `createGrid` with a `requests` domain |
+| `zpwr-daw` is green on nearly everything | **R5, R10, G2, G3 are not green.** Measured against the *recorded pointers*, not the drifted worktree |
+| `traderview` is `✓` on G2 and G3 | **G2 `◐`, G3 `✗`.** It has no `-core` submodule at all (9 in-repo workspace crates), and 44 keys are absent from all 26 non-English catalogs |
+| `zcontainer` has a hand-rolled skin, no shared tokens | **PASS** — `index.html:19` loads `lib/zgui-core/webui/all.css` before its own sheet |
+| `zpwr-daw` `i18n` is wired | **`i18n.js` is bundled by `app/CMakeLists.txt` but nothing loads it** — the only reference in the pinned frontend is a test file |
+
+---
+
+## Reads from the matrix
+
+- **R1–R8 are effectively closed fleet-wide.** The remaining non-✓ cells are `zterminal` R2 (no
+  `zpwr-hooks-editor` submodule) and four `◐`s where an app runs its own implementation rather than
+  the shared source: Audio-Haxor R7/R8 (it is the origin of both), traderview R5/R6/R7/R8, zgo R7
+  (Preferences conforms; the launcher window cannot highlight until `ZGui.launcher` grew the
+  capability — since fixed in `zgui-core`), zpwr-daw R5.
+- **R9 is the largest remaining R-gap: 5 of 22 fail** — zoffice, zcontainer, zphoto, zwire,
+  zthrottle. Each is closable the same way every app that closed it this cycle did: add
+  `zpwr-clip-engine` as a submodule and contribute **only a domain file** to the shared `createGrid`,
+  never a fork of the renderer. Four agents explicitly declined to land one unverified, because a
+  canvas renderer cannot be exercised headlessly.
+- **R10 fails in 3 of 22** — zpwr-daw, zterminal, zwire. `zwire`'s is quantified: the shared
+  `file-browser.js` needs ~35 `window.zfbHost` methods and `zwire-host` implements 9.
+- **G2 is the structural blocker.** No app embeds all three cross-cutting engines. `zoffice-core`
+  shipped its first mountable view this cycle (`webui/zoffice-view.js`, `window.mountZoffice`) plus a
+  feature-gated Tauri plugin, which unblocks the office leg fleet-wide; `zpdf-core` already had one.
+  `zemail-core` still has no embeddable view. `traderview` cannot satisfy G2 as written — it has no
+  second repo to embed — and should be scored `◐` on a topology mismatch, not `✗`.
+- **G3 is one shared repo, not 22 app problems.** Measured missing keys against `zpwr-i18n`:
+  zcite 793, zcontainer 681, zmax-gui 911, zstation 561, zreq 281, zftp 249, ztorrent 231,
+  zphoto ~310, traderview 44 (× 26 locales). The `t(key, fallback)` runtime bug that made these
+  render as raw slugs — `appFmt` treated a string second argument as `vars` and ignored it — is
+  **fixed** in `zpwr-i18n`, so an incomplete catalog now degrades to English rather than to
+  `zph.airbrush`. The translations themselves remain outstanding and are not fakeable.
+- **G4 is nearly closed** — 13 of 22 now PASS, up from 7. The remainder are `◐` where a script family
+  is genuinely N/A (`i18n:*` for an app owning no catalog, `db:*` for a non-SQLite store, `tauri*`
+  under JUCE) rather than missing.
+
+---
+
 
 ## Phase A — Promote / converge shared sources (do ONCE, unblocks all)
 
@@ -149,7 +130,7 @@ shared module before it can be embedded everywhere.
 - [ ] **A4 Shared cyberpunk tokens** — extract `cyberpunk.css` design tokens so Tauri apps
   read the same theme source as the JUCE apps (R4).
 - [ ] **A5 File browser is shared** — `zpwr-file-browser` is the promoted multi-pane browser behind
-  an fs shim (C ABI + JUCE shim), embedded in **12/14** (R10). Still missing from **`zpwr-daw`** and
+  an fs shim (C ABI + JUCE shim), embedded in **19/22** (R10). Still missing from **`zpwr-daw`**, **`zterminal`** and
   **`zterminal`** — neither lists it in `.gitmodules`.
 - [ ] **A6 Tile/tab/header components** — shared tile, tab bar, and header-strip components
   (R5/R6).
@@ -161,23 +142,23 @@ shared module before it can be embedded everywhere.
 Every Desktop App must embed all of these (submodule + wired + transport shim) as a real, working
 embed (not just a `.gitmodules` line). Verified against each app's `.gitmodules`.
 
-### B1 — `zpwr-embed-terminal` (R3) — 12/14
+### B1 — `zpwr-embed-terminal` (R3) — 20/22 (missing: zterminal — N/A, it IS the terminal; zwire)
 - [x] 12 apps (N/A for `zterminal` — it is itself the terminal).
 - [ ] **zcontainer** — no `zpwr-embed-terminal` submodule, and no `zpwr-embed-terminal` directory
   anywhere in the app. Its exec terminal is still bespoke.
 
-### B2 — `zpwr-hooks-editor` (R2) — 13/14
+### B2 — `zpwr-hooks-editor` (R2) — 20/22 (missing: zterminal, zwire)
 - [x] zpdf  - [x] zemail  - [x] zoffice  - [x] zreq  - [x] ztunnel  - [x] zgo
 - [x] zftp  - [x] zcite  - [x] zcontainer
 - [ ] **zterminal** — absent; its `.gitmodules` lists only `zgui-core` + `ztmux-core`.
 
-### B3 — `zpwr-file-browser` (R10) — 12/14
+### B3 — `zpwr-file-browser` (R10) — 19/22 (missing: zpwr-daw, zterminal, zwire)
 - [x] zpdf  - [x] zemail  - [x] zoffice  - [x] zreq  - [x] ztunnel
 - [x] zgo  - [x] zftp  - [x] zcite  - [x] zcontainer
 - [ ] **zpwr-daw** — absent from `.gitmodules`.
 - [ ] **zterminal** — absent from `.gitmodules`.
 
-### B4 — `zpwr-i18n` (G3 runtime) — 13/14 (localization completeness tracked in Phase D)
+### B4 — `zpwr-i18n` (G3 runtime) — 18/22 direct (missing: zpdf, zterminal, zcontainer, zwire — zpdf and zcontainer receive it transitively, vendored inside their -core; localization completeness tracked in Phase D)
 - [x] zcite  - [x] zcontainer (transitively — vendored inside `zcontainer-core`)
 - [ ] **zterminal** — absent; no `zpwr-i18n` submodule, direct or transitive.
 
@@ -191,7 +172,7 @@ embed (not just a `.gitmodules` line). Verified against each app's `.gitmodules`
 ### B6 — Tile dashboard + tab bar + top-left logo header (R5/R6)
 - [ ] All 14 land on a tile dashboard with a tab bar and the shared header (logo top-left).
 
-### B7 — Settings panel (**Cmd/Ctrl+,**) — present in 13/14
+### B7 — Settings panel (**Cmd/Ctrl+,**) — 13/14 (2026-06-30 figure, NOT re-measured across the 22)
 A searchable, **app-owned** settings panel bound to **Cmd/Ctrl+,** (NEVER in a core/embed;
 cores only offer settings items — see the gate's "END-APP surfaces" rule). Nine of the ten apps
 once listed here mount `ZGui.appShell`, which binds ⌘, and opens the panel itself
@@ -234,7 +215,7 @@ C2–C4 are the cross-cutting engines; verified against every app's `.gitmodules
 
 ---
 
-## Phase D — Full i18n (G3) for all 14
+## Phase D — Full i18n (G3) for all 22
 
 - [ ] **D1** The apps that embed `zpwr-i18n` actually **pass** the 18 i18n proof-contract
   tests across all 27 locales (embedding ≠ passing — verify, don't assume).
@@ -246,9 +227,9 @@ C2–C4 are the cross-cutting engines; verified against every app's `.gitmodules
 
 ---
 
-## Phase E — Build / dev tooling parity (G4) for all 14
+## Phase E — Build / dev tooling parity (G4) for all 22
 
-`dev`/`build`/`nuke`/`clean`/`bust`/`rebuild` are already ported across the 14 (the
+`dev`/`build`/`nuke`/`clean`/`bust`/`rebuild` are already ported across the 22 (the
 "desktop-app gitlinks — haxor pnpm parity" pass). Remaining script families:
 
 - [ ] **E1** `tauri:build:ci`, `ship-check`, `deploy` (+ `scripts/ship-check.sh`,
@@ -265,7 +246,7 @@ C2–C4 are the cross-cutting engines; verified against every app's `.gitmodules
 
 ## Phase F — R1–R10 conformance verification (per app, last)
 
-Run the GUI_APP_REQUIREMENTS conformance checklist on each of the 14 and tick all ten:
+Run the GUI_APP_REQUIREMENTS conformance checklist on each of the 22 and tick all ten:
 
 - [ ] R1 palette  - [ ] R2 hooks  - [ ] R3 terminal  - [ ] R4 styles  - [ ] R5 dashboard/tabs
 - [ ] R6 logo/header  - [ ] R7 fzf filters  - [ ] R8 tables  - [ ] R9 grid  - [ ] R10 file browser
@@ -278,7 +259,7 @@ when its F-checklist is fully ticked and G1–G4 are green.
 ## Suggested execution order
 
 1. **Phase A** (shared shell sources) — unblocks the remaining R1/R7/R8/R5/R6 surfaces; one-time.
-2. **Phase E** (scripts) — cheap, mechanical, parallelizable across all 14.
+2. **Phase E** (scripts) — cheap, mechanical, parallelizable across all 22.
 3. **B5–B8** (palette/fzf/table/dashboard/settings/colorschemes) — the non-embed shell surfaces.
 4. **C6** (clip-engine grid domains) where time/sequence content exists.
 5. **Phase D1 + Phase F** — verify and flip ledger rows to PASS.
