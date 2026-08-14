@@ -36,9 +36,39 @@ for a in "$@"; do
 done
 
 # Discover Tauri apps: a tauri.conf.json directly under a top-level dir (not nested in crates/ or libs/).
-mapfile -t APPS < <(find "$META_ROOT" -maxdepth 4 -name tauri.conf.json 2>/dev/null \
-  | grep -viE 'node_modules|/crates/.*/crates|/libs/' \
-  | perl -pe "s#^\Q$META_ROOT\E/##; s#/(app/)?src-tauri/tauri\.conf\.json##" | sort -u)
+#
+# Read with a while-loop, NOT `mapfile`: mapfile is bash 4+, and macOS ships bash 3.2 at /bin/bash.
+# `#!/usr/bin/env bash` picks that up in any non-interactive shell (cron, a hook, `bash script`),
+# where this died instantly with "mapfile: command not found" followed by "APPS[@]: unbound
+# variable" — 19 apps skipped, exit 0, and a summary that looked like nothing had happened.
+APPS=()
+while IFS= read -r _app; do [ -n "$_app" ] && APPS+=("$_app"); done < <(
+  find "$META_ROOT" -maxdepth 4 -name tauri.conf.json 2>/dev/null \
+    | grep -viE 'node_modules|/crates/.*/crates|/libs/' \
+    | perl -pe "s#^\Q$META_ROOT\E/##; s#/(app/)?src-tauri/tauri\.conf\.json##" | sort -u
+)
+[ "${#APPS[@]}" -gt 0 ] || { echo "deploy-apps: no tauri.conf.json found under $META_ROOT" >&2; exit 1; }
+
+# The zgui-core commit every app is pinned to before building. Apps source zgui-core three ways
+# (own submodule, nested inside an engine-core, npm git dependency), and `tauri build` only ever
+# sees whatever each worktree happens to be checked out at — which drifts back to each app's
+# RECORDED gitlink whenever anything runs `submodule update` or `checkout -B main origin/main`.
+# Measured: 52 worktrees across 19 apps had drifted to EIGHT different stale commits between two
+# consecutive deploys. Building without re-pinning ships a stale frontend that still looks fine,
+# which is the hollow-release failure. ship-apps does this; this script did not.
+ZGUI_TARGET="$(git -C "$META_ROOT" ls-tree HEAD zgui-core 2>/dev/null | awk '{print $3}')"
+
+# A bundle whose Mach-O carries the linker's ad-hoc signature declares that bundle resources exist
+# and must be verified. If Contents/_CodeSignature is absent, macOS rejects it — it will not load
+# the icon (you get the generic block) and it will not launch. tauri build has been emitting such
+# bundles, and this script reported "installed" for all of them because it never checked. Re-sign
+# ad-hoc (exactly what tauri would have produced) and FAIL the app if it still will not verify.
+ensure_signed() { # $1=installed .app
+  codesign --verify --strict "$1" >/dev/null 2>&1 && return 0
+  sudo -n codesign --force --deep --sign - "$1" >/dev/null 2>&1 \
+    || codesign --force --deep --sign - "$1" >/dev/null 2>&1
+  codesign --verify --strict "$1" >/dev/null 2>&1
+}
 
 # Make a distributable dmg from a .app WITHOUT any Finder popup: stage app + Applications symlink,
 # then hdiutil create (compressed UDZO). Prints the dmg path on success. hdiutil's auto-sizing
@@ -80,9 +110,17 @@ for app in "${APPS[@]}"; do
   d="$META_ROOT/$app"
   [ -f "$d/app/package.json" ] && bd="$d/app" || bd="$d"
   log="$LOGDIR/$app.deploy.log"
+  : >"$log"          # one truncation per app; everything after this APPENDS, so the zgui pin,
+                     # the build and any failure all survive in one readable file.
 
   if [ "$DO_BUILD" = 1 ]; then
     echo "=== build $app ($bd) — .app only, no dmg popup ==="
+    # Pin every zgui-core worktree under this app IMMEDIATELY before its build. Not once per run:
+    # each app's own beforeBuildCommand assembles its served frontend from these worktrees, so the
+    # pin has to be current at the moment that copy runs.
+    if [ -n "$ZGUI_TARGET" ] && [ -x "$META_ROOT/bin/ship-sync-zgui.sh" ]; then
+      bash "$META_ROOT/bin/ship-sync-zgui.sh" "$d" "$ZGUI_TARGET" >>"$log" 2>&1
+    fi
     # Default builder is `pnpm tauri build --bundles app`. Apps that can't use it (e.g. traderview
     # needs cargo-tauri + frontend-dist isolation) ship an executable scripts/deploy-build.sh that
     # produces the .app under release/bundle/macos; use it when present.
@@ -91,7 +129,9 @@ for app in "${APPS[@]}"; do
     else
       buildcmd=( pnpm tauri build --bundles app )
     fi
-    if ! ( cd "$bd" && "${buildcmd[@]}" ) >"$log" 2>&1; then
+    # APPEND: the zgui pin above already wrote to this log. `>` here would truncate it away, which
+    # is exactly what hid the pin's own output — including its failures — from every past run.
+    if ! ( cd "$bd" && "${buildcmd[@]}" ) >>"$log" 2>&1; then
       echo "$app: BUILD FAILED (see $log)"; summary+="  x $app build-failed"$'\n'; continue
     fi
   fi
@@ -103,13 +143,24 @@ for app in "${APPS[@]}"; do
   installed=""
   if [ "$DO_INSTALL" = 1 ]; then
     dst="/Applications/$name"
+    copied=0
     if rm -rf "$dst" 2>/dev/null && cp -R "$appbundle" "$dst" 2>/dev/null; then
-      echo "$app: installed $dst"; installed=" installed"
+      copied=1
     elif sudo -n rm -rf "$dst" 2>/dev/null && sudo -n cp -R "$appbundle" "$dst" 2>/dev/null; then
       # existing bundle owned by another user (e.g. root/other account) — elevate
-      echo "$app: installed $dst (sudo)"; installed=" installed"
+      copied=1
+    fi
+    if [ "$copied" = 1 ]; then
+      # An installed bundle that will not verify is not installed in any sense the user cares
+      # about: it shows a generic icon and refuses to open. Say so instead of claiming success.
+      if ensure_signed "$dst"; then
+        echo "$app: installed $dst"; installed=" installed"
+      else
+        echo "$app: INSTALLED BUT UNSIGNED — macOS will refuse to launch $dst"
+        summary+="  x $app unsigned"$'\n'; continue
+      fi
     else
-      echo "$app: INSTALL FAILED (perms on $dst)"; summary+="  x $app install-failed"$'\n'
+      echo "$app: INSTALL FAILED (perms on $dst)"; summary+="  x $app install-failed"$'\n'; continue
     fi
   fi
 
