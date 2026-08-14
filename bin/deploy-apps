@@ -1,199 +1,290 @@
-#!/usr/bin/env bash
+#!/usr/bin/env stryke
+
 # deploy-apps — build every Tauri desktop app's RELEASE .app bundle, install it to /Applications,
-# and upload a .dmg to a GitHub release at the app's version. Complements bin/release-all (which
-# handles crate/formula TAG bumps for the CLI tools); this handles the GUI-app build+install+publish.
+# and upload a .dmg + .pkg to a GitHub release at the app's version. Complements bin/release-all
+# (crate/formula TAG bumps for the CLI tools); this handles the GUI-app build+install+publish.
 #
-# Builds with `--bundles app` ONLY, so Tauri's interactive dmg bundler (which mounts the volume and
-# runs an osascript Finder-window arrangement — the "drag to Applications" popup) never runs. The
-# .app is installed to /Applications with cp -R (no dragging). The .dmg for GitHub is produced
-# HEADLESSLY with hdiutil from a staging folder (.app + /Applications symlink) — no Finder window.
+# Ported from bash to stryke so the phases that are IO-bound — the zgui pin, the install, the
+# signature repair, the dmg/pkg build — run across all cores instead of one app at a time. The
+# BUILD phase is deliberately NOT fully parallel: `tauri build` already saturates the machine
+# through cargo, so it runs in bounded chunks (--jobs, default 3). Unbounded builds thrash the
+# CPU and, worse, multiply peak disk — this repo has already hit a full volume mid-deploy.
 #
-# Apps are discovered dynamically: every tauri.conf.json under a top-level submodule (new apps are
-# picked up automatically). Build dir is <app>/app if it has package.json, else <app>. Release tag
-# is v<version> from tauri.conf.json's "version".
+# Builds with `--bundles app` ONLY, so Tauri's interactive dmg bundler (which mounts the volume
+# and runs an osascript Finder-window arrangement — the "drag to Applications" popup) never runs.
+# The .app is installed with cp -R. The .dmg for GitHub is produced HEADLESSLY with hdiutil from a
+# staging folder (.app + /Applications symlink) — no Finder window.
+#
+# Apps are discovered dynamically: every tauri.conf.json under a top-level submodule. Build dir is
+# <app>/app if it has package.json, else <app>. Release tag is v<version> from tauri.conf.json.
 #
 # Usage:
-#   ./bin/deploy-apps                       # build + install + upload every app
-#   ./bin/deploy-apps --only=zthrottle,zcite
-#   ./bin/deploy-apps --no-install          # build + upload, don't touch /Applications
-#   ./bin/deploy-apps --no-upload           # build + install, no GitHub release / dmg
-#   ./bin/deploy-apps --no-build            # install/upload already-built .app bundles only
-set -uo pipefail
+#   deploy-apps                        # pin + build + install + upload, every app
+#   deploy-apps --only=zthrottle,zcite
+#   deploy-apps --jobs=6               # more concurrent builds (default 3)
+#   deploy-apps --no-install           # build + upload, don't touch /Applications
+#   deploy-apps --no-upload            # build + install, no GitHub release / dmg
+#   deploy-apps --no-build             # install/sign already-built .app bundles only
+#   deploy-apps --no-pin               # skip the zgui-core pin (you are debugging the pin itself)
 
-META_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# Build logs go to a cache dir, NEVER inside the repo (a *.deploy.log per app in META_ROOT
+$| = 1
+
+val %opts = %{ getopts({
+    "only|o=s"    => { help => "comma-separated app subset", default => "" },
+    "jobs|j=i"    => { help => "concurrent BUILDS (default 3; other phases use all cores)", default => 3 },
+    "no-build"    => { help => "skip build; install/sign the existing .app" },
+    "no-install"  => { help => "don't touch /Applications" },
+    "no-upload"   => { help => "no GitHub release / dmg / pkg" },
+    "no-pin"      => { help => "skip the zgui-core pin before each build" },
+}, {
+    prog => "deploy-apps",
+    desc => "Build, install and publish every Tauri desktop app.",
+}) }
+
+val $meta       = dirname(dirname(realpath($0)))
+val $only       = $opts{only} // ""
+val $jobs       = ($opts{jobs} // 3) > 0 ? $opts{jobs} : 1
+val $do_build   = $opts{'no-build'}   ? 0 : 1
+val $do_install = $opts{'no-install'} ? 0 : 1
+val $do_upload  = $opts{'no-upload'}  ? 0 : 1
+val $do_pin     = $opts{'no-pin'}     ? 0 : 1
+
+# Build logs go to a cache dir, NEVER inside the repo (a *.deploy.log per app in the meta root
 # would pollute the working tree and show up in git status).
-LOGDIR="${HOME}/.cache/menke-ship"; mkdir -p "$LOGDIR"
-ONLY=""; DO_BUILD=1; DO_INSTALL=1; DO_UPLOAD=1
-for a in "$@"; do
-  case "$a" in
-    --only=*)     ONLY="${a#--only=}" ;;
-    --no-build)   DO_BUILD=0 ;;
-    --no-install) DO_INSTALL=0 ;;
-    --no-upload)  DO_UPLOAD=0 ;;
-    *) echo "unknown arg: $a" >&2; exit 2 ;;
-  esac
-done
+val $logdir = "#{$ENV{HOME}}/.cache/menke-ship"
+system "mkdir -p '$logdir'"
 
-# Discover Tauri apps: a tauri.conf.json directly under a top-level dir (not nested in crates/ or libs/).
-#
-# Read with a while-loop, NOT `mapfile`: mapfile is bash 4+, and macOS ships bash 3.2 at /bin/bash.
-# `#!/usr/bin/env bash` picks that up in any non-interactive shell (cron, a hook, `bash script`),
-# where this died instantly with "mapfile: command not found" followed by "APPS[@]: unbound
-# variable" — 19 apps skipped, exit 0, and a summary that looked like nothing had happened.
-APPS=()
-while IFS= read -r _app; do [ -n "$_app" ] && APPS+=("$_app"); done < <(
-  find "$META_ROOT" -maxdepth 4 -name tauri.conf.json 2>/dev/null \
-    | grep -viE 'node_modules|/crates/.*/crates|/libs/' \
-    | perl -pe "s#^\Q$META_ROOT\E/##; s#/(app/)?src-tauri/tauri\.conf\.json##" | sort -u
-)
-[ "${#APPS[@]}" -gt 0 ] || { echo "deploy-apps: no tauri.conf.json found under $META_ROOT" >&2; exit 1; }
+fn Sh::cap($c)  { var $o = `$c`; chomp $o; $o }      # capture trimmed stdout
+fn Sh::rc($c)   { system $c; $? >> 8 }               # run, return exit code
+fn Sh::run($c)  = Sh::rc($c) == 0                    # run, true on success
+
+# ── discovery ────────────────────────────────────────────────────────────────────────────────
+# A tauri.conf.json directly under a top-level dir (not nested in crates/ or libs/).
+fn App::discover($root) {
+    var @apps
+    for val $line (split /\n/, Sh::cap(
+        "find '$root' -maxdepth 4 -name tauri.conf.json 2>/dev/null"
+      . " | grep -viE 'node_modules|/crates/.*/crates|/libs/' | sort -u")) {
+        next if $line eq ""
+        var $rel = $line
+        $rel =~ s{^\Q$root\E/}{}
+        $rel =~ s{/(app/)?src-tauri/tauri\.conf\.json$}{}
+        push @apps, $rel if $rel ne ""
+    }
+    @apps
+}
+
+fn App::build_dir($d) = -f "$d/app/package.json" ? "$d/app" : $d
+
+fn App::bundle($d) = Sh::cap("find '$d' -path '*/release/bundle/macos/*.app' -type d 2>/dev/null | head -1")
+
+fn App::cfg($d) {
+    for val $c ("$d/app/src-tauri/tauri.conf.json", "$d/src-tauri/tauri.conf.json") { return $c if -f $c }
+    ""
+}
+
+# Tauri allows "version" to be a PATH to a package.json (e.g. "../package.json"); resolve it.
+fn App::version($cfg) {
+    return "" if $cfg eq "" || !-f $cfg
+    var $v = (from_json(c"$cfg"))->{version} // ""
+    if ($v ne "" && ($v =~ /\.json$/ || $v =~ m{/})) {
+        val $p = dirname($cfg) . "/" . $v
+        $v = -f $p ? ((from_json(c"$p"))->{version} // "") : ""
+    }
+    $v
+}
+
+fn App::identifier($cfg) = $cfg eq "" ? "" : ((from_json(c"$cfg"))->{identifier} // "")
+
+# ── signature ────────────────────────────────────────────────────────────────────────────────
+# A bundle whose Mach-O carries the linker's ad-hoc signature declares that bundle resources exist
+# and must be verified. If Contents/_CodeSignature is absent, macOS rejects it — it will not load
+# the icon (you get the generic block) and it will not launch. `tauri build` has been emitting such
+# bundles, and the old script reported "installed" for every one of them because it never checked.
+# Re-sign ad-hoc (exactly what tauri would have produced) and FAIL the app if it still won't verify.
+fn App::verified($bundle) = Sh::run("codesign --verify --strict '$bundle' >/dev/null 2>&1")
+
+fn App::ensure_signed($bundle) {
+    return 1 if App::verified($bundle)
+    Sh::run("sudo -n codesign --force --deep --sign - '$bundle' >/dev/null 2>&1")
+      || Sh::run("codesign --force --deep --sign - '$bundle' >/dev/null 2>&1")
+    App::verified($bundle)
+}
+
+# ── installers ───────────────────────────────────────────────────────────────────────────────
+# Make a distributable dmg from a .app WITHOUT any Finder popup: stage app + Applications symlink,
+# then hdiutil create (compressed UDZO). hdiutil's auto-sizing underestimates when the .app carries
+# a sparse image (e.g. a bundled VM rootfs.img), so on failure retry with an explicit size from the
+# app's apparent bytes; UDZO compresses the zero blocks away.
+fn App::make_dmg($bundle, $out, $volname) {
+    val $stage = Sh::cap("mktemp -d")
+    Sh::run("cp -R '$bundle' '$stage/' && ln -s /Applications '$stage/Applications'")
+    Sh::run("rm -f '$out'")
+    var $ok = Sh::run("hdiutil create -volname '$volname' -srcfolder '$stage' -ov -format UDZO -quiet '$out' 2>/dev/null")
+    if (!$ok) {
+        val $bytes = Sh::cap("find '$bundle' -type f -print0 | xargs -0 stat -f %z 2>/dev/null | awk '{s+=\$1} END{print s+0}'")
+        val $mb = int($bytes / 1048576) + 200
+        Sh::run("rm -f '$out'")
+        $ok = Sh::run("hdiutil create -volname '$volname' -srcfolder '$stage' -ov -format UDZO -size #{$mb}m -quiet '$out' 2>/dev/null")
+    }
+    Sh::run("rm -rf '$stage'")
+    # Report success ONLY if the dmg actually exists — otherwise a missing artifact (e.g. hdiutil
+    # ran out of disk on a large bundle) would still be handed to `gh`, failing the whole upload
+    # and dropping the pkg too.
+    -s $out ? 1 : 0
+}
+
+fn App::make_pkg($bundle, $out, $ident, $ver) {
+    val $stage = Sh::cap("mktemp -d")
+    Sh::run("cp -R '$bundle' '$stage/'")
+    Sh::run("rm -f '$out'")
+    Sh::run("pkgbuild --root '$stage' --install-location /Applications --identifier '$ident' --version '$ver' '$out' >/dev/null 2>&1")
+    Sh::run("rm -rf '$stage'")
+    -s $out ? 1 : 0
+}
+
+# ── plan ─────────────────────────────────────────────────────────────────────────────────────
+var @apps = App::discover($meta)
+if ($only ne "") {
+    val %want = map { ($_ => 1) } split /,/, $only
+    @apps = grep { $want{$_} } @apps
+}
+die "deploy-apps: no tauri.conf.json found under $meta\n" if !@apps
 
 # The zgui-core commit every app is pinned to before building. Apps source zgui-core three ways
-# (own submodule, nested inside an engine-core, npm git dependency), and `tauri build` only ever
+# (own submodule, nested inside an engine-core, npm git dependency) and `tauri build` only ever
 # sees whatever each worktree happens to be checked out at — which drifts back to each app's
 # RECORDED gitlink whenever anything runs `submodule update` or `checkout -B main origin/main`.
 # Measured: 52 worktrees across 19 apps had drifted to EIGHT different stale commits between two
 # consecutive deploys. Building without re-pinning ships a stale frontend that still looks fine,
-# which is the hollow-release failure. ship-apps does this; this script did not.
-ZGUI_TARGET="$(git -C "$META_ROOT" ls-tree HEAD zgui-core 2>/dev/null | awk '{print $3}')"
+# which is the hollow-release failure. ship-apps does this; the bash deploy-apps did not.
+val $zgui = Sh::cap("git -C '$meta' ls-tree HEAD zgui-core 2>/dev/null | awk '{print \$3}'")
 
-# A bundle whose Mach-O carries the linker's ad-hoc signature declares that bundle resources exist
-# and must be verified. If Contents/_CodeSignature is absent, macOS rejects it — it will not load
-# the icon (you get the generic block) and it will not launch. tauri build has been emitting such
-# bundles, and this script reported "installed" for all of them because it never checked. Re-sign
-# ad-hoc (exactly what tauri would have produced) and FAIL the app if it still will not verify.
-ensure_signed() { # $1=installed .app
-  codesign --verify --strict "$1" >/dev/null 2>&1 && return 0
-  sudo -n codesign --force --deep --sign - "$1" >/dev/null 2>&1 \
-    || codesign --force --deep --sign - "$1" >/dev/null 2>&1
-  codesign --verify --strict "$1" >/dev/null 2>&1
+p "deploy-apps: #{len(@apps)} app(s) · builds x#{$jobs} · other phases across all cores"
+p "deploy-apps: zgui-core target #{substr($zgui, 0, 10)}" if $do_pin && $zgui ne ""
+
+# ── phase 1: pin zgui-core (all cores; git + pnpm, IO-bound) ─────────────────────────────────
+# One truncation per app happens HERE, and every later phase appends — so the pin, the build and
+# any failure all survive in one readable file. The bash version opened the build log with `>`
+# after the pin had already written to it, destroying the pin's output (including its failures) on
+# every single run.
+if ($do_pin && $do_build && $zgui ne "") {
+    var @pinned = pmap {
+        val $app = $_
+        val $log = "$logdir/$app.deploy.log"
+        Sh::run(": >'$log'")
+        val $n = Sh::rc("bash '$meta/bin/ship-sync-zgui.sh' '$meta/$app' '$zgui' >>'$log' 2>&1")
+        { app => $app, rc => $n }
+    } @apps
+    val $bad = len(grep { $_->{rc} != 0 } @pinned)
+    p "deploy-apps: pinned zgui-core in #{len(@pinned)} app(s)" . ($bad ? " (#{$bad} reported trouble — see logs)" : "")
+} elsif ($do_build) {
+    for val $app (@apps) { Sh::run(": >'$logdir/$app.deploy.log'") }
 }
 
-# Make a distributable dmg from a .app WITHOUT any Finder popup: stage app + Applications symlink,
-# then hdiutil create (compressed UDZO). Prints the dmg path on success. hdiutil's auto-sizing
-# underestimates when the .app carries a sparse image (e.g. a bundled VM rootfs.img), so on failure
-# retry with an explicit size from the app's apparent bytes; UDZO compresses the zero blocks away.
-make_dmg() { # $1=appbundle  $2=out.dmg  $3=volname
-  local stage; stage="$(mktemp -d)"
-  cp -R "$1" "$stage/" && ln -s /Applications "$stage/Applications"
-  rm -f "$2"
-  if hdiutil create -volname "$3" -srcfolder "$stage" -ov -format UDZO -quiet "$2" 2>/dev/null; then
-    echo "$2"
-  else
-    local apparent size_m
-    apparent=$(find "$1" -type f -print0 | xargs -0 stat -f %z 2>/dev/null | awk '{s+=$1} END{print s+0}')
-    size_m=$(( apparent / 1048576 + 200 ))
-    rm -f "$2"
-    hdiutil create -volname "$3" -srcfolder "$stage" -ov -format UDZO -size "${size_m}m" -quiet "$2" 2>/dev/null && echo "$2"
-  fi
-  rm -rf "$stage"
-  # Report success ONLY if the dmg actually exists — otherwise a missing artifact (e.g. hdiutil
-  # ran out of disk on a large bundle) would still be handed to `gh`, failing the whole upload
-  # and dropping the pkg too.
-  [ -s "$2" ]
+# ── phase 2: build (bounded — cargo already uses every core) ─────────────────────────────────
+var %failed
+if ($do_build) {
+    var @queue = @apps
+    while (@queue) {
+        var @chunk = splice(@queue, 0, $jobs)
+        var @res = pmap {
+            val $app = $_
+            val $d   = "$meta/$app"
+            val $bd  = App::build_dir($d)
+            val $log = "$logdir/$app.deploy.log"
+            # Apps that can't use the default builder (e.g. traderview needs cargo-tauri +
+            # frontend-dist isolation) ship an executable scripts/deploy-build.sh.
+            val $cmd = -x "$bd/scripts/deploy-build.sh" ? "./scripts/deploy-build.sh"
+                                                        : "pnpm tauri build --bundles app"
+            val $rc = Sh::rc("cd '$bd' && $cmd >>'$log' 2>&1")
+            { app => $app, rc => $rc }
+        } @chunk
+        for val $r (@res) {
+            if ($r->{rc} != 0) { $failed{$r->{app}} = "build-failed"; p "#{$r->{app}}: BUILD FAILED (see $logdir/#{$r->{app}}.deploy.log)" }
+            else               { p "#{$r->{app}}: built" }
+        }
+    }
 }
 
-# Make a flat installer .pkg from a .app (installs into /Applications). Headless, no UI.
-make_pkg() { # $1=appbundle  $2=out.pkg  $3=identifier  $4=version
-  local stage; stage="$(mktemp -d)"
-  cp -R "$1" "$stage/"
-  rm -f "$2"
-  pkgbuild --root "$stage" --install-location /Applications --identifier "$3" --version "$4" "$2" >/dev/null 2>&1 && echo "$2"
-  rm -rf "$stage"
-  [ -s "$2" ]
+# ── phase 3: install + signature repair (all cores; independent destinations) ────────────────
+var %installed
+if ($do_install) {
+    var @res = pmap {
+        val $app = $_
+        next_result: {
+            val $d = "$meta/$app"
+            val $bundle = App::bundle($d)
+            return { app => $app, state => "no-.app" } if $bundle eq ""
+            val $name = basename($bundle)
+            val $dst  = "/Applications/$name"
+            var $ok = Sh::run("rm -rf '$dst' 2>/dev/null && cp -R '$bundle' '$dst' 2>/dev/null")
+            # An existing bundle owned by another user (root, another account) needs elevation.
+            $ok ||= Sh::run("sudo -n rm -rf '$dst' 2>/dev/null && sudo -n cp -R '$bundle' '$dst' 2>/dev/null")
+            return { app => $app, state => "install-failed" } if !$ok
+            # An installed bundle that will not verify is not installed in any sense the user cares
+            # about: it shows a generic icon and refuses to open. Report that, never a false success.
+            return { app => $app, state => "unsigned", dst => $dst } if !App::ensure_signed($dst)
+            { app => $app, state => "installed", dst => $dst }
+        }
+    } grep { !$failed{$_} } @apps
+    for val $r (@res) {
+        if ($r->{state} eq "installed") { $installed{$r->{app}} = 1; p "#{$r->{app}}: installed #{$r->{dst}}" }
+        elsif ($r->{state} eq "unsigned") { $failed{$r->{app}} = "unsigned"; p "#{$r->{app}}: INSTALLED BUT UNSIGNED — macOS will refuse to launch #{$r->{dst}}" }
+        else { $failed{$r->{app}} = $r->{state}; p "#{$r->{app}}: #{$r->{state}}" }
+    }
 }
 
-summary=""
-for app in "${APPS[@]}"; do
-  [ -n "$ONLY" ] && { case ",$ONLY," in *,"$app",*) : ;; *) continue ;; esac; }
-  d="$META_ROOT/$app"
-  [ -f "$d/app/package.json" ] && bd="$d/app" || bd="$d"
-  log="$LOGDIR/$app.deploy.log"
-  : >"$log"          # one truncation per app; everything after this APPENDS, so the zgui pin,
-                     # the build and any failure all survive in one readable file.
+# ── phase 4: dmg + pkg + GitHub release (all cores; hdiutil/pkgbuild are CPU-bound) ──────────
+var %uploaded
+if ($do_upload) {
+    var @res = pmap {
+        val $app = $_
+        val $d   = "$meta/$app"
+        val $bundle = App::bundle($d)
+        return { app => $app, ok => 0, why => "no-.app" } if $bundle eq ""
+        val $cfg  = App::cfg($d)
+        val $ver  = App::version($cfg)
+        val $vv   = $ver ne "" ? $ver : "0.0.0"
+        val $id   = App::identifier($cfg)
+        val $ident = $id ne "" ? $id : "com.menketechnologies.$app"
+        val $dmg  = "$d/#{$app}_#{$vv}_aarch64.dmg"
+        val $pkg  = "$d/#{$app}_#{$vv}_aarch64.pkg"
+        var @assets
+        push @assets, $dmg if App::make_dmg($bundle, $dmg, $app)
+        push @assets, $pkg if App::make_pkg($bundle, $pkg, $ident, $vv)
+        return { app => $app, ok => 0, why => "installer-build-failed" } if !@assets
+        val $tag  = "v$vv"
+        val $repo = "MenkeTechnologies/$app"
+        val $list = join " ", map { "'$_'" } @assets
+        var $ok
+        if (Sh::run("gh release view '$tag' --repo '$repo' >/dev/null 2>&1")) {
+            $ok = Sh::run("gh release upload '$tag' $list --clobber --repo '$repo' >/dev/null 2>&1")
+        } else {
+            $ok = Sh::run("gh release create '$tag' $list --repo '$repo' --title '$app $tag'"
+                . " --notes '$app $tag — macOS Apple silicon. .dmg: drag to Applications."
+                . " .pkg: double-click to install. Unsigned: first launch right-click -> Open.'"
+                . " >/dev/null 2>&1")
+        }
+        Sh::run("rm -f '$dmg' '$pkg'")
+        { app => $app, ok => $ok ? 1 : 0, why => $ok ? "" : "upload-failed", tag => $tag }
+    } grep { !$failed{$_} } @apps
+    for val $r (@res) {
+        if ($r->{ok}) { $uploaded{$r->{app}} = 1; p "#{$r->{app}}: released #{$r->{tag}} (dmg+pkg)" }
+        else { p "#{$r->{app}}: #{$r->{why}}" }
+    }
+}
 
-  if [ "$DO_BUILD" = 1 ]; then
-    echo "=== build $app ($bd) — .app only, no dmg popup ==="
-    # Pin every zgui-core worktree under this app IMMEDIATELY before its build. Not once per run:
-    # each app's own beforeBuildCommand assembles its served frontend from these worktrees, so the
-    # pin has to be current at the moment that copy runs.
-    if [ -n "$ZGUI_TARGET" ] && [ -x "$META_ROOT/bin/ship-sync-zgui.sh" ]; then
-      bash "$META_ROOT/bin/ship-sync-zgui.sh" "$d" "$ZGUI_TARGET" >>"$log" 2>&1
-    fi
-    # Default builder is `pnpm tauri build --bundles app`. Apps that can't use it (e.g. traderview
-    # needs cargo-tauri + frontend-dist isolation) ship an executable scripts/deploy-build.sh that
-    # produces the .app under release/bundle/macos; use it when present.
-    if [ -x "$bd/scripts/deploy-build.sh" ]; then
-      buildcmd=( ./scripts/deploy-build.sh )
-    else
-      buildcmd=( pnpm tauri build --bundles app )
-    fi
-    # APPEND: the zgui pin above already wrote to this log. `>` here would truncate it away, which
-    # is exactly what hid the pin's own output — including its failures — from every past run.
-    if ! ( cd "$bd" && "${buildcmd[@]}" ) >>"$log" 2>&1; then
-      echo "$app: BUILD FAILED (see $log)"; summary+="  x $app build-failed"$'\n'; continue
-    fi
-  fi
-
-  appbundle=$(find "$d" -path '*/release/bundle/macos/*.app' -type d 2>/dev/null | head -1)
-  [ -z "$appbundle" ] && { echo "$app: no .app bundle"; summary+="  x $app no-.app"$'\n'; continue; }
-  name=$(basename "$appbundle")
-
-  installed=""
-  if [ "$DO_INSTALL" = 1 ]; then
-    dst="/Applications/$name"
-    copied=0
-    if rm -rf "$dst" 2>/dev/null && cp -R "$appbundle" "$dst" 2>/dev/null; then
-      copied=1
-    elif sudo -n rm -rf "$dst" 2>/dev/null && sudo -n cp -R "$appbundle" "$dst" 2>/dev/null; then
-      # existing bundle owned by another user (e.g. root/other account) — elevate
-      copied=1
-    fi
-    if [ "$copied" = 1 ]; then
-      # An installed bundle that will not verify is not installed in any sense the user cares
-      # about: it shows a generic icon and refuses to open. Say so instead of claiming success.
-      if ensure_signed "$dst"; then
-        echo "$app: installed $dst"; installed=" installed"
-      else
-        echo "$app: INSTALLED BUT UNSIGNED — macOS will refuse to launch $dst"
-        summary+="  x $app unsigned"$'\n'; continue
-      fi
-    else
-      echo "$app: INSTALL FAILED (perms on $dst)"; summary+="  x $app install-failed"$'\n'; continue
-    fi
-  fi
-
-  did_upload=""
-  if [ "$DO_UPLOAD" = 1 ]; then
-    cfg=""
-    for c in "$d"/app/src-tauri/tauri.conf.json "$d"/src-tauri/tauri.conf.json; do
-      [ -f "$c" ] && { cfg="$c"; break; }
-    done
-    # Tauri allows "version" to be a path to a package.json (e.g. "../package.json"); resolve it.
-    ver=$(node -e "const fs=require('fs'),p=require('path'),c=process.argv[1];let v='';try{v=JSON.parse(fs.readFileSync(c,'utf8')).version||''}catch(e){}if(v&&(v.endsWith('.json')||v.includes('/'))){try{v=JSON.parse(fs.readFileSync(p.resolve(p.dirname(c),v),'utf8')).version||''}catch(e){v=''}}console.log(v)" "$cfg" 2>/dev/null)
-    id=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).identifier||'')}catch(e){}" "$cfg" 2>/dev/null)
-    tag="v${ver:-0.0.0}"; repo="MenkeTechnologies/$app"
-    dmg="$d/${app}_${ver:-0.0.0}_aarch64.dmg"
-    pkg="$d/${app}_${ver:-0.0.0}_aarch64.pkg"
-    # build both installer artifacts (dmg for drag-install, pkg for flat-installer)
-    assets=()
-    make_dmg "$appbundle" "$dmg" "$app" >/dev/null && assets+=("$dmg")
-    make_pkg "$appbundle" "$pkg" "${id:-com.menketechnologies.$app}" "${ver:-0.0.0}" >/dev/null && assets+=("$pkg")
-    if [ "${#assets[@]}" -gt 0 ]; then
-      if gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
-        gh release upload "$tag" "${assets[@]}" --clobber --repo "$repo" >/dev/null 2>&1 && { echo "$app: uploaded $tag (dmg+pkg)"; did_upload=" uploaded"; }
-      else
-        gh release create "$tag" "${assets[@]}" --repo "$repo" --title "$app $tag" \
-          --notes "$app $tag — macOS Apple silicon. .dmg: drag to Applications. .pkg: double-click to install. Unsigned: first launch right-click -> Open." >/dev/null 2>&1 \
-          && { echo "$app: created release $tag (dmg+pkg)"; did_upload=" uploaded"; }
-      fi
-      rm -f "$dmg" "$pkg"
-    else
-      echo "$app: installer build FAILED"
-    fi
-  fi
-  summary+="  + $app${installed}${did_upload}"$'\n'
-done
-
-echo ""; echo "=== deploy summary ==="; printf "%s" "$summary"
+# ── summary ──────────────────────────────────────────────────────────────────────────────────
+p ""
+p "=== deploy summary ==="
+for val $app (@apps) {
+    if ($failed{$app}) { p "  x $app #{$failed{$app}}" }
+    else {
+        var $line = "  + $app"
+        $line .= " installed" if $installed{$app}
+        $line .= " uploaded"  if $uploaded{$app}
+        p $line
+    }
+}
+exit(len(keys %failed) > 0 ? 1 : 0)
