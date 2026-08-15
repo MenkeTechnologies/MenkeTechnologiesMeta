@@ -76,6 +76,9 @@ declare -A OIDC_ALLOWLIST=(
     # arb (pipe-native TUI/dashboard language) publishes its own docs site via
     # the same first-party actions/deploy-pages OIDC flow — no cloud-cred exchange.
     [./arb/.github/workflows/pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party; deploys arb's docs site)"
+    # zmax (the CLI IDE) publishes its docs site through the same first-party
+    # actions/deploy-pages OIDC flow — no cloud-cred exchange.
+    [./zmax/.github/workflows/pages.yml]="GitHub Pages deploy via actions/deploy-pages OIDC (first-party; deploys zmax's docs site)"
 )
 
 checked=0
