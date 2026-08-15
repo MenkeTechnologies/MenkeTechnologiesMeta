@@ -108,6 +108,22 @@ jobs:
             libgtk-3-dev cmake ninja-build libasound2-dev libfreetype6-dev \
             libx11-dev libxinerama-dev libxrandr-dev libxcursor-dev libgl1-mesa-dev xvfb
 
+      # Same reason as the traderview job: actions/checkout's token authenticates the
+      # checkout only, and src-tauri git-depends on the private zpwr-account, which cargo
+      # fetches itself with libgit2 and no credential ("revision ... not found / failed to
+      # authenticate"). Carried through GIT_CONFIG_* rather than `git config --global` so
+      # the rewrite is scoped to this job instead of the runner's ~/.gitconfig.
+      - name: Authenticate cargo for private git dependencies
+        env:
+          SUBMODULE_PAT: ${{ secrets.SUBMODULE_PAT }}
+        run: |
+          {
+            echo "GIT_CONFIG_COUNT=1"
+            echo "GIT_CONFIG_KEY_0=url.https://x-access-token:${SUBMODULE_PAT}@github.com/.insteadOf"
+            echo "GIT_CONFIG_VALUE_0=https://github.com/"
+            echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
+          } >> "$GITHUB_ENV"
+
       - uses: pnpm/action-setup@v4
         with:
           version: 10.33.0
