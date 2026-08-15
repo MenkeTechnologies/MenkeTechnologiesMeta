@@ -154,6 +154,16 @@ jobs:
       - name: AudioEngine IPC tests (xvfb)
         working-directory: app
         run: xvfb-run -a node scripts/run-audio-engine-tests.mjs
+      # TAURI_CONFIG is a JSON merge patch tauri-build applies to the resolved config
+      # before it validates bundle resources (tauri-build/src/lib.rs, `json_patch::merge`
+      # right after read_from). Dropping `binaries/stryke` from externalBin lets the test
+      # build proceed without a stryke sidecar: prepare-stryke-sidecar.mjs resolves stryke
+      # from PATH / cargo / Homebrew and skips with a warning when it finds none, which the
+      # runner never has, and tauri-build then hard-fails on the missing resource. Nothing
+      # under test needs it — resolve_stryke() (src-tauri/src/stryke_runner.rs) falls back
+      # to PATH at runtime, and this job builds and tests, it does not bundle.
       - name: Rust tests (library + integration)
         working-directory: app
+        env:
+          TAURI_CONFIG: '{"bundle":{"externalBin":["binaries/audio-engine"]}}'
         run: cargo test --manifest-path src-tauri/Cargo.toml
