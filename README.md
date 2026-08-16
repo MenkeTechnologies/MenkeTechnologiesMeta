@@ -769,30 +769,30 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 4,316,376 | 11,129 |
-| JSON | 2,234,623 | 803 |
-| TeX | 1,278,729 | 168 |
-| JavaScript | 678,519 | 4,199 |
-| HTML | 581,864 | 1,407 |
-| C Header | 387,383 | 1,910 |
-| C++ | 383,187 | 1,131 |
+| Rust | 4,836,761 | 11,959 |
+| JSON | 2,337,400 | 833 |
+| TeX | 1,494,049 | 169 |
+| JavaScript | 700,974 | 4,301 |
+| HTML | 595,594 | 1,425 |
+| C Header | 387,834 | 1,914 |
+| C++ | 384,183 | 1,138 |
+| Python | 286,673 | 1,208 |
 | Zsh | 285,383 | 1,338 |
-| Python | 284,391 | 1,197 |
-| C | 259,558 | 440 |
-| Stryke (`.stk`) | 202,121 | 3,400 |
-| Vim Script | 123,694 | 939 |
-| Shell | 120,482 | 3,430 |
-| CSS | 112,696 | 412 |
-| Perl | 106,000 | 1,772 |
+| C | 263,643 | 446 |
+| Stryke (`.stk`) | 201,879 | 3,397 |
+| Vim Script | 125,592 | 990 |
+| Shell | 123,352 | 3,458 |
+| CSS | 114,792 | 418 |
+| Perl | 107,441 | 1,792 |
 | AWK | 82,707 | 2,192 |
-| C++ Header | 73,563 | 259 |
-| TOML | 42,961 | 838 |
-| Scheme | 39,832 | 1,174 |
-| Kotlin | 29,869 | 276 |
-| SQL | 29,408 | 123 |
+| Scheme | 77,726 | 2,330 |
+| C++ Header | 73,705 | 260 |
+| TOML | 68,312 | 1,093 |
+| Kotlin | 29,909 | 281 |
+| SQL | 29,409 | 124 |
 | Objective-C++ | 20,833 | 65 |
-| *Other (89 languages)* | 103,341 | 1,452 |
-| **Total** | **11,777,520** | **41,084** |
+| *Other (89 languages)* | 113,135 | 1,648 |
+| **Total** | **12,741,286** | **44,026** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -802,16 +802,16 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 <!-- BEGIN gen-code-volume:repos -->
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | JSON 1,581,621 | Rust 777,302 |
-| `MenkeTechnologiesPublications` | TeX 1,272,630 | HTML 131,139 |
-| `zpwr-fx` | C++ 333,803 | C Header 306,874 |
-| `strykelang` | Rust 416,355 | Stryke 162,579 |
-| `zshrs` | Rust 530,544 | Zsh 56,822 |
-| `zmax` | Rust 287,185 | JSON 106,462 |
-| `zvcs` | Rust 447,605 | Shell 12,676 |
-| `docs` | HTML 389,093 | JavaScript 6,428 |
-| `Audio-Haxor` | Rust 130,093 | JSON 118,355 |
-| `pythonrs` | Python 242,735 | Rust 55,260 |
+| `traderview` | JSON 1,581,621 | Rust 779,563 |
+| `MenkeTechnologiesPublications` | TeX 1,487,941 | HTML 132,033 |
+| `zpwr-fx` | C++ 333,824 | C Header 306,882 |
+| `strykelang` | Rust 417,622 | Stryke 162,579 |
+| `zshrs` | Rust 541,248 | Zsh 56,822 |
+| `zvcs` | Rust 493,765 | Shell 12,676 |
+| `zmax` | Rust 289,141 | JSON 106,462 |
+| `zmax-gui` | Rust 249,205 | JSON 95,293 |
+| `docs` | HTML 389,094 | JavaScript 6,428 |
+| `Audio-Haxor` | Rust 135,261 | JSON 121,479 |
 <!-- END gen-code-volume:repos -->
 
 Numbers refresh as repos add commits — regenerate with `bin/gen-code-volume --in-place`.
@@ -823,11 +823,11 @@ Every line above is hand-authored. The standard software-engineering productivit
 <!-- BEGIN gen-code-volume:careers -->
 | Net LOC/day baseline | Career total | This tree ÷ baseline |
 |---:|---:|---:|
-| 100/day (optimistic ceiling) | ~920,000 | **~13×** |
-| 50/day (mid estimate) | ~460,000 | **~26×** |
-| 20/day (conservative) | ~184,000 | **~64×** |
+| 100/day (optimistic ceiling) | ~920,000 | **~14×** |
+| 50/day (mid estimate) | ~460,000 | **~28×** |
+| 20/day (conservative) | ~184,000 | **~69×** |
 
-The defensible floor is **≥12 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
+The defensible floor is **≥13 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
 <!-- END gen-code-volume:careers -->
 
 The baseline is an industry estimate, not a measured value; the Total is measured (`tokei` + the `.stk` pass). This is line-volume, not a claim about impact or difficulty.
