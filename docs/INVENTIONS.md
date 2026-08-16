@@ -18,9 +18,9 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 263 candidates — 201 numeric entries (numbered through 207; 87, 88 and 90–93 are unused) plus
-62 lettered sub-entries (11a–11n, 12a, 13a, 28a, 40a–40e, 89a, 104a, 105a–105n, 114a, 120a–120s,
-144a, 168a, 169a, 170a). By confidence: 84 high, 139 med, 40 low. Marquee claims (the six
+Total: 264 candidates — 201 numeric entries (numbered through 207; 87, 88 and 90–93 are unused) plus
+63 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40e, 89a, 104a, 105a–105n, 114a, 120a–120s,
+144a, 168a, 169a, 170a). By confidence: 84 high, 140 med, 40 low. Marquee claims (the six
 original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
 deep prior-art analysis in the appendix.
 
@@ -73,7 +73,8 @@ are well-trodden (LuaJIT, PyPy, TraceMonkey) — novelty is implementation, not 
 hard bounds make it narrower than production tracers. Not a categorical first.
 
 **4. Behavior-transparent persistent native-code disk cache across all three JIT tiers** — `med`
-An opt-in on-disk cache persists compiled native code for linear, block, **and** tracing
+An on-disk cache (on by default with the `jit-disk-cache` feature; `FUSEVM_JIT_CACHE_DIR=off`
+disables it) persists compiled native code for linear, block, **and** tracing
 tiers across process restarts, keyed by chunk op-hash (tracing also by anchor IP +
 content hash), with a conservative relocation loader that falls back to in-memory JIT on
 any unknown relocation — so it only removes codegen time, never changing results or tier
@@ -82,6 +83,43 @@ selection. *Basis:* `jit-disk-cache` feature in `fusevm/Cargo.toml`; `fusevm/src
 `fusevm/benches/jit_disk_cache.rs`. *Caveat:* persistent JIT caches exist; the notable
 combination is covering a *tracing* tier in a hand-written VM. W^X/reloc correctness not
 independently tested here.
+
+**4a. One native-code cache shared by seventeen language frontends — compounding across languages, processes, and an editor's plugins** — `med`
+The disk cache of #4 is **not namespaced per language, per binary, or per process**: blobs are
+keyed only by chunk op-hash + tier tag (`{op_hash:016x}.{sub:016x}.{tag}.fjit`) in one shared
+directory, so every fusevm frontend reads and writes the same store. All seventeen frontends
+enable it, so the cache *compounds* — native code paid for once by any language, in any process,
+is streamed back by all of them, and the store keeps filling as the stack is used. The concrete
+consequence inside **zmax**: sourced Vimscript and Emacs Lisp — a `.vimrc`, an `init.el`, and the
+plugin files they `:source` / `load` / `require` — execute on the same JIT-enabled VM as the
+standalone CLI runtimes, so an editor plugin's hot loops persist their compiled machine code to
+`~/.cache/fusevm-jit` on first run and skip Cranelift codegen on every later boot. Legacy plugin
+code gets tiered native execution with no plugin-side change and no per-editor cache.
+*Basis:* cache-dir resolution `fusevm/src/jit.rs:3221-3235` (`$FUSEVM_JIT_CACHE_DIR` →
+`$XDG_CACHE_HOME/fusevm-jit` → `~/.cache/fusevm-jit`); on by default with the feature, `=off` to
+disable (`:7611-7613`); un-namespaced blob name `:3724`; all three tiers persisted —
+`try_load_or_build` `:2933`, `try_load_or_build_block` `:5680`, `try_load_or_build_trace` `:6102`
+with `KIND_LINEAR/BLOCK/TRACE` `:3027-3029`, `MAGIC` `FJITNAT2` + `SCHEMA_VERSION = 16`
+`:3031-3051`, 256 MiB default cap evicting oldest-first to 80% (`:7634-7640`). Seventeen
+frontends declare `features = [… "jit-disk-cache" …]` on `fusevm` (arb, awkrs, elisprs, go-rs,
+groovyrs, javars, kotlinrs, node-js, phplang, pythonrs, rlang, rubylang, scalars, strykelang,
+vimlrs, zshrs `Cargo.toml`; tclrs via `zmax/vendor/tclrs/Cargo.toml:73`). Editor path:
+`zmax/zmax-term/src/commands/scripting/mod.rs` `load_init_scripts` → `vimlrs::fusevm_bridge::eval_file`
+(`:951`) → `vimlrs/src/fusevm_bridge.rs:5410` (rkyv bytecode cache) + `install()` `:4553-4554`
+`enable_tracing_jit`; elisp `load`/`require` → `elisprs/src/host.rs:4139` `intrinsic_load` →
+`run_top_forms` (`elisprs/src/lib.rs:78-92`) → `run_chunk` (`elisprs/src/host.rs:4613`,
+`enable_tracing_jit` `:4629`).
+*Caveat:* persistent native/AOT caches exist (JVM AppCDS/JWarmup, .NET ReadyToRun, V8 code
+cache); the claimed novelty is a *single un-namespaced* one serving seventeen distinct language
+frontends **and** an editor's plugin runtimes, not caching per se, and the survey behind "first"
+is non-exhaustive. Cross-*language* reuse only lands where two frontends emit byte-identical op
+sequences; a chunk carrying frontend-registered extension helpers misses safely and recompiles
+(`fusevm/src/jit.rs:3054-3060`). The cache removes codegen only — parse/lower still runs each
+boot unless the frontend has its own bytecode cache (vimlrs does, `~/.cache/vimlrs/scripts.rkyv`;
+elisp `load` does not, it calls `run_top_forms` directly). vimlrs suppresses the JIT in the
+tolerant per-statement fallback used when a config file fails to parse whole
+(`fusevm_bridge.rs:5447`), so those files get no cached native code. No cold-vs-warm
+plugin-load timing is recorded here.
 
 **5. JIT-compiled Emacs Lisp running with no Emacs process** — `high`
 `.el` programs run as standalone CLI processes that trace-compile hot loops to native

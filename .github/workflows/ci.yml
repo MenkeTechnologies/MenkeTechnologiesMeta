@@ -171,7 +171,12 @@ jobs:
   cargo-doc-version-sync:
     name: Cargo.toml ↔ docs/*.html version sync
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 60, not 15: this job carries the whole gate list, and the job aborts at its
+    # first failing gate — so while a gate near the front was red it always died
+    # inside four minutes and never approached the cap. With those fixed it runs
+    # every gate to the end, which takes longer than 15 minutes and was being
+    # killed mid-run (reported as "cancelled") two-thirds of the way through.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
         with:

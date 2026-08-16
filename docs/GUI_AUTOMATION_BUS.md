@@ -312,8 +312,15 @@ is callable by name; `ztranslator` does the same for the engine behind `tauri-pl
 its stateless `ztr_*` commands resolve Rust-direct and the stateful ones go through the plugin's own
 command so the host wrapper (event sink, persistence, log) still runs; `zmax-gui` dispatches its own
 host command surface by name alongside the webview verbs. `zwire` is scriptable through its own
-native bus rather than this socket, and `zterminal` has no webview shell. Track B (JUCE plugins) is
-still unbuilt.
+native bus rather than this socket, and so is `zterminal` — it has no webview shell, but it is **not**
+off the automation story: `zterminal/src/zbus.rs` is 1,658 lines spawned at `main.rs:223`, publishing
+its own verb surface (including `pane_await`, `zbus.rs:210`). An earlier revision of this paragraph
+implied otherwise.
+
+**Track B (JUCE) is no longer unbuilt.** `zpwr-daw` hosts the bus natively through
+`app/src/DawBus.h` (616 lines, a JUCE-free C++ port of the `zgui-bridge` transport), started from
+`PluginEditor.cpp:506` and torn down first in the destructor at `:492` — the first JUCE host on the
+bus. `zpwr-synth`, `zpwr-fx` and `zpwr-midi-fx` remain unwired.
 
 The four nearest prior arts, and why each fails a load-bearing leg:
 

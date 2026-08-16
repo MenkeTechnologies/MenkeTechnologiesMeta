@@ -28,8 +28,8 @@ tauri_icon() { if command -v cargo-tauri >/dev/null; then cargo tauri icon "$@";
 MANIFEST=(
   "Audio-Haxor|tauri|#00e5ff|AH|AUDIO HAXOR|Audio-Haxor/src-tauri/icons"
   "traderview|tauri|#19ff8c|TV|TRADERVIEW|traderview/src-tauri/icons"
-  "zoffice|tauri|#05d9e8|ZO|ZOFFICE|zoffice/src-tauri/icons"
-  "zpdf|tauri|#ff073a|PDF|ZPDF|zpdf/src-tauri/icons"
+  "zoffice|tauri|#05d9e8|ZO|ZOFFICE|zoffice/app/src-tauri/icons"
+  "zpdf|tauri|#ff073a|PDF|ZPDF|zpdf/app/src-tauri/icons"
   "zcite|tauri|#ffb000|CITE|ZCITE|zcite/app/src-tauri/icons"
   "zcontainer|tauri|#2979ff|ZC|ZCONTAINER|zcontainer/app/src-tauri/icons"
   "zemail|tauri|#ff6f00|EM|ZEMAIL|zemail/app/src-tauri/icons"

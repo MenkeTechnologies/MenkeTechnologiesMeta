@@ -57,8 +57,8 @@ val $logdir     = "#{$ENV{HOME}}/.cache/menke-ship"
 fn Sh::cap($c)      { var $o = `$c`; chomp $o; $o }          # capture trimmed stdout
 fn Sh::rc($c)       { system $c; $? >> 8 }                   # run, return exit code
 fn Sh::run($c)      = Sh::rc($c) == 0                        # run, true on success
-fn Sh::git($d, $a)  = Sh::cap("git -C '$d' $a 2>/dev/null")  # git capture
-fn Sh::gitq($d, $a) = Sh::run("git -C '$d' $a >/dev/null 2>&1")
+fn Sh::git($d, $args)  = Sh::cap("git -C '$d' $args 2>/dev/null")  # git capture
+fn Sh::gitq($d, $args) = Sh::run("git -C '$d' $args >/dev/null 2>&1")
 fn Sh::push_dir($d) = Sh::gitq($d, "push") || (Sh::gitq($d, "pull --rebase") && Sh::gitq($d, "push"))
 
 # ── version / path helpers ────────────────────────────────────────────────
@@ -201,10 +201,10 @@ fn App::deploy_one($app) {
 var @apps
 for val $c (split /\n/, Sh::cap("find '$meta' -maxdepth 4 -name tauri.conf.json 2>/dev/null")) {
     next if $c eq "" || $c =~ m{node_modules|/crates/.*/crates|/libs/}
-    var $a = $c
-    $a =~ s{^\Q$meta\E/}{}
-    $a =~ s{/(app/)?src-tauri/tauri\.conf\.json$}{}
-    push @apps, $a
+    var $rel = $c
+    $rel =~ s{^\Q$meta\E/}{}
+    $rel =~ s{/(app/)?src-tauri/tauri\.conf\.json$}{}
+    push @apps, $rel
 }
 @apps = uniq sort @apps
 
