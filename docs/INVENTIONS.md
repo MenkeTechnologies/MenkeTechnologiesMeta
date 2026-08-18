@@ -18,9 +18,9 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 264 candidates — 201 numeric entries (numbered through 207; 87, 88 and 90–93 are unused) plus
+Total: 265 candidates — 202 numeric entries (numbered through 208; 87, 88 and 90–93 are unused) plus
 63 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40e, 89a, 104a, 105a–105n, 114a, 120a–120s,
-144a, 168a, 169a, 170a). By confidence: 84 high, 140 med, 40 low. Marquee claims (the six
+144a, 168a, 169a, 170a). By confidence: 84 high, 141 med, 40 low. Marquee claims (the six
 original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
 deep prior-art analysis in the appendix.
 
@@ -3436,6 +3436,63 @@ long-established; the candidate-first is a *VCS* carrying an agent-coordination 
 inbox, contention analysis, and same-upstream topology as verbs of the git binary, on the same ledger its
 other fleet verbs read. Advisory by design: a claim does not block a writer, and an agent that ignores the
 plane is unaffected by it. "None found," not proven; sweep non-exhaustive. A zvcs addition. MIT.
+
+---
+
+## XII. ztmux — the IPC substrate: OpenBSD imsg in Rust
+
+One entry, kept in its own section because it is a **substrate** claim rather than a product
+claim: the wire protocol underneath ztmux (#175) and ztmux-core. tmux's server↔client channel is
+OpenBSD `imsg`, so everything above it — the parity suite, the extensions, the GUI client — rests
+on that framing having been *reimplemented* rather than linked against C or shelled out to.
+
+**208. First pure-Rust port of the *current-generation* OpenBSD `imsg` IPC framework — a tmux server and client that speak imsg natively, with no C linkage and no CLI scraping (ztmux / ztmux-core)** — `med`
+`imsg` is OpenBSD's IPC framing — the message layer its privilege-separated daemons are built on,
+vendored into portable tmux as the server↔client channel. The Rust ecosystem talks to tmux the other
+two ways: through the CLI (`tmux_interface`, 150,555 downloads, its own one-liner is *"Rust language
+library for communication with TMUX via CLI"* — build a command line, run the `tmux` binary, parse the
+text back), or through C. ztmux does neither: it **ports imsg itself**. `src/ported/compat/imsg.rs`
+(700 L, 27 public fns) plus `imsg_buffer.rs` (1,699 L, 65 public fns) — **2,399 Rust lines, 92 public
+entry points** — reimplement the 1,703 vendored C lines of `imsg.c` / `imsg-buffer.c` / `imsg.h`: the
+`ibuf`/`ibufqueue`/`msgbuf` machinery, header-callback framing, size and overflow accounting, and
+`SCM_RIGHTS` fd passing, with **no `bindgen`, no C shim, and no link against a system imsg** (the build
+script's own words: *"ztmux has no C libraries to find or link"*; the only C-adjacent dependency in
+`Cargo.toml` is `libc` for syscalls). What makes it *current-generation* is the target: the vendored
+sources are `$OpenBSD: imsg.c,v 1.42 2025/06/16`, `imsg-buffer.c,v 1.36 2025/08/25`, `imsg.h,v 1.24
+2025/06/05` — the post-2023 rewrite where write/read state lives in a heap `struct msgbuf` reached
+through `imsgbuf->w`, framing is driven by an `imsg_parse_hdr` callback instead of an embedded read
+buffer, and stack buffers are marked `IBUF_FD_MARK_ON_STACK` rather than `max == 0`. The only other
+Rust imsg port found — tmux-rs, the repo ztmux was seeded from — predates that rewrite: of six markers
+of the new API, `msgbuf_new_reader`, `imsg_parse_hdr`, `ibufqueue` and `IBUF_FD_MARK_ON_STACK` appear
+**0 times** in its `src/compat/imsg.rs` (570 L) + `imsg_buffer.rs` (661 L), against 5 / 4 / 29 / 13 in
+ztmux's. The port is load-bearing, not vendored decoration: `src/ported/proc.rs` runs the real
+server↔client loop on `imsgbuf_read` / `imsg_get` / `imsg_compose` / `imsg_get_fd`, and because the
+anti-drift gate (#175) covers `vendor/tmux/compat/*.c`, every ported `fn` name is **build-checked
+against the C**. The client half is independent and **entirely safe Rust**: `ztmux-core/src/transport.rs`
+writes the 16-byte native-endian imsg header (`type`, `len`, `peerid`, `pid`) straight onto an
+`AF_UNIX`/`SOCK_STREAM` socket with `PROTOCOL_VERSION = 8` carried in `peerid`, so `zterminal` is a
+first-class tmux client with **no `tmux` subprocess and no output scraping anywhere in the path** — the
+GUI reads command output over the file protocol (`MSG_WRITE_OPEN` → `MSG_WRITE` → `MSG_EXIT`), not off a
+pipe. *Basis:* `ztmux/src/ported/compat/imsg.rs:1` (the port header naming `imsg.c,v 1.42` / `imsg.h,v
+1.24` and the three generation changes) and `imsg_buffer.rs`; `ztmux/vendor/tmux/compat/imsg.c:1`,
+`imsg-buffer.c:1`, `imsg.h:1` (the vendored revisions); `ztmux/src/ported/proc.rs:16-106` (live use);
+`ztmux/build.rs:1-5` (no C to link) + `ztmux/Cargo.toml:52` (deps: `libc` only); commit `202d62952c`
+*"port: re-port imsg to the vendored (new) OpenBSD API"*; `ztmux/tests/ported_fn_names_match_c.rs:224`
+(gate scope includes `vendor/tmux/compat/*.c`); `ztmux-core/src/transport.rs:7-128` (safe-Rust framing,
+`PROTOCOL_VERSION = 8`, the file protocol). *Prior-art sweep (2026-08-18):* GitHub code search
+`imsg_compose language:Rust` returns **4 hits in 2 repositories** — `richardscollin/tmux-rs` and
+`MenkeTechnologies/ztmux` — and a crates.io search for `imsg` returns only iMessage/Bluetooth-MAP crates,
+no OpenBSD-imsg crate. *Caveat:* **not** "first imsg in Rust" — tmux-rs precedes it, and ztmux was seeded
+from tmux-rs; the candidate-first is narrower: the current-generation API (roughly 2× the surface) ported
+in pure Rust, plus a native-imsg tmux *client* engine. Nearest non-tmux prior art is `privsep` 0.0.2
+(`reyk/privsep-rs`, `privsep/src/imsg.rs`, 274 L, last published 2021-09-18), which is imsg-*inspired* —
+tokio `UnixStream` + serde payloads + a `zerocopy` header — not a port of the C API (no `ibuf`/`msgbuf`
+queues, no `imsg_compose`/`imsg_flush` surface), and its README calls the crate *"experimental and WIP"*.
+The ztmux port is a faithful **unsafe transliteration** (65 and 168 `unsafe` occurrences in the two files)
+that mirrors the C's pointer semantics for parity — not an idiomatic safe-Rust redesign; the safe half
+(`ztmux-core`) implements only the client framing subset, with no fd passing and no write queue. imsg is
+OpenBSD's design (ISC) — the claim is the port and the CLI-free client path, not the protocol. Sweep was
+crates.io + GitHub code search only; "none found," not proven. MIT (derivative of tmux, ISC).
 
 ---
 
