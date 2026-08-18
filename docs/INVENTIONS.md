@@ -18,9 +18,9 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 268 candidates — 204 numeric entries (numbered through 210; 87, 88 and 90–93 are unused) plus
+Total: 269 candidates — 205 numeric entries (numbered through 211; 87, 88 and 90–93 are unused) plus
 64 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40f, 89a, 104a, 105a–105n, 114a, 120a–120s,
-144a, 168a, 169a, 170a). By confidence: 86 high, 142 med, 40 low. Marquee claims (the six
+144a, 168a, 169a, 170a). By confidence: 87 high, 142 med, 40 low. Marquee claims (the six
 original ledger entries, zvcs #173 and zshrs's value-lineage builtin #40f) are flagged **★**; five of
 them (#1, #64, #65, #173, #40f) carry a deep prior-art analysis in the appendix.
 
@@ -3487,10 +3487,10 @@ plane is unaffected by it. "None found," not proven; sweep non-exhaustive. A zvc
 
 ## XII. Round-3 additions — hosting, in-process pipelines, and the IPC substrate
 
-Three substrate claims, none of which is a product: what a runtime must implement to host a
+Four substrate claims, none of which is a product: what a runtime must implement to host a
 foreign toolkit through its own ABI (#208), what falls away when twelve interpreters are already
-linked into the editor asking for them (#209), and the wire protocol underneath ztmux and
-ztmux-core (#210). #208 and #209 were written up in the *Invention Ledger* book (chapters 55 and
+linked into the editor asking for them (#209), the wire protocol underneath ztmux and
+ztmux-core (#210), and the event loop both of them run on once libevent is gone (#211). #208 and #209 were written up in the *Invention Ledger* book (chapters 55 and
 56) before they were entered here; this section closes that gap.
 
 **208. First non-Tcl runtime to host the real, unmodified Tk toolkit through Tcl's stub ABI — a bytecode-VM frontend standing in where the interpreter is expected (tclrs `--tk`)** — `high`
@@ -3623,6 +3623,70 @@ that mirrors the C's pointer semantics for parity — not an idiomatic safe-Rust
 (`ztmux-core`) implements only the client framing subset, with no fd passing and no write queue. imsg is
 OpenBSD's design (ISC) — the claim is the port and the CLI-free client path, not the protocol. Sweep was
 crates.io + GitHub code search only; "none found," not proven. MIT (derivative of tmux, ISC).
+
+**211. First tmux that runs with no libevent at all — libevent's classic C API reimplemented in-tree in Rust (`ztmux-event 1.0`), so a from-source port keeps every call site and links no C (ztmux)** — `high`
+tmux is written against libevent, and from inside the program the dependency is not negotiable: the
+server loop, the tty, every pane pty, timers, signals and the client socket all reach the kernel
+through `event_add` / `bufferevent` / `evbuffer`. A Rust port therefore has two ordinary options, and
+the field took both. **Bind the C** — what tmux-rs, the project ztmux was seeded from, still does: its
+install instructions read *"Like `tmux`, it requires `libevent2` and terminfo database (usually
+packaged with ncurses)"*, and its author's own discussion of dropping it lands on *"I wonder if it
+would be possible to use tokio instead of libevent"* → *"This isn't a main goal because I think it
+would mean diverging from tracking upstream tmux."* Or **rewrite the program onto an async runtime** —
+which is exactly that divergence: the call sites change, and byte parity with the C ends. ztmux takes a
+third route — keep the API, replace what is under it. `src/extensions/event_loop` is libevent's classic
+(pre-`event_base_*`) surface as tmux uses it — an implicit global base, caller-owned `struct event`
+registrations, `evbuffer` byte queues, classic `bufferevent`s — reimplemented in **2,373 lines of Rust
+across five modules**, exporting **44 libevent-named entry points** (plus the three types and six
+`EV_*` constants) that the ported tree calls in **418 places across 33 files**, with *not one call site
+changed*. The commit that did it (`bef02bd2f9`, 2026-07-28) deleted the 364-line FFI shim
+`src/ported/event.rs` and 151 lines of `pkg-config` probing from `build.rs`, which now opens *"ztmux has
+no C libraries to find or link"*: a build needs a Rust toolchain and nothing else — no `libevent-dev`,
+no Homebrew prefix, no `pkg-config` — and `Cargo.toml`'s `static` / `dynamic` features survive only as
+documented no-ops. The readiness syscall is what marks this a port rather than a rewrite that happens to
+compile: it is **`select` on macOS and `poll` everywhere else, deliberately not kqueue or epoll**,
+because tmux itself forces libevent off both — `vendor/tmux/osdep-darwin.c:102-103` sets
+`EVENT_NOKQUEUE`/`EVENT_NOPOLL` and `osdep-linux.c:97` sets `EVENT_NOEPOLL`, since the tty, the pane
+ptys and `/dev/null` are not sockets and epoll cannot watch `/dev/null`. Parity with tmux includes
+parity with the syscall tmux insists on. Signals keep libevent's shape too — a self-pipe written from an
+`SA_RESTART` `sigaction` handler and drained in the dispatch turn, plus `event_reinit` for the
+post-`fork` server. Verification runs on two levels: **19 unit tests in the module** (a timer that fires
+once and does not repeat, persistent read events, delete-from-callback cancellation, write watermarks,
+EOF reaching the error callback, the `evbuffer` line-ending families) and the **byte-differential parity
+suite, 1,194 of 1,194 cases**, every one of which runs *through* this loop, because each case starts a
+real ztmux server whose dispatch is this code. The loop names itself: `event_get_version()` returns
+`"ztmux-event 1.0"`, and `ztmux doctor` reports it as a build check. *Basis:*
+`ztmux/src/extensions/event_loop/mod.rs:1-24` (the module's statement of the job and the re-export
+list), `base.rs` (937 L: registration, dispatch, timers, signals — `:203-205` the version string,
+`:208-214` `event_get_method` → `select`/`poll`, `:637-700` the signal self-pipe and `sigaction`),
+`backend.rs:1-9` (why `select`/`poll` and not kqueue/epoll, citing tmux's own `osdep` files),
+`buffer.rs` (508 L, `evbuffer`), `bufev.rs` (532 L, `bufferevent`); `ztmux/build.rs:1-5` ("no C
+libraries to find or link"), `ztmux/Cargo.toml:44-50` (`static`/`dynamic` kept as no-ops) and `:52-59`
+(deps: `libc` for syscalls, `terminfo-lean` for terminfo — no `-sys` crate); commit `bef02bd2f9`
+*"Replace libevent with a Rust event loop"* (−364 L `src/ported/event.rs`, −151 L of `build.rs`
+probing), against its predecessor `49ed6af348` *"build: probe libevent via pkg-config, fail with install
+instructions"*; `ztmux/vendor/tmux/osdep-darwin.c:102-103` + `osdep-linux.c:97` (the constraints being
+mirrored); `cargo test --lib event_` → **22 passed, 0 failed** (19 of them the event loop's own);
+`ztmux/parity/parity_summary.json` (`"total": 1194, "passed": 1194, "failed": 0`, ztmux 3.7.38 against
+`tmux next-3.7`, generated 2026-08-10); `ztmux/src/extensions/doctor.rs:140-152` and `:479-486` (the
+`event-loop` build check and its test). *Prior-art sweep (2026-08-18):* crates.io for `libevent` returns
+bindings, not reimplementations — `libevent` 0.2.0 *"Rust bindings to the libevent async I/O
+framework"*, `libevent-sys` 0.4.0 *"Rust FFI bindings to the libevent library"*; the nearest non-binding
+hit is `td_revent` 0.3.2 (2022) *"Event library for Rust, Async IO similar to libevent"* — *similar to*,
+with its own API, not libevent's. A web search for a pure-Rust reimplementation of
+`event_add`/`evbuffer`/`bufferevent` returns those bindings and general async runtimes, nothing
+API-compatible. The other Rust tmux port requires `libevent2` by its own README. *Caveat:* **not**
+"first pure-Rust reactor", and not claimed as one — `mio`, `tokio`, `polling` and `calloop` long predate
+this and are better at that job; what was not found is an *API-compatible* stand-in for libevent's
+classic C surface, and what is claimed is a tmux that no longer carries the dependency. The
+implementation is deliberately **partial**: only what the port calls exists, and everything libevent
+grew for other users (rate limiting, OpenSSL bufferevents, evdns, evhttp, threading, multiple
+`event_base`s) is absent by design. It is also **not safe Rust** — the API is FFI-shaped (raw pointers,
+caller-owned registrations), 155 `unsafe` occurrences across the five modules; the claim is *no C*, not
+*no `unsafe`*. The parity figure is the committed summary of the last full run, not a re-run for this
+entry, and the loop is single-base and single-threaded because the API tmux uses has no room for
+anything else. "None found," not proven; sweep was crates.io + web search only. MIT (derivative of
+tmux, ISC).
 
 ---
 
