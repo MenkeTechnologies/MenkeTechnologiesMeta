@@ -15,8 +15,8 @@
 [![Tier 5](https://img.shields.io/badge/tier_5-20_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-20)
 [![Tier 6](https://img.shields.io/badge/tier_6-23_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-23)
 [![Tier 7](https://img.shields.io/badge/tier_7-8_znative_plugins-blue.svg)](#tier-7--znative-plugins-8)
-[![Rust](https://img.shields.io/badge/rust-4.3M_LOC-orange.svg)](#0x09-code-volume)
-[![Code](https://img.shields.io/badge/code-11.8M_lines-brightgreen.svg)](#0x09-code-volume)
+[![Rust](https://img.shields.io/badge/rust-5.0M_LOC-orange.svg)](#0x09-code-volume)
+[![Code](https://img.shields.io/badge/code-13.4M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -604,7 +604,7 @@ The `bin/` and `scripts/` directories ship wrappers for common operations. Most 
 | [`bin/sync-pointers`](bin/sync-pointers) | After running pull-all, stage + commit all submodule pointer bumps in one commit. |
 | [`bin/release-all`](bin/release-all) | Coordinated `Cargo.toml` bump + commit + tag + push across every submodule that backs a homebrew formula. |
 | [`bin/gen-ci-board`](bin/gen-ci-board) | Regenerate the [\[0x02\] CI Status Board](#0x02-ci-status-board) from the submodule map + live workflow lists (`--in-place` splices README.md). |
-| [`bin/gen-code-volume`](bin/gen-code-volume) | Regenerate the [\[0x09\] Code Volume](#0x09-code-volume) tables (stryke) — `tokei` de-duplicated by git: nested submodule mountpoints counted once at their top-level checkout (`--in-place` splices README.md). |
+| [`bin/gen-code-volume`](bin/gen-code-volume) | Regenerate the [\[0x09\] Code Volume](#0x09-code-volume) tables (stryke) — `tokei` de-duplicated by git: nested submodule mountpoints counted once at their top-level checkout (`--in-place` splices README.md and restamps the header `rust-…M_LOC` / `code-…M_lines` badges). |
 | [`bin/gen-app-icon.sh`](bin/gen-app-icon.sh) | Render one GUI app icon from the shared cyberpunk brand template (chamfered neon frame + width-pinned glyph/wordmark, vendored Orbitron). Args: accent, glyph, wordmark, out.png. |
 | [`bin/gen-all-icons.sh`](bin/gen-all-icons.sh) | Regenerate every GUI app's icon set from that one template (Tauri via `tauri icon`, JUCE via `iconutil`), so all apps share `zterminal`'s geometry and differ only by accent/glyph. Reads the shared brand assets in [`bin/icon-assets/`](bin/icon-assets). |
 | [`bin/gen-gui-actions-live`](bin/gen-gui-actions-live) | Regenerate [`docs/GUI_SCRIPT_ACTIONS.md`](docs/GUI_SCRIPT_ACTIONS.md) from the **live** automation-bus surface (stryke): opens each GUI app, queries `verbs()` over its Unix socket, closes it. Sees the whole runtime surface (appShell + `opts.commands` + dynamically-registered verbs). Requires every app to be launchable. |
@@ -769,7 +769,7 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 4,996,581 | 12,232 |
+| Rust | 4,996,961 | 12,233 |
 | JSON | 2,393,411 | 860 |
 | TeX | 1,854,280 | 173 |
 | JavaScript | 745,093 | 4,549 |
@@ -792,7 +792,7 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 | SQL | 29,409 | 124 |
 | Objective-C++ | 20,833 | 65 |
 | *Other (89 languages)* | 113,207 | 1,647 |
-| **Total** | **13,387,844** | **44,922** |
+| **Total** | **13,388,224** | **44,923** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -808,7 +808,7 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 | `strykelang` | Rust 417,622 | Stryke 162,579 |
 | `zshrs` | Rust 541,609 | Zsh 56,822 |
 | `zmax` | Rust 320,336 | JSON 143,978 |
-| `zvcs` | Rust 516,234 | Shell 12,676 |
+| `zvcs` | Rust 516,614 | Shell 12,676 |
 | `zmax-gui` | Rust 252,968 | JSON 96,307 |
 | `docs` | HTML 393,255 | JavaScript 6,806 |
 | `Audio-Haxor` | Rust 140,344 | JSON 121,593 |
