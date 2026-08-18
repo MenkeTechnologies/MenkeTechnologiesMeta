@@ -18,9 +18,9 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 265 candidates — 202 numeric entries (numbered through 208; 87, 88 and 90–93 are unused) plus
-63 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40e, 89a, 104a, 105a–105n, 114a, 120a–120s,
-144a, 168a, 169a, 170a). By confidence: 84 high, 141 med, 40 low. Marquee claims (the six
+Total: 268 candidates — 204 numeric entries (numbered through 210; 87, 88 and 90–93 are unused) plus
+64 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40f, 89a, 104a, 105a–105n, 114a, 120a–120s,
+144a, 168a, 169a, 170a). By confidence: 86 high, 142 med, 40 low. Marquee claims (the six
 original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
 deep prior-art analysis in the appendix.
 
@@ -969,6 +969,45 @@ construction — and "first" rests on a non-exhaustive prior-art sweep. mksh/pdk
 best-effort (skipped when absent, never fatal). The real-PTY ZTST harness (#40) is separate and not
 yet CI-gated.
 
+**40f. First Unix shell to expose value lineage — where a parameter's bytes came from — as a builtin** — `high`
+`provenance -m NAME` arms a ledger that records every bytecode-level event producing or
+consuming that parameter's value: the **origin** (`$(…)`, `<(…)`/`>(…)`/`=(…)`, a glob
+expansion, a heredoc/herestring, or an earlier assignment) and the ordered **op chain**
+that followed — `assign` / `append` / `array` / `assoc` / `expand` / `concat` / `exec` /
+`call` / `unset` — each stamped with `$LINENO`. `provenance NAME` prints the chain, `-j`
+emits JSON, `-u` untracks, `-c` clears. So `ARCHIVE=${REPORT}.tar.gz` reports its origin as
+the `date` substitution two lines earlier — even though `ARCHIVE` shares no bytes with that
+substitution's output — and records the argv slot it occupied when `tar` consumed it.
+This is strykelang's `mark`/`provenance` (#47) carried into a shell, where the mechanism
+cannot simply be reused: stryke keys lineage on a value's heap `Arc`, which works because a
+stryke value stays one `Arc` from creation to use. A shell value does not — the VM/host
+boundary passes `String` and the parameter table stores `String` — so zshrs keys three
+spaces at once: `Arc` identity for in-flight `fusevm::Value`s (each row carrying a `Weak`
+so a recycled address never inherits a dead value's lineage), the tracked parameter name
+across assignment round trips, and the exact content bytes for values that crossed a
+`String`-typed boundary (speculative, bounded by an 8192-entry FIFO). Every tap keys on an
+exact identity; none infers a link by scanning word text.
+*Basis:* `zshrs/src/extensions/provenance.rs` (965 L, 14 `#[test]`) plus
+`zshrs/tests/provenance_lineage.rs` (9 end-to-end tests driving the built binary); taps at
+`BUILTIN_SET_LINENO`, `BUILTIN_GET_VAR`/`_DQ`, the `concat_splice`/`concat_plan9` helpers and
+`ShellHost::{glob,heredoc,herestring,exec,call_function,cmd_subst,process_sub_*}` in
+`zshrs/src/fusevm_bridge.rs`, `ShellExecutor::run_command_substitution` in
+`zshrs/src/vm_helper.rs`, and the `assignsparam` / `assignaparam` / `sethparam` /
+`unsetparam` write funnels in `zshrs/src/ported/params.rs`. Each tap is one relaxed
+`AtomicBool` load until something is armed, and `[provenance] enabled = false` in
+`~/.zshrs/zshrs.toml` (or `ZSHRS_PROVENANCE=0`) refuses arming outright so no ledger can
+exist in the process. Documented at `zshrs/docs/PROVENANCE.md`; shipped in v0.12.34.
+*Caveat:* "none found", not proven — the adjacent prior art sits at a different layer or a
+coarser granularity: OS-level whole-system provenance (PASS, CamFlow's LSM) records
+processes and files, not a shell's parameter values; ProvDB's `provdb <cmd>` prefix ingests
+provenance per command invocation; zsh's own `SOURCE_TRACE` reports which files were
+sourced, not where a value came from. No surveyed shell exposes per-value lineage as a
+builtin, but the sweep was not exhaustive. Lineage is parameter-granular — a value that
+never reaches an armed parameter keeps a chain only while its content row survives the
+FIFO. The param taps sit at the funnel head, so a write rejected downstream (`read-only
+variable`) still appears as an attempted `assign`; chains cap at 256 ops; globs of more
+than 32 matches are skipped; a subshell's ledger dies with the subshell.
+
 ---
 
 ## III. strykelang — the language
@@ -1026,7 +1065,8 @@ machine; cdylib runs with caller privileges (same trust model as `do FILE`).
 `mark($x)` tags a value's heap Arc so subsequent operations accumulate a lineage record
 retrievable via `provenance($x)` — automatic dataflow lineage exposed as a user verb,
 zero-cost when unused. *Basis:* `provenance.rs` (469 L), framed "no existing scripting
-language ships this". *Caveat:* lineage accrues only for marked values; op coverage
+language ships this"; carried into zshrs as #40f, where the heap-`Arc` key had to be
+replaced. *Caveat:* lineage accrues only for marked values; op coverage
 breadth unverified.
 
 **48. Polymorphic steganography builtins (`hide`/`reveal`)** — `med`
@@ -1787,14 +1827,16 @@ byte-for-byte Nmap and does NOT embed the NSE Lua runtime; several areas marked 
 
 ## VIII. Editor & shell ecosystem
 
-**120. Ten embedded scripting languages in one editor binary, zero FFI** — `med`
-zmax embeds ten scripting interpreters — Emacs Lisp, Vimscript, AWK, zsh, stryke, Ruby, PHP,
-Python, JavaScript (Node), and arb — directly compiled into the binary with no external process
-and no C-ABI/FFI between them, all driving the live buffer through one uniform host API. *Basis:*
-`zmax/README.md:86-87` ("the only IDE to embed 10 scripting languages with zero external
-dependencies and no FFI between them"); `book/src/scripting.md`
-(`:elisp`/`:vim`/`:awk`/`:zsh`/`:stryke`/`:ruby`/`:php`/`:python`/`:node`/`:arb`, `SPC a r`
-unified REPL); each is a pure-Rust crate lowering onto shared fusevm bytecode. *Caveat:* overlaps #1 (the editor-
+**120. Twelve embedded scripting languages in one editor binary, zero FFI** — `med`
+zmax embeds twelve scripting interpreters — Emacs Lisp, Vimscript, AWK, arb, zsh, stryke, Ruby,
+PHP, Python, JavaScript (Node), R, and Tcl — directly compiled into the binary with no external
+process and no C-ABI/FFI between them, all driving the live buffer through one uniform host API.
+*Basis:* `zmax/README.md:95` ("the only IDE to embed 12 scripting languages with zero external
+dependencies and no FFI between them") and `README.md:100` (the twelve `:`-commands);
+`zmax/zmax-term/src/commands/scripting/pipeline.rs:60-62`, whose `LANGUAGES` table is the
+machine-readable list of the same twelve; `book/src/scripting.md` (`SPC a r` unified REPL); each
+is a pure-Rust crate lowering onto shared fusevm bytecode. Chained as pipeline stages, they are
+#209. *Caveat:* overlaps #1 (the editor-
 embedding angle of the same crate family); "world first" is the repo's own assertion; each
 interpreter exposes only a subset of its host API.
 
@@ -3439,14 +3481,98 @@ plane is unaffected by it. "None found," not proven; sweep non-exhaustive. A zvc
 
 ---
 
-## XII. ztmux — the IPC substrate: OpenBSD imsg in Rust
+## XII. Round-3 additions — hosting, in-process pipelines, and the IPC substrate
 
-One entry, kept in its own section because it is a **substrate** claim rather than a product
-claim: the wire protocol underneath ztmux (#175) and ztmux-core. tmux's server↔client channel is
-OpenBSD `imsg`, so everything above it — the parity suite, the extensions, the GUI client — rests
-on that framing having been *reimplemented* rather than linked against C or shelled out to.
+Three substrate claims, none of which is a product: what a runtime must implement to host a
+foreign toolkit through its own ABI (#208), what falls away when twelve interpreters are already
+linked into the editor asking for them (#209), and the wire protocol underneath ztmux and
+ztmux-core (#210). #208 and #209 were written up in the *Invention Ledger* book (chapters 55 and
+56) before they were entered here; this section closes that gap.
 
-**208. First pure-Rust port of the *current-generation* OpenBSD `imsg` IPC framework — a tmux server and client that speak imsg natively, with no C linkage and no CLI scraping (ztmux / ztmux-core)** — `med`
+**208. First non-Tcl runtime to host the real, unmodified Tk toolkit through Tcl's stub ABI — a bytecode-VM frontend standing in where the interpreter is expected (tclrs `--tk`)** — `high`
+Tk 9.0 does not link against Tcl: its shipped dylib has **no undefined `Tcl_*` symbol at all**
+(`nm -u /opt/homebrew/lib/libtcl9tk9.0.dylib | grep -c _Tcl_` → `0`). Every call Tk makes goes
+through a table of function pointers `Tcl_InitStubs` pulls out of whatever interpreter it is
+handed — which turns "what would it take to run Tk" from a documentation question into a
+**measurement**: hand Tk a table whose every slot is a trap that names itself, call `Tk_Init`, and
+read off what it asks for. tclrs — a Tcl frontend that compiles to shared fusevm bytecode and has
+no traditional Tcl interpreter — answers that measurement and then satisfies it: `src/tk` is
+**18,010 lines across 21 modules and implements no widget**, only the ABI beneath one. The four
+stub tables are generated from the upstream headers (`scripts/gen_tk_stubs.py`) at their real
+sizes — `TclStubs` **691** slots, `TclIntStubs` **262**, `TclPlatStubs` **4**, `TclIntPlatStubs`
+**31** — and the probe binary reports what Tk actually touches: `tk-probe` records Tk calling
+**39 distinct slots over 274 calls** before it stops at
+`Tcl_EvalEx(interp, "file tildeexpand ~/.Xdefaults", …)`, the first request that needs an
+evaluator rather than a data structure, so `Tk_Init` exercises **under 7%** of the table. With the
+object layer, evaluator and notifier behind the table, `tk-host` reaches **2,737 calls over 75
+distinct slots and `Tk_Init` returns** — **200 of the 691 slots have bodies**. Three things a
+language frontend otherwise never needs had to exist, each of them evidence this is an ABI
+implementation rather than a shim: **Tcl's notifier** (Tk registers an event source and calls
+`Tcl_DoOneEvent`, so hosting Tk means hosting the event queue, timers and idle handlers, ported
+from Tcl 9.0.4 onto a CFRunLoop); a **C trampoline** (`src/tk/trampoline.c`, compiled by
+`build.rs`) because seven slots are C-variadic and stable rustc refuses to *define* one
+(`error[E0658]`, tracking issue 44930) with no AAPCS64 workaround — four of them carry a payload
+Tk reads back, including `Tcl_ObjPrintf`, which is how `wm geometry .` returns its value; and
+**three operations that are not table calls at all** — `Tcl_IncrRefCount` / `Tcl_DecrRefCount` /
+`Tcl_IsShared` are macros over `objPtr->refCount`, which forces a shadow `Tcl_Obj` with pinned
+storage and a stated ownership rule for every pointer crossing the boundary (and two of the
+objects Tk operates on live on Tk's own C stack, one with `refCount` uninitialised).
+`Tcl_HashTable` and `Tcl_ChannelType` push the same way: the host has to *implement* Tcl's hash
+table and to call *into* Tk's channel driver. The rule that keeps the 200 honest: an unimplemented
+slot **ends the process** rather than returning a plausible zero, and a trap counts as a failure,
+never a skip. *Basis:* `tclrs/src/tk/mod.rs:1-150` (the measurement write-up, the four
+not-in-the-table structures, the variadic analysis); `tclrs/src/tk/generated.rs:21` (691), `:3487`
+(262), `:4808` (4), `:4839` (31); `tclrs/src/tk/` (21 modules, 18,010 lines: `abi`, `obj`,
+`objtype`, `hash`, `channel`, `notifier`, `eval`, `dispatch`, `load`, `session`, …);
+`tclrs/src/tk/trampoline.c`; `tclrs/tests/tk_abi.rs`, `tk_probe_session.rs`, `tk_notifier.rs`,
+`tk_obj.rs`, `tk_session.rs`, `tk_eval.rs`, `tk_main_thread.rs`, `tk_console_channels.rs`,
+`tk_cold_lowering.rs`, `tk_index_pkg.rs`. *Caveat:* hosting a C library through its ABI is not
+novel — every language with an FFI does it, and the stub mechanism exists so *extensions* can be
+written against a stable table. What is unusual is the **direction**: the table is normally
+provided *by* Tcl *to* Tk, and here it is provided *to* Tk by something that is not a Tcl
+interpreter. 200/691 slots have bodies and no widget path is claimed beyond what the harness
+exercises; measured against Homebrew arm64 tcl-tk 9.0.4 on macOS, so the notifier leg is
+CFRunLoop-specific. "Running Tk" in the broad sense is ordinary — dozens of languages do it
+through a real Tcl — and is **not** what is claimed. "None found," not proven; sweep
+non-exhaustive.
+
+**209. Twelve language runtimes chained as pipeline stages inside the editor process — no fork, no pipe, and the text bound as a native value in every stage (zmax `:xpipe`)** — `med`
+Filtering a selection through an external command is one of the oldest moves in text editing —
+`!` in vi, `M-|` in Emacs — and it has always cost the same thing: a three-stage `awk | ruby | php`
+filter is three `fork`+`execve` pairs, six pipe descriptors, three `waitpid`s and a full
+encode/decode of the text at every boundary, for interpreters that in this stack are **already
+linked into the editor binary**. `:xpipe` runs the same chain as N function calls on the editor
+thread. Twelve runtimes are addressable as stages — `awk`, `arb`, `ruby`, `python`, `node`, `php`,
+`rlang`, `tcl`, `zsh`, `stryke`, `elisp`, `vim` — with no process created, no pipe opened, and the
+whole chain landing as **one undo step**. The part that makes it more than a speed trick is the
+binding: each stage receives the incoming text as a *real value* on that stage's own runtime — a
+Ruby `String`, a Python `str`, a JS string, a PHP variable, an R character vector, a Tcl global, a
+zsh parameter, a stryke scalar, an elisp symbol value, a VimL `g:` variable — which cost work
+*upstream* rather than in the editor, because every frontend's `eval_str` resets its host and
+wipes a global installed beforehand. Each therefore grew an entry point that seeds bindings after
+the reset and captures output in-process (`eval_str_captured` in rubylang, pythonrs and node-js,
+`eval_capture_with` in phplang, `eval_captured` in rlang, `bind_scalar` + `begin_capture` in
+strykelang, `execute_script_captured` in zshrs, `set_global_string` in vimlrs; elisp needed
+nothing new). Stages are separated by a whitespace-delimited **`|>`** — a language constraint, not
+a style choice, since a bare `|` is live syntax in most of the twelve (awk's `print | "cmd"`, Ruby
+and JS block parameters, zsh pipelines). And the threading rule falls out of the runtimes rather
+than being asserted: `Stage::is_pure` is true only for `awk` and `arb` — the two that build a
+fresh runtime per call and touch nothing shared — and `Pipeline::is_pure` folds it with `all`, so
+a chain leaves the editor thread only when every stage can. *Basis:*
+`zmax/zmax-term/src/commands/scripting/pipeline.rs:60-62` (the twelve-name `LANGUAGES` table),
+`:89-91` (`Stage::is_pure` = `Awk | Arb`, with the per-language reasons the other ten are pinned),
+`pipeline.rs:1-56` (the per-frontend capture entry points and why the reset forced them);
+`zmax/zmax-term/src/commands/scripting/mod.rs:730` (`Pipeline::is_pure` folding with `all`).
+*Caveat:* editors have embedded *a* scripting language for decades (Emacs/elisp, vim/VimL,
+Sublime/Python, VS Code/JavaScript), and multi-language plugin hosts exist — but they host each
+language in a separate process or VM instance and marshal across the boundary. The novelty is the
+**conjunction**: twelve, chained, in-process, value-bound, one undo step. Ten of the twelve are
+pinned to the editor thread (thread-local interpreter state; zsh's capture swaps process fds;
+elisp and VimL reach the editor through a thread-local raw pointer), so the parallel path is
+`awk`/`arb`-only chains. Overlaps #120, which is the *embedding*; this is the *chaining*. "None
+found," not proven; sweep non-exhaustive.
+
+**210. First pure-Rust port of the *current-generation* OpenBSD `imsg` IPC framework — a tmux server and client that speak imsg natively, with no C linkage and no CLI scraping (ztmux / ztmux-core)** — `med`
 `imsg` is OpenBSD's IPC framing — the message layer its privilege-separated daemons are built on,
 vendored into portable tmux as the server↔client channel. The Rust ecosystem talks to tmux the other
 two ways: through the CLI (`tmux_interface`, 150,555 downloads, its own one-liner is *"Rust language
