@@ -21,8 +21,8 @@ deep, the caveat says so.
 Total: 268 candidates — 204 numeric entries (numbered through 210; 87, 88 and 90–93 are unused) plus
 64 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40f, 89a, 104a, 105a–105n, 114a, 120a–120s,
 144a, 168a, 169a, 170a). By confidence: 86 high, 142 med, 40 low. Marquee claims (the six
-original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
-deep prior-art analysis in the appendix.
+original ledger entries, zvcs #173 and zshrs's value-lineage builtin #40f) are flagged **★**; five of
+them (#1, #64, #65, #173, #40f) carry a deep prior-art analysis in the appendix.
 
 ---
 
@@ -969,7 +969,7 @@ construction — and "first" rests on a non-exhaustive prior-art sweep. mksh/pdk
 best-effort (skipped when absent, never fatal). The real-PTY ZTST harness (#40) is separate and not
 yet CI-gated.
 
-**40f. First Unix shell to expose value lineage — where a parameter's bytes came from — as a builtin** — `high`
+**40f. ★ First Unix shell to expose value lineage — where a parameter's bytes came from — as a builtin** — `high`
 `provenance -m NAME` arms a ledger that records every bytecode-level event producing or
 consuming that parameter's value: the **origin** (`$(…)`, `<(…)`/`>(…)`/`=(…)`, a glob
 expansion, a heredoc/herestring, or an earlier assignment) and the ordered **op chain**
@@ -997,16 +997,20 @@ exact identity; none infers a link by scanning word text.
 `AtomicBool` load until something is armed, and `[provenance] enabled = false` in
 `~/.zshrs/zshrs.toml` (or `ZSHRS_PROVENANCE=0`) refuses arming outright so no ledger can
 exist in the process. Documented at `zshrs/docs/PROVENANCE.md`; shipped in v0.12.34.
-*Caveat:* "none found", not proven — the adjacent prior art sits at a different layer or a
-coarser granularity: OS-level whole-system provenance (PASS, CamFlow's LSM) records
-processes and files, not a shell's parameter values; ProvDB's `provdb <cmd>` prefix ingests
-provenance per command invocation; zsh's own `SOURCE_TRACE` reports which files were
-sourced, not where a value came from. No surveyed shell exposes per-value lineage as a
-builtin, but the sweep was not exhaustive. Lineage is parameter-granular — a value that
-never reaches an armed parameter keeps a chain only while its content row survives the
-FIFO. The param taps sit at the funnel head, so a write rejected downstream (`read-only
-variable`) still appears as an attempted `assign`; chains cap at 256 ops; globs of more
-than 32 matches are skipped; a subshell's ledger dies with the subshell.
+*Prior art:* none — **no shell in the history of Unix has shipped value provenance**, and
+the near-misses fail on a different axis rather than by a narrow margin (deep analysis in
+the appendix). Everything adjacent is either a different *layer* (OS/kernel provenance —
+PASS, CamFlow, SPADE — which records processes and files, never a shell's parameter
+values), a different *granularity* (ProvDB's `provdb <cmd>` prefix and the
+reproducibility wrappers capture whole command invocations, not the ancestry of one
+value), or a different *question* (`set -x`, `SOURCE_TRACE`, `typeset -p`,
+`funcfiletrace` all answer "what ran / what is it now / where was it defined", never "how
+was this value built"). *Caveat:* the limits are implementation-side, not claim-side.
+Lineage is parameter-granular — a value that never reaches an armed parameter keeps a
+chain only while its content row survives the FIFO. The param taps sit at the funnel
+head, so a write rejected downstream (`read-only variable`) still appears as an attempted
+`assign`; chains cap at 256 ops; globs of more than 32 matches are skipped; a subshell's
+ledger dies with the subshell.
 
 ---
 
@@ -3721,6 +3725,48 @@ many-writer, submodule-heavy, automated workflows lock-free and fair**, with `zs
 attached, forward-only submodule discipline and a differential fuzz harness (#174) holding the git-compat
 floor to byte parity. Recorded as "none found", owned by MenkeTechnologies, **not** stamped a proven
 absolute; the sweep is non-exhaustive and cannot cover private/internal tooling.
+
+---
+
+### Why each near-miss isn't a dup — value lineage as a shell builtin (#40f)
+
+The claim is narrow: a **shell** that answers *"where did this parameter's bytes come from, and what
+did the bytecode do to them?"* through a builtin, at **value** granularity. No shell in the history of
+Unix — Thompson sh, Bourne sh, csh/tcsh, ksh88/ksh93, bash, zsh, ash/dash, mksh, fish, elvish,
+nushell, oil/YSH, PowerShell — has shipped it. The near-misses are not close calls; each answers a
+different question, and the split is clean:
+
+- **OS / kernel-level provenance (PASS, CamFlow's LSM, SPADE, Hi-Fi)** — a *different layer*. These
+  record system objects: processes, files, sockets, and the edges between them. They can tell you that
+  `/bin/date` wrote to a pipe that a shell process read; they cannot name the parameter that received
+  the bytes, because the shell's parameter table is private process memory the kernel never sees. Value
+  lineage inside the shell is invisible to them by construction.
+- **Command-granular capture (ProvDB's `provdb <cmd>` prefix, reproducibility wrappers of the
+  ReproZip / Sumatra / noWorkflow family)** — a *different granularity*. The unit is one invocation or
+  one script run, recorded for reproducibility and re-execution. Nothing in that model has a name for
+  "this variable, built from that substitution three lines up, concatenated with a literal, then handed
+  to `tar` as argv[2]".
+- **Shell features routinely mistaken for it** — a *different question*. `set -x`/`PS4` xtrace prints
+  each command as it executes and then forgets it; zsh's `SOURCE_TRACE` reports which *files* were
+  sourced; `typeset -p` / `declare -p` print a value's current contents and attributes with no history;
+  `funcfiletrace` / `BASH_SOURCE` / `funcsourcetrace` locate where *code* was defined. None of them
+  retains an ancestry for a value, and none survives the value being rebuilt by an expansion.
+- **Taint tracking (Perl's `-T`)** — the closest relative in spirit, and still a different mechanism:
+  taint propagates a single *boolean* through derived values to gate dangerous operations. It answers
+  "is this untrusted?", never "what produced it" — there is no origin, no op chain, no line numbers, and
+  it is a language feature, not a shell one.
+- **zshrs's own recorder (PFA-SMR, `src/recorder/`)** — deliberately the other half of the pair, and
+  worth naming so the two are not conflated: the recorder answers *"what state did this shell define,
+  and where"* (aliases, functions, options, bindings, with file:line). Provenance answers *"how was this
+  value built"*. Same shell, orthogonal questions, independent subsystems.
+- **Dataflow-lineage research languages (LIO, Adapton) and stryke's own `mark`/`provenance` (#47)** —
+  the concept exists in *languages*; #47 is this author's own, and #40f is its first appearance in a
+  **shell**, where the enabling mechanism (heap-`Arc` identity) does not survive the parameter table and
+  had to be replaced by the three-key scheme the entry describes.
+
+Net: no prior art. Recorded on the author's own prior-art search plus the sweep summarized above; the
+adjacent systems are catalogued here precisely because they are the ones a reviewer would reach for, and
+each one misses on layer, granularity, or question — not by inches.
 
 ---
 
