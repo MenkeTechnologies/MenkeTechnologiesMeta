@@ -206,12 +206,12 @@
 
     <div class="stat-row">
       <div class="stat-card"><div class="n">134/137</div><div class="l">files at DONE tier</div></div>
-      <div class="stat-card"><div class="n">2,436</div><div class="l">lib tests passing</div></div>
+      <div class="stat-card"><div class="n">2,529</div><div class="l">lib tests passing</div></div>
       <div class="stat-card"><div class="n">462</div><div class="l">parity tests vs upstream</div></div>
       <div class="stat-card"><div class="n">11</div><div class="l">port bugs surfaced + fixed</div></div>
       <div class="stat-card"><div class="n">624</div><div class="l">upstream py fns</div></div>
       <div class="stat-card"><div class="n">0</div><div class="l">python runtime deps</div></div>
-      <div class="stat-card"><div class="n">v0.2.18</div><div class="l">current tag</div></div>
+      <div class="stat-card"><div class="n">v0.2.23</div><div class="l">current tag</div></div>
     </div>
 
     <section class="tutorial-section">
@@ -263,7 +263,7 @@ cargo test --test ported_fn_names_match_py</pre>
 
     <section class="tutorial-section">
       <h2>Status</h2>
-      <p>Port is structurally complete at the function level. <strong>134 of 137 upstream Python files</strong> are at DONE tier per the citation-density classifier (<code>scripts/gen_port_checklist.py</code>); the 3 remaining NEAR files are <strong>Python lipstick</strong> — zero-fn class shells (<code>renderers/shell/readline.py</code> and <code>renderers/shell/zsh.py</code> each hold two escape-marker string constants and a class alias; <code>bindings/i3/powerline-i3.py</code>'s single <code>render</code> fn is already 100% ported per <code>docs/port_report.html</code>). No behavioral surface left to port — the classifier's <code>py_fn_total == 0</code> denominator just can't promote 0/0 → DONE. The Rust port spans ~65,992 LOC across <code>src/ported/</code> with <strong>2,497 lib tests</strong> + <strong>2 audit tests</strong> + <strong>462 parity tests</strong> passing. Parity tests pipe identical inputs through the upstream Python interpreter (via the vendored <code>powerline-status</code>) and the Rust port, asserting byte/value-identical results — <strong>11 real port bugs</strong> were surfaced by this harness and fixed in-tree (ThreadedSegment.daemon, Spec.did_type, encoding locale lookup, _clear_special_values UB, Spec.ident regex, Spec.context_message recursion, Spec.tuple bounds, Spec.unknown_msg/_spec dispatch, NON_PRINTABLE_RE inversion, Spec.printable/unsigned). Every <code>fn</code> name under <code>src/ported/</code> traces to one of 624 upstream Python fn names (or to <code>tests/data/fake_fn_allowlist.txt</code> for maintainer-approved exemptions); every ported body carries <code>// py:NNN</code> line-citations against upstream <code>powerline/</code>. End-to-end statusline rendering against a real <code>.json</code> theme tree runs through the <code>Powerline</code> orchestrator chain (Powerline class + Theme + Renderer base + segment dispatcher) in both <code>powerline-render</code> and <code>powerline-daemon</code> via the shared <code>render_runtime::render_once</code> entry — byte-identical output with upstream <code>python3 powerline-render</code> is asserted across 45 daemon-parity fixtures (<code>tests/daemon_parity.rs</code>) on top of the 462 unit-parity tests. Watch <a href="https://github.com/MenkeTechnologies/powerliners/tags">tags</a> for milestone bumps.</p>
+      <p>Port is structurally complete at the function level. <strong>134 of 137 upstream Python files</strong> are at DONE tier per the citation-density classifier (<code>scripts/gen_port_checklist.py</code>); the 3 remaining NEAR files are <strong>Python lipstick</strong> — zero-fn class shells (<code>renderers/shell/readline.py</code> and <code>renderers/shell/zsh.py</code> each hold two escape-marker string constants and a class alias; <code>bindings/i3/powerline-i3.py</code>'s single <code>render</code> fn is already 100% ported per <code>docs/port_report.html</code>). No behavioral surface left to port — the classifier's <code>py_fn_total == 0</code> denominator just can't promote 0/0 → DONE. The Rust port spans ~65,992 LOC across <code>src/ported/</code> with <strong>2,529 lib tests</strong> + <strong>2 audit tests</strong> + <strong>462 parity tests</strong> passing. Parity tests pipe identical inputs through the upstream Python interpreter (via the vendored <code>powerline-status</code>) and the Rust port, asserting byte/value-identical results — <strong>11 real port bugs</strong> were surfaced by this harness and fixed in-tree (ThreadedSegment.daemon, Spec.did_type, encoding locale lookup, _clear_special_values UB, Spec.ident regex, Spec.context_message recursion, Spec.tuple bounds, Spec.unknown_msg/_spec dispatch, NON_PRINTABLE_RE inversion, Spec.printable/unsigned). Every <code>fn</code> name under <code>src/ported/</code> traces to one of 624 upstream Python fn names (or to <code>tests/data/fake_fn_allowlist.txt</code> for maintainer-approved exemptions); every ported body carries <code>// py:NNN</code> line-citations against upstream <code>powerline/</code>. End-to-end statusline rendering against a real <code>.json</code> theme tree runs through the <code>Powerline</code> orchestrator chain (Powerline class + Theme + Renderer base + segment dispatcher) in both <code>powerline-render</code> and <code>powerline-daemon</code> via the shared <code>render_runtime::render_once</code> entry — byte-identical output with upstream <code>python3 powerline-render</code> is asserted across 45 daemon-parity fixtures (<code>tests/daemon_parity.rs</code>) on top of the 462 unit-parity tests. Watch <a href="https://github.com/MenkeTechnologies/powerliners/tags">tags</a> for milestone bumps.</p>
     </section>
 
     <section class="tutorial-section">
@@ -347,6 +347,52 @@ ls target/debug/powerliners target/debug/powerline-{render,lint,config,daemon}</
     </section>
 
     <section class="tutorial-section">
+      <h2>Daemon runtime — render pool &amp; deadlines</h2>
+      <p>Upstream's daemon calls <code>get_answer</code> inline inside its <code>select</code> loop, so the loop is unavailable for the full duration of a render and one slow segment stalls every other client. That is not hypothetical: a stale login session made every <code>osascript</code> in the Spotify segment block for 30 s inside LaunchServices, renders took 30–120 s, and tmux printed <code>&lt;'…' not ready&gt;</code> in place of the statusline for every pane.</p>
+      <p>The Rust daemon splits that apart. <code>dispatch_request</code> keeps the <code>&amp;mut State</code> half (the <code>wm.*</code> registry, the per-ext <code>Configs</code> cache) on the loop thread and hands the render itself to <code>src/extensions/render_pool.rs</code>. The loop thread only ever does socket work, so no segment — however wedged — can stop it accepting, answering, or reaping connections.</p>
+      <pre>  loop thread                          worker pool (POWERLINERS_RENDER_THREADS, default 4)
+  ───────────                          ────────────────────────────────────────────────
+  poll(sockets + wake_fd)
+    ├─ readable  → do_read → submit ──────────►  job queue (one shared receiver)
+    │                                              │  lock held only to dequeue,
+    │                                              │  never across the render
+    │                                              ▼
+    │                                           render_once(...)  ── segment fns
+    │                                              │
+    ├─ wake_fd readable ◄── self-pipe byte ◄───────┘  + Done{id, bytes} on the channel
+    │     drain pipe, then channel; match id → Conn
+    ├─ writable  → flush reply → close
+    └─ timeout   → reap connections past CONN_DEADLINE</pre>
+      <p>The completion path is a self-pipe because a <code>poll</code> blocked on descriptors cannot otherwise wake for a channel send. <code>drain()</code> reads the pipe <em>before</em> the channel — the reverse order loses wakeups, since a worker that sends in the gap would have its byte consumed while its result stayed queued, and the loop would sleep on it until the poll timeout expired. Job ids are a monotonic <code>u64</code>, deliberately not the connection's descriptor: descriptors are recycled the moment a connection closes, and a late result must never be mistaken for the answer to a new client that inherited the same number. Jobs also carry a cancel flag, so a request the daemon has given up on (client hung up, or deadline blown) is dropped instead of spending a worker on output nobody will read.</p>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Three bounds keep a bad segment contained</h3>
+      <table class="audit-tbl">
+        <thead><tr><th>bound</th><th>module</th><th>behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>render isolation</td><td><code>extensions/render_pool.rs</code></td><td>Renders never run on the loop thread. A panicking worker poisons the queue lock; the remaining workers keep serving. At shutdown the queue closes and finished workers are joined — a worker still inside a wedged render is left detached on purpose, because nothing in this design waits on a hung segment, shutdown included.</td></tr>
+          <tr><td>per-segment budget</td><td><code>extensions/segment_watchdog.rs</code></td><td>Each segment gets 2000 ms, overridable per segment with a <code>"timeout": &lt;ms&gt;</code> theme arg. An overrun serves the segment's last good value (up to 60 s old, then empty) so a briefly-slow segment holds its place instead of blinking out and shoving its neighbours sideways. While an id is overdue, further calls for it return the cached value immediately rather than stacking a new thread per render — a 2 s refresh against a 30 s hang would otherwise accumulate 15 live threads.</td></tr>
+          <tr><td>subprocess kill</td><td><code>extensions/proc_timeout.rs</code></td><td>Segments that shell out SIGKILL any child that outlives its budget, then wait up to 2 s for the reap. The channel is re-checked before the kill: a child that finished in the gap has already been reaped and its pid may have been recycled onto an unrelated process. The watchdog frees the <em>render</em>; this frees the <em>process</em> — complementary, not alternatives.</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-family:Orbitron,sans-serif; font-size:12px; color:var(--cyan); letter-spacing:1.5px; text-transform:uppercase; margin:1.2rem 0 0.4rem;">Connection lifetime</h3>
+      <p>Upstream relies on every client being well-behaved, so a peer that vanished at the wrong moment could be retained indefinitely — 34 open connection sockets against a single live client, observed in the field. Here connections are a <code>Reading</code> / <code>Rendering</code> / <code>Writing</code> state machine, <code>accept</code> drains the whole backlog rather than taking one connection per tick, and reaping is driven by time as well as by socket events: every connection carries a 10 s deadline, accepted sockets get 2 s <code>SO_RCVTIMEO</code> / <code>SO_SNDTIMEO</code>, and the poll timeout shortens to the nearest deadline so it actually fires.</p>
+
+      <table class="audit-tbl" style="margin-top:0.6rem;">
+        <thead><tr><th>knob</th><th>default</th><th>where</th></tr></thead>
+        <tbody>
+          <tr><td><code>POWERLINERS_RENDER_THREADS</code></td><td>4 workers</td><td>env; any positive integer, else the default</td></tr>
+          <tr><td>segment budget</td><td>2000 ms</td><td><code>"timeout": &lt;ms&gt;</code> per segment in theme JSON</td></tr>
+          <tr><td>last-good staleness</td><td>60 s</td><td>compile-time (<code>MAX_STALENESS</code>)</td></tr>
+          <tr><td>connection deadline</td><td>10 s</td><td>compile-time (<code>CONN_DEADLINE</code>)</td></tr>
+          <tr><td>socket send / recv timeout</td><td>2 s</td><td>compile-time (<code>SOCKET_IO_TIMEOUT</code>)</td></tr>
+          <tr><td>post-SIGKILL reap grace</td><td>2 s</td><td>compile-time (<code>REAP_GRACE</code>)</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.6rem;">Watchdog trips, connection reaps, and per-segment timings land in <code>~/.powerliners/powerliners.log</code> (rotates at 5 MiB, keeps 3 generations) — the first place to look when a segment renders empty or late.</p>
+    </section>
+
+    <section class="tutorial-section">
       <h2>Environment variables</h2>
       <table class="audit-tbl" style="margin-top:0.4rem;">
         <thead><tr><th>variable</th><th>effect</th></tr></thead>
@@ -354,6 +400,7 @@ ls target/debug/powerliners target/debug/powerline-{render,lint,config,daemon}</
           <tr><td><code>POWERLINE_COMMAND</code></td><td>The command shell integrations invoke to render. Set to <code>powerline</code> (this binary); existing setups that hardcode the upstream Python shim keep working because the wire format is identical.</td></tr>
           <tr><td><code>POWERLINE_CONFIG_PATHS</code></td><td>Colon-separated config-root search list (<code>config.json</code> + themes / colorschemes / segments JSON). Mirrors upstream search order.</td></tr>
           <tr><td><code>POWERLINE_CONFIG_OVERRIDES</code></td><td>Theme-override <code>key=value</code> pairs applied per extension.</td></tr>
+          <tr><td><code>POWERLINERS_RENDER_THREADS</code></td><td>Size of the daemon's render worker pool. Any positive integer; anything else (unset, zero, unparseable) falls back to 4. Renders are dominated by subprocess and network waits rather than CPU, so a small pool covers the concurrent-pane case without oversubscribing — see <strong>Daemon runtime</strong> above.</td></tr>
           <tr><td><code>POWERLINERS_ICONS</code></td><td>Icon tier: unset/default &rarr; Nerd Font glyphs, <code>=unicode</code> &rarr; text-presentation Unicode fallback, <code>=ascii</code> &rarr; label-style ASCII. Read once per process (see <code>src/extensions/icons.rs</code>).</td></tr>
           <tr><td><code>$XDG_CACHE_HOME</code></td><td>Root for the extracted tmux conf (<code>powerliners/tmux/</code>) and vim plugin (<code>powerliners/vim/</code>); default <code>~/.cache</code>.</td></tr>
           <tr><td><code>$FUSEVM_JIT_CACHE</code> · <code>${ZSHRS,STRYKE,AWKRS,VIMLRS,ELISPRS}_RKYV_CACHE</code> / <code>_HOME</code> · <code>$XDG_DATA_HOME</code></td><td>Override roots for the six cache-size segments — see the resolution chain in <strong>Bundled segments</strong> below.</td></tr>

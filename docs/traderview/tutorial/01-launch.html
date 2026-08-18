@@ -86,7 +86,7 @@
           <li><strong>Recover from a stale lock.</strong> If <code>postmaster.pid</code> exists, the bootstrap reads the recorded PID and checks if that process is still alive. If not, the lockfile is removed — a SIGKILL'd parent on the previous run no longer blocks startup.</li>
           <li><strong>Reuse the persisted password.</strong> A random password file (mode 0600) is written on first init and reused on every subsequent launch so authentication survives across runs.</li>
           <li><strong>Download Postgres if missing.</strong> First launch fetches a portable PostgreSQL into <code>~/.theseus</code> (~80 MB). Subsequent launches reuse that cache.</li>
-          <li><strong>Start the cluster, bind to a random localhost port, run migrations.</strong> 46 migrations under <code>migrations/0001_*.sql</code> through <code>migrations/0046_*.sql</code> are applied in order; new migrations apply on the next launch.</li>
+          <li><strong>Start the cluster, bind to a random localhost port, run migrations.</strong> 102 migrations under <code>migrations/0001_*.sql</code> through <code>migrations/0102_*.sql</code> are applied in order; new migrations apply on the next launch.</li>
           <li><strong>Hold the <code>Embedded</code> handle across <code>axum::serve</code>.</strong> The worker thread owns the handle for the lifetime of the server and drops it explicitly after serve returns. An earlier version dropped at function exit, which silently called <code>pg_ctl stop</code> mid-request — every subsequent query timed out with <em>"pool timed out"</em>.</li>
           <li><strong>Start the axum router on the localhost port and the Tauri WebView.</strong> The WebView loads <code>frontend/index.html</code> via the <code>tauri://localhost</code> custom scheme.</li>
         </ol>
@@ -119,22 +119,24 @@
           <li><strong>Account picker</strong> — switch between accounts. Each broker import lands in its own <code>accounts</code> row; the picker scopes every downstream query.</li>
           <li><strong>Quick-nav chips</strong> — Dashboard · Trades · Journal · Reports · Watchlists · Charts · Live · Scanner. These are the same 8 routes the global keyboard shortcuts target (<code>Cmd+Opt+D/T/J/R/W/C/L/M</code>).</li>
           <li><strong>Symbol search</strong> — full-text autocomplete over <code>symbols</code> + your watchlists. Enter jumps to the per-symbol research dossier (step 08).</li>
-          <li><strong>Cmd-K launcher button</strong> — opens the 648-tile categorized launcher. The same overlay opens on <code>Cmd+K</code> from any view.</li>
-          <li><strong>Help / tutorial</strong> — the <code>?</code> key (no modifier) opens an in-app keyboard cheat-sheet across three searchable tables (48 globals + 70+ scoped ctxmenu items + view-scoped binds).</li>
+          <li><strong>Cmd-K launcher button</strong> — opens the 1444-tile categorized launcher. The same overlay opens on <code>Cmd+K</code> from any view.</li>
+          <li><strong>Help / tutorial</strong> — the <code>?</code> key (no modifier) opens an in-app keyboard cheat-sheet across three searchable tables (58 globals + 70+ scoped ctxmenu items + view-scoped binds).</li>
         </ul>
       </section>
 
       <section class="tutorial-section">
-        <h2>The Cmd-K launcher — 648 tiles, 10 categories</h2>
+        <h2>The Cmd-K launcher — 1444 tiles, 10 categories</h2>
         <p>There is no fixed nav strip. The topbar carries the most-used routes; everything else lives in the Cmd-K launcher. Tiles are grouped into the categories below; type any substring to filter; Enter jumps to the first match.</p>
-        <pre>⚡ Live Markets         6 tiles    Scanner / Halts / Catalysts / Pre-market / Tape / Heatmap
-📊 Trading            16 tiles    Webull / Live Positions / Paper / New Trade / Plans / Hotkeys
-📓 Journal             9 tiles    Journal / AI Journal / Trade Reviews / Compare / Replay / Discipline
-🔎 Charts &amp; Research 178 tiles    Charts / Research / Watchlists / Screener / Scanners / Sectors / …
-📈 Reports            23 tiles    Dashboard / Reports / R-Multiple / Forecast / Fill Quality / Tax / …
-🧷 Strategy            7 tiles    Backtest / Walk-forward / Custom Indicators / Strategy Alerts / Alerts / Webhooks
-💬 Community           4 tiles    Shares / Forum / Mentorship / Boards
-⚙️  Admin             18 tiles    Import / CSV Wizard / Exports / Accounts / Tags / Search / Settings / API tokens</pre>
+        <pre>⚡ Live Markets         41 tiles   Scanner / Halts / Catalysts / Pre+After-hours / UOA / Gamma / Insider Form 4
+📊 Trading             36 tiles   Webull / Live Positions / Paper / New Trade / Plans / Sizing / Hotkeys
+📓 Journal             12 tiles   Journal / AI Journal / Trade Reviews / Compare / Replay / Discipline / Goals
+🔎 Charts &amp; Research  150 tiles   Charts / Screener / Scanners / Options+Greeks / Vol Surface / 100+ indicators
+📈 Reports &amp; Analytics 426 tiles  Dashboard / Reports / valuation / retirement / bonds / real estate / accounting / docs
+🏛️  Tax Code · IRC §    273 tiles   One calculator per IRC section — §179 / §1031 / §121 / §199A / §1202 / §475(f) / …
+🧰 Misc / Specialized  99 tiles   AMT / backdoor Roth / ESPP+ISO / trusts / 13F + Form 4 / cost seg / K-1
+🧷 Strategy            13 tiles   Backtest / Walk-forward / Custom Indicators / Strategy Alerts / Webhooks
+💬 Community            4 tiles   Shares / Forum / Mentorship / Boards
+⚙️  Admin &amp; Data       15 tiles   Import / CSV Wizard / Exports / Accounts / Businesses / Search / Settings / Logs</pre>
         <p>The exact tile count drifts as views are added — the launcher reads its catalog from a single registry at boot, so the count in the README is generated, not typed. Pin / unpin tiles from the launcher to put your daily routes on the topbar.</p>
       </section>
 

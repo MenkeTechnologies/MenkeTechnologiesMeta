@@ -505,7 +505,8 @@
   margin-bottom: 0.3rem;
 }
 .field input,
-.field select {
+.field select,
+.field textarea {
   width: 100%;
   font-family: 'Share Tech Mono', monospace;
   font-size: 12px;
@@ -516,12 +517,41 @@
   padding: 0.5rem 0.65rem;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
+.field textarea {
+  resize: vertical;
+  min-height: 8rem;
+  line-height: 1.5;
+}
 .field input:focus,
-.field select:focus {
+.field select:focus,
+.field textarea:focus {
   outline: none;
   border-color: var(--cyan);
   box-shadow: 0 0 10px var(--cyan-dim);
 }
+/* Contact page */
+.contact-wrap { max-width: 40rem; margin: 0 auto; }
+.contact-intro { color: var(--text-dim); margin-bottom: 1.3rem; line-height: 1.6; }
+.contact-err {
+  color: var(--red, #ff5470);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  margin: 0.4rem 0 0.8rem;
+  min-height: 1em;
+}
+.contact-sent {
+  border: 1px solid var(--cyan);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--cyan-dim) 30%, transparent);
+  padding: 0.7rem 0.9rem;
+  margin-top: 1rem;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+}
+.contact-sent::before { content: "// "; color: var(--accent); }
+.contact-direct { color: var(--text-dim); font-size: 12px; margin-top: 1.2rem; }
+.contact-direct a { color: var(--cyan); }
 .field-row { display: flex; gap: 0.6rem; }
 .field-row .field { flex: 1; }
 .checkout-ok {
@@ -1148,4 +1178,109 @@
   font-size: 11px;
   line-height: 1.45;
   color: var(--text-dim);
+}
+
+/* Corporate lockup in the header brand line. The wordmark is part of the logo,
+   so the brand element is the full lockup and the h1 keeps only the page
+   qualifier -- the page no longer spells MENKETECHNOLOGIES twice.
+
+   The package takes --text and the monogram --cyan, matching the house
+   treatment: a light package with the cyan monogram inside it. Both are scheme
+   variables, so the lockup recolours with the HUD scheme picker rather than
+   pinning its own hex, and both invert correctly in the light theme. Inline SVG
+   rather than <img> for that reason: an <img> cannot inherit.
+
+   Do not swap those two roles. Putting the accent on the package and the
+   monogram in cyan inverts the figure/ground and no longer reads as the mark. */
+.brand-lockup {
+  /* Follows the colour scheme. The house treatment is a light package with the
+     saturated monogram inside it, so the package takes --cyan and the monogram
+     --accent: both are scheme variables, so the mark recolours with the HUD
+     picker and inverts correctly on the light theme without a second rule.
+
+     Do not swap those two roles. Putting the accent on the package and the
+     cyan in the monogram inverts the figure/ground and no longer reads as the
+     mark. */
+  color: var(--cyan);
+  --neon: var(--accent);
+  height: 3.4em;
+  width: auto;
+  vertical-align: -1.35em;
+  margin-right: 0.5em;
+  filter: drop-shadow(0 0 8px var(--cyan-glow));
+}
+/* The logo sets its own face, not the page body font. Share Tech Mono ships no
+   bold weight, so font-weight:700 on the wordmark silently did nothing there and
+   MENKE rendered as thin as its own subtitle. */
+.brand-lockup text {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Branch badge on the product detail page. Every product belongs to one of the
+   four MenkeTechnologies branches; the mark is the corporate hex + MT monogram
+   with a branch glyph in the corner voids.
+
+   The package and the monogram must not resolve to the same value or the MT
+   stops reading as figure against the hex, so the mark keeps the house
+   treatment -- light package, accent monogram -- while the label and border
+   take the branch accent. No border or chip around it - the mark and the
+   wordmark are the badge. That is why .p-branch-mark resets its own colour
+   rather than inheriting the badge's. */
+.p-branchrow { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.p-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.p-branch-mark { width: 20px; height: 20px; flex: none; }
+
+/* Both colours are keyed off the branch hue, never off --text. --text is
+   #e0f0ff on the dark theme but #1e293b on the light one, so painting the
+   package with it rendered a near-black hex on white. Nothing in this mark is
+   allowed to go black.
+
+   Package takes the branch's light tint and the monogram the accent, which is
+   the same relationship the branch board uses. On the light theme both step
+   down one: the accent becomes the package and the paper-safe value becomes the
+   monogram, so the monogram stays the darker of the two and keeps reading as
+   figure against the package. */
+.b-audio      { color: #ff2a6d; } .b-audio      .p-branch-mark { color: #ff9fbd; --neon: #ff2a6d; }
+.b-publishing { color: #ffb020; } .b-publishing .p-branch-mark { color: #ffd68a; --neon: #ffb020; }
+.b-app        { color: #9d6bff; } .b-app        .p-branch-mark { color: #c9adff; --neon: #9d6bff; }
+.b-oss        { color: #2ee65f; } .b-oss        .p-branch-mark { color: #a5f5bd; --neon: #2ee65f; }
+
+[data-theme="light"] .b-audio      { color: #c4004f; } [data-theme="light"] .b-audio      .p-branch-mark { color: #ff2a6d; --neon: #c4004f; }
+[data-theme="light"] .b-publishing { color: #8a5a00; } [data-theme="light"] .b-publishing .p-branch-mark { color: #ffb020; --neon: #8a5a00; }
+[data-theme="light"] .b-app        { color: #5b2fb8; } [data-theme="light"] .b-app        .p-branch-mark { color: #9d6bff; --neon: #5b2fb8; }
+[data-theme="light"] .b-oss        { color: #157a33; } [data-theme="light"] .b-oss        .p-branch-mark { color: #2ee65f; --neon: #157a33; }
+
+/* Header lockup draws itself in on load, the same gesture as the identity
+   board's hero mark: the package strokes on, then the pins and monogram follow.
+
+   pathLength="1" on each path normalises its length to 1 user unit, so one
+   dasharray works for all of them regardless of actual geometry. Without it the
+   dasharray has to exceed the true perimeter, and any excess is dead time at
+   the start where the dash has not reached the path yet and nothing is drawn.
+
+   The <text> in the lockup is deliberately not animated -- .tutorial-brand
+   already runs bootFlicker over the whole header line, and stacking a second
+   entrance on the wordmark reads as two logos arriving separately. */
+@keyframes lk-draw { to { stroke-dashoffset: 0; } }
+
+.brand-lockup .lk-hex,
+.brand-lockup .lk-late {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: lk-draw 0.55s ease-out forwards;
+}
+.brand-lockup .lk-late { animation-delay: 0.4s; animation-duration: 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-lockup .lk-hex,
+  .brand-lockup .lk-late { animation: none; stroke-dashoffset: 0; }
 }
