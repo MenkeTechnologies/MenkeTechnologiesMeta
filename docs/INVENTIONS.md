@@ -18,9 +18,9 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 270 candidates — 206 numeric entries (numbered through 212; 87, 88 and 90–93 are unused) plus
+Total: 271 candidates — 207 numeric entries (numbered through 213; 87, 88 and 90–93 are unused) plus
 64 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40f, 89a, 104a, 105a–105n, 114a, 120a–120s,
-144a, 168a, 169a, 170a). By confidence: 87 high, 143 med, 40 low. Marquee claims (the six
+144a, 168a, 169a, 170a). By confidence: 87 high, 144 med, 40 low. Marquee claims (the six
 original ledger entries, zvcs #173 and zshrs's value-lineage builtin #40f) are flagged **★**; five of
 them (#1, #64, #65, #173, #40f) carry a deep prior-art analysis in the appendix.
 
@@ -3487,11 +3487,13 @@ plane is unaffected by it. "None found," not proven; sweep non-exhaustive. A zvc
 
 ## XII. Round-3 additions — hosting, in-process pipelines, and the IPC substrate
 
-Five substrate claims, none of which is a product: what a runtime must implement to host a
+Six substrate claims, none of which is a product: what a runtime must implement to host a
 foreign toolkit through its own ABI (#208), what falls away when twelve interpreters are already
 linked into the editor asking for them (#209), the wire protocol underneath ztmux and
-ztmux-core (#210), the event loop both of them run on once libevent is gone (#211), and what a
-version control system has to expose before a third party can ship it a compiled plugin (#212).
+ztmux-core (#210), the event loop both of them run on once libevent is gone (#211), what a
+version control system has to expose before a third party can ship it a compiled plugin (#212),
+and the same question for a terminal multiplexer, where the answer has to reach the command
+language and the format engine as well (#213).
 #208 and #209 were written up in the *Invention Ledger* book (chapters 55 and
 56) before they were entered here; this section closes that gap.
 
@@ -3744,6 +3746,79 @@ subcommand — with a per-process discovery model that keeps the cost at two `st
 unused. Prior-art sweep found no VCS with a built-in plugin package manager of any kind;
 "None found," not proven, and searches are not exhaustive. A zvcs addition (ABI and manager
 ported from zshrs's `znative`). MIT.
+
+**213. First terminal multiplexer whose plugins are compiled native code loaded into the server, registering first-class commands, `#{…}` format variables and hooks — with the package manager inside the multiplexer (ztmux `znative` + `ztnative`)** — `med`
+tmux has no plugin API. Its only extension point is `run-shell`, so every plugin ever
+published is a shell script that drives the server by shelling out to `tmux bind-key …`, and
+the manager everyone uses (TPM) is a third-party shell script that clones repos into
+`~/.tmux/plugins` and runs their `*.tmux` files. The multiplexers that *do* have a plugin
+system each stop short of a different half. **Zellij** has both a plugin system and a plugin
+manager, but its plugins are sandboxed **WASM** modules talking protobuf across a host
+boundary, loaded from `file:`/`http(s):`/`zellij:` URLs or a plugin directory; its documented
+API is events, exported commands, filesystem access and async workers — a plugin renders its
+own pane and issues *existing* actions, with no documented way to register a new zellij verb
+or a status-bar variable, and its "plugin manager" is a loader/monitor rather than a store
+with ref pinning and integrity hashes. **WezTerm** clones plugin repos from git URLs
+(`wezterm.plugin.require`, `plugin.list()`, `plugin.update_all()`) but they are **Lua**
+applied to the config at startup — a fetcher, no ABI, nothing compiled. **kitty**'s kittens
+are Python/Go terminal programs run as overlay *processes* that drive kitty over remote
+control, with no ABI and no manager. ztmux has the compiled half and the manager half at
+once, inside the server: a plugin is a Rust `cdylib` compiled against the versioned
+[`ztnative`](https://github.com/MenkeTechnologies/ztmux/tree/main/ztnative) C ABI and
+`dlopen`ed into the running server, and what it registers are the host's own primitives —
+a **command** that is a real `cmd_entry` in tmux's command table, so tmux's own `args_parse`
+parses the plugin's flags from the template it declared and the command works from
+`.tmux.conf`, a key binding, the command prompt and the CLI alike; a **`#{…}` format
+provider** consulted during expansion, so a plugin extends the format language the status
+line is drawn from with no shell job on the redraw path; and a **hook subscription** called
+from `notify_add`. It calls back for `print`/`error` to the client that ran it, `run` (parse
+and queue any tmux command text), `get_option`/`set_option` (including the `@user` options
+plugins configure themselves with), and `format_expand` against the running command's target.
+`znative add|load|remove|list|loaded|info|update|gc|clean` installs into one content-addressed
+store under `$ZTMUX_HOME/pkg` — sources auto-classify (`owner/repo`, `github:…`, `git+URL`,
+`path:…`, each with `@ref` pinning), every install SHA-256 pinned in `installed.toml` — and
+the same command installs **unmodified TPM plugins** into the same store, so the manager is
+additive rather than a replacement ecosystem. Three parts are specific to a multiplexer and
+are not inherited from the shell original. **Long-lived references force the unload
+discipline**: a parsed tmux `cmd` holds its `cmd_entry` by reference for as long as it sits in
+a command list, key binding or menu, which outlives the plugin — so entries are leaked
+deliberately, registrations are purged *before* the `dlclose`, and every dispatch resolves its
+handler by name at call time, turning "plugin removed under a queued command" into a
+diagnostic instead of a jump into an unmapped page. **The redraw path sets the cost floor**:
+format and hook dispatch sit behind a relaxed atomic, so a server with no native plugin pays
+one atomic load per `#{…}` resolution and never takes a lock. **A script plugin has to reach
+the right server**: TPM plugins call bare `tmux`, so `znative` runs them with a generated
+`tmux` shim first on `PATH` that execs *this* ztmux against *this* socket — necessary because
+ztmux deliberately adopts `$TMUX` only for a socket in its own directory (so a ztmux command
+inside a real tmux pane does not speak ztmux's protocol at a tmux server), which would
+otherwise leave a plugin on a `-S`/`-L` server configuring the default one. A native plugin's
+identity also comes from the compiled artifact when the repo declares none: the cdylib is
+probed for its `PluginInfo` before installation, so a repo called `tmux-battery` whose plugin
+declares itself `battery` installs as `battery@0.2.0`. *Basis:* `ztmux/docs/ZNATIVE.md`;
+`ztmux/ztnative/src/lib.rs` (the dependency-free ABI crate — `#[repr(C)]` `HostApi`,
+`PluginInfo`, `HookEvent`, `ABI_VERSION`, `INIT_SYMBOL`, `declare_plugin!`);
+`ztmux/src/extensions/plugin_host.rs` (`dlopen` via `libloading`, the version gate, staging
+buffers, command/format/hook registries, the leaked `cmd_entry` + shared `exec` trampoline,
+purge-before-`dlclose` unload, `probe`); `ztmux/src/extensions/pkg/` (`manifest.rs`,
+`store.rs`, `resolver.rs`, `commands.rs`, `cmd_znative.rs`); the three wiring points in the
+port — `src/ported/cmd.rs` (`CMD_TABLE` 92 → 93, and the `cmd_find` overlay consulted only
+after the static table misses), `src/ported/format.rs` (`format_find`), `src/ported/notify.rs`
+(`notify_add`); `ztmux/examples/plugin-hello/` (a complete plugin — one command, one format,
+one hook). Verified end to end against a live server: install/load/list/loaded/info/remove/
+update/gc/clean, the example plugin's command and alias dispatching, its format resolving, its
+`session-created` hook firing, an unmodified TPM plugin (tmux-fzf-url) binding its key against
+the correct server, the two-start `.tmux.conf` flow, and a plugin trying to register
+`new-window` being refused. *Caveat:* the ingredients are individually old — dlopen plugin
+hosts are ancient, zellij already ships a multiplexer plugin system, wezterm already fetches
+plugin repos, and this project's own zshrs shipped the ABI (#40c) and the compiled-plugin
+package manager (#40d) first, from which this is ported (the sibling port into a VCS is #212).
+The candidate-first is the combination in a **terminal multiplexer**: compiled in-process
+plugins over a stable versioned ABI that register the host's *own* commands, formats and
+hooks, plus a package manager in the binary that installs them and the existing shell-script
+ecosystem from one pinned store. The scoping against zellij rests on its published plugin
+docs (WASM modules; events/commands/filesystem/workers), not on reading its source. "None
+found," not proven; prior-art sweep non-exhaustive. A ztmux addition, alongside #175. MIT
+(ztmux is a derivative of tmux, ISC).
 
 ---
 
