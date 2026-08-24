@@ -18,9 +18,9 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 269 candidates — 205 numeric entries (numbered through 211; 87, 88 and 90–93 are unused) plus
+Total: 270 candidates — 206 numeric entries (numbered through 212; 87, 88 and 90–93 are unused) plus
 64 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40f, 89a, 104a, 105a–105n, 114a, 120a–120s,
-144a, 168a, 169a, 170a). By confidence: 87 high, 142 med, 40 low. Marquee claims (the six
+144a, 168a, 169a, 170a). By confidence: 87 high, 143 med, 40 low. Marquee claims (the six
 original ledger entries, zvcs #173 and zshrs's value-lineage builtin #40f) are flagged **★**; five of
 them (#1, #64, #65, #173, #40f) carry a deep prior-art analysis in the appendix.
 
@@ -3487,10 +3487,12 @@ plane is unaffected by it. "None found," not proven; sweep non-exhaustive. A zvc
 
 ## XII. Round-3 additions — hosting, in-process pipelines, and the IPC substrate
 
-Four substrate claims, none of which is a product: what a runtime must implement to host a
+Five substrate claims, none of which is a product: what a runtime must implement to host a
 foreign toolkit through its own ABI (#208), what falls away when twelve interpreters are already
 linked into the editor asking for them (#209), the wire protocol underneath ztmux and
-ztmux-core (#210), and the event loop both of them run on once libevent is gone (#211). #208 and #209 were written up in the *Invention Ledger* book (chapters 55 and
+ztmux-core (#210), the event loop both of them run on once libevent is gone (#211), and what a
+version control system has to expose before a third party can ship it a compiled plugin (#212).
+#208 and #209 were written up in the *Invention Ledger* book (chapters 55 and
 56) before they were entered here; this section closes that gap.
 
 **208. First non-Tcl runtime to host the real, unmodified Tk toolkit through Tcl's stub ABI — a bytecode-VM frontend standing in where the interpreter is expected (tclrs `--tk`)** — `high`
@@ -3687,6 +3689,61 @@ caller-owned registrations), 155 `unsafe` occurrences across the five modules; t
 entry, and the loop is single-base and single-threaded because the API tmux uses has no room for
 anything else. "None found," not proven; sweep was crates.io + web search only. MIT (derivative of
 tmux, ISC).
+
+**212. First VCS with a plugin package manager of its own — compiled, in-process plugins over a stable C ABI that add or replace its subcommands (zvcs `git znative`)** — `med`
+Git's only extension point for a third party is the dashed external: name an executable
+`git-foo`, put it on `PATH`, and `git foo` will `exec` it (`execv_dashed_external`,
+git.c). There is nothing else — no installer, no registry, no in-process API, no way to
+*replace* a built-in verb, and every invocation is a fork of a separate program that then
+talks to git by running git again. The neighbours each have one half and not the other.
+**Mercurial** has genuine in-process extensions, but they are Python source enabled by hand
+in an `hgrc` `[extensions]` section and obtained however you like — there is no package
+manager in `hg`. **GitHub CLI** has the package manager — `gh extension install owner/repo`,
+`--pin`, even precompiled binary extensions — but `gh` is not a VCS and its extensions are
+still separate executables it forks, with no ABI and no ability to override a built-in
+command. zvcs has both halves at once, inside the `git` binary: `git znative
+add|load|remove|list|info|update|gc` installs plugins into one content-addressed global
+store under `$ZVCS_HOME/pkg` (sources auto-classify — `owner/repo`, `github:…`, `git+URL`,
+`path:…`, with `@ref` pinning — and each install is SHA-256 pinned in `installed.toml`), and
+a **native** plugin is a Rust `cdylib` compiled against the versioned `znative` C ABI and
+`dlopen`ed into the running `git`, registering verbs that dispatch **in-process**. A plugin
+may also **override** an existing verb — its handler runs in place of the built-in
+implementation and calls `dispatch_verb` to run the original — which git's fork-an-external
+model structurally cannot express. The host API a plugin calls back through is the VCS, not
+a shell: `run` (any subcommand, in this process, no fork), `config_get`/`config_set`,
+`repo_info`, `resolve_rev`, `object_read`/`object_write`. **Script** plugins — a repo of
+`git-<verb>` executables, the shape every existing third-party subcommand already ships in —
+install into the same store from the same command, so the manager is additive rather than a
+replacement ecosystem. The interesting engineering is the load model, and it is *not*
+inherited from the shell original: a shell loads its plugins once into a process that lives
+for hours, while `git` is a fresh process per command, so **nothing is loaded until a verb
+proves to belong to a plugin**. The verbs a native plugin registers are discovered by loading
+it once at install time — never declared, so the recorded set cannot lie — and projected into
+two flat side tables (`verbs.tsv`, `overrides.tsv`) that are *deleted rather than written
+empty*; a machine with no plugin installed therefore pays two failed `stat`s per command and
+never opens a file. *Basis:* `zvcs/ZNATIVE.md` (command, store and ABI surface);
+`zvcs/src/plugin/src/lib.rs` (the dependency-free ABI crate — `#[repr(C)]`
+`HostApi`/`PluginInfo`/`ObjectBuf`, `MAGIC`, `ABI_VERSION`, `INIT_SYMBOL`,
+`declare_plugin!`); `zvcs/src/extensions/src/plugin_host.rs` (`dlopen` via `libloading`, the
+magic + version gate, staging buffers, verb/override registries, purge-before-`dlclose`
+unload, the side-table lookup); `zvcs/src/extensions/src/pkg/` (`manifest.rs`, `store.rs`,
+`resolver.rs`, `commands.rs`) + `superset/znative.rs`; the resolution hook ahead of
+`external::try_dashed` in `src/extensions/src/lib.rs` and the override hook in `dispatch.rs`;
+`zvcs/examples/` — `plugin-hello` (added verb + an override that delegates), `plugin-wip`
+(`git wip`, composing `add`/`commit` through `host.run`), `plugin-todo` (the script kind).
+**Test-verified:** `zvcs/src/extensions/tests/znative_plugin.rs` drives the real `git` binary
+through install, plugin-verb dispatch, override-then-delegate, precedence over a same-named
+`git-hello` on `PATH`, the script kind, and the cold case that asserts neither side table
+exists when nothing is installed. *Caveat:* every ingredient exists somewhere — dlopen plugin
+hosts are ancient, `hg` has in-process extensions, `gh` has an extension installer, and this
+project's own zshrs shipped the ABI (#40c) and the compiled-plugin package manager (#40d)
+first, from which this is ported. The candidate-first is the combination in a **version
+control system**: a VCS that ships its own plugin package manager, installs *compiled*
+plugins over a stable versioned ABI, runs them in-process, and lets one replace a built-in
+subcommand — with a per-process discovery model that keeps the cost at two `stat`s when
+unused. Prior-art sweep found no VCS with a built-in plugin package manager of any kind;
+"None found," not proven, and searches are not exhaustive. A zvcs addition (ABI and manager
+ported from zshrs's `znative`). MIT.
 
 ---
 
