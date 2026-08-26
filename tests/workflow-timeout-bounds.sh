@@ -32,7 +32,11 @@
 # GitHub's own ceiling.
 #
 # Detection: integer type + value bounds. Non-integer types
-# (strings, lists, mappings) FAIL with a typed error.
+# (strings, lists, mappings) FAIL with a typed error — except a
+# `${{ … }}` expression, which is a legal value here (the contexts
+# `github, needs, strategy, matrix, vars, inputs` are all available
+# to `jobs.<job_id>.timeout-minutes`) and resolves only at run time,
+# so it is counted and passed rather than judged.
 #
 # 121/121 jobs with timeout-minutes set at iter-135 add — pure
 # regression floor.
@@ -74,6 +78,17 @@ try:
         tm = job.get("timeout-minutes")
         if tm is None:
             continue
+        # An expression is legal here and cannot be checked statically: the
+        # value is whatever the matrix (or a var, or an input) supplies at run
+        # time. GitHub lists `github, needs, strategy, matrix, vars, inputs`
+        # as the contexts available to `jobs.<job_id>.timeout-minutes`, and
+        # strykelang uses `${{ matrix.timeout }}` to give each release target
+        # its own budget — 60 for Linux, 120 for the macOS pair, which exist
+        # because a flat 60 killed the macOS builds. Reporting it as a type
+        # error rejected valid configuration; every literal is still bounded.
+        if isinstance(tm, str) and "${{" in tm:
+            results.append(f"EXPR:{jn}:{tm}")
+            continue
         if not isinstance(tm, int) or isinstance(tm, bool):
             results.append(f"BAD:{jn}:{tm!r} (type {type(tm).__name__})")
         elif tm <= 0 or tm > 360:
@@ -90,8 +105,8 @@ except Exception:
     while IFS=: read -r status jn rest; do
         [[ -z "$status" ]] && continue
         checked=$((checked + 1))
-        if [[ "$status" == "OK" ]]; then
-            : # silent pass
+        if [[ "$status" == "OK" || "$status" == "EXPR" ]]; then
+            : # silent pass — EXPR is a run-time value, checked by Actions itself
         else
             echo "FAIL  $wf $jn: $rest"
             bad=$((bad + 1))
