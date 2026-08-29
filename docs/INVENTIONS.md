@@ -422,7 +422,7 @@ inside a `proc` reports `loop @7 trace-eligible=true traced=true` and `reaches n
 true`. *Caveat:* the prior art is close — TclQuadcode compiles Tcl procedures to LLVM IR and
 native code, but is explicitly **ahead-of-time** ("currently too slow for JIT" by its own
 description) and runs on the standard Tcl runtime — so the novel leg is a *tracing JIT at
-run time* for Tcl on a VM shared with sixteen other languages, not native compilation of Tcl
+run time* for Tcl on a VM shared with seventeen other languages, not native compilation of Tcl
 as such. The same loop at a script's top level traces nothing, because a top-level variable
 is a VM global; the project's README states this rather than hiding it.
 
@@ -453,7 +453,7 @@ inside `expr`, a Tcl `proc` shadowing an export, a block that fails rustc failin
 with the line it was written on, arity refusal). *Caveat:* the *concept* has deep prior art
 in Tcl — critcl has embedded **C** in Tcl scripts, cached by checksum and dynamically
 linked, for two decades. The novel legs are the language (Rust), the shared `fusevm::ffi`
-substrate across seventeen frontends, and compile-time registration into a statically
+substrate across eighteen frontends, and compile-time registration into a statically
 resolved dispatch; signatures are limited to fusevm's marshalling set (≤4 `i64` → `i64`,
 ≤3 `f64` → `f64`, `*const c_char` → `i64` or `*const c_char`).
 
