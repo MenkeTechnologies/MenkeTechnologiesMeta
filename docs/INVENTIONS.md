@@ -26,16 +26,16 @@ them (#1, #64, #65, #173, #40f) carry a deep prior-art analysis in the appendix.
 
 ---
 
-## I. Execution engine & language runtimes — fusevm + seventeen frontends
+## I. Execution engine & language runtimes — fusevm + eighteen frontends
 
-**1. ★ Solo-authored from-scratch JIT VM hosting seventeen production language frontends** — `med`
+**1. ★ Solo-authored from-scratch JIT VM hosting eighteen production language frontends** — `med`
 One person built the whole execution engine — a bytecode VM plus a 3-tier
 (linear/block/tracing) Cranelift JIT emitting native machine code at runtime, and an
-AOT object compiler — and **seventeen independent language frontends** (`strykelang`/Perl 5,
+AOT object compiler — and **eighteen independent language frontends** (`strykelang`/Perl 5,
 `zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, `rlang`/R, `go-rs`/Go,
-`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy, `tclrs`/Tcl, and the
+`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy, `tclrs`/Tcl, `texrs`/TeX, and the
 original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode. Every
-one ships the full toolchain: a standalone binary, `--lsp` and `--dap` servers, shell
+one but `texrs`, the newest, ships the full toolchain: a standalone binary, `--lsp` and `--dap` servers, shell
 completions, man pages, generated `reference.html`, inline Rust FFI, and
 `--dump-tokens`/`--dump-ast`/`--disasm` introspection, and the `--tiers` execution-tier
 report (#11n). The
@@ -43,7 +43,7 @@ novelty is the combination: solo author **+** from-scratch VM with a genuine mac
 JIT **+** 17 production frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
 mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
-`cranelift_object`; seventeen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
+`cranelift_object`; eighteen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
 (arb's compute core — its `calc` / expression layer — lowers to a `fusevm::Chunk` via
 `arb/src/expr.rs` and runs on the VM, while its widget / layout construction stays a native
 `ratatui` interpreter). `fusevm/src/op.rs` (~234 ops),
@@ -84,10 +84,10 @@ selection. *Basis:* `jit-disk-cache` feature in `fusevm/Cargo.toml`; `fusevm/src
 combination is covering a *tracing* tier in a hand-written VM. W^X/reloc correctness not
 independently tested here.
 
-**4a. One native-code cache shared by seventeen language frontends — compounding across languages, processes, and an editor's plugins** — `med`
+**4a. One native-code cache shared by eighteen language frontends — compounding across languages, processes, and an editor's plugins** — `med`
 The disk cache of #4 is **not namespaced per language, per binary, or per process**: blobs are
 keyed only by chunk op-hash + tier tag (`{op_hash:016x}.{sub:016x}.{tag}.fjit`) in one shared
-directory, so every fusevm frontend reads and writes the same store. All seventeen frontends
+directory, so every fusevm frontend reads and writes the same store. All eighteen frontends
 enable it, so the cache *compounds* — native code paid for once by any language, in any process,
 is streamed back by all of them, and the store keeps filling as the stack is used. The concrete
 consequence inside **zmax**: sourced Vimscript and Emacs Lisp — a `.vimrc`, an `init.el`, and the
@@ -100,7 +100,7 @@ code gets tiered native execution with no plugin-side change and no per-editor c
 disable (`:7611-7613`); un-namespaced blob name `:3724`; all three tiers persisted —
 `try_load_or_build` `:2933`, `try_load_or_build_block` `:5680`, `try_load_or_build_trace` `:6102`
 with `KIND_LINEAR/BLOCK/TRACE` `:3027-3029`, `MAGIC` `FJITNAT2` + `SCHEMA_VERSION = 16`
-`:3031-3051`, 256 MiB default cap evicting oldest-first to 80% (`:7634-7640`). Seventeen
+`:3031-3051`, 256 MiB default cap evicting oldest-first to 80% (`:7634-7640`). Eighteen
 frontends declare `features = [… "jit-disk-cache" …]` on `fusevm` (arb, awkrs, elisprs, go-rs,
 groovyrs, javars, kotlinrs, node-js, phplang, pythonrs, rlang, rubylang, scalars, strykelang,
 vimlrs, zshrs `Cargo.toml`; tclrs via `zmax/vendor/tclrs/Cargo.toml:73`). Editor path:
@@ -110,7 +110,7 @@ vimlrs, zshrs `Cargo.toml`; tclrs via `zmax/vendor/tclrs/Cargo.toml:73`). Editor
 `run_top_forms` (`elisprs/src/lib.rs:78-92`) → `run_chunk` (`elisprs/src/host.rs:4613`,
 `enable_tracing_jit` `:4629`).
 *Caveat:* persistent native/AOT caches exist (JVM AppCDS/JWarmup, .NET ReadyToRun, V8 code
-cache); the claimed novelty is a *single un-namespaced* one serving seventeen distinct language
+cache); the claimed novelty is a *single un-namespaced* one serving eighteen distinct language
 frontends **and** an editor's plugin runtimes, not caching per se, and the survey behind "first"
 is non-exhaustive. Cross-*language* reuse only lands where two frontends emit byte-identical op
 sequences; a chunk carrying frontend-registered extension helpers misses safely and recompiles
@@ -174,7 +174,7 @@ machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-cond
 survey; the machine-code tier engages only for JIT-eligible numeric chunks.
 
 **11. Sixteen-language DAP debuggers on one shared VM** — `high`
-Sixteen of the seventeen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
+Sixteen of the eighteen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
 Ruby, arb, Python, PHP, JavaScript, Go, Java, Kotlin, Scala, Groovy, Tcl)
 ship a real Debug Adapter Protocol server (`--dap`
 over stdio or TCP) wrapping a shared line-stop / step / breakpoint / function-breakpoint /
@@ -461,11 +461,11 @@ resolved dispatch; signatures are limited to fusevm's marshalling set (≤4 `i64
 `<binary> --tiers <script>` runs the program, then reports, per compiled chunk, whether the
 block tier holds native code for it, which loop headers the tracing tier compiled, which it
 blacklisted, and — when a tier refused — a histogram of the JIT-ineligible ops that caused
-the refusal. Shipped in **all seventeen** frontends. The point is that the report does not
+the refusal. Shipped in **seventeen of the eighteen** frontends (`texrs`, the newest, has no `--tiers` yet). The point is that the report does not
 guess: it asks fusevm's own predicates, the same ones the compiler consults before doing the
 work, so "the JIT is enabled" and "the JIT compiled this" stop being the same sentence.
 *Basis:* `<repo>/src/tiers.rs` in sixteen frontends and `strykelang/strykelang/tiers.rs` in
-stryke — all seventeen tracked, 5,707 lines total; each queries
+stryke — seventeen of the eighteen tracked, 5,707 lines total; each queries
 `fusevm::JitCompiler::is_block_eligible` (`fusevm/src/jit.rs:8059`), `block_jit_is_compiled`
 (`:8069`), `find_jit_region` (`:8078`), `is_trace_eligible` (`:8231`), `trace_is_compiled`
 (`:8238`), and `trace_is_blacklisted` (`:8321`) after the run. `Report { chunks:
