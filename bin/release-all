@@ -132,6 +132,36 @@ find_cargo_toml() {
   return 1
 }
 
+# rewrite_docs_version REPO_DIR OLD_VERSION NEW_VERSION
+# Follow the Cargo bump into docs/*.html, so the meta version-sync gate does not
+# go red on the next pointer bump. Twelve repos drifted this way before this
+# existed, and each one took meta CI down until someone chased it.
+#
+# DELIBERATELY NARROW. Only two constructs are meant to track the version:
+#
+#   <p class="docs-build-line">name vX.Y.Z · …</p>   the build these docs describe
+#   <div class="stat-val">vX.Y.Z</div><div class="stat-label">version|Build</div>
+#
+# Everything else keeps its number, because those numbers are claims about the
+# past and rewriting them would make the docs lie to satisfy a gate:
+#
+#   "crates.io Release: vX"   — the published release, which a bump has not made yet
+#   "the vX binary is 9.0 MB" — a measurement of a real artifact
+#   "Post-vX parity batch"    — history
+#   "Stats snapshot: <date> · vX"
+rewrite_docs_version() {
+  _repo=$1 _old=$2 _new=$3
+  [ -d "$_repo/docs" ] || return 0
+  for _f in "$_repo"/docs/*.html; do
+    [ -f "$_f" ] || continue
+    OLD=$_old NEW=$_new perl -i -pe '
+      my ($o, $n) = ($ENV{OLD}, $ENV{NEW});
+      s/(class="docs-build-line"[^>]*>[^<]*?)\bv\Q$o\E\b/$1v$n/g;
+      s/(<div class="stat-val[^"]*">)v\Q$o\E(<\/div><div class="stat-label">(?:version|Build)<)/$1v$n$2/gi;
+    ' "$_f"
+  done
+}
+
 # rewrite_cargo_version FILE NEW_VERSION
 # Replaces the first plain `version = "..."` line, skipping `version.workspace = true`.
 rewrite_cargo_version() {
@@ -241,6 +271,10 @@ while IFS='	' read -r repo old prefix; do
     rewrite_cargo_version "$cargo_toml" "$new"
     relative="${cargo_toml#"$repo"/}"
     git -C "$repo" add "$relative"
+    rewrite_docs_version "$repo" "$old" "$new"
+    if [ -n "$(git -C "$repo" status --porcelain -- docs 2>/dev/null)" ]; then
+      git -C "$repo" add docs
+    fi
     if [ -f "$repo/Cargo.lock" ] && [ -n "$(git -C "$repo" status --porcelain -- Cargo.lock 2>/dev/null)" ]; then
       git -C "$repo" add Cargo.lock
     fi
