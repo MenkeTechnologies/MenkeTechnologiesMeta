@@ -19,6 +19,25 @@ Selected from nine directions; see `../logos.html` for the full board.
 | `icon-1024.svg` | App icon on the house ground. |
 | `avatar-1024.svg` | GitHub account avatar. Same ground as the app icon, mark scaled x14 instead of x16 so nothing lands under the circular crop. |
 
+## Rendered PNGs
+
+`png/` holds a PNG of every variant on both grounds, and `render-png.sh`
+regenerates the whole directory. The SVGs are the source of truth; everything
+under `png/` is derived and safe to delete. Run the script after touching any
+SVG here.
+
+Two-colour variants render twice - `-void` on `#0b1020`, `-paper` on `#ffffff`
+with the paper accent. Self-grounded files (`favicon`, `icon`, the avatars)
+render once, since they carry their own ground.
+
+The script tints a temp copy of each source, never the source itself, because
+librsvg 2.62.3 resolves `currentColor` from an inline `color` but does **not**
+resolve `var(--neon)` - it falls through to the fallback hex, which is the void
+accent. Rendering a paper variant without substituting the accent textually
+produces a paper ground carrying the void accent, which is the contrast failure
+the colour table below exists to prevent. Verified with a probe SVG: `--neon`
+set to `#ff0000` on the root, `fill="var(--neon, #00b0ff)"` renders `#00b0ff`.
+
 ## Colour
 
 | Hex | Role |
