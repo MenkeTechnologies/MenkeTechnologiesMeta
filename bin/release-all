@@ -149,6 +149,32 @@ find_cargo_toml() {
 #   "the vX binary is 9.0 MB" — a measurement of a real artifact
 #   "Post-vX parity batch"    — history
 #   "Stats snapshot: <date> · vX"
+# rewrite_man_version REPO_DIR OLD_VERSION NEW_VERSION
+#
+# Stamp `man/man1/*.1` the way tests/man-page-version-sync.sh expects:
+#
+#   .TH NAME 1 "DATE" "<name> X.Y.Z" "User Commands"
+#
+# Without this a release bumps Cargo.toml and docs but leaves every man page
+# on the old version, which fails that gate. It was being repaired by hand
+# after each wave (20 stale .TH lines after one twelve-repo pass), so it
+# belongs here next to the docs rewrite.
+rewrite_man_version() {
+  _repo=$1 _old=$2 _new=$3
+  [ -d "$_repo/man/man1" ] || return 0
+  _today=$(date +%Y-%m-%d)
+  for _f in "$_repo"/man/man1/*.1; do
+    [ -f "$_f" ] || continue
+    OLD=$_old NEW=$_new TODAY=$_today perl -i -pe '
+      my ($o, $n, $t) = ($ENV{OLD}, $ENV{NEW}, $ENV{TODAY});
+      # .TH version: the quoted "<name> <version>" field, name left alone.
+      s/^(\.TH\s+\S+\s+1\s+"[^"]*"\s+")([^"]*?)\Q$o\E(")/$1$2$n$3/;
+      # .TH date: the first quoted field after the section number.
+      s/^(\.TH\s+\S+\s+1\s+)"[0-9-]+"/$1"$t"/;
+    ' "$_f"
+  done
+}
+
 rewrite_docs_version() {
   _repo=$1 _old=$2 _new=$3
   [ -d "$_repo/docs" ] || return 0
@@ -272,6 +298,10 @@ while IFS='	' read -r repo old prefix; do
     relative="${cargo_toml#"$repo"/}"
     git -C "$repo" add "$relative"
     rewrite_docs_version "$repo" "$old" "$new"
+    rewrite_man_version "$repo" "$old" "$new"
+    if [ -n "$(git -C "$repo" status --porcelain -- man 2>/dev/null)" ]; then
+      git -C "$repo" add man
+    fi
     if [ -n "$(git -C "$repo" status --porcelain -- docs 2>/dev/null)" ]; then
       # -f: a global gitignore with `docs/` in it makes a bare `git add docs`
       # fail ("paths are ignored by one of your .gitignore files"), which under
