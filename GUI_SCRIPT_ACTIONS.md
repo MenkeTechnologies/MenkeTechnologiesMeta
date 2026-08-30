@@ -5,25 +5,25 @@ GUI app — the exact surface `App::open("<app>")->verbs()` returns over the
 [GUI Automation Bus](GUI_AUTOMATION_BUS.md): the LIVE runtime surface (appShell verbs +
 per-app `opts.commands` + dynamically-registered verbs), read from each running app.
 
-**4375 actions** across **16 apps**. Read from each app's live bus
+**4435 actions** across **16 apps**. Read from each app's live bus
 surface by `bin/gen-gui-actions-live` — do not hand-edit. Requires every app open when generated.
 
 | App | Verbs | Surface |
 | --- |:--:| --- |
 | [`traderview`](#traderview) | 1748 | TradingView-style charting/trading terminal — view tiles + shortcut actions |
-| [`zpdf`](#zpdf) | 689 | Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact |
+| [`zpdf`](#zpdf) | 680 | Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact |
 | [`audio-haxor`](#audio-haxor) | 241 | Audio analyzer / DAW-project generator — spectrum, DSP, .als generation |
-| [`zoffice`](#zoffice) | 228 | LibreOffice-style office engine — writer/calc/impress over ODF/OOXML |
-| [`zemail`](#zemail) | 216 | Thunderbird-style mail client — accounts, folders, messages, PGP/S-MIME, search |
+| [`zoffice`](#zoffice) | 230 | LibreOffice-style office engine — writer/calc/impress over ODF/OOXML |
+| [`zemail`](#zemail) | 215 | Thunderbird-style mail client — accounts, folders, messages, PGP/S-MIME, search |
 | [`zcite`](#zcite) | 209 | Zotero-style reference manager — library, collections, citations, PDF, sync |
-| [`zftp`](#zftp) | 183 | Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync |
+| [`zftp`](#zftp) | 182 | Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync |
 | [`zwire`](#zwire) | 161 | Chromium-superset browser — tabs, windows, tab-groups, downloads, reading list, power |
-| [`zreq`](#zreq) | 152 | Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocket |
+| [`zreq`](#zreq) | 156 | Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocket |
 | [`zgo`](#zgo) | 144 | Alfred-style launcher — script-filter workflows and system commands |
-| [`zphoto`](#zphoto) | 105 | Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions |
-| [`ztunnel`](#ztunnel) | 100 | Tunnelblick-style VPN client — OpenVPN / WireGuard config + control |
+| [`ztunnel`](#ztunnel) | 128 | Tunnelblick-style VPN client — OpenVPN / WireGuard config + control |
+| [`zphoto`](#zphoto) | 101 | Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions |
+| [`zthrottle`](#zthrottle) | 98 | System monitor / process & network throttling |
 | [`ztranslator`](#ztranslator) | 65 | BOME-style MIDI/keyboard translator — presets, translators, rules, HID |
-| [`zthrottle`](#zthrottle) | 57 | System monitor / process & network throttling |
 | [`zstation`](#zstation) | 52 | Station-style multi-app workspace — boards, tiles, panes |
 | [`zcontainer`](#zcontainer) | 25 | Docker Desktop + Lens-style container / Kubernetes manager |
 
@@ -1795,9 +1795,9 @@ app.watchlistQuickAdd
 ## zpdf
 
 Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact  
-**689 verbs** · live bus surface · call as `App::open("zpdf")->call("<verb>", %args)`
+**680 verbs** · live bus surface · call as `App::open("zpdf")->call("<verb>", %args)`
 
-**`(top-level)`** (324)
+**`(top-level)`** (322)
 
 ```
 accessibility_check
@@ -1837,7 +1837,6 @@ adjust_image
 adjust_page
 apply_actions
 apply_redactions
-assemble_pages
 attach_file
 attachments
 auto_crop_margins
@@ -1916,7 +1915,6 @@ export_xlsx
 extract_attachment
 extract_fonts
 extract_images
-extract_page_temp
 extract_tables
 extract_text
 extract_text_in_region
@@ -2126,7 +2124,7 @@ xfa_packets
 xmp_metadata
 ```
 
-**`appshell`** (365)
+**`appshell`** (358)
 
 ```
 appshell.crt.off
@@ -2140,15 +2138,12 @@ appshell.hooks
 appshell.neon.off
 appshell.neon.on
 appshell.palette
-appshell.recent:/Users/tommy/Desktop/A-80_OM.pdf
-appshell.recent:/Users/tommy/Desktop/JacobMenke2026.pdf
-appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/allovance/Allovance_JacobMenke.pdf
-appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/block/Block_JacobMenke.pdf
-appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/ford/Ford_JacobMenke.pdf
-appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/reuters-lead/Reuters_JacobMenke.pdf
-appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/reuters/Reuters_JacobMenke.pdf
-appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/siemens/Siemens_JacobMenke.pdf
-appshell.recent:/Users/tommy/Desktop/zpwr-jobs/jobs/trinityhealth/TrinityHealth_JacobMenke.pdf
+appshell.recent:/Users/wizard/Desktop/JacobMenke2026.pdf
+appshell.recent:/Users/wizard/Desktop/JacobMenkeCV2026.pdf
+appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/znative/docs/book.pdf
+appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/zpwr-jobs/JacobMenke2026.pdf
+appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/zpwr-jobs/JacobMenkeCV2026.pdf
+appshell.recent:/tmp/livetest.pdf
 appshell.scheme-arctic
 appshell.scheme-crimson
 appshell.scheme-cyberpunk
@@ -2165,7 +2160,6 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
-appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
@@ -2193,7 +2187,6 @@ appshell.zp.cmd_annot_rect
 appshell.zp.cmd_annot_subject
 appshell.zp.cmd_annots_lock
 appshell.zp.cmd_annots_print
-appshell.zp.cmd_assemble
 appshell.zp.cmd_attach_file
 appshell.zp.cmd_attachments
 appshell.zp.cmd_auto_crop
@@ -2252,7 +2245,6 @@ appshell.zp.cmd_encrypt_cert
 appshell.zp.cmd_encrypt_multi
 appshell.zp.cmd_encrypt_perms
 appshell.zp.cmd_export_comments_xfdf
-appshell.zp.cmd_export_dialog
 appshell.zp.cmd_export_fdf
 appshell.zp.cmd_export_svg
 appshell.zp.cmd_export_xfa
@@ -2442,7 +2434,6 @@ appshell.zp.export_image
 appshell.zp.export_markdown
 appshell.zp.export_ppt
 appshell.zp.export_word
-appshell.zp.expose
 appshell.zp.extract_page
 appshell.zp.goto_page
 appshell.zp.guided_tour
@@ -2750,7 +2741,7 @@ app.vizFullscreen
 ## zoffice
 
 LibreOffice-style office engine — writer/calc/impress over ODF/OOXML  
-**228 verbs** · live bus surface · call as `App::open("zoffice")->call("<verb>", %args)`
+**230 verbs** · live bus surface · call as `App::open("zoffice")->call("<verb>", %args)`
 
 **`(top-level)`** (6)
 
@@ -2763,7 +2754,7 @@ open
 pagesetup
 ```
 
-**`appshell`** (125)
+**`appshell`** (127)
 
 ```
 appshell.activity_timeline
@@ -2831,6 +2822,8 @@ appshell.math_starmath
 appshell.neon.off
 appshell.neon.on
 appshell.open_document
+appshell.open_files
+appshell.open_hooks
 appshell.open_preferences
 appshell.open_recent
 appshell.page_setup
@@ -2862,10 +2855,10 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
-appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
+appshell.toggle_terminal
 appshell.writer_blame
 appshell.writer_bookmarks
 appshell.writer_compare
@@ -3023,7 +3016,7 @@ writer.text
 ## zemail
 
 Thunderbird-style mail client — accounts, folders, messages, PGP/S-MIME, search  
-**216 verbs** · live bus surface · call as `App::open("zemail")->call("<verb>", %args)`
+**215 verbs** · live bus surface · call as `App::open("zemail")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -3049,7 +3042,7 @@ address.to_ascii
 address.validate
 ```
 
-**`appshell`** (31)
+**`appshell`** (30)
 
 ```
 appshell.crt.off
@@ -3079,7 +3072,6 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
-appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
@@ -3863,7 +3855,7 @@ zotero.verify
 ## zftp
 
 Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync  
-**183 verbs** · live bus surface · call as `App::open("zftp")->call("<verb>", %args)`
+**182 verbs** · live bus surface · call as `App::open("zftp")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -3871,7 +3863,7 @@ Cyberduck-style transfer client — FTP/SFTP/WebDAV/S3/cloud, transfers, sync
 version
 ```
 
-**`appshell`** (53)
+**`appshell`** (52)
 
 ```
 appshell.Compare directories
@@ -3923,7 +3915,6 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
-appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
@@ -4457,7 +4448,7 @@ browser.zoomReset
 ## zreq
 
 Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocket  
-**152 verbs** · live bus surface · call as `App::open("zreq")->call("<verb>", %args)`
+**156 verbs** · live bus surface · call as `App::open("zreq")->call("<verb>", %args)`
 
 **`(top-level)`** (1)
 
@@ -4465,7 +4456,7 @@ Postman-style API client — requests, collections, auth, codegen, gRPC/WebSocke
 version
 ```
 
-**`appshell`** (31)
+**`appshell`** (30)
 
 ```
 appshell.crt.off
@@ -4495,7 +4486,6 @@ appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
-appshell.tmux-keys
 appshell.tmux-layouts
 appshell.toggle-statusbar
 appshell.toggle-theme
@@ -4513,11 +4503,23 @@ assert.run
 asyncapi.parse
 ```
 
+**`cache`** (1)
+
+```
+cache.simulate
+```
+
 **`cbor`** (2)
 
 ```
 cbor.decode
 cbor.encode
+```
+
+**`chain`** (1)
+
+```
+chain.plan
 ```
 
 **`chunked`** (2)
@@ -4560,6 +4562,12 @@ cookie.list
 cookie.parse
 cookie.select
 cookie.set
+```
+
+**`cors`** (1)
+
+```
+cors.simulate
 ```
 
 **`curl`** (1)
@@ -4613,6 +4621,12 @@ formdata.build
 formdata.parse
 ```
 
+**`fuzz`** (1)
+
+```
+fuzz.explore
+```
+
 **`globals`** (2)
 
 ```
@@ -4646,11 +4660,12 @@ har.analyze
 hash.compute
 ```
 
-**`history`** (3)
+**`history`** (4)
 
 ```
 history.clear
 history.list
+history.remove
 history.replay
 ```
 
@@ -5320,86 +5335,31 @@ workflow.remove
 workflow.run
 ```
 
-## zphoto
+## ztunnel
 
-Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions  
-**105 verbs** · live bus surface · call as `App::open("zphoto")->call("<verb>", %args)`
+Tunnelblick-style VPN client — OpenVPN / WireGuard config + control  
+**128 verbs** · live bus surface · call as `App::open("ztunnel")->call("<verb>", %args)`
 
-**`appshell`** (105)
+**`(top-level)`** (1)
 
 ```
-appshell.addLayer
-appshell.addMaskFromSel
-appshell.addMaskWhite
-appshell.addText
-appshell.applyMask
-appshell.autoContrast
-appshell.blackWhite
-appshell.boxBlur
-appshell.brightnessContrast
-appshell.colorBalance
-appshell.convertGray
-appshell.convertIndexed
-appshell.cropImage
-appshell.cropToSel
+version
+```
+
+**`appshell`** (28)
+
+```
 appshell.crt.off
 appshell.crt.on
 appshell.crt.toggle
-appshell.curvesDlg
-appshell.delActive
-appshell.deleteImage
-appshell.desaturate
-appshell.dropShadow
-appshell.dupActive
-appshell.edge
-appshell.emboss
-appshell.equalize
-appshell.exposure
 appshell.files
 appshell.files.close
 appshell.files.open
-appshell.fillLayer
-appshell.flatten
-appshell.flipH
-appshell.flipLayerH
-appshell.flipLayerV
-appshell.flipV
-appshell.gamma
-appshell.gaussianBlur
-appshell.glow
-appshell.gradientMap
 appshell.gui-scripts
-appshell.histogram
 appshell.hooks
-appshell.hueSaturation
-appshell.invert
-appshell.invertMask
-appshell.layerFromVisible
-appshell.levelsDlg
-appshell.median
-appshell.mergeVisible
-appshell.motionBlur
 appshell.neon.off
 appshell.neon.on
-appshell.newImage
-appshell.noiseF
-appshell.offsetLayer
-appshell.openImage
 appshell.palette
-appshell.pixelate
-appshell.posterize
-appshell.redo
-appshell.removeMask
-appshell.resizeCanvas
-appshell.ripple
-appshell.rotate180
-appshell.rotate270
-appshell.rotate90
-appshell.rotateLayer
-appshell.saveImage
-appshell.saveJpeg
-appshell.scaleImage
-appshell.scaleLayer
 appshell.scheme-arctic
 appshell.scheme-crimson
 appshell.scheme-cyberpunk
@@ -5408,42 +5368,15 @@ appshell.scheme-matrix
 appshell.scheme-midnight
 appshell.scheme-toxic
 appshell.scheme-vapor
-appshell.selectAll
-appshell.selectInvert
-appshell.selectNone
-appshell.sepia
 appshell.settings
-appshell.sharpen
 appshell.shortcuts
-appshell.solarize
-appshell.spread
-appshell.temperature
 appshell.terminal
 appshell.terminal.close
 appshell.terminal.open
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
-appshell.threshold
-appshell.tmux-keys
-appshell.tmux-layouts
-appshell.toggle-statusbar
 appshell.toggle-theme
-appshell.undo
-appshell.valueInvert
-appshell.vibrance
-appshell.vignette
-```
-
-## ztunnel
-
-Tunnelblick-style VPN client — OpenVPN / WireGuard config + control  
-**100 verbs** · live bus surface · call as `App::open("ztunnel")->call("<verb>", %args)`
-
-**`(top-level)`** (1)
-
-```
-version
 ```
 
 **`config`** (16)
@@ -5655,55 +5588,86 @@ wg.noise_layout
 wg.pubkey
 ```
 
-## ztranslator
+## zphoto
 
-BOME-style MIDI/keyboard translator — presets, translators, rules, HID  
-**65 verbs** · live bus surface · call as `App::open("ztranslator")->call("<verb>", %args)`
+Photoshop + Illustrator-style raster & vector editor — layers, filters, paths, actions  
+**101 verbs** · live bus surface · call as `App::open("zphoto")->call("<verb>", %args)`
 
-**`appshell`** (65)
+**`appshell`** (101)
 
 ```
-appshell.addPreset
-appshell.addTranslator
-appshell.analyzer
-appshell.bulkToggle
-appshell.capture
-appshell.code
-appshell.conflicts
-appshell.copySel
+appshell.addLayer
+appshell.addMaskFromSel
+appshell.addMaskWhite
+appshell.addText
+appshell.applyMask
+appshell.autoContrast
+appshell.blackWhite
+appshell.boxBlur
+appshell.brightnessContrast
+appshell.colorBalance
+appshell.convertGray
+appshell.convertIndexed
+appshell.cropImage
+appshell.cropToSel
 appshell.crt.off
 appshell.crt.on
 appshell.crt.toggle
-appshell.cutSel
-appshell.delSel
-appshell.dupSel
-appshell.exportBmtp
-appshell.feedback
+appshell.curvesDlg
+appshell.delActive
+appshell.deleteImage
+appshell.desaturate
+appshell.dropShadow
+appshell.dupActive
+appshell.edge
+appshell.emboss
+appshell.equalize
+appshell.exposure
 appshell.files
 appshell.files.close
 appshell.files.open
-appshell.grantAccess
+appshell.fillLayer
+appshell.flatten
+appshell.flipH
+appshell.flipLayerH
+appshell.flipLayerV
+appshell.flipV
+appshell.gamma
+appshell.gaussianBlur
+appshell.glow
+appshell.gradientMap
 appshell.gui-scripts
-appshell.help
+appshell.histogram
 appshell.hooks
-appshell.import
-appshell.jsonView
-appshell.loadJson
-appshell.midiPorts
-appshell.midiRef
+appshell.hueSaturation
+appshell.invert
+appshell.invertMask
+appshell.layerFromVisible
+appshell.levelsDlg
+appshell.median
+appshell.mergeVisible
+appshell.motionBlur
 appshell.neon.off
 appshell.neon.on
-appshell.new
+appshell.newImage
+appshell.noiseF
+appshell.offsetLayer
+appshell.openImage
 appshell.palette
-appshell.panic
-appshell.pasteSel
-appshell.presetJump
-appshell.presetMgr
-appshell.properties
-appshell.refreshPorts
-appshell.renameSel
-appshell.routes
-appshell.saveJson
+appshell.pixelate
+appshell.posterize
+appshell.redo
+appshell.removeMask
+appshell.resizeCanvas
+appshell.ripple
+appshell.rotate180
+appshell.rotate270
+appshell.rotate90
+appshell.rotateLayer
+appshell.saveImage
+appshell.saveJpeg
+appshell.scaleImage
+appshell.scaleLayer
 appshell.scheme-arctic
 appshell.scheme-crimson
 appshell.scheme-cyberpunk
@@ -5712,28 +5676,33 @@ appshell.scheme-matrix
 appshell.scheme-midnight
 appshell.scheme-toxic
 appshell.scheme-vapor
-appshell.sequencer
+appshell.selectAll
+appshell.selectInvert
+appshell.selectNone
+appshell.sepia
 appshell.settings
+appshell.sharpen
 appshell.shortcuts
-appshell.showLog
-appshell.showMonitor
-appshell.start
-appshell.stats
-appshell.stop
-appshell.terminal
-appshell.terminal.close
-appshell.terminal.open
+appshell.solarize
+appshell.spread
+appshell.temperature
 appshell.theme.dark
 appshell.theme.light
 appshell.theme.toggle
+appshell.threshold
+appshell.tmux-layouts
+appshell.toggle-statusbar
 appshell.toggle-theme
-appshell.verify
+appshell.undo
+appshell.valueInvert
+appshell.vibrance
+appshell.vignette
 ```
 
 ## zthrottle
 
 System monitor / process & network throttling  
-**57 verbs** · live bus surface · call as `App::open("zthrottle")->call("<verb>", %args)`
+**98 verbs** · live bus surface · call as `App::open("zthrottle")->call("<verb>", %args)`
 
 **`(top-level)`** (2)
 
@@ -5749,6 +5718,52 @@ alerts.check
 alerts.list
 alerts.remove
 alerts.set
+```
+
+**`appshell`** (41)
+
+```
+appshell.bench-cpu
+appshell.bench-disk
+appshell.bench-mem
+appshell.bench-net
+appshell.compare-baseline
+appshell.copy-run-report
+appshell.crt.off
+appshell.crt.on
+appshell.crt.toggle
+appshell.files
+appshell.files.close
+appshell.files.open
+appshell.gui-scripts
+appshell.history-clear
+appshell.hooks
+appshell.keyboard-shortcuts
+appshell.metric-alerts
+appshell.neon.off
+appshell.neon.on
+appshell.palette
+appshell.run-all
+appshell.run-contention
+appshell.scheme-arctic
+appshell.scheme-crimson
+appshell.scheme-cyberpunk
+appshell.scheme-ember
+appshell.scheme-matrix
+appshell.scheme-midnight
+appshell.scheme-toxic
+appshell.scheme-vapor
+appshell.settings
+appshell.shortcuts
+appshell.terminal
+appshell.terminal.close
+appshell.terminal.open
+appshell.theme.dark
+appshell.theme.light
+appshell.theme.toggle
+appshell.tmux-layouts
+appshell.toggle-statusbar
+appshell.toggle-theme
 ```
 
 **`bench`** (9)
@@ -5845,6 +5860,81 @@ sys.pubip
 sys.sensors
 sys.smart
 sys.users
+```
+
+## ztranslator
+
+BOME-style MIDI/keyboard translator — presets, translators, rules, HID  
+**65 verbs** · live bus surface · call as `App::open("ztranslator")->call("<verb>", %args)`
+
+**`appshell`** (65)
+
+```
+appshell.addPreset
+appshell.addTranslator
+appshell.analyzer
+appshell.bulkToggle
+appshell.capture
+appshell.code
+appshell.conflicts
+appshell.copySel
+appshell.crt.off
+appshell.crt.on
+appshell.crt.toggle
+appshell.cutSel
+appshell.delSel
+appshell.dupSel
+appshell.exportBmtp
+appshell.feedback
+appshell.files
+appshell.files.close
+appshell.files.open
+appshell.grantAccess
+appshell.gui-scripts
+appshell.help
+appshell.hooks
+appshell.import
+appshell.jsonView
+appshell.loadJson
+appshell.midiPorts
+appshell.midiRef
+appshell.neon.off
+appshell.neon.on
+appshell.new
+appshell.palette
+appshell.panic
+appshell.pasteSel
+appshell.presetJump
+appshell.presetMgr
+appshell.properties
+appshell.refreshPorts
+appshell.renameSel
+appshell.routes
+appshell.saveJson
+appshell.scheme-arctic
+appshell.scheme-crimson
+appshell.scheme-cyberpunk
+appshell.scheme-ember
+appshell.scheme-matrix
+appshell.scheme-midnight
+appshell.scheme-toxic
+appshell.scheme-vapor
+appshell.sequencer
+appshell.settings
+appshell.shortcuts
+appshell.showLog
+appshell.showMonitor
+appshell.start
+appshell.stats
+appshell.stop
+appshell.terminal
+appshell.terminal.close
+appshell.terminal.open
+appshell.theme.dark
+appshell.theme.light
+appshell.theme.toggle
+appshell.toggle-theme
+appshell.verify
 ```
 
 ## zstation

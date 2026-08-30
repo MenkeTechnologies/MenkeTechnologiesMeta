@@ -1,4 +1,4 @@
-#!/usr/bin/env stryke
+#!/usr/bin/env -S stryke --no-interop
 # Regenerate GUI_SCRIPT_ACTIONS.md from the LIVE automation-bus surface of every GUI app.
 #
 # The static `gen-gui-actions.sh` only sees grep-able verb sources (`-core/commands.rs` lists,
@@ -74,7 +74,7 @@ fn verbs_of($app) {
 }
 
 # ── open every app (background, no focus steal) ──
-p "opening #{scalar keys %bundle} apps…"
+p "opening #{len keys %bundle} apps…"
 for val $app (sort keys %bundle) { system "open -g -a '/Applications/#{$bundle{$app}}.app' 2>/dev/null" }
 
 # ── poll each socket until its app has booted + registered (up to 60s) ──
@@ -94,8 +94,11 @@ warn "not reachable: @pending" if @pending
 
 # ── render the catalog (per-app full surface, grouped by namespace) ──
 var $total = 0
-for val $app (keys %verbs) { $total += scalar @{$verbs{$app}} }
-var @bysize = sort { scalar @{$verbs{$b}} <=> scalar @{$verbs{$a}} } keys %verbs
+for val $app (keys %verbs) { $total += len @{$verbs{$app}} }
+# Named comparator, and the two `len` calls are PARENTHESISED deliberately: written bare, as
+# `len @{...} <=> len @{...}`, `len` swallows the `<=>` and the comparator returns the input
+# unsorted — silently, with no error. Verified against a three-key fixture.
+var @bysize = sort { |$x, $y| (len @{$verbs{$y}}) <=> (len @{$verbs{$x}}) } keys %verbs
 
 var @o = ()
 push @o, "# GUI Script Actions — Global Catalog"
@@ -105,12 +108,12 @@ push @o, "GUI app — the exact surface `App::open(\"<app>\")->verbs()` returns 
 push @o, "[GUI Automation Bus](GUI_AUTOMATION_BUS.md): the LIVE runtime surface (appShell verbs +"
 push @o, "per-app `opts.commands` + dynamically-registered verbs), read from each running app."
 push @o, ""
-push @o, "**#{$total} actions** across **#{scalar keys %verbs} apps**. Read from each app's live bus"
+push @o, "**#{$total} actions** across **#{len keys %verbs} apps**. Read from each app's live bus"
 push @o, "surface by `bin/gen-gui-actions-live` — do not hand-edit. Requires every app open when generated."
 push @o, ""
 push @o, "| App | Verbs | Surface |"
 push @o, "| --- |:--:| --- |"
-for val $app (@bysize) { push @o, "| [`#{$app}`](##{$app}) | #{scalar @{$verbs{$app}}} | #{$desc{$app} // ''} |" }
+for val $app (@bysize) { push @o, "| [`#{$app}`](##{$app}) | #{len @{$verbs{$app}}} | #{$desc{$app} // ''} |" }
 push @o, ""
 push @o, "---"
 push @o, ""
@@ -119,7 +122,7 @@ for val $app (@bysize) {
   push @o, "## #{$app}"
   push @o, ""
   push @o, "#{$desc{$app} // ''}  " if $desc{$app}
-  push @o, "**#{scalar @ids} verbs** · live bus surface · call as `App::open(\"#{$app}\")->call(\"<verb>\", %args)`"
+  push @o, "**#{len @ids} verbs** · live bus surface · call as `App::open(\"#{$app}\")->call(\"<verb>\", %args)`"
   push @o, ""
   var %grp = ()
   for val $id (@ids) {
@@ -127,7 +130,7 @@ for val $app (@bysize) {
     push @{$grp{$ns}}, $id
   }
   for val $ns (sort keys %grp) {
-    push @o, "**`#{$ns}`** (#{scalar @{$grp{$ns}}})"
+    push @o, "**`#{$ns}`** (#{len @{$grp{$ns}}})"
     push @o, ""
     push @o, "```"
     for val $id (@{$grp{$ns}}) { push @o, $id }
@@ -137,7 +140,7 @@ for val $app (@bysize) {
 }
 spurt $out, join("\n", @o) . "\n"
 system "cp '#{$out}' '#{$meta}/docs/GUI_SCRIPT_ACTIONS.md'"
-p "wrote #{$out} — #{$total} actions across #{scalar keys %verbs} live apps"
+p "wrote #{$out} — #{$total} actions across #{len keys %verbs} live apps"
 
 # ── close every app ──
 p "closing apps…"
