@@ -173,22 +173,23 @@ persistence the README's survey of BWK/gawk/mawk/goawk/frawk/zawk finds in none.
 machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-conducted
 survey; the machine-code tier engages only for JIT-eligible numeric chunks.
 
-**11. Sixteen-language DAP debuggers on one shared VM** — `high`
-Sixteen of the eighteen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
-Ruby, arb, Python, PHP, JavaScript, Go, Java, Kotlin, Scala, Groovy, Tcl)
+**11. Seventeen-language DAP debuggers on one shared VM** — `high`
+Seventeen of the eighteen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
+Ruby, arb, Python, PHP, JavaScript, Go, Java, Kotlin, Scala, Groovy, Tcl, TeX)
 ship a real Debug Adapter Protocol server (`--dap`
 over stdio or TCP) wrapping a shared line-stop / step / breakpoint / function-breakpoint /
 expression-evaluate debugger state machine —
-source-level interactive debugging for sixteen languages on a single VM substrate, including
+source-level interactive debugging for seventeen languages on a single VM substrate, including
 classic languages (AWK, VimL, zsh) that historically have **no** DAP debugger. *Basis:*
 `strykelang/.../dap.rs` (1997 L, the original the others were ported from);
-`awkrs/src/dap.rs` (1085 L) + `debugger.rs`; `zshrs/src/extensions/dap.rs` (879 L) +
-`tests/dap_integration.rs`; `pythonrs/src/dap.rs` (629 L); `node-js/src/dap.rs` (619 L);
+`zshrs/src/extensions/dap.rs` (1245 L) + `tests/dap_integration.rs`;
+`awkrs/src/dap.rs` (1090 L) + `debugger.rs`; `arb/src/dap.rs` (675 L);
+`elisprs/src/dap.rs` (665 L); `pythonrs/src/dap.rs` (629 L); `node-js/src/dap.rs` (619 L);
 `phplang/src/dap.rs` (610 L); `rubylang/src/dap.rs` (606 L) + `tests/dap.rs`;
-`tclrs/src/dap.rs` (590 L) + `tests/dap_session.rs`; `arb/src/dap.rs` (582 L);
-`go-rs/src/dap.rs` (572 L); `kotlinrs/src/dap.rs` (570 L);
-`javars/src/dap.rs` (568 L); `elisprs/src/dap.rs` (563 L); `groovyrs/src/dap.rs` (531 L);
-`scalars/src/dap.rs` (523 L); `vimlrs/src/dap.rs` (353 L);
+`tclrs/src/dap.rs` (593 L) + `tests/dap_session.rs`; `javars/src/dap.rs` (574 L);
+`kotlinrs/src/dap.rs` (573 L); `go-rs/src/dap.rs` (572 L); `vimlrs/src/dap.rs` (560 L);
+`groovyrs/src/dap.rs` (536 L); `texrs/src/dap.rs` (524 L) + `tests/dap_integration.rs`;
+`scalars/src/dap.rs` (523 L);
 line tracking via debug-only markers.
 *Caveat:* the debuggers share design (ported from stryke's), not a single fusevm op —
 line tracking is per-frontend; variable drill-down depth varies by value model (awk =
@@ -199,7 +200,7 @@ stryke, zshrs, elisprs and vimlrs (`editors/intellij/.../dap/`), VS Code debug a
 stryke, zshrs, awkrs and vimlrs (`vscode-*/package.json` `"debuggers"`); the rest are driven
 by any generic DAP client. Python/Ruby/PHP/JavaScript/Go/Java/Kotlin/Scala/Groovy already
 have mature DAP debuggers elsewhere, so the world-first leg is the classic-language
-debuggers (AWK/VimL/zsh) plus running all sixteen on one shared VM substrate — not DAP for
+debuggers (AWK/VimL/zsh) plus running all seventeen on one shared VM substrate — not DAP for
 those mainstream languages, and not for Tcl either, which has TclProDebug.
 
 **11a. Fused superinstructions collapsing whole counted/append loops into one dispatch** — `high`
@@ -461,11 +462,11 @@ resolved dispatch; signatures are limited to fusevm's marshalling set (≤4 `i64
 `<binary> --tiers <script>` runs the program, then reports, per compiled chunk, whether the
 block tier holds native code for it, which loop headers the tracing tier compiled, which it
 blacklisted, and — when a tier refused — a histogram of the JIT-ineligible ops that caused
-the refusal. Shipped in **seventeen of the eighteen** frontends (`texrs`, the newest, has no `--tiers` yet). The point is that the report does not
+the refusal. Shipped in **all eighteen** frontends. The point is that the report does not
 guess: it asks fusevm's own predicates, the same ones the compiler consults before doing the
 work, so "the JIT is enabled" and "the JIT compiled this" stop being the same sentence.
-*Basis:* `<repo>/src/tiers.rs` in sixteen frontends and `strykelang/strykelang/tiers.rs` in
-stryke — seventeen of the eighteen tracked, 5,707 lines total; each queries
+*Basis:* `<repo>/src/tiers.rs` in seventeen frontends and `strykelang/strykelang/tiers.rs` in
+stryke — all eighteen tracked, 6,399 lines total; each queries
 `fusevm::JitCompiler::is_block_eligible` (`fusevm/src/jit.rs:8059`), `block_jit_is_compiled`
 (`:8069`), `find_jit_region` (`:8078`), `is_trace_eligible` (`:8231`), `trace_is_compiled`
 (`:8238`), and `trace_is_blacklisted` (`:8321`) after the run. `Report { chunks:
@@ -478,7 +479,7 @@ bodies walked off the host arena for elisprs, one chunk for the JVM frontends an
 *Caveat:* not a first in the sense of "nobody reports JIT state" — every serious JIT has some
 introspection (`-XX:+PrintCompilation`, `--jit-debug`, `perf` annotations). The claim is
 narrower: one report format, one set of predicates, one implementation shape, answered
-identically by seventeen different languages, because the tier decisions are the shared
+identically by eighteen different languages, because the tier decisions are the shared
 engine's rather than each language's. Whether a given program reaches native code is a
 property of that program's loop shape, not of the frontend — several frontends lower loop
 bodies through `CallBuiltin`/`Extended`, which the tracer declines, and the report is what
