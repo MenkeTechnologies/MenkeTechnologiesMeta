@@ -273,7 +273,12 @@ while IFS='	' read -r repo old prefix; do
     git -C "$repo" add "$relative"
     rewrite_docs_version "$repo" "$old" "$new"
     if [ -n "$(git -C "$repo" status --porcelain -- docs 2>/dev/null)" ]; then
-      git -C "$repo" add docs
+      # -f: a global gitignore with `docs/` in it makes a bare `git add docs`
+      # fail ("paths are ignored by one of your .gitignore files"), which under
+      # `set -e` aborted the whole run after the Cargo bump was already staged,
+      # leaving the repo half-released. These docs ARE tracked, so forcing is
+      # correct, and it matches what zshrs/scripts/bp.sh already does.
+      git -C "$repo" add -f docs
     fi
     if [ -f "$repo/Cargo.lock" ] && [ -n "$(git -C "$repo" status --porcelain -- Cargo.lock 2>/dev/null)" ]; then
       git -C "$repo" add Cargo.lock
