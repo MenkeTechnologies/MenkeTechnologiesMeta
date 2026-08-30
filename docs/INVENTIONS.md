@@ -194,8 +194,10 @@ line tracking via debug-only markers.
 *Caveat:* the debuggers share design (ported from stryke's), not a single fusevm op —
 line tracking is per-frontend; variable drill-down depth varies by value model (awk =
 scalars + flat assoc only). Of the remaining frontend, `rlang`/R ships only a handshake +
-run-to-completion adapter (`rlang/src/dap.rs`, 166 L — stepping pending), so it is not
-counted. Editor-side clients are partial, not per-language: IntelliJ DAP clients exist for
+run-to-completion adapter (`rlang/src/dap.rs`, 166 L), which is the frontend's own
+recorded position, not an outside reading — `rlang/BUGS.md` states "The DAP adapter does
+not step" and that breakpoints and stepping are not wired to the fusevm line table. It is
+therefore not counted. Editor-side clients are partial, not per-language: IntelliJ DAP clients exist for
 stryke, zshrs, elisprs and vimlrs (`editors/intellij/.../dap/`), VS Code debug adapters for
 stryke, zshrs, awkrs and vimlrs (`vscode-*/package.json` `"debuggers"`); the rest are driven
 by any generic DAP client. Python/Ruby/PHP/JavaScript/Go/Java/Kotlin/Scala/Groovy already
