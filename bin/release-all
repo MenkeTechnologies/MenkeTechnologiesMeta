@@ -325,7 +325,12 @@ while IFS='	' read -r repo old prefix; do
     # rewrites only this workspace's own entries and leaves third-party pins
     # alone, which is what zmax/scripts/release.sh already does.
     if [ -f "$repo/Cargo.lock" ]; then
-      ( cd "$repo" && cargo update --workspace --quiet ) 2>/dev/null || true
+      # Not silenced: if this fails the release ships a stale lock and every
+      # --locked build breaks, which is the whole bug being fixed here. A
+      # warning that the sync did not happen is worth more than a clean run.
+      if ! ( cd "$repo" && cargo update --workspace --quiet ); then
+        echo "release-all: WARNING: could not sync $repo/Cargo.lock — the release may ship a lockfile that --locked builds reject" >&2
+      fi
     fi
     rewrite_docs_version "$repo" "$old" "$new"
     rewrite_man_version "$repo" "$old" "$new"
