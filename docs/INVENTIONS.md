@@ -19,8 +19,7 @@ deep, the caveat says so.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
 Total: 271 candidates — 207 numeric entries (numbered through 213; 87, 88 and 90–93 are unused) plus
-64 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40f, 89a, 104a, 105a–105n, 114a, 120a–120s,
-144a, 168a, 169a, 170a). By confidence: 87 high, 144 med, 40 low. Marquee claims (the six
+64 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40f, 89a, 104a, 105a–105n, 114a, 120a–120s, 144a, 168a, 169a, 170a). By confidence: 87 high, 145 med, 39 low. Marquee claims (the six
 original ledger entries, zvcs #173 and zshrs's value-lineage builtin #40f) are flagged **★**; five of
 them (#1, #64, #65, #173, #40f) carry a deep prior-art analysis in the appendix.
 
@@ -46,7 +45,7 @@ mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
 `cranelift_object`; eighteen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
 (arb's compute core — its `calc` / expression layer — lowers to a `fusevm::Chunk` via
 `arb/src/expr.rs` and runs on the VM, while its widget / layout construction stays a native
-`ratatui` interpreter). `fusevm/src/op.rs` (~234 ops),
+`ratatui` interpreter). `fusevm/src/op.rs` (~235 ops),
 `host.rs`/`awk_host.rs` host-trait injection seam. *Caveat:* "None found", not proven —
 the deep search (see analysis) found no project meeting all three criteria but cannot
 cover private/defunct work; the nearest near-miss (Deegen) is contestable. JIT is
@@ -67,7 +66,7 @@ A from-scratch tracing JIT inlines calls (incl. bounded self-recursion), traces
 branches across caller and inlined-callee frames, stitches side traces at hot
 side-exits, and on deopt reconstructs full interpreter state (synthetic frames + live
 stack) to resume mid-callee. *Basis:* `fusevm/src/jit.rs` (`DeoptInfo`/`DeoptFrame`; the
-`JitConfig` fields `max_inline_recursion` / `max_trace_chain`, both defaulting to 4); `fusevm/src/vm.rs`
+`JitConfig` fields `max_inline_recursion` / `max_trace_chain` `:359-361`, both defaulting to 4 `:377-378`); `fusevm/src/vm.rs`
 `materialize_deopt_frames()`. *Caveat:* speculative tracing JITs with deopt/side-traces
 are well-trodden (LuaJIT, PyPy, TraceMonkey) — novelty is implementation, not concept;
 hard bounds make it narrower than production tracers. Not a categorical first.
@@ -95,30 +94,29 @@ plugin files they `:source` / `load` / `require` — execute on the same JIT-ena
 standalone CLI runtimes, so an editor plugin's hot loops persist their compiled machine code to
 `~/.cache/fusevm-jit` on first run and skip Cranelift codegen on every later boot. Legacy plugin
 code gets tiered native execution with no plugin-side change and no per-editor cache.
-*Basis:* cache-dir resolution `fusevm/src/jit.rs:3221-3235` (`$FUSEVM_JIT_CACHE_DIR` →
+*Basis:* cache-dir resolution `fusevm/src/jit.rs:3389-3403` (`$FUSEVM_JIT_CACHE_DIR` →
 `$XDG_CACHE_HOME/fusevm-jit` → `~/.cache/fusevm-jit`); on by default with the feature, `=off` to
-disable (`:7611-7613`); un-namespaced blob name `:3724`; all three tiers persisted —
-`try_load_or_build` `:2933`, `try_load_or_build_block` `:5680`, `try_load_or_build_trace` `:6102`
-with `KIND_LINEAR/BLOCK/TRACE` `:3027-3029`, `MAGIC` `FJITNAT2` + `SCHEMA_VERSION = 16`
-`:3031-3051`, 256 MiB default cap evicting oldest-first to 80% (`:7634-7640`). Eighteen
+disable (`:3378-3386`); un-namespaced blob name `:3893`; all three tiers persisted —
+`try_load_or_build` `:4142`, `try_load_or_build_block` `:4162`, `try_load_or_build_trace` `:4187`
+with `KIND_LINEAR/BLOCK/TRACE` `:3191-3193`, `MAGIC` `FJITNAT3` + `SCHEMA_VERSION = 16`
+`:3199-3219`, 256 MiB default cap evicting oldest-first to 80% (`:3940`, eviction `prune` `:4031`). Eighteen
 frontends declare `features = [… "jit-disk-cache" …]` on `fusevm` (arb, awkrs, elisprs, go-rs,
 groovyrs, javars, kotlinrs, node-js, phplang, pythonrs, rlang, rubylang, scalars, strykelang,
-vimlrs, zshrs `Cargo.toml`; tclrs via `zmax/vendor/tclrs/Cargo.toml:73`). Editor path:
+vimlrs, zshrs `Cargo.toml`; tclrs `Cargo.toml:105`). Editor path:
 `zmax/zmax-term/src/commands/scripting/mod.rs` `load_init_scripts` → `vimlrs::fusevm_bridge::eval_file`
-(`:951`) → `vimlrs/src/fusevm_bridge.rs:5410` (rkyv bytecode cache) + `install()` `:4553-4554`
-`enable_tracing_jit`; elisp `load`/`require` → `elisprs/src/host.rs:4139` `intrinsic_load` →
-`run_top_forms` (`elisprs/src/lib.rs:78-92`) → `run_chunk` (`elisprs/src/host.rs:4613`,
-`enable_tracing_jit` `:4629`).
+(`:1092`) → `vimlrs/src/fusevm_bridge.rs:7089` (rkyv bytecode cache) + `enable_tracing_jit` `:6106`; elisp `load`/`require` → `elisprs/src/host.rs:6336` `intrinsic_load` →
+`run_top_forms` (`elisprs/src/lib.rs:113`) → `run_chunk` (`elisprs/src/host.rs:7013`,
+`enable_tracing_jit` `:6993`).
 *Caveat:* persistent native/AOT caches exist (JVM AppCDS/JWarmup, .NET ReadyToRun, V8 code
 cache); the claimed novelty is a *single un-namespaced* one serving eighteen distinct language
 frontends **and** an editor's plugin runtimes, not caching per se, and the survey behind "first"
 is non-exhaustive. Cross-*language* reuse only lands where two frontends emit byte-identical op
 sequences; a chunk carrying frontend-registered extension helpers misses safely and recompiles
-(`fusevm/src/jit.rs:3054-3060`). The cache removes codegen only — parse/lower still runs each
+(`fusevm/src/jit.rs:3224-3230`). The cache removes codegen only — parse/lower still runs each
 boot unless the frontend has its own bytecode cache (vimlrs does, `~/.cache/vimlrs/scripts.rkyv`;
 elisp `load` does not, it calls `run_top_forms` directly). vimlrs suppresses the JIT in the
 tolerant per-statement fallback used when a config file fails to parse whole
-(`fusevm_bridge.rs:5447`), so those files get no cached native code. No cold-vs-warm
+(`fusevm_bridge.rs:6063`), so those files get no cached native code. No cold-vs-warm
 plugin-load timing is recorded here.
 
 **5. JIT-compiled Emacs Lisp running with no Emacs process** — `high`
@@ -257,7 +255,7 @@ methods (`def self.m`), exceptions (`begin`/`rescue`/`ensure`, method-body and m
 default args, the standalone `ruby` binary + REPL, the rkyv bytecode cache, an AOP
 method-intercept registry, and an LSP server. *Basis:*
 `rubylang/src/{lexer,parser,compiler,host,cache,intercepts,lsp,dap,aot}.rs` (~6,989 L);
-`Cargo.toml` `fusevm = "0.17.0"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
+`Cargo.toml` `fusevm = "0.26.0"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
 harness (`cargo run --bin parity`) diffs a **35-snippet** corpus live against the reference
 `ruby`, and `tests/parity.rs` replays the frozen outputs in CI with no `ruby` installed.
 *Caveat:* mruby already compiles Ruby to bytecode (in C, since 2012) and Artichoke is a
@@ -280,7 +278,7 @@ REPL, the core builtin surface (`print`/`len`/`range`/`int`/`str`/`list`/`dict`/
 run, AOT compilation to a standalone native executable, an AOP method-intercept registry,
 a DAP debug server, and an LSP server. *Basis:*
 `pythonrs/src/{lexer,parser,compiler,host,cache,intercepts,lsp,dap,aot}.rs` (~5,999 L);
-`Cargo.toml` `fusevm = "0.17.0"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
+`Cargo.toml` `fusevm = "0.26.0"` with `jit`/`jit-disk-cache`/`aot`; a differential parity
 harness (`cargo run --bin parity`, `src/bin/parity.rs`) diffs the example corpus live
 against the reference `python3`. *Caveat:* CPython already compiles Python to bytecode
 (in C, on its own VM) and PyPy JIT-compiles Python on RPython's own tracing JIT, while
@@ -365,7 +363,7 @@ standard library is reimplemented natively package by package rather than vendor
 concurrency programs need the scheduler, so goroutine/channel/`select` code runs under
 `go run` rather than `go build`. "First" rests on a non-exhaustive prior-art sweep. MIT.
 
-**11j. First Tcl lowered onto a shared multi-language VM's bytecode (tclrs) — a pure frontend with no interpreter loop** — `low`
+**11j. First Tcl lowered onto a shared multi-language VM's bytecode (tclrs) — a pure frontend with no interpreter loop** — `med`
 tclrs is the seventeenth fusevm frontend and a **pure frontend**: it parses Tcl —
 resolving every substitution the grammar permits at parse time — and lowers each command
 straight to `fusevm::Chunk` bytecode. There is no interpreter loop and no code generator
@@ -394,19 +392,30 @@ two hooks: a numeric hook for operands the VM cannot compute on natively (an ope
 parses as a number is one; comparisons fall back to string order when it does not) and
 frontend extension ops for the operators whose Tcl meaning differs from the VM's generic
 one (`/` and `%` floored toward negative infinity, integral `**`, and a normalize op for
-Tcl's boolean and double formatting). *Basis:* `tclrs/src/parser.rs` (773 L),
-`compiler.rs` (1289 L), `expr.rs` (421 L), `runtime.rs` (1481 L), 25 modules in all;
-`Cargo.toml` `fusevm = "0.17.0"` with `jit` / `jit-disk-cache` / `aot` / `ffi`;
-tclsh 9.0.4 is the specification and the suites diff against it
-directly — 17 test binaries in all (`tests/*.rs`), among them per-area differential suites
-for words, execution, procedures, lists, strings, arrays and coroutines, 14 rule-by-rule
+Tcl's boolean and double formatting). Since that phase it has also grown `{*}` argument
+expansion, the `expr(n)` math functions, bignums, namespaces, channels and `encoding`,
+`clock`, `regexp`, `format`, and an optional `--features tk` build whose `--tk` session
+runs the interpreter on the process main thread. *Basis:* `tclrs/src/parser.rs` (1134 L),
+`compiler.rs` (3359 L), `expr.rs` (996 L), `runtime.rs` (4894 L), 44 modules in all;
+`Cargo.toml` `fusevm = "0.26.0"` with `jit` / `jit-disk-cache` / `aot` / `ffi`;
+tclsh 9.0.4 is the specification (pinned by `tests/version_pin.rs`) and the suites diff
+against it directly — 55 test binaries in all (`tests/*.rs`), among them per-area
+differential suites for words, execution, procedures, lists, strings, arrays, coroutines,
+namespaces, channels, encodings, `clock`, `regexp`, `format`, bignums and `{*}`
+expansion, 14 rule-by-rule
 parser tests (`tests/dodekalogue.rs`), and a replayed corpus of the divergences a
-differential fuzzer found (`tests/parity_fuzz_findings.rs`, 18 tests), so no expected output
-in the repository is hand-written. *Caveat:* still early, and the refusals are named rather
-than approximated: `{*}` argument expansion is parsed and recorded on the word but refused
-when the command is lowered; math functions (`sqrt(4)` → `math function "sqrt" is not
-supported yet`) and bignum (`2**100` → `integer value too large to represent`) are not
-built; `--aot` is refused for a script using `catch` or a coroutine. Tcl has compiled to
+differential fuzzer found (`tests/parity_fuzz_findings.rs`, 50 tests), so no expected output
+in the repository is hand-written. Beyond its own suites the crate runs **Tcl's own test
+suite** against itself: 29,335 of 48,201 attempted cases pass — 60.9%
+(`conformance/REPORT.md`, regenerated by `conformance/run.sh`, which lifts every case out
+of every `tests/*.test` file and counts a pass only when tclsh and tclrs agree on exit
+code, result string and stdout, byte for byte). *Caveat:* the refusals are named rather
+than approximated and `README.md` §0x05 is the list — among them a non-literal ensemble
+subcommand or body word (`while $cond $body`), a computed `namespace eval` name and
+`namespace path` / `unknown` / `upvar`, `info frame` / `errorstack` / `cmdcount`,
+`clock scan` without `-format`, `regexp -about`, `format %a`, `open |command`,
+`fconfigure -blocking 0`, the ISO-2022 escape-sequence encodings, and `--aot` for a script
+using `catch` or a coroutine. Tcl has compiled to
 bytecode on its own engine since 8.0, so the defensible "first" is the narrower
 combination: Tcl lowered onto a *shared* multi-frontend bytecode VM, authored in Rust, with
 no Tcl runtime linked — not "first compiled Tcl" outright. "First" rests on a
@@ -500,7 +509,7 @@ pipe architecture**: the TUI renders to `/dev/tty` and reads keys from `/dev/tty
 `vipe`), so stdout stays a clean data channel and `find / | arb | consumer` streams through
 untouched while the UI runs. The compute core **is wired to fusevm** — expressions and the
 `calc` op lower to a `fusevm::Chunk` and run on the VM + three-tier Cranelift JIT
-(`arb/src/expr.rs`; `Cargo.toml` depends on `fusevm = "0.17.0"` with `jit`). The
+(`arb/src/expr.rs`; `Cargo.toml` depends on `fusevm = "0.26.0"` with `jit`). The
 world-first framing is the **synthesis** — no prior tool is a pipe-native, dual-target
 (terminal + web), component-generating UI language with a shareable dashboard registry
 (each leg has prior art: Tcl'88 / Tk'88 / Expect'90, dasel, ratatui, Streamlit /
@@ -2936,7 +2945,7 @@ TUI clean. *Basis:* `zmax/zmax-term/src/commands/scripting/python.rs` (`pythonrs
 (`scripting` is a **default** feature; `pythonrs = { path = "../vendor/pythonrs" }` with no
 `stdlib-ffi`); vendored `zmax/vendor/pythonrs` @ `54aeca9` (`[features]` has **no** `default` line, so
 `pyo3` is never pulled — "Default builds never pull pyo3 or need libpython"); pythonrs lowers to fusevm
-(`pythonrs/src/compiler.rs`, `Cargo.toml` `fusevm = "0.17.0"` with `jit`/`jit-disk-cache`/`aot`).
+(`pythonrs/src/compiler.rs`, `Cargo.toml` `fusevm = "0.26.0"` with `jit`/`jit-disk-cache`/`aot`).
 **Build-verified:** `zmax-term/src/commands/scripting/mod.rs` tests assert
 `python::eval("111 * 1111").is_ok()` and `python::eval("1 +").is_err()`. *Caveat:* pure-Rust Python
 interpreters exist — RustPython above all, which pythonrs uses as its behavioral parity spec — so this
