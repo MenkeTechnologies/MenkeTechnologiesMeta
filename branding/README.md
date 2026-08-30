@@ -17,6 +17,7 @@ Selected from nine directions; see `../logos.html` for the full board.
 | `favicon.svg` | Browser tabs only. Carries its own ground; hex dropped for the tile. |
 | `lockup.svg` | Mark plus wordmark, horizontal. |
 | `icon-1024.svg` | App icon on the house ground. |
+| `avatar-1024.svg` | GitHub account avatar. Same ground as the app icon, mark scaled x14 instead of x16 so nothing lands under the circular crop. |
 
 ## Colour
 
