@@ -18,32 +18,32 @@ deep, the caveat says so.
 - **med** — implemented but partial, or the "first/novel" framing is the softer part.
 - **low** — early/WIP, design-doc-only, or a known-category tool whose novelty is the combination/packaging.
 
-Total: 264 candidates — 201 numeric entries (numbered through 207; 87, 88 and 90–93 are unused) plus
-63 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40e, 89a, 104a, 105a–105n, 114a, 120a–120s,
-144a, 168a, 169a, 170a). By confidence: 84 high, 140 med, 40 low. Marquee claims (the six
-original ledger entries plus zvcs #173) are flagged **★**; four of them (#1, #64, #65, #173) carry a
-deep prior-art analysis in the appendix.
+Total: 271 candidates — 207 numeric entries (numbered through 213; 87, 88 and 90–93 are unused) plus
+64 lettered sub-entries (4a, 11a–11n, 12a, 13a, 28a, 40a–40f, 89a, 104a, 105a–105n, 114a, 120a–120s,
+144a, 168a, 169a, 170a). By confidence: 87 high, 144 med, 40 low. Marquee claims (the six
+original ledger entries, zvcs #173 and zshrs's value-lineage builtin #40f) are flagged **★**; five of
+them (#1, #64, #65, #173, #40f) carry a deep prior-art analysis in the appendix.
 
 ---
 
-## I. Execution engine & language runtimes — fusevm + seventeen frontends
+## I. Execution engine & language runtimes — fusevm + eighteen frontends
 
-**1. ★ Solo-authored from-scratch JIT VM hosting seventeen production language frontends** — `med`
+**1. ★ Solo-authored from-scratch JIT VM hosting eighteen production language frontends** — `med`
 One person built the whole execution engine — a bytecode VM plus a 3-tier
 (linear/block/tracing) Cranelift JIT emitting native machine code at runtime, and an
-AOT object compiler — and **seventeen independent language frontends** (`strykelang`/Perl 5,
+AOT object compiler — and **eighteen independent language frontends** (`strykelang`/Perl 5,
 `zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, `rlang`/R, `go-rs`/Go,
-`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy, `tclrs`/Tcl, and the
+`javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy, `tclrs`/Tcl, `texrs`/TeX, and the
 original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode. Every
-one ships the full toolchain: a standalone binary, `--lsp` and `--dap` servers, shell
-completions, man pages, generated `reference.html`, inline Rust FFI, and
-`--dump-tokens`/`--dump-ast`/`--disasm` introspection, and the `--tiers` execution-tier
-report (#11n). The
+one ships a standalone binary, `--lsp` and `--dap` servers, shell
+completions, man pages, generated `reference.html`, `--dump-tokens`/`--disasm` introspection,
+and the `--tiers` execution-tier report (#11n); `texrs`, the newest, is the one without
+inline Rust FFI and `--dump-ast`. The
 novelty is the combination: solo author **+** from-scratch VM with a genuine machine-code
 JIT **+** 17 production frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
 mmap+`PROT_EXEC` disk cache; `fusevm/src/aot.rs` emits a relocatable `.o` via
-`cranelift_object`; seventeen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
+`cranelift_object`; eighteen crates already depend on `fusevm` and emit `fusevm::Chunk`/`Op`
 (arb's compute core — its `calc` / expression layer — lowers to a `fusevm::Chunk` via
 `arb/src/expr.rs` and runs on the VM, while its widget / layout construction stays a native
 `ratatui` interpreter). `fusevm/src/op.rs` (~234 ops),
@@ -84,10 +84,10 @@ selection. *Basis:* `jit-disk-cache` feature in `fusevm/Cargo.toml`; `fusevm/src
 combination is covering a *tracing* tier in a hand-written VM. W^X/reloc correctness not
 independently tested here.
 
-**4a. One native-code cache shared by seventeen language frontends — compounding across languages, processes, and an editor's plugins** — `med`
+**4a. One native-code cache shared by eighteen language frontends — compounding across languages, processes, and an editor's plugins** — `med`
 The disk cache of #4 is **not namespaced per language, per binary, or per process**: blobs are
 keyed only by chunk op-hash + tier tag (`{op_hash:016x}.{sub:016x}.{tag}.fjit`) in one shared
-directory, so every fusevm frontend reads and writes the same store. All seventeen frontends
+directory, so every fusevm frontend reads and writes the same store. All eighteen frontends
 enable it, so the cache *compounds* — native code paid for once by any language, in any process,
 is streamed back by all of them, and the store keeps filling as the stack is used. The concrete
 consequence inside **zmax**: sourced Vimscript and Emacs Lisp — a `.vimrc`, an `init.el`, and the
@@ -100,7 +100,7 @@ code gets tiered native execution with no plugin-side change and no per-editor c
 disable (`:7611-7613`); un-namespaced blob name `:3724`; all three tiers persisted —
 `try_load_or_build` `:2933`, `try_load_or_build_block` `:5680`, `try_load_or_build_trace` `:6102`
 with `KIND_LINEAR/BLOCK/TRACE` `:3027-3029`, `MAGIC` `FJITNAT2` + `SCHEMA_VERSION = 16`
-`:3031-3051`, 256 MiB default cap evicting oldest-first to 80% (`:7634-7640`). Seventeen
+`:3031-3051`, 256 MiB default cap evicting oldest-first to 80% (`:7634-7640`). Eighteen
 frontends declare `features = [… "jit-disk-cache" …]` on `fusevm` (arb, awkrs, elisprs, go-rs,
 groovyrs, javars, kotlinrs, node-js, phplang, pythonrs, rlang, rubylang, scalars, strykelang,
 vimlrs, zshrs `Cargo.toml`; tclrs via `zmax/vendor/tclrs/Cargo.toml:73`). Editor path:
@@ -110,7 +110,7 @@ vimlrs, zshrs `Cargo.toml`; tclrs via `zmax/vendor/tclrs/Cargo.toml:73`). Editor
 `run_top_forms` (`elisprs/src/lib.rs:78-92`) → `run_chunk` (`elisprs/src/host.rs:4613`,
 `enable_tracing_jit` `:4629`).
 *Caveat:* persistent native/AOT caches exist (JVM AppCDS/JWarmup, .NET ReadyToRun, V8 code
-cache); the claimed novelty is a *single un-namespaced* one serving seventeen distinct language
+cache); the claimed novelty is a *single un-namespaced* one serving eighteen distinct language
 frontends **and** an editor's plugin runtimes, not caching per se, and the survey behind "first"
 is non-exhaustive. Cross-*language* reuse only lands where two frontends emit byte-identical op
 sequences; a chunk carrying frontend-registered extension helpers misses safely and recompiles
@@ -173,33 +173,36 @@ persistence the README's survey of BWK/gawk/mawk/goawk/frawk/zawk finds in none.
 machine-code tier from fusevm `jit-disk-cache`. *Caveat:* "first" is a self-conducted
 survey; the machine-code tier engages only for JIT-eligible numeric chunks.
 
-**11. Sixteen-language DAP debuggers on one shared VM** — `high`
-Sixteen of the seventeen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
-Ruby, arb, Python, PHP, JavaScript, Go, Java, Kotlin, Scala, Groovy, Tcl)
+**11. Seventeen-language DAP debuggers on one shared VM** — `high`
+Seventeen of the eighteen fusevm frontends (Perl-like stryke, zsh, AWK, VimL, Emacs Lisp,
+Ruby, arb, Python, PHP, JavaScript, Go, Java, Kotlin, Scala, Groovy, Tcl, TeX)
 ship a real Debug Adapter Protocol server (`--dap`
 over stdio or TCP) wrapping a shared line-stop / step / breakpoint / function-breakpoint /
 expression-evaluate debugger state machine —
-source-level interactive debugging for sixteen languages on a single VM substrate, including
+source-level interactive debugging for seventeen languages on a single VM substrate, including
 classic languages (AWK, VimL, zsh) that historically have **no** DAP debugger. *Basis:*
 `strykelang/.../dap.rs` (1997 L, the original the others were ported from);
-`awkrs/src/dap.rs` (1085 L) + `debugger.rs`; `zshrs/src/extensions/dap.rs` (879 L) +
-`tests/dap_integration.rs`; `pythonrs/src/dap.rs` (629 L); `node-js/src/dap.rs` (619 L);
+`zshrs/src/extensions/dap.rs` (1245 L) + `tests/dap_integration.rs`;
+`awkrs/src/dap.rs` (1090 L) + `debugger.rs`; `arb/src/dap.rs` (675 L);
+`elisprs/src/dap.rs` (665 L); `pythonrs/src/dap.rs` (629 L); `node-js/src/dap.rs` (619 L);
 `phplang/src/dap.rs` (610 L); `rubylang/src/dap.rs` (606 L) + `tests/dap.rs`;
-`tclrs/src/dap.rs` (590 L) + `tests/dap_session.rs`; `arb/src/dap.rs` (582 L);
-`go-rs/src/dap.rs` (572 L); `kotlinrs/src/dap.rs` (570 L);
-`javars/src/dap.rs` (568 L); `elisprs/src/dap.rs` (563 L); `groovyrs/src/dap.rs` (531 L);
-`scalars/src/dap.rs` (523 L); `vimlrs/src/dap.rs` (353 L);
+`tclrs/src/dap.rs` (593 L) + `tests/dap_session.rs`; `javars/src/dap.rs` (574 L);
+`kotlinrs/src/dap.rs` (573 L); `go-rs/src/dap.rs` (572 L); `vimlrs/src/dap.rs` (560 L);
+`groovyrs/src/dap.rs` (536 L); `texrs/src/dap.rs` (524 L) + `tests/dap_integration.rs`;
+`scalars/src/dap.rs` (523 L);
 line tracking via debug-only markers.
 *Caveat:* the debuggers share design (ported from stryke's), not a single fusevm op —
 line tracking is per-frontend; variable drill-down depth varies by value model (awk =
 scalars + flat assoc only). Of the remaining frontend, `rlang`/R ships only a handshake +
-run-to-completion adapter (`rlang/src/dap.rs`, 166 L — stepping pending), so it is not
-counted. Editor-side clients are partial, not per-language: IntelliJ DAP clients exist for
+run-to-completion adapter (`rlang/src/dap.rs`, 166 L), which is the frontend's own
+recorded position, not an outside reading — `rlang/BUGS.md` states "The DAP adapter does
+not step" and that breakpoints and stepping are not wired to the fusevm line table. It is
+therefore not counted. Editor-side clients are partial, not per-language: IntelliJ DAP clients exist for
 stryke, zshrs, elisprs and vimlrs (`editors/intellij/.../dap/`), VS Code debug adapters for
 stryke, zshrs, awkrs and vimlrs (`vscode-*/package.json` `"debuggers"`); the rest are driven
 by any generic DAP client. Python/Ruby/PHP/JavaScript/Go/Java/Kotlin/Scala/Groovy already
 have mature DAP debuggers elsewhere, so the world-first leg is the classic-language
-debuggers (AWK/VimL/zsh) plus running all sixteen on one shared VM substrate — not DAP for
+debuggers (AWK/VimL/zsh) plus running all seventeen on one shared VM substrate — not DAP for
 those mainstream languages, and not for Tcl either, which has TclProDebug.
 
 **11a. Fused superinstructions collapsing whole counted/append loops into one dispatch** — `high`
@@ -422,7 +425,7 @@ inside a `proc` reports `loop @7 trace-eligible=true traced=true` and `reaches n
 true`. *Caveat:* the prior art is close — TclQuadcode compiles Tcl procedures to LLVM IR and
 native code, but is explicitly **ahead-of-time** ("currently too slow for JIT" by its own
 description) and runs on the standard Tcl runtime — so the novel leg is a *tracing JIT at
-run time* for Tcl on a VM shared with sixteen other languages, not native compilation of Tcl
+run time* for Tcl on a VM shared with seventeen other languages, not native compilation of Tcl
 as such. The same loop at a script's top level traces nothing, because a top-level variable
 is a VM global; the project's README states this rather than hiding it.
 
@@ -453,7 +456,7 @@ inside `expr`, a Tcl `proc` shadowing an export, a block that fails rustc failin
 with the line it was written on, arity refusal). *Caveat:* the *concept* has deep prior art
 in Tcl — critcl has embedded **C** in Tcl scripts, cached by checksum and dynamically
 linked, for two decades. The novel legs are the language (Rust), the shared `fusevm::ffi`
-substrate across seventeen frontends, and compile-time registration into a statically
+substrate across eighteen frontends, and compile-time registration into a statically
 resolved dispatch; signatures are limited to fusevm's marshalling set (≤4 `i64` → `i64`,
 ≤3 `f64` → `f64`, `*const c_char` → `i64` or `*const c_char`).
 
@@ -461,11 +464,11 @@ resolved dispatch; signatures are limited to fusevm's marshalling set (≤4 `i64
 `<binary> --tiers <script>` runs the program, then reports, per compiled chunk, whether the
 block tier holds native code for it, which loop headers the tracing tier compiled, which it
 blacklisted, and — when a tier refused — a histogram of the JIT-ineligible ops that caused
-the refusal. Shipped in **all seventeen** frontends. The point is that the report does not
+the refusal. Shipped in **all eighteen** frontends. The point is that the report does not
 guess: it asks fusevm's own predicates, the same ones the compiler consults before doing the
 work, so "the JIT is enabled" and "the JIT compiled this" stop being the same sentence.
-*Basis:* `<repo>/src/tiers.rs` in sixteen frontends and `strykelang/strykelang/tiers.rs` in
-stryke — all seventeen tracked, 5,707 lines total; each queries
+*Basis:* `<repo>/src/tiers.rs` in seventeen frontends and `strykelang/strykelang/tiers.rs` in
+stryke — all eighteen tracked, 6,399 lines total; each queries
 `fusevm::JitCompiler::is_block_eligible` (`fusevm/src/jit.rs:8059`), `block_jit_is_compiled`
 (`:8069`), `find_jit_region` (`:8078`), `is_trace_eligible` (`:8231`), `trace_is_compiled`
 (`:8238`), and `trace_is_blacklisted` (`:8321`) after the run. `Report { chunks:
@@ -478,7 +481,7 @@ bodies walked off the host arena for elisprs, one chunk for the JVM frontends an
 *Caveat:* not a first in the sense of "nobody reports JIT state" — every serious JIT has some
 introspection (`-XX:+PrintCompilation`, `--jit-debug`, `perf` annotations). The claim is
 narrower: one report format, one set of predicates, one implementation shape, answered
-identically by seventeen different languages, because the tier decisions are the shared
+identically by eighteen different languages, because the tier decisions are the shared
 engine's rather than each language's. Whether a given program reaches native code is a
 property of that program's loop shape, not of the frontend — several frontends lower loop
 bodies through `CallBuiltin`/`Extended`, which the tracer declines, and the report is what
@@ -969,6 +972,49 @@ construction — and "first" rests on a non-exhaustive prior-art sweep. mksh/pdk
 best-effort (skipped when absent, never fatal). The real-PTY ZTST harness (#40) is separate and not
 yet CI-gated.
 
+**40f. ★ First Unix shell to expose value lineage — where a parameter's bytes came from — as a builtin** — `high`
+`provenance -m NAME` arms a ledger that records every bytecode-level event producing or
+consuming that parameter's value: the **origin** (`$(…)`, `<(…)`/`>(…)`/`=(…)`, a glob
+expansion, a heredoc/herestring, or an earlier assignment) and the ordered **op chain**
+that followed — `assign` / `append` / `array` / `assoc` / `expand` / `concat` / `exec` /
+`call` / `unset` — each stamped with `$LINENO`. `provenance NAME` prints the chain, `-j`
+emits JSON, `-u` untracks, `-c` clears. So `ARCHIVE=${REPORT}.tar.gz` reports its origin as
+the `date` substitution two lines earlier — even though `ARCHIVE` shares no bytes with that
+substitution's output — and records the argv slot it occupied when `tar` consumed it.
+This is strykelang's `mark`/`provenance` (#47) carried into a shell, where the mechanism
+cannot simply be reused: stryke keys lineage on a value's heap `Arc`, which works because a
+stryke value stays one `Arc` from creation to use. A shell value does not — the VM/host
+boundary passes `String` and the parameter table stores `String` — so zshrs keys three
+spaces at once: `Arc` identity for in-flight `fusevm::Value`s (each row carrying a `Weak`
+so a recycled address never inherits a dead value's lineage), the tracked parameter name
+across assignment round trips, and the exact content bytes for values that crossed a
+`String`-typed boundary (speculative, bounded by an 8192-entry FIFO). Every tap keys on an
+exact identity; none infers a link by scanning word text.
+*Basis:* `zshrs/src/extensions/provenance.rs` (965 L, 14 `#[test]`) plus
+`zshrs/tests/provenance_lineage.rs` (9 end-to-end tests driving the built binary); taps at
+`BUILTIN_SET_LINENO`, `BUILTIN_GET_VAR`/`_DQ`, the `concat_splice`/`concat_plan9` helpers and
+`ShellHost::{glob,heredoc,herestring,exec,call_function,cmd_subst,process_sub_*}` in
+`zshrs/src/fusevm_bridge.rs`, `ShellExecutor::run_command_substitution` in
+`zshrs/src/vm_helper.rs`, and the `assignsparam` / `assignaparam` / `sethparam` /
+`unsetparam` write funnels in `zshrs/src/ported/params.rs`. Each tap is one relaxed
+`AtomicBool` load until something is armed, and `[provenance] enabled = false` in
+`~/.zshrs/zshrs.toml` (or `ZSHRS_PROVENANCE=0`) refuses arming outright so no ledger can
+exist in the process. Documented at `zshrs/docs/PROVENANCE.md`; shipped in v0.12.34.
+*Prior art:* none — **no shell in the history of Unix has shipped value provenance**, and
+the near-misses fail on a different axis rather than by a narrow margin (deep analysis in
+the appendix). Everything adjacent is either a different *layer* (OS/kernel provenance —
+PASS, CamFlow, SPADE — which records processes and files, never a shell's parameter
+values), a different *granularity* (ProvDB's `provdb <cmd>` prefix and the
+reproducibility wrappers capture whole command invocations, not the ancestry of one
+value), or a different *question* (`set -x`, `SOURCE_TRACE`, `typeset -p`,
+`funcfiletrace` all answer "what ran / what is it now / where was it defined", never "how
+was this value built"). *Caveat:* the limits are implementation-side, not claim-side.
+Lineage is parameter-granular — a value that never reaches an armed parameter keeps a
+chain only while its content row survives the FIFO. The param taps sit at the funnel
+head, so a write rejected downstream (`read-only variable`) still appears as an attempted
+`assign`; chains cap at 256 ops; globs of more than 32 matches are skipped; a subshell's
+ledger dies with the subshell.
+
 ---
 
 ## III. strykelang — the language
@@ -1026,7 +1072,8 @@ machine; cdylib runs with caller privileges (same trust model as `do FILE`).
 `mark($x)` tags a value's heap Arc so subsequent operations accumulate a lineage record
 retrievable via `provenance($x)` — automatic dataflow lineage exposed as a user verb,
 zero-cost when unused. *Basis:* `provenance.rs` (469 L), framed "no existing scripting
-language ships this". *Caveat:* lineage accrues only for marked values; op coverage
+language ships this"; carried into zshrs as #40f, where the heap-`Arc` key had to be
+replaced. *Caveat:* lineage accrues only for marked values; op coverage
 breadth unverified.
 
 **48. Polymorphic steganography builtins (`hide`/`reveal`)** — `med`
@@ -1787,14 +1834,16 @@ byte-for-byte Nmap and does NOT embed the NSE Lua runtime; several areas marked 
 
 ## VIII. Editor & shell ecosystem
 
-**120. Ten embedded scripting languages in one editor binary, zero FFI** — `med`
-zmax embeds ten scripting interpreters — Emacs Lisp, Vimscript, AWK, zsh, stryke, Ruby, PHP,
-Python, JavaScript (Node), and arb — directly compiled into the binary with no external process
-and no C-ABI/FFI between them, all driving the live buffer through one uniform host API. *Basis:*
-`zmax/README.md:86-87` ("the only IDE to embed 10 scripting languages with zero external
-dependencies and no FFI between them"); `book/src/scripting.md`
-(`:elisp`/`:vim`/`:awk`/`:zsh`/`:stryke`/`:ruby`/`:php`/`:python`/`:node`/`:arb`, `SPC a r`
-unified REPL); each is a pure-Rust crate lowering onto shared fusevm bytecode. *Caveat:* overlaps #1 (the editor-
+**120. Twelve embedded scripting languages in one editor binary, zero FFI** — `med`
+zmax embeds twelve scripting interpreters — Emacs Lisp, Vimscript, AWK, arb, zsh, stryke, Ruby,
+PHP, Python, JavaScript (Node), R, and Tcl — directly compiled into the binary with no external
+process and no C-ABI/FFI between them, all driving the live buffer through one uniform host API.
+*Basis:* `zmax/README.md:95` ("the only IDE to embed 12 scripting languages with zero external
+dependencies and no FFI between them") and `README.md:100` (the twelve `:`-commands);
+`zmax/zmax-term/src/commands/scripting/pipeline.rs:60-62`, whose `LANGUAGES` table is the
+machine-readable list of the same twelve; `book/src/scripting.md` (`SPC a r` unified REPL); each
+is a pure-Rust crate lowering onto shared fusevm bytecode. Chained as pipeline stages, they are
+#209. *Caveat:* overlaps #1 (the editor-
 embedding angle of the same crate family); "world first" is the repo's own assertion; each
 interpreter exposes only a subset of its host API.
 
@@ -3439,6 +3488,343 @@ plane is unaffected by it. "None found," not proven; sweep non-exhaustive. A zvc
 
 ---
 
+## XII. Round-3 additions — hosting, in-process pipelines, and the IPC substrate
+
+Six substrate claims, none of which is a product: what a runtime must implement to host a
+foreign toolkit through its own ABI (#208), what falls away when twelve interpreters are already
+linked into the editor asking for them (#209), the wire protocol underneath ztmux and
+ztmux-core (#210), the event loop both of them run on once libevent is gone (#211), what a
+version control system has to expose before a third party can ship it a compiled plugin (#212),
+and the same question for a terminal multiplexer, where the answer has to reach the command
+language and the format engine as well (#213).
+#208 and #209 were written up in the *Invention Ledger* book (chapters 55 and
+56) before they were entered here; this section closes that gap.
+
+**208. First non-Tcl runtime to host the real, unmodified Tk toolkit through Tcl's stub ABI — a bytecode-VM frontend standing in where the interpreter is expected (tclrs `--tk`)** — `high`
+Tk 9.0 does not link against Tcl: its shipped dylib has **no undefined `Tcl_*` symbol at all**
+(`nm -u /opt/homebrew/lib/libtcl9tk9.0.dylib | grep -c _Tcl_` → `0`). Every call Tk makes goes
+through a table of function pointers `Tcl_InitStubs` pulls out of whatever interpreter it is
+handed — which turns "what would it take to run Tk" from a documentation question into a
+**measurement**: hand Tk a table whose every slot is a trap that names itself, call `Tk_Init`, and
+read off what it asks for. tclrs — a Tcl frontend that compiles to shared fusevm bytecode and has
+no traditional Tcl interpreter — answers that measurement and then satisfies it: `src/tk` is
+**18,010 lines across 21 modules and implements no widget**, only the ABI beneath one. The four
+stub tables are generated from the upstream headers (`scripts/gen_tk_stubs.py`) at their real
+sizes — `TclStubs` **691** slots, `TclIntStubs` **262**, `TclPlatStubs` **4**, `TclIntPlatStubs`
+**31** — and the probe binary reports what Tk actually touches: `tk-probe` records Tk calling
+**39 distinct slots over 274 calls** before it stops at
+`Tcl_EvalEx(interp, "file tildeexpand ~/.Xdefaults", …)`, the first request that needs an
+evaluator rather than a data structure, so `Tk_Init` exercises **under 7%** of the table. With the
+object layer, evaluator and notifier behind the table, `tk-host` reaches **2,737 calls over 75
+distinct slots and `Tk_Init` returns** — **200 of the 691 slots have bodies**. Three things a
+language frontend otherwise never needs had to exist, each of them evidence this is an ABI
+implementation rather than a shim: **Tcl's notifier** (Tk registers an event source and calls
+`Tcl_DoOneEvent`, so hosting Tk means hosting the event queue, timers and idle handlers, ported
+from Tcl 9.0.4 onto a CFRunLoop); a **C trampoline** (`src/tk/trampoline.c`, compiled by
+`build.rs`) because seven slots are C-variadic and stable rustc refuses to *define* one
+(`error[E0658]`, tracking issue 44930) with no AAPCS64 workaround — four of them carry a payload
+Tk reads back, including `Tcl_ObjPrintf`, which is how `wm geometry .` returns its value; and
+**three operations that are not table calls at all** — `Tcl_IncrRefCount` / `Tcl_DecrRefCount` /
+`Tcl_IsShared` are macros over `objPtr->refCount`, which forces a shadow `Tcl_Obj` with pinned
+storage and a stated ownership rule for every pointer crossing the boundary (and two of the
+objects Tk operates on live on Tk's own C stack, one with `refCount` uninitialised).
+`Tcl_HashTable` and `Tcl_ChannelType` push the same way: the host has to *implement* Tcl's hash
+table and to call *into* Tk's channel driver. The rule that keeps the 200 honest: an unimplemented
+slot **ends the process** rather than returning a plausible zero, and a trap counts as a failure,
+never a skip. *Basis:* `tclrs/src/tk/mod.rs:1-150` (the measurement write-up, the four
+not-in-the-table structures, the variadic analysis); `tclrs/src/tk/generated.rs:21` (691), `:3487`
+(262), `:4808` (4), `:4839` (31); `tclrs/src/tk/` (21 modules, 18,010 lines: `abi`, `obj`,
+`objtype`, `hash`, `channel`, `notifier`, `eval`, `dispatch`, `load`, `session`, …);
+`tclrs/src/tk/trampoline.c`; `tclrs/tests/tk_abi.rs`, `tk_probe_session.rs`, `tk_notifier.rs`,
+`tk_obj.rs`, `tk_session.rs`, `tk_eval.rs`, `tk_main_thread.rs`, `tk_console_channels.rs`,
+`tk_cold_lowering.rs`, `tk_index_pkg.rs`. *Caveat:* hosting a C library through its ABI is not
+novel — every language with an FFI does it, and the stub mechanism exists so *extensions* can be
+written against a stable table. What is unusual is the **direction**: the table is normally
+provided *by* Tcl *to* Tk, and here it is provided *to* Tk by something that is not a Tcl
+interpreter. 200/691 slots have bodies and no widget path is claimed beyond what the harness
+exercises; measured against Homebrew arm64 tcl-tk 9.0.4 on macOS, so the notifier leg is
+CFRunLoop-specific. "Running Tk" in the broad sense is ordinary — dozens of languages do it
+through a real Tcl — and is **not** what is claimed. "None found," not proven; sweep
+non-exhaustive.
+
+**209. Twelve language runtimes chained as pipeline stages inside the editor process — no fork, no pipe, and the text bound as a native value in every stage (zmax `:xpipe`)** — `med`
+Filtering a selection through an external command is one of the oldest moves in text editing —
+`!` in vi, `M-|` in Emacs — and it has always cost the same thing: a three-stage `awk | ruby | php`
+filter is three `fork`+`execve` pairs, six pipe descriptors, three `waitpid`s and a full
+encode/decode of the text at every boundary, for interpreters that in this stack are **already
+linked into the editor binary**. `:xpipe` runs the same chain as N function calls on the editor
+thread. Twelve runtimes are addressable as stages — `awk`, `arb`, `ruby`, `python`, `node`, `php`,
+`rlang`, `tcl`, `zsh`, `stryke`, `elisp`, `vim` — with no process created, no pipe opened, and the
+whole chain landing as **one undo step**. The part that makes it more than a speed trick is the
+binding: each stage receives the incoming text as a *real value* on that stage's own runtime — a
+Ruby `String`, a Python `str`, a JS string, a PHP variable, an R character vector, a Tcl global, a
+zsh parameter, a stryke scalar, an elisp symbol value, a VimL `g:` variable — which cost work
+*upstream* rather than in the editor, because every frontend's `eval_str` resets its host and
+wipes a global installed beforehand. Each therefore grew an entry point that seeds bindings after
+the reset and captures output in-process (`eval_str_captured` in rubylang, pythonrs and node-js,
+`eval_capture_with` in phplang, `eval_captured` in rlang, `bind_scalar` + `begin_capture` in
+strykelang, `execute_script_captured` in zshrs, `set_global_string` in vimlrs; elisp needed
+nothing new). Stages are separated by a whitespace-delimited **`|>`** — a language constraint, not
+a style choice, since a bare `|` is live syntax in most of the twelve (awk's `print | "cmd"`, Ruby
+and JS block parameters, zsh pipelines). And the threading rule falls out of the runtimes rather
+than being asserted: `Stage::is_pure` is true only for `awk` and `arb` — the two that build a
+fresh runtime per call and touch nothing shared — and `Pipeline::is_pure` folds it with `all`, so
+a chain leaves the editor thread only when every stage can. *Basis:*
+`zmax/zmax-term/src/commands/scripting/pipeline.rs:60-62` (the twelve-name `LANGUAGES` table),
+`:89-91` (`Stage::is_pure` = `Awk | Arb`, with the per-language reasons the other ten are pinned),
+`pipeline.rs:1-56` (the per-frontend capture entry points and why the reset forced them);
+`zmax/zmax-term/src/commands/scripting/mod.rs:730` (`Pipeline::is_pure` folding with `all`).
+*Caveat:* editors have embedded *a* scripting language for decades (Emacs/elisp, vim/VimL,
+Sublime/Python, VS Code/JavaScript), and multi-language plugin hosts exist — but they host each
+language in a separate process or VM instance and marshal across the boundary. The novelty is the
+**conjunction**: twelve, chained, in-process, value-bound, one undo step. Ten of the twelve are
+pinned to the editor thread (thread-local interpreter state; zsh's capture swaps process fds;
+elisp and VimL reach the editor through a thread-local raw pointer), so the parallel path is
+`awk`/`arb`-only chains. Overlaps #120, which is the *embedding*; this is the *chaining*. "None
+found," not proven; sweep non-exhaustive.
+
+**210. First pure-Rust port of the *current-generation* OpenBSD `imsg` IPC framework — a tmux server and client that speak imsg natively, with no C linkage and no CLI scraping (ztmux / ztmux-core)** — `med`
+`imsg` is OpenBSD's IPC framing — the message layer its privilege-separated daemons are built on,
+vendored into portable tmux as the server↔client channel. The Rust ecosystem talks to tmux the other
+two ways: through the CLI (`tmux_interface`, 150,555 downloads, its own one-liner is *"Rust language
+library for communication with TMUX via CLI"* — build a command line, run the `tmux` binary, parse the
+text back), or through C. ztmux does neither: it **ports imsg itself**. `src/ported/compat/imsg.rs`
+(700 L, 27 public fns) plus `imsg_buffer.rs` (1,699 L, 65 public fns) — **2,399 Rust lines, 92 public
+entry points** — reimplement the 1,703 vendored C lines of `imsg.c` / `imsg-buffer.c` / `imsg.h`: the
+`ibuf`/`ibufqueue`/`msgbuf` machinery, header-callback framing, size and overflow accounting, and
+`SCM_RIGHTS` fd passing, with **no `bindgen`, no C shim, and no link against a system imsg** (the build
+script's own words: *"ztmux has no C libraries to find or link"*; the only C-adjacent dependency in
+`Cargo.toml` is `libc` for syscalls). What makes it *current-generation* is the target: the vendored
+sources are `$OpenBSD: imsg.c,v 1.42 2025/06/16`, `imsg-buffer.c,v 1.36 2025/08/25`, `imsg.h,v 1.24
+2025/06/05` — the post-2023 rewrite where write/read state lives in a heap `struct msgbuf` reached
+through `imsgbuf->w`, framing is driven by an `imsg_parse_hdr` callback instead of an embedded read
+buffer, and stack buffers are marked `IBUF_FD_MARK_ON_STACK` rather than `max == 0`. The only other
+Rust imsg port found — tmux-rs, the repo ztmux was seeded from — predates that rewrite: of six markers
+of the new API, `msgbuf_new_reader`, `imsg_parse_hdr`, `ibufqueue` and `IBUF_FD_MARK_ON_STACK` appear
+**0 times** in its `src/compat/imsg.rs` (570 L) + `imsg_buffer.rs` (661 L), against 5 / 4 / 29 / 13 in
+ztmux's. The port is load-bearing, not vendored decoration: `src/ported/proc.rs` runs the real
+server↔client loop on `imsgbuf_read` / `imsg_get` / `imsg_compose` / `imsg_get_fd`, and because the
+anti-drift gate (#175) covers `vendor/tmux/compat/*.c`, every ported `fn` name is **build-checked
+against the C**. The client half is independent and **entirely safe Rust**: `ztmux-core/src/transport.rs`
+writes the 16-byte native-endian imsg header (`type`, `len`, `peerid`, `pid`) straight onto an
+`AF_UNIX`/`SOCK_STREAM` socket with `PROTOCOL_VERSION = 8` carried in `peerid`, so `zterminal` is a
+first-class tmux client with **no `tmux` subprocess and no output scraping anywhere in the path** — the
+GUI reads command output over the file protocol (`MSG_WRITE_OPEN` → `MSG_WRITE` → `MSG_EXIT`), not off a
+pipe. *Basis:* `ztmux/src/ported/compat/imsg.rs:1` (the port header naming `imsg.c,v 1.42` / `imsg.h,v
+1.24` and the three generation changes) and `imsg_buffer.rs`; `ztmux/vendor/tmux/compat/imsg.c:1`,
+`imsg-buffer.c:1`, `imsg.h:1` (the vendored revisions); `ztmux/src/ported/proc.rs:16-106` (live use);
+`ztmux/build.rs:1-5` (no C to link) + `ztmux/Cargo.toml:52` (deps: `libc` only); commit `202d62952c`
+*"port: re-port imsg to the vendored (new) OpenBSD API"*; `ztmux/tests/ported_fn_names_match_c.rs:224`
+(gate scope includes `vendor/tmux/compat/*.c`); `ztmux-core/src/transport.rs:7-128` (safe-Rust framing,
+`PROTOCOL_VERSION = 8`, the file protocol). *Prior-art sweep (2026-08-18):* GitHub code search
+`imsg_compose language:Rust` returns **4 hits in 2 repositories** — `richardscollin/tmux-rs` and
+`MenkeTechnologies/ztmux` — and a crates.io search for `imsg` returns only iMessage/Bluetooth-MAP crates,
+no OpenBSD-imsg crate. *Caveat:* **not** "first imsg in Rust" — tmux-rs precedes it, and ztmux was seeded
+from tmux-rs; the candidate-first is narrower: the current-generation API (roughly 2× the surface) ported
+in pure Rust, plus a native-imsg tmux *client* engine. Nearest non-tmux prior art is `privsep` 0.0.2
+(`reyk/privsep-rs`, `privsep/src/imsg.rs`, 274 L, last published 2021-09-18), which is imsg-*inspired* —
+tokio `UnixStream` + serde payloads + a `zerocopy` header — not a port of the C API (no `ibuf`/`msgbuf`
+queues, no `imsg_compose`/`imsg_flush` surface), and its README calls the crate *"experimental and WIP"*.
+The ztmux port is a faithful **unsafe transliteration** (65 and 168 `unsafe` occurrences in the two files)
+that mirrors the C's pointer semantics for parity — not an idiomatic safe-Rust redesign; the safe half
+(`ztmux-core`) implements only the client framing subset, with no fd passing and no write queue. imsg is
+OpenBSD's design (ISC) — the claim is the port and the CLI-free client path, not the protocol. Sweep was
+crates.io + GitHub code search only; "none found," not proven. MIT (derivative of tmux, ISC).
+
+**211. First tmux that runs with no libevent at all — libevent's classic C API reimplemented in-tree in Rust (`ztmux-event 1.0`), so a from-source port keeps every call site and links no C (ztmux)** — `high`
+tmux is written against libevent, and from inside the program the dependency is not negotiable: the
+server loop, the tty, every pane pty, timers, signals and the client socket all reach the kernel
+through `event_add` / `bufferevent` / `evbuffer`. A Rust port therefore has two ordinary options, and
+the field took both. **Bind the C** — what tmux-rs, the project ztmux was seeded from, still does: its
+install instructions read *"Like `tmux`, it requires `libevent2` and terminfo database (usually
+packaged with ncurses)"*, and its author's own discussion of dropping it lands on *"I wonder if it
+would be possible to use tokio instead of libevent"* → *"This isn't a main goal because I think it
+would mean diverging from tracking upstream tmux."* Or **rewrite the program onto an async runtime** —
+which is exactly that divergence: the call sites change, and byte parity with the C ends. ztmux takes a
+third route — keep the API, replace what is under it. `src/extensions/event_loop` is libevent's classic
+(pre-`event_base_*`) surface as tmux uses it — an implicit global base, caller-owned `struct event`
+registrations, `evbuffer` byte queues, classic `bufferevent`s — reimplemented in **2,373 lines of Rust
+across five modules**, exporting **44 libevent-named entry points** (plus the three types and six
+`EV_*` constants) that the ported tree calls in **418 places across 33 files**, with *not one call site
+changed*. The commit that did it (`bef02bd2f9`, 2026-07-28) deleted the 364-line FFI shim
+`src/ported/event.rs` and 151 lines of `pkg-config` probing from `build.rs`, which now opens *"ztmux has
+no C libraries to find or link"*: a build needs a Rust toolchain and nothing else — no `libevent-dev`,
+no Homebrew prefix, no `pkg-config` — and `Cargo.toml`'s `static` / `dynamic` features survive only as
+documented no-ops. The readiness syscall is what marks this a port rather than a rewrite that happens to
+compile: it is **`select` on macOS and `poll` everywhere else, deliberately not kqueue or epoll**,
+because tmux itself forces libevent off both — `vendor/tmux/osdep-darwin.c:102-103` sets
+`EVENT_NOKQUEUE`/`EVENT_NOPOLL` and `osdep-linux.c:97` sets `EVENT_NOEPOLL`, since the tty, the pane
+ptys and `/dev/null` are not sockets and epoll cannot watch `/dev/null`. Parity with tmux includes
+parity with the syscall tmux insists on. Signals keep libevent's shape too — a self-pipe written from an
+`SA_RESTART` `sigaction` handler and drained in the dispatch turn, plus `event_reinit` for the
+post-`fork` server. Verification runs on two levels: **19 unit tests in the module** (a timer that fires
+once and does not repeat, persistent read events, delete-from-callback cancellation, write watermarks,
+EOF reaching the error callback, the `evbuffer` line-ending families) and the **byte-differential parity
+suite, 1,194 of 1,194 cases**, every one of which runs *through* this loop, because each case starts a
+real ztmux server whose dispatch is this code. The loop names itself: `event_get_version()` returns
+`"ztmux-event 1.0"`, and `ztmux doctor` reports it as a build check. *Basis:*
+`ztmux/src/extensions/event_loop/mod.rs:1-24` (the module's statement of the job and the re-export
+list), `base.rs` (937 L: registration, dispatch, timers, signals — `:203-205` the version string,
+`:208-214` `event_get_method` → `select`/`poll`, `:637-700` the signal self-pipe and `sigaction`),
+`backend.rs:1-9` (why `select`/`poll` and not kqueue/epoll, citing tmux's own `osdep` files),
+`buffer.rs` (508 L, `evbuffer`), `bufev.rs` (532 L, `bufferevent`); `ztmux/build.rs:1-5` ("no C
+libraries to find or link"), `ztmux/Cargo.toml:44-50` (`static`/`dynamic` kept as no-ops) and `:52-59`
+(deps: `libc` for syscalls, `terminfo-lean` for terminfo — no `-sys` crate); commit `bef02bd2f9`
+*"Replace libevent with a Rust event loop"* (−364 L `src/ported/event.rs`, −151 L of `build.rs`
+probing), against its predecessor `49ed6af348` *"build: probe libevent via pkg-config, fail with install
+instructions"*; `ztmux/vendor/tmux/osdep-darwin.c:102-103` + `osdep-linux.c:97` (the constraints being
+mirrored); `cargo test --lib event_` → **22 passed, 0 failed** (19 of them the event loop's own);
+`ztmux/parity/parity_summary.json` (`"total": 1194, "passed": 1194, "failed": 0`, ztmux 3.7.38 against
+`tmux next-3.7`, generated 2026-08-10); `ztmux/src/extensions/doctor.rs:140-152` and `:479-486` (the
+`event-loop` build check and its test). *Prior-art sweep (2026-08-18):* crates.io for `libevent` returns
+bindings, not reimplementations — `libevent` 0.2.0 *"Rust bindings to the libevent async I/O
+framework"*, `libevent-sys` 0.4.0 *"Rust FFI bindings to the libevent library"*; the nearest non-binding
+hit is `td_revent` 0.3.2 (2022) *"Event library for Rust, Async IO similar to libevent"* — *similar to*,
+with its own API, not libevent's. A web search for a pure-Rust reimplementation of
+`event_add`/`evbuffer`/`bufferevent` returns those bindings and general async runtimes, nothing
+API-compatible. The other Rust tmux port requires `libevent2` by its own README. *Caveat:* **not**
+"first pure-Rust reactor", and not claimed as one — `mio`, `tokio`, `polling` and `calloop` long predate
+this and are better at that job; what was not found is an *API-compatible* stand-in for libevent's
+classic C surface, and what is claimed is a tmux that no longer carries the dependency. The
+implementation is deliberately **partial**: only what the port calls exists, and everything libevent
+grew for other users (rate limiting, OpenSSL bufferevents, evdns, evhttp, threading, multiple
+`event_base`s) is absent by design. It is also **not safe Rust** — the API is FFI-shaped (raw pointers,
+caller-owned registrations), 155 `unsafe` occurrences across the five modules; the claim is *no C*, not
+*no `unsafe`*. The parity figure is the committed summary of the last full run, not a re-run for this
+entry, and the loop is single-base and single-threaded because the API tmux uses has no room for
+anything else. "None found," not proven; sweep was crates.io + web search only. MIT (derivative of
+tmux, ISC).
+
+**212. First VCS with a plugin package manager of its own — compiled, in-process plugins over a stable C ABI that add or replace its subcommands (zvcs `git znative`)** — `med`
+Git's only extension point for a third party is the dashed external: name an executable
+`git-foo`, put it on `PATH`, and `git foo` will `exec` it (`execv_dashed_external`,
+git.c). There is nothing else — no installer, no registry, no in-process API, no way to
+*replace* a built-in verb, and every invocation is a fork of a separate program that then
+talks to git by running git again. The neighbours each have one half and not the other.
+**Mercurial** has genuine in-process extensions, but they are Python source enabled by hand
+in an `hgrc` `[extensions]` section and obtained however you like — there is no package
+manager in `hg`. **GitHub CLI** has the package manager — `gh extension install owner/repo`,
+`--pin`, even precompiled binary extensions — but `gh` is not a VCS and its extensions are
+still separate executables it forks, with no ABI and no ability to override a built-in
+command. zvcs has both halves at once, inside the `git` binary: `git znative
+add|load|remove|list|info|update|gc` installs plugins into one content-addressed global
+store under `$ZVCS_HOME/pkg` (sources auto-classify — `owner/repo`, `github:…`, `git+URL`,
+`path:…`, with `@ref` pinning — and each install is SHA-256 pinned in `installed.toml`), and
+a **native** plugin is a Rust `cdylib` compiled against the versioned `znative` C ABI and
+`dlopen`ed into the running `git`, registering verbs that dispatch **in-process**. A plugin
+may also **override** an existing verb — its handler runs in place of the built-in
+implementation and calls `dispatch_verb` to run the original — which git's fork-an-external
+model structurally cannot express. The host API a plugin calls back through is the VCS, not
+a shell: `run` (any subcommand, in this process, no fork), `config_get`/`config_set`,
+`repo_info`, `resolve_rev`, `object_read`/`object_write`. **Script** plugins — a repo of
+`git-<verb>` executables, the shape every existing third-party subcommand already ships in —
+install into the same store from the same command, so the manager is additive rather than a
+replacement ecosystem. The interesting engineering is the load model, and it is *not*
+inherited from the shell original: a shell loads its plugins once into a process that lives
+for hours, while `git` is a fresh process per command, so **nothing is loaded until a verb
+proves to belong to a plugin**. The verbs a native plugin registers are discovered by loading
+it once at install time — never declared, so the recorded set cannot lie — and projected into
+two flat side tables (`verbs.tsv`, `overrides.tsv`) that are *deleted rather than written
+empty*; a machine with no plugin installed therefore pays two failed `stat`s per command and
+never opens a file. *Basis:* `zvcs/ZNATIVE.md` (command, store and ABI surface);
+`zvcs/src/plugin/src/lib.rs` (the dependency-free ABI crate — `#[repr(C)]`
+`HostApi`/`PluginInfo`/`ObjectBuf`, `MAGIC`, `ABI_VERSION`, `INIT_SYMBOL`,
+`declare_plugin!`); `zvcs/src/extensions/src/plugin_host.rs` (`dlopen` via `libloading`, the
+magic + version gate, staging buffers, verb/override registries, purge-before-`dlclose`
+unload, the side-table lookup); `zvcs/src/extensions/src/pkg/` (`manifest.rs`, `store.rs`,
+`resolver.rs`, `commands.rs`) + `superset/znative.rs`; the resolution hook ahead of
+`external::try_dashed` in `src/extensions/src/lib.rs` and the override hook in `dispatch.rs`;
+`zvcs/examples/` — `plugin-hello` (added verb + an override that delegates), `plugin-wip`
+(`git wip`, composing `add`/`commit` through `host.run`), `plugin-todo` (the script kind).
+**Test-verified:** `zvcs/src/extensions/tests/znative_plugin.rs` drives the real `git` binary
+through install, plugin-verb dispatch, override-then-delegate, precedence over a same-named
+`git-hello` on `PATH`, the script kind, and the cold case that asserts neither side table
+exists when nothing is installed. *Caveat:* every ingredient exists somewhere — dlopen plugin
+hosts are ancient, `hg` has in-process extensions, `gh` has an extension installer, and this
+project's own zshrs shipped the ABI (#40c) and the compiled-plugin package manager (#40d)
+first, from which this is ported. The candidate-first is the combination in a **version
+control system**: a VCS that ships its own plugin package manager, installs *compiled*
+plugins over a stable versioned ABI, runs them in-process, and lets one replace a built-in
+subcommand — with a per-process discovery model that keeps the cost at two `stat`s when
+unused. Prior-art sweep found no VCS with a built-in plugin package manager of any kind;
+"None found," not proven, and searches are not exhaustive. A zvcs addition (ABI and manager
+ported from zshrs's `znative`). MIT.
+
+**213. First terminal multiplexer whose plugins are compiled native code loaded into the server, registering first-class commands, `#{…}` format variables and hooks — with the package manager inside the multiplexer (ztmux `znative` + `ztnative`)** — `med`
+tmux has no plugin API. Its only extension point is `run-shell`, so every plugin ever
+published is a shell script that drives the server by shelling out to `tmux bind-key …`, and
+the manager everyone uses (TPM) is a third-party shell script that clones repos into
+`~/.tmux/plugins` and runs their `*.tmux` files. The multiplexers that *do* have a plugin
+system each stop short of a different half. **Zellij** has both a plugin system and a plugin
+manager, but its plugins are sandboxed **WASM** modules talking protobuf across a host
+boundary, loaded from `file:`/`http(s):`/`zellij:` URLs or a plugin directory; its documented
+API is events, exported commands, filesystem access and async workers — a plugin renders its
+own pane and issues *existing* actions, with no documented way to register a new zellij verb
+or a status-bar variable, and its "plugin manager" is a loader/monitor rather than a store
+with ref pinning and integrity hashes. **WezTerm** clones plugin repos from git URLs
+(`wezterm.plugin.require`, `plugin.list()`, `plugin.update_all()`) but they are **Lua**
+applied to the config at startup — a fetcher, no ABI, nothing compiled. **kitty**'s kittens
+are Python/Go terminal programs run as overlay *processes* that drive kitty over remote
+control, with no ABI and no manager. ztmux has the compiled half and the manager half at
+once, inside the server: a plugin is a Rust `cdylib` compiled against the versioned
+[`ztnative`](https://github.com/MenkeTechnologies/ztmux/tree/main/ztnative) C ABI and
+`dlopen`ed into the running server, and what it registers are the host's own primitives —
+a **command** that is a real `cmd_entry` in tmux's command table, so tmux's own `args_parse`
+parses the plugin's flags from the template it declared and the command works from
+`.tmux.conf`, a key binding, the command prompt and the CLI alike; a **`#{…}` format
+provider** consulted during expansion, so a plugin extends the format language the status
+line is drawn from with no shell job on the redraw path; and a **hook subscription** called
+from `notify_add`. It calls back for `print`/`error` to the client that ran it, `run` (parse
+and queue any tmux command text), `get_option`/`set_option` (including the `@user` options
+plugins configure themselves with), and `format_expand` against the running command's target.
+`znative add|load|remove|list|loaded|info|update|gc|clean` installs into one content-addressed
+store under `$ZTMUX_HOME/pkg` — sources auto-classify (`owner/repo`, `github:…`, `git+URL`,
+`path:…`, each with `@ref` pinning), every install SHA-256 pinned in `installed.toml` — and
+the same command installs **unmodified TPM plugins** into the same store, so the manager is
+additive rather than a replacement ecosystem. Three parts are specific to a multiplexer and
+are not inherited from the shell original. **Long-lived references force the unload
+discipline**: a parsed tmux `cmd` holds its `cmd_entry` by reference for as long as it sits in
+a command list, key binding or menu, which outlives the plugin — so entries are leaked
+deliberately, registrations are purged *before* the `dlclose`, and every dispatch resolves its
+handler by name at call time, turning "plugin removed under a queued command" into a
+diagnostic instead of a jump into an unmapped page. **The redraw path sets the cost floor**:
+format and hook dispatch sit behind a relaxed atomic, so a server with no native plugin pays
+one atomic load per `#{…}` resolution and never takes a lock. **A script plugin has to reach
+the right server**: TPM plugins call bare `tmux`, so `znative` runs them with a generated
+`tmux` shim first on `PATH` that execs *this* ztmux against *this* socket — necessary because
+ztmux deliberately adopts `$TMUX` only for a socket in its own directory (so a ztmux command
+inside a real tmux pane does not speak ztmux's protocol at a tmux server), which would
+otherwise leave a plugin on a `-S`/`-L` server configuring the default one. A native plugin's
+identity also comes from the compiled artifact when the repo declares none: the cdylib is
+probed for its `PluginInfo` before installation, so a repo called `tmux-battery` whose plugin
+declares itself `battery` installs as `battery@0.2.0`. *Basis:* `ztmux/docs/ZNATIVE.md`;
+`ztmux/ztnative/src/lib.rs` (the dependency-free ABI crate — `#[repr(C)]` `HostApi`,
+`PluginInfo`, `HookEvent`, `ABI_VERSION`, `INIT_SYMBOL`, `declare_plugin!`);
+`ztmux/src/extensions/plugin_host.rs` (`dlopen` via `libloading`, the version gate, staging
+buffers, command/format/hook registries, the leaked `cmd_entry` + shared `exec` trampoline,
+purge-before-`dlclose` unload, `probe`); `ztmux/src/extensions/pkg/` (`manifest.rs`,
+`store.rs`, `resolver.rs`, `commands.rs`, `cmd_znative.rs`); the three wiring points in the
+port — `src/ported/cmd.rs` (`CMD_TABLE` 92 → 93, and the `cmd_find` overlay consulted only
+after the static table misses), `src/ported/format.rs` (`format_find`), `src/ported/notify.rs`
+(`notify_add`); `ztmux/examples/plugin-hello/` (a complete plugin — one command, one format,
+one hook). Verified end to end against a live server: install/load/list/loaded/info/remove/
+update/gc/clean, the example plugin's command and alias dispatching, its format resolving, its
+`session-created` hook firing, an unmodified TPM plugin (tmux-fzf-url) binding its key against
+the correct server, the two-start `.tmux.conf` flow, and a plugin trying to register
+`new-window` being refused. *Caveat:* the ingredients are individually old — dlopen plugin
+hosts are ancient, zellij already ships a multiplexer plugin system, wezterm already fetches
+plugin repos, and this project's own zshrs shipped the ABI (#40c) and the compiled-plugin
+package manager (#40d) first, from which this is ported (the sibling port into a VCS is #212).
+The candidate-first is the combination in a **terminal multiplexer**: compiled in-process
+plugins over a stable versioned ABI that register the host's *own* commands, formats and
+hooks, plus a package manager in the binary that installs them and the existing shell-script
+ecosystem from one pinned store. The scoping against zellij rests on its published plugin
+docs (WASM modules; events/commands/filesystem/workers), not on reading its source. "None
+found," not proven; prior-art sweep non-exhaustive. A ztmux addition, alongside #175. MIT
+(ztmux is a derivative of tmux, ISC).
+
+---
+
 ## Appendix — deep prior-art analyses (marquee claims)
 
 ### Why each near-miss isn't a dup — GP DAW as a plugin / embeddable (#64)
@@ -3538,6 +3924,48 @@ many-writer, submodule-heavy, automated workflows lock-free and fair**, with `zs
 attached, forward-only submodule discipline and a differential fuzz harness (#174) holding the git-compat
 floor to byte parity. Recorded as "none found", owned by MenkeTechnologies, **not** stamped a proven
 absolute; the sweep is non-exhaustive and cannot cover private/internal tooling.
+
+---
+
+### Why each near-miss isn't a dup — value lineage as a shell builtin (#40f)
+
+The claim is narrow: a **shell** that answers *"where did this parameter's bytes come from, and what
+did the bytecode do to them?"* through a builtin, at **value** granularity. No shell in the history of
+Unix — Thompson sh, Bourne sh, csh/tcsh, ksh88/ksh93, bash, zsh, ash/dash, mksh, fish, elvish,
+nushell, oil/YSH, PowerShell — has shipped it. The near-misses are not close calls; each answers a
+different question, and the split is clean:
+
+- **OS / kernel-level provenance (PASS, CamFlow's LSM, SPADE, Hi-Fi)** — a *different layer*. These
+  record system objects: processes, files, sockets, and the edges between them. They can tell you that
+  `/bin/date` wrote to a pipe that a shell process read; they cannot name the parameter that received
+  the bytes, because the shell's parameter table is private process memory the kernel never sees. Value
+  lineage inside the shell is invisible to them by construction.
+- **Command-granular capture (ProvDB's `provdb <cmd>` prefix, reproducibility wrappers of the
+  ReproZip / Sumatra / noWorkflow family)** — a *different granularity*. The unit is one invocation or
+  one script run, recorded for reproducibility and re-execution. Nothing in that model has a name for
+  "this variable, built from that substitution three lines up, concatenated with a literal, then handed
+  to `tar` as argv[2]".
+- **Shell features routinely mistaken for it** — a *different question*. `set -x`/`PS4` xtrace prints
+  each command as it executes and then forgets it; zsh's `SOURCE_TRACE` reports which *files* were
+  sourced; `typeset -p` / `declare -p` print a value's current contents and attributes with no history;
+  `funcfiletrace` / `BASH_SOURCE` / `funcsourcetrace` locate where *code* was defined. None of them
+  retains an ancestry for a value, and none survives the value being rebuilt by an expansion.
+- **Taint tracking (Perl's `-T`)** — the closest relative in spirit, and still a different mechanism:
+  taint propagates a single *boolean* through derived values to gate dangerous operations. It answers
+  "is this untrusted?", never "what produced it" — there is no origin, no op chain, no line numbers, and
+  it is a language feature, not a shell one.
+- **zshrs's own recorder (PFA-SMR, `src/recorder/`)** — deliberately the other half of the pair, and
+  worth naming so the two are not conflated: the recorder answers *"what state did this shell define,
+  and where"* (aliases, functions, options, bindings, with file:line). Provenance answers *"how was this
+  value built"*. Same shell, orthogonal questions, independent subsystems.
+- **Dataflow-lineage research languages (LIO, Adapton) and stryke's own `mark`/`provenance` (#47)** —
+  the concept exists in *languages*; #47 is this author's own, and #40f is its first appearance in a
+  **shell**, where the enabling mechanism (heap-`Arc` identity) does not survive the parameter table and
+  had to be replaced by the three-key scheme the entry describes.
+
+Net: no prior art. Recorded on the author's own prior-art search plus the sweep summarized above; the
+adjacent systems are catalogued here precisely because they are the ones a reviewer would reach for, and
+each one misses on layer, granularity, or question — not by inches.
 
 ---
 

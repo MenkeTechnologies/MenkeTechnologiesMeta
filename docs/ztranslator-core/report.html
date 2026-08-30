@@ -56,10 +56,10 @@
     <main class="docs-main">
       <section class="hero-stats">
         <div class="hero-stat"><span class="num">0.3.0</span><span class="lbl">engine version</span></div>
-        <div class="hero-stat"><span class="num">39</span><span class="lbl">engine source files</span></div>
-        <div class="hero-stat"><span class="num">14.2k</span><span class="lbl">lines of Rust (engine)</span></div>
-        <div class="hero-stat"><span class="num">183</span><span class="lbl">tests (33 integration · 150 inline)</span></div>
-        <div class="hero-stat"><span class="num">4</span><span class="lbl">C-ABI exports (37 dispatch cmds)</span></div>
+        <div class="hero-stat"><span class="num">48</span><span class="lbl">engine source files</span></div>
+        <div class="hero-stat"><span class="num">20.0k</span><span class="lbl">lines of Rust (engine)</span></div>
+        <div class="hero-stat"><span class="num">274</span><span class="lbl">tests (48 integration · 226 inline)</span></div>
+        <div class="hero-stat"><span class="num">4</span><span class="lbl">C-ABI exports (143 dispatch cmds)</span></div>
         <div class="hero-stat"><span class="num">23</span><span class="lbl">direct dependencies</span></div>
       </section>
       <p class="note">Numbers are derived from the repository at engine version <code>0.3.0</code> (edition 2021): the engine library crate counts <code>src/*.rs</code> only — the crate's <code>[lib] path = "src/lib.rs"</code> is the compiled source set. The C ABI lives in the sibling <code>capi/</code> crate. A non-MIT <code>UNLICENSED</code> license; <code>publish = false</code>.</p>
@@ -87,12 +87,17 @@
           <tr><td>midi</td><td><code>MidiMessage</code> parsing / encoding</td></tr>
           <tr><td>actions</td><td>outgoing action executors; <code>actions/macos.rs</code> holds the OS-control paths (keystroke, mouse, AppleScript) that no-op off macOS</td></tr>
           <tr><td>bmtp</td><td>BOME <code>.bmtp</code> <code>import</code> / <code>import_str</code> / <code>export</code>; option + payload parsing (<code>parse_incoming</code> / <code>parse_outgoing</code>)</td></tr>
-          <tr><td>serial · keycodes · error · timers</td><td>serial-port plumbing; key-code tables; <code>Error</code> / <code>Result</code>; engine timers</td></tr>
+          <tr><td>probe</td><td>single-event dispatch probe: replays one synthetic event through the project's fire order and reports every translator walked — why each was or was not considered, the captured variables, the per-rule VM trace, the rules verdict, the resolved outgoing bytes, the <code>Stop processing</code> cut, and the router verdict</td></tr>
+          <tr><td>search</td><td>project-wide find &amp; replace over every text-bearing field (names, comments, rules, trigger/action payloads, port names, router edges), derived from the model's own serde representation; enum discriminators are never rewritten and a replacement that would not read back is rejected whole</td></tr>
+          <tr><td>library</td><td>preset-level <code>extract</code> / <code>merge</code>: lift chosen presets into a standalone fragment carrying the ports they use and the router edges between them, and fold one back under an explicit name-collision policy, unioning ports and routes</td></tr>
+          <tr><td>history</td><td>bounded undo/redo ring of whole-project snapshots with labels, edit coalescing, and a navigable timeline (<code>entries</code> / <code>jump</code>)</td></tr>
+          <tr><td>engine/recorder</td><td>live MIDI capture written as a format-0 Standard MIDI File through <code>smf</code>; wall-clock timestamps mapped onto a declared tempo, realtime clock / active-sensing dropped</td></tr>
+          <tr><td>serial · keycodes · error · timers</td><td>serial-port plumbing; key-code tables; <code>Error</code> / <code>Result</code>; engine timers (with a live <code>snapshot</code> of every running timer)</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">C-ABI surface</h2>
-      <p class="note">The <code>ztranslator-capi</code> crate exports 4 <code>extern "C"</code> symbols; <code>zt_invoke</code> dispatches 37 distinct <code>ztr_*</code> commands.</p>
+      <p class="note">The <code>ztranslator-capi</code> crate exports 4 <code>extern "C"</code> symbols; <code>zt_invoke</code> dispatches 143 distinct <code>ztr_*</code> commands.</p>
       <pre class="code">void  zt_set_event_callback(void (*cb)(const char* event_json));
 char* zt_init(void);
 char* zt_invoke(const char* cmd, const char* args_json);
@@ -103,7 +108,7 @@ void  zt_string_free(char* s);</pre>
       <p class="note">23 direct dependencies, all pure-Rust / foundational. Trigger and transport crates: <code>midir</code> (MIDI), <code>rosc</code> (OSC), <code>serialport</code>, <code>notify</code> (file watch), <code>gilrs</code> (gamepad), <code>hidapi</code> (USB-HID), <code>tiny_http</code> / <code>ureq</code> / <code>tungstenite</code> / <code>rumqttc</code> (HTTP / WebSocket / MQTT), <code>cron</code> + <code>chrono</code> (schedules), <code>if-addrs</code> + <code>socket2</code> (network / sACN), <code>rusty_link</code> (Ableton Link). Art-Net DMX is decoded inline from a plain UDP packet — no crate. Data layer: <code>serde</code> + <code>serde_json</code>, <code>thiserror</code>, <code>crossbeam-channel</code>. The OS-control executors and audio input are gated to <code>cfg(target_os = "macos")</code> (<code>core-graphics</code>, <code>core-foundation</code>, <code>foreign-types</code>, <code>cpal</code>) so the cross-platform build stays dependency-clean.</p>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="note">65 test functions: 33 integration tests across <code>tests/bmtp_import.rs</code>, <code>tests/engine_pipeline.rs</code>, and <code>tests/rules_vm.rs</code>, plus 32 inline <code>#[test]</code> functions in the engine source. The BOME importer is driven against real <code>.bmtp</code> fixtures (Note Transpose, Controller Value Scaling, Simple Arpeggiator, Conditional MIDI mapping, one-shot timer, and an Ableton project). The rules suite exercises the integer VM's arithmetic / bitwise ops, conditionals, jumps, and execute / ignore outcomes; the pipeline suite drives the engine end to end. The deterministic core builds and runs in a headless Linux CI; macOS-only OS-control paths no-op off macOS.</p>
+      <p class="note">274 test functions: 48 integration tests across <code>tests/bmtp_import.rs</code>, <code>tests/engine_pipeline.rs</code>, <code>tests/engine_live.rs</code>, <code>tests/rules_vm.rs</code>, <code>tests/diff_projects.rs</code> and <code>tests/verify_program.rs</code>, plus 226 inline <code>#[test]</code> functions in the engine source. <code>tests/engine_live.rs</code> drives the live-introspection surface (globals, activity counters, running timers, the MIDI recorder) through the real worker thread headlessly. The BOME importer is driven against real <code>.bmtp</code> fixtures (Note Transpose, Controller Value Scaling, Simple Arpeggiator, Conditional MIDI mapping, one-shot timer, and an Ableton project). The rules suite exercises the integer VM's arithmetic / bitwise ops, conditionals, jumps, and execute / ignore outcomes; the pipeline suite drives the engine end to end. The deterministic core builds and runs in a headless Linux CI; macOS-only OS-control paths no-op off macOS.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; ztranslator-core &middot; engineering report</footer>
     </main>

@@ -37,6 +37,11 @@ fn round_mult($m) {
     return ($m < 10) ? sprintf("%.1f", $m) : sprintf("%.0f", $m)
 }
 
+# header-badge formatting: whole-tree and Rust totals in millions (e.g. 13.4).
+fn millions($n) {
+    return sprintf("%.1f", $n / 1000000)
+}
+
 # replace the body between <!-- BEGIN gen-code-volume:TAG --> / <!-- END … -->.
 # index/substr rather than a regex: the markers are fixed literals, so this
 # avoids any quotemeta / multiline-regex behavior differences.
@@ -208,6 +213,13 @@ if ($in_place) {
     $md = splice_region($md, "languages", $languages)
     $md = splice_region($md, "repos",     $repos)
     $md = splice_region($md, "careers",   $careers)
+
+    # the two header badges that deep-link to this section — stamped here so
+    # they can never drift from the tables below them.
+    var $rustbadge = "badge/rust-" . millions($lang_code{"Rust"}) . "M_LOC"
+    var $codebadge = "badge/code-" . millions($tot_code) . "M_lines"
+    die "gen-code-volume: rust LOC badge not found in README.md\n" unless ($md =~ s{badge/rust-[0-9.]+M_LOC}{$rustbadge})
+    die "gen-code-volume: code lines badge not found in README.md\n" unless ($md =~ s{badge/code-[0-9.]+M_lines}{$codebadge})
     spurt "README.md", $md
     p "gen-code-volume: README.md refreshed — Total #{commify($tot_code)} code across #{commify($tot_files)} files"
 } else {

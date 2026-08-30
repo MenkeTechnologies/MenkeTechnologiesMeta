@@ -61,14 +61,19 @@
         <div class="card"><h3>Font-sourced parameters</h3><p>Where TeX reads TFM <code>fontdimen</code>s, this reads MathConstants. The engine's measurements and the renderer's painting come from one face, so they cannot drift apart.</p></div>
         <div class="card"><h3>Total by design</h3><p>An unknown control sequence becomes a visible error box plus a diagnostic, never an abort — the editor calls this on every keystroke, and a half-typed formula still previews.</p></div>
         <div class="card"><h3>Embeddable</h3><p>Builds <code>rlib</code>, <code>staticlib</code> and <code>cdylib</code>, with one JSON command bus and a headless CLI, so a GUI host, a C ABI host and a shell pipeline all reach the same surface.</p></div>
+        <div class="card"><h3>A proved fixed point</h3><p>Passes run until one reads exactly what it wrote, not a fixed count. Because the iteration is in memory, every intermediate state is kept: <code>typeset.converge</code> reports which entries moved and to what, and when there is no fixed point it names the cycle and its period rather than giving up at a rerun cap.</p></div>
+        <div class="card"><h3>The page budget</h3><p>Every page limit is met by guessing: compile, look at the last page, delete a sentence, compile again. The page builder placed a known amount of vertical material into pages of a known height, so <code>typeset.fit</code> subtracts and gets a FLOOR &mdash; no pagination into the target exists while it is positive &mdash; stated in points, body lines and words, with every construct priced against it and the sufficient ones re-laid-out to prove the page count.</p></div>
         <div class="card"><h3>Real TeX Live packages</h3><p>The engine speaks the TeX Live database format directly — the local <code>texlive.tlpdb</code> joined against the mirror's — installs a package's <code>.tar.xz</code> into its own <code>texmf</code> store, and mines a <code>.sty</code> for the macros it defines. No <code>tlmgr</code>, no <code>perl</code>, no root; what could not be honoured is reported rather than pretended.</p></div>
       </div>
 
       <h2 class="reg-h">The pipeline</h2>
-      <pre class="code">.tex ─▶ tokenize ─▶ expand ─▶ textmode ─▶ line-break ─▶ page-break ─▶ pass 2 ─▶ RenderDoc
-        (catcodes)  (macros)   (blocks)   (Knuth-Plass)  (vertical)   (refs)     (pages)
-                                   │                                     ▲
-                                   └─▶ math mode ─▶ mlist_to_hlist ──────┘
+      <pre class="code">.tex ─▶ tokenize ─▶ expand ─▶ textmode ─▶ line-break ─▶ page-break ─▶ RenderDoc
+        (catcodes)  (macros)   (blocks)   (Knuth-Plass)  (vertical)      (pages)
+                                   │            ▲            │
+                                   │            └── re-run ──┘
+                                   │        while a pass does not read what it wrote
+                                   │             (references, pages, contents)
+                                   └─▶ math mode ─▶ mlist_to_hlist
                                        ($…$, displays)   ▲
                                                 OpenType MATH constants
                                                   + glyph metrics</pre>
@@ -80,7 +85,9 @@
           <tr><td><code>lex</code></td><td>TeX's mouth: category codes, control sequences, comments, <code>\def</code> / <code>\newcommand</code> / <code>\let</code> expansion with a recursion bound</td></tr>
           <tr><td><code>parse</code> &middot; <code>symbols</code> &middot; <code>atom</code></td><td>The math-mode grammar, the control-sequence table, and the math-list model (atoms, fields, fractions, radicals, matrices)</td></tr>
           <tr><td><code>textmode</code> &middot; <code>doc</code></td><td>The text-mode grammar and the document model: preamble, paragraphs, sectioning, lists, tables, floats, bibliography</td></tr>
-          <tr><td><code>linebreak</code> &middot; <code>hyphen</code> &middot; <code>typeset</code></td><td>Knuth&ndash;Plass total-fit line breaking, Liang's algorithm over TeX's own pattern file feeding it discretionaries, and the page builder with its floats, footnotes and second reference-resolving pass</td></tr>
+          <tr><td><code>linebreak</code> &middot; <code>hyphen</code> &middot; <code>typeset</code></td><td>Knuth&ndash;Plass total-fit line breaking, Liang's algorithm over TeX's own pattern file feeding it discretionaries, and the page builder with its floats, footnotes and its iteration to the reference fixed point</td></tr>
+          <tr><td><code>converge</code></td><td>Whether the document is finished: the pass-by-pass trace read into a verdict — the fixed point and how many passes it took, or the cycle and its period, with every unstable entry tied to the <code>\ref</code> / <code>\pageref</code> sites that read it</td></tr>
+          <tr><td><code>fit</code></td><td>The page budget: the material that must be removed to meet a page limit, proved rather than searched for, with every top-level construct priced from the page builder's own record</td></tr>
           <tr><td><code>include</code></td><td><code>\input</code> / <code>\include</code> splicing: the <code>\includeonly</code> list, a page break around each <code>\include</code>, a nesting limit and a cycle guard</td></tr>
           <tr><td><code>style</code> &middot; <code>font</code></td><td>The eight math styles and their transitions; glyph boxes, MATH constants, and Unicode math-alphabet mapping</td></tr>
           <tr><td><code>boxes</code> &middot; <code>mlist</code></td><td>The box model (width / height / depth) and the layout itself</td></tr>
@@ -96,6 +103,8 @@ zlatex typeset source='\frac{1}{2}' size_pt=14   # a formula → one equation bo
 zlatex export.pdf source_file=paper.tex          # multi-page pdf
 zlatex export.svg source='x^2 + y^2 = z^2' font=assets/latinmodern-math.otf
 zlatex packages.scan source_file=paper.tex       # what this document needs
+zlatex typeset.converge source_file=paper.tex    # finished, or chasing itself?
+zlatex typeset.fit source_file=paper.tex target_pages=8   # how much has to go?
 zlatex palette</pre>
 
       <h2 class="reg-h">Read on</h2>

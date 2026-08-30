@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-crate — engineering report. Shared sample-library crate browser for the MenkeTechnologies audio stack. Architecture, C ABI surface, dependencies, schema, CI gates.">
+  <meta name="description" content="zpwr-crate — engineering report. Shared sample-library crate browser for the MenkeTechnologies audio stack. Architecture, C ABI surface, dependencies, schema, quality gates.">
   <title>zpwr-crate — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,7 +119,7 @@
           <tr><td>Browse</td><td><code>crate_query</code> faceted filter (category incl. parent node, pack, manufacturer, BPM, key, loop/one-shot, favorites, LIKE/regex search, pagination) plus facets + category counts</td></tr>
           <tr><td>Native consumer</td><td>Audio-Haxor links the <code>rlib</code> and calls <code>Database</code> / <code>scan</code> directly</td></tr>
           <tr><td>C ABI consumer</td><td>zpwr-daw links <code>libzpwr_crate.a</code> (or the cdylib); 19 <code>crate_*</code> exports, JSON params/results, declared in hand-written <code>include/zpwr_crate.h</code></td></tr>
-          <tr><td>Build</td><td>Cargo with <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>, <code>publish = false</code>; Linux x86_64 + macOS aarch64 in CI</td></tr>
+          <tr><td>Build</td><td>Cargo with <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>, <code>publish = false</code>; builds on Linux x86_64 + macOS aarch64</td></tr>
         </tbody>
       </table>
 
@@ -148,7 +148,7 @@
       <p>The schema is built by 15 versioned migrations &mdash; <code>v1 / v2 / v6 / v8 / v9 / v10 / v12 / v14 / v15 / v16 / v17 / v20 / v24 / v27 / v28</code>; the subset <code>v1 / v9 / v10 / v12 / v14 / v24 / v27</code> is aligned with Audio-Haxor, so opening an existing Audio-Haxor database is a <strong>no-op</strong> &mdash; it is already past those versions. <code>audio_samples_fts</code> is a contentless FTS5 trigram table linked to <code>audio_samples.id</code>; a WAL journal plus a writer + round-robin read pool keep reads from blocking on the writer. The per-sample <code>sample_analysis</code> pipeline (BPM/key parse, category + pack/manufacturer assignment) is separate; this crate owns the schema + read/browse side and creates the analysis tables so browser joins resolve.</p>
 
       <hr class="section-rule">
-      <h2 class="tutorial-title"><span class="step-hash">$</span>CI GATES</h2>
+      <h2 class="tutorial-title"><span class="step-hash">$</span>QUALITY GATES</h2>
       <table class="arch-table">
         <thead><tr><th>Gate</th><th>Command</th></tr></thead>
         <tbody>
@@ -158,7 +158,7 @@
           <tr><td>test</td><td><code>cargo test --verbose</code> (headless; scans temp dirs, exercises the query layer)</td></tr>
         </tbody>
       </table>
-      <p>The umbrella <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> repo additionally pins this crate's metadata across its gate suite &mdash; LICENSE present + canonical MIT text, <code>authors</code>/<code>repository</code>/<code>homepage</code> fields, and the four polish gates above.</p>
+      <p>These four gates are run locally &mdash; this repo ships no GitHub Actions workflow, so there is no remote CI job enforcing them. The umbrella <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> repo still pins this crate's metadata across its gate suite &mdash; LICENSE present + canonical MIT text and the <code>authors</code>/<code>repository</code>/<code>homepage</code> fields.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">#</span>PROJECT METADATA</h2>
