@@ -93,6 +93,15 @@ different glyph type, at the same footprint, on the same grid, in its own accent
 | MTApp | angular brackets — a viewport frame | `#9d6bff` | `#5b2fb8` |
 | MTOpensource | paired bars of uneven height | `#2ee65f` | `#157a33` |
 
+**Avatars.** `avatar-1024.svg` is the parent account avatar;
+`branches/mtopensource-avatar-1024.svg` is the same treatment for the open-source
+branch. Both scale the canonical geometry to clear GitHub's circular crop, and the
+branch needs a smaller scale than the parent (x12 against x14) because the corner
+glyphs sit on the diagonal, where that crop cuts deepest — measured enclosing
+radius 466px of the 512px safe radius. The other three branches have no avatar
+yet; each needs its own measurement, since the glyph shapes reach different
+distances.
+
 **Draw the detail in the corner void, never against the package.** This is the
 rule the whole set turns on, and it was learned the expensive way: the first
 three branches varied the pin stubs and hugged the hex, and every one of them
