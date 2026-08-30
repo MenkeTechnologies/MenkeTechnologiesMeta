@@ -168,7 +168,11 @@ rewrite_man_version() {
     OLD=$_old NEW=$_new TODAY=$_today perl -i -pe '
       my ($o, $n, $t) = ($ENV{OLD}, $ENV{NEW}, $ENV{TODAY});
       # .TH version: the quoted "<name> <version>" field, name left alone.
-      s/^(\.TH\s+\S+\s+1\s+"[^"]*"\s+")([^"]*?)\Q$o\E(")/$1$2$n$3/;
+      # Matches ANY semver already there, not just $o -- a man page that had
+      # already drifted (elisprs sat at 0.1.9 while Cargo was 0.1.11) is not
+      # repaired by an $o->$n substitution, and the release then leaves it
+      # still stale and still failing the gate.
+      s/^(\.TH\s+\S+\s+1\s+"[^"]*"\s+"[^"]*?)\d+\.\d+\.\d+(")/$1$n$2/;
       # .TH date: the first quoted field after the section number.
       s/^(\.TH\s+\S+\s+1\s+)"[0-9-]+"/$1"$t"/;
     ' "$_f"
