@@ -35,10 +35,10 @@ AOT object compiler — and **eighteen independent language frontends** (`stryke
 `zshrs`/zsh, `awkrs`/AWK, `vimlrs`/VimL, `elisprs`/Emacs Lisp, `rubylang`/Ruby, `pythonrs`/Python, `phplang`/PHP, `node-js`/JavaScript, `rlang`/R, `go-rs`/Go,
 `javars`/Java, `kotlinrs`/Kotlin, `scalars`/Scala, `groovyrs`/Groovy, `tclrs`/Tcl, `texrs`/TeX, and the
 original pipeline-UI language `arb`) each targeting the **same** `fusevm` bytecode. Every
-one but `texrs`, the newest, ships the full toolchain: a standalone binary, `--lsp` and `--dap` servers, shell
-completions, man pages, generated `reference.html`, inline Rust FFI, and
-`--dump-tokens`/`--dump-ast`/`--disasm` introspection, and the `--tiers` execution-tier
-report (#11n). The
+one ships a standalone binary, `--lsp` and `--dap` servers, shell
+completions, man pages, generated `reference.html`, `--dump-tokens`/`--disasm` introspection,
+and the `--tiers` execution-tier report (#11n); `texrs`, the newest, is the one without
+inline Rust FFI and `--dump-ast`. The
 novelty is the combination: solo author **+** from-scratch VM with a genuine machine-code
 JIT **+** 17 production frontends. *Basis:* `fusevm/src/jit.rs` builds a
 `cranelift_jit::JITModule`, transmutes finalized functions to native fn pointers, with an
