@@ -188,6 +188,18 @@ rewrite_docs_version() {
       my ($o, $n) = ($ENV{OLD}, $ENV{NEW});
       s/(class="docs-build-line"[^>]*>[^<]*?)\bv\Q$o\E\b/$1v$n/g;
       s/(<div class="stat-val[^"]*">)v\Q$o\E(<\/div><div class="stat-label">(?:version|Build)<)/$1v$n$2/gi;
+      # …and every remaining mention of the outgoing version anywhere in the
+      # page. The two targeted rules above are not enough:
+      #   * report.html often carries the version with no build-line at all,
+      #     so neither rule matches and the file stays a release behind;
+      #   * tests/cargo-doc-version-sync.sh takes the HIGHEST version across
+      #     docs/*.html, but first DROPS lines naming another language
+      #     ("Rust 2021", "python", "perl"), so a correctly-stamped build-line
+      #     can be invisible to it while a stale line elsewhere wins.
+      # Both were live: one release wave left 13 repos failing that gate.
+      # Only the outgoing version is touched, so unrelated versions (compat
+      # targets, dependency versions) are left alone.
+      s/\bv\Q$o\E\b/v$n/g;
     ' "$_f"
   done
 }
