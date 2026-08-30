@@ -188,6 +188,18 @@ rewrite_docs_version() {
       my ($o, $n) = ($ENV{OLD}, $ENV{NEW});
       s/(class="docs-build-line"[^>]*>[^<]*?)\bv\Q$o\E\b/$1v$n/g;
       s/(<div class="stat-val[^"]*">)v\Q$o\E(<\/div><div class="stat-label">(?:version|Build)<)/$1v$n$2/gi;
+      # …and every remaining mention of the outgoing version anywhere in the
+      # page. The two targeted rules above are not enough:
+      #   * report.html often carries the version with no build-line at all,
+      #     so neither rule matches and the file stays a release behind;
+      #   * tests/cargo-doc-version-sync.sh takes the HIGHEST version across
+      #     docs/*.html, but first DROPS lines naming another language
+      #     ("Rust 2021", "python", "perl"), so a correctly-stamped build-line
+      #     can be invisible to it while a stale line elsewhere wins.
+      # Both were live: one release wave left 13 repos failing that gate.
+      # Only the outgoing version is touched, so unrelated versions (compat
+      # targets, dependency versions) are left alone.
+      s/\bv\Q$o\E\b/v$n/g;
     ' "$_f"
   done
 }
@@ -301,6 +313,20 @@ while IFS='	' read -r repo old prefix; do
     rewrite_cargo_version "$cargo_toml" "$new"
     relative="${cargo_toml#"$repo"/}"
     git -C "$repo" add "$relative"
+    # Sync the lockfile to the version just written. `rewrite_cargo_version`
+    # only edits Cargo.toml, so without this the lock keeps recording the OLD
+    # version and every `--locked` build fails before compiling anything:
+    #
+    #   error: cannot update the lock file ... because --locked was passed
+    #
+    # That breaks both CI and the release workflows, which build with --locked.
+    # The staging block below only fires when Cargo.lock is already dirty, and
+    # nothing else here ever makes it dirty, so it never fired. `--workspace`
+    # rewrites only this workspace's own entries and leaves third-party pins
+    # alone, which is what zmax/scripts/release.sh already does.
+    if [ -f "$repo/Cargo.lock" ]; then
+      ( cd "$repo" && cargo update --workspace --quiet ) 2>/dev/null || true
+    fi
     rewrite_docs_version "$repo" "$old" "$new"
     rewrite_man_version "$repo" "$old" "$new"
     if [ -n "$(git -C "$repo" status --porcelain -- man 2>/dev/null)" ]; then
