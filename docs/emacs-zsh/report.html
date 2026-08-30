@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="emacs-zsh — engineering report. font-lock generated from the zshrs binary (137 builtins, 113 extensions, 245 special vars via regexp-opt), why the small surface uses plain regexp-opt instead of hash tables, lint via zshrs -n, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
+  <meta name="description" content="emacs-zsh — engineering report. font-lock generated from the zshrs binary (138 builtins, 112 extensions, 245 special vars via regexp-opt), why the small surface uses plain regexp-opt instead of hash tables, lint via zshrs -n, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
   <title>emacs-zsh — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,7 +46,7 @@
             <a href="https://github.com/MenkeTechnologies/zshrs" target="_blank" rel="noopener noreferrer">zshrs</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            Emacs major mode for zshrs &middot; font-lock generated from the binary (137 builtins, 113 extensions, 245 special vars) &middot; lint via zshrs -n &middot; LSP via zshrs --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
+            Emacs major mode for zshrs &middot; font-lock generated from the binary (138 builtins, 112 extensions, 245 special vars) &middot; lint via zshrs -n &middot; LSP via zshrs --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -61,7 +61,7 @@
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
       <p class="tutorial-subtitle"><strong>emacs-zsh</strong> is the Emacs major mode for <strong>zshrs</strong> &mdash; the first-ever Rust rewrite of the zsh shell. <code>zshrs-mode</code> derives from <code>prog-mode</code> and provides font-lock, a syntax table, shell-block-aware indentation, filetype detection, a buffer linter (<code>zshrs -n</code>), and an LSP client that launches <code>zshrs --lsp</code>. It does not clobber the built-in <code>sh-mode</code>.</p>
-      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is generated, not hand-picked. <code>scripts/gen-stdlib.sh</code> dumps <code>.builtins</code>, <code>.extensions</code>, and <code>.special_vars</code> from <code>zshrs --dump-reflection</code> and writes <code>zshrs-stdlib.el</code> &mdash; 137 builtins, 113 zshrs extensions, 245 special vars. Regenerate after a zshrs upgrade and it stays in sync.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is generated, not hand-picked. <code>scripts/gen-stdlib.sh</code> dumps <code>.builtins</code>, <code>.extensions</code>, and <code>.special_vars</code> from <code>zshrs --dump-reflection</code> and writes <code>zshrs-stdlib.el</code> &mdash; 138 builtins, 113 zshrs extensions, 245 special vars. Regenerate after a zshrs upgrade and it stays in sync.</p>
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">137</div><div class="stat-label">Builtins font-locked</div></div>
@@ -76,7 +76,7 @@
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">~</span>WHY PLAIN REGEXP-OPT, NOT HASH TABLES</h2>
-      <p class="tutorial-subtitle">emacs-stryke stores its 10,450 builtins as <strong>hash tables</strong> because a single <code>(regexp-opt names 'symbols)</code> over that many names overflows Emacs' regexp compiler (<code>invalid-regexp "Regular expression too big"</code>). zshrs is different: the surface is <strong>small</strong> &mdash; 137 builtins, 113 extensions, 245 special vars. Each category fits comfortably under the limit, so the generator emits one precomputed <code>regexp-opt</code> alternation per category (<code>zshrs-builtins-regexp</code>, <code>zshrs-extensions-regexp</code>, <code>zshrs-special-vars-regexp</code>). The font-lock keyword list references those regexps directly &mdash; no matcher function, no hash lookup. Extensions are listed before builtins so the zshrs-specific names win their own bold <code>zshrs-extension-face</code>; the categories are disjoint by construction (builtins exclude keyword + extension names).</p>
+      <p class="tutorial-subtitle">emacs-stryke stores its 10,450 builtins as <strong>hash tables</strong> because a single <code>(regexp-opt names 'symbols)</code> over that many names overflows Emacs' regexp compiler (<code>invalid-regexp "Regular expression too big"</code>). zshrs is different: the surface is <strong>small</strong> &mdash; 138 builtins, 112 extensions, 245 special vars. Each category fits comfortably under the limit, so the generator emits one precomputed <code>regexp-opt</code> alternation per category (<code>zshrs-builtins-regexp</code>, <code>zshrs-extensions-regexp</code>, <code>zshrs-special-vars-regexp</code>). The font-lock keyword list references those regexps directly &mdash; no matcher function, no hash lookup. Extensions are listed before builtins so the zshrs-specific names win their own bold <code>zshrs-extension-face</code>; the categories are disjoint by construction (builtins exclude keyword + extension names).</p>
 
       <table class="parity-table">
         <thead><tr><th>Component</th><th>Detail</th></tr></thead>

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zmax engineering report — workspace module map, dependency footprint, scripting embeds, language/grammar coverage, and test inventory derived directly from the v0.4.56 Rust source tree.">
+  <meta name="description" content="zmax engineering report — workspace module map, dependency footprint, scripting embeds, language/grammar coverage, and test inventory derived directly from the v0.4.67 Rust source tree.">
   <title>zmax &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,16 +89,16 @@
     <main class="tutorial-main">
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">A structural snapshot of the zmax <code>v0.4.56</code> Cargo workspace &mdash; module map, dependency footprint, scripting embeds, and test inventory. zmax is a modal IDE; the workspace ships 13 first-party crates plus an <code>xtask</code> build helper, with <code>zmax-term</code> as the default member (the terminal binary). All figures below are counted directly from the Rust source tree (Edition 2021, MSRV 1.90, license MPL-2.0), not estimated.</p>
+      <p class="tutorial-subtitle">A structural snapshot of the zmax <code>v0.4.67</code> Cargo workspace &mdash; module map, dependency footprint, scripting embeds, and test inventory. zmax is a modal IDE; the workspace ships 13 first-party crates plus an <code>xtask</code> build helper, with <code>zmax-term</code> as the default member (the terminal binary). All figures below are counted directly from the Rust source tree (Edition 2021, MSRV 1.90, license MPL-2.0), not estimated.</p>
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val accent">13</div><div class="stat-label">Library / Binary Crates</div></div>
-        <div class="stat-card"><div class="stat-val">243</div><div class="stat-label">Rust Source Files</div></div>
-        <div class="stat-card"><div class="stat-val">114,364</div><div class="stat-label">Lines of Rust in Crate src</div></div>
-        <div class="stat-card"><div class="stat-val green">440</div><div class="stat-label">#[test] Functions</div></div>
-        <div class="stat-card"><div class="stat-val">89</div><div class="stat-label">Files Containing Tests</div></div>
-        <div class="stat-card"><div class="stat-val">334</div><div class="stat-label">Configured Languages</div></div>
-        <div class="stat-card"><div class="stat-val">293</div><div class="stat-label">Tree-sitter Grammars</div></div>
-        <div class="stat-card"><div class="stat-val accent">3,129</div><div class="stat-label">Ported Commands</div></div>
+        <div class="stat-card"><div class="stat-val accent">14</div><div class="stat-label">Library / Binary Crates</div></div>
+        <div class="stat-card"><div class="stat-val">509</div><div class="stat-label">Rust Source Files</div></div>
+        <div class="stat-card"><div class="stat-val">459,573</div><div class="stat-label">Lines of Rust in Crate src</div></div>
+        <div class="stat-card"><div class="stat-val green">3,269</div><div class="stat-label">#[test] Functions</div></div>
+        <div class="stat-card"><div class="stat-val">324</div><div class="stat-label">Files Containing Tests</div></div>
+        <div class="stat-card"><div class="stat-val">361</div><div class="stat-label">Configured Languages</div></div>
+        <div class="stat-card"><div class="stat-val">313</div><div class="stat-label">Tree-sitter Grammars</div></div>
+        <div class="stat-card"><div class="stat-val accent">8,972</div><div class="stat-label">Ported Feature Items</div></div>
       </div>
 
       <hr class="section-rule">
@@ -110,20 +110,21 @@
           <tr><th>Crate</th><th class="num">Files</th><th class="num">LOC</th><th>Size</th><th>Role</th></tr>
         </thead>
         <tbody>
-          <tr><td style="color:var(--accent);">zmax-stdx</td><td class="num">7</td><td class="num">2,532</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:5%"></div></div></td><td>Standard-library extensions (rust-analyzer-style)</td></tr>
-          <tr><td style="color:var(--accent);">zmax-core</td><td class="num">44</td><td class="num">20,389</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:43%"></div></div></td><td>Functional core editing primitives: rope, selections, transactions, syntax</td></tr>
-          <tr><td style="color:var(--accent);">zmax-lsp-types</td><td class="num">35</td><td class="num">9,906</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:21%"></div></div></td><td>Language Server Protocol type definitions</td></tr>
-          <tr><td style="color:var(--accent);">zmax-lsp</td><td class="num">6</td><td class="num">4,240</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:9%"></div></div></td><td>Language server client</td></tr>
-          <tr><td style="color:var(--accent);">zmax-dap-types</td><td class="num">1</td><td class="num">1,107</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2%"></div></div></td><td>Debug Adapter Protocol type definitions</td></tr>
-          <tr><td style="color:var(--accent);">zmax-dap</td><td class="num">4</td><td class="num">1,188</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2%"></div></div></td><td>Debug Adapter Protocol client</td></tr>
-          <tr><td style="color:var(--accent);">zmax-event</td><td class="num">9</td><td class="num">1,094</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2%"></div></div></td><td>Event primitives, hooks, and <code>AsyncHook</code> debouncing</td></tr>
-          <tr><td style="color:var(--accent);">zmax-loader</td><td class="num">5</td><td class="num">1,920</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:4%"></div></div></td><td>Building, fetching, and loading external resources / grammars</td></tr>
-          <tr><td style="color:var(--accent);">zmax-vcs</td><td class="num">8</td><td class="num">1,500</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:3%"></div></div></td><td>Version-control integration (diff gutters, blame)</td></tr>
-          <tr><td style="color:var(--accent);">zmax-parsec</td><td class="num">1</td><td class="num">574</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1%"></div></div></td><td>Parser-combinator utilities</td></tr>
-          <tr><td style="color:var(--accent);">zmax-view</td><td class="num">25</td><td class="num">16,031</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:34%"></div></div></td><td>Imperative shell: <code>Document</code>, <code>View</code>, <code>Editor</code> state</td></tr>
-          <tr><td style="color:var(--accent);">zmax-tui</td><td class="num">16</td><td class="num">6,222</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:13%"></div></div></td><td>TUI primitives (forked from tui-rs): surfaces, widgets, layout</td></tr>
-          <tr><td style="color:var(--accent);">zmax-term</td><td class="num">82</td><td class="num">47,661</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:100%"></div></div></td><td>Terminal frontend: application loop, commands, keymap, scripting</td></tr>
-          <tr class="total-row"><td>13 crates</td><td class="num">243</td><td class="num">114,364</td><td></td><td>plus <code>xtask</code> build tooling</td></tr>
+          <tr><td style="color:var(--accent);">zmax-stdx</td><td class="num">7</td><td class="num">2,970</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1%"></div></div></td><td>Standard-library extensions (rust-analyzer-style)</td></tr>
+          <tr><td style="color:var(--accent);">zmax-core</td><td class="num">112</td><td class="num">64,764</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:19%"></div></div></td><td>Functional core editing primitives: rope, selections, transactions, syntax</td></tr>
+          <tr><td style="color:var(--accent);">zmax-lsp-types</td><td class="num">35</td><td class="num">9,930</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:3%"></div></div></td><td>Language Server Protocol type definitions</td></tr>
+          <tr><td style="color:var(--accent);">zmax-lsp</td><td class="num">6</td><td class="num">4,420</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1%"></div></div></td><td>Language server client</td></tr>
+          <tr><td style="color:var(--accent);">zmax-dap-types</td><td class="num">1</td><td class="num">1,286</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:0%"></div></div></td><td>Debug Adapter Protocol type definitions</td></tr>
+          <tr><td style="color:var(--accent);">zmax-dap</td><td class="num">5</td><td class="num">1,618</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:0%"></div></div></td><td>Debug Adapter Protocol client</td></tr>
+          <tr><td style="color:var(--accent);">zmax-event</td><td class="num">9</td><td class="num">1,111</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:0%"></div></div></td><td>Event primitives, hooks, and <code>AsyncHook</code> debouncing</td></tr>
+          <tr><td style="color:var(--accent);">zmax-loader</td><td class="num">5</td><td class="num">2,657</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1%"></div></div></td><td>Building, fetching, and loading external resources / grammars</td></tr>
+          <tr><td style="color:var(--accent);">zmax-vcs</td><td class="num">8</td><td class="num">1,897</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1%"></div></div></td><td>Version-control integration (diff gutters, blame)</td></tr>
+          <tr><td style="color:var(--accent);">zmax-parsec</td><td class="num">1</td><td class="num">574</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:0%"></div></div></td><td>Parser-combinator utilities</td></tr>
+          <tr><td style="color:var(--accent);">zmax-view</td><td class="num">27</td><td class="num">24,380</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:7%"></div></div></td><td>Imperative shell: <code>Document</code>, <code>View</code>, <code>Editor</code> state</td></tr>
+          <tr><td style="color:var(--accent);">zmax-tui</td><td class="num">16</td><td class="num">6,623</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:2%"></div></div></td><td>TUI primitives (forked from tui-rs): surfaces, widgets, layout</td></tr>
+          <tr><td style="color:var(--accent);">zmax-term</td><td class="num">276</td><td class="num">334,412</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:100%"></div></div></td><td>Terminal frontend: application loop, commands, keymap, scripting</td></tr>
+          <tr><td style="color:var(--accent);">zmax-native</td><td class="num">1</td><td class="num">2,931</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1%"></div></div></td><td>Native host bridge: the compiled-in surface zmax exposes to embedded scripting</td></tr>
+          <tr class="total-row"><td>14 crates</td><td class="num">509</td><td class="num">459,573</td><td></td><td>plus <code>xtask</code> build tooling</td></tr>
         </tbody>
       </table>
       <p class="tutorial-subtitle">The workspace total of ~124.9k lines includes integration tests, benchmarks, and the <code>xtask</code> helper beyond the per-crate <code>src/</code> figures above.</p>
@@ -148,8 +149,8 @@
       <h2 class="tutorial-title"><span class="step-hash">~</span>LANGUAGE &amp; GRAMMAR FOOTPRINT</h2>
       <p class="tutorial-subtitle">Syntax support is configured in <code>languages.toml</code> and backed by vendored tree-sitter grammar sources.</p>
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">334</div><div class="stat-label">[[language]] Entries</div></div>
-        <div class="stat-card"><div class="stat-val accent">293</div><div class="stat-label">Tree-sitter Grammar Sources</div></div>
+        <div class="stat-card"><div class="stat-val">361</div><div class="stat-label">[[language]] Entries</div></div>
+        <div class="stat-card"><div class="stat-val accent">313</div><div class="stat-label">Tree-sitter Grammar Sources</div></div>
       </div>
 
       <hr class="section-rule">
@@ -161,9 +162,9 @@
           <tr><th>Status</th><th class="num">Count</th><th>Share</th><th>Notes</th></tr>
         </thead>
         <tbody>
-          <tr><td style="color:var(--accent);">Ported</td><td class="num">3,129</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:46%"></div><span class="bar-pct">45.7%</span></div></td><td>Fully ported commands against a 6,847-item denominator</td></tr>
-          <tr><td style="color:var(--accent);">Partial</td><td class="num">537</td><td><div class="bar-wrap"><div class="bar-fill yellow" style="width:8%"></div><span class="bar-pct">7.8%</span></div></td><td>Partially ported commands</td></tr>
-          <tr><td style="color:var(--accent);">Denominator</td><td class="num">6,847</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:100%"></div></div></td><td>Total command surface considered</td></tr>
+          <tr><td style="color:var(--accent);">Ported</td><td class="num">8,972</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:90%"></div><span class="bar-pct">90.4%</span></div></td><td>Fully ported feature items against a 9,924-item denominator</td></tr>
+          <tr><td style="color:var(--accent);">Partial</td><td class="num">574</td><td><div class="bar-wrap"><div class="bar-fill yellow" style="width:6%"></div><span class="bar-pct">5.8%</span></div></td><td>Partially ported commands</td></tr>
+          <tr><td style="color:var(--accent);">Denominator</td><td class="num">9,924</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:100%"></div></div></td><td>Total feature surface considered</td></tr>
         </tbody>
       </table>
       <div class="feature-grid" style="margin-top:1.2rem;">
@@ -180,9 +181,9 @@
           <tr><th>Metric</th><th class="num">Count</th></tr>
         </thead>
         <tbody>
-          <tr><td style="color:var(--accent);">#[test] functions (whole workspace)</td><td class="num">440</td></tr>
-          <tr><td style="color:var(--accent);">Source files containing tests</td><td class="num">89</td></tr>
-          <tr><td style="color:var(--accent);">Integration test files &mdash; zmax-term/tests/</td><td class="num">14</td></tr>
+          <tr><td style="color:var(--accent);">#[test] functions (whole workspace)</td><td class="num">3,269</td></tr>
+          <tr><td style="color:var(--accent);">Source files containing tests</td><td class="num">324</td></tr>
+          <tr><td style="color:var(--accent);">Integration test files &mdash; zmax-term/tests/</td><td class="num">6</td></tr>
           <tr><td style="color:var(--accent);">Integration test files &mdash; zmax-tui/tests/</td><td class="num">6</td></tr>
           <tr><td style="color:var(--accent);">Integration test files &mdash; zmax-core/tests/</td><td class="num">1</td></tr>
           <tr><td style="color:var(--accent);">Integration test files &mdash; zmax-stdx/tests/</td><td class="num">1</td></tr>
@@ -196,17 +197,17 @@
       <hr class="section-rule">
 
       <h2 class="tutorial-title"><span class="step-hash">~</span>RELATED REPORTS</h2>
-      <p class="tutorial-subtitle">The port and keybinding reports are auto-generated by <code>scripts/gen_port_report.py</code>. Figures in this report were counted from the <code>v0.4.56</code> source tree.</p>
+      <p class="tutorial-subtitle">The port and keybinding reports are auto-generated by <code>scripts/gen_port_report.py</code>. Figures in this report were counted from the <code>v0.4.67</code> source tree.</p>
       <div class="feature-grid">
         <div class="feature-card"><h4>Documentation Home</h4><p><a href="index.html" style="color:var(--accent-light);">index.html</a> &mdash; landing page and project doc index.</p></div>
-        <div class="feature-card"><h4>Port Report</h4><p><a href="port_report.html" style="color:var(--accent-light);">port_report.html</a> &mdash; Emacs/Vim/Spacemacs command coverage: 3,129 ported (45.7%) and 537 partial against a 6,847-item denominator, over a surface of 1,069 static commands, 1,641 typable commands, and 2,666 keybindings.</p></div>
+        <div class="feature-card"><h4>Port Report</h4><p><a href="port_report.html" style="color:var(--accent-light);">port_report.html</a> &mdash; Emacs/Vim/Spacemacs feature coverage: 8,972 ported (90.4%) and 537 partial against a 6,847-item denominator, over a surface of 1,069 static commands, 1,641 typable commands, and 2,666 keybindings.</p></div>
         <div class="feature-card"><h4>Keybinding Coverage</h4><p><a href="keybinding_report.html" style="color:var(--accent-light);">keybinding_report.html</a> &mdash; the key-press subset of the port report.</p></div>
         <div class="feature-card"><h4>Architecture &amp; Vision</h4><p><a href="architecture.md" style="color:var(--accent-light);">architecture.md</a> &mdash; narrative of how the crates fit together. <a href="vision.md" style="color:var(--accent-light);">vision.md</a> &mdash; goals and direction.</p></div>
       </div>
 
     </main>
     <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
-      ZMAX &middot; ENGINEERING REPORT &middot; 13 CRATES &middot; 243 SRC FILES &middot; 114,364 LOC &middot; 440 TESTS &middot; 334 LANGUAGES &middot; 293 GRAMMARS &middot; ELISP + VIML SCRIPTING &middot; MPL-2.0 &middot; MENKETECHNOLOGIES
+      ZMAX &middot; ENGINEERING REPORT &middot; 14 CRATES &middot; 509 SRC FILES &middot; 459,573 LOC &middot; 3,269 TESTS &middot; 334 LANGUAGES &middot; 293 GRAMMARS &middot; ELISP + VIML SCRIPTING &middot; MPL-2.0 &middot; MENKETECHNOLOGIES
     </footer>
   </div>
 
