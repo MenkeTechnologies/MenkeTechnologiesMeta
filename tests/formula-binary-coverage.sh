@@ -95,6 +95,26 @@ for stem in "${!formula_to_repo[@]}"; do
         fi
     fi
 
+    # Cargo also auto-discovers one binary per `src/bin/*.rs`, needing no
+    # [[bin]] block at all. Those build, ship in the release tarball, and are
+    # legitimately installed by the formula — so they belong in `declared` too.
+    #
+    # Appended AFTER the implicit-main.rs branch above on purpose: that branch
+    # only fires when `declared` is empty, so filling it in first would
+    # suppress the package-name binary for a crate that has both a src/main.rs
+    # and a src/bin/. This is additive and independent — a crate can have a
+    # [[bin]] block AND src/bin/*.rs binaries, which is exactly the case the
+    # old logic missed (lsofrs ships lsf from src/bin/lsf.rs beside its
+    # [[bin]] lsofrs; temprs ships tp the same way). Both were reported as
+    # stale formula references when the formulas were correct and the
+    # binaries genuinely exist in the published tarballs.
+    if [[ -d "$repo/src/bin" ]]; then
+        for binsrc in "$repo"/src/bin/*.rs; do
+            [[ -e "$binsrc" ]] || continue
+            declared="$declared$(basename "$binsrc" .rs) "
+        done
+    fi
+
     checked=$((checked + 1))
 
     # Subset check: every binary the formula installs MUST exist as a
