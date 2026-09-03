@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zphoto-core engineering report — module map and verification policy for the embeddable pure-Rust image engine behind zphoto. 444 raster + 114 vector commands on a shared layer stack via Engine::invoke, 681 tests, C FFI + Tauri plugin.">
+  <meta name="description" content="zphoto-core engineering report — module map and verification policy for the embeddable pure-Rust image engine behind zphoto. 465 raster + 114 vector commands on a shared layer stack via Engine::invoke, 775 tests, C FFI + Tauri plugin.">
   <title>zphoto-core — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,7 +57,7 @@
       </div>
     </header>
     <main class="docs-main">
-      <div class="status-banner"><strong>Status: implemented engine.</strong> A working pure-Rust library — 444 raster commands and 114 vector commands over one shared layer stack, reached through <code>Engine::invoke(cmd, args)</code> (73 pixel operators in <code>ops</code>), exercised by 681 <code>#[test]</code> functions. This page describes the engine's structure.</div>
+      <div class="status-banner"><strong>Status: implemented engine.</strong> A working pure-Rust library — 465 raster commands and 114 vector commands over one shared layer stack, reached through <code>Engine::invoke(cmd, args)</code> (73 pixel operators in <code>ops</code>), exercised by 775 <code>#[test]</code> functions. This page describes the engine's structure.</div>
 
       <h2 class="reg-h">Architecture</h2>
       <p class="note"><strong>zphoto-core</strong> is the engine behind the <a href="https://github.com/MenkeTechnologies/zphoto">zphoto</a> desktop app. The defining decision is a <strong>single shared layer stack</strong>: Illustrator-style vector commands composite onto the same layers as Photoshop-style raster commands, rather than a separate vector document. Every operation is a string command plus JSON args routed through one surface, <code>Engine::invoke(cmd, args) -&gt; Result&lt;Value&gt;</code>; the host renders the result. Pixels are edited at 8-, 16-, and 32-bit depth with f64 geometry. The same engine is reached natively (Rust), through a C FFI (<code>ffi</code>), and through a Tauri v2 plugin (<code>tauri_plugin</code>).</p>
@@ -79,6 +79,9 @@
           <tr><td>solve</td><td>Constraint Solve — fit a program's parameters to pinned sampler target colours (<code>program.solve</code>)</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>codec</td><td>decode / encode raster formats into and out of the document model</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>b64</td><td>base64 transport of image buffers across the FFI / IPC boundary</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>graph</td><td>node graph &mdash; a non-destructive DAG whose nodes are the user&rsquo;s own recorded Actions, behind the <code>graph.*</code> commands</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>guard &middot; blame</td><td>armed, named perceptual watchpoints over a region of a live document, and perceptual blame &mdash; which steps of the edit history visibly changed a given rectangle</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>events</td><td>the engine event stream &mdash; the third GUI Automation Bus surface beside the command list and its reversibility classes</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>ffi</td><td>C FFI surface for embedding the engine outside Rust</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>tauri_plugin</td><td>Tauri v2 plugin exposing the command surface to the desktop GUI and other apps</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>error</td><td>typed error model — unknown/unimplemented commands return errors, never panic or silently succeed</td><td><span class="tag">implemented</span></td></tr>
@@ -86,7 +89,7 @@
       </table>
 
       <h2 class="reg-h">Roadmap</h2>
-      <p class="note">Per-command coverage of the Photoshop / Illustrator surface (444 raster + 114 vector) is tracked, source-derived, in zphoto's <a href="https://github.com/MenkeTechnologies/zphoto">port report</a>; no command is marked done without a verifiable engine symbol. Work proceeds area by area:</p>
+      <p class="note">Per-command coverage of the Photoshop / Illustrator surface (465 raster + 114 vector) is tracked, source-derived, in zphoto's <a href="https://github.com/MenkeTechnologies/zphoto">port report</a>; no command is marked done without a verifiable engine symbol. Work proceeds area by area:</p>
       <ol class="phases">
         <li><b>Raster core</b> — layer model, blend modes, codecs, and the filter / fill / paint command surface across 8/16/32-bit depth.</li>
         <li><b>Selections &amp; masks</b> — selections and layer masks feeding the raster commands.</li>
@@ -96,7 +99,7 @@
       </ol>
 
       <h2 class="reg-h">Verification policy</h2>
-      <p class="note">Status is never asserted from a roadmap. A command counts as done only when a real, non-stub symbol exists and the port report can cite it. The engine ships 681 <code>#[test]</code> functions; tests build documents in memory (no external fixtures) and confirm that unimplemented commands return a typed error rather than panicking or silently succeeding — runnable on headless Linux CI.</p>
+      <p class="note">Status is never asserted from a roadmap. A command counts as done only when a real, non-stub symbol exists and the port report can cite it. The engine ships 775 <code>#[test]</code> functions; tests build documents in memory (no external fixtures) and confirm that unimplemented commands return a typed error rather than panicking or silently succeeding — runnable on headless Linux CI.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zphoto-core &middot; engineering report &middot; <a href="https://github.com/MenkeTechnologies/zphoto-core">zphoto-core</a> &middot; <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></footer>
     </main>
