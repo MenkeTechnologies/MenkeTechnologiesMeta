@@ -32,7 +32,7 @@
       glyph: 'BT',
       category: 'Desktop Apps',
       badge: 'WIP',
-      tagline: 'A from-scratch BitTorrent client in Rust behind a cyberpunk HUD, modeled on Transmission at 97.4% of its 114-feature surface — torrents, files, peers, trackers, and labels, plus the policy layer that sits above the wire: a download/seed queue, ratio and idle seeding limits, the alt-speed (turtle) scheduler, blocklists in every format the public providers ship, and watch folders with their own options. A second report tracks what the other clients do — categories and saved views, RSS feeds with regex and episode rules, super-seeding, disk preallocation, play-while-downloading — at 76.7% of 86 features. Byte-exact bencode means the info-hash is taken from the original info bytes, and a Transmission RPC compatibility layer answers in Transmission\'s own envelope over HTTP or HTTPS, so transmission-remote and the phone apps drive it unchanged. Its pure-Rust ztorrent-core engine is extracted so the same client embeds inside the other MenkeTechnologies apps. In development.',
+      tagline: 'A from-scratch BitTorrent client in Rust behind a cyberpunk HUD, modeled on Transmission at 96.5% of its 114-feature surface — torrents, files, peers, trackers, and labels, plus the policy layer that sits above the wire: a download/seed queue, ratio and idle seeding limits, the alt-speed (turtle) scheduler, blocklists in every format the public providers ship, and watch folders with their own options. A second report tracks what the other clients do — categories and saved views, RSS feeds with regex and episode rules, super-seeding, disk preallocation, play-while-downloading — at 76.7% of 86 features. Byte-exact bencode means the info-hash is taken from the original info bytes, and a Transmission RPC compatibility layer answers in Transmission\'s own envelope over HTTP or HTTPS, so transmission-remote and the phone apps drive it unchanged. Its pure-Rust ztorrent-core engine is extracted so the same client embeds inside the other MenkeTechnologies apps. In development.',
       pills: ['Tauri v2', 'Rust', 'Transmission RPC', 'Embeddable core'],
       price: 20,
       tiers: [
@@ -58,7 +58,7 @@
       glyph: 'P',
       category: 'Desktop Apps',
       badge: 'NEW',
-      tagline: 'A from-scratch PDF editor that replaces Adobe Acrobat and macOS Preview — 293 catalogued features, all 293 implemented: full document editing, annotation & markup, AcroForms fill/flatten, digital & certificate signatures, OCR, redaction, page management (merge/split/extract/rotate/crop), convert/export, compare, accessibility tagging and PDF/UA preflight, optimize and print production, and Action Wizard batch automation — in Rust behind a cyberpunk HUD, with a CLI beside the GUI. It also does what no competitor does: a content-addressed Merkle version-control DAG living inside the .pdf itself, with log / diff / blame / bisect and three-way branch merges, no sidecar and no server. Its pure-Rust zpdf-core engine is extracted so it embeds inside the other apps.',
+      tagline: 'A from-scratch PDF editor that replaces Adobe Acrobat and macOS Preview — 309 catalogued features, 308 implemented (100%): full document editing, annotation & markup, AcroForms fill/flatten, digital & certificate signatures, OCR, redaction, page management (merge/split/extract/rotate/crop), convert/export, compare, accessibility tagging and PDF/UA preflight, optimize and print production, and Action Wizard batch automation — in Rust behind a cyberpunk HUD, with a CLI beside the GUI. It also does what no competitor does: a content-addressed Merkle version-control DAG living inside the .pdf itself, with log / diff / blame / bisect and three-way branch merges, no sidecar and no server. Its pure-Rust zpdf-core engine is extracted so it embeds inside the other apps.',
       pills: ['Tauri v2', 'Rust', 'Edit · annotate · sign', 'Embeddable core'],
       price: 20,
       tiers: [
@@ -71,7 +71,7 @@
       glyph: 'PH',
       category: 'Desktop Apps',
       badge: 'NEW',
-      tagline: 'A from-scratch image editor that replaces GIMP, Photoshop and Illustrator — in Rust behind a cyberpunk HUD. The raster side is 295 of 302 catalogued Photoshop features (97.7%): layers with blend modes, selections and masks, brushes, filters, non-destructive adjustment layers, 8/16/32-bit pixels, and PSD/XCF I/O. The vector side is a separate Illustrator port — 46 features, 32 vec.* commands over f64 Bézier geometry and an anti-aliased rasterizer — that renders into the same layer stack, so masks, blend modes and project save apply to vector artwork too. Its pure-Rust zphoto-core engine is extracted so it embeds inside the other apps.',
+      tagline: 'A from-scratch image editor that replaces GIMP, Photoshop and Illustrator — in Rust behind a cyberpunk HUD. The raster side is 342 of 346 catalogued Photoshop checklist rows (98.8%): layers with blend modes, selections and masks, brushes, filters, non-destructive adjustment layers, 8/16/32-bit pixels, and PSD/XCF I/O. The vector side is a separate Illustrator port — 46 features, 32 vec.* commands over f64 Bézier geometry and an anti-aliased rasterizer — that renders into the same layer stack, so masks, blend modes and project save apply to vector artwork too. Its pure-Rust zphoto-core engine is extracted so it embeds inside the other apps.',
       pills: ['Tauri v2', 'Rust', 'Raster + vector', 'Embeddable core'],
       price: 20,
       tiers: [
@@ -110,7 +110,7 @@
       glyph: 'O',
       category: 'Desktop Apps',
       badge: 'NEW',
-      tagline: 'A from-scratch office suite in Rust — documents, spreadsheets, presentations, drawings, formulas and databases — behind a cyberpunk HUD, replacing Microsoft Office and LibreOffice: 236 of 245 catalogued features implemented, reading and writing ODF + OOXML plus legacy .doc/.xls/.ppt and .rtf, with formula evaluation, page rendering and PDF export. It also makes office files real-VCS citizens — zmerge is a git merge driver that reconciles parsed document models, zblame attributes every paragraph to the revision that changed it, and Calc computes its own recalculation critical path and keystone cell. Its pure-Rust zoffice-core engine is extracted so the same office engine embeds inside the other MenkeTechnologies apps.',
+      tagline: 'A from-scratch office suite in Rust — documents, spreadsheets, presentations, drawings, formulas and databases — behind a cyberpunk HUD, replacing Microsoft Office and LibreOffice: six engine modules (Writer, Calc, Impress, Draw, Math, Base) under 1,059 tests, reading and writing ODF + OOXML plus legacy .doc/.xls/.ppt and .rtf, with formula evaluation, page rendering and PDF export. It also makes office files real-VCS citizens — zmerge is a git merge driver that reconciles parsed document models, zblame attributes every paragraph to the revision that changed it, and Calc computes its own recalculation critical path and keystone cell. Its pure-Rust zoffice-core engine is extracted so the same office engine embeds inside the other MenkeTechnologies apps.',
       pills: ['Tauri v2', 'Rust', 'Docs · sheets · slides', 'Embeddable core'],
       price: 99,
       tiers: [
@@ -287,7 +287,7 @@
       glyph: 'ZW',
       category: 'Desktop Apps',
       badge: 'NEW',
-      tagline: 'A Chromium/Blink browser forked into a cyberpunk tiling HUD — a 27-patch C++ source fork that restyles the native chrome (tab shapes, UI font, neon toolbar, omnibox, 8 schemes in the color mixer + DevTools) and compiles a browser-wide audio engine into the audio service, plus a full keyboard-driven workspace: a tmux-style tiling overlay (ztmux), a ⌘K command palette, vim navigation, durable named sessions, stryke lifecycle hooks, output triggers, pane pipelines, and 23 HUD pages that reimplement Chrome\'s own internal pages. Free and open source.',
+      tagline: 'A Chromium/Blink browser forked into a cyberpunk tiling HUD — a 27-patch C++ source fork that restyles the native chrome (tab shapes, UI font, neon toolbar, omnibox, 8 schemes in the color mixer + DevTools) and compiles a browser-wide audio engine into the audio service, plus a full keyboard-driven workspace: a tmux-style tiling overlay (ztmux), a ⌘K command palette, vim navigation, durable named sessions, stryke lifecycle hooks, output triggers, pane pipelines, and 26 HUD pages that reimplement Chrome\'s own internal pages. Free and open source.',
       pills: ['Chromium fork', 'Tiling HUD', 'ztmux + ⌘K', 'Browser-wide audio', 'Free / OSS'],
       price: 0,
       tiers: [
@@ -359,7 +359,7 @@
       glyph: 'Z',
       category: 'Developer Tools',
       badge: 'WORLD FIRST',
-      tagline: 'The first compiled Unix shell. Rkyv-backed bytecode + Cranelift JIT, an 18-thread parallel runtime, and a persistent worker pool — drop-in zsh compatibility with none of the startup tricks. Free and open source.',
+      tagline: 'The first Unix shell to JIT-compile to native machine code — rkyv-backed bytecode persisted across processes, a tiered Cranelift JIT, a 2–18-thread persistent worker pool replacing fork+exec, and a stable published plugin ABI. Drop-in zsh compatibility with none of the startup tricks. Free and open source.',
       pills: ['Rust', 'JIT', 'macOS/Linux', 'Free / OSS'],
       price: 0,
       tiers: [
@@ -524,7 +524,7 @@
       glyph: 'RL',
       category: 'Developer Tools',
       badge: 'NEW',
-      tagline: 'R in Rust — run .R outside GNU R. R as a fusevm frontend (lex/parse → AST → fusevm bytecode) on the shared bytecode VM + Cranelift JIT: every value is a vector with attributes on an RHost heap, so recycling, NA propagation, three-valued logic, and copy-on-modify are the runtime semantics themselves. All four index forms, closures and <<-, S3 UseMethod, 239 primitives and 20 operators — checked byte-for-byte against GNU R by a differential parity harness. Standalone Rscript binary + REPL, an LSP language server, a DAP debugger, inline-Rust FFI (.rust / .Call), and a transparent rkyv bytecode cache. Free and open source.',
+      tagline: 'R in Rust — run .R outside GNU R. R as a fusevm frontend (lex/parse → AST → fusevm bytecode) on the shared bytecode VM + Cranelift JIT: every value is a vector with attributes on an RHost heap, so recycling, NA propagation, three-valued logic, and copy-on-modify are the runtime semantics themselves. All four index forms, closures and <<-, S3 UseMethod, 288 primitives and 20 operators — checked byte-for-byte against GNU R by a differential parity harness. Standalone Rscript binary + REPL, an LSP language server, a DAP debugger, inline-Rust FFI (.rust / .Call), and a transparent rkyv bytecode cache. Free and open source.',
       pills: ['Rust', 'R', 'fusevm', 'Free / OSS'],
       price: 0,
       tiers: [
@@ -564,12 +564,27 @@
       repo: 'https://github.com/MenkeTechnologies/tclrs',
     },
     {
+      id: 'texrs',
+      name: 'texrs',
+      glyph: 'TX',
+      category: 'Developer Tools',
+      badge: 'NEW',
+      tagline: 'TeX in Rust — Knuth\'s mouth and expander compiled to bytecode instead of interpreted. TeX is two machines: the mouth turns bytes into tokens under a mutable category-code table, the expander turns tokens into other tokens (\\def, \\csname, \\the, the conditionals). Every mainstream engine — pdfTeX, XeTeX, LuaTeX — descends from tex.web through web2c and interprets that expander; texrs lowers it to fusevm bytecode and runs it on the shared three-tier Cranelift JIT, 4.0x faster than tex on a 120k-statement document. A deliberately small --dvi stomach measures text in a real .tfm font, breaks first-fit lines and ships DVI. Free and open source.',
+      pills: ['Rust', 'TeX', 'fusevm', 'Free / OSS'],
+      price: 0,
+      tiers: [
+        { name: 'Open Source', desc: 'MIT licensed', price: 0 },
+      ],
+      download: 'https://github.com/MenkeTechnologies/texrs/releases/latest',
+      repo: 'https://github.com/MenkeTechnologies/texrs',
+    },
+    {
       id: 'zvcs',
       name: 'zvcs',
       glyph: 'ZV',
       category: 'Developer Tools',
       badge: 'NEW',
-      tagline: 'A git-shadowing superset VCS — a single Rust binary named git that replaces stock git on PATH and serves 181 subcommands natively over vendored gitoxide, with no fork/exec of stock git and no fallthrough. On top of git compatibility it adds 117 coordination verbs git structurally cannot have: a fair FIFO index-lock daemon in place of the O_EXCL lockfile, submodule reconcile that leaves HEAD attached, and forward-only gitlink bumps — built for a meta-repo of nested submodules driven by many concurrent automated agents. Free and open source.',
+      tagline: 'A git-shadowing superset VCS — a single Rust binary named git that replaces stock git on PATH and serves 181 subcommands natively over vendored gitoxide, with no fork/exec of stock git and no fallthrough. On top of git compatibility it adds 119 coordination verbs git structurally cannot have: a fair FIFO index-lock daemon in place of the O_EXCL lockfile, submodule reconcile that leaves HEAD attached, and forward-only gitlink bumps — built for a meta-repo of nested submodules driven by many concurrent automated agents. Free and open source.',
       pills: ['Rust', 'gitoxide', 'Git superset', 'Free / OSS'],
       price: 0,
       tiers: [
@@ -622,9 +637,6 @@
       ],
       download: 'https://github.com/MenkeTechnologies/zmax/releases/latest',
       repo: 'https://github.com/MenkeTechnologies/zmax',
-      docs: [
-        { label: 'Reference (PDF)', desc: 'The complete zmax reference — every keybinding by mode, the full IDE configuration schema, every typable : command, every static command with its default keys, and the language-support matrix. Generated from the source.', url: 'docs/zmax-reference.pdf' },
-      ],
     },
     {
       id: 'zmax-gui',
@@ -632,7 +644,7 @@
       glyph: 'EG',
       category: 'Desktop Apps',
       badge: 'NEW',
-      tagline: 'A native desktop GUI for the zmax IDE â wraps the zmax modal-editing core in a windowed front-end the way MacVim wraps Vim: a 21-menu menu bar, toolbar, ⌘K palette, context menu, drag-and-drop, and native open/save dialogs, every action bridged into the editor as an ex-command. On top of the MacVim surface it adds an IDE project workbench (quick open, find-in-files, project search & replace, go-to-symbol, find-definition, TODO markers, git blame / history / stage / branches / stash / commit graph) â and it searches and git-blames binary documents (docx / odt / xlsx / ods / pptx / odp / pdf) in-process, at document addresses like Sheet1!B14 and p. 7, with no pandoc or unoconv anywhere. Free and open source.',
+      tagline: 'A native desktop GUI for the zmax IDE — wraps the zmax modal-editing core in a windowed front-end the way MacVim wraps Vim: a 21-menu menu bar, toolbar, ⌘K palette, context menu, drag-and-drop, and native open/save dialogs, every action bridged into the editor as an ex-command. On top of the MacVim surface it adds an IDE project workbench (quick open, find-in-files, project search & replace, go-to-symbol, find-definition, TODO markers, git blame / history / stage / branches / stash / commit graph) — and it searches and git-blames binary documents (docx / odt / xlsx / ods / pptx / odp / pdf) in-process, at document addresses like Sheet1!B14 and p. 7, with no pandoc or unoconv anywhere. Free and open source.',
       pills: ['Rust', 'GUI editor', 'Emacs / Spacemacs', 'Free / OSS'],
       price: 0,
       tiers: [
@@ -643,7 +655,7 @@
     },
     {
       id: 'awkrs', name: 'awkrs', glyph: 'ak', category: 'CLI Tools', badge: 'FREE',
-      tagline: 'The world’s fastest awk — a parallel bytecode-engine awk written in Rust, with parallel record processing.',
+      tagline: 'A parallel bytecode-engine awk in Rust — the first awk to pair a bytecode VM with a persistent on-disk cache, with rayon record parallelism and a default-on fusevm/Cranelift JIT measured 14–110× over its own interpreter on numeric loops.',
       pills: ['Rust', 'awk', 'Free / OSS'], price: 0,
       tiers: [{ name: 'Open Source', desc: 'MIT licensed', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/awkrs/releases/latest',
@@ -707,7 +719,7 @@
     },
     {
       id: 'ztmux', name: 'ztmux', glyph: 'zx', category: 'CLI Tools', badge: 'FREE',
-      tagline: 'The world\'s first 100%-functional tmux in Rust — a from-source port of the whole program (server + client), not a wrapper or control-mode client: the grid/screen model, the VT input parser, layouts, the command language, formats, and the terminal back end, reimplemented in memory-safe Rust and diffed byte-for-byte against the upstream tmux C source of truth — 1194/1194 parity cases passing. MIT-licensed.',
+      tagline: 'The world\'s first 100%-functional tmux in Rust — a from-source port of the whole program (server + client), not a wrapper or control-mode client: the grid/screen model, the VT input parser, layouts, the command language, formats, and the terminal back end, reimplemented in memory-safe Rust and diffed byte-for-byte against the upstream tmux C source of truth — 1242/1242 gated parity cases passing. MIT-licensed.',
       pills: ['Rust', 'tmux port', 'MIT / OSS'], price: 0,
       tiers: [{ name: 'Open Source', desc: 'MIT licensed', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/ztmux/tags',
@@ -715,7 +727,7 @@
     },
     {
       id: 'zdbview', name: 'zdbview', glyph: 'db', category: 'CLI Tools', badge: 'FREE',
-      tagline: 'A terminal CRUD editor for rkyv archives and SQLite databases — one binary for both halves of the cache. rkyv archives carry no schema, so eight registered formats are decoded AND edited in place through a validated format registry: add, edit, rename, delete a record, re-serialized byte-identically to what the producing host writes. Unregistered archives fall back to strings + hex; SQLite gets full generic CRUD. Backend chosen by header magic, not filename. MIT.',
+      tagline: 'A terminal CRUD editor for rkyv archives and SQLite databases — one binary for both halves of the cache. rkyv archives carry no schema, so eleven registered formats are decoded AND edited in place through a validated format registry: add, edit, rename, delete a record, re-serialized byte-identically to what the producing host writes. Unregistered archives fall back to strings + hex; SQLite gets full generic CRUD. Backend chosen by header magic, not filename. MIT.',
       pills: ['Rust', 'rkyv + SQLite', 'MIT / OSS'], price: 0,
       tiers: [{ name: 'Open Source', desc: 'MIT', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/zdbview/releases/latest',
@@ -739,7 +751,7 @@
     },
     {
       id: 'zwire-host', name: 'zwire-host', glyph: 'wh', category: 'CLI Tools', badge: 'FREE',
-      tagline: 'A universal local host — one ~500 KB Rust binary that exposes the machine (sysinfo, PTY terminals, filesystem watch/tail, exec, background jobs, a peered-mesh pub/sub event bus, and a per-app KV store) over both Chrome native-messaging and a newline-JSON local-socket daemon. Also embeddable as a Rust library.',
+      tagline: 'A universal local host — one ~500 KB Rust binary that exposes the machine (sysinfo, PTY terminals, the real tmux server over its own wire protocol, filesystem watch/tail, exec, background jobs, wire-level transactions, a peered-mesh pub/sub event bus, and a per-app KV store) over both Chrome native-messaging and a newline-JSON local-socket daemon. Also embeddable as a Rust library.',
       pills: ['Rust', 'native host · daemon', 'sysinfo · PTY · FS · exec', 'Free / OSS'], price: 0,
       tiers: [{ name: 'Open Source', desc: 'MIT licensed', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/zwire-host/releases/latest',
@@ -795,7 +807,7 @@
     },
     {
       id: 'fusevm-book', name: 'The fusevm Book', glyph: 'fB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to fusevm — the shared bytecode VM behind sixteen language frontends (zshrs, stryke, awkrs, vimlrs, elisprs, rubylang, pythonrs, phplang, node-js, rlang, javars, kotlinrs, scalars, groovyrs, tclrs, arb): the value model, the tiered Cranelift JIT, and the closed-world AOT compiler that lowers a whole program to native registers and a standalone binary. Pandoc + LaTeX typeset.',
+      tagline: 'The companion book to fusevm — the shared bytecode VM behind eighteen language frontends (zshrs, stryke, awkrs, vimlrs, elisprs, rubylang, pythonrs, phplang, node-js, rlang, javars, kotlinrs, scalars, groovyrs, go-rs, tclrs, arb, texrs): the value model, the tiered Cranelift JIT, and the closed-world AOT compiler that lowers a whole program to native registers and a standalone binary. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'fusevm', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
@@ -981,7 +993,7 @@
     },
     {
       id: 'zpwr-encyclopedia', name: 'The zpwr Encyclopedia', glyph: 'zE', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The complete reference to zpwr — the most advanced UNIX terminal environment (500+ subcommands, 2000+ aliases). Every verb, alias, and subsystem, LaTeX-typeset into one volume.',
+      tagline: 'The complete reference to zpwr — the most advanced UNIX terminal environment (504 verbs, 2000+ aliases). Every verb, alias, and subsystem, LaTeX-typeset into one volume.',
       pills: ['Encyclopedia', 'zpwr', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
@@ -993,13 +1005,13 @@
     },
     {
       id: 'ztmux-book', name: 'The ztmux Book', glyph: 'xB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to ztmux — the world\'s first 100%-functional tmux in Rust (the whole server + client, not a wrapper or control-mode client): the client/server split and libevent loop, the grid/screen and scrollback model, the VT input parser, the layout engine, the lalrpop command language and its one-file-per-command mirror of tmux\'s cmd-*.c, formats/config/keys, and the terminal back end — plus the port methodology (diffed byte-for-byte against the vendored tmux C source of truth, 1194/1194 parity cases passing) and the anti-drift gate that forbids fake functions. Pandoc + LaTeX typeset.',
+      tagline: 'The companion book to ztmux — the world\'s first 100%-functional tmux in Rust (the whole server + client, not a wrapper or control-mode client): the client/server split and libevent loop, the grid/screen and scrollback model, the VT input parser, the layout engine, the lalrpop command language and its one-file-per-command mirror of tmux\'s cmd-*.c, formats/config/keys, and the terminal back end — plus the port methodology (diffed byte-for-byte against the vendored tmux C source of truth, 1242/1242 gated parity cases passing) and the anti-drift gate that forbids fake functions. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'ztmux', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
     {
       id: 'zwire-book', name: 'The zwire Book', glyph: 'wB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to zwire — Chromium/Blink forked into the strykelang cyberpunk HUD (not a WebView wrapper, not a new engine): why a real Blink base is required for zpwrchrome\'s Manifest V3 surface, the 27 authored patches that compile the native chrome — tab shapes, UI font, neon toolbar, omnibox, the 8 schemes in the color mixer + DevTools, and the browser-wide audio engine — the ztmux tiling overlay and ⌘K palette, stryke lifecycle hooks, output triggers, pane pipelines, the 23 HUD pages, the native host, the dedicated profile, and the CDP overlay layer. Pandoc + LaTeX typeset.',
+      tagline: 'The companion book to zwire — Chromium/Blink forked into the strykelang cyberpunk HUD (not a WebView wrapper, not a new engine): why a real Blink base is required for zpwrchrome\'s Manifest V3 surface, the 27 authored patches that compile the native chrome — tab shapes, UI font, neon toolbar, omnibox, the 8 schemes in the color mixer + DevTools, and the browser-wide audio engine — the ztmux tiling overlay and ⌘K palette, stryke lifecycle hooks, output triggers, pane pipelines, the 26 HUD pages, the native host, the dedicated profile, and the CDP overlay layer. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'zwire', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
@@ -1088,6 +1100,18 @@
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
     {
+      id: 'texrs-book', name: 'The texrs Book', glyph: 'xB', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The companion book to texrs — TeX\'s mouth and expander compiled to bytecode. Which of Knuth\'s two machines this is and why the compiled half is the interesting one; what every TeX since 1982 does differently; what compiling buys and what it costs, measured rather than asserted; category codes and the three-state line scanner; \\def with delimited parameters; \\csname, \\expandafter and the conditionals; groups and registers; \\input and the LaTeX layer; the --dvi page; the binary formats a TeX installation is made of; the \\message parity contract against the real tex; \\intercept advice and inline Rust. Every figure measured at a named tree. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'texrs', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
+      id: 'texrs-reference', name: 'The texrs Reference', glyph: 'xR', category: 'Publications', badge: 'REFERENCE',
+      tagline: 'The complete texrs primitive reference — every control sequence the mouth and expander implement, with its expansion semantics and the divergences from tex.web stated rather than glossed. The dense companion to The texrs Book. DRM-free PDF.',
+      pills: ['Reference', 'texrs', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
+    },
+    {
       id: 'zpwr-synth-reference', name: 'The zpwr-synth Reference', glyph: 'yR', category: 'Publications', badge: 'REFERENCE',
       tagline: 'The zpwr-synth manual — per-module node and parameter reference for the modular voice engine, generated from the live registry. Free, DRM-free PDF.',
       pills: ['Reference', 'zpwr-synth', 'Free · DRM-free PDF'], price: 0,
@@ -1159,10 +1183,9 @@
     },
     {
       id: 'gui-automation-bus-book', name: 'The GUI Automation Bus', glyph: 'gB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to the GUI Automation Bus — the typed verb-call layer that turns every app\'s existing engine command surface into a scriptable API: one stryke script calls a named verb on any app, in-process or over a local socket, and gets the return value back. Free, DRM-free PDF.',
-      pills: ['Reference', 'gui-automation-bus', 'Free · DRM-free PDF'], price: 0,
-      tiers: [{ name: 'PDF', desc: 'Free DRM-free PDF download', price: 0 }],
-      download: 'docs/gui-automation-bus-book.pdf',
+      tagline: 'The companion book to the GUI Automation Bus — the typed verb-call layer that turns every app\'s existing engine command surface into a scriptable API: one stryke script calls a named verb on any app, in-process or over a local socket, and gets the return value back. Pandoc + LaTeX typeset.',
+      pills: ['Reference', 'gui-automation-bus', 'DRM-free PDF'], price: 20,
+      tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
     {
       id: 'gui-automation-bus-reference', name: 'The GUI Automation Bus Reference', glyph: 'gR', category: 'Publications', badge: 'REFERENCE',
@@ -1195,27 +1218,27 @@
   }
 
   [
-    ['stryke-app', 'AP', 'App automation for stryke — call a MenkeTechnologies GUI app\'s verbs by name, read its state, and subscribe to its events over the GUI Automation Bus. Semantic, not synthetic clicks; cross-platform and JIT-compiled.'],
-    ['stryke-arrow', 'AR', 'Apache Arrow, Parquet, Feather, and Arrow CSV/JSON for stryke.'],
+    ['stryke-app', 'AP', 'App automation for stryke — call a MenkeTechnologies GUI app\'s verbs by name, read its state, and subscribe to its events over the GUI Automation Bus: App::here / open / list / verbs / call / get / sub / poll, plus $h->txn so a chain of verbs runs transactionally and a die compensates it in reverse. Semantic, not synthetic clicks; cross-platform and JIT-compiled.'],
+    ['stryke-arrow', 'AR', 'Apache Arrow, Parquet, Feather, and Arrow CSV/JSON for stryke — read, streaming read, columnar read, schema and stats, write and write_iter, and format-to-format convert, with compression and format discovery. An opt-in cdylib kept out of the core binary so the daily-driver install stays slim.'],
     ['stryke-aws', 'AWS', 'AWS client for stryke — S3, DynamoDB, SQS, SNS, Lambda, Step Functions, Kinesis, EC2, ECR, IAM, KMS, STS, SSM, Secrets Manager, SES, CloudWatch, and CloudWatch Logs.'],
     ['stryke-azure', 'AZ', 'Azure client for stryke — Blob Storage, Storage Queues, Cosmos DB, Key Vault secrets and keys, Virtual Machines, AKS, Service Bus, Container Instances, Monitor, and resource-group admin over Entra credential auth.'],
     ['stryke-clickhouse', 'CH', 'ClickHouse client for stryke — SELECTs, JSONEachRow bulk insert, table/database admin, and schema introspection over the HTTP interface.'],
-    ['stryke-docker', 'DK', 'Docker client for stryke — containers, images, networks, volumes, logs, exec, and prune.'],
-    ['stryke-duckdb', 'DB', 'Embedded DuckDB SQL engine for stryke — direct-query Parquet, CSV, and JSON.'],
+    ['stryke-docker', 'DK', 'Docker client for stryke — containers, images, networks, volumes, logs, exec, live stats, daemon info, and prune, plus pure helpers that need no daemon (image-reference normalization and friends).'],
+    ['stryke-duckdb', 'DB', 'Embedded DuckDB SQL engine for stryke — direct-query Parquet, CSV and JSON, with DDL/DML, transactions, metadata, analytics, and multi-database ATTACH.'],
     ['stryke-email', 'EM', 'Transactional and campaign email for stryke — single send, mass mailing, {{merge}} templates, and List-Unsubscribe compliance over your own SMTP.'],
-    ['stryke-fleet', 'FL', 'Expect, but N sessions at once — parallel interactive session automation for stryke: transcripted PTY sessions, declarative playbooks, a 49-recipe login corpus, and pmap fan-out across N hosts.'],
+    ['stryke-fleet', 'FL', 'Expect, but N sessions at once — parallel interactive session automation for stryke: transcripted PTY sessions, declarative playbooks with branches and retries, a 49-recipe login corpus, and pmap fan-out across N hosts with bounded batching, failure retry, and group-by-output config-drift buckets.'],
     ['stryke-gcp', 'GCP', 'Google Cloud client for stryke — Cloud Storage, Pub/Sub, BigQuery, Firestore, Secret Manager, Compute Engine, Cloud Run, Cloud Functions, Cloud Logging, Monitoring, and IAM.'],
-    ['stryke-grpc', 'GR', 'Reflection-based gRPC client for stryke — grpcurl, as a stryke package.'],
-    ['stryke-gui', 'GUI', 'GUI automation for stryke — mouse, keyboard, screen, pixel, clipboard, multi-display screenshots, and a 36-fn color toolkit (HSL/HSV/HWB/CMYK/Lab/OkLab/XYZ, blending, gradients, schemes, delta-E, contrast ratio).'],
+    ['stryke-grpc', 'GR', 'Reflection-based gRPC client for stryke — grpcurl, as a stryke package, with a grpc CLI alongside the use Grpc surface.'],
+    ['stryke-gui', 'GUI', 'GUI automation for stryke — mouse, keyboard, screen, pixel, clipboard, multi-display enumeration and screenshots, and a 36-fn color toolkit (HSL/HSV/HWB/CMYK/Lab/OkLab/XYZ, blending, gradients, schemes, delta-E, contrast ratio).'],
     ['stryke-k8s', 'K8', 'Kubernetes client for stryke — get, apply, create, replace, patch, delete, scale, autoscale, rollout, label, annotate, node cordon/uncordon/drain/taint/evict, logs, events, top, and wait.'],
-    ['stryke-kafka', 'KK', 'Apache Kafka client for stryke — producer, consumer, and topic/cluster admin.'],
-    ['stryke-mcpd', 'MCP', 'MCP servers without a runtime — a Model Context Protocol daemon for stryke.'],
-    ['stryke-mongo', 'MGO', 'MongoDB client for stryke — CRUD, aggregation, and index admin.'],
+    ['stryke-kafka', 'KK', 'Apache Kafka client for stryke — producer, consumer, consumer-offset control, topic/cluster admin, and broker-free pure helpers.'],
+    ['stryke-mcpd', 'MCP', 'MCP servers without a runtime — a Model Context Protocol daemon for stryke, in four modules: Schema (validated tool specs, JSON-Schema in and out), Server (validate, wrap, audit, serve), Tools (a jailed read-only-capable filesystem/exec/env toolset) and Client (envelope and tool-list helpers).'],
+    ['stryke-mongo', 'MGO', 'MongoDB client for stryke — read and write paths, atomic findAndModify, aggregation helpers, convenience composites, index and metadata admin, and connection-free query builders.'],
     ['stryke-mssql', 'MS', 'Microsoft SQL Server / Azure SQL client for stryke — parametrized T-SQL, transaction batches, scalar/exists helpers, and schema introspection over tiberius.'],
     ['stryke-mysql', 'MY', 'MySQL / MariaDB client for stryke — pooled in-process queries, insert_many and upsert writes, transaction batches, CALL stored procedures, schema/index/trigger introspection, and processlist/status/size admin.'],
     ['stryke-neo4j', 'N4', 'Neo4j graph database client for stryke — parametrized Cypher query and run, scalar/row helpers, and schema introspection over the Bolt protocol.'],
     ['stryke-office', 'OF', 'Office document I/O for stryke — Excel, Word, PowerPoint, ODF, PDF, a 111-fn imaging surface, charts, QR/1D barcodes, Markdown/HTML conversion, and mail merge.'],
-    ['stryke-parquet', 'PQ', 'Parquet toolkit for stryke — schema, stats, row-groups, head/tail, CSV/JSON I/O, merge, and recompress.'],
+    ['stryke-parquet', 'PQ', 'Parquet toolkit for stryke — schema, stats, row-groups, head/tail, CSV/JSON I/O, merge and recompress, plus polars-style row predicates and reshaping, diagnostics, and NDJSON inspect / stats / rowgroups shapes.'],
     ['stryke-polars', 'PL', 'Full pandas/numpy surface for stryke — DataFrame, Series, Index, GroupBy, ndarray, masked and sparse arrays, linalg, FFT, signal, random, datetime64, statistics and stat tests, metrics, clustering, image, graph, geo, and text.'],
     ['stryke-postgres', 'PG', 'PostgreSQL client for stryke — pooled queries, COPY bulk transfer, LISTEN/NOTIFY, savepoints and transactions, schema/role/extension introspection, and vacuum/reindex/locks/activity admin.'],
     ['stryke-redis', 'RD', 'Redis / Valkey client for stryke — KV, lists, sets, hashes, zsets, streams, geo, bitmaps, HyperLogLog, scripting, pub/sub, pipelines, and server admin (ACL, config, client, slowlog, memory, object).'],
@@ -1224,7 +1247,7 @@
     ['stryke-search', 'ES', 'Elasticsearch / OpenSearch client for stryke — index admin, document CRUD, bulk indexing, the query DSL, an 18-fn aggregation builder, scroll and point-in-time, aliases, component templates, ingest pipelines, snapshot repositories, tasks, and cluster health.'],
     ['stryke-selenium', 'SE', 'Browser automation for stryke — WebDriver sessions, DOM find and wait, JS execution, action chains, window and frame switching, alerts, screenshots and print-to-PDF, and cookies.'],
     ['stryke-spark', 'SK', 'Apache Spark client for stryke — SQL query and execute, explain plans, external parquet/csv/json/orc read and write, catalog and temp-view management, table cache control, and spark-submit pass-through.'],
-    ['stryke-terminal', 'TR', 'Headless VT100 / VT220 / linux terminal emulator for stryke — a faithful pyte port; feed a program\'s raw byte stream and read the rendered screen model.'],
+    ['stryke-terminal', 'TR', 'Headless VT100 / VT220 / linux terminal emulator for stryke — a faithful pyte port: feed a program\'s raw byte stream and read the rendered screen model, with scrollback history, per-cell inspection, direct screen commands, PTY integration and an escape-sequence disassembler.'],
     ['stryke-utils', 'UT', 'Boundary helpers for stryke — 149 pure-stryke composites across String, List, Hash, Num, Time, and Path; everything else is a builtin.'],
     ['stryke-zmq', 'ZQ', 'ZeroMQ client for stryke — REQ/REP, PUB/SUB, PUSH/PULL, DEALER/ROUTER, and PAIR over TCP/IPC/inproc, with poll, socket monitoring, a backgrounded proxy device, and CURVE keypairs plus z85 codec.'],
   ].forEach(function (e) { PRODUCTS.push(strykePkg(e[0], e[1], e[2])); });
@@ -1291,7 +1314,7 @@
     };
   }
 
-  [["fusevm","VM","Developer Tools","Language-agnostic bytecode VM with fused superinstructions and a three-tier Cranelift JIT — the shared execution engine behind sixteen language frontends, including zshrs, strykelang, awkrs, vimlrs, elisprs, rubylang, pythonrs, phplang, node-js, rlang, javars, kotlinrs, scalars, groovyrs, go-rs, and arb.",["Rust","234-op VM","JIT","Free / OSS"],false],["api-rest-generator","API","Developer Tools","Parses SQL DDL dumps and generates a fully-wired REST backend — Spring Boot (Java/Kotlin/Groovy) or Loco (Rust/Axum/SeaORM).",["codegen","JVM/Rust","Free / OSS"],false],["LearningCollectionAPI","LC","Developer Tools","A Spring Boot + Kotlin REST API for managing a personal collection of learning notes, backed by MySQL.",["Kotlin","Spring Boot","Free / OSS"],false],["stryke-demo","SD","Developer Tools","Live demo scripts for every stryke-* package — one .stk per package, one install pulls them all.",["stryke","demos","Free / OSS"],false],["VimColorSchemes","VC","Developer Tools","The largest curated Vim colorscheme bundle — 732 working :colorscheme targets in one plugin.",["Vim","732 themes","Free / OSS"],false],["zpwr","zp","Zsh Plugins","The world’s most advanced UNIX terminal environment — 500+ subcommands, 2000+ aliases, 47k completions, vim + tmux integration.",["zsh","terminal env","Free / OSS"],true],["zsh-more-completions","mc","Zsh Plugins","The largest curated zsh completion corpus in existence — 47k+ command completions wired into compsys.",["zsh","completions","Free / OSS"],false],["zsh-expand","ze","Zsh Plugins","The most powerful zsh expansion plugin — spacebar-expands aliases, globs, history, params, and typo fixes in pure zsh.",["zsh","expansion","Free / OSS"],true],["zsh-learn","zl","Zsh Plugins","Turn your terminal into a MySQL-backed knowledge base — save, search, and quiz yourself on snippets and notes.",["zsh","MySQL","Free / OSS"],false],["zsh-git-acp","ga","Zsh Plugins","Stage, commit, and push in one keybinding — ZLE widgets that use the command line as your commit message, plus 159 git aliases.",["zsh","git","Free / OSS"],false],["zsh-git-repo-cache","rc","Zsh Plugins","Finds and caches every git repo on your machine for instant prompts and fzf-powered cd.",["zsh","git","fzf","Free / OSS"],false],["zsh-zinit-final","zf","Zsh Plugins","An intentionally-empty plugin that loads last under zinit — a deterministic carrier for trailing atinit/atload hooks.",["zsh","zinit","Free / OSS"],false],["zsh-sudo","su","Zsh Plugins","Toggle sudo on the current command line with a single keybind — prepend or strip without retyping.",["zsh","ZLE","Free / OSS"],false],["zsh-cargo-completion","cg","Zsh Plugins","Zsh tab-completion for Rust’s Cargo, with live crates.io search for add and install.",["zsh","completion","Free / OSS"],false],["zsh-cpan-completion","cpn","Zsh Plugins","Zsh completion that pulls live Perl module names from CPAN for cpan and cpanm.",["zsh","completion","Free / OSS"],false],["zsh-dotnet-completion","dn","Zsh Plugins","Zsh tab-completion and aliases for the .NET (dotnet) CLI.",["zsh","completion","Free / OSS"],false],["zsh-gem-completion","gm","Zsh Plugins","Zsh completion for Ruby’s gem, with live remote gem search on install.",["zsh","completion","Free / OSS"],false],["zsh-nginx","ng","Zsh Plugins","nginx vhost management from zsh — en / dis enable and disable sites by symlink, vhost scaffolds a new server block from a template (plain_php, symfony2), each with its own compsys completion.",["zsh","completion","Free / OSS"],false],["zsh-openshift-aliases","oc","Zsh Plugins","53 short aliases over the OpenShift oc CLI, plus login macros and oc completion.",["zsh","oc","Free / OSS"],false],["zsh-pip-description-completion","pp","Zsh Plugins","Zsh completion for pip with package version and description shown in the menu.",["zsh","completion","Free / OSS"],false],["zsh-sed-sub","sb","Zsh Plugins","A ZLE keybinding for global sed-style search-and-replace on the current command line.",["zsh","ZLE","Free / OSS"],false],["zsh-very-colorful-manuals","mn","Zsh Plugins","Renders man pages in cyberpunk ANSI colors via scoped LESS_TERMCAP_* injection.",["zsh","man","Free / OSS"],false],["zshrs-forgit","fg","znative Plugins","forgit (interactive git + fzf) ported to a native zshrs plugin — the ga/glo/gd command set as compiled Rust builtins in a cdylib, no per-startup sourcing.",["zshrs","native","Free / OSS"],false],["zshrs-git-fuzzy","gz","znative Plugins","git-fuzzy (full-screen fzf git UI) status ported to a native zshrs plugin — self-reentrant helpers as builtins, no per-keystroke library sourcing.",["zshrs","native","Free / OSS"],false],["zshrs-git-repos","gp","znative Plugins","zsh-git-repo-cache ported to a native zshrs plugin — in-process filesystem walk with parallel clean/dirty classification, then fzf-jump.",["zshrs","native","Free / OSS"],false],["zshrs-revolver","rv","znative Plugins","revolver (shell progress spinner) ported to a native zshrs plugin — the animator runs on an in-process thread, no fork and no statefile.",["zshrs","native","Free / OSS"],false],["zshrs-kubectl-completion","kb","znative Plugins","kubectl completion as a native zshrs plugin — delegates to cobra's kubectl __complete, always in sync with the installed kubectl.",["zshrs","native","Free / OSS"],false],["zshrs-zsh-z","jz","znative Plugins","zsh-z (frecency directory jumper) ported to a native zshrs plugin — a faithful Rust reimplementation of the ~/.z datafile, frecency formula, and aging.",["zshrs","native","Free / OSS"],false],["zshrs-fasd","fd","znative Plugins","fasd (frecency for files AND directories — a/s/d/f/j/v) ported to a native zshrs plugin — a preexec hook tracks every path argument; regex + fuzzy matching and frecency scoring reimplemented in Rust.",["zshrs","native","Free / OSS"],false],["zshrs-reveal","rl","znative Plugins","reveal (open the current repo's GitHub / Heroku pages in the browser) ported to a native zshrs plugin — OS opener detection, git remote -v parsing, and SSH/HTTPS URL normalization in Rust.",["zshrs","native","Free / OSS"],false],["zmax-native-wc","Wc","zmax-native Plugins","wc for the editor buffer — :wc reports the current buffer's line / word / char / byte counts on the status line, a compiled Rust cdylib loaded over zmax's stable C ABI with no editor recompile.",["zmax","native","Free / OSS"],false],["zmax-native-uuid","Ud","zmax-native Plugins","Insert a random RFC 4122 v4 UUID at the cursor — :uuid and :uuid-upper, entropy from /dev/urandom, a zero-dependency native zmax cdylib plugin.",["zmax","native","Free / OSS"],false],["zmax-native-toc","Tc","zmax-native Plugins","Insert a nested Markdown table of contents built from the buffer's ATX headings — :toc, a zero-dependency native zmax cdylib plugin loaded over the stable C ABI.",["zmax","native","Free / OSS"],false],["zmax-native-lorem","Lo","zmax-native Plugins","Insert n paragraphs of lorem-ipsum placeholder text at the cursor — :lorem [n], a zero-dependency native zmax cdylib plugin.",["zmax","native","Free / OSS"],false],["vscode-stryke","VS","Editor Plugins","VS Code / VSCodium extension for the stryke language — *.stk detection, a stryke-native TextMate grammar from the binary's reflection tables, and LSP via stryke --lsp.",["VS Code","stryke","LSP","Free / OSS"],false],["vim-stryke","Vi","Editor Plugins","Vim / Neovim support for stryke — filetype detection, a reflection-generated syntax grammar, brace indent, ALE lint, and LSP via stryke --lsp.",["Vim","stryke","LSP","Free / OSS"],false],["emacs-stryke","Es","Editor Plugins","stryke-mode for Emacs — a generated stryke-stdlib.el with the full builtin surface, brace indent, and LSP via stryke --lsp (eglot + lsp-mode).",["Emacs","stryke","LSP","Free / OSS"],false],["vscode-zsh","Vz","Editor Plugins","VS Code / VSCodium support for zshrs — a source.zshrs grammar from zshrs --dump-reflection, *.zsh / dotfile / shebang detection, and LSP via zshrs --lsp.",["VS Code","zshrs","LSP","Free / OSS"],false],["vim-zsh","vz","Editor Plugins","Vim / Neovim support for zshrs — *.zsh / dotfile / shebang detection, a reflection-generated grammar, shell-block indent, ALE, and LSP via zshrs --lsp.",["Vim","zshrs","LSP","Free / OSS"],false],["emacs-zsh","ez","Editor Plugins","zshrs-mode for Emacs — font-lock from zshrs --dump-reflection, shell-block indent, and LSP via zshrs --lsp (eglot + lsp-mode).",["Emacs","zshrs","LSP","Free / OSS"],false],["vscode-arb","Vb","Editor Plugins","VS Code / VSCodium extension for arb — *.arb detection, a source.arb grammar, an arb.run command, LSP via arb --lsp, and DAP debugging via arb --dap.",["VS Code","arb","LSP · DAP","Free / OSS"],false],["vim-arb","vb","Editor Plugins","Vim / Neovim support for arb — *.arb detection, syntax + brace indent, run / :make, and LSP via arb --lsp.",["Vim","arb","LSP","Free / OSS"],false],["emacs-arb","eb","Editor Plugins","arb-mode for Emacs — font-lock for arb, indent, run, eldoc + completion, and LSP via arb --lsp (eglot + lsp-mode).",["Emacs","arb","LSP","Free / OSS"],false],["vscode-awk","Va","Editor Plugins","VS Code / VSCodium extension for AWK (awkrs) — *.awk detection, a source.awk grammar, an awk.run command, LSP via awkrs --lsp, and DAP debugging via awkrs --dap.",["VS Code","awk","LSP · DAP","Free / OSS"],false],["vim-awk","va","Editor Plugins","Vim / Neovim support for AWK (awkrs) — *.awk detection, syntax + brace indent, run / :make, and LSP via awkrs --lsp.",["Vim","awk","LSP","Free / OSS"],false],["emacs-awk","ea","Editor Plugins","awkrs-mode for Emacs — font-lock for AWK, indent, run, eldoc + completion, and LSP via awkrs --lsp (eglot + lsp-mode).",["Emacs","awk","LSP","Free / OSS"],false],["vscode-elisp","Vl","Editor Plugins","VS Code / VSCodium extension for Emacs Lisp (elisprs) — *.el / .emacs / shebang detection, a source.elisp grammar, an elisp.run command, LSP via elisp --lsp, and DAP debugging via elisp --dap.",["VS Code","elisp","LSP · DAP","Free / OSS"],false],["vim-elisp","vl","Editor Plugins","Vim / Neovim support for Emacs Lisp (elisprs) — *.el / .emacs detection, a standalone Emacs Lisp syntax grammar, indent, run / :make, LSP via elisp --lsp, and nvim-dap debugging via elisp --dap.",["Vim","elisp","LSP · DAP","Free / OSS"],false],["emacs-elisp","el","Editor Plugins","elisprs-mode for Emacs — derives from the built-in emacs-lisp-mode and layers the elisprs toolchain on top: run via elisp, eldoc + completion over the builtin surface, LSP via elisp --lsp (eglot + lsp-mode), and DAP via elisp --dap.",["Emacs","elisp","LSP · DAP","Free / OSS"],false],["zpwr-theme","th","Editor Plugins","Cyberpunk editor theme — the 8 canonical HUD colorschemes in dark and light: 16 VS Code themes plus 16 matching JetBrains UI themes and editor colour-scheme XMLs, all generated from one palette/schemes.json.",["VS Code","JetBrains","theme","Free / OSS"],false],["tmux-fzf-url","tx","Editor Plugins","Pop an fzf picker over every URL visible in the tmux pane; the selected URL opens in your browser.",["tmux","fzf","Free / OSS"],false],["gh_reveal","gh","Developer Tools","Open the current git repo's web page from the terminal — every remote, GitHub or GitLab or self-hosted, with Heroku remotes routed to their dashboard and herokuapp URL.",["git","CLI","Free / OSS"],false],["zsh-better-npm-completion","np","Zsh Plugins","Smarter zsh completion for npm — completes installed packages for run / uninstall and caches the script list.",["zsh","npm","Free / OSS"],false],["zsh-xcode-completions","xc","Zsh Plugins","Zsh tab-completion for 11 Xcode command-line tools — xcodebuild, xcrun, xcode-select, swift, swift-demangle, instruments, genstrings, plutil, nm, strings, dyldinfo.",["zsh","Xcode","Free / OSS"],false],["zsh-travis","tv","Zsh Plugins","Zsh aliases + functions for the Travis CI CLI — open build / PR pages from inside a project.",["zsh","Travis CI","Free / OSS"],false]]
+  [["fusevm","VM","Developer Tools","Language-agnostic bytecode VM with fused superinstructions and a three-tier Cranelift JIT — the shared execution engine behind eighteen language frontends, including zshrs, strykelang, awkrs, vimlrs, elisprs, rubylang, pythonrs, phplang, node-js, rlang, tclrs, javars, kotlinrs, scalars, groovyrs, go-rs, arb, and texrs.",["Rust","235-op VM","JIT","Free / OSS"],false],["api-rest-generator","API","Developer Tools","Parses SQL DDL dumps and generates a fully-wired REST backend — Spring Boot (Java/Kotlin/Groovy) or Loco (Rust/Axum/SeaORM).",["codegen","JVM/Rust","Free / OSS"],false],["LearningCollectionAPI","LC","Developer Tools","A Spring Boot + Kotlin REST API for managing a personal collection of learning notes, backed by MySQL.",["Kotlin","Spring Boot","Free / OSS"],false],["stryke-demo","SD","Developer Tools","Live demo scripts for every stryke-* package — one .stk per package, one install pulls them all.",["stryke","demos","Free / OSS"],false],["VimColorSchemes","VC","Developer Tools","The largest curated Vim colorscheme bundle — 732 working :colorscheme targets in one plugin.",["Vim","732 themes","Free / OSS"],false],["zpwr","zp","Zsh Plugins","The world’s most advanced UNIX terminal environment — 504 verbs, 2000+ aliases, 47k completions, 168k lines, vim + tmux integration.",["zsh","terminal env","Free / OSS"],true],["zsh-more-completions","mc","Zsh Plugins","The largest curated zsh completion corpus in existence — 47k+ command completions wired into compsys.",["zsh","completions","Free / OSS"],false],["zsh-expand","ze","Zsh Plugins","The most powerful zsh expansion plugin — spacebar-expands aliases, globs, history, params, and typo fixes in pure zsh.",["zsh","expansion","Free / OSS"],true],["zsh-learn","zl","Zsh Plugins","Turn your terminal into a MySQL-backed knowledge base — save, search, and quiz yourself on snippets and notes.",["zsh","MySQL","Free / OSS"],false],["zsh-git-acp","ga","Zsh Plugins","Stage, commit, and push in one keybinding — ZLE widgets that use the command line as your commit message, plus 159 git aliases.",["zsh","git","Free / OSS"],false],["zsh-git-repo-cache","rc","Zsh Plugins","Finds and caches every git repo on your machine for instant prompts and fzf-powered cd.",["zsh","git","fzf","Free / OSS"],false],["zsh-zinit-final","zf","Zsh Plugins","An intentionally-empty plugin that loads last under zinit — a deterministic carrier for trailing atinit/atload hooks.",["zsh","zinit","Free / OSS"],false],["zsh-sudo","su","Zsh Plugins","Toggle sudo on the current command line with a single keybind — prepend or strip without retyping.",["zsh","ZLE","Free / OSS"],false],["zsh-cargo-completion","cg","Zsh Plugins","Zsh tab-completion for Rust’s Cargo, with live crates.io search for add and install.",["zsh","completion","Free / OSS"],false],["zsh-cpan-completion","cpn","Zsh Plugins","Zsh completion that pulls live Perl module names from CPAN for cpan and cpanm.",["zsh","completion","Free / OSS"],false],["zsh-dotnet-completion","dn","Zsh Plugins","Zsh tab-completion and aliases for the .NET (dotnet) CLI.",["zsh","completion","Free / OSS"],false],["zsh-gem-completion","gm","Zsh Plugins","Zsh completion for Ruby’s gem, with live remote gem search on install.",["zsh","completion","Free / OSS"],false],["zsh-nginx","ng","Zsh Plugins","nginx vhost management from zsh — en / dis enable and disable sites by symlink, vhost scaffolds a new server block from a template (plain_php, symfony2), each with its own compsys completion.",["zsh","completion","Free / OSS"],false],["zsh-openshift-aliases","oc","Zsh Plugins","52 short aliases over the OpenShift oc CLI, plus login macros and oc completion.",["zsh","oc","Free / OSS"],false],["zsh-pip-description-completion","pp","Zsh Plugins","Zsh completion for pip with package version and description shown in the menu.",["zsh","completion","Free / OSS"],false],["zsh-sed-sub","sb","Zsh Plugins","A ZLE keybinding for global sed-style search-and-replace on the current command line.",["zsh","ZLE","Free / OSS"],false],["zsh-very-colorful-manuals","mn","Zsh Plugins","Renders man pages in cyberpunk ANSI colors via scoped LESS_TERMCAP_* injection.",["zsh","man","Free / OSS"],false],["zshrs-forgit","fg","znative Plugins","forgit (interactive git + fzf) ported to a native zshrs plugin — the ga/glo/gd command set as compiled Rust builtins in a cdylib, no per-startup sourcing.",["zshrs","native","Free / OSS"],false],["zshrs-git-fuzzy","gz","znative Plugins","git-fuzzy (full-screen fzf git UI) status ported to a native zshrs plugin — self-reentrant helpers as builtins, no per-keystroke library sourcing.",["zshrs","native","Free / OSS"],false],["zshrs-git-repos","gp","znative Plugins","zsh-git-repo-cache ported to a native zshrs plugin — in-process filesystem walk with parallel clean/dirty classification, then fzf-jump.",["zshrs","native","Free / OSS"],false],["zshrs-revolver","rv","znative Plugins","revolver (shell progress spinner) ported to a native zshrs plugin — the animator runs on an in-process thread, no fork and no statefile.",["zshrs","native","Free / OSS"],false],["zshrs-kubectl-completion","kb","znative Plugins","kubectl completion as a native zshrs plugin — delegates to cobra's kubectl __complete, always in sync with the installed kubectl.",["zshrs","native","Free / OSS"],false],["zshrs-zsh-z","jz","znative Plugins","zsh-z (frecency directory jumper) ported to a native zshrs plugin — a faithful Rust reimplementation of the ~/.z datafile, frecency formula, and aging.",["zshrs","native","Free / OSS"],false],["zshrs-fasd","fd","znative Plugins","fasd (frecency for files AND directories — a/s/d/f/j/v) ported to a native zshrs plugin — a preexec hook tracks every path argument; regex + fuzzy matching and frecency scoring reimplemented in Rust.",["zshrs","native","Free / OSS"],false],["zshrs-reveal","rl","znative Plugins","reveal (open the current repo's GitHub / Heroku pages in the browser) ported to a native zshrs plugin — OS opener detection, git remote -v parsing, and SSH/HTTPS URL normalization in Rust.",["zshrs","native","Free / OSS"],false],["zmax-native-wc","Wc","zmax-native Plugins","wc for the editor buffer — :wc reports the current buffer's line / word / char / byte counts on the status line, a compiled Rust cdylib loaded over zmax's stable C ABI with no editor recompile.",["zmax","native","Free / OSS"],false],["zmax-native-uuid","Ud","zmax-native Plugins","Insert a random RFC 4122 v4 UUID at the cursor — :uuid and :uuid-upper, entropy from /dev/urandom, a zero-dependency native zmax cdylib plugin.",["zmax","native","Free / OSS"],false],["zmax-native-toc","Tc","zmax-native Plugins","Insert a nested Markdown table of contents built from the buffer's ATX headings — :toc, a zero-dependency native zmax cdylib plugin loaded over the stable C ABI.",["zmax","native","Free / OSS"],false],["zmax-native-lorem","Lo","zmax-native Plugins","Insert n paragraphs of lorem-ipsum placeholder text at the cursor — :lorem [n], a zero-dependency native zmax cdylib plugin.",["zmax","native","Free / OSS"],false],["vscode-stryke","VS","Editor Plugins","VS Code / VSCodium extension for the stryke language — *.stk detection, a stryke-native TextMate grammar from the binary's reflection tables, and LSP via stryke --lsp.",["VS Code","stryke","LSP","Free / OSS"],false],["vim-stryke","Vi","Editor Plugins","Vim / Neovim support for stryke — filetype detection, a reflection-generated syntax grammar, brace indent, ALE lint, and LSP via stryke --lsp.",["Vim","stryke","LSP","Free / OSS"],false],["emacs-stryke","Es","Editor Plugins","stryke-mode for Emacs — a generated stryke-stdlib.el with the full builtin surface, brace indent, and LSP via stryke --lsp (eglot + lsp-mode).",["Emacs","stryke","LSP","Free / OSS"],false],["vscode-zsh","Vz","Editor Plugins","VS Code / VSCodium support for zshrs — a source.zshrs grammar from zshrs --dump-reflection, *.zsh / dotfile / shebang detection, and LSP via zshrs --lsp.",["VS Code","zshrs","LSP","Free / OSS"],false],["vim-zsh","vz","Editor Plugins","Vim / Neovim support for zshrs — *.zsh / dotfile / shebang detection, a reflection-generated grammar, shell-block indent, ALE, and LSP via zshrs --lsp.",["Vim","zshrs","LSP","Free / OSS"],false],["emacs-zsh","ez","Editor Plugins","zshrs-mode for Emacs — font-lock from zshrs --dump-reflection, shell-block indent, and LSP via zshrs --lsp (eglot + lsp-mode).",["Emacs","zshrs","LSP","Free / OSS"],false],["vscode-arb","Vb","Editor Plugins","VS Code / VSCodium extension for arb — *.arb detection, a source.arb grammar, an arb.run command, LSP via arb --lsp, and DAP debugging via arb --dap.",["VS Code","arb","LSP · DAP","Free / OSS"],false],["vim-arb","vb","Editor Plugins","Vim / Neovim support for arb — *.arb detection, syntax + brace indent, run / :make, ALE, LSP via arb --lsp, and nvim-dap debugging via arb --dap.",["Vim","arb","LSP","Free / OSS"],false],["emacs-arb","eb","Editor Plugins","arb-mode for Emacs — font-lock for arb, indent, run, eldoc + completion, and LSP via arb --lsp (eglot + lsp-mode).",["Emacs","arb","LSP","Free / OSS"],false],["vscode-awk","Va","Editor Plugins","VS Code / VSCodium extension for AWK (awkrs) — *.awk detection, a source.awk grammar, an awk.run command, LSP via awkrs --lsp, and DAP debugging via awkrs --dap.",["VS Code","awk","LSP · DAP","Free / OSS"],false],["vim-awk","va","Editor Plugins","Vim / Neovim support for AWK (awkrs) — *.awk detection, syntax + brace indent, run / :make, ALE, LSP via awkrs --lsp, and nvim-dap debugging via awkrs --dap.",["Vim","awk","LSP","Free / OSS"],false],["emacs-awk","ea","Editor Plugins","awkrs-mode for Emacs — font-lock for AWK, indent, run, eldoc + completion, and LSP via awkrs --lsp (eglot + lsp-mode).",["Emacs","awk","LSP","Free / OSS"],false],["vscode-elisp","Vl","Editor Plugins","VS Code / VSCodium extension for Emacs Lisp (elisprs) — *.el / .emacs / shebang detection, a source.elisp grammar, an elisp.run command, LSP via elisp --lsp, and DAP debugging via elisp --dap.",["VS Code","elisp","LSP · DAP","Free / OSS"],false],["vim-elisp","vl","Editor Plugins","Vim / Neovim support for Emacs Lisp (elisprs) — *.el / .emacs detection, a standalone Emacs Lisp syntax grammar, indent, run / :make, LSP via elisp --lsp, and nvim-dap debugging via elisp --dap.",["Vim","elisp","LSP · DAP","Free / OSS"],false],["emacs-elisp","el","Editor Plugins","elisprs-mode for Emacs — derives from the built-in emacs-lisp-mode and layers the elisprs toolchain on top: run via elisp, eldoc + completion over the builtin surface, LSP via elisp --lsp (eglot + lsp-mode), and DAP via elisp --dap.",["Emacs","elisp","LSP · DAP","Free / OSS"],false],["zpwr-theme","th","Editor Plugins","Cyberpunk editor theme — the 8 canonical HUD colorschemes in dark and light: 16 VS Code themes plus 16 matching JetBrains UI themes and editor colour-scheme XMLs, all generated from one palette/schemes.json.",["VS Code","JetBrains","theme","Free / OSS"],false],["tmux-fzf-url","tx","Editor Plugins","Pop an fzf picker over every URL visible in the tmux pane; the selected URL opens in your browser.",["tmux","fzf","Free / OSS"],false],["gh_reveal","gh","Developer Tools","Open the current git repo's web page from the terminal — every remote, GitHub or GitLab or self-hosted, with Heroku remotes routed to their dashboard and herokuapp URL.",["git","CLI","Free / OSS"],false],["zsh-better-npm-completion","np","Zsh Plugins","Smarter zsh completion for npm — completes installed packages for run / uninstall and caches the script list.",["zsh","npm","Free / OSS"],false],["zsh-xcode-completions","xc","Zsh Plugins","Zsh tab-completion for 11 Xcode command-line tools — xcodebuild, xcrun, xcode-select, swift, swift-demangle, instruments, genstrings, plutil, nm, strings, dyldinfo.",["zsh","Xcode","Free / OSS"],false],["zsh-travis","tv","Zsh Plugins","Zsh aliases + functions for the Travis CI CLI — open build / PR pages from inside a project.",["zsh","Travis CI","Free / OSS"],false]]
     .forEach(function (e) { PRODUCTS.push(metaProduct(e[0], e[1], e[2], e[3], e[4], e[5])); });
 
   // arb ecosystem packages — dashboards distributed as git repos through the
@@ -1322,7 +1345,7 @@
       "features": [
         "R interpreter in Rust — runs .R files standalone, no GNU R required",
         "Vector value model on an RHost heap — attributes, recycling, NA propagation, three-valued logic, copy-on-modify",
-        "All four index forms, closures and <<-, replacement functions, S3 UseMethod, 239 primitives and 20 operators",
+        "All four index forms, closures and <<-, replacement functions, S3 UseMethod, 288 primitives and 20 operators",
         "Byte-for-byte checked against GNU R by a differential parity harness",
         "Standalone Rscript binary + REPL, an LSP language server (--lsp), a DAP debugger (--dap), and Rscript --aot standalone native executables",
         "Inline-Rust FFI — .rust(code) compiles a pub extern \"C\" block to a cached cdylib, .Call(name, …) invokes it (shared fusevm FFI runtime)",
@@ -1417,6 +1440,45 @@
         "DRM-free PDF"
       ]
     },
+    "texrs": {
+      "overview": "TeX in Rust — Knuth's mouth and expander, compiled to bytecode rather than interpreted. TeX is two machines: the mouth turns bytes into tokens under a mutable category-code table, and the expander turns tokens into other tokens (\\def, \\csname, \\the, the conditionals). texrs implements those two — the half a macro-heavy document spends its time in — by lowering them to fusevm bytecode and running them on the shared three-tier Cranelift JIT behind zshrs, stryke, rubylang and pythonrs. Every mainstream engine (pdfTeX, XeTeX, LuaTeX) descends from tex.web through web2c and interprets the expander instead. Free and open source.",
+      "features": [
+        "The mouth: category codes and \\catcode over INITEX's sparse defaults, the three-state line scanner (blank line to \\par, collapsed spaces), and ^^X notation",
+        "The expander: \\def with undelimited and delimited parameters, \\csname/\\endcsname, \\string, \\the, \\number, \\expandafter, \\let, \\edef/\\xdef/\\gdef, \\global, \\begingroup/\\endgroup",
+        "Conditionals (\\iftrue, \\iffalse, \\ifnum, \\ifodd, \\ifx, \\ifcase …), groups that scope the macro table and the count registers written under them, \\count registers, `x character codes, and \\advance/\\multiply/\\divide",
+        "\\input resolved where a real document expects it, verbatim / Verbatim / the fancyvrb family, and the LaTeX layer — \\newcommand and its three relatives",
+        "--dvi: a deliberately small stomach — text measured in a real .tfm font, first-fit lines at a measure, stacked down a page and shipped as DVI; not tex.web's stomach, and the README says exactly what that costs",
+        "Readers for the binary formats a TeX installation is made of, each printing what it parsed",
+        "4.0x faster than tex 3.141592653 (TeX Live 2026) on a 5.6 MB / 120k-statement / 691k-token document (0.259 s vs 1.038 s), and an 800-statement document from 248 ms to 11.7 ms; 60 documents across all cores in 0.198 s",
+        "Parity is the \\message stream compared byte-for-byte against the real tex binary — no expectation written by hand, and both harnesses refuse to run against an oracle version other than the one recorded in BUGS.md",
+        "\\intercept advice (before / after / around) on macro expansion, and inline Rust blocks",
+        "Free / OSS — MIT licensed"
+      ]
+    },
+    "texrs-book": {
+      "overview": "The companion book to texrs — TeX's mouth and expander compiled to bytecode. It opens on a TeX primer and the two-machine split (which half texrs is, and why the compiled half is the interesting one), then walks what every TeX since 1982 does differently, what compiling buys and what it costs — measured, not asserted — and on through the scanner, macros, conditionals, groups, registers, \\input, the LaTeX layer, the --dvi page, the binary formats, the parity contract, intercepts and inline Rust. Every figure is measured at a named tree rather than described.",
+      "features": [
+        "A TeX primer, then Chapter 1: the mouth, the gullet, the stomach that is not here, and why",
+        "Every TeX since 1982 interprets the expander — what compiling it actually means, conditional by conditional and loop by loop",
+        "What compiling buys and what it costs, on macro-heavy and arithmetic-heavy documents and on a batch",
+        "Category codes, the three-state line scanner, delimited parameters, \\csname / \\expandafter, groups and count registers",
+        "\\input, the LaTeX \\newcommand layer, verbatim, and the --dvi page: .tfm measurement, first-fit lines, DVI output",
+        "The \\message parity contract against the real tex, the version-pinned oracle, and the fuzzing harness",
+        "\\intercept advice and inline Rust, read as their expansions",
+        "Pandoc + LaTeX typeset, 289 pages, DRM-free PDF"
+      ]
+    },
+    "texrs-reference": {
+      "overview": "The complete texrs primitive reference — every control sequence the mouth and expander implement, with its expansion semantics and the places it diverges from tex.web stated rather than glossed. The dense companion to The texrs Book.",
+      "features": [
+        "Every implemented primitive, grouped by the machine that serves it",
+        "Expansion semantics per control sequence, with the delimited-parameter and \\csname rules spelled out",
+        "The conditional set and the register operations, including the group-scoping rules",
+        "Divergences from tex.web named as divergences, never omitted",
+        "The dense companion to The texrs Book",
+        "26 pages, DRM-free PDF"
+      ]
+    },
     "pythonrs": {
       "overview": "Python in Rust — run .py files outside CPython. Python as a fusevm frontend that lexes and parses Python, lowers it to fusevm bytecode, and runs on a PyHost object heap with no bespoke VM or JIT, on the shared 3-tier Cranelift JIT behind the rest of the fleet. The first compiled standalone Python runtime. Free and open source.",
       "features": [
@@ -1442,7 +1504,7 @@
         "Generators and yield from as host-side stackful coroutines, so yield costs one stack switch and needs no VM change",
         "Arrays with true PHP value semantics, references ($b = &$a, &$x parameters), and by-reference OUT parameters",
         "Standard library across 26 dispatch modules including GMP and bcmath arbitrary precision, preg, mbstring, DateTime and the SPL data structures",
-        "804 names across 40 chapters documented against the runtime, 590 with examples executed against the built binary, gated by tests/corpus_coverage.rs",
+        "841 names across 40 chapters documented against the runtime, 617 with examples executed against the built binary, gated in both directions by tests/corpus_coverage.rs so a builtin cannot ship undocumented",
         "Standalone php binary with an interactive REPL (php -a), an LSP language server (--lsp), a DAP debugger (--dap) and --tiers tier reporting",
         "zsh completion, man pages, and an HTML docs/report site",
         "Free and open source (MIT)"
@@ -1456,9 +1518,9 @@
         "Runs on the shared bytecode VM + 3-tier Cranelift JIT (stryke, zshrs, awkrs, vimlrs, elisprs, rubyrs, arb, pythonrs, php)",
         "Language surface: classes and inheritance, async/await, generators, destructuring, Map/Set/WeakRef, Promise, BigInt on num-bigint, TypedArrays, and RegExp on fancy-regex",
         "Real I/O event loop with promises, microtasks and timers; a CommonJS loader whose require() executes real npm packages off disk",
-        "49 require() specs across 45 core modules — fs, http, http2, net, tls and https on rustls, crypto, zlib, dgram, worker_threads, cluster, stream, child_process, dns, readline, vm, v8",
+        "47 core module implementations — fs, http, http2, net, tls and https on rustls, crypto, zlib, dgram, worker_threads, cluster, stream, child_process, dns, readline, vm, v8",
         "Unimplemented modules throw a named error instead of returning a silent fake",
-        "84-script byte-parity corpus against the reference node, plus a delta-debugging differential fuzzer",
+        "A 120-script byte-parity corpus against the reference node, plus a delta-debugging differential fuzzer",
         "Standalone node binary with a REPL, an LSP language server (--lsp), a DAP debugger (--dap), AOT --build and an rkyv bytecode cache",
         "zsh completion, man pages, and an HTML docs/report site",
         "Free and open source (MIT)"
@@ -1492,6 +1554,7 @@
         "Classes with primary-constructor properties, secondary constructors, data classes and data-class inheritance, companion objects, and object expressions",
         "Inheritance the compiler enforces — open/abstract/sealed/interface, the supertype list, override, interface default bodies, and qualified super&lt;T&gt;.m()",
         "Extension functions and extension/computed properties, vararg parameters, default and named arguments, overload resolution, generics, and casts",
+        "Delegated properties — by lazy, user-written delegates, and Delegates.observable / vetoable, plus top-level properties",
         "Standalone kotlinrs binary with an LSP language server (--lsp), a DAP debugger (--dap), --tiers reporting, and inline rust { } FFI compiled to a cached cdylib",
         "Free and open source (MIT)"
       ]
@@ -1524,19 +1587,21 @@
         "Classes, single inheritance with virtual dispatch and super chaining, interfaces with Java 8 default methods, traits, and method and constructor overloading by parameter type",
         "The list/map GDK with spread — collect, collectEntries, takeWhile, dropWhile, flatten, findAll and the rest, over Groovy-printed insertion-ordered literals",
         "assert with Groovy's power-assert rendering, switch, do/while, labeled break/continue, static imports, and runtime faults raised as catchable Groovy throwables",
+        "Category use blocks — use (NumCat) { 3.twice() } — and method overloading by arity as well as by parameter type",
         "Every program in examples/ diffed byte-for-byte against Apache Groovy in the test suite",
         "Free and open source (MIT)"
       ]
     },
     "zvcs": {
-      "overview": "A git-shadowing superset VCS: a single Rust binary named git that replaces stock git on PATH and serves subcommands natively over vendored gitoxide — no fork/exec of stock git, and no fallthrough when a subcommand is unported. The superset is the reason it exists: 117 z-verbs add the coordination layer git cannot have for a meta-repo of nested submodules driven by many concurrent automated agents. The parity harness scores git-compat depth separately from dispatch, and the latest generated report is 90.3% (3851/4264) across 184 dispatched subcommands. Free and open source.",
+      "overview": "A git-shadowing superset VCS: a single Rust binary named git that replaces stock git on PATH and serves subcommands natively over vendored gitoxide — no fork/exec of stock git, and no fallthrough when a subcommand is unported. The superset is the reason it exists: 119 z-verbs add the coordination layer git cannot have for a meta-repo of nested submodules driven by many concurrent automated agents. The parity harness scores git-compat depth separately from dispatch: the generated report is 100% dispatch coverage (all 184 stock git subcommands answered natively) and 90.3% behavioural parity (3851/4264 corpus assertions). Free and open source.",
       "features": [
-        "One binary named git — shadows stock git on PATH; 181 git-compat subcommands dispatched natively over vendored gitoxide, never shelling out to stock git",
+        "One binary named git — shadows stock git on PATH; 181 git-compat porcelain verbs served natively over vendored gitoxide, never shelling out to stock git",
+        "100% dispatch coverage — every one of stock git's 184 main subcommands is answered by the binary, with 90.3% behavioural parity (3851/4264) reported separately so a narrow corpus never inflates the score",
         "zdaemon — a machine-wide daemon with a per-repo FIFO lane replaces git's O_EXCL index.lock, so a contended writer waits in arrival order instead of failing",
         "zsync / zbump — submodules reconciled to their tracked mainline with HEAD left attached, and forward-only gitlink bumps that are committed, never regressed",
-        "117 superset z-verbs — parallel fleet query and fan-out, secret scan, commit-signature check, queryable audit trail, scheduler, AOP intercepts, and policy gates across every indexed repo",
+        "119 superset z-verbs — parallel fleet query and fan-out, secret scan, commit-signature check, queryable audit trail, scheduler, AOP intercepts, and policy gates across every indexed repo",
         "zworktree — a private, object-sharing worktree of the whole submodule tree per agent",
-        "Every read verb takes --json for NDJSON, checked by an integration test so the surface cannot drift",
+        "git zverbs prints the live verb list with usage, and every read verb takes --json for NDJSON, checked by an integration test so the surface cannot drift",
         "Free and open source (MIT)"
       ]
     },
@@ -2005,9 +2070,10 @@
       "overview": "git-fuzzy — the full-screen fzf-driven git interface — ported to a native zshrs plugin; this port covers the status command end-to-end. The self-reentrant helpers run as builtins, so there is no per-keystroke library sourcing.",
       "features": [
         "Full-screen fzf git UI (status command) as a native plugin",
+        "gf / gf menu alias resolves to gf status — the upstream menu is not ported yet",
         "Self-reentrant preview/keybinding helpers as builtins — no per-keystroke re-sourcing",
-        "Requires git and fzf (>= 0.71) on PATH",
-        "delta / diff-so-fancy used for diff rendering when present",
+        "All 14 GF_* environment variables documented and honoured",
+        "Requires git and fzf (>= 0.71) on PATH; delta / diff-so-fancy used for diff rendering when present",
         "Installed with znative load MenkeTechnologies/zshrs-git-fuzzy"
       ]
     },
@@ -2017,6 +2083,7 @@
         "In-process filesystem walk instead of sudo find / -name .git",
         "Parallel clean/dirty classification across threads",
         "fzf-pick a repo to cd into, with clean/dirty filtering",
+        "gitrepos --list / -l prints instead of fzf-cd, --regen (or bare regen) rescans and rebuilds the cache, -h/--help documents the surface",
         "Clean = git diff-index --quiet HEAD and no untracked files (same test as the original)",
         "Installed with znative load MenkeTechnologies/zshrs-git-repos"
       ]
@@ -2136,16 +2203,36 @@
       "features": ["zshrs, the first compiled Unix shell", "Bytecode + Cranelift JIT, parallel runtime, worker pool", "Drop-in zsh compatibility and AOP intercepts", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zmax-book": {
-      "overview": "The companion book to zmax — the modal IDE with vim, emacs, and Spacemacs keymaps over a multiple-selection core, and the first IDE ever to embed ten complete programming languages — elisp, vimscript, stryke, AWK, and Zsh — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
-      "features": ["zmax, end to end — the modal IDE wearing a vim default keymap", "Vim, emacs, and Spacemacs bindings on one multiple-selection engine", "World-first: ten languages embedded in the core — elisp, vimscript, stryke, AWK, zsh, Ruby, PHP, Python, JavaScript, arb", "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split", "Pandoc + LaTeX typeset, 102 pages, DRM-free PDF"]
+      "overview": "The companion book to zmax — the modal IDE with vim, emacs, helix, cua and Spacemacs keymaps over a multiple-selection core, and the first IDE ever to embed twelve complete programming languages — elisp, vimscript, AWK, zsh, stryke, Ruby, PHP, Python, JavaScript, arb, Tcl and R — compiled into one binary on a single shared bytecode VM, with no subprocess and no FFI.",
+      "features": [
+        "zmax, end to end — the modal IDE and its five keymap presets",
+        "Vim, emacs, helix, cua and Spacemacs bindings on one multiple-selection engine",
+        "World-first: twelve languages embedded in the core — elisp, vimscript, AWK, zsh, stryke, Ruby, PHP, Python, JavaScript, arb, Tcl and R",
+        "The engine underneath: rope, tree-sitter, fusevm, the AOT/JIT split",
+        "Pandoc + LaTeX typeset, 431 pages, DRM-free PDF"
+      ]
     },
     "zmax-native-book": {
       "overview": "The plugin guide for zmax — writing a native, compiled Rust plugin for the editor over its frozen C ABI. Helix, which zmax forks, ships no plugin system at all; zmax publishes a versioned binary interface a stranger can compile against, plus a package manager that installs the result from owner/repo into a content-addressed store and maps it into the process. The book covers the boundary and why it is a C ABI, the declare_plugin! macro read as its expansion, the six host callbacks and the context window that governs them, the five SDK examples line by line, shipping and the package manager, and the rules of the road — closing on an honest inventory of where the API stops.",
-      "features": ["The frozen C ABI: #[repr(C)] tables, extern \"C\" fn pointers, ABI_VERSION checked from both sides at load", "declare_plugin! read as its expansion — the static PluginInfo, the #[no_mangle] init, one trampoline per handler", "The six host callbacks (message, error, eval, buffer_text, insert_text, register_command) and the context window that makes them legal", "The five SDK examples line by line: hello, insert-date, buffer-stats, trim-trailing, banner", "Shipping: zmax-native.toml, the package manager, the ~/.zmax/pkg store, publishing an owner/repo plugin", "Rules of the road: TUI safety, panics that abort across FFI, ABI versioning, testing — and where the API stops", "Pandoc + LaTeX typeset, 61 pages, DRM-free PDF"]
+      "features": [
+        "The frozen C ABI: #[repr(C)] tables, extern \"C\" fn pointers, ABI_VERSION checked from both sides at load",
+        "declare_plugin! read as its expansion — the static PluginInfo, the #[no_mangle] init, one trampoline per handler",
+        "The six host callbacks (message, error, eval, buffer_text, insert_text, register_command) and the context window that makes them legal",
+        "The five SDK examples line by line: hello, insert-date, buffer-stats, trim-trailing, banner",
+        "Shipping: zmax-native.toml, the package manager, the ~/.zmax/pkg store, publishing an owner/repo plugin",
+        "Rules of the road: TUI safety, panics that abort across FFI, ABI versioning, testing — and where the API stops",
+        "Pandoc + LaTeX typeset, 245 pages, DRM-free PDF"
+      ]
     },
     "fusevm-book": {
-      "overview": "The companion book to fusevm — the language-agnostic bytecode VM that stryke, zshrs, awkrs, and vimlrs all compile to. The value model and opcode set, the interpreter and its fused superinstructions, the three-tier Cranelift JIT, and the closed-world AOT compiler that lowers a whole program to native registers and a standalone binary.",
-      "features": ["fusevm, end to end — the shared bytecode machine", "The value model, the opcode set, and the fused superinstructions", "The tiered execution ladder: interpreter, block JIT, tracing JIT", "The closed-world AOT compiler: registers, deopt, standalone binary", "Pandoc + LaTeX typeset, 34 pages, DRM-free PDF"]
+      "overview": "The companion book to fusevm — the language-agnostic bytecode VM that stryke, zshrs, awkrs, vimlrs and fourteen other frontends all compile to. The value model and opcode set, the interpreter and its fused superinstructions, the three-tier Cranelift JIT, and the closed-world AOT compiler that lowers a whole program to native registers and a standalone binary.",
+      "features": [
+        "fusevm, end to end — the shared bytecode machine",
+        "The value model, the opcode set, and the fused superinstructions",
+        "The tiered execution ladder: interpreter, block JIT, tracing JIT",
+        "The closed-world AOT compiler: registers, deopt, standalone binary",
+        "Pandoc + LaTeX typeset, 403 pages, DRM-free PDF"
+      ]
     },
     "elisprs-book": {
       "overview": "The companion book to elisprs — Emacs Lisp implemented as a pure fusevm frontend. The reader and its syntax, the cons/symbol/string object heap reached through fusevm's extension handler, the special forms and macros, and the compiler that lowers elisp to fusevm bytecode — so elisp inherits fusevm's interpreter, three-tier Cranelift JIT, and AOT native compiler with no bespoke VM of its own.",
@@ -2394,20 +2481,43 @@
       "features": ["An opening chapter on the shared package model — cdylib + [ffi] namespace, JSON boundary, OnceCell connection cache, s pkg install", "Part I Databases: postgres, mysql, mssql, mongo, redis, neo4j, scylla, clickhouse, search", "Part II Data & analytics: arrow, parquet, polars, duckdb, spark", "Part III Messaging & RPC: kafka, zmq, grpc", "Part IV Cloud & infrastructure: aws, gcp, azure, k8s, docker", "Part V Web & automation: scrape, selenium, mcpd, email", "Part VI Documents (office) and Part VII Foundation (utils, gui) — the packages that are not external-system clients, framed honestly as such", "Each chapter names the wrapped crate and the exported verbs from source — no invented APIs, one real example per package", "The connector-fleet companion to the strykelang language reference. Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zpwr-encyclopedia": {
-      "overview": "The complete reference to zpwr — the most advanced UNIX terminal environment, with 500+ subcommands and 2000+ aliases. Every verb, alias, and subsystem, LaTeX-typeset into one volume.",
-      "features": ["Every zpwr verb and subcommand (500+)", "2000+ aliases, 47k completions, vim + tmux integration", "Generated from the live zpwr source", "LaTeX-typeset encyclopedia, DRM-free PDF"]
+      "overview": "The complete reference to zpwr — the most advanced UNIX terminal environment, with 504 verbs and 2000+ aliases. Every verb, alias, and subsystem, LaTeX-typeset into one volume.",
+      "features": [
+        "Every zpwr verb and subcommand (504)",
+        "2000+ aliases, 47k completions, vim + tmux integration",
+        "Generated from the live zpwr source",
+        "LaTeX-typeset encyclopedia, DRM-free PDF"
+      ]
     },
     "ztmux-book": {
-      "overview": "The companion book to ztmux — the world's first 100%-functional tmux in Rust. Not a wrapper around the tmux binary and not a control-mode client: it reimplements the whole program — server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end — in memory-safe Rust, seeded from the tmux-rs port and validated module-by-module against the vendored upstream tmux C source of truth. The book walks that architecture and the port methodology: a parity suite that runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte (1194/1194 cases passing) and an anti-drift gate that fails the build on any Rust function with no tmux C counterpart.",
-      "features": ["ztmux, end to end — the whole tmux program reimplemented in Rust", "The client/server split, the libevent loop, and the session/window/pane state tree", "The grid/screen + scrollback model, the VT input parser, and the layout engine", "The lalrpop command language, one file per command mirroring tmux's cmd-*.c", "The port methodology: byte-for-byte parity vs the vendored tmux C source, 1194/1194 cases passing", "The anti-drift gate: no Rust function survives without a tmux C counterpart", "Pandoc + LaTeX typeset, DRM-free PDF"]
+      "overview": "The companion book to ztmux — the world's first 100%-functional tmux in Rust. Not a wrapper around the tmux binary and not a control-mode client: it reimplements the whole program — server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end — in memory-safe Rust, seeded from the tmux-rs port and validated module-by-module against the vendored upstream tmux C source of truth. The book walks that architecture and the port methodology: a parity suite that runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte (1242/1242 gated cases passing) and an anti-drift gate that fails the build on any Rust function with no tmux C counterpart.",
+      "features": ["ztmux, end to end — the whole tmux program reimplemented in Rust", "The client/server split, the libevent loop, and the session/window/pane state tree", "The grid/screen + scrollback model, the VT input parser, and the layout engine", "The lalrpop command language, one file per command mirroring tmux's cmd-*.c", "The port methodology: byte-for-byte parity vs the vendored tmux C source, 1242/1242 gated cases passing", "The anti-drift gate: no Rust function survives without a tmux C counterpart", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zwire-book": {
-      "overview": "The companion book to zwire — a Chromium/Blink browser forked into the strykelang cyberpunk HUD. Not a WebView wrapper (WebKit, no MV3) and not a fresh engine: a real Blink base, patched and extended, on a dedicated profile that never touches system Chrome. The book walks the full stack the project is built on — the HUD extension workspace (the ztmux tiling overlay, the ⌘K palette, sessions, the internal-page skin) and, under it, the 25 authored C++ patches that compile the native chrome an extension cannot reach (tab geometry, UI fonts, the neon toolbar, native menus and dialogs, the 8 schemes in the color mixer + DevTools, and a browser-wide DSP engine inside Chromium's audio service) against a pinned Chromium tag.",
-      "features": ["Why a real Blink base is required — zpwrchrome's Manifest V3 surface (userScripts, declarativeNetRequestWithHostAccess, nativeMessaging, webRequest, service-worker background)", "The unbranded fork build that still carries --load-extension (removed from branded Chrome in v137)", "The 25 HUD patches that restyle the native chrome — tabs, UI font, neon toolbar, omnibox, native menus, the 8 schemes in the color mixer + DevTools — and compile the browser-wide audio engine, written against a pinned Chromium tag", "The ztmux tiling overlay, the ⌘K palette, the new-tab HUD, the internal-page scheme picker, its eight schemes, and the native host", "The automation layer, chapter by chapter: stryke lifecycle hooks (53 catalogued browser events), output triggers on rendered page text, and pane pipelines — reactive dataflow edges between tiled webviews, with the cycle check that refuses a loop", "The audio dashboard over the browser-wide DSP engine: the spec-on-disk control loop, the live meters back-channel, and why it never uses tabCapture", "The dedicated profile and per-user staged extensions — never collides with system Chrome", "The CDP overlay layer and the cross-platform / updating operations matrix", "Pandoc + LaTeX typeset, DRM-free PDF"]
+      "overview": "The companion book to zwire — a Chromium/Blink browser forked into the strykelang cyberpunk HUD. Not a WebView wrapper (WebKit, no MV3) and not a fresh engine: a real Blink base, patched and extended, on a dedicated profile that never touches system Chrome. The book walks the full stack the project is built on — the HUD extension workspace (the ztmux tiling overlay, the ⌘K palette, sessions, the internal-page skin) and, under it, the 27 authored C++ patches that compile the native chrome an extension cannot reach (tab geometry, UI fonts, the neon toolbar, native menus and dialogs, the 8 schemes in the color mixer + DevTools, and a browser-wide DSP engine inside Chromium's audio service) against a pinned Chromium tag.",
+      "features": [
+        "Why a real Blink base is required — zpwrchrome's Manifest V3 surface (userScripts, declarativeNetRequestWithHostAccess, nativeMessaging, webRequest, service-worker background)",
+        "The unbranded fork build that still carries --load-extension (removed from branded Chrome in v137)",
+        "The 27 HUD patches that restyle the native chrome — tabs, UI font, neon toolbar, omnibox, native menus, the 8 schemes in the color mixer + DevTools — and compile the browser-wide audio engine, written against a pinned Chromium tag",
+        "The ztmux tiling overlay, the ⌘K palette, the new-tab HUD, the internal-page scheme picker, its eight schemes, and the native host",
+        "The automation layer, chapter by chapter: stryke lifecycle hooks (53 catalogued browser events), output triggers on rendered page text, and pane pipelines — reactive dataflow edges between tiled webviews, with the cycle check that refuses a loop",
+        "The audio dashboard over the browser-wide DSP engine: the spec-on-disk control loop, the live meters back-channel, and why it never uses tabCapture",
+        "The dedicated profile and per-user staged extensions — never collides with system Chrome",
+        "The CDP overlay layer and the cross-platform / updating operations matrix",
+        "Pandoc + LaTeX typeset, DRM-free PDF"
+      ]
     },
     "inventions-book": {
-      "overview": "Firsts — the narrative edition of the MenkeTechnologies invention ledger (INVENTIONS.md). It walks the 269 candidate 'world's first' capabilities across the stack, grouped by subsystem, and holds each to the same falsifiable bar: a genuinely novel capability plus a real in-repo implementation. Every claim carries its basis (files, functions, build artifacts) and an honest caveat — 'no prior art found' is recorded as exactly that, never as proof — plus a high/med/low confidence tag. The six marquee claims get an appendix of adversarial prior-art analyses.",
-      "features": ["269 candidate firsts, each as claim + in-repo basis + honest caveat + confidence tag", "The execution engine: a solo from-scratch JIT VM hosting eighteen language frontends on one bytecode", "The compiled Unix shell, the Perl-5 superset, and the fully modular patch-graph DAW", "zcontainer: the first compiled-native desktop GUI for both Docker and Kubernetes", "Appendix: adversarial prior-art analyses for five of the eight marquee (★) claims", "The methodology: how to claim — and how to refute — a first honestly", "Pandoc + LaTeX typeset, DRM-free PDF"]
+      "overview": "Firsts — the narrative edition of the MenkeTechnologies invention ledger (INVENTIONS.md). It walks the 269 candidate 'world's first' capabilities across the stack, grouped by subsystem, and holds each to the same falsifiable bar: a genuinely novel capability plus a real in-repo implementation. Every claim carries its basis (files, functions, build artifacts) and an honest caveat — 'no prior art found' is recorded as exactly that, never as proof — plus a high/med/low confidence tag. Eight marquee claims are flagged ★, five of them with an appendix of adversarial prior-art analyses.",
+      "features": [
+        "269 candidate firsts, each as claim + in-repo basis + honest caveat + confidence tag",
+        "The execution engine: a solo from-scratch JIT VM hosting eighteen language frontends on one bytecode",
+        "The compiled Unix shell, the Perl-5 superset, and the fully modular patch-graph DAW",
+        "zcontainer: the first compiled-native desktop GUI for both Docker and Kubernetes",
+        "Appendix: adversarial prior-art analyses for five of the eight marquee (★) claims",
+        "The methodology: how to claim — and how to refute — a first honestly",
+        "Pandoc + LaTeX typeset, DRM-free PDF"
+      ]
     },
     "vscode-stryke": {
       "overview": "A VS Code / VSCodium extension that turns the editor into a full stryke IDE — syntax highlighting, completion, and diagnostics for the stryke language.",
@@ -2422,8 +2532,15 @@
       "features": ["Generated stryke-stdlib.el with the complete language surface from the binary's reflection tables", "Font-lock + brace indentation", "LSP via stryke --lsp (eglot + lsp-mode)", "Regenerate after a stryke upgrade via scripts/gen-stdlib.sh"]
     },
     "vscode-zsh": {
-      "overview": "VS Code / VSCodium support for the zshrs shell — a reflection-generated grammar plus LSP.",
-      "features": ["source.zshrs TextMate grammar generated from zshrs --dump-reflection", "*.zsh / dotfile / shebang detection", "LSP via zshrs --lsp", "137 builtins + 113 zshrs extensions + 245 special vars highlighted"]
+      "overview": "VS Code / VSCodium support for the zshrs shell — a standalone reflection-generated grammar that owns its own zshrs language id (not a shellscript reskin), plus LSP, one-key running, and full debugging.",
+      "features": [
+        "source.zshrs TextMate grammar generated from zshrs --dump-reflection",
+        "*.zsh / dotfile / shebang detection",
+        "LSP via zshrs --lsp",
+        "Run — zshrs: Run File (Ctrl+F5 / editor-title ▶) runs the file in a terminal",
+        "Debugging — breakpoints, stepping, call stack, variables and watch over zshrs's native connect-back debug adapter (zshrs --dap)",
+        "137 builtins + 113 zshrs extensions (in their own scope) + 245 special vars highlighted"
+      ]
     },
     "vim-zsh": {
       "overview": "Vim / Neovim support for the zshrs shell — syntax, indent, lint, and LSP.",
@@ -2435,11 +2552,24 @@
     },
     "vscode-arb": {
       "overview": "A VS Code / VSCodium extension for arb — the pipeline-visualization language — with both an LSP and a DAP.",
-      "features": ["*.arb filetype detection", "Hand-written source.arb TextMate grammar (widgets, ~130 query verbs, input sources, /regex/, durations/sizes, dotted widget paths, -flags)", "arb.run command (arb &lt;file&gt;)", "LSP via arb --lsp", "DAP debugging via arb --dap — step the stream, regex breakpoints"]
+      "features": [
+        "*.arb filetype detection",
+        "Hand-written source.arb TextMate grammar (18 widgets, 111 query verbs, input sources, /regex/, durations/sizes, dotted widget paths, -flags)",
+        "arb.run command (arb &lt;file&gt;)",
+        "LSP via arb --lsp",
+        "DAP debugging via arb --dap — step the stream, regex breakpoints"
+      ]
     },
     "vim-arb": {
-      "overview": "Vim / Neovim support for arb — syntax, indent, run, lint, and LSP.",
-      "features": ["*.arb filetype detection", "arb syntax + brace-aware indent", "Run / :make via arb --check", "ALE lint via arb --check", "LSP via arb --lsp"]
+      "overview": "Vim / Neovim support for arb — syntax, indent, run, lint, LSP and DAP.",
+      "features": [
+        "*.arb filetype detection",
+        "arb syntax + brace-aware indent",
+        "Run / :make via :ArbRun",
+        "ALE lint via arb --check",
+        "LSP via arb --lsp (vim-lsp / coc.nvim)",
+        "nvim-dap debugging via arb --dap, with a ready-to-paste adapter config"
+      ]
     },
     "emacs-arb": {
       "overview": "arb-mode for Emacs — a major mode for the arb pipeline language.",
@@ -2450,8 +2580,15 @@
       "features": ["*.awk filetype detection", "Hand-written source.awk TextMate grammar (BEGIN/END, built-in vars + functions, field refs, /regex/)", "awk.run command", "LSP via awkrs --lsp", "DAP debugging via awkrs --dap — breakpoints, stepping, variables"]
     },
     "vim-awk": {
-      "overview": "Vim / Neovim support for AWK (awkrs) — syntax, indent, run, lint, and LSP.",
-      "features": ["*.awk filetype detection", "AWK syntax + brace-aware indent", "Run / :make via awkrs", "ALE lint via awkrs -L invalid", "LSP via awkrs --lsp"]
+      "overview": "Vim / Neovim support for AWK (awkrs) — syntax, indent, run, lint, LSP and DAP.",
+      "features": [
+        "*.awk filetype detection",
+        "AWK syntax + brace-aware indent",
+        "Run / :make via :AwkRun",
+        "ALE lint via awkrs -L invalid",
+        "LSP via awkrs --lsp (vim-lsp / coc.nvim)",
+        "nvim-dap debugging via awkrs --dap"
+      ]
     },
     "emacs-awk": {
       "overview": "awkrs-mode for Emacs — a major mode for AWK.",
@@ -2503,16 +2640,24 @@
         "Dynamic difficulty, practice speed and Wait Mode — the grader's windows derive from the speed you set",
         "Star paths and take history — unstarred lessons ordered easiest-first, exams gated on stars, every take kept",
         "JUCE audio sidecar owns the scoring clock — MIDI-in and the playhead share one process, so grading never crosses IPC",
+        "A score you can audit — every take records what it was earned under (the exact notes graded, tempo, difficulty, hand, instrument, whether the clock came from an Ableton Link session), so the app can say in words why two personal bests are not comparable instead of ranking them anyway",
+        "Per-passage decay — the forgetting curve is fitted over the same two-bar chunks the lesson is taught in, out of the note-level record, so it names the turnaround that goes first rather than averaging the whole chart",
+        "What a mistake costs — the recovery cost of a miss is measured (did the next note land, or was half a bar lost) rather than only priced against accuracy and a streak rule",
+        "Practice you can program and grep — takes, drills and variations exposed as data over the automation bus, with a leaderboard that refuses incomparable runs",
+        "Play it like the record, and like that drummer played it — feel, groove and variation extraction from the source performance",
         "Cyberpunk HUD interface from the shared zgui-core chrome",
         "Embeddable zmusic-core engine (rlib + staticlib + cdylib)",
         "In development — the app and its core are being built out"
       ],
       "screenshots": [
-        { "src": "assets/zmusic.webp", "cap": "PLAY tab — a keys lesson on the ClipSeq note grid with draw/paint/slice tools and 1/4–1/32 grid, practice-speed and backing-track controls, the score / accuracy / streak / perfect / miss / extra / mean-err readouts, and the light-guide 88-key keyboard in the cyberpunk HUD" }
+        {
+          "src": "assets/zmusic.webp",
+          "cap": "PLAY tab — a keys lesson on the ClipSeq note grid with draw/paint/slice tools and 1/4–1/32 grid, practice-speed and backing-track controls, the score / accuracy / streak / perfect / miss / extra / mean-err readouts, and the light-guide 88-key keyboard in the cyberpunk HUD"
+        }
       ]
     },
     "ztorrent": {
-      "overview": "A from-scratch BitTorrent client in Rust (Tauri v2 desktop app) modeled on Transmission, behind a cyberpunk HUD. The engine carries the session model — torrents, files, peers, trackers, labels — and the policy Transmission applies above the wire: the download/seed queue, ratio and idle seeding limits, the alt-speed (turtle) scheduler, blocklists, and watch folders. Two hand-assessed reports track it — 97.4% of Transmission's 114-feature surface, and 76.7% of an 86-feature surface taken from qBittorrent, Deluge, uTorrent, BiglyBT and Tixati. Formats are handled byte-exactly, and a Transmission RPC translation over HTTP or HTTPS lets existing remotes drive it. Its pure-Rust ztorrent-core engine is extracted so the same client embeds across the GUI stack. In development.",
+      "overview": "A from-scratch BitTorrent client in Rust (Tauri v2 desktop app) modeled on Transmission, behind a cyberpunk HUD. The engine carries the session model — torrents, files, peers, trackers, labels — and the policy Transmission applies above the wire: the download/seed queue, ratio and idle seeding limits, the alt-speed (turtle) scheduler, blocklists, and watch folders. Two hand-assessed reports track it — 96.5% of Transmission's 114-feature surface, and 76.7% of an 86-feature surface taken from qBittorrent, Deluge, uTorrent, BiglyBT and Tixati. Formats are handled byte-exactly, and a Transmission RPC translation over HTTP or HTTPS lets existing remotes drive it. Its pure-Rust ztorrent-core engine is extracted so the same client embeds across the GUI stack. In development.",
       "features": [
         "Session model — torrents, queue order, labels, per-torrent limits, per-file wanted/priority flags, with atomic JSON persistence",
         "Download / seed queue — slot limits, stalled detection, and priority",
@@ -2534,7 +2679,10 @@
         "In development — the app and its core are being built out"
       ],
       "screenshots": [
-        { "src": "assets/ztorrent.webp", "cap": "Client view — status-filter sidebar with live counts, the sortable torrent table (size, done, status, up/down, ratio, ETA, peers), add/magnet/start/pause/remove and turtle-mode actions, and the Info / Files / Peers / Trackers / Pieces / Options details pane in the cyberpunk HUD" }
+        {
+          "src": "assets/ztorrent.webp",
+          "cap": "Client view — status-filter sidebar with live counts, the sortable torrent table (size, done, status, up/down, ratio, ETA, peers), add/magnet/start/pause/remove and turtle-mode actions, and the Info / Files / Peers / Trackers / Pieces / Options details pane in the cyberpunk HUD"
+        }
       ]
     },
     "zlatex": {
@@ -2563,7 +2711,7 @@
       ]
     },
     "zpdf": {
-      "overview": "A from-scratch PDF editor in Rust (Tauri v2 desktop app) that replaces Adobe Acrobat and macOS Preview — full document editing, annotation, forms, and signatures behind a cyberpunk HUD, with a scriptable CLI on the same engine. The port report catalogs 293 features across the Acrobat Pro + Preview surface and all 293 are implemented and cited to real code. zpdf-core parses and writes the PDF object model directly, so linearization, font subsetting and redaction that truly removes content are first-class rather than bolt-ons, and the same pure-Rust engine embeds inside the other apps.",
+      "overview": "A from-scratch PDF editor in Rust (Tauri v2 desktop app) that replaces Adobe Acrobat and macOS Preview — full document editing, annotation, forms, and signatures behind a cyberpunk HUD, with a scriptable CLI on the same engine. The port report catalogs 309 features across the Acrobat Pro + Preview surface: 308 implemented (100%), 0 stubbed, 1 planned, each cited to real code — a feature can only be marked done by writing the engine, never by editing the manifest. zpdf-core parses and writes the PDF object model directly, so linearization, font subsetting and redaction that truly removes content are first-class rather than bolt-ons, and the same pure-Rust engine embeds inside the other apps.",
       "features": [
         "Full PDF editing — text, images, and objects on parsed content streams",
         "Annotation & markup — highlight, notes, shapes, freehand ink, stamps, measure",
@@ -2582,24 +2730,31 @@
         "Embeddable zpdf-core engine (rlib + staticlib + cdylib) — embeds into traderview and the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/zpdf.webp", "cap": "Two-page spread view — page thumbnails, the PAGE / TEXT / FIELDS / METADATA / BOOKMARKS / TIMELINE / INSIGHTS / COMPARE tabs, and open/merge/extract/export actions in the cyberpunk HUD" }
+        {
+          "src": "assets/zpdf.webp",
+          "cap": "Two-page spread view — page thumbnails, the PAGE / TEXT / FIELDS / METADATA / BOOKMARKS / TIMELINE / INSIGHTS / COMPARE tabs, and open/merge/extract/export actions in the cyberpunk HUD"
+        }
       ]
     },
     "zphoto": {
-      "overview": "A from-scratch image editor in Rust (Tauri v2 desktop app) that replaces GIMP, Photoshop and Illustrator, behind a cyberpunk HUD. Two engines behind one command surface: a raster engine at 97.7% of a 302-feature Photoshop checklist, and a separate vector engine at 69.7% of a 66-feature Illustrator checklist that rasterizes into the same layer stack — SVG is the interchange format, and AI files route through the zpdf-core PDF engine. 477 tests. Its pure-Rust zphoto-core engine is extracted so the same imaging engine embeds inside the other apps.",
+      "overview": "A from-scratch image editor in Rust (Tauri v2 desktop app) that replaces GIMP, Photoshop and Illustrator, behind a cyberpunk HUD. Two engines behind one command surface: a raster engine that is a Photoshop / GIMP port — 444 commands across 19 groups, 342 of 346 in-scope checklist rows done (98.8%, 99.4% including partial) — and a separate Illustrator port exposed through 114 vec.* commands at 119 of 119 in-scope rows (100%) that rasterizes into the same layer stack, so layer opacity, blend modes, masks, filters and PSD save apply to vector artwork for free. SVG is the interchange format, and AI files route through the zpdf-core PDF engine. 709 engine tests. Its pure-Rust zphoto-core engine is extracted so the same imaging engine embeds inside the other apps.",
       "features": [
-        "Layer-based raster editing with blend modes, masks, groups and adjustment layers — 8, 16 and 32-bit pixels with an editable indexed colour table",
-        "Selections, masks, brushes, and paint tools",
+        "Layer-based raster editing with blend modes, masks, groups and adjustment layers — 8, 16 and 32-bit pixels (f32 working space) with an editable indexed colour table",
+        "444 raster commands across 19 groups — 138 filters, 80 point ops, 65 layer ops, 36 image ops, 31 selection ops, 24 paint tools, 15 fills, actions, paths and history",
         "Filters and non-destructive adjustments — destructive point ops (Exposure, Temperature, Colour Balance, …) preview live on-canvas while you drag and only commit on OK, through the engine undo stack",
         "Open / edit / export common image formats, plus layered PSD and XCF read and write",
-        "Vector mode — an Illustrator port: Bézier paths, fills and strokes, compound paths, expand, path editing (simplify / join / average / add-remove anchors), scissors and knife, transform-each, radial / grid / mirror Repeat, Select-Same",
+        "Vector mode — 114 vec.* commands, a 12.5k-line Illustrator port: Bézier paths, fills and strokes, compound paths, Pathfinder, expand, path editing, scissors and knife, transform-each, radial / grid / mirror Repeat, Select-Same, symbols, type and masks",
         "Vector effects — Warp envelopes, Tweak / Free Distort / Convert-to-Shape, 2.5-D Extrude and Revolve, 3D rotate, linear / radial / mesh / freeform gradients, Live Paint bucket, Flare and Symbol Sprayer",
+        "SVG / PDF / AI / EPS round-trip, with AI parsed through the shared zpdf-core engine",
         "Photoshop-style chrome — menu bar, context-sensitive Tool Options Bar, and right-dock Layers / Channels / Paths / Swatches / Adjustments / Styles / Color panels, on the Photoshop default keyboard map",
         "Cyberpunk HUD interface from the shared zgui-core chrome",
         "Embeddable zphoto-core engine (rlib + staticlib + cdylib) — embeds into the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/zphoto.webp", "cap": "Raster editing workspace — layers panel, tool palette, brushes and selections, and non-destructive adjustments in the cyberpunk HUD" }
+        {
+          "src": "assets/zphoto.webp",
+          "cap": "Raster editing workspace — layers panel, tool palette, brushes and selections, and non-destructive adjustments in the cyberpunk HUD"
+        }
       ]
     },
     "zemail": {
@@ -2616,20 +2771,24 @@
         "Sender Identity Firewall — per-sender behavioural baselines flag impersonation and takeover",
         "Revision Ledger — BLAKE3 attachment identity plus content-delta drift across the archive",
         "Cyberpunk HUD interface",
+        "53 engine source modules under 282 tests (225 in-source unit tests + 57 integration tests), recomputed from the tree",
         "Embeddable zemail-core engine (rlib + staticlib + cdylib) with a C ABI + C++ wrapper",
         "Owned, no-subscription desktop mail"
       ],
       "screenshots": [
-        { "src": "assets/zemail.webp", "cap": "Mail client — folder sidebar, message list, and reading pane over the IMAP/SMTP zemail-core engine in the cyberpunk HUD" }
+        {
+          "src": "assets/zemail.webp",
+          "cap": "Mail client — folder sidebar, message list, and reading pane over the IMAP/SMTP zemail-core engine in the cyberpunk HUD"
+        }
       ]
     },
     "zstation": {
-      "overview": "A workspace of isolated web apps in Rust (Tauri v2) behind a cyberpunk HUD — a from-scratch port of the defunct station.app. Named dashboards arrange your web apps as Trello-like draggable, resizable tiles, each running in its OWN native, session-isolated webview (per-partition WKWebView data store on macOS / WebView2 data directory on Windows) so logging into one never spills cookies or storage into another; any dashboard pops out into its own OS window for multi-monitor use. A tile is not only a site — 70 native widget kinds render in the tile body, and the whole workspace is one SQLite database with an FTS5 index across every tile and note. Its pure-Rust zstation-core engine is extracted so the same station board embeds across the GUI stack.",
+      "overview": "A workspace of isolated web apps in Rust (Tauri v2) behind a cyberpunk HUD — a from-scratch port of the defunct station.app. Named dashboards arrange your web apps as Trello-like draggable, resizable tiles, each running in its OWN native, session-isolated webview (per-partition WKWebView data store on macOS / WebView2 data directory on Windows) so logging into one never spills cookies or storage into another; any dashboard pops out into its own OS window for multi-monitor use. A tile is not only a site — 77 native widget kinds render in the tile body, and the whole workspace is one SQLite database with an FTS5 index across every tile and note. Its pure-Rust zstation-core engine is extracted so the same station board embeds across the GUI stack.",
       "features": [
         "Workspace of web apps in Rust + Tauri v2, ported from station.app",
         "Per-service session isolation via native child webviews (WKWebView / WebView2), not iframes",
         "143-service built-in catalog plus arbitrary custom URLs, each in its own partition",
-        "70 native widget-tile kinds — notes, todos, kanban, charts, timers, PTY terminal, MIDI-style control surfaces",
+        "77 native widget-tile kinds — notes, todos, kanban, charts, timers, PTY terminal, MIDI-style control surfaces",
         "Named dashboards with ⌘1–9 switching; pop a dashboard into its own OS window, one per monitor",
         "Station Wiring — a local Source → Transform → Sink bus that drives one logged-in app from another, no OAuth, no cloud",
         "Session Lens — fire one path at N authenticated tiles and field-wise diff what each account sees",
@@ -2640,58 +2799,67 @@
         "Embeddable zstation-core engine (rlib + staticlib + cdylib)"
       ],
       "screenshots": [
-        { "src": "assets/zstation.webp", "cap": "One board of session-isolated web apps — Trello-like draggable, resizable tiles, each its own native webview, in the cyberpunk HUD" }
+        {
+          "src": "assets/zstation.webp",
+          "cap": "One board of session-isolated web apps — Trello-like draggable, resizable tiles, each its own native webview, in the cyberpunk HUD"
+        }
       ]
     },
     "zoffice": {
-      "overview": "A from-scratch office suite in Rust (Tauri v2 desktop app) that replaces Microsoft Office and LibreOffice — documents, spreadsheets, presentations, drawings, formulas and databases behind a cyberpunk HUD. 236 of 245 catalogued LibreOffice / MS Office features are implemented (96%, 0 stubbed): read and write ODF + OOXML plus legacy .doc/.xls/.ppt and .rtf, evaluate formulas, render page layout, and export PDF. Its pure-Rust zoffice-core engine is extracted so the same office engine embeds inside the other apps.",
+      "overview": "A from-scratch office suite in Rust (Tauri v2 desktop app) that replaces Microsoft Office and LibreOffice — documents, spreadsheets, presentations, drawings, formulas and databases behind a cyberpunk HUD. One shared engine, zoffice-core, carries all six modules in ~78k lines of Rust under 1,059 tests: read and write ODF + OOXML, evaluate formulas, render page layout, and export PDF. The crate ships engine and view — a mountable window.mountZoffice(root, opts) surface plus a bare-command Tauri backend — so any app in the family opens .docx / .xlsx / .pptx in its own pane and drives it over the automation bus.",
       "features": [
-        "245 LibreOffice / MS Office features catalogued; 236 implemented (96%), 0 stubbed",
-        "Rust office engine — Writer 49/49, Calc 67/69, Impress 29/29, Draw 11/11, Math 5/6, Base 9/11",
-        "Reads and writes ODF + OOXML (.odt/.docx, .ods/.xlsx, .odp/.pptx) plus legacy .doc/.xls/.ppt, .rtf, .csv",
+        "Six engine modules in one crate — Writer (documents), Calc (spreadsheets), Impress (presentations), Draw, Math and Base",
+        "Reads and writes ODF + OOXML (.odt/.docx, .ods/.xlsx, .odp/.pptx) and .csv, with encrypted ODF/OOXML packages, XML digital signatures and OLE2 compound-file parsing",
         "Formula evaluation, page-layout rendering, and PDF export for Writer, Calc and Impress",
-        "Encrypted ODF/OOXML packages, XML digital signatures, OLE2 compound-file parsing",
-        "zmerge — a git merge driver that reconciles parsed .docx/.odt models instead of failing on the blob",
+        "~78k lines of Rust in zoffice-core under 1,059 tests",
+        "Scriptable by name over the zgui-bridge socket — every engine command plus every verb the UI registers, callable from stryke",
+        "zmerge — a git 3-way merge driver that reconciles parsed .docx/.odt models by content hash instead of failing on the blob, emitting a reopenable document plus a typed conflict set",
         "zblame — structural git-blame attributing each paragraph to the revision that last changed it",
         "Calc recalculation critical path and dependency blast radius (keystone cell) — graph analyses no spreadsheet ships",
-        "Cyberpunk HUD interface",
-        "Embeddable zoffice-core engine (rlib + staticlib + cdylib)",
+        "Rehearsal timeline — the shared zpwr-clip-engine arrangement grid, seeded from the deck's own authored p:transition timings and published on the automation bus",
+        "Sibling engines in-window — zpdf-core's viewer and zemail-core's mail pane mount lazily inside the app",
+        "Cyberpunk HUD interface; embeddable zoffice-core engine (rlib + staticlib + cdylib)",
         "Owned, no-subscription office suite"
       ],
       "screenshots": [
-        { "src": "assets/zoffice.webp", "cap": "Office suite — Writer / Calc / Impress editing over the ODF/OOXML zoffice-core engine in the cyberpunk HUD" }
+        {
+          "src": "assets/zoffice.webp",
+          "cap": "Office suite — Writer / Calc / Impress editing over the ODF/OOXML zoffice-core engine in the cyberpunk HUD"
+        }
       ]
     },
     "zshrs": {
-      "overview": "A drop-in zsh replacement written in Rust that compiles shell commands to bytecode and runs them on a virtual machine instead of forking, with a persistent worker thread pool replacing fork+exec. Framed as the first compiled Unix shell.",
+      "overview": "A drop-in zsh replacement written in Rust — 915k lines, 861 source files across a 4-crate workspace — that compiles every command to fusevm bytecode, hands hot blocks to a tiered Cranelift JIT emitting x86-64/aarch64 machine code, and persists that bytecode across processes in rkyv images. A persistent worker thread pool replaces fork+exec. Framed as the first Unix shell to JIT-compile to native code: Nushell's IR is interpreted, compiled per parse and discarded at exit; zsh's .zwc is wordcode for zsh's own interpreter.",
       "features": [
-        "854k lines, 824 source files across a 3-crate workspace — zshrs runtime + zshrs-daemon + znative",
-        "Compiles commands to fusevm bytecode with Cranelift JIT",
-        "Persistent worker thread pool (2–18 threads) replaces fork+exec",
-        "53 coreutils commands run in-process, zero fork",
-        "100× warm-start speedup (717ms cold to 7ms warm)",
-        "rkyv-backed bytecode image cache, mmap hot path",
-        "193 ZLE widgets, 47 fish-ported builtins",
-        "248 builtins — 157 in the zsh port table plus 91 extension builtins; zsh and bash compatibility",
-        "Built-in LSP server, DAP debug adapter, JetBrains plugin",
-        "234-opcode fusevm 0.17 bytecode, AOP intercepts, parallel primitives (pmap/pgrep/peach)"
+        "915k lines, 861 source files across a 4-crate workspace — zshrs runtime + zshrs-daemon + znative (the published plugin-ABI SDK) + zshrs-runtime",
+        "Structurally split into a strict 1:1 port directory (src/ported/, 106 files, every fn mapped to a real zsh Src/*.c function and enforced by tests/port_purity.rs) and a non-port extensions directory (src/extensions/, 102 files)",
+        "Compiles commands to fusevm bytecode with a three-tier Cranelift JIT; rkyv-backed bytecode images with an mmap hot path, plus read-only SQLite mirrors for dbview / SQL inspection only",
+        "Persistent worker thread pool (2–18 threads) replaces fork+exec; 23 coreutils commands run in-process at 2000–5000× per invocation",
+        "100× warm-start speedup — 717ms cold (lex + parse + compile + cache write) to 7ms warm (deserialize + execute)",
+        "243 builtins — 152 zsh ports plus 91 extensions (23 coreutils and the parallel primitives among them)",
+        "193 ZLE widgets registered, 47 fish-ported line-editor builtins (syntax highlight, autosuggest, history search, autopair — opt-in, so bare zshrs -f stays byte-identical to zsh -f)",
+        "47,851 tests, 47,035 of them differential assertions against real zsh, plus a 2,604-chunk upstream .ztst runner",
+        "First shell to publish its native-plugin interface as a stable versioned ABI (cargo add znative, load a cdylib with zmodload -R), and the first Bourne-lineage shell to ship an LSP server and DAP adapter in its own binary",
+        "AOP intercepts, parallel primitives (pmap/pgrep/peach), and a JetBrains IDE plugin"
       ]
     },
     "elisprs": {
-      "overview": "Emacs Lisp in Rust — run .el files outside Emacs. A Lisp-2 interpreter with a separate-value/function-cell obarray, dynamic binding, and an elisp-correct reader built on its own ElispHost value model, lowered onto the fusevm bytecode VM that already backs stryke, zshrs, awkrs, and vimlrs. Ships as a standalone elisp binary with a REPL. Free and open source.",
+      "overview": "Emacs Lisp in Rust — run .el files outside Emacs. A Lisp-2 interpreter with a separate-value/function-cell obarray, lexical and dynamic binding, and an elisp-correct reader built on its own ElispHost value model, lowered onto the fusevm bytecode VM that already backs stryke, zshrs, awkrs, vimlrs and a dozen other frontends. It carries no bespoke VM or JIT: each form lowers to a fusevm::Chunk, hot arithmetic lowers to native JIT/AOT-able ops, and the elisp object heap rides the VM as Value::Obj handles. Ships as a standalone elisp binary with a REPL. Free and open source.",
       "features": [
         "Elisp interpreter in Rust — runs .el files standalone, no Emacs required",
-        "Lisp-2 obarray with separate value and function cells",
-        "Dynamic binding and an elisp-correct reader on its own ElispHost value model",
+        "Lisp-2 obarray with separate value and function cells, lexical and dynamic binding",
+        "Elisp-correct reader — dotted pairs, backquote/unquote, #' desugaring, ?c char literals",
         "Lowering onto the fusevm bytecode VM (the engine behind stryke, zshrs, awkrs, vimlrs)",
-        "22 special forms and 252 subrs, plus an 889-name elisp prelude porting subr.el, cl-lib, seq.el, map.el, ring.el, nadvice and text-property-search",
-        "Standalone elisp binary with an interactive REPL and an rkyv bytecode cache",
-        "LSP language server, DAP debugger, and AOT native compilation",
+        "18 special forms and 271 subrs, plus a 1,198-name elisp prelude porting subr.el, cl-lib, seq.el, map.el, ring.el, nadvice and text-property-search",
+        "Buffers, markers, text properties and an interval tree; generalized setf, pcase and backquote patterns",
+        "AOP pattern intercepts — glob across many function names at once",
+        "Standalone elisp binary with an interactive REPL and an rkyv bytecode cache at ~/.elisprs",
+        "LSP language server, DAP debugger, and AOT compilation to standalone native binaries (--aot-exe)",
         "Free / OSS — MIT licensed"
       ]
     },
     "zmax": {
-      "overview": "A zero-configuration modal IDE in Rust: install the binary, open a project, and get LSP, a DAP debugger, tree-sitter, a fuzzy file picker, a project tree, a real PTY terminal, magit-style git, and run configs — no init.el, no plugin manager, no setup ritual. It is a Vim / Emacs / Spacemacs / JetBrains superset with 5 keymap presets (spacemacs by default, plus vim, helix, emacs and cua), switchable at runtime. The generated port report measures it against cited Neovim, GNU Emacs, Spacemacs, JetBrains, Cursor and fzf.vim inventories: 5973 of 6847 items ported (87.2%), and 185 of 186 deduplicated capabilities (99.5%). This is the terminal editor; the windowed GUI front-end ships separately as zmax-gui. Free and open source.",
+      "overview": "A zero-configuration modal IDE in Rust: install the binary, open a project, and get LSP, a DAP debugger, tree-sitter, a fuzzy file picker, a project tree, a real PTY terminal, magit-style git, and run configs — no init.el, no plugin manager, no setup ritual. It is a Vim / Emacs / Spacemacs / JetBrains superset with 5 keymap presets (spacemacs by default, plus vim, helix, emacs and cua), switchable at runtime. The generated port report measures it against cited Vim/Neovim, GNU Emacs, Spacemacs, kakoune, vis, sam, ed, nvi, vile, mg, nano, micro, mcedit, ne, dte, LazyVim/AstroNvim/LunarVim, fzf.vim, JetBrains and Cursor inventories: 8,972 of 9,924 items ported (90.4%, plus 574 partial), and 186 of 186 deduplicated capabilities (100%). This is the terminal editor; the windowed GUI front-end ships separately as zmax-gui. Free and open source.",
       "features": [
         "Zero configuration — LSP, DAP debugger, tree-sitter, fuzzy picker, project tree, PTY terminal, magit-style git and run configs all work on first launch, from one static binary",
         "12 embedded scripting interpreters — elisp, vimscript, awk, zsh, stryke, ruby, php, python, node, arb, tcl and R, each a pure-Rust crate sharing one host API with no FFI between them",
@@ -2699,50 +2867,72 @@
         "5 keymap presets — spacemacs (default), vim, helix, emacs and cua; switchable at runtime with :keymap",
         "Native plugins — an ordinary Rust cdylib loaded at runtime over a frozen, versioned C ABI, registering typable : commands with no editor recompile",
         "Built-in TUIs — snippet library, hex editor, 3-pane merge resolver, org-mode with a date-aware agenda, IDE workbench, comint shell and a searchable help browser",
-        "2268 static commands, 2585 typable : commands and 4227 default keybindings, re-derived from source by the port report on every run",
+        "Embedded Arduino / PlatformIO toolchain surface — boards, ports, library and board managers, build, flash, serial monitor and debug driven from the editor",
+        "2,505 static commands, 3,118 typable : commands and 4,606 default keybindings, re-derived from source by the port report on every run",
         "Terminal IDE; the windowed GUI build is zmax-gui",
         "Free / OSS — MPL-2.0 licensed"
       ],
       "screenshots": [
-        { "src": "assets/zmax/editor.webp", "cap": "zmax in NOR mode — file-tree, split editors over stryke source, the IDE action menu (Find Usages, Refactor, Run/Debug, Git), and an embedded terminal, all running in the terminal" }
+        {
+          "src": "assets/zmax/editor.webp",
+          "cap": "zmax in NOR mode — file-tree, split editors over stryke source, the IDE action menu (Find Usages, Refactor, Run/Debug, Git), and an embedded terminal, all running in the terminal"
+        }
       ]
     },
     "zmax-gui": {
-      "overview": "A native desktop GUI for the zmax IDE. It wraps the zmax modal-editing core in a windowed front-end, the way MacVim wraps the Vim CLI editor: a Tauri v2 shell running the editor in an embedded PTY under a full menu bar, toolbar, ⌘K palette and native file dialogs, with an IDE project workbench and in-process office/PDF document search and blame layered on top. Free and open source.",
+      "overview": "A native desktop GUI for the zmax IDE. It wraps the zmax modal-editing core in a windowed front-end, the way MacVim wraps the Vim CLI editor: a Tauri v2 shell running the editor in an embedded PTY under a full menu bar, toolbar, ⌘K palette and native file dialogs, with an IDE project workbench and in-process office/PDF document search and blame layered on top. Every GUI action is also a typed automation-bus verb, and a multi-step refactor runs as a real transaction. Free and open source.",
       "features": [
         "GUI front-end over the zmax terminal IDE — same modal core, native window",
-        "A 21-menu menu bar, a toolbar, a ⌘K palette over every action, and a right-click context menu â each bridged into the editor as an ex-command",
+        "A 21-menu menu bar, a toolbar, a ⌘K palette over every action, and a right-click context menu — each bridged into the editor as an ex-command",
+        "Editor state reconstructed from the PTY stream, so the native chrome tracks the embedded editor without a second source of truth",
         "Native open/save dialogs and drag-and-drop",
+        "Scriptable — every GUI action is an automation-bus verb, published as a typed, parameterised surface",
+        "Reversible verbs — the bus classifies each verb pure / inverse / irreversible; a transaction journals the inverse ones for compensation and refuses the irreversible ones before they run",
+        "Transactions outlive the process, and a run that names its roots takes a witness of every file under them first, so a rollback that cannot reach the tree says so instead of claiming success",
+        "Batch Plan — paint a refactor across the project and run it as one transaction",
+        "Hooks editor, bundled self-contained binaries, and an app-local English seed derived from its own call sites",
         "Modal editing, tree-sitter syntax, and LSP inherited from the zmax core",
         "Cross-platform",
         "Free / OSS — MPL-2.0 licensed"
       ],
       "screenshots": [
-        { "src": "assets/zmax-gui.webp", "cap": "zmax-gui — the windowed front-end over the zmax modal IDE core: native tabs, menu bar, GUI font rendering, and split editors" }
+        {
+          "src": "assets/zmax-gui.webp",
+          "cap": "zmax-gui — the windowed front-end over the zmax modal IDE core: native tabs, menu bar, GUI font rendering, and split editors"
+        }
       ]
     },
     "zwire": {
-      "overview": "A Chromium/Blink browser forked into a cyberpunk HUD — not a theme and not a wrapper, but a real engine compiled from a 27-patch C++ source fork of Chromium and running a full keyboard-driven, tiling workspace on top. The fork restyles the native chrome the extension layer can't reach — sharp 2px tab shapes, the Share Tech Mono UI font, a neon under-toolbar line, a sharp omnibox, native Views menus and dialogs bound to the HUD palette, and the 8 HUD schemes wired into the color mixer + DevTools — and compiles a browser-wide DSP engine into Chromium's audio service so one chain shapes every sound the browser makes. Layered over it, the HUD (extensions/hud-internal) adds a tmux-style tiling overlay, a ⌘K command palette, vim-style motions, a find bar, a powerline status bar, durable session management, stryke lifecycle hooks, page-content triggers, reactive pane pipelines, and 23 HUD pages that reimplement Chrome's own internal pages — all against a dedicated profile so it never touches your system Chrome. Free and open source.",
+      "overview": "A Chromium/Blink browser forked into a cyberpunk HUD — not a theme and not a wrapper, but a real engine compiled from a 27-patch C++ source fork of Chromium and running a full keyboard-driven, tiling workspace on top. The fork restyles the native chrome the extension layer can't reach — sharp 2px tab shapes, the Share Tech Mono UI font, a neon under-toolbar line, a sharp omnibox, native Views menus and dialogs bound to the HUD palette, and the 8 HUD schemes wired into the color mixer + DevTools — and compiles a browser-wide DSP engine into Chromium's audio service so one chain shapes every sound the browser makes. Layered over it, the HUD (extensions/hud-internal) adds a tmux-style tiling overlay, a ⌘K command palette, vim-style motions, a find bar, a powerline status bar, durable session management, stryke lifecycle hooks, page-content triggers, reactive pane pipelines, and 26 HUD pages that reimplement Chrome's own internal pages — all against a dedicated profile so it never touches your system Chrome. Free and open source.",
       "features": [
         "27-patch C++ source fork of Chromium (pinned tag) that restyles the native chrome: sharp 2px tabs, Share Tech Mono UI font, neon under-toolbar line, sharp omnibox, the 8 HUD schemes in the color mixer + DevTools, native menu/dialog colors bound to the HUD palette, plus allow-framing so ztmux can iframe any site",
         "Browser-wide audio engine compiled into Chromium's audio service — an always-on zdsp-core chain (EQ cascade, channel strip, saturation/dynamics, modulation, delay + reverb, spatial, brickwall limiter) on every output stream (media element, MSE/YouTube, Web Audio, WebRTC), live-reconfigurable with nothing open and no relaunch, with real post-DSP spectrum and meters pumped back to the Audio HUD page",
         "ztmux — a tmux server in the browser: recursive binary pane splits, unlimited windows, every pane a live webview of any URL, driven by a rebindable prefix with 49 remappable actions (panes, layouts, windows, partial synchronize-panes, copy mode, marks, clock)",
         "⌘K command palette (zpalette), vim-style motions (zkeys/zvim), a find bar (zfind), and a powerline status bar (zpowerline)",
         "Durable named sessions saved to chrome.storage — full CRUD page (create / rename / duplicate / delete / load / import-export) with per-pane URL editing and a live SVG preview of each window's tiling",
-        "stryke lifecycle hooks — bind scripts to 53 catalogued browser events (tab / window / navigation / download / bookmark / terminal / scheme / audio / ⌘K-command, plus an action catch-all), run by zwire-host with the event JSON on stdin",
+        "stryke lifecycle hooks — bind scripts to 55 catalogued browser events (tab / window / navigation / download / bookmark / terminal / scheme / audio / ⌘K-command, plus an action catch-all), run by zwire-host with the event JSON on stdin",
         "Output triggers — bind a regex to page text as it renders and streams, then run a chain of typed steps (shell / stryke / JS / AppleScript / batch / browser-action / scheme / host) with the matched line as {q}; per-trigger cooldown, once-per-page mode, URL filter",
         "Pane pipelines — a persisted, reactive dataflow edge between tiled webviews: extract from a source pane (selector / regex / selection / URL), transform it (a stryke |> op chain, JS, or passthrough), deliver it to a sink pane (navigate / fill / replace / append / batch-open), with a graph cycle-check that refuses an A→B→A loop",
         "One namespaced browser.* automation verb bus — tab / group / window ops, edge snapping, navigation, downloads, browsing-data clearing, bookmarks, reading list, extensions, power, screenshot, notify, tmux toggle — driven by the palette, shortcuts, and hooks through a single service-worker executor and published as a typed, introspectable manifest",
-        "23 HUD pages reimplementing chrome://{extensions,settings,history,bookmarks,downloads,version} plus Audio, Hooks, Triggers, Pipelines, Terminal, Notes, Feeds, Translate, Reading list, a dashboard, a Keyboard remapper, Commands, Sessions, CI, a Host console, and an in-browser App Store tab",
+        "26 HUD pages reimplementing chrome://{extensions,settings,history,bookmarks,downloads,version} plus Audio, Hooks, Triggers, Pipelines, Terminal, Notes, Feeds, Translate, Reading list, a dashboard, a Keyboard remapper, Commands, Sessions, CI, a Host console, and an in-browser App Store tab",
         "8 color schemes (cyberpunk, midnight, matrix, ember, arctic, crimson, toxic, vapor), each with a light variant, driving the browser chrome natively with a light/dark toggle synced across the HUD, new-tab page, and zpwrchrome",
         "Built on zgui-core — the shared ZGui cyberpunk web-component toolkit (260 webui modules), loaded straight from the submodule path so no copy can go stale",
         "zpwrchrome MV3 power-tool preloaded as a submodule (reuse, not copy) against a dedicated profile — needs a real Blink engine for userScripts, declarativeNetRequestWithHostAccess, nativeMessaging, webRequest, and a service-worker background",
         "Free / OSS — MIT licensed"
       ],
       "screenshots": [
-        { "src": "assets/zwire/tmux.webp", "cap": "ztmux — the tmux-style tiling overlay running in the forked Chromium HUD: recursive pane splits, each pane a live webview, driven by a rebindable prefix and the powerline status bar" },
-        { "src": "assets/zwire/audio.webp", "cap": "The Audio HUD page — a browser-wide C++ audio engine applied live to every tab: the full signal chain, an always-on preamp + compressor, an 8-band draggable parametric EQ, and a metering column (peak/LUFS, stereo goniometer, phase correlation, VU)" },
-        { "src": "assets/zwire/audio2.webp", "cap": "The Audio HUD engine strip — gain/pan/mono/drive, space & glue (width/delay/reverb/limiter), and the two FX racks (gate·crush·exciter·Haas·cross-feed·chorus·flanger·phaser, then waveshaper·ring-mod·tremolo·auto-pan·auto-wah), over a live spectrum analyzer and scrolling spectrogram" }
+        {
+          "src": "assets/zwire/tmux.webp",
+          "cap": "ztmux — the tmux-style tiling overlay running in the forked Chromium HUD: recursive pane splits, each pane a live webview, driven by a rebindable prefix and the powerline status bar"
+        },
+        {
+          "src": "assets/zwire/audio.webp",
+          "cap": "The Audio HUD page — a browser-wide C++ audio engine applied live to every tab: the full signal chain, an always-on preamp + compressor, an 8-band draggable parametric EQ, and a metering column (peak/LUFS, stereo goniometer, phase correlation, VU)"
+        },
+        {
+          "src": "assets/zwire/audio2.webp",
+          "cap": "The Audio HUD engine strip — gain/pan/mono/drive, space & glue (width/delay/reverb/limiter), and the two FX racks (gate·crush·exciter·Haas·cross-feed·chorus·flanger·phaser, then waveshaper·ring-mod·tremolo·auto-pan·auto-wah), over a live spectrum analyzer and scrolling spectrogram"
+        }
       ]
     },
     "zwire-host": {
@@ -2753,26 +2943,32 @@
         "Streams live system stats (sysinfo), runs PTY terminals (portable-pty), crawls and watches/tails the filesystem, and execs commands",
         "Background jobs that notify on completion, process list/kill, clipboard / notify / open, and a per-app key/value store",
         "A pub/sub event bus that federates across a mesh of peered hosts",
+        "Drives the real tmux server the user is already running, over tmux's own wire protocol with no subprocess",
+        "Transactions on the wire — txn_begin journals every reversible call, an irreversible verb is refused at call time rather than stranding a half-applied chain, and a rollback compensates newest-first",
         "Also a Rust library — sibling hosts (e.g. zpwrchrome-host) embed it as a dependency",
         "Free / OSS — MIT licensed"
       ],
       "screenshots": [
-        { "src": "assets/zwire/host.webp", "cap": "zwire-host — the single self-contained Rust binary exposing live system stats, PTY terminals, filesystem crawl/watch, background jobs, and the pub/sub event bus over one JSON protocol" }
+        {
+          "src": "assets/zwire/host.webp",
+          "cap": "zwire-host — the single self-contained Rust binary exposing live system stats, PTY terminals, filesystem crawl/watch, background jobs, and the pub/sub event bus over one JSON protocol"
+        }
       ]
     },
     "strykelang": {
-      "overview": "A Perl 5 compatible interpreter written in Rust with native parallel primitives, a bytecode VM plus Cranelift JIT, three-tier regex, and rayon work-stealing across all cores. Framed as the fastest dynamic language for parallel operations and 2nd-fastest single-threaded after LuaJIT.",
+      "overview": "A Perl 5 compatible interpreter written in Rust with native parallel primitives, a bytecode VM plus Cranelift JIT, three-tier regex, and rayon work-stealing across all cores. The 2nd-fastest dynamic language runtime benchmarked single-threaded — behind only LuaJIT, and beating it on 3 of 8 benchmarks — and the fastest on every multithreaded benchmark; faster than perl5, Python, Ruby, Julia and Raku on every benchmark.",
       "features": [
         "Perl 5 compatible interpreter in Rust",
         "NaN-boxed StrykeValue runtime values",
         "Three-tier regex: regex, fancy-regex, pcre2",
-        "Bytecode VM plus Cranelift block and linear JIT",
+        "Bytecode VM plus Cranelift block and linear JIT on the shared fusevm engine",
         "Rayon work-stealing parallelism across all cores",
-        "10,488 stdlib primaries (11,266 keys in %all including 688 aliases and 90 keywords)",
-        "48.5 MiB single static binary, sub-10ms cold start",
-        "Parallel primitives: pmap/pgrep/psort/preduce, streaming iterators",
-        "rkyv KV store, sketch algebra, zsh glob qualifiers",
-        "Built-in HTTP, JSON, CSV, SQLite, crypto, AI primitives"
+        "10,488 stdlib primaries in %b (11,266 keys in %all including aliases and keywords) — clears Wolfram v14.3's high-band estimate by roughly 3,188",
+        "44 MB single static binary — every builtin in one file, ~4.3 KB amortized per builtin, sub-10ms cold start",
+        "Parallel primitives: pmap/pgrep/psort/preduce, streaming iterators, varsync shared state",
+        "rkyv KV store (mmap + validate + cast reads), sketch algebra, zsh glob qualifiers",
+        "Built-in HTTP, JSON, CSV, SQLite, crypto, STUN/TURN/NAT-punching and AI primitives",
+        "Package ecosystem — versioned store, lockfile pinning, and `use Module VERSION` resolution"
       ]
     },
     "vimlrs": {
@@ -2780,13 +2976,15 @@
       "features": [
         "Faithful Rust port of the Neovim C eval engine (the eval/* tree)",
         "Standalone interpreter — runs Vimscript outside Vim / Neovim",
-        "Hosted on fusevm: lex/parse → AST → fusevm bytecode → Cranelift JIT",
+        "Hosted on fusevm: lex/parse → AST → fusevm bytecode → Cranelift JIT, ~15–100× faster on traced loops",
         "Vim-native value types ported: list, dict (insertion-ordered), blob, typval",
         "rkyv-backed bytecode script cache, mmap hot path — versioned from day one",
-        "441 documented builtins; the 106 that need a live editor are flagged as standalone stubs rather than faked",
+        "882 documented builtins; the 107 that need a live editor are flagged as standalone stubs rather than faked",
+        "vim9script foundation — :vim9script, def … enddef with bare parameters and defaults, and vim9 automatic line continuation",
+        "Vim's own assert_* unit-testing framework with byte-exact v:errors message wording, checked against real vim",
         "AOP :Intercept advice on user-function calls — before/after/around, no Vim counterpart",
         "Inline rust { } FFI blocks callable as VimL functions",
-        "163 self-testing examples/*.vim run in CI, plus a differential fuzzer against Vim 9.2 and Neovim 0.12",
+        "164 self-testing examples/*.vim run in CI, plus a differential fuzzer against Vim 9.2 and Neovim 0.12",
         "Standalone binary, REPL, LSP language server, DAP debugger, and AOT native compiler",
         "Free / OSS — MIT licensed"
       ]
@@ -2805,19 +3003,21 @@
         "Genuine C calls through Fiddle — dlopen, symbol resolution, and libffi-marshalled Fiddle::Function invocation",
         "AOT — ruby --build bundles an app and every file it requires into one cached program; ruby --build --native emits a standalone executable that needs no interpreter and no .rb sources",
         "AOP method intercepts, an LSP server, a DAP debugger with in-method breakpoints, and an irb-style REPL",
-        "Differential parity harness: a 398-snippet corpus diffed against real Ruby 4.0.6, frozen and replayed in CI",
+        "Differential parity harness: a 619-snippet corpus diffed live against the reference ruby, frozen and replayed in CI, plus a seed-deterministic parity fuzzer",
         "Free / OSS — MIT licensed"
       ]
     },
     "arb": {
-      "overview": "Visualize and modify Unix pipelines. Pipe a stream into arb and it spawns a dynamic full-screen TUI (and, later, a web page) built from a declarative, Tcl/Tk-flavored spec. It is a jq / xpath / css / yq superset, an interactive megafilter/map over the live passthrough, and it runs on the fusevm bytecode VM + Cranelift JIT. Milestone 0 ships zero-config live-tail — pipe any stream in and watch it in a full-screen TUI; with no controlling terminal it prints a headless summary instead. Free and open source.",
+      "overview": "Visualize and modify Unix pipelines. Pipe a stream into arb and it spawns a dynamic full-screen TUI — or a served web page over WebSocket (arb --serve) built from the shared zgui-core toolkit — from a declarative, Tcl/Tk-flavored spec. It is a jq / xpath / css / yq superset whose containment is machine-checked leg by leg against each reference tool, an interactive megafilter/map over the live passthrough, and an original language of its own lexer, parser and semantics running on the fusevm bytecode VM + three-tier Cranelift JIT. Free and open source.",
       "features": [
-        "A TUI for every pipeline — pipe any Unix stream in, get a dynamic full-screen TUI",
-        "Declarative, Tcl/Tk-flavored spec drives widgets, layout, and sources",
-        "A jq / xpath / css / yq query superset over the live stream",
-        "Interactive megafilter/map that shapes the passthrough in place",
-        "Runs on the fusevm bytecode VM + Cranelift JIT",
-        "Zero-config live-tail (Milestone 0); headless summary when there is no TTY",
+        "A TUI for every pipeline — pipe any Unix stream in, get a dynamic full-screen TUI; no daemon, and no controlling terminal falls back to a headless summary",
+        "Dual target — the same spec renders to a ratatui TUI or a served web page + WebSocket, the browser dashboard built from zgui-core",
+        "One query engine — a jq / xpath / css / yq superset over JSON, XML, HTML, YAML, TOML and CSV, including a real XPath 1.0 engine (all 13 axes, node tests, positional predicates, the 27-function core library), with per-leg containment measured by probes rather than asserted",
+        "Megafilter/map — interactive controls render and feed out, so a control's path used as a value is its current state; arb filters and maps the downstream output live",
+        "fzf superset + orchestrator — arb --fzf is a fuzzy select mode (rank, smart-case, fzf's extended query language, multi-select, preview) that reads your fzf configuration, and arb 'PROD | _ | CONS' runs a whole pipeline with arb as the _ stage, hooking each command's fds so producer stderr lands in a pane instead of corrupting the TUI",
+        "Runs on fusevm — expressions and the calc pipeline op lower to a fusevm::Chunk on the shared three-tier Cranelift JIT",
+        "An original language, not a port — reuses sibling mechanics (fusevm embedding, the rkyv script cache, the LSP/DAP stdio shape, the package-manager ABI) but owns its lexer, parser, AST, lowering and semantics",
+        "arb-registry — a git-index package registry of installable pipeline dashboards, on the crates.io-index model",
         "Free / OSS — MIT licensed"
       ]
     },
@@ -2833,21 +3033,60 @@
         "Export/import all tabs to JSON, TOML, CSV, or TSV",
         "JUCE-powered audio engine sidecar for low-latency playback",
         "SQLite backend with timestamped scan history and diff engine",
+        "Session journal + culprit bisect — the edit stream is kept as an addressable journal, so position k is the draft after the first k edits, and session.bisect searches it with a rendered-audio oracle (offline mixdown, BS.1770 integrated loudness, 4× oversampled true peak, stem masking) to name the edit that flipped the property",
+        "session.omit and session.solve — would it still fail had that edit never been made, and what value would that edit have needed for the property to hold",
+        "Scriptable over the GUI Automation Bus with a reversibility class per verb, so a chain of project edits runs as one transaction",
         "Full PTY-backed embedded terminal, Vim keybindings, Cmd+K palette"
       ],
       "screenshots": [
-        { "src": "assets/audio-haxor/plugins.webp", "cap": "Plugin grid — every VST2/VST3/AU/CLAP detected" },
-        { "src": "assets/audio-haxor/samples.webp", "cap": "Sample vault with BPM, key, and LUFS per file" },
-        { "src": "assets/audio-haxor/daw.webp", "cap": "DAW project index across 14+ formats" },
-        { "src": "assets/audio-haxor/presets.webp", "cap": "Preset archive" },
-        { "src": "assets/audio-haxor/midi.webp", "cap": "MIDI device matrix" },
-        { "src": "assets/audio-haxor/visualizers.webp", "cap": "Real-time audio visualizers" },
-        { "src": "assets/audio-haxor/terminal.webp", "cap": "Embedded PTY terminal" },
-        { "src": "assets/audio-haxor/tags.webp", "cap": "Tag network graph" },
-        { "src": "assets/audio-haxor/pdf.webp", "cap": "PDF manual library" },
-        { "src": "assets/audio-haxor/favorites.webp", "cap": "Favorites" },
-        { "src": "assets/audio-haxor/notes.webp", "cap": "Per-item notes" },
-        { "src": "assets/audio-haxor/files.webp", "cap": "File browser" }
+        {
+          "src": "assets/audio-haxor/plugins.webp",
+          "cap": "Plugin grid — every VST2/VST3/AU/CLAP detected"
+        },
+        {
+          "src": "assets/audio-haxor/samples.webp",
+          "cap": "Sample vault with BPM, key, and LUFS per file"
+        },
+        {
+          "src": "assets/audio-haxor/daw.webp",
+          "cap": "DAW project index across 14+ formats"
+        },
+        {
+          "src": "assets/audio-haxor/presets.webp",
+          "cap": "Preset archive"
+        },
+        {
+          "src": "assets/audio-haxor/midi.webp",
+          "cap": "MIDI device matrix"
+        },
+        {
+          "src": "assets/audio-haxor/visualizers.webp",
+          "cap": "Real-time audio visualizers"
+        },
+        {
+          "src": "assets/audio-haxor/terminal.webp",
+          "cap": "Embedded PTY terminal"
+        },
+        {
+          "src": "assets/audio-haxor/tags.webp",
+          "cap": "Tag network graph"
+        },
+        {
+          "src": "assets/audio-haxor/pdf.webp",
+          "cap": "PDF manual library"
+        },
+        {
+          "src": "assets/audio-haxor/favorites.webp",
+          "cap": "Favorites"
+        },
+        {
+          "src": "assets/audio-haxor/notes.webp",
+          "cap": "Per-item notes"
+        },
+        {
+          "src": "assets/audio-haxor/files.webp",
+          "cap": "File browser"
+        }
       ]
     },
     "traderview": {
@@ -2856,33 +3095,39 @@
         "Replaces TraderVue + DayTradeDash + StockInvest.us; $2,604/yr saved",
         "Two binaries: Tauri desktop (embedded Postgres) + axum web server",
         "FIFO trade roll-up from atomic execution rows per account/symbol",
-        "13 broker importers plus a Generic CSV column-mapping wizard",
+        "15 broker importers plus a Generic CSV column-mapping wizard",
         "17 reports plus R-multiple, Monte Carlo, fill-quality TCA, tax-lot tracker",
         "139 stateless financial calculators under /calc",
         "Asset classes: stocks, options, futures, forex",
         "On-device receipt OCR with 20-bucket Schedule C taxonomy",
         "stryke-JIT backtest engine, walk-forward sweeper, strategy alerts",
-        "Schema: 125 tables, 179 indexes, 25 enum types; money is NUMERIC(20,8)"
+        "Schema: 128 tables, 180 indexes, 25 enum types across 111 migrations; money is NUMERIC(20,8)"
       ],
       "screenshots": [
-        { "src": "assets/traderview.webp", "cap": "Equity curve, summary stats, and trade journal" }
+        {
+          "src": "assets/traderview.webp",
+          "cap": "Equity curve, summary stats, and trade journal"
+        }
       ]
     },
     "ztranslator": {
-      "overview": "A real-time event-translation desktop app written in pure Rust that watches MIDI, OSC, DMX, and the file system for triggers, matches each event against per-translator rules running on a signed-32-bit integer VM, and fires an outgoing action. The same engine is embeddable inside a host GUI/CLI app via its Rust library API.",
+      "overview": "A real-time event-translation desktop app written in pure Rust that watches MIDI, OSC, DMX, and many other sources for triggers, matches each event against per-translator rules running on a signed-32-bit integer VM, and fires an outgoing action. The same engine is embeddable inside a host GUI/CLI app via its Rust library API. The generated port report scores it against the vendored BOME manual, conservatively hand-assessed: 71.9% coverage — 45 full, 15 partial, 13 missing over 73 tracked features.",
       "features": [
         "Ships its own GUI; the engine also drops into a host GUI/CLI app",
-        "Trigger sources: MIDI input ports, OSC, DMX, and file-system watchers",
+        "28 incoming trigger variants — MIDI message / 14-bit, keystroke, timer, preset, plus OSC, Art-Net DMX, sACN/E1.31, filesystem watch, serial, gamepad, USB-HID, MIDI clock, MTC, MMC, RTP-MIDI, Ableton Link, cron, system events, audio amplitude/onset/pitch, CV/gate, HTTP, TCP, WebSocket, MQTT",
+        "Another MenkeTechnologies app's automation-bus event can itself be a trigger — the fleet as a MIDI device",
         "Faithful BOME rules VM: arithmetic + bitwise, IF/THEN, Goto/Skip",
         "10 local + global registers, wrap-on-overflow signed-32-bit integers",
         "Outgoing actions: MIDI / OSC / DMX out, keystroke, mouse, AppleScript",
         "Timer and host-defined custom command actions",
-        "Imports and exports BOME MIDI Translator Pro .bmtp projects, lossless",
-        "Stores native projects as JSON",
-        "65 superset extensions beyond BOME — response curves, musical scale snap, LFO/ADSR generators, swing + groove, strum, note-repeat, velocity compression, SMF/SysEx builders, offline rules-VM debugger"
+        "Imports and exports BOME MIDI Translator Pro .bmtp projects, lossless; stores native projects as JSON",
+        "Superset transforms beyond BOME — response curves, quantize, deadzone, slew limiting, musical scale snap, transpose, 14-bit packing, LFO (6 shapes incl. sample-and-hold) and ADSR generators, swing quantize, groove templates, chord strum, note-repeat rolls, velocity compression, and an offline rules-VM debugger"
       ],
       "screenshots": [
-        { "src": "assets/ztranslator.webp", "cap": "Translator table mapping incoming MIDI/OSC/DMX triggers to outgoing actions" }
+        {
+          "src": "assets/ztranslator.webp",
+          "cap": "Translator table mapping incoming MIDI/OSC/DMX triggers to outgoing actions"
+        }
       ]
     },
     "zcite": {
@@ -2897,11 +3142,19 @@
         "Citation-aware 3-way .docx merge — installs as a git merge driver for co-authored manuscripts",
         "Quote & locator attestation — checks quoted spans against the cited PDF page with typed verdicts, fully offline",
         "zcite-lsp — a citation Language Server for .tex / .md / .qmd / .typ with live diagnostics, quick-fixes and cite-key completion",
+        "Reference lineage — the typed transform chain that produced a reference's current state (imported → normalized → merged → edited), each hop carrying a typed proof rather than a confidence score, projected from the same append-only Lamport op log that backs sync",
+        "Citation provenance — walks from your sentence to the sentence carrying the same claim in the cited work, reads the marker printed on it, resolves it through that work's own mined reference list, and repeats, so each citation site gets a provenance depth and a named terminus (primary, dangling, unlocated, cycle, depth_limit, …); fully offline, no index and no model",
+        "Claim drift — reads that chain evidence-first and compares adjacent restatements on certainty, scope and quantity, reporting the earliest document that overstated (first_overstatement) verbatim rather than as a score",
+        "Draft audit + attestation-gated bibliography — bib.attested_bibliography decides each entry from its own quotations (attested / failed / unverifiable / uncited) and can withhold a failed entry's formatted text",
+        "Scriptable over the GUI Automation Bus — every engine command declares a reversibility class (pure / inverse / irreversible), so a chain of library edits runs as a transaction and an unclassified new command fails the build",
         "Style-inverse decompiler — recovers structured items from a plain reference list, then restyles A to B",
         "Embeddable zcite-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/zcite.webp", "cap": "Reference library — collections, tags, and per-item metadata with citation/bibliography styles in the cyberpunk HUD" }
+        {
+          "src": "assets/zcite.webp",
+          "cap": "Reference library — collections, tags, and per-item metadata with citation/bibliography styles in the cyberpunk HUD"
+        }
       ]
     },
     "zreq": {
@@ -2917,10 +3170,18 @@
         "Native pm.* test assertions (status / time / body / header) and variable writes — no JS sandbox",
         "GraphQL Explorer with schema introspection, an OAuth 2.0 token manager, and a structural response-diff panel",
         "Tools workbench — JWT, hash/HMAC, encoding, JSONPath/JMESPath, JSON-Schema, secret scan, PKCE, fuzz, HAR analyze, OpenAPI diff/mock, SLA, collection lint + diff",
+        "Cross-representation coherence — probe one endpoint for its JSON / CSV / PDF / workbook representations in parallel, read each through the engine that owns it, and report per fact what the export omitted, contradicted or truncated",
+        "Cross-endpoint entity coherence and Write Effect Attribution — judge a recorded session for endpoints that disagree about the same entity (a difference counts as a contradiction only when no recorded write explains it), and for which write actually moved a value, which asked and got nothing, and which changes nobody asked for",
+        "Causal session replay — mine the session's real request-to-request data flow by value provenance, pin one edit, and re-execute only the requests it actually reaches, diffed against the recording",
+        "Collection runner on a real time axis — the shared zpwr-clip-engine arrangement grid, one lane per request, every send a draggable region at its own millisecond offset, latency / status / retry-backoff as automation lanes, and a loop region that re-fires that window over one pooled connection, in parallel only when the window provably has no internal data dependency",
+        "Localized through the shared zpwr-i18n runtime — every shipped locale selectable from Settings, switching live",
         "Embeddable zreq-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/zreq.webp", "cap": "API client — collection sidebar, request builder, and response viewer with environments and history in the cyberpunk HUD" }
+        {
+          "src": "assets/zreq.webp",
+          "cap": "API client — collection sidebar, request builder, and response viewer with environments and history in the cyberpunk HUD"
+        }
       ]
     },
     "ztunnel": {
@@ -2935,16 +3196,22 @@
         "Interface-less WireGuard handshake probe — one real Noise_IKpsk2 initiation validates endpoint, keys and PSK with no tun and no privilege",
         "Network benches — diagnostics (public IP, default route, leak check), TLS/DoH/MTU/speedtest/header tools, LAN scan (subnet math, ping sweep, ARP, RDAP), live monitor (netstat, firewall, HTTP bench, TLS scan, DNS dump/AXFR)",
         "SSH port-forward manager — local/remote/dynamic forwards, jump hosts, key generation, ~/.ssh/config import",
+        "Certificate & key audit — pki.audit_config answers 'is my cert expired, does the key match it, is it signed by this CA' from the profile text alone, before anything connects: a self-contained DER decoder and SHA-256, no network, no privilege, no openssl binary, verdicts ok / attention / broken over machine-coded findings",
+        "Connect forecast — a profile's connect outcome is a step function of time, so pki.connect_forecast returns the contiguous connects / blocked segments, the governing fault, first_blocked_at and renew_by, and flags blind_spot when the fault that blocks first is one this client's log will never explain",
+        "Offline cipher negotiation — openvpn.negotiate decides cipher agreement from two config texts with no socket, porting OpenVPN's own ssl_ncp.c (server preference wins, wire matching is strcmp, the legacy --cipher second match), so a no-overlap failure is diagnosed here instead of in the server's log",
         "Connect / disconnect with live status",
         "macOS + Linux behind a platform abstraction (utun / /dev/net/tun, routing, DNS) — bring-up needs root and reports needs_privilege rather than faking a live tunnel",
         "Embeddable ztunnel-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/ztunnel.webp", "cap": "VPN manager — OpenVPN/WireGuard tunnel list with live connection status, logs, and stats in the cyberpunk HUD" }
+        {
+          "src": "assets/ztunnel.webp",
+          "cap": "VPN manager — OpenVPN/WireGuard tunnel list with live connection status, logs, and stats in the cyberpunk HUD"
+        }
       ]
     },
     "zthrottle": {
-      "overview": "A from-scratch system stress + benchmark tool AND full system monitor in Rust (Tauri v2 desktop app), behind a cyberpunk HUD. Four real single-axis benchmarks plus a world-first contention profiler that drives every subsystem at once, going beyond single-axis tools like Blackmagic Disk Speed Test. Around the benchmarks sits a live monitor: processes, network, and a persistent storage tree. Its pure-Rust zthrottle-core engine is extracted so the same engine embeds across the GUI stack.",
+      "overview": "A from-scratch system stress + benchmark tool AND full system monitor in Rust (Tauri v2 desktop app), behind a cyberpunk HUD. Four real single-axis benchmarks plus a world-first contention profiler that drives every subsystem at once, going beyond single-axis tools like Blackmagic Disk Speed Test. The profilers then fit into one queryable FOPDT plant model per ordered axis pair, so the machine answers questions about workloads that were never run — and a contention governor turns that model into admission decisions. Around the benchmarks sits a live monitor: processes, network, and a persistent storage tree. Its pure-Rust zthrottle-core engine is extracted so the same engine embeds across the GUI stack.",
       "features": [
         "Disk throughput + random 4 KiB IOPS, uncached via F_NOCACHE / O_DIRECT",
         "Network throughput (loopback or a host:port peer) — TCP, UDP, and RTT",
@@ -2954,17 +3221,28 @@
         "System monitor — processes with signal control (TERM/KILL/STOP/CONT/HUP…), CPU-history graph, per-interface network history + live flows",
         "Storage tree — a persistent SQLite directory index built by ONE full scan, then kept live by filesystem-watch hooks (targeted updates, no re-walk); instant reads, no loading screen",
         "\"What can I free?\" — junk detection with a user-editable pattern list, per-owner filter, and multi-select bulk delete (.git internals never flagged)",
+        "Plant model — every profiler fitted into a FOPDT model per ordered axis pair, answering closed-form questions about unrun workloads",
+        "Contention governor — gov.tune synthesizes SIMC/IMC constants in closed form from the fit, gov.admit bounds worker count against a QoS floor and the throughput knee, and gov.report / gov.ledger record what each grant was actually worth",
+        "⌂ HEADROOM tab and a menu-bar headroom HUD rendering the same gov.headroom report through one engine module, so the strip and the panel cannot drift",
+        "Storage snapshots drawer — list, purge, and Time Machine exclusion, so a snapshot holding space a delete just freed is visible instead of silent",
         "Cross-platform — macOS, Linux, and Windows",
         "Embeddable zthrottle-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/zthrottle.webp", "cap": "Stress-bench + system monitor — multi-axis benchmarks, the contention profiler, and live process/network/storage panels in the cyberpunk HUD" }
+        {
+          "src": "assets/zthrottle.webp",
+          "cap": "Stress-bench + system monitor — multi-axis benchmarks, the contention profiler, and live process/network/storage panels in the cyberpunk HUD"
+        }
       ]
     },
     "zgo": {
-      "overview": "A from-scratch launcher in Rust (Tauri v2 desktop app) that replaces Alfred — fuzzy launching, workflows, and snippets behind a cyberpunk HUD. Its pure-Rust zgo-core engine is extracted so the same launcher engine embeds inside the other apps.",
+      "overview": "A from-scratch launcher in Rust (Tauri v2 desktop app) that replaces Alfred — fuzzy launching, workflows, and snippets behind a cyberpunk HUD. It is also the suite's saga coordinator: an ordered list of verbs spanning several running apps runs as one transaction, and a failure unwinds every app that already acted through that app's own declared inverse. Its pure-Rust zgo-core engine is extracted so the same launcher engine embeds inside the other apps.",
       "features": [
         "Workflows — objects + connections with Script Filter feedback (JSON + legacy XML)",
+        "Cross-app transactions — saga.plan preflights an ordered list of verbs across running apps against each peer's published reversibility class (pure / inverse / irreversible), saga.run drives them under one held socket per participant and fans abort back out newest-first, and irreversible steps are refused inside a transaction by the peer's own bridge",
+        "Attested rollback — with attest on, the coordinator digests every state each participant publishes before the forward pass and re-reads it after the unwind, so a report is 'compensated, and the state is back' or names what is not; saga.probe measures a declared inverse per verb without waiting for a real failure, catching a lossy inverse and a pure verb that quietly mutates",
+        "Blast radius — saga.blast trials a step against the whole live fleet, baselining every state every running app publishes, so an effect that leaves the target's process (a shared file, a daemon, the clipboard) is reported as collateral with the edge named; volatility calibration, quiescence and three-valued atomicity keep it a measurement rather than an accusation",
+        "Compositional reversibility — saga.compose finds the 1-minimal set of steps that unwind alone but not together, excluding steps already dirty on their own, confirming the finding, and reporting unstable or unproven instead of overstating minimality",
         "Fuzzy matching across launchable items",
         "Variable / token expansion in actions",
         "Web searches from the launch bar",
@@ -2976,7 +3254,10 @@
         "Embeddable zgo-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/zgo.webp", "cap": "Launcher — fuzzy launch bar, workflows, clipboard history, and snippets in the cyberpunk HUD" }
+        {
+          "src": "assets/zgo.webp",
+          "cap": "Launcher — fuzzy launch bar, workflows, clipboard history, and snippets in the cyberpunk HUD"
+        }
       ]
     },
     "zftp": {
@@ -2994,10 +3275,17 @@
         "Download / upload / sync transfer queue",
         "Per-session logs and throughput stats",
         "OS-keychain credential storage (on by default) plus PBKDF2 + AEAD profile encryption",
+        "Content Units — a zftp original: decompose a remote container (ZIP-family, so .xlsx / .docx / .pptx / .odt / .epub / .jar, plus .tar) into addressable byte ranges with a handful of small ranged reads and never its body, then transfer just the unit you asked for instead of the whole 400 MB object",
+        "Transfer Schedule — the family's shared zpwr-clip-engine arrangement grid on a 24-hour ruler: per-bookmark allowed-transfer windows in 15-minute slots over a link-budget throttle envelope",
+        "Read a remote document without downloading it — zpdf-core, zoffice-core and zemail-core mount their own views in place for a remote .pdf / .docx / .xlsx / .eml",
+        "Engine-surfacing panels — Profile Vault, Archive Index, Cloud Signing, Cloud Planner, Connection Pool and Erasure Durability",
         "Embeddable zftp-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/zftp.webp", "cap": "File-transfer client — bookmarks, remote browser, and the download/upload/sync transfer queue across FTP/SFTP/WebDAV/cloud stores in the cyberpunk HUD" }
+        {
+          "src": "assets/zftp.webp",
+          "cap": "File-transfer client — bookmarks, remote browser, and the download/upload/sync transfer queue across FTP/SFTP/WebDAV/cloud stores in the cyberpunk HUD"
+        }
       ]
     },
     "zcontainer": {
@@ -3011,29 +3299,49 @@
         "Offline predictors — build-cache invalidation, health-gated Compose startup schedule, whole-cluster Deploy Dry-Run, OOM-kill order, request-based cost model",
         "Multi-cluster Kubernetes contexts — pods, workloads, services, CRDs, Helm releases",
         "Live log streaming, in-pod exec, and port-forwarding",
+        "Live OOM-kill Death Row — ranks running containers in the order the kernel will actually evict them by porting oom_badness() over live working-set readings, then inverts it: the growth after which each is certainly next, and the byte level at which it dies",
+        "Lifecycle timeline — container and pod history on the family's shared zpwr-clip-engine arrangement grid: one lane per workload, one block per run (running / exited / OOM-killed), restart and OOM flags on the ruler, over 1h / 6h / 24h / 7d",
+        "Blame — an operator action log (clicks, bus verbs, and parsed shell command lines) joined to the lifecycle transitions, each verdict attributed / ambiguous / unattributed within a real latency budget, ranked by specificity; an OOM kill is never attributed to anyone",
+        "Collateral damage — walks the depends_on graph out from every explained transition and asks per hop, against that dependent's own healthcheck schedule, whether it could physically have reacted in the time observed; the whole chain, the mechanism per hop, and the blast radius a keystroke never named",
+        "Embedded PTY shell that is itself on the automation bus — terminal.run / send / expect drive the shell the user is watching, with reads pure and writes irreversible so a transaction refuses to journal keystrokes it cannot un-type",
         "YAML editing and resource inspection",
         "Compiled-native (not Electron / not a TUI)",
         "Cross-platform — macOS, Linux, and Windows",
         "Embeddable zcontainer-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
       ],
       "screenshots": [
-        { "src": "assets/zcontainer/dashboard.webp", "cap": "Overview — engine status, workload donut, live CPU chart, disk usage, and recent activity" },
-        { "src": "assets/zcontainer/containers.webp", "cap": "Containers — per-container CPU/memory sparklines, net & block I/O, PIDs, and port mappings" }
+        {
+          "src": "assets/zcontainer/dashboard.webp",
+          "cap": "Overview — engine status, workload donut, live CPU chart, disk usage, and recent activity"
+        },
+        {
+          "src": "assets/zcontainer/containers.webp",
+          "cap": "Containers — per-container CPU/memory sparklines, net & block I/O, PIDs, and port mappings"
+        }
       ]
     },
     "zterminal": {
-      "overview": "A GPU-accelerated, cross-platform terminal emulator in Rust (OpenGL) for the MenkeTechnologies stack — sensible defaults, extensive TOML configuration, and high VTE throughput, with native tmux control and a command-palette-driven workflow.",
+      "overview": "A GPU-accelerated, cross-platform terminal emulator in Rust (OpenGL ES 2.0 glyph-atlas renderer) for the MenkeTechnologies stack — sensible defaults, extensive TOML configuration, and high VTE throughput. It speaks tmux's native wire protocol as a first-class client (no subprocess), renders images inline through all three common terminal image protocols, and carries an automation bus that turns captured pane output into queryable, joinable data. 59,947 lines across 113 files under 600 tests.",
       "features": [
-        "OpenGL GPU-accelerated rendering",
-        "Cross-platform — BSD, Linux, macOS, and Windows",
-        "Native tmux control via the wire protocol (no subprocess)",
-        "Cross-pane search, broadcast input, and a unified window exposé",
-        "tmux-resurrect-style session save/restore from the command palette",
+        "OpenGL ES 2.0 glyph-atlas rendering, full xterm-compatible VT parsing (vim, tmux, htop, ncurses), 24-bit truecolor, scrollback, vi mode, search and regex hints",
+        "Cross-platform — BSD, Linux, macOS, and Windows; vendored, self-contained build with no external runtime dependencies",
+        "Native tmux control over the wire protocol — live editors for the running server's settings, and switchable tmux state profiles",
+        "Native tiling splits, cross-pane search, broadcast input, a unified window exposé, and tmux-resurrect-style session save/restore from the command palette",
+        "Inline graphics in the grid via the GPU, supporting all three common terminal image protocols",
+        "OSC 133 shell integration — prompt jumping, a fuzzy shell-history palette, and per-command output capture",
+        "Automation bus — pane_send / pane_await / panes_await drive and block on live panes, and captured output stays queryable after it scrolls away, including relational queries and cross-command, cross-host joins",
+        "In-process GUI control panel in an embedded WebView — settings, telemetry dashboard, file browser, ⌘K command palette; all state under ~/.zterminal",
         "Extensive TOML configuration and high-throughput VTE performance"
       ],
       "screenshots": [
-        { "src": "assets/zterminal/dashboard.webp", "cap": "Dashboard — live tmux server stats, session/window/pane gauges, PTY throughput, and the zgui-core widget showcase" },
-        { "src": "assets/zterminal/settings.webp", "cap": "Settings — color-scheme presets, custom palette, CRT/vignette/neon effects, and live TOML config reload" }
+        {
+          "src": "assets/zterminal/dashboard.webp",
+          "cap": "Dashboard — live tmux server stats, session/window/pane gauges, PTY throughput, and the zgui-core widget showcase"
+        },
+        {
+          "src": "assets/zterminal/settings.webp",
+          "cap": "Settings — color-scheme presets, custom palette, CRT/vignette/neon effects, and live TOML config reload"
+        }
       ]
     },
     "awkrs": {
@@ -3113,13 +3421,14 @@
       "features": [
         "rkyv CRUD write-back — add, edit, rename and delete records in a recognized archive; deserialize, mutate, re-serialize, atomic temp+rename",
         "Byte-identical re-serialization — the producing host reads the edited shard normally, verified by round-tripping every real cache",
-        "Ten registered formats — zshrs script / autoload / canonical shard / system shard, strykelang (native v4 + compat), awkrs, vimlrs, elisprs heap image, plus header-less pythonrs and rubylang/arb shards keyed by content hash",
+        "Eleven registered formats — zshrs script / autoload / canonical shard / system shard, strykelang (native v4 + compat), awkrs, vimlrs, texrs, elisprs heap image, plus header-less pythonrs and rubylang/arb shards keyed by content hash",
         "rkyv Records view — key/value table for a recognized archive: keys left, the selected value's decoded scalar fields plus a hex pane right, searchable by key",
         "Format registry — magic-detected, validated decode; a version or feature drift fails validation and falls back, never decodes garbage silently",
         "Structural fallback for unknown archives — printable-string runs with byte offsets, plus an xxd-style hex/ascii dump",
         "Full generic SQLite CRUD — tables with row counts, paginated rows, in-place cell edit, insert with column defaults, rowid delete, arbitrary SQL",
         "Backend chosen by header magic, not filename — a .db whose bytes are not a SQLite header opens as an archive",
         "No-arg launch opens an MRU picker of recently opened files; SQLite is compiled in (no system library)",
+        "zdbview --formats prints the resolved registry, and the shared magic header is a published convention any producer can register against",
         "MIT — original Rust, ratatui + crossterm"
       ]
     },
@@ -3175,10 +3484,10 @@
       ]
     },
     "ztmux": {
-      "overview": "The world's first 100%-functional tmux in Rust — a from-source port of the whole program, not a wrapper around the tmux binary and not a control-mode client. The server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end, reimplemented in memory-safe Rust. Correctness is measured, not claimed: a parity suite runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte — 1194/1194 cases passing against the vendored tmux next-3.7, zero known divergences. MIT-licensed.",
+      "overview": "The world's first 100%-functional tmux in Rust — a from-source port of the whole program, not a wrapper around the tmux binary and not a control-mode client. The server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end, reimplemented in memory-safe Rust. Correctness is measured, not claimed: a parity suite runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte — 1242/1242 gated cases passing (100%) against the vendored tmux next-3.7, with 12 cases quarantined over a Linux-only divergence that is still being root-caused. MIT-licensed.",
       "features": [
         "The whole tmux program in Rust: server + client, not a wrapper",
-        "1194/1194 parity cases passing — byte-for-byte against the vendored tmux next-3.7",
+        "1242/1242 gated parity cases passing — byte-for-byte against the vendored tmux next-3.7, plus 12 quarantined and still diffed on every pass",
         "Validated module-by-module against the vendored upstream tmux C source of truth",
         "Grid/screen + scrollback model, VT input parser, and the layout engine",
         "lalrpop command grammar; one file per command mirroring tmux's cmd-*.c",
@@ -3187,7 +3496,10 @@
         "MIT-licensed, self-contained (vendors tmux C + tmux-rs as references)"
       ],
       "screenshots": [
-        { "src": "assets/ztmux.webp", "cap": "ztmux — the from-source Rust tmux: recursive pane splits, windows, and the status bar, byte-for-byte parity with system tmux" }
+        {
+          "src": "assets/ztmux.webp",
+          "cap": "ztmux — the from-source Rust tmux: recursive pane splits, windows, and the status bar, byte-for-byte parity with system tmux"
+        }
       ]
     },
     "storageshower": {
@@ -3205,20 +3517,23 @@
       ]
     },
     "zpwrchrome": {
-      "overview": "A Chrome MV3 extension bundling fourteen daily-driver browser tools into one toolbar icon, with a vendored Rust native-messaging host and 55 keyboard commands.",
+      "overview": "A Chrome MV3 extension bundling a browser power-user's whole toolchain into one toolbar icon — 20 capabilities, 55 keyboard commands, and a vendored Rust native-messaging host that is a 1:1 port of browserpass-native v3.1.2 plus seven Rust-only tool families upstream never had.",
       "features": [
-        "UNIX pass integration: fill, copy, OTP, full CRUD manager",
-        "Profile + credit-card autofill from pass entries",
-        "Segmented multi-connection download manager via Range GETs",
-        "JetBrains-style tab switcher with MRU, scenes, minimap",
-        "fzf-fuzzy search over up to 5000 history entries",
-        "Tampermonkey-equivalent userscript engine with GM_* shim",
-        "Wappalyzer-compatible detection, 3,993-fingerprint corpus",
-        "Full-page screenshot capture with OffscreenCanvas stitching",
-        "55 commands; 3109 node:test + 132 cargo test cases, all passing"
+        "UNIX pass integration: fill, copy, OTP, auto-submit, basic-auth injection, full CRUD manager",
+        "Profile + credit-card autofill from pass entries — shadow-DOM piercing, custom combobox and intl-tel-input widgets, cross-origin card iframes reported rather than silently skipped",
+        "Segmented multi-connection download manager that intercepts every browser download by default (HEAD probe + parallel Range GETs), with glob-matched post-download commands run without a shell",
+        "JetBrains-style tab switcher with cross-window MRU, named scenes, opener-tree and minimap",
+        "fzf-fuzzy search over up to 5000 history entries, plus find-in-all-tabs full-text search",
+        "Tampermonkey-equivalent userscript engine with a GM_* / GM.* shim",
+        "Wappalyzer-compatible detection against a vendored 3,993-fingerprint corpus, every matcher group implemented",
+        "Full-page screenshot capture with OffscreenCanvas stitching; JSON + XML viewers, cinema dimmer, page-theme injector, UA switcher and a ModHeader-style header/redirect manager",
+        "55 commands (4 default-keyed, 51 user-bindable); 3,083 node:test + 134 cargo test cases, all passing"
       ],
       "screenshots": [
-        { "src": "assets/zpwrchrome.webp", "cap": "zpwrchrome — the MV3 toolbar popup: pass integration, download manager, tab switcher, history search, and userscript engine in one icon" }
+        {
+          "src": "assets/zpwrchrome.webp",
+          "cap": "zpwrchrome — the MV3 toolbar popup: pass integration, download manager, tab switcher, history search, and userscript engine in one icon"
+        }
       ]
     },
     "zpwr-daw": {
@@ -3505,7 +3820,7 @@
       ]
     },
     "stryke-polars": {
-      "overview": "Full pandas DataFrame plus numpy ndarray/linalg/FFT/random surface for stryke in one cdylib — 1,547 wrapper fns across 43 export families.",
+      "overview": "Full pandas DataFrame plus numpy ndarray/linalg/FFT/random surface for stryke in one cdylib — 1,505 stryke-side fns across 46 wrapper modules.",
       "features": [
         "DataFrame, Series, Index, GroupBy operations",
         "ndarray, ufuncs, masked arrays, sparse arrays",
@@ -3725,17 +4040,17 @@
       ]
     },
     "fusevm": {
-      "overview": "A language-agnostic bytecode virtual machine with fused superinstructions and a three-tier Cranelift JIT — the shared execution engine behind strykelang, zshrs, awkrs, and vimlrs.",
+      "overview": "A language-agnostic bytecode virtual machine with fused superinstructions and a three-tier Cranelift JIT — the shared execution engine behind eighteen language frontends, including zshrs, strykelang, awkrs, vimlrs, elisprs, rubylang, arb and texrs. Any frontend that compiles to fusevm opcodes gets fused hot-loop dispatch, extension opcode tables, slot-indexed fast paths and native code compilation for free.",
       "features": [
-        "234 opcodes across 22 sections, 11 fused superinstructions",
+        "235 opcodes across 22 sections, 11 fused superinstructions",
+        "Three-tier Cranelift JIT (Cranelift 0.130, behind the jit feature): linear, block, and tracing",
+        "Tracing JIT records hot loops, deopts on guard miss",
         "AOT compilation of a whole program to a native object file via cranelift-object (aot feature)",
         "Inline Rust FFI — rust { } blocks compiled to a cdylib and marshalled against fusevm::Value (ffi feature)",
         "Cooperative goroutine scheduler and channels (sched module, Go/Chan ops, interpreter-only)",
         "Compiles to wasm32-unknown-unknown for web-worker execution",
-        "Three-tier Cranelift JIT: linear, block, and tracing",
-        "Tracing JIT records hot loops, deopts on guard miss",
-        "29 first-class shell ops, 61 first-class AWK ops",
-        "Extension dispatch via Extended(u16,u8) handler tables",
+        "29 first-class shell ops dispatched through the ShellHost trait, 61 first-class AWK ops through AwkHost",
+        "Extension dispatch via Extended(u16,u8) handler tables — stryke registers ~450 extended ops, awkrs ~95, zshrs ~20, elisprs 10; each frontend owns its own ID space",
         "Stack-based execution with slot-indexed local fast paths",
         "Optional jit-disk-cache persists native code across restarts",
         "Zero-clone dispatch with in-place array/hash mutation"
@@ -3781,26 +4096,27 @@
       ]
     },
     "zpwr": {
-      "overview": "ZPWR is a zinit-based zsh terminal environment layered with custom zsh, bash, vimL, and stryke code — a full command-line cyberdeck with autocomplete, vim keybindings, and tmux integration.",
+      "overview": "ZPWR is a zinit-based zsh terminal environment layered with custom zsh, bash, vimL, and stryke code — a full command-line cyberdeck with autocomplete, vim keybindings, and tmux integration. It invented the terminal-OS category: not a dotfiles repo with a bin/ directory, but a namespaced verb-CLI, an env-var control plane, and a completion corpus in one installable system.",
       "features": [
-        "504 zpwr subcommands with colorized zsh menucompletion",
+        "504 zpwr subcommands with colorized zsh menucompletion — 460 from the in-repo dispatcher table, the rest registered by the zinit-installed plugins",
         "2000+ aliases plus 360+ git aliases",
-        "47,441 zsh tab completions for predictive input (47,393 from zsh-more-completions + 48 in-tree)",
+        "47k zsh tab completions for predictive input, via zsh-more-completions",
         "177 centralized ZPWR-namespace environment variables",
-        "1,277 centralized files in ~/.zpwr for clean uninstall",
-        "77 neovim plugins; 48 zinit plugins (33 custom)",
-        "224k lines of code across 1,229 text files",
+        "1,277 tracked files and ~107k zsh+sh lines, 533 autoload functions, 183 scripts in ~/.zpwr/scripts",
+        "216 zsh keybindings and 80 tmux bindings; 48 zinit plugins, 33 of them custom",
+        "149 zunit test files, ~79.7k test lines, 14,278 assertions",
         "Evolved from Hashrocket's Dotmatrix into a full cyberdeck"
       ]
     },
     "zsh-more-completions": {
-      "overview": "The largest curated zsh completion corpus in existence, wiring over 47k command completions into compsys — auto-generated from --help, man pages, and web research, then cleaned and verified.",
+      "overview": "The largest curated zsh completion corpus in existence — 47,393 files wiring that many command interfaces into compsys, auto-generated from --help, man pages, and web research, then cleaned and verified. Roughly 247× the size of zsh-completions, the next-largest third-party #compdef set, and ~48× zsh's own bundled completions.",
       "features": [
         "The largest curated zsh completion corpus: 47,393 files",
-        "Over 47k command completions wired into compsys",
+        "The hand-written src/ directory alone (~8,360 files) is ~8.4× the entire zsh project's bundled corpus (997 files built by the zsh dev team over three decades)",
+        "Bounded by tools worth knowing about, not tools installed — usable as inline documentation regardless of what is on the box",
         "Harvested from Nix, Homebrew, APT, Fedora, Kali, Alpine, FreeBSD",
         "Exotic ecosystems: Hackage, OPAM, Hex.pm, CPAN, CRAN",
-        "Covers GDAL/OGR, CERN ROOT, BIND 9, OpenFOAM, ROS",
+        "Covers GDAL/OGR, CERN ROOT, BIND 9, OpenFOAM, ROS, Starlink astronomy suites",
         "Architecture-prefixed completions in architecture_src",
         "Manipulates fpath so override_src takes priority",
         "ZUnit suite validates structure, syntax, and coverage"
@@ -3854,7 +4170,7 @@
         "fzf integration for interactive repo selection",
         "Regenerate functions rescan and rebuild caches",
         "Auto-generates dirty/clean caches on first search",
-        "10 zpwr verbs for listing and searching repos",
+        "Seven autoloaded verbs for regenerating and searching the all / dirty / clean repo sets",
         "Filters repos with uncommitted changes"
       ]
     },
@@ -3936,9 +4252,9 @@
       ]
     },
     "zsh-openshift-aliases": {
-      "overview": "Provides 53 short aliases over the OpenShift oc CLI plus login macros and oc tab-completion.",
+      "overview": "Provides 52 short aliases over the OpenShift oc CLI plus login macros and oc tab-completion.",
       "features": [
-        "53 oc-prefixed aliases (og=get, odesc=describe, olog=logs)",
+        "52 oc-prefixed aliases (og=get, odesc=describe, olog=logs)",
         "Env-driven login macros: ocdev, ocqa, ologin via rsh",
         "Auto-sources oc completion when oc is on PATH",
         "No-ops safely when oc is not installed",
@@ -3986,8 +4302,15 @@
       "features": ["Every implemented Emacs Lisp subroutine and special form", "The fusevm-frontend model: Emacs Lisp lowered to the shared bytecode VM", "Generated from the live elisprs source", "The dense companion to The elisprs Book", "DRM-free PDF"]
     },
     "gui-automation-bus-book": {
-      "overview": "The companion book to the GUI automation bus — the cross-app event-routing layer that wires the MenkeTechnologies desktop suite together, letting one app drive another over a shared message bus.",
-      "features": ["The cross-app event-routing architecture", "The message model: how apps subscribe and publish", "Per-app endpoints across the desktop suite", "Worked automation flows spanning multiple apps", "Pandoc + LaTeX typeset, DRM-free PDF"]
+      "overview": "The companion book to the GUI Automation Bus — the typed verb-call layer that turns every app's existing engine command surface into a scriptable API, so one stryke script calls a named verb on any app in the fleet, in-process or over a local socket, and gets the return value back.",
+      "features": [
+        "The verb-call model: a typed, parameterised surface published by each app",
+        "Both transports — in-process and the local socket — behind one call shape",
+        "Reversibility classes (pure / inverse / irreversible) and cross-app transactions",
+        "Per-app endpoints across the desktop suite, read from each app's live bus surface",
+        "Worked automation flows spanning multiple apps",
+        "Pandoc + LaTeX typeset, 244 pages, DRM-free PDF"
+      ]
     },
     "gui-automation-bus-reference": {
       "overview": "The dense reference for the GUI automation bus — its message types, routing model, and per-app endpoints, for scripting the desktop suite.",
@@ -4077,7 +4400,7 @@
   // which link a PDF catalog instead) are intentionally absent so no link 404s.
   var DOC_REPOS = [
     'api-rest-generator', 'arb', 'awkrs', 'fusevm', 'htoprs', 'iftoprs', 'lsofrs', 'nmaprs',
-    'powerliners', 'storageshower', 'temprs', 'strykelang', 'zdbview', 'zshrs', 'ztmux', 'zpwr',
+    'powerliners', 'storageshower', 'temprs', 'strykelang', 'texrs', 'zdbview', 'zshrs', 'ztmux', 'zpwr',
     'zpwrchrome', 'stryke-arrow', 'stryke-aws', 'stryke-azure',
     'stryke-clickhouse', 'stryke-demo', 'stryke-docker', 'stryke-duckdb',
     'stryke-email', 'stryke-fleet', 'stryke-gcp', 'stryke-grpc', 'stryke-gui',

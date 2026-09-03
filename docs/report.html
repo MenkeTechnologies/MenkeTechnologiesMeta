@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="MenkeTechnologiesMeta — engineering report. Scale, per-tier breakdown, CI matrix, polish gates, dep posture across the 188-submodule umbrella.">
+  <meta name="description" content="MenkeTechnologiesMeta — engineering report. Scale, per-tier breakdown, CI matrix, polish gates, dep posture across the 190-submodule umbrella.">
   <title>MenkeTechnologiesMeta — Engineering Report</title>
   <link rel="icon" type="image/svg+xml" href="brand/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -97,18 +97,18 @@
 
   <main class="report-main">
     <h2 class="report-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-    <p>MenkeTechnologiesMeta is a single umbrella git repository that vendors every active MenkeTechnologies project as a submodule. The goal: one <code>git clone --recurse-submodules</code> produces a fully-loaded development workstation with the language, shell, VM, CLIs, GUIs, plugins, completions, and supporting infrastructure already in place. Currently 188 submodules across 7 tiers, ~8.3 GB on disk, 97 Rust crates + 28 zsh plugins + 19 Tauri v2 desktop apps (Audio-Haxor, traderview, ztranslator, zoffice, zemail, zpdf, zphoto, zstation, zcite, zreq, zftp, zgo, zcontainer, ztunnel, zthrottle, zmax-gui, zlatex, zmusic, ztorrent) + 1 DAW arranger engine (zpwr-daw) + 3 JUCE audio plugins + 1 storefront + 1 Chrome extension + 2 web-API services + the public website + the private MenkeTechnologiesPublications book pipeline.</p>
+    <p>MenkeTechnologiesMeta is a single umbrella git repository that vendors every active MenkeTechnologies project as a submodule. The goal: one <code>git clone --recurse-submodules</code> produces a fully-loaded development workstation with the language, shell, VM, CLIs, GUIs, plugins, completions, and supporting infrastructure already in place. Currently 190 submodules across 7 tiers, ~8.3 GB on disk, 98 Rust crates + 28 zsh plugins + 19 Tauri v2 desktop apps (Audio-Haxor, traderview, ztranslator, zoffice, zemail, zpdf, zphoto, zstation, zcite, zreq, zftp, zgo, zcontainer, ztunnel, zthrottle, zmax-gui, zlatex, zmusic, ztorrent) + 1 DAW arranger engine (zpwr-daw) + 3 JUCE audio plugins + 1 storefront + 1 Chrome extension + 2 web-API services + the public website + the private MenkeTechnologiesPublications book pipeline.</p>
 
     <section class="report-section">
       <h2>~ SCALE &amp; POSITION</h2>
       <table class="report">
         <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
-        <tr><td>Submodules</td><td>188</td><td>All canonical URLs <code>https://github.com/MenkeTechnologies/&lt;repo&gt;.git</code>, flat layout</td></tr>
+        <tr><td>Submodules</td><td>190</td><td>All canonical URLs <code>https://github.com/MenkeTechnologies/&lt;repo&gt;.git</code>, flat layout</td></tr>
         <tr><td>Tiers</td><td>7</td><td>Core, Stryke ecosystem, completions, zsh plugins, editor/multiplexer plugins, apps/web/APIs, znative plugins</td></tr>
-        <tr><td>Rust crates</td><td>96</td><td>Any submodule with a top-level <code>Cargo.toml</code>; 45 run all four polish gates (fmt+clippy+doc+test), the rest have documented opt-outs or ship no ci.yml (see below)</td></tr>
+        <tr><td>Rust crates</td><td>98</td><td>Any submodule with a top-level <code>Cargo.toml</code>; 45 run all four polish gates (fmt+clippy+doc+test), the rest have documented opt-outs or ship no ci.yml (see below)</td></tr>
         <tr><td>Zsh plugins (Tier 4)</td><td>28</td><td>All have <code>.github/workflows/ci.yml</code> running zunit on each push</td></tr>
         <tr><td>Total checkout</td><td>~8.3 GB</td><td>Bulk: MenkeTechnologiesPublications (~1.9 GB — it re-vendors strykelang/zshrs/zpwr), traderview (~682 MB), zmax-gui (~589 MB), zmax (~573 MB), MenkeTechnologies.github.io (~506 MB — image history), Audio-Haxor (~451 MB — Tauri + JUCE C++), zpwr-fx (~340 MB), zpwr-synth (~290 MB), rest small. Excludes gitignored build output — zwire's ~772 MB Chromium snapshot lives in the gitignored <code>dist/</code> and is fetched at setup, so zwire is only ~42 MB here.</td></tr>
-        <tr><td>Homebrew tap</td><td>33 formulas</td><td><code>MenkeTechnologies/menketech</code> — auto-bumped by each repo's release.yml</td></tr>
+        <tr><td>Homebrew tap</td><td>37 formulas</td><td><code>MenkeTechnologies/menketech</code> — auto-bumped by each repo's release.yml</td></tr>
       </table>
     </section>
 
@@ -122,7 +122,7 @@
         <tr><td>Tier 4 — Zsh plugins</td><td>28</td><td>full ZPWR_GH_PLUGINS canonical list</td></tr>
         <tr><td>Tier 5 — Editor / multiplexer</td><td>20</td><td>VimColorSchemes (732 schemes), vim-stryke / vscode-stryke / emacs-stryke (stryke support), vim-zsh / vscode-zsh / emacs-zsh (zshrs support, generated from <code>zshrs --dump-reflection</code>), vscode-awk / vim-awk / emacs-awk (awkrs support), vscode-viml / vim-viml / emacs-viml (vimlrs support), tmux-fzf-url</td></tr>
         <tr><td>Tier 6 — Apps, ext, web, APIs</td><td>23</td><td>zwire, zpwrchrome, storageshower, zpwr-jobs (job-application pipeline CLI), MenkeTechnologies.github.io, api-rest-generator, LearningCollectionAPI, zpwr-synth, zpwr-fx, zpwr-midi-fx (JUCE audio plugins), zpwr-patch-core (shared patch graph), zpwr-hooks-editor (shared stryke Hooks editor), zpwr-modal-editor (shared Vim/Emacs modal-editing surface), zpwr-i18n (shared i18n runtime), zpwr-clip-engine (shared arranger/sequencer frontend), zgui-core (shared cyberpunk GUI toolkit), zgui-bridge (GUI Automation Bus socket host), zdsp-core (shared audio DSP engine), zpwr-theme (VS Code + JetBrains cyberpunk theme), app-store (storefront), zpwr-license, zpwr-account (accounts / subscriptions / device activation), MenkeTechnologiesPublications (private paid book pipeline)</td></tr>
-        <tr><td>Tier 7 — znative plugins</td><td>8</td><td>zshrs-forgit (git+fzf), zshrs-git-fuzzy (fzf git UI), zshrs-git-repos (parallel repo scan), zshrs-revolver (progress spinner), zshrs-kubectl-completion, zshrs-zsh-z (frecency dir jumper), zshrs-fasd (frecency files+dirs), zshrs-reveal (open repo pages) — classic zsh utilities ported to native compiled cdylib zshrs plugins installed via znative</td></tr>
+        <tr><td>Tier 7 — znative plugins</td><td>9</td><td>zshrs-forgit (git+fzf), zshrs-git-fuzzy (fzf git UI), zshrs-git-repos (parallel repo scan), zshrs-revolver (progress spinner), zshrs-kubectl-completion, zshrs-zsh-z (frecency dir jumper), zshrs-fasd (frecency files+dirs), zshrs-reveal (open repo pages), zshrs-zwire (the whole zgui automation bus as a builtin) — classic zsh utilities ported to native compiled cdylib zshrs plugins installed via znative</td></tr>
       </table>
     </section>
 
@@ -147,7 +147,7 @@
         <li><strong>bin/ smoke</strong> — <code>bin/status-all</code> + <code>bin/foreach</code> don't crash on empty checkout</li>
         <li><strong>Homebrew tap formula quality</strong> — every <code>homebrew-menketech/Formula/*.rb</code> parses, declares <code>version</code>, <code>homepage</code>, <code>license</code>, and ships per-platform <code>sha256</code> + <code>url</code></li>
         <li><strong>Cargo.toml ↔ docs/*.html version sync</strong> — every Rust crate's shipped version in <code>Cargo.toml</code> agrees with what <code>docs/index.html</code> and per-repo report cards advertise</li>
-        <li><strong>README link sanity</strong> — 6 independent drift gates: (a) every <code>.gitmodules</code> path is referenced from README, (b) submodule-count badge matches actual entry count, (c) each <code>### Tier N — Label (M)</code> header has exactly M table rows + tier-counts sum to total submodules, (d) <code>docs/index.html</code> stat-cards for <em>submodules</em>, <em>tiers</em>, and <em>zsh plugins</em> match README values, (e) <em>rust crates</em> stat-card matches actual top-level <code>Cargo.toml</code> count (skipped when submodules aren't initialized in this job's checkout), (f) all seven per-tier counts in <code>docs/index.html</code> cards and <code>docs/report.html</code> rows match the README <code>### Tier N</code> headers</li>
+        <li><strong>README link sanity</strong> — 7 independent drift gates: (a) every <code>.gitmodules</code> path is referenced from README, (b) submodule-count badge matches actual entry count, (c) each <code>### Tier N — Label (M)</code> header has exactly M table rows + tier-counts sum to total submodules, (d) <code>docs/index.html</code> stat-cards for <em>submodules</em>, <em>tiers</em>, and <em>zsh plugins</em> match README values, (e) <em>rust crates</em> stat-card matches actual top-level <code>Cargo.toml</code> count (skipped when submodules aren't initialized in this job's checkout), (f) all seven per-tier counts in <code>docs/index.html</code> cards and <code>docs/report.html</code> rows match the README <code>### Tier N</code> headers, (g) the ASCII-banner tagline and the <code>[0x08]</code> Disk Footprint per-tier repo-counts + Total match the tier headers and the <code>.gitmodules</code> count</li>
       </ol>
     </section>
 
@@ -165,7 +165,7 @@
 
     <section class="report-section">
       <h2>^ DEPENDENCY POSTURE</h2>
-      <p>Cross-repo Cargo.lock sweep run periodically — <code>cargo update</code> across all 97 Rust crates, lockfile committed, CI re-run. Dependabot security PRs (e.g. <code>rustls-webpki</code>, <code>rand</code>) get absorbed into the same sweep when they appear. Major-version bumps require maintainer review and aren't auto-applied.</p>
+      <p>Cross-repo Cargo.lock sweep run periodically — <code>cargo update</code> across all 98 Rust crates, lockfile committed, CI re-run. Dependabot security PRs (e.g. <code>rustls-webpki</code>, <code>rand</code>) get absorbed into the same sweep when they appear. Major-version bumps require maintainer review and aren't auto-applied.</p>
     </section>
 
     <section class="report-section">

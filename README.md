@@ -7,25 +7,25 @@
  ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
 ```
 
-[![Submodules](https://img.shields.io/badge/submodules-189-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-74_core-cyan.svg)](#tier-1--core-74)
+[![Submodules](https://img.shields.io/badge/submodules-190-blue.svg)](#0x01-submodule-map)
+[![Tier 1](https://img.shields.io/badge/tier_1-75_core-cyan.svg)](#tier-1--core-75)
 [![Tier 2](https://img.shields.io/badge/tier_2-34_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-34)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-20_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-20)
 [![Tier 6](https://img.shields.io/badge/tier_6-23_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-23)
-[![Tier 7](https://img.shields.io/badge/tier_7-8_znative_plugins-blue.svg)](#tier-7--znative-plugins-8)
+[![Tier 7](https://img.shields.io/badge/tier_7-9_znative_plugins-blue.svg)](#tier-7--znative-plugins-9)
 [![Rust](https://img.shields.io/badge/rust-5.0M_LOC-orange.svg)](#0x09-code-volume)
 [![Code](https://img.shields.io/badge/code-13.4M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 189 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 190 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
-**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `vimlrs` (the standalone VimL interpreter on `fusevm`), `elisprs` (the standalone Emacs Lisp interpreter, running on `fusevm`), `rubylang` (the compiled Ruby runtime on `fusevm`), `rlang` (the compiled R runtime on `fusevm`), `javars` / `kotlinrs` / `scalars` / `groovyrs` / `go-rs` / `tclrs` (the Java / Kotlin / Scala / Groovy / Go / Tcl frontends on `fusevm`), `arb` (the pipeline-visualization TUI language on `fusevm`), `texrs` (a TeX engine — Knuth's mouth and expander, plus the smallest stomach that ships a DVI page), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` / `grcrs` (the Rust CLI tools), `iftoprs` / `storageshower` / `zdbview` (TUIs — the last one a CRUD editor for the stack's rkyv archives and SQLite databases), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zcite` / `zreq` / `ztunnel` / `zgo` / `zftp` / `zcontainer` / `zstation` / `ztorrent` (the ported Tauri v2 desktop apps — Zotero / Postman / Tunnelblick / Alfred / Cyberduck / Docker Desktop + Lens / Station / Transmission reimagined in Rust, each with its embeddable `*-core` engine), `zterminal` (the GPU-accelerated terminal emulator) `zmax` (the Rust Emacs port — a Vim-style modal core built out toward Spacemacs), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-file-browser` (the shared multi-pane file browser — JS front end + Rust `fs` crate) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-modal-editor` (the shared Vim/Emacs modal-editing surface) + `zpwr-i18n` (the shared portable i18n runtime) + `zpwr-clip-engine` (the shared JS arranger/sequencer frontend extracted from `zpwr-daw`) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 33-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `vscode-awk`, `vim-awk`, `emacs-awk`, `vscode-viml`, `vim-viml`, `emacs-viml`, `tmux-fzf-url`), the 8-repo znative plugin family (`zshrs-forgit`, `zshrs-git-fuzzy`, `zshrs-git-repos`, `zshrs-revolver`, `zshrs-kubectl-completion`, `zshrs-zsh-z`, `zshrs-fasd`, `zshrs-reveal` — classic zsh utilities ported to native compiled `cdylib` `zshrs` plugins installed via `znative`), the cyberpunk editor theme (`zpwr-theme` — VS Code + JetBrains), the Chrome extension (`zpwrchrome`) and `zwire` (a Chromium superset — that extension + a cyberpunk theme preloaded on an unbranded Chromium snapshot), the public website (`MenkeTechnologies.github.io`), the web-API services `api-rest-generator` and `LearningCollectionAPI`, and the commercial back end `zpwr-license` / `zpwr-account` (offline license crypto + the accounts / subscriptions / device-activation service behind the paid catalog).
+**MenkeTechnologiesMeta** is a single umbrella repo that vendors every active [MenkeTechnologies](https://github.com/MenkeTechnologies) project as a git submodule. Clone once with `--recurse-submodules` and a fresh host has the entire stack: `strykelang` (the language), `zshrs` (the shell), `fusevm` (the bytecode VM), `vimlrs` (the standalone VimL interpreter on `fusevm`), `elisprs` (the standalone Emacs Lisp interpreter, running on `fusevm`), `rubylang` (the compiled Ruby runtime on `fusevm`), `rlang` (the compiled R runtime on `fusevm`), `javars` / `kotlinrs` / `scalars` / `groovyrs` / `go-rs` / `tclrs` (the Java / Kotlin / Scala / Groovy / Go / Tcl frontends on `fusevm`), `arb` (the pipeline-visualization TUI language on `fusevm`), `texrs` (a TeX engine — Knuth's mouth and expander, plus the smallest stomach that ships a DVI page), `lsofrs` / `awkrs` / `temprs` / `nmaprs` / `powerliners` / `grcrs` (the Rust CLI tools), `iftoprs` / `storageshower` / `zdbview` (TUIs — the last one a CRUD editor for the stack's rkyv archives and SQLite databases), `zpwr-jobs` (the job-application pipeline CLI), `Audio-Haxor` / `traderview` (Tauri v2 desktop GUI apps), `ztranslator` (the real-time MIDI/OSC/DMX event-translation desktop app + embeddable routing engine), `zcite` / `zreq` / `ztunnel` / `zgo` / `zftp` / `zcontainer` / `zstation` / `ztorrent` (the ported Tauri v2 desktop apps — Zotero / Postman / Tunnelblick / Alfred / Cyberduck / Docker Desktop + Lens / Station / Transmission reimagined in Rust, each with its embeddable `*-core` engine), `zterminal` (the GPU-accelerated terminal emulator) `zmax` (the Rust Emacs port — a Vim-style modal core built out toward Spacemacs), `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx` / `zpwr-daw` (the four JUCE patch-graph audio plugins — three perform plugins plus the FL-style DAW, every track a patch graph of blocks) + `zpwr-patch-core` (their shared signal-agnostic patch graph) + `zpwr-crate` (the shared Rust sample-library crate browser behind `Audio-Haxor` and `zpwr-daw`) + `zpwr-embed-terminal` (the shared PTY terminal vendored into the desktop apps) + `zpwr-file-browser` (the shared multi-pane file browser — JS front end + Rust `fs` crate) + `zpwr-hooks-editor` (their shared stryke Hooks code editor) + `zpwr-modal-editor` (the shared Vim/Emacs modal-editing surface) + `zpwr-i18n` (the shared portable i18n runtime) + `zpwr-clip-engine` (the shared JS arranger/sequencer frontend extracted from `zpwr-daw`) + `zpwr-algo-production` (the algorithmic music-production engine behind `zpwr-daw`'s one-click track generation) + `app-store` (the storefront) + `MenkeTechnologiesPublications` (the private paid books / reference manuals / zpwr encyclopedia + their build pipeline), `zpwr` (the terminal OS), the 33-repo stryke ecosystem (`stryke-aws`, `stryke-azure`, `stryke-clickhouse`, `stryke-scylla`, `stryke-search`, `stryke-gcp`, `stryke-k8s`, `stryke-kafka`, `stryke-zmq`, `stryke-gui`, `stryke-polars`, `stryke-utils`, ...), the 28-repo zsh plugin family (`zsh-more-completions`, `zsh-expand`, `zsh-cargo-completion`, `fzf-tab`, `revolver`, `zunit`, ...), editor / multiplexer plugins (`VimColorSchemes`, `vim-stryke`, `vscode-stryke`, `emacs-stryke`, `vim-zsh`, `vscode-zsh`, `emacs-zsh`, `vscode-awk`, `vim-awk`, `emacs-awk`, `vscode-viml`, `vim-viml`, `emacs-viml`, `tmux-fzf-url`), the 9-repo znative plugin family (`zshrs-forgit`, `zshrs-git-fuzzy`, `zshrs-git-repos`, `zshrs-revolver`, `zshrs-kubectl-completion`, `zshrs-zsh-z`, `zshrs-fasd`, `zshrs-reveal`, `zshrs-zwire` — classic zsh utilities ported to native compiled `cdylib` `zshrs` plugins installed via `znative`, plus the whole zgui automation bus as a builtin), the cyberpunk editor theme (`zpwr-theme` — VS Code + JetBrains), the Chrome extension (`zpwrchrome`) and `zwire` (a Chromium superset — that extension + a cyberpunk theme preloaded on an unbranded Chromium snapshot), the public website (`MenkeTechnologies.github.io`), the web-API services `api-rest-generator` and `LearningCollectionAPI`, and the commercial back end `zpwr-license` / `zpwr-account` (offline license crypto + the accounts / subscriptions / device-activation service behind the paid catalog).
 
 ### [`MenkeTechnologies on GitHub`](https://github.com/MenkeTechnologies) &middot; [`strykelang`](https://github.com/MenkeTechnologies/strykelang) · [`zshrs`](https://github.com/MenkeTechnologies/zshrs) · [`zpwr`](https://github.com/MenkeTechnologies/zpwr)
 
@@ -35,13 +35,13 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (74)](#tier-1--core-74)
+  - [Tier 1 — Core (75)](#tier-1--core-75)
   - [Tier 2 — Stryke ecosystem + tap (34)](#tier-2--stryke-ecosystem--tap-34)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
   - [Tier 5 — Editor / multiplexer plugins (20)](#tier-5--editor--multiplexer-plugins-20)
   - [Tier 6 — Apps, extensions, web & web-APIs (23)](#tier-6--apps-extensions-web--web-apis-23)
-  - [Tier 7 — znative plugins (8)](#tier-7--znative-plugins-8)
+  - [Tier 7 — znative plugins (9)](#tier-7--znative-plugins-9)
 - [\[0x02\] CI Status Board](#0x02-ci-status-board)
 - [\[0x03\] Common Operations](#0x03-common-operations)
 - [\[0x04\] Helper Scripts](#0x04-helper-scripts)
@@ -62,7 +62,7 @@
 git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git && cd MenkeTechnologiesMeta && git submodule foreach --recursive 'git checkout main 2>/dev/null || true'
 ```
 
-`--recurse-submodules` fetches all 189 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
+`--recurse-submodules` fetches all 190 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -82,7 +82,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 189 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 190 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (75)
 
@@ -199,7 +199,7 @@ MenkeTechnologies distribution (single tap for every CLI tool) + per-service con
 
 | Project | What it is |
 |---|---|
-| [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | Single Homebrew tap for 33 MenkeTechnologies CLI formulas (`arb` / `awkrs` / `elisprs` / `grcrs` / `groovyrs` / `htoprs` / `iftoprs` / `javars` / `kotlinrs` / `lsofrs` / `nmaprs` / `node-js` / `phplang` / `powerliners` / `pythonrs` / `rlang` / `rubylang` / `scalars` / `storageshower` / `stryke` / `tclrs` / `temprs` / `vimlrs` / `zcolorizer` / `zdbview` / `zmax` / `zpwrchrome-host` / `zshrs` / `zshrs-all` / `zshrs-daemon` / `ztmux` / `zvcs` / `zwire-host`). Formulas auto-bumped by each tool's `Release` workflow via `HOMEBREW_TAP_TOKEN`. |
+| [`homebrew-menketech`](https://github.com/MenkeTechnologies/homebrew-menketech) | Single Homebrew tap for 37 MenkeTechnologies CLI formulas (`arb` / `awkrs` / `elisprs` / `go-rs` / `grcrs` / `groovyrs` / `htoprs` / `iftoprs` / `javars` / `kotlinrs` / `lsofrs` / `nmaprs` / `node-js` / `phplang` / `powerliners` / `pythonrs` / `rlang` / `rubylang` / `scalars` / `storageshower` / `stryke` / `tclrs` / `temprs` / `texrs` / `vimlrs` / `zcolorizer` / `zdbview` / `zmax` / `zpwrchrome-host` / `zshrs` / `zshrs-all` / `zshrs-daemon` / `zshrs-native` / `zshrs-native-all` / `ztmux` / `zvcs` / `zwire-host`). Formulas auto-bumped by each tool's `Release` workflow via `HOMEBREW_TAP_TOKEN`. |
 | [`stryke-arrow`](https://github.com/MenkeTechnologies/stryke-arrow) | Apache Arrow integration. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-arrow/) · [report](https://menketechnologies.github.io/stryke-arrow/report.html)</sub> |
 | [`stryke-aws`](https://github.com/MenkeTechnologies/stryke-aws) | AWS SDK bindings (S3, EC2, SQS, Lambda, ...). &middot; <sub>[docs](https://menketechnologies.github.io/stryke-aws/) · [report](https://menketechnologies.github.io/stryke-aws/report.html)</sub> |
 | [`stryke-azure`](https://github.com/MenkeTechnologies/stryke-azure) | Microsoft Azure SDK bindings. &middot; <sub>[docs](https://menketechnologies.github.io/stryke-azure/) · [report](https://menketechnologies.github.io/stryke-azure/report.html)</sub> |
@@ -332,7 +332,7 @@ Browser extensions, supporting apps, audio plugins, public website, storefront, 
 | [`zpwr-account`](https://github.com/MenkeTechnologies/zpwr-account) | **Accounts + subscriptions + device activation** for the paid catalog (PRIVATE) — the stateful commercial layer on top of `zpwr-license`'s offline crypto core. Axum + PostgreSQL service (`account-db` / `account-server` / `account-client` crates) serving a portal API, a device-activation API (`/v1/activate` · `/validate` · `/deactivate` · `/crl`), an admin API and a static ZGui portal. Two-key design: the license issuer key stays offline in the `zpwr-license` CLI and a separate entitlement key signs the short-lived machine-bound entitlements subscribers receive, so a breach of the online service can never mint a license. `account-client` is the gate every paid app links — offline entitlement verification, background refresh, offline grace, run-or-lock. **Private** — commercial infrastructure. |
 | [`MenkeTechnologiesPublications`](https://github.com/MenkeTechnologies/MenkeTechnologiesPublications) | **Paid publications** (PRIVATE). The companion books, reference manuals/PDFs, and the zpwr encyclopedia for `strykelang`, `zshrs`, and `zpwr`, plus their generation pipeline (pandoc + LaTeX). Self-contained: vendors the public source repos as `src/` submodules and builds each book from that source; the free public docs sites stay in each product's own repo. **Private** — paid product. |
 
-### Tier 7 — znative plugins (8)
+### Tier 7 — znative plugins (9)
 
 Classic zsh utilities ported to **native `zshrs` plugins** — compiled Rust `cdylib`s loaded at runtime with `zmodload -R` against the crates.io [`znative`](https://github.com/MenkeTechnologies/zshrs) SDK, installed via the `znative` package manager. Not sourced shell functions parsed on every startup — compiled builtins. All **Free / OSS (MIT)**.
 
@@ -346,6 +346,7 @@ Classic zsh utilities ported to **native `zshrs` plugins** — compiled Rust `cd
 | [`zshrs-zsh-z`](https://github.com/MenkeTechnologies/zshrs-zsh-z) | `zsh-z` — the frecency directory jumper — ported to a native `zshrs` plugin. |
 | [`zshrs-fasd`](https://github.com/MenkeTechnologies/zshrs-fasd) | `fasd` (frecency over files **and** directories — `a`/`s`/`d`/`f`/`j`/`v`) ported to a native `zshrs` plugin; regex + fuzzy matching and frecency scoring reimplemented in Rust. |
 | [`zshrs-reveal`](https://github.com/MenkeTechnologies/zshrs-reveal) | `reveal` — open the current repo's GitHub / Heroku pages in the browser — ported to a native `zshrs` plugin. |
+| [`zshrs-zwire`](https://github.com/MenkeTechnologies/zshrs-zwire) | The whole zgui automation bus as a `zshrs` builtin — the [`zwire`](https://github.com/MenkeTechnologies/zwire) browser (tabs, windows, tiling, downloads, bookmarks, history, extensions, power, colour scheme), the live page as typed state, the machine under it (filesystem, exec, jobs, processes, PTY, key/value store, system stats), the tmux server, lifecycle hooks, transactions, and the pub/sub bus — spoken straight to [`zwire-host`](https://github.com/MenkeTechnologies/zwire-host) over its local socket from a compiled `cdylib`, with no `curl`, remote-debugging port, or client library. |
 
 ---
 
@@ -373,8 +374,9 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 1 — Core | [`kotlinrs`](https://github.com/MenkeTechnologies/kotlinrs) | [![CI](https://github.com/MenkeTechnologies/kotlinrs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/kotlinrs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/kotlinrs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/kotlinrs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/kotlinrs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/kotlinrs/tags) |
 | 1 — Core | [`scalars`](https://github.com/MenkeTechnologies/scalars) | [![CI](https://github.com/MenkeTechnologies/scalars/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/scalars/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/scalars/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/scalars/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/scalars?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/scalars/tags) |
 | 1 — Core | [`groovyrs`](https://github.com/MenkeTechnologies/groovyrs) | [![CI](https://github.com/MenkeTechnologies/groovyrs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/groovyrs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/groovyrs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/groovyrs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/groovyrs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/groovyrs/tags) |
-| 1 — Core | [`go-rs`](https://github.com/MenkeTechnologies/go-rs) | [![CI](https://github.com/MenkeTechnologies/go-rs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/go-rs/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/go-rs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/go-rs/tags) |
-| 1 — Core | [`tclrs`](https://github.com/MenkeTechnologies/tclrs) | — | [![Release](https://github.com/MenkeTechnologies/tclrs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/tclrs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/tclrs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/tclrs/tags) |
+| 1 — Core | [`go-rs`](https://github.com/MenkeTechnologies/go-rs) | [![CI](https://github.com/MenkeTechnologies/go-rs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/go-rs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/go-rs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/go-rs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/go-rs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/go-rs/tags) |
+| 1 — Core | [`tclrs`](https://github.com/MenkeTechnologies/tclrs) | [![CI](https://github.com/MenkeTechnologies/tclrs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/tclrs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/tclrs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/tclrs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/tclrs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/tclrs/tags) |
+| 1 — Core | [`texrs`](https://github.com/MenkeTechnologies/texrs) | [![CI](https://github.com/MenkeTechnologies/texrs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/texrs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/texrs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/texrs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/texrs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/texrs/tags) |
 | 1 — Core | [`zvcs`](https://github.com/MenkeTechnologies/zvcs) | [![CI](https://github.com/MenkeTechnologies/zvcs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zvcs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/zvcs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zvcs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zvcs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zvcs/tags) |
 | 1 — Core | [`iftoprs`](https://github.com/MenkeTechnologies/iftoprs) | [![CI](https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/iftoprs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/iftoprs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/iftoprs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/iftoprs/tags) |
 | 1 — Core | [`htoprs`](https://github.com/MenkeTechnologies/htoprs) | [![CI](https://github.com/MenkeTechnologies/htoprs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/htoprs/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/htoprs/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/htoprs/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/htoprs?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/htoprs/tags) |
@@ -531,7 +533,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 6 — Apps, extensions, web & web-APIs | [`zgui-bridge`](https://github.com/MenkeTechnologies/zgui-bridge) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zdsp-core`](https://github.com/MenkeTechnologies/zdsp-core) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-theme`](https://github.com/MenkeTechnologies/zpwr-theme) | [![CI](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zpwr-theme?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zpwr-theme/tags) |
-| 6 — Apps, extensions, web & web-APIs | [`app-store`](https://github.com/MenkeTechnologies/app-store) | [![CI](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml) [![jekyll-gh-pages](https://github.com/MenkeTechnologies/app-store/actions/workflows/jekyll-gh-pages.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/jekyll-gh-pages.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/app-store?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/app-store/tags) |
+| 6 — Apps, extensions, web & web-APIs | [`app-store`](https://github.com/MenkeTechnologies/app-store) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-license`](https://github.com/MenkeTechnologies/zpwr-license) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-account`](https://github.com/MenkeTechnologies/zpwr-account) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`MenkeTechnologiesPublications`](https://github.com/MenkeTechnologies/MenkeTechnologiesPublications) | — | — | — |
@@ -543,6 +545,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 7 — znative plugins | [`zshrs-zsh-z`](https://github.com/MenkeTechnologies/zshrs-zsh-z) | [![CI](https://github.com/MenkeTechnologies/zshrs-zsh-z/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zshrs-zsh-z/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/zshrs-zsh-z/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zshrs-zsh-z/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zshrs-zsh-z?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zshrs-zsh-z/tags) |
 | 7 — znative plugins | [`zshrs-fasd`](https://github.com/MenkeTechnologies/zshrs-fasd) | [![CI](https://github.com/MenkeTechnologies/zshrs-fasd/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zshrs-fasd/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/zshrs-fasd/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zshrs-fasd/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zshrs-fasd?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zshrs-fasd/tags) |
 | 7 — znative plugins | [`zshrs-reveal`](https://github.com/MenkeTechnologies/zshrs-reveal) | [![CI](https://github.com/MenkeTechnologies/zshrs-reveal/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zshrs-reveal/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/zshrs-reveal/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zshrs-reveal/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zshrs-reveal?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zshrs-reveal/tags) |
+| 7 — znative plugins | [`zshrs-zwire`](https://github.com/MenkeTechnologies/zshrs-zwire) | [![CI](https://github.com/MenkeTechnologies/zshrs-zwire/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zshrs-zwire/actions/workflows/ci.yml) | [![Release](https://github.com/MenkeTechnologies/zshrs-zwire/actions/workflows/release.yml/badge.svg)](https://github.com/MenkeTechnologies/zshrs-zwire/actions/workflows/release.yml) | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zshrs-zwire?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zshrs-zwire/tags) |
 
 ## [0x03] COMMON OPERATIONS
 
@@ -683,7 +686,7 @@ cd MenkeTechnologiesMeta
 # install zpwr (the terminal OS)
 ./zpwr/install/zpwrInstall.sh
 
-# install any CLI tool via the unified homebrew tap (33 formulas: arb, awkrs, elisprs, grcrs, groovyrs, htoprs, iftoprs, javars, kotlinrs, lsofrs, nmaprs, node-js, phplang, powerliners, pythonrs, rlang, rubylang, scalars, storageshower, stryke, tclrs, temprs, vimlrs, zcolorizer, zdbview, zmax, zpwrchrome-host, zshrs, zshrs-all, zshrs-daemon, ztmux, zvcs, zwire-host)
+# install any CLI tool via the unified homebrew tap (37 formulas: arb, awkrs, elisprs, go-rs, grcrs, groovyrs, htoprs, iftoprs, javars, kotlinrs, lsofrs, nmaprs, node-js, phplang, powerliners, pythonrs, rlang, rubylang, scalars, storageshower, stryke, tclrs, temprs, texrs, vimlrs, zcolorizer, zdbview, zmax, zpwrchrome-host, zshrs, zshrs-all, zshrs-daemon, zshrs-native, zshrs-native-all, ztmux, zvcs, zwire-host)
 brew tap MenkeTechnologies/menketech
 brew install stryke zshrs lsofrs iftoprs htoprs awkrs nmaprs temprs powerliners storageshower zpwrchrome-host zmax elisprs vimlrs zcolorizer zdbview ztmux zwire-host
 # `zshrs-all` is the full zshrs install (shell + zd client + recorder +
@@ -748,8 +751,8 @@ Measured fresh-clone size (checked-out tracked files + `.git/modules/`, after `g
 | Tier 4 — Zsh ecosystem plugins | 28 | ~22 MB |
 | Tier 5 — Editor / multiplexer plugins | 20 | ~16 MB |
 | Tier 6 — Apps, extensions, web & web-APIs | 23 | ~3.8 GB |
-| Tier 7 — znative plugins | 8 | ~1.5 MB |
-| **Total** | **189** | **~8.3 GB** |
+| Tier 7 — znative plugins | 9 | ~1.5 MB |
+| **Total** | **190** | **~8.3 GB** |
 
 Each repo's size counts its own git object store, so a nested submodule's objects are counted again under every parent that vendors it — which is exactly what a recursive clone puts on disk. The bulk is `MenkeTechnologiesPublications/` (~1.9 GB — it vendors `strykelang`, `zshrs`, and `zpwr` as its own `src/` submodules, so a full recursive clone re-fetches all three a second time under it), `traderview/` (~682 MB), `zmax-gui/` (~589 MB) and `zmax/` (~573 MB), `MenkeTechnologies.github.io/` (~506 MB — accumulated screenshot history), `Audio-Haxor/` (~451 MB — Tauri v2 frontend assets + JUCE C++), `zpwr-fx/` (~340 MB), and `zpwr-synth/` (~290 MB). Cargo `target/` directories are `.gitignore`d and re-derived during build — as is `zwire/dist/` (the ~772 MB Chromium snapshot, fetched at setup, not cloned), which is why `zwire` is only ~42 MB here. Numbers refresh as repos add commits.
 
@@ -771,30 +774,30 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 4,996,961 | 12,233 |
-| JSON | 2,393,411 | 860 |
-| TeX | 1,854,280 | 173 |
-| JavaScript | 745,093 | 4,549 |
-| HTML | 604,746 | 1,426 |
-| C Header | 387,834 | 1,914 |
-| C++ | 384,299 | 1,138 |
-| Python | 286,754 | 1,208 |
-| Zsh | 285,383 | 1,338 |
-| C | 263,643 | 446 |
-| Stryke (`.stk`) | 201,945 | 3,398 |
-| Shell | 134,856 | 3,602 |
-| Vim Script | 125,676 | 992 |
-| CSS | 119,687 | 460 |
-| Perl | 107,492 | 1,793 |
-| AWK | 82,707 | 2,192 |
-| Scheme | 77,756 | 2,338 |
+| Rust | 5,002,054 | 12,191 |
+| JSON | 2,311,975 | 905 |
+| TeX | 1,956,872 | 280 |
+| JavaScript | 743,601 | 4,616 |
+| HTML | 596,046 | 1,426 |
+| C Header | 388,395 | 1,915 |
+| C++ | 384,476 | 1,135 |
+| Python | 287,276 | 1,205 |
+| Zsh | 285,428 | 1,338 |
+| C | 263,572 | 443 |
+| Stryke (`.stk`) | 202,440 | 3,405 |
+| Shell | 145,248 | 4,002 |
+| Vim Script | 127,426 | 1,019 |
+| CSS | 119,057 | 460 |
+| Perl | 108,124 | 1,811 |
+| AWK | 82,918 | 2,209 |
 | C++ Header | 73,770 | 260 |
-| TOML | 68,573 | 1,113 |
-| Kotlin | 29,909 | 281 |
-| SQL | 29,409 | 124 |
+| TOML | 43,814 | 909 |
+| Scheme | 39,862 | 1,182 |
+| Kotlin | 31,747 | 315 |
+| SQL | 29,408 | 123 |
 | Objective-C++ | 20,833 | 65 |
-| *Other (89 languages)* | 113,207 | 1,647 |
-| **Total** | **13,388,224** | **44,923** |
+| *Other (89 languages)* | 115,524 | 1,574 |
+| **Total** | **13,359,866** | **44,129** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -804,16 +807,16 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 <!-- BEGIN gen-code-volume:repos -->
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | JSON 1,581,635 | Rust 784,604 |
-| `MenkeTechnologiesPublications` | TeX 1,848,172 | HTML 133,104 |
+| `traderview` | JSON 1,581,635 | Rust 780,934 |
+| `MenkeTechnologiesPublications` | TeX 1,949,851 | HTML 134,396 |
 | `zpwr-fx` | C++ 333,824 | C Header 306,882 |
-| `strykelang` | Rust 417,622 | Stryke 162,579 |
-| `zshrs` | Rust 541,609 | Zsh 56,822 |
-| `zmax` | Rust 320,336 | JSON 143,978 |
-| `zvcs` | Rust 516,614 | Shell 12,676 |
-| `zmax-gui` | Rust 252,968 | JSON 96,307 |
-| `docs` | HTML 393,255 | JavaScript 6,806 |
-| `Audio-Haxor` | Rust 140,344 | JSON 121,593 |
+| `strykelang` | Rust 419,871 | Stryke 162,579 |
+| `zvcs` | Rust 619,026 | Shell 12,678 |
+| `zshrs` | Rust 547,108 | Zsh 56,822 |
+| `zmax` | Rust 365,831 | JSON 157,647 |
+| `docs` | HTML 393,768 | JavaScript 6,806 |
+| `Audio-Haxor` | Rust 137,899 | JSON 121,401 |
+| `pythonrs` | Python 243,575 | Rust 69,838 |
 <!-- END gen-code-volume:repos -->
 
 Numbers refresh as repos add commits — regenerate with `bin/gen-code-volume --in-place`.

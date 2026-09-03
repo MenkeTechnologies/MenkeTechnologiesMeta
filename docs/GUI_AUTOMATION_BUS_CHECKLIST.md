@@ -54,7 +54,7 @@ perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"
 - [x] `zgui-core/webui/automation.js` — `ZGui.automation`: `register({app,verbs,state,events})`,
       `surface()`, `emit(id,payload)`, and the call/get/subscribe **dispatch** to registered handlers (§4).
       Shipped, alongside `zgui-core/webui/automation-host.js`.
-- [ ] Upgrade the `event`-step editor (`user-commands.js:300`) to read the typed `surface()` instead of
+- [ ] Upgrade the `event`-step editor (`user-commands.js:324`) to read the typed `surface()` instead of
       label-only `setActions`. **Still open** — `user-commands.js` exports only `setActions`.
 - [x] `zgui-bridge` (new shared Rust crate) — Unix-socket host, newline-JSON frame codec, request router
       (§7.1). One entry point: `zgui_bridge::serve(app_name, surface)`. Shipped
@@ -153,7 +153,7 @@ transport. zterminal is N/A: native terminal, no webview shell, not on this bus 
 `sock` box is ✅, but they were not running the last time `bin/gen-gui-actions-live` swept the fleet —
 their verbs are therefore absent from the generated catalog and `verbs`/`docs` stay ◐/☐ until the next
 sweep with all apps open. (zcontainer's earlier catalog-without-bus discrepancy is resolved: its
-`serve("zcontainer")` call site is live at `zcontainer/app/src-tauri/src/bus.rs:145`.)
+`serve("zcontainer")` call site is live at `zcontainer/app/src-tauri/src/bus.rs:752`.)
 
 ## Status matrix — Track B (JUCE)
 
@@ -169,7 +169,7 @@ sweep with all apps open. (zcontainer's earlier catalog-without-bus discrepancy 
 ## Order
 
 1. **Phase 0A** (Track A substrate) — nothing else can start until this lands.
-2. **Pilots ⭐ `zcite` + `zreq`** — highest existing action counts (206 / 151), rich state, natural cross-app
+2. **Pilots ⭐ `zcite` + `zreq`** — highest existing action counts (209 / 156), rich state, natural cross-app
    pair. Prove in-proc + out-of-proc + one cross-app script (`zcite` selection → `zreq` request) before
    fan-out.
 3. **Fan out Track A** — sockets are wired everywhere; what remains per app is promoting the

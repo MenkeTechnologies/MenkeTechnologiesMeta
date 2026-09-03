@@ -71,8 +71,8 @@ Recorded so the doc's failure mode is visible, not just its numbers. Each was ve
 
 | Claim in the previous ledger | Measured reality |
 | --- | --- |
-| `zterminal` is `✗` on palette, settings, shared styles, header, tiles, colorscheme | **All six PASS.** Palette at `zterminal/src/config/bindings.rs:686` (⌘K → `Action::OpenCommandPalette`), ⌘, at `:721`, shared `all.css` at `settings/frontend/index.html:8`, `ZGui.header.build` at `zterminal-settings.js:799`, `ZGui.tileGrid` at `dashboard/dashboard.js:46` |
-| `zterminal` is "N/A — not on this bus" (`GUI_AUTOMATION_BUS_CHECKLIST.md`) | **On a bus.** `zterminal/src/zbus.rs` is 1,658 lines spawned at `main.rs:223`, publishing ~200 verbs with enforced reversibility |
+| `zterminal` is `✗` on palette, settings, shared styles, header, tiles, colorscheme | **All six PASS.** Palette at `zterminal/zterminal/src/config/bindings.rs:686` (⌘K → `Action::OpenCommandPalette`), ⌘, at `:721`, shared `all.css` at `settings/frontend/index.html:7`, `ZGui.header.build` at `zterminal-settings.js:783`, `ZGui.tileGrid` at `dashboard/dashboard.js:47` |
+| `zterminal` is "N/A — not on this bus" (`GUI_AUTOMATION_BUS_CHECKLIST.md`) | **On a bus.** `zterminal/zterminal/src/zbus.rs` is 1,745 lines spawned at `main.rs:226`, publishing ~200 verbs with enforced reversibility |
 | `Audio-Haxor` consumes `ZGui.dataTable` / `ZGui.table` (R8) | **Zero call sites in app code.** Sorting is `frontend/js/sort-persist.js:5`, resizing `frontend/js/columns.js:17` — hand-rolled, and the origin the shared component was extracted *from* |
 | `zoffice` is `✗` on fzf filters (R7) | **PASS** — 10 `ZGui.fzf` sites across `app.js` and `zoffice-ext.js` |
 | `zreq` R9 is `N/A` | **PASS** — `zreq-core/webui/run-arrangement.js` already drives `createGrid` with a `requests` domain |
@@ -95,9 +95,12 @@ Recorded so the doc's failure mode is visible, not just its numbers. Each was ve
   `zpwr-clip-engine` as a submodule and contribute **only a domain file** to the shared `createGrid`,
   never a fork of the renderer. Four agents explicitly declined to land one unverified, because a
   canvas renderer cannot be exercised headlessly.
-- **R10 fails in 3 of 22** — zpwr-daw, zterminal, zwire. `zwire`'s is quantified: the shared
-  `file-browser.js` needs ~35 `window.zfbHost` methods and `zwire-host` implements 9.
-- **G2 is the structural blocker.** No app embeds all three cross-cutting engines. `zoffice-core`
+- **R10's `zpwr-file-browser` submodule is now in 21 of 22** — only `zpwr-daw` lacks it.
+  `zterminal` and `zwire` have since added it but neither drives the shared browser yet, so their
+  matrix cells stay `✗`. `zwire`'s gap is quantified: the shared `file-browser.js` needs ~35
+  `window.zfbHost` methods and `zwire-host` implements 9.
+- **G2 is the structural blocker.** Four apps now submodule all three cross-cutting engines
+  (`zoffice`, `zemail`, `zreq`, `zftp`) but none yet mounts all three as real views. `zoffice-core`
   shipped its first mountable view this cycle (`webui/zoffice-view.js`, `window.mountZoffice`) plus a
   feature-gated Tauri plugin, which unblocks the office leg fleet-wide; `zpdf-core` already had one.
   `zemail-core` still has no embeddable view. `traderview` cannot satisfy G2 as written — it has no
@@ -120,9 +123,9 @@ Recorded so the doc's failure mode is visible, not just its numbers. Each was ve
 These are the `GUI_APP_REQUIREMENTS.md` "known conformance gaps". Each must be a single
 shared module before it can be embedded everywhere.
 
-- [ ] **A1 Single command palette** — converge `zpwr-patch-core/webui/command-palette.js`,
-  `Audio-Haxor/frontend/js/command-palette.js`, and ztranslator's inline palette into ONE
-  shared module; route all apps through it (R1).
+- [ ] **A1 Single command palette** — converge `Audio-Haxor/frontend/js/command-palette.js` and
+  ztranslator's inline palette onto the canonical `zgui-core/webui/command-palette.js`; route all
+  apps through it (R1). (`zpwr-patch-core` no longer ships a `command-palette.js` of its own.)
 - [ ] **A2 Shared fzf matcher** — promote `zpwr-patch-core`'s `fzfMatch` to a shared module
   with one highlight style; every filter + the palette imports it (R7).
 - [ ] **A3 Shared table component** — one sortable + resizable + width-persisting table; no
@@ -130,8 +133,8 @@ shared module before it can be embedded everywhere.
 - [ ] **A4 Shared cyberpunk tokens** — extract `cyberpunk.css` design tokens so Tauri apps
   read the same theme source as the JUCE apps (R4).
 - [ ] **A5 File browser is shared** — `zpwr-file-browser` is the promoted multi-pane browser behind
-  an fs shim (C ABI + JUCE shim), embedded in **19/22** (R10). Still missing from **`zpwr-daw`**, **`zterminal`** and
-  **`zterminal`** — neither lists it in `.gitmodules`.
+  an fs shim (C ABI + JUCE shim), embedded in **21/22** (R10). Still missing from **`zpwr-daw`** —
+  the only Desktop App that does not list it in `.gitmodules`.
 - [ ] **A6 Tile/tab/header components** — shared tile, tab bar, and header-strip components
   (R5/R6).
 
@@ -143,20 +146,22 @@ Every Desktop App must embed all of these (submodule + wired + transport shim) a
 embed (not just a `.gitmodules` line). Verified against each app's `.gitmodules`.
 
 ### B1 — `zpwr-embed-terminal` (R3) — 20/22 (missing: zterminal — N/A, it IS the terminal; zwire)
-- [x] 12 apps (N/A for `zterminal` — it is itself the terminal).
-- [ ] **zcontainer** — no `zpwr-embed-terminal` submodule, and no `zpwr-embed-terminal` directory
-  anywhere in the app. Its exec terminal is still bespoke.
+- [x] 20 apps (N/A for `zterminal` — it is itself the terminal).
+- [ ] **zcontainer** — the submodule has landed (`crates/zpwr-embed-terminal`); its exec terminal
+  still has to be routed onto it.
 
 ### B2 — `zpwr-hooks-editor` (R2) — 20/22 (missing: zterminal, zwire)
 - [x] zpdf  - [x] zemail  - [x] zoffice  - [x] zreq  - [x] ztunnel  - [x] zgo
 - [x] zftp  - [x] zcite  - [x] zcontainer
-- [ ] **zterminal** — absent; its `.gitmodules` lists only `zgui-core` + `ztmux-core`.
+- [ ] **zterminal** — absent; its `.gitmodules` lists only `zgui-core`, `ztmux-core` and
+  `zpwr-file-browser`.
+- [ ] **zwire** — vendored at `extensions/hud-internal/vendor/zpwr-hooks-editor`, not a submodule.
 
-### B3 — `zpwr-file-browser` (R10) — 19/22 (missing: zpwr-daw, zterminal, zwire)
+### B3 — `zpwr-file-browser` (R10) — 21/22 (missing: zpwr-daw)
 - [x] zpdf  - [x] zemail  - [x] zoffice  - [x] zreq  - [x] ztunnel
 - [x] zgo  - [x] zftp  - [x] zcite  - [x] zcontainer
+- [x] zterminal (`crates/zpwr-file-browser`)  - [x] zwire (`extensions/hud-internal/lib/file-browser`)
 - [ ] **zpwr-daw** — absent from `.gitmodules`.
-- [ ] **zterminal** — absent from `.gitmodules`.
 
 ### B4 — `zpwr-i18n` (G3 runtime) — 18/22 direct (missing: zpdf, zterminal, zcontainer, zwire — zpdf and zcontainer receive it transitively, vendored inside their -core; localization completeness tracked in Phase D)
 - [x] zcite  - [x] zcontainer (transitively — vendored inside `zcontainer-core`)
@@ -176,7 +181,7 @@ embed (not just a `.gitmodules` line). Verified against each app's `.gitmodules`
 A searchable, **app-owned** settings panel bound to **Cmd/Ctrl+,** (NEVER in a core/embed;
 cores only offer settings items — see the gate's "END-APP surfaces" rule). Nine of the ten apps
 once listed here mount `ZGui.appShell`, which binds ⌘, and opens the panel itself
-(`zgui-core/webui/app-shell.js:315`, `:324`):
+(`zgui-core/webui/app-shell.js:463`, `:472`):
 - [x] zpdf  - [x] zemail  - [x] zoffice  - [x] zreq  - [x] ztunnel  - [x] zgo (Preferences window)
 - [x] zftp  - [x] zcite  - [x] zcontainer
 - [ ] **zterminal** — the only app with no settings panel: it does not mount the appShell.
@@ -197,13 +202,14 @@ C2–C4 are the cross-cutting engines; verified against every app's `.gitmodules
 - [x] **C1 own `-core`** wired natively **and** over the C ABI in every app that has one
   (`zcontainer-core`, `zpdf-core`, `zemail-core`, `zoffice-core`, `zreq-core`, `ztunnel-core`,
   `zgo-core`, `zcite-core`, `ztranslator-core`).
-- [ ] **C2 `zpdf-core`** + a PDF view in all 13 non-source apps — embedded in **3**: `zemail`,
-  `zftp`, `Audio-Haxor`. Missing from zcite, zreq, zgo, ztunnel, zcontainer, zphoto, zstation,
-  zthrottle, zmax-gui, traderview, ztranslator, zpwr-daw.
-- [ ] **C3 `zoffice-core`** + an office view in all 13 non-source apps — embedded in **2**: `zemail`,
-  `zftp`. Missing from every other non-source app.
-- [ ] **C4 `zemail-core`** + a mail view in all 13 non-source apps — embedded in **1**: `zftp`.
-  Missing from every other non-source app.
+- [ ] **C2 `zpdf-core`** + a PDF view in all 13 non-source apps — embedded in **7**: `Audio-Haxor`,
+  `zemail`, `zoffice`, `zreq`, `zftp`, `zlatex`, `zmax-gui`. Missing from zcite, zgo, ztunnel,
+  zcontainer, zphoto, zstation, zthrottle, zmusic, ztorrent, traderview, ztranslator, zpwr-daw.
+- [ ] **C3 `zoffice-core`** + an office view in all 13 non-source apps — embedded in **8**:
+  `Audio-Haxor`, `zpdf`, `zemail`, `zreq`, `zftp`, `zcite`, `zlatex`, `zmax-gui`. Missing from every
+  other non-source app.
+- [ ] **C4 `zemail-core`** + a mail view in all 13 non-source apps — embedded in **4**: `zoffice`,
+  `zreq`, `zftp`, `zcite`. Missing from every other non-source app.
 - [x] **C5 `ztranslator-core`** in the show-control-relevant apps (haxor/traderview/daw), extracted
   from the `ztranslator` app.
 - [ ] **C6 `zpwr-clip-engine` grid (R9)** + an app-specific domain in every app with

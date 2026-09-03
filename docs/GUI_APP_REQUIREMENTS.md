@@ -150,7 +150,7 @@ It is the family's file surface (open/import/export, project/sample/asset browsi
 
 - The browser is **promoted to a shared module** (mirror `zpwr-embed-terminal`): one source,
   vendored into every app — never re-forked. Done: it is the top-level `zpwr-file-browser`
-  submodule, mounted by 17 repos.
+  submodule, mounted by 22 repos.
 - Filesystem access goes through a **host-provided backend behind a transport shim**, the
   same way the terminal abstracts its PTY. The host supplies the fs ops
   (`listDirectory`, `renameFile`, copy/move/delete, …); Tauri routes them to `invoke`,
@@ -225,9 +225,8 @@ Per app, all ten must be true:
 
 - **Command palette is single-source for the Tauri apps.** The canonical module is
   `zgui-core/webui/command-palette.js`; ztranslator loads it
-  (`ztranslator-core/frontend/index.html`), superseding the older
-  `zpwr-patch-core/webui/command-palette.js` named above. The JUCE shell is the remaining
-  consumer to converge.
+  (`ztranslator-core/frontend/index.html:370`). The older `zpwr-patch-core` copy is gone — that repo
+  ships no `command-palette.js` at all. The JUCE shell is the remaining consumer to converge.
 - **Styles are split by substrate.** JUCE apps share `cyberpunk.css`; the Tauri apps
   (Audio-Haxor, traderview, ztranslator) carry their own stylesheets. Extract the shared
   design tokens so both substrates read the same theme source.
@@ -237,9 +236,9 @@ Per app, all ten must be true:
   `zreq` route every table/filter/tab through them; the remaining apps still carry ad-hoc
   instances and must converge on the shared widgets.
 - **File browser is promoted** to the shared `zpwr-file-browser` submodule (webui + Rust
-  `fs_*` backend behind the `window.vstUpdater` shim) and mounted by 17 repos — including
-  `zoffice`, `zemail` and `zpdf`. Remaining embeds: `zpwr-daw` and `zterminal`.
-- **Arrangement grid** (`zpwr-clip-engine`) is a submodule in 10 repos: beyond `zpwr-daw`,
+  `fs_*` backend behind the `window.vstUpdater` shim) and mounted by 22 repos — including
+  `zoffice`, `zemail`, `zpdf`, `zterminal` and `zwire`. Remaining embed: `zpwr-daw`.
+- **Arrangement grid** (`zpwr-clip-engine`) is a submodule in 24 repos: beyond `zpwr-daw`,
   ztranslator embeds it (`ztranslator-core/frontend/trigger-grid.js` — `createGrid` +
   `createTriggersDomain`) and Audio-Haxor drives it from `als-timeline.js`. The remaining apps
   still need a domain + `createGrid` embed (R9).

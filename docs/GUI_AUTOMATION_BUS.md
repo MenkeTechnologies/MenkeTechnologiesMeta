@@ -15,9 +15,9 @@ The apps already ship a user-programmable command palette. `ZGui.userCommands`
 (`app-store/zgui-core/webui/user-commands.js`) stores a shared, cross-app JSON list of command entries,
 each a chain of typed steps: `url | js | scheme | event | stryke | bash`. Two steps matter here:
 
-- **`event`** (`user-commands.js:171`) dispatches **one** app action id. Apps publish their action
+- **`event`** (`user-commands.js:184`) dispatches **one** app action id. Apps publish their action
   vocabulary via `setActions([{id,label}])` — **id + label only**. No params, no return, no state.
-- **`stryke`** (`user-commands.js:174`) runs a script via `invoke("run_stryke_hook", {script, ctx:{arg}})`
+- **`stryke`** (`user-commands.js:187`) runs a script via `invoke("run_stryke_hook", {script, ctx:{arg}})`
   on the backend.
 
 The `stryke` step is a **dead end**. The script runs on the backend, receives `ctx.arg`, returns — and
@@ -101,7 +101,7 @@ ZGui.automation.register({
 
 `ZGui.automation.surface()` returns the manifest (verbs/state/events, types only, no functions) —
 this is what `App::verbs()` reports to a script. The palette's `event`-step editor also reads it, so the
-existing action dropdown (`user-commands.js:300`) upgrades from label-only to typed verbs for free.
+existing action dropdown (`user-commands.js:324`) upgrades from label-only to typed verbs for free.
 
 ## 5. Layer 2 — the bridge (stryke ⇆ app, request/response)
 
@@ -246,7 +246,7 @@ The journal itself is `zgui_bridge::Journal` (`lib.rs:156-213`) — `begin` / `r
 
 All three surfaces get `App` in scope and use the **same** module — no per-surface logic:
 
-1. **Palette `stryke` step** — `user-commands.js:174` today passes only `ctx.arg`. Extend `run_stryke_hook`
+1. **Palette `stryke` step** — `user-commands.js:187` today passes only `ctx.arg`. Extend `run_stryke_hook`
    so the script has `App::here()` bound to the current app. A palette command becomes a real
    orchestration, not a single `event` fire. The step chain (`url|js|scheme|event|stryke|bash`) is
    unchanged; the `stryke` step just gets more powerful.
@@ -293,8 +293,8 @@ Per app (one session each, your 16-pane workflow):
 7. Verify: a `.stk` script drives the app **in-proc** (palette step) and **out-of-proc** (from zshrs).
 
 **Pilot apps first** — highest existing action count, prove the loop before fan-out:
-- **zcite** (206 verbs) — library/collection/citation verbs, rich state (selection, active collection).
-- **zreq** (151 verbs) — request.send/save, environments; natural cross-app partner (fire requests for
+- **zcite** (209 verbs) — library/collection/citation verbs, rich state (selection, active collection).
+- **zreq** (156 verbs) — request.send/save, environments; natural cross-app partner (fire requests for
   zcite DOIs, drive zcontainer service endpoints).
 
 Then fan out to zemail, zcontainer, zftp, zstation, zterminal, the rest.
@@ -307,14 +307,14 @@ across apps, and a vendor-authored automation language each **predate this separ
 **19 apps** call `zgui_bridge::serve` and expose the surface today — Audio-Haxor, traderview, zcite,
 zcontainer, zemail, zftp, zgo, zlatex, zmax-gui, zmusic, zoffice, zpdf, zphoto, zreq, zstation,
 zthrottle, ztorrent, ztranslator, ztunnel. `zcontainer` routes its own engine Rust-direct on the same
-socket (`app/src-tauri/src/bus.rs:210`), so its `docker.*` / `k8s.*` / `vm.*` / `analyze.*` vocabulary
+socket (`app/src-tauri/src/bus.rs:54`), so its `docker.*` / `k8s.*` / `vm.*` / `analyze.*` vocabulary
 is callable by name; `ztranslator` does the same for the engine behind `tauri-plugin-ztranslator` —
 its stateless `ztr_*` commands resolve Rust-direct and the stateful ones go through the plugin's own
 command so the host wrapper (event sink, persistence, log) still runs; `zmax-gui` dispatches its own
 host command surface by name alongside the webview verbs. `zwire` is scriptable through its own
 native bus rather than this socket, and so is `zterminal` — it has no webview shell, but it is **not**
-off the automation story: `zterminal/src/zbus.rs` is 1,658 lines spawned at `main.rs:223`, publishing
-its own verb surface (including `pane_await`, `zbus.rs:210`). An earlier revision of this paragraph
+off the automation story: `zterminal/zterminal/src/zbus.rs` is 1,745 lines spawned at `main.rs:226`, publishing
+its own verb surface (including `pane_await`, `zbus.rs:211`). An earlier revision of this paragraph
 implied otherwise.
 
 **Track B (JUCE) is no longer unbuilt.** `zpwr-daw` hosts the bus natively through

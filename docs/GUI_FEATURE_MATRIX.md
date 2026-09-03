@@ -12,7 +12,7 @@ call site, not by the submodule being vendored.
 _Re-verified 2026-08-02 by grepping each app's real entry/frontend + `src-tauri` at the recorded
 gitlink. For the two tmux surfaces the test is **does the app's own frontend load the script**:
 `powerline.js` self-boots its bar on `DOMContentLoaded` when loaded (`boot()` →
-`apply(true)`, `zgui-core/webui/powerline.js:190`; `.powerline.init(` is *optional* — it only
+`apply(true)`, `zgui-core/webui/powerline.js:189`; `.powerline.init(` is *optional* — it only
 supplies the sig/providers to an already-built bar, `powerline.js:162-167`), while `tmux.js`
 additionally needs an explicit `.tmux.init(` (each app's `tmux-config.js`). Vendoring `zgui-core`
 alone wires neither. The rest: `serve("<app>")` in the app's `bus.rs` for the socket, `monaco-vim` /
@@ -44,24 +44,24 @@ in [`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md).
 
 | App | GUI scripting (bus) | Bus verbs | tmux bar | tmux WM | vim (editor) | vim (app) | hooks editor |
 | --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| **zpdf** | ✓ | 649 | ✓ | ✓ | ✓ | · | ✓ |
-| **zemail** | ✓ | 208 | ✓ | ✓ | ✓ | · | ✓ |
-| **zcite** | ✓ | 206 | · | · | ✓ | · | ✓ |
-| **zftp** | ✓ | 160 | ✓ | ✓ | ✓ | · | ✓ |
-| **zreq** | ✓ | 151 | ✓ | ✓ | ✓ | · | ✓ |
-| **ztunnel** | ✓ | 125 | ✓ | · | ✓ | · | ✓ |
-| **zoffice** | ✓ | 199 | ✓ | ✓ | ✓ | ✓ | ✓ |
-| **zthrottle** | ✓ | 91 | ✓ | ✓ | ✓ | · | ✓ |
+| **zpdf** | ✓ | 674 | ✓ | ✓ | ✓ | · | ✓ |
+| **zemail** | ✓ | 215 | ✓ | ✓ | ✓ | · | ✓ |
+| **zcite** | ✓ | 209 | ✓ | · | ✓ | · | ✓ |
+| **zftp** | ✓ | 182 | ✓ | ✓ | ✓ | · | ✓ |
+| **zreq** | ✓ | 156 | ✓ | ✓ | ✓ | · | ✓ |
+| **ztunnel** | ✓ | 128 | ✓ | · | ✓ | · | ✓ |
+| **zoffice** | ✓ | 230 | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **zthrottle** | ✓ | 98 | ✓ | ✓ | ✓ | · | ✓ |
 | **zlatex** | ✓ | 65 | ✓ | · | ✓ | · | ✓ |
-| **zgo** | ✓ | 140 | · | · | ✓ | · | ✓ |
-| **traderview** | ✓ | 1732 | · | · | ✓ | · | ✓ |
+| **zgo** | ✓ | 144 | · | · | ✓ | · | ✓ |
+| **traderview** | ✓ | 1748 | · | · | ✓ | · | ✓ |
 | **zphoto** | ✓ | 101 | ✓ | ✓ | ✓ | · | ✓ |
-| **zstation** | ✓ | 37 | ✓ | · | ✓ | · | ✓ |
-| **zcontainer** | ✓⁴ | 25 | · | · | ✓ | · | ✓ |
+| **zstation** | ✓ | 52 | ✓ | · | ✓ | · | ✓ |
+| **zcontainer** | ✓⁴ | 25 | ✓ | · | ✓ | · | ✓ |
 | **zmusic** | ✓ | —⁶ | ✓ | ✓ | ✓ | · | ✓ |
 | **ztorrent** | ✓ | —⁶ | ✓ | ✓ | ✓ | · | ✓ |
-| **Audio-Haxor** | ✓ | 239 | · | · | ✓ | · | ✓ |
-| **ztranslator** | ✓ | 54 | · | · | ✓ | · | ✓ |
+| **Audio-Haxor** | ✓ | 241 | · | · | ✓ | · | ✓ |
+| **ztranslator** | ✓ | 65 | ✓ | · | ✓ | · | ✓ |
 | **zmax-gui** | ✓ | 30 | ✓ | ✓ | ✓ | · | ✓ |
 | **zwire** | native² | 161 | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **zterminal** | · | — | native³ | native³ | · | · | · |
@@ -92,7 +92,7 @@ the webview registers, so it is also proof the frontend booted: a dead webview r
 verbs alone. It mounts the powerline bar but not the tmux tiling WM — a two-pane editor/preview
 does not tile.
 
-⁴ **zcontainer**'s bus has since landed in git — `zcontainer/app/src-tauri/src/bus.rs:145` now calls
+⁴ **zcontainer**'s bus has since landed in git — `zcontainer/app/src-tauri/src/bus.rs:752` now calls
 `serve("zcontainer", handler)`, so the 25 verbs the live catalog lists are reproducible from source
 and the row is ✓. (It was the one row that wasn't, when no `bus.rs` existed on any ref.) **19** apps
 now call `serve("<app>")`: Audio-Haxor, traderview, zcite, **zcontainer**, zemail, zftp, zgo,
@@ -104,17 +104,19 @@ either copy of the catalog and their live verb counts are unread. Every other co
 is verified from source. Re-run `bin/gen-gui-actions-live` to fill them in.
 
 **On the two tmux surfaces** — the bar and the WM ship in `zgui-core` but are **not** mounted by the
-appShell; they are per-app **script loads**. **13** apps pull `powerline.js` into their own
+appShell; they are per-app **script loads**. **16** apps pull `powerline.js` into their own
 `index.html` (`zpdf`, `zemail`, `zftp`, `zreq`, `ztunnel`, `zoffice`, `zthrottle`, `zlatex`,
-`zphoto`, `zstation`, `zmax-gui`, `zmusic`, `ztorrent`); **10** of those also pull
-`webui/tmux.js` + a `tmux-config.js` that calls `.tmux.init(` — the same list minus `ztunnel`,
-`zlatex` and `zstation`, which take the bar without the tiling WM. The remaining apps load neither
+`zphoto`, `zstation`, `zmax-gui`, `zmusic`, `ztorrent`, `zcite`, `zcontainer`, `ztranslator`);
+**10** of those also pull `webui/tmux.js` + a `tmux-config.js` that calls `.tmux.init(` — the same
+list minus `ztunnel`, `zlatex`, `zstation`, `zcite`, `zcontainer` and `ztranslator`, which take the
+bar without the tiling WM. The remaining apps (`zgo`, `traderview`, `Audio-Haxor`) load neither
 script outside their vendored `lib/zgui-core` copy, so `ZGui.powerline` / `ZGui.tmux` never exist in
-their document. Six apps additionally call `.powerline.init(` to feed the already-booted bar an app
-sig + stat providers — **ztunnel** (`frontend/main.js:25`), **zstation** (`frontend/main.js:30`),
-**zoffice** (`frontend/tmux-config.js:82`), **zthrottle** (`frontend/main.js:185`), **zlatex**
-(`frontend/main.js:204`) and **zmusic** (`frontend/zmusic.js:5391`); the rest run the bar's
-auto-booted defaults.
+their document. Nine apps additionally call `.powerline.init(` to feed the already-booted bar an app
+sig + stat providers — **ztunnel** (`frontend/main.js:42`), **zstation** (`frontend/main.js:43`),
+**zoffice** (`frontend/tmux-config.js:82`), **zthrottle** (`frontend/main.js:218`), **zlatex**
+(`frontend/main.js:249`), **zmusic** (`frontend/zmusic.js:7828`), **zcite** (`frontend/main.js:41`),
+**ztranslator** (`frontend/main.js:121`) and **zcontainer** (`frontend/zcontainer.js:8545`); the
+rest run the bar's auto-booted defaults.
 
 ---
 
@@ -132,9 +134,9 @@ socket addressing) is still unbuilt (see [`GUI_AUTOMATION_BUS_CHECKLIST.md`](GUI
 
 - **Shared shell ≠ shared surfaces.** Mounting `ZGui.appShell` gets an app the shell chrome (⌘K
   palette, ⌘, settings, filter bar, native menu) and the shell's own lazy deps (`toast.js`,
-  `modal.js`, `menu.js` — `app-shell.js:384`, `:387`, `:614`). It does **not** get it the bar or the
+  `modal.js`, `menu.js` — `app-shell.js:532`, `:535`, `:806`). It does **not** get it the bar or the
   tmux WM: `app-shell.js` never loads `powerline.js` / `tmux.js`, and it only *feature-detects* tmux
-  (`Z().tmux && …isInited()` at `app-shell.js:166`, `:171`) to decide whether to list the status-bar
+  (`Z().tmux && …isInited()` at `app-shell.js:183`, `:188`, `:193`) to decide whether to list the status-bar
   and saved-layouts commands. The bar and the WM come from **per-app script loads** — the app's own
   `index.html` pulling `powerline.js` / `tmux.js` plus a `tmux-config.js` calling `.tmux.init(` — so
   they are wired in 10 of the `zgui-core` apps, not all of them (`zwire` has both natively, and
@@ -147,10 +149,10 @@ socket addressing) is still unbuilt (see [`GUI_AUTOMATION_BUS_CHECKLIST.md`](GUI
   regenerated by `bin/gen-gui-actions-live` — which opens every app, reads its live bus surface over a
   native Unix socket, and closes it. No app is "forward-only"; each count is exactly what that
   running app answered to `verbs()`.
-- **Both catalog copies are stale and diverged — regenerate before trusting the counts.** The
-  per-app numbers in the table above are the `docs/GUI_SCRIPT_ACTIONS.md` generation (**4308 verbs
-  across 17 apps**, committed 2026-07-16). The root-level `GUI_SCRIPT_ACTIONS.md` is a *later*
-  generation (**4375 across 16 apps**, committed 2026-07-19) whose run did not reach `zmax-gui` or
-  `zlatex`, so its roster is a subset. Neither run covers `zmusic` or `ztorrent`. The two copies
-  must be re-generated together by `bin/gen-gui-actions-live` with every app launchable; they are
-  generator-owned and are never hand-edited.
+- **The last catalog run did not reach every app — regenerate before trusting the counts.** The
+  per-app numbers in the table above are the current `GUI_SCRIPT_ACTIONS.md` generation (**4429
+  verbs across 16 apps**); `docs/GUI_SCRIPT_ACTIONS.md` is the mirror copy the generator writes with
+  its closing `cp`, so both copies carry that same generation. That run did not reach `zlatex` or
+  `zmax-gui` — their numbers above are the last live figures read for them — and it covers neither
+  `zmusic` nor `ztorrent`. Re-run `bin/gen-gui-actions-live` with every app launchable; both copies
+  are generator-owned and are never hand-edited.

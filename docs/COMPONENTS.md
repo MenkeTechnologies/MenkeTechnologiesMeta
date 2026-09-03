@@ -8,7 +8,7 @@ every GUI app embeds the full shared component set it needs.
 > vim / hooks editor) — as opposed to which submodules it embeds — see
 > [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
 
-_Last reconciled: 2026-08-02, from each app's `.gitmodules` at the SHAs this meta repo pins._
+_Last reconciled: 2026-09-02, from each app's `.gitmodules` at the SHAs this meta repo pins._
 
 ## Components
 
@@ -40,14 +40,15 @@ _Last reconciled: 2026-08-02, from each app's `.gitmodules` at the SHAs this met
 `✓` = consumed. `—` = not consumed by that app. `(source)` = the app that owns that engine (it is
 also the app's own submodule, so `(source)` implies consumption). Derived from each app's
 `.gitmodules` at the SHA this meta repo pins — a component counts only where the app actually
-mounts it, not where it could. The office/mail/pdf cores are *not* universal: only `zemail` and
-`zftp` embed all three.
+mounts it, not where it could. The office/mail/pdf cores are *not* universal: only `zoffice`,
+`zemail`, `zreq` and `zftp` embed all three.
 
-One row reads as empty and that is correct: `zterminal` mounts only `zgui-core` + `ztmux-core`
-(neither is a column here) — it *is* the terminal, so it embeds no `embed-terminal` and no hooks
-editor. `zwire` carries a single `✓¹` (the vendored hooks editor). The JUCE plugins mount only the
-clip/patch engines. `zgui-bridge`, `zwire-host` and `zpwr-modal-editor` are mounted broadly but have
-no column here; see the component table above for their consumers.
+`zterminal` carries a single `✓` (`zpwr-file-browser`); its other two submodules — `zgui-core` and
+`ztmux-core` — have no column here, and it *is* the terminal, so it embeds no `embed-terminal` and
+no hooks editor. `zwire` mounts the clip engine and the file browser plus a **vendored** hooks
+editor (`✓¹`). The JUCE plugins mount only the clip/patch engines. `zgui-bridge`, `zwire-host` and
+`zpwr-modal-editor` are mounted broadly but have no column here; see the component table above for
+their consumers.
 
 | App | clip-engine | patch-core | embed-terminal | hooks-editor | crate | ztranslator | file-browser | i18n | algo | office-core | mail-core | pdf-core |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
@@ -58,27 +59,29 @@ no column here; see the component table above for their consumers.
 | **zpwr-synth** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zpwr-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
 | **zpwr-midi-fx** | ✓ | ✓ | — | — | — | — | — | — | — | — | — | — |
-| **zoffice** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | _(source)_ | — | — |
+| **zoffice** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | _(source)_ | ✓ | ✓ |
 | **zemail** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | _(source)_ | ✓ |
 | **zpdf** | — | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | — | _(source)_ |
-| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | — |
-| **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zgo** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zftp** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
-| **zcontainer** | — | — | — | ✓ | — | — | ✓ | — | — | — | — | — |
+| **zcite** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | — |
+| **zreq** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zgo** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zftp** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| **zcontainer** | — | — | ✓ | ✓ | — | — | ✓ | — | — | — | — | — |
 | **zstation** | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | — | — | — |
-| **zphoto** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **ztunnel** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zthrottle** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zlatex** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zmax-gui** | — | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | ✓ |
+| **zphoto** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **ztunnel** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zthrottle** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
+| **zlatex** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | ✓ |
+| **zmax-gui** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | ✓ | — | ✓ |
 | **zmusic** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
 | **ztorrent** | ✓ | — | ✓ | ✓ | — | — | ✓ | ✓ | — | — | — | — |
-| **zwire** | — | — | — | ✓¹ | — | — | — | — | — | — | — | — |
-| **zterminal** | — | — | — | — | — | — | — | — | — | — | — | — |
+| **zwire** | ✓ | — | — | ✓¹ | — | — | ✓ | — | — | — | — | — |
+| **zterminal** | — | — | — | — | — | — | ✓ | — | — | — | — | — |
 
 <sub>¹ `zwire` vendors the hooks editor at `extensions/hud-internal/vendor/zpwr-hooks-editor` rather
-than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`, `zwire-host`.</sub>
+than as a submodule; its own submodules are `zgui-core`, `zpwrchrome`, `zwire-host`,
+`zpwr-file-browser` (at `extensions/hud-internal/lib/file-browser`) and `zpwr-clip-engine`
+(at `extensions/hud-internal/lib/clip-engine`).</sub>
 
 ## Notes
 
@@ -102,13 +105,13 @@ than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`,
 - **zpdf:** from-scratch PDF editor (Tauri v2) porting the Adobe Acrobat Pro + macOS Preview feature
   set; `zpdf` + `zpdf-core` are meta submodules, `zpdf` embeds `zpdf-core` (nested) plus the standard
   component set. `zpdf-core` is *not* universal — outside `zpdf` itself, only `Audio-Haxor`, `zemail`,
-  `zftp` and `zmax-gui` mount it.
+  `zoffice`, `zreq`, `zftp`, `zlatex` and `zmax-gui` mount it.
 - **zoffice / zemail:** GUI apps (Tauri v2, cyberpunk HUD) — `zoffice` replaces MS Office
   (documents/spreadsheets/presentations), `zemail` is a desktop mail client. Both ship a Tauri app
   shell (`frontend/` + `app/src-tauri`) and a `pnpm t` suite driving their engines `zoffice-core` /
-  `zemail-core`, and both add `zpwr-modal-editor` on top of the standard set. The cross-embed is
-  one-way: `zemail` mounts `zoffice-core` (plus `zpdf-core`), `zoffice` mounts neither `zemail-core`
-  nor `zpdf-core`. zoffice/zemail/zpdf are paid products.
+  `zemail-core`, and both add `zpwr-modal-editor` on top of the standard set. The cross-embed now
+  runs both ways: `zemail` mounts `zoffice-core` (plus `zpdf-core`) and `zoffice` mounts
+  `zemail-core` and `zpdf-core`. zoffice/zemail/zpdf are paid products.
 - **zphoto / zterminal:** GUI apps (Tauri v2, cyberpunk HUD, `zgui-core`). `zphoto` is a from-scratch
   raster editor replacing GIMP/Photoshop — it embeds its own `zphoto-core` engine, consumes
   `zpwr-i18n`, and embeds the rest of the standard set (it does not vendor `gimp`). `zterminal` is a GPU-accelerated
@@ -123,8 +126,8 @@ than as a top-level submodule; its own submodules are `zgui-core`, `zpwrchrome`,
   necessarily what each app's `.gitmodules` has wired yet. Current variable-column wiring is
   literal: `zstation` embeds `zpwr-clip-engine` + `ztranslator-core` (both ✓); `zftp` already wires
   `office-core` / `mail-core` / `pdf-core` in `.gitmodules`; `zcontainer` wires `zcontainer-core`,
-  `zpwr-file-browser`, `zpwr-hooks-editor`, `zgui-core` and `zgui-bridge` — so both of its matrix ✓s
-  are real wiring, and it mounts no `embed-terminal` / `i18n` yet.
+  `zpwr-file-browser`, `zpwr-hooks-editor`, `zpwr-embed-terminal`, `zgui-core`, `zgui-bridge` and
+  `zwire-host` — so all three of its matrix ✓s are real wiring, and it mounts no `i18n` yet.
 - **Not consumed by any GUI app:** `zpwr-theme`, `zpwr-jobs`, `zpwr-license`, `zpwr-account` — no
   submodule in the tree mounts any of them (tooling / editor theme / commercial back end). The
   account service goes the other way: `zpwr-account` itself mounts `zgui-core` for its portal.

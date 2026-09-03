@@ -147,11 +147,12 @@ at the **same path**:
 ```
 
 > **The tree currently violates this rule and the gate that enforces it.** `baseline-gate.mjs:142`
-> hard-fails any JS UI lib not at exactly `frontend/lib/<name>`, but only `zterminal` and `zthrottle`
-> mount `zgui-core` there. Twelve apps (`zpdf`, `zemail`, `zcite`, `zreq`, `ztunnel`, `zgo`, `zftp`,
-> `zphoto`, `zstation`, `zcontainer`, `zmax-gui`, `traderview`) mount it at `crates/zgui-core`, and
-> `zoffice` + `Audio-Haxor` carry **both** paths. The rule above is the intended one — this is a
-> migration debt to close in the apps, not a rule to relax.
+> hard-fails any JS UI lib not at exactly `frontend/lib/<name>`, but only `zterminal`, `zthrottle`,
+> `zlatex` and `zmusic` mount `zgui-core` there. Fourteen apps (`traderview`, `ztranslator`,
+> `zemail`, `zpdf`, `zcite`, `zreq`, `zgo`, `zftp`, `zcontainer`, `zstation`, `zphoto`, `ztunnel`,
+> `zmax-gui`, `ztorrent`) mount it at `crates/zgui-core`, and `zoffice` + `Audio-Haxor` carry
+> **both** paths. The rule above is the intended one — this is a migration debt to close in the
+> apps, not a rule to relax.
 
 - **Every repo serves `frontend/`.** Engine cores that historically served `webui/` are renamed
   `webui → frontend`, and the wrapper's Tauri `frontendDist` points at `…/frontend`.
@@ -245,6 +246,6 @@ declare `zguiView` → run the gate → bump pointers (`<core>` → `<app>` → 
 ## 8. Build order in `zgui-core`
 
 The runtime guards (§5a) ship as `webui/embed.js` plus the `appShell` single‑instance check
-(`app-shell.js:43`) — the once‑planned `webui/role.js` was never split out and does not exist; the
+(`app-shell.js:54`) — the once‑planned `webui/role.js` was never split out and does not exist; the
 gate (§5b) gains the view‑purity scan. These land in `zgui-core` first
 (they are the substrate every app depends on), then the per‑app sweep follows.
