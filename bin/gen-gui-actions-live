@@ -69,7 +69,15 @@ fn verbs_of($app) {
   val $d = from_json((split /\n/, $buf)[0])
   return () unless $d && $d->{ok}
   var @ids = ()
-  for val $v (@{$d->{value}{verbs}}) { push @ids, $v->{id} }
+  # Some verb ids carry live per-user state in their payload — appShell mints one
+  # `appshell.recent:<abs path>` verb per entry in the local recent-files list. Those
+  # are machine-local document history, not part of the scriptable API surface, and
+  # this catalogue is published to GitHub Pages, so drop any id carrying a filesystem
+  # path before it reaches the doc.
+  for val $v (@{$d->{value}{verbs}}) {
+    next if $v->{id} =~ m{:/};
+    push @ids, $v->{id}
+  }
   sort @ids
 }
 

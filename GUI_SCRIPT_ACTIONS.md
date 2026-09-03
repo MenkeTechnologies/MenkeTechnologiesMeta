@@ -5,13 +5,13 @@ GUI app — the exact surface `App::open("<app>")->verbs()` returns over the
 [GUI Automation Bus](GUI_AUTOMATION_BUS.md): the LIVE runtime surface (appShell verbs +
 per-app `opts.commands` + dynamically-registered verbs), read from each running app.
 
-**4435 actions** across **16 apps**. Read from each app's live bus
+**4429 actions** across **16 apps**. Read from each app's live bus
 surface by `bin/gen-gui-actions-live` — do not hand-edit. Requires every app open when generated.
 
 | App | Verbs | Surface |
 | --- |:--:| --- |
 | [`traderview`](#traderview) | 1748 | TradingView-style charting/trading terminal — view tiles + shortcut actions |
-| [`zpdf`](#zpdf) | 680 | Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact |
+| [`zpdf`](#zpdf) | 674 | Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact |
 | [`audio-haxor`](#audio-haxor) | 241 | Audio analyzer / DAW-project generator — spectrum, DSP, .als generation |
 | [`zoffice`](#zoffice) | 230 | LibreOffice-style office engine — writer/calc/impress over ODF/OOXML |
 | [`zemail`](#zemail) | 215 | Thunderbird-style mail client — accounts, folders, messages, PGP/S-MIME, search |
@@ -1795,7 +1795,7 @@ app.watchlistQuickAdd
 ## zpdf
 
 Acrobat/Preview-style PDF engine — render, edit, annotate, forms, OCR, redact  
-**680 verbs** · live bus surface · call as `App::open("zpdf")->call("<verb>", %args)`
+**674 verbs** · live bus surface · call as `App::open("zpdf")->call("<verb>", %args)`
 
 **`(top-level)`** (322)
 
@@ -2124,7 +2124,7 @@ xfa_packets
 xmp_metadata
 ```
 
-**`appshell`** (358)
+**`appshell`** (352)
 
 ```
 appshell.crt.off
@@ -2138,12 +2138,6 @@ appshell.hooks
 appshell.neon.off
 appshell.neon.on
 appshell.palette
-appshell.recent:/Users/wizard/Desktop/JacobMenke2026.pdf
-appshell.recent:/Users/wizard/Desktop/JacobMenkeCV2026.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/MenkeTechnologiesPublications/znative/docs/book.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/zpwr-jobs/JacobMenke2026.pdf
-appshell.recent:/Users/wizard/RustroverProjects/MenkeTechnologiesMeta/zpwr-jobs/JacobMenkeCV2026.pdf
-appshell.recent:/tmp/livetest.pdf
 appshell.scheme-arctic
 appshell.scheme-crimson
 appshell.scheme-cyberpunk
