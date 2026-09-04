@@ -21,7 +21,7 @@
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-### `[META REPO // 189 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
+### `[META REPO // 190 SUBMODULES // ONE COMMAND, EVERY MENKETECHNOLOGIES PROJECT]`
 
 > *"One repo to rule them all, one repo to fetch them, one repo to bring them all, and on every host bind them."*
 
@@ -62,7 +62,7 @@
 git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTechnologiesMeta.git && cd MenkeTechnologiesMeta && git submodule foreach --recursive 'git checkout main 2>/dev/null || true'
 ```
 
-`--recurse-submodules` fetches all 189 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
+`--recurse-submodules` fetches all 190 submodules in parallel (`-j 8` = 8 at a time), then the `foreach` switches each one from its detached-HEAD pinned SHA onto its `main` branch.
 
 **Already cloned without `--recurse-submodules`? Add them after the fact:**
 
@@ -82,7 +82,7 @@ git clone --recurse-submodules -j 8 https://github.com/MenkeTechnologies/MenkeTe
 
 ## [0x01] SUBMODULE MAP
 
-All 189 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
+All 190 submodules sit flat at the repository root. URLs are HTTPS for fresh-host portability (no SSH key needed for `clone --recurse`).
 
 ### Tier 1 — Core (75)
 
