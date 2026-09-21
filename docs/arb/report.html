@@ -56,7 +56,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/arb" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line">arb v0.1.16 · pipe → dynamic TUI/web · original language on fusevm + Cranelift JIT · jq/xpath/css/yq superset · MIT · M0–M8 shipped: query engine, controls, web target, actors, package manager, LSP/DAP</p>
+          <p class="docs-build-line">arb v0.1.17 · pipe → dynamic TUI/web · original language on fusevm + Cranelift JIT · jq/xpath/css/yq superset · MIT · M0–M8 shipped: query engine, controls, web target, actors, package manager, LSP/DAP</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -83,7 +83,8 @@
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val accent">Pipeline</div><div class="stat-label">fusevm language host</div></div>
         <div class="stat-card"><div class="stat-val">M0–M8</div><div class="stat-label">milestones shipped</div></div>
-        <div class="stat-card"><div class="stat-val">v0.1.16</div><div class="stat-label">version</div></div>
+        <div class="stat-card"><div class="stat-val">v0.1.17</div><div class="stat-label">version</div></div>
+        <div class="stat-card"><div class="stat-val">3.33&times;</div><div class="stat-label">vs fzf · 1.26M-line filter</div></div>
         <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">license · free / OSS</div></div>
       </div>
 
@@ -103,6 +104,31 @@
           <div class="feature-card"><h4>The combination is new</h4><p>No tool is a <em>pipe-native, dual-target (terminal + web), component-generating UI language with a shareable dashboard registry</em>. arb is that combination.</p></div>
           <div class="feature-card"><h4>Ecosystem leg</h4><p><code>cmd | arb</code> sniffs the upstream command or data shape → resolves the matching <code>arb-&lt;tool&gt;</code> package → renders. No registry of installable pipeline TUIs exists today.</p></div>
           <div class="feature-card"><h4>Not a server</h4><p>Terminal-invoked and pipe-driven. The web target spawns a local UI host on demand (like <code>textual serve</code>), not a daemon you run.</p></div>
+        </div>
+      </section>
+
+      <hr class="section-rule">
+
+      <section class="tutorial-section">
+        <h2>Finder parity &amp; throughput vs fzf and skim</h2>
+        <p>arb's <code>--fzf</code> mode claims to be a superset of fzf's core, and <code>--filter</code> claims to score across cores. Both are contracts, and both are machine-checked by <a href="https://github.com/MenkeTechnologies/arb/blob/main/scripts/fzf_bench.sh">scripts/fzf_bench.sh</a>, in the same shape as the jq/xpath/yq parity harness: one corpus of probes through all three engines, stdout diffed, then the same invocations timed. arb is compared <strong>byte-exact</strong> against <code>fzf --filter</code> — output ORDER is part of parity, not just the match set — and set-exact against <code>sk --filter</code>, whose own scorer orders ties differently. A probe whose reference REFUSES the invocation skips with the reason printed. There is no allowlist; the exit status is the number of divergences.</p>
+        <p>Recorded run — 1,259,869 real filesystem paths (127,414,004 bytes), arb 0.1.16 / fzf 0.74.3 / sk 4.6.0, Apple M5 Max (12P+6E), hyperfine 1.20.0. Parity: <strong>39 pass / 1 diverged / 2 skipped</strong>. Every fuzzy, exact, prefix, suffix, negated, OR-set and multi-term query matched fzf byte-for-byte, as did <code>--exact</code>, <code>--no-sort</code>, <code>--tac</code>, <code>--algo=v1</code>, <code>--tiebreak</code>, <code>--scheme=path</code>, <code>--ignore-case</code> and smart-case. The two skips are skim flags that do not exist (<code>--algo=v1</code>, <code>--ignore-case</code>). The single divergence is skim's own defect: <code>sk --filter cargo --tac</code> emits duplicates (8,103 lines, 2,123 unique, against 8,053 distinct from its own non-<code>--tac</code> run) where arb and fzf agree.</p>
+        <table class="file-table">
+          <thead><tr><th>Query</th><th>arb</th><th>fzf</th><th>skim</th><th>vs fzf</th><th>vs skim</th></tr></thead>
+          <tbody>
+            <tr><td><code>cargo</code> (dense)</td><td>123.1 &plusmn; 2.0 ms</td><td>409.3 &plusmn; 19.8 ms</td><td>232.2 &plusmn; 11.2 ms</td><td>3.33&times;</td><td>1.89&times;</td></tr>
+            <tr><td><code>libcore</code></td><td>96.4 &plusmn; 1.0 ms</td><td>256.9 &plusmn; 4.4 ms</td><td>177.8 &plusmn; 4.8 ms</td><td>2.66&times;</td><td>1.84&times;</td></tr>
+            <tr><td><code>'cargo</code> (exact)</td><td>70.2 &plusmn; 0.7 ms</td><td>200.3 &plusmn; 1.5 ms</td><td>88.0 &plusmn; 3.8 ms</td><td>2.85&times;</td><td>1.25&times;</td></tr>
+            <tr><td><code>^/opt .rs$ !zsh</code></td><td>49.4 &plusmn; 0.8 ms</td><td>78.2 &plusmn; 1.0 ms</td><td>70.4 &plusmn; 2.5 ms</td><td>1.58&times;</td><td>1.42&times;</td></tr>
+            <tr><td><code>zqxjvw</code> (no match)</td><td>48.8 &plusmn; 0.6 ms</td><td>67.3 &plusmn; 0.7 ms</td><td>61.8 &plusmn; 12.4 ms</td><td>1.38&times;</td><td>1.26&times;</td></tr>
+            <tr><td>startup, empty stdin</td><td>4.1 &plusmn; 0.4 ms</td><td>3.2 &plusmn; 0.4 ms</td><td>5.3 &plusmn; 0.9 ms</td><td>0.78&times;</td><td>1.29&times;</td></tr>
+          </tbody>
+        </table>
+        <div class="feature-grid">
+          <div class="feature-card"><h4>Where the margin comes from</h4><p><code>run_filter</code> reads the whole stream, validates and splits it in one pass, then <code>rank</code> scores with <code>par_iter</code> and orders with <code>par_sort_by_key</code> (<code>src/cli.rs</code>, <code>src/tui.rs</code>). On the <code>cargo</code> row that is ~1.0 GB/s of candidates, against ~0.31 GB/s for fzf and ~0.55 GB/s for skim.</p></div>
+          <div class="feature-card"><h4>It is the matcher, not I/O</h4><p>With a query that matches nothing, every engine is mostly reading stdin and the spread collapses to 1.38&times;. The margin opens with the hit rate, which is where the parallel scorer is doing the work.</p></div>
+          <div class="feature-card"><h4>The axis arb loses</h4><p>Process startup: fzf's static Go binary launches ~1 ms faster. arb is ahead again on any real corpus — on a 10,000-line slice, <code>cargo</code> is 6.1 &plusmn; 0.5 ms in arb against 7.9 &plusmn; 0.4 ms in fzf and 10.3 &plusmn; 0.6 ms in skim.</p></div>
+          <div class="feature-card"><h4>Parity is the precondition</h4><p>Speed on a different answer is not a comparison. The timings above only mean anything because the same probes are byte-identical to fzf's output first — the harness runs parity before it runs a clock.</p></div>
         </div>
       </section>
 
@@ -151,7 +177,7 @@
 
       <section class="tutorial-section">
         <h2>Module layout</h2>
-        <p>A lib + bin: the front-end is unit-testable without a terminal (588 tests). Every row is in the tree today.</p>
+        <p>A lib + bin: the front-end is unit-testable without a terminal (589 tests). Every row is in the tree today.</p>
         <table class="file-table">
           <thead><tr><th>File</th><th>State</th><th>Role</th></tr></thead>
           <tbody>

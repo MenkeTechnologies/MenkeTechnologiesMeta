@@ -61,7 +61,7 @@
         <div class="card"><h3>Four Benchmarks</h3><p>Disk sequential + random throughput and IOPS (direct I/O, bypassing the page cache), network throughput and latency, multi-threaded compute, and memory bandwidth + latency — each a real measurement, not a synthetic score.</p></div>
         <div class="card"><h3>Contention Profiler</h3><p>Loads disk, network, CPU and memory simultaneously and reports the interaction matrix — how much each axis degrades under pressure from the others, plus the bottleneck migration timeline. This is the reason the tool exists.</p></div>
         <div class="card"><h3>System Monitor</h3><p>A tabbed monitor: processes (CPU/memory table, CPU-history graph, per-process signal menu — TERM/KILL/STOP/CONT/HUP and more), per-interface network with live download/upload sparklines, and a global storage view.</p></div>
-        <div class="card"><h3>Storage Tree</h3><p>A persistent SQLite index of the whole directory tree — instant load on launch, kept accurate by an mtime-diff refresh. Drill in, find the biggest space hogs anywhere (the dirs macOS Storage hides), flag build/cache junk, and delete to reclaim space. SMB/NFS mounts are detected and never walked blind.</p></div>
+        <div class="card"><h3>Storage Tree</h3><p>A persistent SQLite index of the whole directory tree — instant load on launch, kept live by an FSEvents / inotify watch that updates only the directories that changed and bubbles the delta up their ancestors, with a full descent as the reconcile when events are lost. Drill in, find the biggest space hogs anywhere (the dirs macOS Storage hides), flag build/cache junk by name or by the CACHEDIR.TAG cargo writes into every target dir it builds (so a redirected CARGO_TARGET_DIR is caught whatever it is named), and delete to reclaim space. SMB/NFS mounts are detected and never walked blind.</p></div>
       </div>
 
       <h2 class="reg-h">The contention idea</h2>
@@ -86,6 +86,8 @@ pnpm --dir app tauri build    # release bundle</pre>
         <img src="index-arch.svg" alt="zthrottle storage-index architecture: a full scan builds the SQLite index; then the fs-watch hook drives targeted update_paths, with a full descent reconciling on cold start, burst overflow, dropped events, or a watcher that can't start; user actions (refresh, reindex, delete, pattern edit, freshen) stay manual." loading="lazy">
         <figcaption>Full scan &rarr; the fs-watch hook keeps the SQLite index live via targeted <code>update_paths</code>, with a full descent as the reconcile path on cold start, burst overflow, dropped events, or a watcher that can't start &mdash; so the map is always current without a manual re-walk.</figcaption>
       </figure>
+
+      <p class="lede">Why this is not just a faster scanner: the index is a <em>ledger</em>, updated by kernel change events with delta propagation to ancestors, so deleting a directory costs a prune plus one subtraction per ancestor rather than a re-crawl of what used to be inside it &mdash; and the class of event that gets lost decides which repair runs. Stated as an inheritable idea, with the near misses named, in <a href="https://github.com/MenkeTechnologies/zthrottle/blob/main/docs/INVENTIONS.md"><code>docs/INVENTIONS.md</code></a>.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zthrottle &middot; system stress + benchmark + contention profiler</footer>
     </main>

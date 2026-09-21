@@ -8,15 +8,15 @@
 ```
 
 [![Submodules](https://img.shields.io/badge/submodules-190-blue.svg)](#0x01-submodule-map)
-[![Tier 1](https://img.shields.io/badge/tier_1-74_core-cyan.svg)](#tier-1--core-74)
+[![Tier 1](https://img.shields.io/badge/tier_1-75_core-cyan.svg)](#tier-1--core-75)
 [![Tier 2](https://img.shields.io/badge/tier_2-34_stryke%2Btap-green.svg)](#tier-2--stryke-ecosystem--tap-34)
 [![Tier 3](https://img.shields.io/badge/tier_3-1_completions-magenta.svg)](#tier-3--zsh-more-completions-1)
 [![Tier 4](https://img.shields.io/badge/tier_4-28_zsh_plugins-yellow.svg)](#tier-4--zsh-ecosystem-plugins-28)
 [![Tier 5](https://img.shields.io/badge/tier_5-20_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-20)
 [![Tier 6](https://img.shields.io/badge/tier_6-23_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-23)
 [![Tier 7](https://img.shields.io/badge/tier_7-9_znative_plugins-blue.svg)](#tier-7--znative-plugins-9)
-[![Rust](https://img.shields.io/badge/rust-5.0M_LOC-orange.svg)](#0x09-code-volume)
-[![Code](https://img.shields.io/badge/code-13.4M_lines-brightgreen.svg)](#0x09-code-volume)
+[![Rust](https://img.shields.io/badge/rust-5.2M_LOC-orange.svg)](#0x09-code-volume)
+[![Code](https://img.shields.io/badge/code-13.5M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -35,7 +35,7 @@
 
 - [\[0x00\] Quick Start](#0x00-quick-start)
 - [\[0x01\] Submodule Map](#0x01-submodule-map)
-  - [Tier 1 — Core (74)](#tier-1--core-74)
+  - [Tier 1 — Core (75)](#tier-1--core-75)
   - [Tier 2 — Stryke ecosystem + tap (34)](#tier-2--stryke-ecosystem--tap-34)
   - [Tier 3 — zsh-more-completions (1)](#tier-3--zsh-more-completions-1)
   - [Tier 4 — Zsh ecosystem plugins (28)](#tier-4--zsh-ecosystem-plugins-28)
@@ -774,30 +774,30 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 4,996,961 | 12,233 |
-| JSON | 2,393,411 | 860 |
-| TeX | 1,854,280 | 173 |
-| JavaScript | 745,093 | 4,549 |
-| HTML | 604,746 | 1,426 |
-| C Header | 387,834 | 1,914 |
-| C++ | 384,299 | 1,138 |
-| Python | 286,754 | 1,208 |
-| Zsh | 285,383 | 1,338 |
-| C | 263,643 | 446 |
-| Stryke (`.stk`) | 201,945 | 3,398 |
-| Shell | 134,856 | 3,602 |
-| Vim Script | 125,676 | 992 |
-| CSS | 119,687 | 460 |
-| Perl | 107,492 | 1,793 |
-| AWK | 82,707 | 2,192 |
-| Scheme | 77,756 | 2,338 |
+| Rust | 5,187,923 | 12,583 |
+| JSON | 2,356,404 | 1,034 |
+| TeX | 1,858,424 | 302 |
+| JavaScript | 746,646 | 4,695 |
+| HTML | 595,984 | 1,425 |
+| C Header | 388,535 | 1,915 |
+| C++ | 384,535 | 1,135 |
+| Python | 308,330 | 1,213 |
+| Zsh | 287,507 | 1,393 |
+| C | 263,572 | 443 |
+| Stryke (`.stk`) | 202,716 | 3,407 |
+| Shell | 144,641 | 4,009 |
+| Vim Script | 127,718 | 1,037 |
+| CSS | 118,967 | 459 |
+| Perl | 108,395 | 1,812 |
+| AWK | 82,918 | 2,209 |
 | C++ Header | 73,770 | 260 |
-| TOML | 68,573 | 1,113 |
-| Kotlin | 29,909 | 281 |
-| SQL | 29,409 | 124 |
+| TOML | 43,835 | 910 |
+| Scheme | 39,862 | 1,182 |
+| Kotlin | 31,747 | 315 |
+| SQL | 29,408 | 123 |
 | Objective-C++ | 20,833 | 65 |
-| *Other (89 languages)* | 113,207 | 1,647 |
-| **Total** | **13,388,224** | **44,923** |
+| *Other (90 languages)* | 115,968 | 1,578 |
+| **Total** | **13,518,638** | **44,879** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -807,16 +807,16 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 <!-- BEGIN gen-code-volume:repos -->
 | Repo | Primary | Secondary |
 |---|---:|---:|
-| `traderview` | JSON 1,581,635 | Rust 784,604 |
-| `MenkeTechnologiesPublications` | TeX 1,848,172 | HTML 133,104 |
+| `traderview` | JSON 1,581,635 | Rust 780,986 |
+| `MenkeTechnologiesPublications` | TeX 1,850,454 | HTML 133,239 |
 | `zpwr-fx` | C++ 333,824 | C Header 306,882 |
-| `strykelang` | Rust 417,622 | Stryke 162,579 |
-| `zshrs` | Rust 541,609 | Zsh 56,822 |
-| `zmax` | Rust 320,336 | JSON 143,978 |
-| `zvcs` | Rust 516,614 | Shell 12,676 |
-| `zmax-gui` | Rust 252,968 | JSON 96,307 |
-| `docs` | HTML 393,255 | JavaScript 6,806 |
-| `Audio-Haxor` | Rust 140,344 | JSON 121,593 |
+| `zshrs` | Rust 614,156 | Zsh 58,850 |
+| `strykelang` | Rust 419,898 | Stryke 162,579 |
+| `zvcs` | Rust 665,195 | Shell 12,678 |
+| `zmax` | Rust 371,902 | JSON 157,647 |
+| `docs` | HTML 394,892 | JavaScript 6,806 |
+| `Audio-Haxor` | Rust 138,078 | JSON 121,593 |
+| `pythonrs` | Python 243,895 | Rust 72,817 |
 <!-- END gen-code-volume:repos -->
 
 Numbers refresh as repos add commits — regenerate with `bin/gen-code-volume --in-place`.
