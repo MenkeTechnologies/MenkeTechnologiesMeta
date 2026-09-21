@@ -775,10 +775,10 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 5,187,923 | 12,583 |
+| Rust | 5,190,804 | 12,595 |
 | JSON | 2,356,404 | 1,034 |
 | TeX | 1,858,424 | 302 |
-| JavaScript | 746,646 | 4,695 |
+| JavaScript | 746,680 | 4,695 |
 | HTML | 595,984 | 1,425 |
 | C Header | 388,535 | 1,915 |
 | C++ | 384,535 | 1,135 |
@@ -798,7 +798,7 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 | SQL | 29,408 | 123 |
 | Objective-C++ | 20,833 | 65 |
 | *Other (90 languages)* | 115,968 | 1,578 |
-| **Total** | **13,518,638** | **44,879** |
+| **Total** | **13,521,553** | **44,891** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -811,9 +811,9 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 | `traderview` | JSON 1,581,635 | Rust 780,986 |
 | `MenkeTechnologiesPublications` | TeX 1,850,454 | HTML 133,239 |
 | `zpwr-fx` | C++ 333,824 | C Header 306,882 |
-| `zshrs` | Rust 614,156 | Zsh 58,850 |
+| `zshrs` | Rust 614,155 | Zsh 58,850 |
 | `strykelang` | Rust 419,898 | Stryke 162,579 |
-| `zvcs` | Rust 665,195 | Shell 12,678 |
+| `zvcs` | Rust 667,193 | Shell 12,678 |
 | `zmax` | Rust 371,902 | JSON 157,647 |
 | `docs` | HTML 394,892 | JavaScript 6,806 |
 | `Audio-Haxor` | Rust 138,078 | JSON 121,593 |
