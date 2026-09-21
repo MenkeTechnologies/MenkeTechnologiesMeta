@@ -13,6 +13,20 @@
 #
 # Requires: gh (authenticated), bash 4.4+.
 set -euo pipefail
+
+# `mapfile` is a bash 4 builtin. macOS still ships bash 3.2 as /bin/bash,
+# and under it mapfile is simply not found — but the failure is SILENT in
+# the worst way: it happens inside a `while read` subshell, so `set -e`
+# never sees it, every workflow list comes back empty, and the script
+# exits 0 having printed a three-line table with no repos in it. Run with
+# --in-place, that empty table is what gets spliced into README.md. Fail
+# loudly instead; Homebrew's bash is the fix on macOS.
+if (( BASH_VERSINFO[0] < 4 )); then
+    echo "gen-ci-board: needs bash 4.4+ (mapfile); this is bash $BASH_VERSION" >&2
+    echo "gen-ci-board: on macOS run it under Homebrew's bash: \"\$(brew --prefix)/bin/bash\" bin/gen-ci-board" >&2
+    exit 1
+fi
+
 cd "$(dirname "$0")/.." || exit 1
 
 base=https://github.com/MenkeTechnologies
