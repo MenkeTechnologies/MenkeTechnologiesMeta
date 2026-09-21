@@ -385,6 +385,16 @@ jobs:
         # total — only comparing names catches it. A card may instead
         # declare itself a sample by ending in an ellipsis.
         run: bash tests/docs-index-tier-rosters-complete.sh
+      - name: Every bin/ script using a bash 4 builtin guards on BASH_VERSINFO
+        # macOS ships bash 3.2 as /bin/bash and #!/usr/bin/env bash
+        # picks whatever is first on PATH, so a bash-4 generator runs on
+        # two different interpreters. gen-ci-board's mapfile call sits
+        # in a `while read` subshell where set -e cannot see it fail:
+        # under bash 3.2 it printed a board with no repos and exited 0,
+        # and --in-place would have spliced that into README.md.
+        # A version guard makes the script stop instead of corrupting
+        # the file it was about to rewrite.
+        run: bash tests/bin-bash4-guard.sh
       - name: Every first-party README opens with the cyberpunk ASCII-art banner
         # The house style: every MenkeTechnologies repo README leads with
         # a fenced figlet/ANSI-Shadow wordmark, not a bare `# title`. A
