@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="lsofrs — modern Rust implementation of lsof. 5–21× faster than lsof / lsofng. 26,849 lines of production Rust, 1,762 tests, 31 cyberpunk themes, 7-tab TUI, macOS + Linux + FreeBSD, zero-copy FFI, rayon parallel gathering.">
+  <meta name="description" content="lsofrs — modern Rust implementation of lsof. 5–21× faster than lsof / lsofng. 27,101 lines of production Rust, 1,768 tests, 31 cyberpunk themes, 7-tab TUI, macOS + Linux + FreeBSD, zero-copy FFI, rayon parallel gathering.">
   <title>lsofrs — Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -146,8 +146,8 @@
             <span class="sep">/</span>
             <a href="https://docs.rs/lsofrs" target="_blank" rel="noopener noreferrer">docs.rs</a>
           </nav>
-          <p class="docs-build-line">lsofrs v4.11.0 · Zero-copy FFI · Rayon-parallel gathering · macOS + Linux + FreeBSD · 7-tab TUI · 31 cyberpunk themes · 5–21× faster than lsof / lsofng</p>
-          <p class="docs-build-line">26,849 Rust src · 8,829 test src · 1,762 #[test] functions · 13 direct dependencies</p>
+          <p class="docs-build-line">lsofrs v4.11.1 · Zero-copy FFI · Rayon-parallel gathering · macOS + Linux + FreeBSD · 7-tab TUI · 31 cyberpunk themes · 5–21× faster than lsof / lsofng</p>
+          <p class="docs-build-line">27,101 Rust src · 8,829 test src · 1,768 #[test] functions · 13 direct dependencies</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -263,7 +263,7 @@ lsf -F pcfn                   # field output (p=pid, c=cmd, f=fd, n=name)</pre>
           <li><strong>Platform gather</strong> — <code>src/darwin.rs</code> (1,253 lines, libproc FFI), <code>src/linux.rs</code> (820 lines, <code>/proc</code> reader), <code>src/freebsd.rs</code> (835 lines, sysctl + procfs). All three return the same <code>Vec&lt;Process&gt;</code> from <code>types.rs</code>; each per-PID FD scan is parallelized with rayon's work-stealing pool.</li>
           <li><strong>Selection</strong> — <code>src/filter.rs</code> (3,035 lines) implements OR-mode (default) and AND-mode (<code>-a</code>) filter composition over PID / PGID / user / command / FD / network-spec / path. Supports comma-lists, ranges (<code>0-10</code>), exclusion (<code>^root</code>), and regex (<code>/nginx|apache/</code>).</li>
           <li><strong>Output</strong> — <code>src/output.rs</code> (columnar + field), <code>src/json.rs</code> (serde), <code>src/csv_out.rs</code> (RFC 4180). TTY detection auto-switches between cyberpunk headers (<code>H4XOR</code> / <code>CL4SS</code> / <code>T4RGET</code>) and plain headers for pipelines.</li>
-          <li><strong>Live modes</strong> — <code>--tui</code> (7-tab dashboard, 5,308 lines), <code>--top</code> (1,009 lines), <code>--summary -r</code> (1,026 lines), <code>--monitor</code> (398 lines), <code>--watch FILE</code>, <code>--follow PID</code>, <code>--leak-detect</code>. All share <code>src/tui_app.rs</code>'s <code>TuiMode</code> trait for common keybindings, alternate-screen entry/exit, and atomic frame rendering.</li>
+          <li><strong>Live modes</strong> — <code>--tui</code> (7-tab dashboard, 5,534 lines), <code>--top</code> (1,009 lines), <code>--summary -r</code> (1,026 lines), <code>--monitor</code> (398 lines), <code>--watch FILE</code>, <code>--follow PID</code>, <code>--leak-detect</code>. All share <code>src/tui_app.rs</code>'s <code>TuiMode</code> trait for common keybindings, alternate-screen entry/exit, and atomic frame rendering.</li>
           <li><strong>Themes</strong> — <code>src/theme.rs</code> (1,005 lines) defines 31 named palettes via the <code>ThemeName</code> enum. Custom 6-color themes persist to <code>~/.lsofrs.conf</code> through <code>src/config.rs</code> (TOML).</li>
         </ul>
       </section>
@@ -434,7 +434,7 @@ hover_tooltips = true     # auto-tooltips after 1s hover (T toggles; right-click
             <tr><td><code>/</code> / <code>0</code></td><td>Filter popup (regex) / clear filter</td></tr>
             <tr><td><code>j</code> / <code>k</code> / <code>&uarr;</code> / <code>&darr;</code></td><td>Navigate rows</td></tr>
             <tr><td><code>F</code></td><td>Pin / unpin selected row</td></tr>
-            <tr><td><code>y</code></td><td>Copy selected row to clipboard</td></tr>
+            <tr><td><code>y</code></td><td>Copy selected row to clipboard (<code>pbcopy</code>/<code>wl-copy</code>/<code>xclip</code>/<code>xsel</code>, falling back to the OSC 52 terminal escape over ssh)</td></tr>
             <tr><td><code>e</code></td><td>Export current tab to file</td></tr>
             <tr><td><code>q</code> / <code>Esc</code> / <code>Ctrl-C</code></td><td>Quit</td></tr>
           </tbody>
@@ -463,7 +463,7 @@ hover_tooltips = true     # auto-tooltips after 1s hover (T toggles; right-click
 ├── summary.rs     # 1,026 aggregate stats + bars (+ live TUI mode)
 ├── tree.rs        # 556  process tree w/ FD inheritance
 ├── tui_app.rs     # 572  shared TuiMode trait (ratatui)
-├── tui_tabs.rs    # 5,308 unified 7-tab TUI (mouse, tooltips)
+├── tui_tabs.rs    # 5,534 unified 7-tab TUI (mouse, tooltips)
 ├── theme.rs       # 1,005 31 themes + custom palette support
 ├── config.rs      # TOML config persistence (~/.lsofrs.conf)
 ├── top.rs         # 1,009 live top-N FD dashboard
@@ -540,7 +540,7 @@ completions/_lsofrs # 101-line zsh completion (#compdef lsofrs)</pre>
     </main>
 
     <footer style="border-top:1px dashed var(--border);padding:1rem 1.5rem;text-align:center;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;color:var(--text-muted);">
-      lsofrs v4.11.0 &middot; MIT license &middot; built by <a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a> &middot;
+      lsofrs v4.11.1 &middot; MIT license &middot; built by <a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a> &middot;
       <a href="https://github.com/MenkeTechnologies/lsofrs">GitHub</a> &middot;
       <a href="https://crates.io/crates/lsofrs">crates.io</a> &middot;
       <a href="https://docs.rs/lsofrs">docs.rs</a>
