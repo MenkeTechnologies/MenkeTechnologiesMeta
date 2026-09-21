@@ -24,6 +24,16 @@
 # Does NOT verify any specific text content; only that all 27 files
 # match each other. The canonical hash is computed from the first
 # LICENSE file found and the rest must equal it.
+#
+# A repo whose declared licence is a COMPOUND SPDX expression including
+# MIT (zvcs: `MIT AND GPL-2.0-only`, for the git templates it ships
+# verbatim under git's own licence) cannot satisfy byte-equality: its
+# LICENSE carries the canonical MIT text AND an addendum naming the
+# other licence. Those are held to a PREFIX match instead — the
+# canonical MIT text must be the first lines of the file, byte for
+# byte, and only trailing text may follow. That is stricter than
+# skipping the repo, which is what the `UNLICENSED` and single-non-MIT
+# branches do.
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root" || exit
@@ -78,6 +88,9 @@ else
     echo "SKIP  no shasum/sha1sum tool available"
     exit 0
 fi
+# Lines in the canonical text — the prefix branch below compares exactly
+# this many lines of a compound-licence LICENSE against it.
+canonical_lines=$(printf '%s\n' "$canonical_text" | grep -c '')
 
 checked=0
 diverged=0
@@ -95,6 +108,20 @@ for p in "${paths[@]}"; do
     # plugin doesn't.
     [[ -f "$p/Cargo.toml" || -f "$p/src-tauri/Cargo.toml" ]] || continue
 
+    # Where the licence is DECLARED. A plain crate declares it in the
+    # root Cargo.toml and a Tauri app in src-tauri/Cargo.toml, but a
+    # repo whose root is a bare `[workspace]` declares it in a member
+    # instead (zvcs: src/extensions/Cargo.toml). Read the `members`
+    # array so the member manifests are consulted too — and only those,
+    # since `exclude`d trees hold vendored third-party crates whose own
+    # licence says nothing about this repo.
+    manifests=("$p/Cargo.toml" "$p/src-tauri/Cargo.toml")
+    members=$(perl -0777 -ne 'print $1 if /^\s*members\s*=\s*\[(.*?)\]/ms' "$p/Cargo.toml" 2>/dev/null)
+    members=${members//[\"\',]/ }
+    for m in $members; do
+        [[ -f "$p/$m/Cargo.toml" ]] && manifests+=("$p/$m/Cargo.toml")
+    done
+
     # Paid / proprietary products are NOT MIT — skip them. The marker is
     # `license = "UNLICENSED"` in the package Cargo.toml; such repos ship
     # their own proprietary LICENSE (still pinned to exist by
@@ -103,7 +130,7 @@ for p in "${paths[@]}"; do
     # Tauri paid apps (Audio-Haxor) declare license in src-tauri/Cargo.toml
     # while the root is a license-less workspace.
     if grep -qhE '^license[[:space:]]*=[[:space:]]*"UNLICENSED"' \
-        "$p/Cargo.toml" "$p/src-tauri/Cargo.toml" 2>/dev/null; then
+        "${manifests[@]}" 2>/dev/null; then
         echo "SKIP  $p: proprietary (license=\"UNLICENSED\") — paid product, not MIT"
         continue
     fi
@@ -114,8 +141,8 @@ for p in "${paths[@]}"; do
     # not-MIT and the MIT-uniformity check does not apply; the LICENSE file
     # is still required to exist (license-file-present.sh).
     if grep -qhE '^license[[:space:]]*=[[:space:]]*"(MPL-2\.0|Apache-2\.0|GPL-[23]\.0[^"]*|LGPL-[^"]*|BSD-[23]-Clause)"' \
-        "$p/Cargo.toml" "$p/src-tauri/Cargo.toml" 2>/dev/null; then
-        decl=$(grep -hoE '^license[[:space:]]*=[[:space:]]*"[^"]+"' "$p/Cargo.toml" "$p/src-tauri/Cargo.toml" 2>/dev/null | head -1)
+        "${manifests[@]}" 2>/dev/null; then
+        decl=$(grep -hoE '^license[[:space:]]*=[[:space:]]*"[^"]+"' "${manifests[@]}" 2>/dev/null | head -1)
         echo "SKIP  $p: $decl — free fork, inherited non-MIT OSI license"
         continue
     fi
@@ -135,6 +162,24 @@ for p in "${paths[@]}"; do
 
     checked=$((checked + 1))
     sha=$(shasum "$p/LICENSE" 2>/dev/null | awk '{print $1}')
+
+    # Compound SPDX expression including MIT: the repo is MIT for its own
+    # code and carries another licence for something it ships verbatim,
+    # so its LICENSE is the canonical MIT text PLUS an addendum naming
+    # that other licence. Byte-equality cannot hold; require the
+    # canonical text as an exact PREFIX and let the addendum follow.
+    decl=$(grep -hoE '^license[[:space:]]*=[[:space:]]*"[^"]+"' "${manifests[@]}" 2>/dev/null | head -1)
+    if [[ "$decl" == *MIT* && "$decl" == *" AND "* || "$decl" == *MIT* && "$decl" == *" OR "* ]]; then
+        head_sha=$(head -n "$canonical_lines" "$p/LICENSE" | shasum 2>/dev/null | awk '{print $1}')
+        if [[ "$head_sha" == "$canonical_sha" ]]; then
+            echo "PASS  $p/LICENSE: canonical MIT + declared addendum ($decl)"
+        else
+            echo "FAIL  $p/LICENSE declares $decl but its first $canonical_lines lines are not the canonical MIT text (sha $head_sha)"
+            diverged=$((diverged + 1))
+            ok=0
+        fi
+        continue
+    fi
 
     if [[ "$sha" == "$canonical_sha" ]]; then
         echo "PASS  $p/LICENSE matches canonical"
