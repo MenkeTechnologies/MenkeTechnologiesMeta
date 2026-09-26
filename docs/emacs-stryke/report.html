@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="emacs-stryke — engineering report. font-lock generated from the stryke binary (all 10,409 builtins via hash-table matcher), why a single regexp-opt overflows Emacs, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
+  <meta name="description" content="emacs-stryke — engineering report. font-lock generated from the stryke binary (all 10,452 builtins via hash-table matcher), why a single regexp-opt overflows Emacs, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
   <title>emacs-stryke — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,7 +44,7 @@
             <a href="https://github.com/MenkeTechnologies/emacs-stryke" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            Emacs major mode for stryke &middot; font-lock generated from the binary (all 10,409 builtins, hash-table matcher) &middot; LSP via stryke --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
+            Emacs major mode for stryke &middot; font-lock generated from the binary (all 10,452 builtins, hash-table matcher) &middot; LSP via stryke --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -59,10 +59,10 @@
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
       <p class="tutorial-subtitle"><strong>emacs-stryke</strong> is the Emacs major mode for <strong>stryke</strong> &mdash; a highly parallel Perl 5 superset interpreter written in Rust. <code>stryke-mode</code> derives from <code>prog-mode</code> and provides font-lock, a syntax table, brace-aware indentation, filetype detection, and an LSP client that launches <code>stryke --lsp</code>.</p>
-      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is not a hand-picked subset and not a reskin of a Perl mode. <code>scripts/gen-stdlib.sh</code> dumps <code>%b</code> (builtins), <code>%k</code> (keywords), and <code>$c{parallel}</code> from the live binary and writes <code>stryke-stdlib.el</code> carrying the <strong>complete</strong> language surface &mdash; all 10,409 builtins. Regenerate after a stryke upgrade and it stays in sync.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is not a hand-picked subset and not a reskin of a Perl mode. <code>scripts/gen-stdlib.sh</code> dumps <code>%b</code> (builtins), <code>%k</code> (keywords), and <code>$c{parallel}</code> from the live binary and writes <code>stryke-stdlib.el</code> carrying the <strong>complete</strong> language surface &mdash; all 10,452 builtins. Regenerate after a stryke upgrade and it stays in sync.</p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">10,409</div><div class="stat-label">Builtins font-locked</div></div>
+        <div class="stat-card"><div class="stat-val">10,452</div><div class="stat-label">Builtins font-locked</div></div>
         <div class="stat-card"><div class="stat-val accent">39</div><div class="stat-label">Parallel primitives</div></div>
         <div class="stat-card"><div class="stat-val">90</div><div class="stat-label">Keywords</div></div>
         <div class="stat-card"><div class="stat-val">12</div><div class="stat-label">Type names</div></div>
@@ -74,7 +74,7 @@
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">~</span>WHY HASH TABLES, NOT ONE REGEXP</h2>
-      <p class="tutorial-subtitle">The natural approach &mdash; <code>(regexp-opt builtins 'symbols)</code> over all 10,409 names &mdash; produces a regexp that Emacs' own compiler rejects with <code>invalid-regexp "Regular expression too big"</code>. So the generator instead emits two <strong>hash tables</strong> (<code>stryke-builtins-table</code>, <code>stryke-parallel-table</code>), and a font-lock <em>matcher function</em> walks identifiers with a generic <code>\_&lt;…\_&gt;</code> regexp and looks each one up in O(1). The two sets are disjoint, so parallel primitives get their own face without conflicting with the general builtin face. Small categories (keywords, types) still use a plain <code>regexp-opt</code> &mdash; they are well under the limit.</p>
+      <p class="tutorial-subtitle">The natural approach &mdash; <code>(regexp-opt builtins 'symbols)</code> over all 10,452 names &mdash; produces a regexp that Emacs' own compiler rejects with <code>invalid-regexp "Regular expression too big"</code>. So the generator instead emits two <strong>hash tables</strong> (<code>stryke-builtins-table</code>, <code>stryke-parallel-table</code>), and a font-lock <em>matcher function</em> walks identifiers with a generic <code>\_&lt;…\_&gt;</code> regexp and looks each one up in O(1). The two sets are disjoint, so parallel primitives get their own face without conflicting with the general builtin face. Small categories (keywords, types) still use a plain <code>regexp-opt</code> &mdash; they are well under the limit.</p>
 
       <table class="parity-table">
         <thead><tr><th>Component</th><th>Detail</th></tr></thead>
