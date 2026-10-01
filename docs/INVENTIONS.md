@@ -574,7 +574,7 @@ in-process without executing anything — the zsh grammar and expander as a libr
 crate an **AST front-end for the whole Bourne family** (bash/ksh/dash/sh via the emulation modes) —
 a reusable foundation for shell static analyzers, linters, and formatters that until now needed a
 running shell (or a bespoke re-implementation of the grammar) to get an AST at all. *Basis:*
-`zshrs/Cargo.toml` `[lib] name = "zsh"` (v0.12.24, no `publish = false`);
+`zshrs/Cargo.toml` `[lib] name = "zsh"` (v0.12.67, no `publish = false`);
 `ShellExecutor::execute_script`; public front-end modules `ported::parse`/`ported::lex` (grammar),
 `ported::glob` (glob qualifiers), `ported::subst`/`ported::params` (parameter expansion); already
 consumed as the embedded `:zsh` engine in zmax (`zmax-term/Cargo.toml`, `zsh = { package = "zshrs" }`). *Caveat:* crates.io
@@ -2509,7 +2509,7 @@ terminals), the **zmax** editor (auto-spawns `zwire-host serve`, no manual step)
 `fsops.rs:116` (`fs_walk` recursive crawl) + `api.rs:107` (`walk`) + `api.rs:44` (`exec`);
 `zmax/zmax-term/src/commands/host.rs:1` (client bridge, auto-spawn `serve`);
 `zpwrchrome/zpwrchrome-host/Cargo.toml:52` (`zwire-host = { version = "0.3",
-default-features = false }` — a crates.io registry dep, resolved to `0.3.8` in the lockfile).
+default-features = false }` — a crates.io registry dep, resolved to `0.3.10` in the lockfile).
 *Caveat:* this is a **filesystem** crawler, **not** a web crawler — it walks local paths, not
 URLs. "None found", not proven: browsers ship single-purpose native-messaging hosts
 (password managers, download helpers), but a general filesystem-crawl + exec + watch + PTY
@@ -2632,8 +2632,8 @@ colour scheme across a browser (extensions + native window chrome) and a Tauri d
 via a shared file + per-process pub/sub bus + drop-in plugin has no prior art found; search not
 exhaustive. The shim is a generic drop-in (vendored into every zgui-core app's `lib/`), so any
 Tauri/JUCE zgui-core app can join by registering the plugin + loading the shim. Version drift
-exists across the pins (local crate `0.3.14`, ztranslator `v0.3.5`, zpwrchrome-host on the
-crates.io `0.3` line resolved to `0.3.8`, without the `tauri` feature). Inert wherever the host
+exists across the pins (local crate `0.3.21`, ztranslator `v0.3.5`, zpwrchrome-host on the
+crates.io `0.3` line resolved to `0.3.10`, without the `tauri` feature). Inert wherever the host
 isn't connected.
 
 **169a. The theme bus extended to a terminal modal editor — bidirectional, over the editor's own ported schemes** — `med`
@@ -2830,7 +2830,7 @@ tmux program — server, client, grid/screen model, input parser, layouts, the c
 formats, and the terminal back end — reimplemented against the upstream **tmux C sources** (vendored
 under `vendor/` as a plain, read-only, SHA-pinned copy, 196 `.c` files) and held to that spec by a
 byte-for-byte differential parity suite (identical inputs through real `tmux` and ztmux, diffed) at
-**1107/1107 (100%)**, with an **anti-drift gate** (`tests/ported_fn_names_match_c.rs`) that *fails the
+**1656/1656 (100%)**, with an **anti-drift gate** (`tests/ported_fn_names_match_c.rs`) that *fails the
 build* if a free `fn` is added to `src/` whose name has no counterpart in `vendor/tmux` — so the port
 cannot be faked with Rust-only "helper" functions. On top of that compatibility floor it is a
 **superset**: 119 original `src/extensions/` modules (walled off from the anti-drift gate precisely
@@ -2842,14 +2842,14 @@ features are absorbed natively (`@ztmux-zellij-mode` inset pane frames, `stack` 
 pane, a session manager, modal keybindings, a tab bar); **`resurrect`** + `@ztmux-resurrect-auto`
 fold tmux-resurrect **and** tmux-continuum into the binary; and **`open`** folds tmux-open/tmux-urlview
 in — every extension pipeable via `-o json`. *Basis:* `ztmux/README.md` §[0x02]/[0x04]/[0x05]/[0x08];
-`ztmux/vendor/` (SHA-pinned tmux C, 196 `.c`); `ztmux/parity/PARITY_ROADMAP.md` (1107/1107);
+`ztmux/vendor/` (SHA-pinned tmux C, 196 `.c`); `ztmux/parity/PARITY_ROADMAP.md` (1656/1656);
 `ztmux/tests/ported_fn_names_match_c.rs` (anti-drift gate) + `tests/data/fake_fn_allowlist.txt`;
-`ztmux/src/extensions/` (119 modules: `triggers.rs`, `resurrect.rs`, `stack.rs`, `sessions.rs`,
-`modal.rs`, `open.rs`, `switch.rs`, `dashboard.rs`, `watch.rs`, `sync.rs`, …); v3.7.21. Pairs with
+`ztmux/src/extensions/` (129 modules: `triggers.rs`, `resurrect.rs`, `stack.rs`, `sessions.rs`,
+`modal.rs`, `open.rs`, `switch.rs`, `dashboard.rs`, `watch.rs`, `sync.rs`, …); v3.7.47. Pairs with
 `ztmux-core` (the native tmux *client* engine) — this repo is the server+client rewrite. *Caveat:*
 "first" is the **combination** — a byte-compatible tmux **and** a superset — not "first tmux in Rust"
 (tmux-rs precedes it as a pure port) nor "first Rust multiplexer with these features" (zellij has
-frames/floating/resurrect but is not tmux). The parity figure is corpus-relative (1107 cases), not a
+frames/floating/resurrect but is not tmux). The parity figure is corpus-relative (1656 cases), not a
 proof of universal equivalence; the extensions are original subcommands, not upstream tmux. "None
 found," not proven; prior-art sweep non-exhaustive. MIT (derivative of tmux, ISC).
 
@@ -2879,7 +2879,7 @@ prompt-fingerprint-deduped, and writes one wake byte to a per-client FIFO the sh
 segment modules + `watch.rs` reactive push), `src/extensions/shell_hooks/reactive.zsh`;
 `tests/ported_fn_names_match_py.rs` (anti-drift gate); `docs/PORT.md` (`src/extensions/` + `src/bin/`
 carve-out); 462 parity tests / 2,473 lib tests; README §"Bundled extensions" / §"Reactive Prompt
-Push"; v0.2.17. *Caveat:* "first" is the **combination** — byte-compatible Powerline **and** a superset
+Push"; v0.2.31. *Caveat:* "first" is the **combination** — byte-compatible Powerline **and** a superset
 — not "first Powerline in Rust" (powerline-go / powerline-rs precede it but are not byte-parity ports
 of `powerline-status`) nor "first prompt with these segments." Byte-parity is asserted on the ported
 render path (tested against upstream Python, per #116's caveat); the 20 segments are original, not
@@ -2897,7 +2897,7 @@ to the port by a **port-purity gate** (`build.rs`) that checks every free `fn` n
 against the htop C-function snapshot `tests/data/htop_c_fn_names.txt` and *fails the build* on any Rust
 name with no C counterpart — the same falsify-the-port instrument as ztmux's `ported_fn_names_match_c.rs`
 and powerliners' `ported_fn_names_match_py.rs`, with the same carve-out (`src/extensions/` is exempt
-because it is honestly not htop). Coverage 1069/1093 C functions (97.8%) across 130/131 files, a daily
+because it is honestly not htop). Coverage 1068/1101 C functions (97.0%) across 130 files, a daily
 driver on macOS; the terminal layer is pure-Rust crossterm (no C dep) while the color model
 (`CRT.c` `ColorElements` + every `CRT_colorSchemes` entry) is transcribed verbatim so colors match
 htop exactly. On that byte-compatible floor it is a **superset**: 21 `src/extensions/` modules add
@@ -2919,7 +2919,7 @@ cites), `src/extensions/` (21 modules; `forecast.rs`, `theme.rs`+`colors.rs`+`ov
 `procring.rs`, `barstyle.rs`, `panels.rs`+`bridge.rs`, …); `build.rs` port-purity gate +
 `tests/data/htop_c_fn_names.txt` + `fake_fn_allowlist.txt`; `tests/parity/` (byte-diff vs reference
 htop); `scripts/gen_port_report.py` → `docs/port_report.html` (source-derived coverage, `todo!()` counts
-as stubbed); v0.5.9. *Caveat:* "first" is the **combination** — byte-compatible htop **and** a superset
+as stubbed); v0.5.16. *Caveat:* "first" is the **combination** — byte-compatible htop **and** a superset
 — not "first htop-like in Rust" (bottom / btop / ytop / zenith precede it but are from-scratch
 alternatives, not byte-parity ports of htop) nor "first process monitor with these features." Coverage /
 parity are corpus-relative (1069 functions; the parity suite's cases), a measurement, not proof of
@@ -3368,7 +3368,7 @@ gains are workload-dependent and small batches deliberately stay sequential. "No
 sweep non-exhaustive. A zvcs addition (gitoxide engine vendored). MIT.
 
 **203. A superset that documents and installs itself — man pages generated from the dispatch table, symlinks derived from it, and tests that fail when any of it drifts (zvcs `git zdashed` / `zdoctor` / `zverbs`)** — `med`
-A binary that invents 116 verbs stock git never had has a documentation problem no upstream man page can
+A binary that invents 119 verbs stock git never had has a documentation problem no upstream man page can
 solve, and a compatibility problem the moment it replaces `git` on `PATH`: nothing else provides the dashed
 `git-<verb>` external forms tools still expect. zvcs generates both from its own dispatch tables.
 `superset/manpage.rs` holds one structured `Doc` per verb and renders real `man(1)` roff on demand, so
