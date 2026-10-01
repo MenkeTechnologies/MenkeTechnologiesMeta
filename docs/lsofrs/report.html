@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="lsofrs — engineering report. Rust rewrite of lsof: 25,364 lines of production Rust + 8,813 lines of tests, 1,672 #[test] functions, 31 themes, 7-tab TUI, macOS + Linux + FreeBSD. 5–21× faster than lsof / lsofng on hyperfine.">
+  <meta name="description" content="lsofrs — engineering report. Rust rewrite of lsof: 27,125 lines of production Rust + 8,829 lines of tests, 1,769 #[test] functions, 31 themes, 7-tab TUI, macOS + Linux + FreeBSD. 5–21× faster than lsof / lsofng on hyperfine.">
   <title>lsofrs &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,30 +90,30 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY           -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle"><strong>lsofrs</strong> is a single-binary Rust implementation of <code>lsof</code>. Three platform backends (<code>src/darwin.rs</code> via libproc FFI, <code>src/linux.rs</code> via <code>/proc</code>, <code>src/freebsd.rs</code> via sysctl + procfs) feed a shared <code>Vec&lt;Process&gt;</code> through a composable filter pipeline (<code>src/filter.rs</code>) into one of fourteen output / live-monitor modes. Per-PID FD enumeration runs on rayon's work-stealing pool; every TTY mode shares a <code>TuiMode</code> trait (<code>src/tui_app.rs</code>) for common keybindings, alternate-screen entry/exit, and atomic frame rendering. <strong>25,364 production Rust lines + 8,813 test lines + 1,741 <code>#[test]</code> functions</strong>. <code>hyperfine</code> wall-clock: <strong>14.2 ms</strong> for the default invocation vs <strong>169.8 ms</strong> for <code>lsof 4.91</code> (~12&times; speedup), <strong>21&times;</strong> on terse PID output.</p>
+      <p class="tutorial-subtitle"><strong>lsofrs</strong> is a single-binary Rust implementation of <code>lsof</code>. Three platform backends (<code>src/darwin.rs</code> via libproc FFI, <code>src/linux.rs</code> via <code>/proc</code>, <code>src/freebsd.rs</code> via sysctl + procfs) feed a shared <code>Vec&lt;Process&gt;</code> through a composable filter pipeline (<code>src/filter.rs</code>) into one of fourteen output / live-monitor modes. Per-PID FD enumeration runs on rayon's work-stealing pool; every TTY mode shares a <code>TuiMode</code> trait (<code>src/tui_app.rs</code>) for common keybindings, alternate-screen entry/exit, and atomic frame rendering. <strong>27,125 production Rust lines + 8,829 test lines + 1,769 <code>#[test]</code> functions</strong>. <code>hyperfine</code> wall-clock: <strong>14.2 ms</strong> for the default invocation vs <strong>169.8 ms</strong> for <code>lsof 4.91</code> (~12&times; speedup), <strong>21&times;</strong> on terse PID output.</p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">25,364</div><div class="stat-label">Production Rust Lines</div></div>
-        <div class="stat-card"><div class="stat-val">8,813</div><div class="stat-label">Test Rust Lines</div></div>
-        <div class="stat-card"><div class="stat-val accent">34,177</div><div class="stat-label">Total Rust Lines</div></div>
-        <div class="stat-card"><div class="stat-val green">1,741</div><div class="stat-label">#[test] Functions</div></div>
-        <div class="stat-card"><div class="stat-val">31</div><div class="stat-label">Production Modules</div></div>
+        <div class="stat-card"><div class="stat-val">27,125</div><div class="stat-label">Production Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val">8,829</div><div class="stat-label">Test Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val accent">35,954</div><div class="stat-label">Total Rust Lines</div></div>
+        <div class="stat-card"><div class="stat-val green">1,769</div><div class="stat-label">#[test] Functions</div></div>
+        <div class="stat-card"><div class="stat-val">32</div><div class="stat-label">Production Modules</div></div>
         <div class="stat-card"><div class="stat-val">15</div><div class="stat-label">Test Modules</div></div>
-        <div class="stat-card"><div class="stat-val">38</div><div class="stat-label">CLI Args (#[arg])</div></div>
+        <div class="stat-card"><div class="stat-val">53</div><div class="stat-label">CLI Args (#[arg])</div></div>
         <div class="stat-card"><div class="stat-val">31</div><div class="stat-label">Themes</div></div>
         <div class="stat-card"><div class="stat-val">7</div><div class="stat-label">TUI Tabs</div></div>
         <div class="stat-card"><div class="stat-val">13</div><div class="stat-label">Direct Dependencies</div></div>
         <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Platforms (Darwin/Linux/FreeBSD)</div></div>
-        <div class="stat-card"><div class="stat-val">265</div><div class="stat-label">Git Commits</div></div>
+        <div class="stat-card"><div class="stat-val">316</div><div class="stat-label">Git Commits</div></div>
       </div>
 
       <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 34,177 lines</p>
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source Distribution &mdash; 35,954 lines</p>
         <div class="bar-wrap" style="height:26px;">
-          <div class="bar-fill cyan" style="width:72.8%;"></div>
-          <span class="bar-pct" style="font-size:12px;">25,364 production / 8,813 tests &middot; 74.2% production</span>
+          <div class="bar-fill cyan" style="width:75.4%;"></div>
+          <span class="bar-pct" style="font-size:12px;">27,125 production / 8,829 tests &middot; 75.4% production</span>
         </div>
-        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Production: 31 files in <code>src/</code>. Tests: 15 integration modules in <code>tests/</code> + inline <code>#[cfg(test)]</code> blocks in 27 of the production files. Total <code>#[test]</code> count is taken from <code>grep -rh '#[test]' tests/*.rs src/*.rs | wc -l</code>.</p>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Production: 32 files in <code>src/</code>. Tests: 15 integration modules in <code>tests/</code> + inline <code>#[cfg(test)]</code> blocks in 28 of the production files. Total <code>#[test]</code> count is taken from <code>grep -rh '#[test]' tests/*.rs src/*.rs | wc -l</code>.</p>
       </div>
 
       <hr class="section-rule">
@@ -191,23 +191,23 @@
       <!-- SECTION 2: SUBSYSTEM BREAKDOWN          -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">#</span>SUBSYSTEM BREAKDOWN</h2>
-      <p class="tutorial-subtitle">Source partitioned by role. TUI &amp; theming dominate at 31.0% of production Rust &mdash; <code>tui_tabs.rs</code> alone is 5,308 lines for the unified 7-tab dashboard (mouse, tooltips, theme chooser + editor). Selection / filter is the second-biggest subsystem (2,812 lines) because every selector composes with every other under OR / AND mode with regex, range, and negation grammar.</p>
+      <p class="tutorial-subtitle">Source partitioned by role. TUI &amp; theming dominate at 27.8% of production Rust &mdash; <code>tui_tabs.rs</code> alone is 5,558 lines for the unified 7-tab dashboard (mouse, tooltips, theme chooser + editor). Selection / filter is a single 3,037-line file because every selector composes with every other under OR / AND mode with regex, range, and negation grammar.</p>
 
       <table class="file-table">
         <thead><tr><th>Subsystem</th><th>Key Files</th><th class="num">Lines</th><th class="num">% of prod</th><th style="min-width:120px;">Share</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td style="color:var(--accent);">TUI &amp; Theming</td><td><code>tui_tabs, tui_app, theme, config</code></td><td class="num">7,303</td><td class="num">21.4%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:28.9%"></div></div></td><td>Unified 7-tab dashboard (<code>--tui</code>) with mouse + tooltips + theme chooser/editor (<code>tui_tabs.rs</code>, 5,308); shared <code>TuiMode</code> trait + ratatui framework (<code>tui_app.rs</code>); 31 named palettes via <code>ThemeName</code> enum (<code>theme.rs</code>); TOML config persistence at <code>~/.lsofrs.conf</code> (<code>config.rs</code>)</td></tr>
-          <tr><td style="color:var(--accent);">Selection / Filter</td><td><code>filter</code></td><td class="num">3,035</td><td class="num">8.9%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:11.9%"></div></div></td><td>PID / PGID / user / command / FD / network-spec / path selectors, OR-mode (default) and AND-mode (<code>-a</code>) composition, comma-lists, ranges (<code>0-10</code>), exclusion (<code>^root</code>), regex (<code>/&hellip;/</code>), precomputed canonical paths</td></tr>
-          <tr><td style="color:var(--accent);">Platform Gather</td><td><code>darwin, linux, freebsd</code></td><td class="num">2,962</td><td class="num">8.7%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:11.7%"></div></div></td><td>macOS libproc FFI with zero-copy <code>#[repr(C)]</code> structs (<code>darwin.rs</code>, 1,286); <code>/proc</code> reader with parallel per-PID rayon (<code>linux.rs</code>, 841); sysctl + procfs socket decoder (<code>freebsd.rs</code>, 835)</td></tr>
-          <tr><td style="color:var(--accent);">Live Modes</td><td><code>top, summary, monitor, follow, watch, leak, delta</code></td><td class="num">3,920</td><td class="num">11.5%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:15.5%"></div></div></td><td>Live top-N FD dashboard (<code>top.rs</code>, 1,009); aggregate summary + bars in static and live form (<code>summary.rs</code>, 1,026); classic full-screen monitor (<code>monitor.rs</code>, 398); single-PID follow (<code>follow.rs</code>, 192); file-open/close watch (<code>watch.rs</code>, 369); circular-buffer FD-leak detector (<code>leak.rs</code>, 340); iteration-diff engine for change highlighting (<code>delta.rs</code>, 580)</td></tr>
-          <tr><td style="color:var(--accent);">Single-Shot Views</td><td><code>tree, ports, stale, pipe_chain, net_map</code></td><td class="num">2,285</td><td class="num">6.7%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:9.0%"></div></div></td><td>Process tree with FD inheritance + per-PID type breakdown (<code>tree.rs</code>); listening-ports summary like <code>ss -tlnp</code> (<code>ports.rs</code>); deleted-file FD finder (<code>stale.rs</code>); pipe / unix-socket IPC map (<code>pipe_chain.rs</code>); connections grouped by remote host (<code>net_map.rs</code>)</td></tr>
-          <tr><td style="color:var(--accent);">CLI &amp; Dispatch</td><td><code>cli, main, lib, strutil</code></td><td class="num">2,514</td><td class="num">7.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:7.4%"></div></div></td><td>clap derive parser with 52 <code>#[arg]</code> attributes and custom help display (<code>cli.rs</code>, 1,908); mode-dispatch entry point including repeat / leak-detect loops (<code>main.rs</code>, 442); library facade gated by <code>#[cfg(target_os)]</code> (<code>lib.rs</code>); safe UTF-8 truncation for fixed-width column display, no mid-codepoint slices (<code>strutil.rs</code>)</td></tr>
-          <tr><td style="color:var(--accent);">Output / Serialization</td><td><code>output, json, csv_out</code></td><td class="num">1,927</td><td class="num">5.6%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:7.6%"></div></div></td><td>Columnar + field (<code>-F</code>) formatting with TTY-detected ANSI theming (<code>output.rs</code>, 793); serde-backed JSON array (<code>json.rs</code>, 441); RFC 4180-compliant CSV with proper quoting (<code>csv_out.rs</code>, 397)</td></tr>
-          <tr><td style="color:var(--accent);">Type System</td><td><code>types</code></td><td class="num">999</td><td class="num">2.9%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:3.9%"></div></div></td><td>Shared cross-platform data shapes: <code>Process</code>, <code>OpenFile</code>, <code>SocketInfo</code>, <code>FileType</code>, <code>NetworkFilter</code>, <code>FdName</code>, <code>FdFilter</code>, <code>DeltaStatus</code> &mdash; 11 public <code>struct</code> / <code>enum</code> definitions, all <code>#[derive(Serialize)]</code> for the JSON contract</td></tr>
-          <tr><td style="color:var(--accent);">Stall Classifier</td><td><code>stall</code></td><td class="num">419</td><td class="num">1.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1.7%"></div></div></td><td>Per-FD socket backpressure classifier: samples each socket's kernel send / recv buffer occupancy across successive polls and issues a <code>TX-STALLED</code> / <code>RX-STALLED</code> verdict per <code>(pid, fd)</code></td></tr>
-          <tr><td style="color:var(--green);">Tests</td><td><code>tests/*.rs + #[cfg(test)] inline</code></td><td class="num">8,813</td><td class="num">25.8%</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:25.8%"></div></div></td><td>1,741 <code>#[test]</code> functions across 15 integration modules (<code>tests/</code>) + 27 inline <code>#[cfg(test)]</code> blocks. Covers JSON / CSV contracts (233 tests in <code>json_and_csv_contracts.rs</code>), CLI dispatch (177 in <code>integration.rs</code>, 86 in <code>cli_combinations.rs</code>, 63 in <code>dispatch_contracts.rs</code>), library smoke / filter semantics / color output / binary aliasing</td></tr>
+          <tr><td style="color:var(--accent);">TUI &amp; Theming</td><td><code>tui_tabs, tui_app, theme, config</code></td><td class="num">7,553</td><td class="num">21.0%</td><td><div class="bar-wrap"><div class="bar-fill magenta" style="width:21.0%"></div></div></td><td>Unified 7-tab dashboard (<code>--tui</code>) with mouse + tooltips + theme chooser/editor (<code>tui_tabs.rs</code>, 5,558); shared <code>TuiMode</code> trait + ratatui framework (<code>tui_app.rs</code>); 31 named palettes via <code>ThemeName</code> enum (<code>theme.rs</code>); TOML config persistence at <code>~/.lsofrs.conf</code> (<code>config.rs</code>)</td></tr>
+          <tr><td style="color:var(--accent);">Selection / Filter</td><td><code>filter</code></td><td class="num">3,037</td><td class="num">8.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:8.4%"></div></div></td><td>PID / PGID / user / command / FD / network-spec / path selectors, OR-mode (default) and AND-mode (<code>-a</code>) composition, comma-lists, ranges (<code>0-10</code>), exclusion (<code>^root</code>), regex (<code>/&hellip;/</code>), precomputed canonical paths</td></tr>
+          <tr><td style="color:var(--accent);">Platform Gather</td><td><code>darwin, linux, freebsd</code></td><td class="num">3,775</td><td class="num">10.5%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.5%"></div></div></td><td>macOS libproc FFI with zero-copy <code>#[repr(C)]</code> structs (<code>darwin.rs</code>, 1,861); <code>/proc</code> reader with parallel per-PID rayon (<code>linux.rs</code>, 1,065); sysctl + procfs socket decoder (<code>freebsd.rs</code>, 849)</td></tr>
+          <tr><td style="color:var(--accent);">Live Modes</td><td><code>top, summary, monitor, follow, watch, leak, delta</code></td><td class="num">3,920</td><td class="num">10.9%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:10.9%"></div></div></td><td>Live top-N FD dashboard (<code>top.rs</code>, 1,009); aggregate summary + bars in static and live form (<code>summary.rs</code>, 1,032); classic full-screen monitor (<code>monitor.rs</code>, 398); single-PID follow (<code>follow.rs</code>, 192); file-open/close watch (<code>watch.rs</code>, 369); circular-buffer FD-leak detector (<code>leak.rs</code>, 340); iteration-diff engine for change highlighting (<code>delta.rs</code>, 580)</td></tr>
+          <tr><td style="color:var(--accent);">Single-Shot Views</td><td><code>tree, ports, stale, pipe_chain, net_map</code></td><td class="num">2,291</td><td class="num">6.4%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:6.4%"></div></div></td><td>Process tree with FD inheritance + per-PID type breakdown (<code>tree.rs</code>); listening-ports summary like <code>ss -tlnp</code> (<code>ports.rs</code>); deleted-file FD finder (<code>stale.rs</code>); pipe / unix-socket IPC map (<code>pipe_chain.rs</code>); connections grouped by remote host (<code>net_map.rs</code>)</td></tr>
+          <tr><td style="color:var(--accent);">CLI &amp; Dispatch</td><td><code>cli, run, main, bin/lsf, lib, strutil</code></td><td class="num">2,556</td><td class="num">7.1%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:7.1%"></div></div></td><td>clap derive parser with 53 <code>#[arg]</code> attributes and custom help display (<code>cli.rs</code>, 1,915); mode dispatch including repeat / leak-detect loops (<code>run.rs</code>, 457), called from the two-line <code>main.rs</code> and <code>bin/lsf.rs</code> entry points; library facade gated by <code>#[cfg(target_os)]</code> (<code>lib.rs</code>); safe UTF-8 truncation for fixed-width column display, no mid-codepoint slices (<code>strutil.rs</code>)</td></tr>
+          <tr><td style="color:var(--accent);">Output / Serialization</td><td><code>output, json, csv_out, resolve</code></td><td class="num">2,441</td><td class="num">6.8%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:6.8%"></div></div></td><td>Columnar + field (<code>-F</code>) formatting with TTY-detected ANSI theming (<code>output.rs</code>, 1,252); serde-backed JSON array (<code>json.rs</code>, 444); RFC 4180-compliant CSV with proper quoting (<code>csv_out.rs</code>, 397); cached, parallel host / service name resolution for socket names (<code>resolve.rs</code>, 348)</td></tr>
+          <tr><td style="color:var(--accent);">Type System</td><td><code>types</code></td><td class="num">1,133</td><td class="num">3.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:3.2%"></div></div></td><td>Shared cross-platform data shapes: <code>Process</code>, <code>OpenFile</code>, <code>SocketInfo</code>, <code>FileType</code>, <code>NetworkFilter</code>, <code>FdName</code>, <code>FdFilter</code>, <code>DeltaStatus</code> &mdash; 11 public <code>struct</code> / <code>enum</code> definitions, all <code>#[derive(Serialize)]</code> for the JSON contract</td></tr>
+          <tr><td style="color:var(--accent);">Stall Classifier</td><td><code>stall</code></td><td class="num">419</td><td class="num">1.2%</td><td><div class="bar-wrap"><div class="bar-fill cyan" style="width:1.2%"></div></div></td><td>Per-FD socket backpressure classifier: samples each socket's kernel send / recv buffer occupancy across successive polls and issues a <code>TX-STALLED</code> / <code>RX-STALLED</code> verdict per <code>(pid, fd)</code></td></tr>
+          <tr><td style="color:var(--green);">Tests</td><td><code>tests/*.rs + #[cfg(test)] inline</code></td><td class="num">8,829</td><td class="num">24.6%</td><td><div class="bar-wrap"><div class="bar-fill green" style="width:24.6%"></div></div></td><td>1,769 <code>#[test]</code> functions across 15 integration modules (<code>tests/</code>) + 28 inline <code>#[cfg(test)]</code> blocks. Covers JSON / CSV contracts (233 tests in <code>json_and_csv_contracts.rs</code>), CLI dispatch (177 in <code>integration.rs</code>, 86 in <code>cli_combinations.rs</code>, 63 in <code>dispatch_contracts.rs</code>), library smoke / filter semantics / color output / binary aliasing</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL (incl. tests)</td><td class="num">34,177</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
+        <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL (incl. tests)</td><td class="num">35,954</td><td class="num">100%</td><td></td><td></td></tr></tfoot>
       </table>
 
       <hr class="section-rule">
@@ -216,33 +216,33 @@
       <!-- SECTION 3: TOP 20 FILES                 -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">$</span>TOP 20 FILES BY SIZE</h2>
-      <p class="tutorial-subtitle">The 20 largest files account for <strong>82.0%</strong> of the codebase (Rust under <code>src/</code> + <code>tests/</code>). <code>tui_tabs.rs</code> is by far the largest single file &mdash; the entire 7-tab dashboard, mouse handling, tooltips, and theme picker live there. The four largest test modules (<code>json_and_csv_contracts</code>, <code>integration</code>, <code>cli_combinations</code>, <code>dispatch_contracts</code>) cover 6,602 lines &mdash; every flag combination, every JSON shape, every CSV escape rule.</p>
+      <p class="tutorial-subtitle">The 20 largest files account for <strong>80.9%</strong> of the codebase (Rust under <code>src/</code> + <code>tests/</code>). <code>tui_tabs.rs</code> is by far the largest single file &mdash; the entire 7-tab dashboard, mouse handling, tooltips, and theme picker live there. The four largest test modules (<code>json_and_csv_contracts</code>, <code>integration</code>, <code>cli_combinations</code>, <code>dispatch_contracts</code>) cover 6,602 lines &mdash; every flag combination, every JSON shape, every CSV escape rule.</p>
 
       <table class="file-table">
         <thead><tr><th>File</th><th class="num">Lines</th><th>Role</th></tr></thead>
         <tbody>
-          <tr><td>src/tui_tabs.rs</td><td class="num">5,308</td><td>Unified 7-tab TUI dashboard (TOP / SUMMARY / PORTS / TREE / NET-MAP / PIPES / STALE), mouse handling, hover &amp; right-click tooltips, theme chooser + 6-color editor, bottom-bar segments with verbose tooltips, atomic frame rendering</td></tr>
-          <tr><td>src/filter.rs</td><td class="num">3,035</td><td>Selection &amp; filter composition: PID / PGID / user / command / FD / network-spec / path selectors with comma-lists, ranges, exclusion, regex; OR (default) and AND (<code>-a</code>) modes; precomputed canonical filter paths (v4.8.0 perf path)</td></tr>
+          <tr><td>src/tui_tabs.rs</td><td class="num">5,558</td><td>Unified 7-tab TUI dashboard (TOP / SUMMARY / PORTS / TREE / NET-MAP / PIPES / STALE), mouse handling, hover &amp; right-click tooltips, theme chooser + 6-color editor, bottom-bar segments with verbose tooltips, atomic frame rendering</td></tr>
+          <tr><td>src/filter.rs</td><td class="num">3,037</td><td>Selection &amp; filter composition: PID / PGID / user / command / FD / network-spec / path selectors with comma-lists, ranges, exclusion, regex; OR (default) and AND (<code>-a</code>) modes; precomputed canonical filter paths (v4.8.0 perf path)</td></tr>
           <tr><td>tests/json_and_csv_contracts.rs</td><td class="num">2,581</td><td>233 <code>#[test]</code> functions pinning every JSON field, every CSV escape rule, every per-flag output shape &mdash; refactors can&rsquo;t silently break downstream consumers</td></tr>
           <tr><td>tests/integration.rs</td><td class="num">2,090</td><td>177 end-to-end tests: full binary invocation, every flag, every output mode</td></tr>
-          <tr><td>src/cli.rs</td><td class="num">1,913</td><td>clap derive args (38 <code>#[arg]</code> attributes, 20 short flags), custom help display, mode-flag groupings, version printing</td></tr>
-          <tr><td>src/darwin.rs</td><td class="num">1,286</td><td>macOS libproc FFI: <code>proc_listpids</code>, <code>proc_pidinfo</code>, <code>proc_pidfdinfo</code>, <code>proc_pidpath</code>; zero-copy <code>#[repr(C)]</code> structs sized to kernel headers; per-PID FD scan parallelized with rayon</td></tr>
+          <tr><td>src/cli.rs</td><td class="num">1,915</td><td>clap derive args (53 <code>#[arg]</code> attributes, 23 short flags), custom help display, mode-flag groupings, version printing</td></tr>
+          <tr><td>src/darwin.rs</td><td class="num">1,861</td><td>macOS libproc FFI: <code>proc_listpids</code>, <code>proc_pidinfo</code>, <code>proc_pidfdinfo</code>, <code>proc_pidpath</code>; zero-copy <code>#[repr(C)]</code> structs sized to kernel headers; per-PID FD scan parallelized with rayon</td></tr>
+          <tr><td>src/output.rs</td><td class="num">1,252</td><td>Columnar + field (<code>-F</code>) formatting, TTY-detected ANSI theming, cyberpunk header swap (<code>PROCESS</code>/<code>PRC</code>/<code>H4XOR</code> on TTY, <code>COMMAND</code>/<code>PID</code>/<code>USER</code> when piped), Unicode-safe column widths via <code>strutil.rs</code></td></tr>
           <tr><td>tests/cli_combinations.rs</td><td class="num">1,142</td><td>86 tests covering every selector / mode combinator (<code>-a -p -u -i</code> AND mode, regex command match, range FDs, exclusion)</td></tr>
+          <tr><td>src/types.rs</td><td class="num">1,133</td><td>Cross-platform shared shapes: <code>Process</code>, <code>OpenFile</code>, <code>SocketInfo</code>, <code>NetworkFilter</code>, <code>FileType</code>, etc. &mdash; 11 public structs / enums, all <code>#[derive(Serialize)]</code> for the JSON contract</td></tr>
+          <tr><td>src/linux.rs</td><td class="num">1,065</td><td>Linux gather: <code>/proc/&lt;pid&gt;/{stat,status,fd,fdinfo}</code> reader, /proc/net/{tcp,tcp6,udp,udp6,unix} parser for socket decoding; parallelized per-PID with rayon</td></tr>
+          <tr><td>src/summary.rs</td><td class="num">1,032</td><td>Aggregate FD breakdown with bar charts, top-N processes, per-user totals; doubles as a live TUI mode under <code>--summary -r N</code> via the shared <code>TuiMode</code> trait</td></tr>
           <tr><td>src/top.rs</td><td class="num">1,009</td><td>Live top-N FD dashboard: sort cycling (FDs &rarr; PID &rarr; USER &rarr; REG &rarr; SOCK &rarr; PIPE &rarr; OTHER &rarr; DELTA &rarr; CMD), distribution bar column, delta tracking, <code>+/-</code> to grow / shrink N</td></tr>
           <tr><td>src/theme.rs</td><td class="num">1,005</td><td>31 named cyberpunk palettes (<code>NeonSprawl</code>, <code>BladeRunner</code>, <code>Matrix</code>, <code>SolarFlare</code>, &hellip;) via the <code>ThemeName</code> enum with display name + 6-color resolver; custom-palette support persisted through <code>config.rs</code></td></tr>
-          <tr><td>src/summary.rs</td><td class="num">1,032</td><td>Aggregate FD breakdown with bar charts, top-N processes, per-user totals; doubles as a live TUI mode under <code>--summary -r N</code> via the shared <code>TuiMode</code> trait</td></tr>
-          <tr><td>src/types.rs</td><td class="num">999</td><td>Cross-platform shared shapes: <code>Process</code>, <code>OpenFile</code>, <code>SocketInfo</code>, <code>NetworkFilter</code>, <code>FileType</code>, etc. &mdash; 11 public structs / enums, all <code>#[derive(Serialize)]</code> for the JSON contract</td></tr>
-          <tr><td>src/freebsd.rs</td><td class="num">835</td><td>FreeBSD gather: <code>sysctl(KERN_PROC_FILEDESC)</code> + <code>/proc</code> when mounted, FreeBSD-specific TCP / UDP / unix-socket decoding from <code>/proc/net</code></td></tr>
-          <tr><td>src/linux.rs</td><td class="num">841</td><td>Linux gather: <code>/proc/&lt;pid&gt;/{stat,status,fd,fdinfo}</code> reader, /proc/net/{tcp,tcp6,udp,udp6,unix} parser for socket decoding; parallelized per-PID with rayon</td></tr>
-          <tr><td>tests/dispatch_contracts.rs</td><td class="num">789</td><td>63 tests pinning the mode-dispatch matrix in <code>main.rs</code>: which mode wins when multiple flags are passed, exit-code contracts, alternate-screen lifecycle</td></tr>
-          <tr><td>src/output.rs</td><td class="num">1,089</td><td>Columnar + field (<code>-F</code>) formatting, TTY-detected ANSI theming, cyberpunk header swap (<code>PROCESS</code>/<code>PRC</code>/<code>H4XOR</code> on TTY, <code>COMMAND</code>/<code>PID</code>/<code>USER</code> when piped), Unicode-safe column widths via <code>strutil.rs</code></td></tr>
+          <tr><td>src/freebsd.rs</td><td class="num">849</td><td>FreeBSD gather: <code>sysctl(KERN_PROC_FILEDESC)</code> + <code>/proc</code> when mounted, FreeBSD-specific TCP / UDP / unix-socket decoding from <code>/proc/net</code></td></tr>
+          <tr><td>tests/dispatch_contracts.rs</td><td class="num">789</td><td>63 tests pinning the mode-dispatch matrix in <code>run.rs</code>: which mode wins when multiple flags are passed, exit-code contracts, alternate-screen lifecycle</td></tr>
           <tr><td>src/net_map.rs</td><td class="num">608</td><td>Network connections grouped by remote host: aggregates each peer&rsquo;s open-socket count, supports JSON output and per-user filtering</td></tr>
           <tr><td>src/delta.rs</td><td class="num">580</td><td>Iteration-diff engine for change highlighting: stable record IDs, additions in green, removals in red, used by <code>--delta -r N</code> and all live modes</td></tr>
           <tr><td>src/tui_app.rs</td><td class="num">572</td><td>Shared <code>TuiMode</code> trait + ratatui scaffold: alternate-screen entry/exit, common keybindings (<code>1-9</code>, <code>p</code> pause, <code>?</code> help, <code>c</code>/<code>C</code> theme, <code>x</code> border, <code>/</code> filter, <code>y</code> copy, <code>e</code> export, <code>q</code> quit), atomic frame rendering</td></tr>
           <tr><td>src/tree.rs</td><td class="num">556</td><td>Hierarchical process tree with FD inheritance, per-PID type breakdown (<code>[REG:12 IPv4:3 PIPE:2]</code>), notable-file listing inline; JSON tree with nested children</td></tr>
-          <tr><td>src/ports.rs</td><td class="num">450</td><td>Listening-ports summary like <code>ss -tlnp</code> but cross-platform (macOS + Linux + FreeBSD); supports JSON output and per-user filtering</td></tr>
+          <tr><td>src/run.rs</td><td class="num">457</td><td>Mode dispatch shared by the <code>lsofrs</code>, <code>lsf</code>, and <code>lsof</code> alias binaries: picks the active mode from the parsed flags, runs the repeat (<code>-r</code>) and leak-detect loops</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOP 20 SUBTOTAL</td><td class="num">27,720</td><td>81.1% of 34,177-line Rust slice</td></tr></tfoot>
+        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOP 20 SUBTOTAL</td><td class="num">29,091</td><td>80.9% of 35,954-line Rust slice</td></tr></tfoot>
       </table>
 
       <hr class="section-rule">
@@ -254,12 +254,12 @@
       <p class="tutorial-subtitle">One invocation flows through three stages: <strong>gather</strong> (platform-specific FFI, parallel per-PID), <strong>filter</strong> (composable selectors, AND/OR mode), <strong>output</strong> (one of: columnar TTY, columnar plain, JSON, CSV, field, or live TUI). The shared <code>Process</code> / <code>OpenFile</code> shape from <code>src/types.rs</code> means every backend feeds every output mode without intermediate marshaling.</p>
 
       <pre style="margin:0.5rem 0;padding:1rem;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-dim);font-size:11px;line-height:1.7;overflow-x:auto;">
-  argv  ──▶  cli.rs (clap derive, 38 args)
+  argv  ──▶  cli.rs (clap derive, 53 args)
                   │
                   ▼
          ┌────────────────┐
-         │   main.rs      │  mode dispatch:
-         │   (283 lines)  │   tui / top / summary -r / monitor /
+         │   run.rs       │  mode dispatch:
+         │   (457 lines)  │   tui / top / summary -r / monitor /
          │                │   watch / follow / leak-detect /
          │                │   tree / ports / stale / pipe-chain /
          │                │   net-map / csv / json / field / list
@@ -268,10 +268,10 @@
        ┌──────────┴──────────┐
        │                     │
        ▼                     ▼
- #[cfg(target_os = …)]  filter.rs  (3,035 lines)
+ #[cfg(target_os = …)]  filter.rs  (3,037 lines)
  ┌───────────┐           - PID / PGID / USER / CMD
  │ darwin.rs │           - FD range / exclusion
- │ (1,286)   │           - network spec (4|6|TCP|UDP|:port)
+ │ (1,861)   │           - network spec (4|6|TCP|UDP|:port)
  │ libproc   │           - path canonicalization
  │ FFI       │           - AND mode (-a) / OR mode (default)
  │ repr(C)   │           - regex via /…/
@@ -279,15 +279,15 @@
        │
  ┌───────────┐
  │ linux.rs  │
- │ (841)     │
+ │ (1,065)   │
  │ /proc fs  │     ┌──────────────────────┐
  │ rayon     │ ──▶ │  Vec&lt;Process&gt;        │
- │ per-PID   │     │  (types.rs, 999 ln)  │
+ │ per-PID   │     │ (types.rs, 1,133 ln) │
  └─────┬─────┘     │   Process            │
        │           │   ├─ OpenFile        │
  ┌───────────┐     │   │   ├─ FileType    │
  │freebsd.rs │     │   │   └─ SocketInfo  │
- │ (835)     │     │   └─ command/uid/…   │
+ │ (849)     │     │   └─ command/uid/…   │
  │sysctl+proc│     └──────────┬───────────┘
  └───────────┘                │
                               ▼
@@ -309,7 +309,7 @@
       <!-- SECTION 5: TYPE SYSTEM                  -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>TYPE SYSTEM</h2>
-      <p class="tutorial-subtitle">Eleven public <code>struct</code> / <code>enum</code> definitions in <code>src/types.rs</code> (972 lines) carry every fact between the gather, filter, and output layers: <code>FileType</code>, <code>Access</code>, <code>InetAddr</code>, <code>TcpState</code>, <code>SocketInfo</code>, <code>FdName</code>, <code>OpenFile</code>, <code>Process</code>, <code>NetworkFilter</code>, <code>FdFilter</code>, <code>DeltaStatus</code>. The serialized shapes <code>#[derive(Serialize)]</code>, so the JSON contract is one derive macro &mdash; no hand-rolled escaping, no schema drift. The resolved theme types (<code>ThemeName</code>, <code>LsofTheme</code>) live in <code>src/theme.rs</code>, not <code>types.rs</code>.</p>
+      <p class="tutorial-subtitle">Eleven public <code>struct</code> / <code>enum</code> definitions in <code>src/types.rs</code> (1,133 lines) carry every fact between the gather, filter, and output layers: <code>FileType</code>, <code>Access</code>, <code>InetAddr</code>, <code>TcpState</code>, <code>SocketInfo</code>, <code>FdName</code>, <code>OpenFile</code>, <code>Process</code>, <code>NetworkFilter</code>, <code>FdFilter</code>, <code>DeltaStatus</code>. The serialized shapes <code>#[derive(Serialize)]</code>, so the JSON contract is one derive macro &mdash; no hand-rolled escaping, no schema drift. The resolved theme types (<code>ThemeName</code>, <code>LsofTheme</code>) live in <code>src/theme.rs</code>, not <code>types.rs</code>.</p>
 
       <div class="mapping-grid">
         <div class="mapping-card"><h4>Process</h4><p>Per-PID record: <code>pid</code>, <code>ppid</code>, <code>pgid</code>, <code>uid</code>, <code>command</code>, <code>files: Vec&lt;OpenFile&gt;</code>, plus selection-state fields (<code>sel_flags</code>, <code>sel_state</code>) and a private <code>OnceCell&lt;String&gt;</code> username cache. Populated by each platform backend, consumed by every filter and output mode.</p></div>
@@ -336,10 +336,10 @@
       <table class="file-table">
         <thead><tr><th>Flag</th><th>Module</th><th class="num">Lines</th><th>Mode</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><code>(default)</code></td><td><code>output.rs</code></td><td class="num">793</td><td>single-shot</td><td>Columnar output (cyberpunk on TTY, plain when piped); the original <code>lsof</code> default</td></tr>
-          <tr><td><code>--tui</code></td><td><code>tui_tabs.rs</code></td><td class="num">5,308</td><td>live (TuiMode)</td><td>Unified 7-tab dashboard with mouse + tooltips + theme picker + theme editor</td></tr>
+          <tr><td><code>(default)</code></td><td><code>output.rs</code></td><td class="num">1,252</td><td>single-shot</td><td>Columnar output (cyberpunk on TTY, plain when piped); the original <code>lsof</code> default</td></tr>
+          <tr><td><code>--tui</code></td><td><code>tui_tabs.rs</code></td><td class="num">5,558</td><td>live (TuiMode)</td><td>Unified 7-tab dashboard with mouse + tooltips + theme picker + theme editor</td></tr>
           <tr><td><code>--top [N]</code></td><td><code>top.rs</code></td><td class="num">1,009</td><td>live (TuiMode)</td><td>Live top-N processes sorted by FD count with distribution bars + delta</td></tr>
-          <tr><td><code>--summary [-r N]</code></td><td><code>summary.rs</code></td><td class="num">1,026</td><td>both</td><td>Aggregate stats + bar charts; <code>-r N</code> turns it into a live TuiMode</td></tr>
+          <tr><td><code>--summary [-r N]</code></td><td><code>summary.rs</code></td><td class="num">1,032</td><td>both</td><td>Aggregate stats + bar charts; <code>-r N</code> turns it into a live TuiMode</td></tr>
           <tr><td><code>--monitor</code> / <code>-W</code></td><td><code>monitor.rs</code></td><td class="num">398</td><td>live (TuiMode)</td><td>Classic full-screen alternate-buffer monitor (<code>top(1)</code>-style)</td></tr>
           <tr><td><code>--watch FILE</code></td><td><code>watch.rs</code></td><td class="num">369</td><td>live (stream)</td><td>Timestamped <code>+OPEN</code> / <code>-CLOSE</code> events for a single path</td></tr>
           <tr><td><code>--follow PID</code></td><td><code>follow.rs</code></td><td class="num">192</td><td>live</td><td>Single-PID FD tracker; new opens <code>+NEW</code> green, closes <code>-DEL</code> red</td></tr>
@@ -347,10 +347,10 @@
           <tr><td><code>--tree</code></td><td><code>tree.rs</code></td><td class="num">556</td><td>single-shot</td><td>Hierarchical process tree with per-PID FD-type breakdown</td></tr>
           <tr><td><code>--ports</code></td><td><code>ports.rs</code></td><td class="num">450</td><td>single-shot</td><td>Listening-ports summary like <code>ss -tlnp</code>, cross-platform</td></tr>
           <tr><td><code>--stale</code></td><td><code>stale.rs</code></td><td class="num">313</td><td>single-shot</td><td>Deleted-file FD finder (disk-space leak / zombie-handle detector)</td></tr>
-          <tr><td><code>--pipe-chain</code></td><td><code>pipe_chain.rs</code></td><td class="num">358</td><td>single-shot</td><td>Pipe + unix-socket IPC topology between processes</td></tr>
+          <tr><td><code>--pipe-chain</code></td><td><code>pipe_chain.rs</code></td><td class="num">364</td><td>single-shot</td><td>Pipe + unix-socket IPC topology between processes</td></tr>
           <tr><td><code>--net-map</code></td><td><code>net_map.rs</code></td><td class="num">608</td><td>single-shot</td><td>Network connections grouped by remote host</td></tr>
           <tr><td><code>--csv</code></td><td><code>csv_out.rs</code></td><td class="num">397</td><td>single-shot</td><td>RFC 4180-compliant CSV export</td></tr>
-          <tr><td><code>--json</code> / <code>-J</code></td><td><code>json.rs</code></td><td class="num">441</td><td>single-shot</td><td>Serde-backed JSON array (full <code>OpenFile</code> shape)</td></tr>
+          <tr><td><code>--json</code> / <code>-J</code></td><td><code>json.rs</code></td><td class="num">444</td><td>single-shot</td><td>Serde-backed JSON array (full <code>OpenFile</code> shape)</td></tr>
           <tr><td><code>--delta -r N</code></td><td><code>delta.rs</code></td><td class="num">580</td><td>live (repeat)</td><td>Color-coded diff between iterations (green=new, red=gone)</td></tr>
           <tr><td><code>-F &lt;chars&gt;</code></td><td><code>output.rs</code></td><td class="num">&mdash;</td><td>single-shot</td><td>Per-record field output (p=pid, c=cmd, f=fd, n=name, &hellip;) &mdash; lsof-compatible</td></tr>
           <tr><td><code>-t</code></td><td><code>output.rs</code></td><td class="num">&mdash;</td><td>single-shot</td><td>Terse PIDs-only output (scripting path)</td></tr>
@@ -391,7 +391,7 @@
       <!-- SECTION 8: TEST SURFACE                 -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">?</span>TEST SURFACE</h2>
-      <p class="tutorial-subtitle">1,741 <code>#[test]</code> functions across 15 integration modules and 27 inline <code>#[cfg(test)]</code> blocks. The integration suite is contract-heavy: every JSON field, every CSV escape, every CLI flag combination is pinned so refactors can't silently shift output shape.</p>
+      <p class="tutorial-subtitle">1,769 <code>#[test]</code> functions across 15 integration modules and 28 inline <code>#[cfg(test)]</code> blocks. The integration suite is contract-heavy: every JSON field, every CSV escape, every CLI flag combination is pinned so refactors can't silently shift output shape.</p>
 
       <table class="file-table">
         <thead><tr><th>Test Module</th><th class="num">Lines</th><th class="num">#[test]</th><th>Focus</th></tr></thead>
@@ -399,7 +399,7 @@
           <tr><td>tests/json_and_csv_contracts.rs</td><td class="num">2,581</td><td class="num">233</td><td>Every JSON field, every CSV escape, every per-flag output shape</td></tr>
           <tr><td>tests/integration.rs</td><td class="num">2,090</td><td class="num">177</td><td>End-to-end binary invocation, every flag, every output mode</td></tr>
           <tr><td>tests/cli_combinations.rs</td><td class="num">1,142</td><td class="num">86</td><td>Selector / mode combinator matrix (<code>-a -p -u -i</code>, regex, ranges)</td></tr>
-          <tr><td>tests/dispatch_contracts.rs</td><td class="num">789</td><td class="num">63</td><td>Mode-dispatch precedence in <code>main.rs</code>, exit-code contracts, alternate-screen lifecycle</td></tr>
+          <tr><td>tests/dispatch_contracts.rs</td><td class="num">789</td><td class="num">63</td><td>Mode-dispatch precedence in <code>run.rs</code>, exit-code contracts, alternate-screen lifecycle</td></tr>
           <tr><td>tests/library_smoke.rs</td><td class="num">393</td><td class="num">28</td><td>Library-crate facade smoke tests (<code>pub mod cli; pub mod types; pub mod filter; &hellip;</code>)</td></tr>
           <tr><td>tests/json_wrappers.rs</td><td class="num">391</td><td class="num">43</td><td>JSON envelope shapes for the structured modes (summary, ports, tree, &hellip;)</td></tr>
           <tr><td>tests/filters_and_paths.rs</td><td class="num">268</td><td class="num">26</td><td>Path canonicalization, FD-range parsing, exclusion grammar</td></tr>
@@ -408,14 +408,14 @@
           <tr><td>tests/lsf_binary.rs</td><td class="num">52</td><td class="num">5</td><td><code>lsf</code> short-form alias contract &mdash; same binary, same behavior, both bin targets in Cargo.toml</td></tr>
           <tr><td>tests/contract_csv_fd_port_range.rs</td><td class="num">241</td><td class="num">8</td><td>CSV FD / port-range contract pins (descending ranges, selector composition)</td></tr>
           <tr><td>tests/contract_filter_combinators.rs</td><td class="num">153</td><td class="num">9</td><td>Filter combinator contract: 4/6 selector + <code>:port</code> semantics</td></tr>
-          <tr><td>tests/contract_field_output_round4.rs</td><td class="num">167</td><td class="num">6</td><td><code>-F</code> field-output bijection, <code>-P</code>/<code>-n</code> independence, end-to-end markers</td></tr>
+          <tr><td>tests/contract_field_output_round4.rs</td><td class="num">183</td><td class="num">6</td><td><code>-F</code> field-output bijection, <code>-P</code>/<code>-n</code> independence, end-to-end markers</td></tr>
           <tr><td>tests/inet_filter_selector_port_and_reversed_range.rs</td><td class="num">175</td><td class="num">3</td><td><code>-i</code> selector <code>:port</code> + reversed/descending port-range parsing</td></tr>
           <tr><td>tests/inet_parsed_host_precomputation.rs</td><td class="num">78</td><td class="num">4</td><td><code>parse_inet_filter</code> precomputed <code>parsed_host</code> contract</td></tr>
         </tbody>
         <tfoot>
-          <tr class="total-row"><td>tests/ subtotal</td><td class="num">8,813</td><td class="num">710</td><td>15 integration modules</td></tr>
-          <tr class="total-row"><td>+ inline #[cfg(test)] in src/</td><td class="num">&mdash;</td><td class="num">962</td><td>25 modules with inline test blocks (filter.rs alone has 220 inline tests)</td></tr>
-          <tr class="total-row" style="border-top:2px solid var(--accent);"><td><strong>TOTAL</strong></td><td class="num"><strong>8,813+</strong></td><td class="num"><strong>1,741</strong></td><td><strong>Pinned contracts across CLI, JSON, CSV, filters, dispatch, color, library facade</strong></td></tr>
+          <tr class="total-row"><td>tests/ subtotal</td><td class="num">8,829</td><td class="num">710</td><td>15 integration modules</td></tr>
+          <tr class="total-row"><td>+ inline #[cfg(test)] in src/</td><td class="num">&mdash;</td><td class="num">1,059</td><td>28 modules with inline test blocks (filter.rs alone has 234 inline tests)</td></tr>
+          <tr class="total-row" style="border-top:2px solid var(--accent);"><td><strong>TOTAL</strong></td><td class="num"><strong>8,829+</strong></td><td class="num"><strong>1,769</strong></td><td><strong>Pinned contracts across CLI, JSON, CSV, filters, dispatch, color, library facade</strong></td></tr>
         </tfoot>
       </table>
 
@@ -433,11 +433,11 @@
         </div>
         <div class="feature-card">
           <h4>Man page</h4>
-          <p>310-line roff page at <code>man/man1/lsofrs.1</code> &mdash; every flag documented, copy with <code>sudo cp man/man1/lsofrs.1 /usr/local/share/man/man1/</code> then <code>man lsofrs</code>.</p>
+          <p>386-line roff page at <code>man/man1/lsofrs.1</code> &mdash; every flag documented, copy with <code>sudo cp man/man1/lsofrs.1 /usr/local/share/man/man1/</code> then <code>man lsofrs</code>.</p>
         </div>
         <div class="feature-card">
           <h4>Zsh completion</h4>
-          <p>101-line <code>#compdef lsofrs</code> script at <code>completions/_lsofrs</code>; drop into any <code>fpath</code> entry (e.g. <code>/usr/local/share/zsh/site-functions/</code>) and reload via <code>compinit</code>.</p>
+          <p>129-line <code>#compdef lsofrs</code> script at <code>completions/_lsofrs</code>; drop into any <code>fpath</code> entry (e.g. <code>/usr/local/share/zsh/site-functions/</code>) and reload via <code>compinit</code>.</p>
         </div>
         <div class="feature-card">
           <h4>Library crate</h4>

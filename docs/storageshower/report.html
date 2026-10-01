@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="storageshower — Engineering report. Cyberpunk disk usage TUI in Rust: 14,723 src lines + 50,242 integration test lines, 30 builtin themes, 3,736 test functions, ratatui + crossterm, macOS IOKit + Linux /proc/diskstats live I/O, SMART probes, NFS latency, drill-down explorer, theme editor.">
+  <meta name="description" content="storageshower — Engineering report. Cyberpunk disk usage TUI in Rust: 15,087 src lines + 50,244 integration test lines, 30 builtin themes, 3,749 test functions, ratatui + crossterm, macOS IOKit + Linux /proc/diskstats live I/O, SMART probes, NFS latency, drill-down explorer, theme editor.">
   <title>storageshower — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,28 +93,28 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY           -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">storageshower is a single-binary TUI for disk usage monitoring written in Rust on top of <a href="https://github.com/ratatui/ratatui">ratatui</a> + <a href="https://github.com/crossterm-rs/crossterm">crossterm</a>. It paints per-mount usage bars in four styles across 30 builtin cyberpunk palettes, refreshes telemetry (load avg, memory, CPU, swap, processes, uptime, network, battery) on a background thread behind an <code>Arc&lt;Mutex&lt;&gt;&gt;</code>, probes per-device SMART status and per-mount disk I/O throughput against IOKit on macOS and <code>/proc/diskstats</code> on Linux, samples network-filesystem latency with a timed <code>read_dir</code>, drills into mounts with a recursive directory explorer, and ships a live per-channel theme editor that round-trips to a TOML config. <strong>14,723 Rust source lines + 50,242 integration test lines across 1,337 test files; 3,736 test functions total; 10 production + 4 dev direct dependencies (271 in the resolved tree); 285 commits since 2026-03-26.</strong></p>
+      <p class="tutorial-subtitle">storageshower is a single-binary TUI for disk usage monitoring written in Rust on top of <a href="https://github.com/ratatui/ratatui">ratatui</a> + <a href="https://github.com/crossterm-rs/crossterm">crossterm</a>. It paints per-mount usage bars in four styles across 30 builtin cyberpunk palettes, refreshes telemetry (load avg, memory, CPU, swap, processes, uptime, network, battery) on a background thread behind an <code>Arc&lt;Mutex&lt;&gt;&gt;</code>, probes per-device SMART status and per-mount disk I/O throughput against IOKit on macOS and <code>/proc/diskstats</code> on Linux, samples network-filesystem latency with a timed <code>read_dir</code>, drills into mounts with a recursive directory explorer, and ships a live per-channel theme editor that round-trips to a TOML config. <strong>15,087 Rust source lines + 50,244 integration test lines across 1,337 test files; 3,749 test functions total; 10 production + 4 dev direct dependencies (271 in the resolved tree); 288 commits since 2026-03-26.</strong></p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">14,723</div><div class="stat-label">Rust Src Lines</div></div>
-        <div class="stat-card"><div class="stat-val">50,242</div><div class="stat-label">Test Src Lines</div></div>
+        <div class="stat-card"><div class="stat-val">15,087</div><div class="stat-label">Rust Src Lines</div></div>
+        <div class="stat-card"><div class="stat-val">50,244</div><div class="stat-label">Test Src Lines</div></div>
         <div class="stat-card"><div class="stat-val accent">30</div><div class="stat-label">Builtin Themes</div></div>
-        <div class="stat-card"><div class="stat-val green">3,736</div><div class="stat-label">Test Functions</div></div>
+        <div class="stat-card"><div class="stat-val green">3,749</div><div class="stat-label">Test Functions</div></div>
         <div class="stat-card"><div class="stat-val">1,337</div><div class="stat-label">Test Files</div></div>
-        <div class="stat-card"><div class="stat-val">13</div><div class="stat-label">Source Files</div></div>
+        <div class="stat-card"><div class="stat-val">14</div><div class="stat-label">Source Files</div></div>
         <div class="stat-card"><div class="stat-val">10</div><div class="stat-label">Direct Deps</div></div>
-        <div class="stat-card"><div class="stat-val">269</div><div class="stat-label">Resolved Crates</div></div>
-        <div class="stat-card"><div class="stat-val">252</div><div class="stat-label">Git Commits</div></div>
+        <div class="stat-card"><div class="stat-val">271</div><div class="stat-label">Resolved Crates</div></div>
+        <div class="stat-card"><div class="stat-val">288</div><div class="stat-label">Git Commits</div></div>
         <div class="stat-card"><div class="stat-val">v0.28.16</div><div class="stat-label">Current Release</div></div>
       </div>
 
       <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution &mdash; 63,901 Rust lines</p>
+        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution &mdash; 65,675 Rust lines</p>
         <div class="bar-wrap" style="height:26px;">
-          <div class="bar-fill magenta" style="width:78.1%;"></div>
-          <span class="bar-pct" style="font-size:12px;">50,242 tests / 14,723 src / 344 bench &middot; 76.9% tests</span>
+          <div class="bar-fill magenta" style="width:76.5%;"></div>
+          <span class="bar-pct" style="font-size:12px;">50,244 tests / 15,087 src / 344 bench &middot; 76.5% tests</span>
         </div>
-        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Tests: 1,337 files in <code>tests/</code>. Src: 13 modules in <code>src/</code>. Bench: 1 file (<code>benches/bench.rs</code>, 344 lines, criterion-driven). Test:src ratio is 3.66:1.</p>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Tests: 1,337 files in <code>tests/</code>. Src: 14 modules in <code>src/</code>. Bench: 1 file (<code>benches/bench.rs</code>, 344 lines, criterion-driven). Test:src ratio is 3.33:1.</p>
       </div>
 
       <hr class="section-rule">
@@ -123,7 +123,7 @@
       <!-- SECTION 2: SOURCE LAYOUT               -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">#</span>SOURCE LAYOUT</h2>
-      <p class="tutorial-subtitle">Thirteen modules under <code>src/</code>. Largest: <code>ui.rs</code> (rendering) and <code>keys.rs</code> (keyboard dispatch). <code>system.rs</code> hosts every platform probe (IOKit / <code>/proc/diskstats</code> / SMART / network FS latency / sysinfo). <code>app.rs</code> owns the <code>App</code> state machine and refresh loop.</p>
+      <p class="tutorial-subtitle">Fourteen modules under <code>src/</code>. Largest: <code>ui.rs</code> (rendering) and <code>keys.rs</code> (keyboard dispatch). <code>system.rs</code> hosts every platform probe (IOKit / <code>/proc/diskstats</code> / SMART / network FS latency / sysinfo). <code>app.rs</code> owns the <code>App</code> state machine and refresh loop.</p>
 
       <table class="file-table">
         <thead>
@@ -136,20 +136,21 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td><code>src/ui.rs</code></td><td class="num">4,086</td><td class="num">509</td><td class="num">3,577</td><td>ratatui widgets: disk list, drill-down, header / footer / tooltips, theme chooser, theme editor, popup chrome, palette tables</td></tr>
-          <tr><td><code>src/keys.rs</code></td><td class="num">2,185</td><td class="num">1,428</td><td class="num">757</td><td>Keyboard event dispatch: navigation, sort, filter, drill-down, theme editor, threshold cycles, bookmarks, export</td></tr>
-          <tr><td><code>src/cli.rs</code></td><td class="num">1,692</td><td class="num">1,163</td><td class="num">529</td><td><code>clap</code> derive: every flag, <code>--no-flag</code> inverses, <code>--list-colors</code>, <code>--export-theme</code>, config merge</td></tr>
-          <tr><td><code>src/system.rs</code></td><td class="num">1,760</td><td class="num">733</td><td class="num">1,027</td><td>Platform probes: IOKit byte counters (macOS), <code>/proc/diskstats</code> (Linux), SMART, NFS latency, sysinfo wrappers, mount discovery</td></tr>
-          <tr><td><code>src/app.rs</code></td><td class="num">1,503</td><td class="num">968</td><td class="num">535</td><td><code>App</code> state, refresh thread, alert tracking, bookmark set, filter buffer, view mode (Disks &harr; DrillDown)</td></tr>
-          <tr><td><code>src/mouse.rs</code></td><td class="num">923</td><td class="num">688</td><td class="num">235</td><td>Mouse event router: hit-testing rows / headers / column separators / popup / theme rows, drag-to-resize, scroll-wheel</td></tr>
-          <tr><td><code>src/prefs.rs</code></td><td class="num">690</td><td class="num">578</td><td class="num">112</td><td>TOML config schema, load / save, custom-theme merge, default <code>storageshower.default.conf</code> generator</td></tr>
-          <tr><td><code>src/helpers.rs</code></td><td class="num">683</td><td class="num">614</td><td class="num">69</td><td>Pure helpers: byte-pretty-printing (<code>human</code> / <code>gib</code> / <code>mib</code> / <code>bytes</code>), mount-name compaction, gradient interpolation</td></tr>
-          <tr><td><code>src/types.rs</code></td><td class="num">708</td><td class="num">424</td><td class="num">284</td><td><code>ColorMode</code> (30 variants), <code>ThemeColors</code>, <code>UnitMode</code>, <code>SmartHealth</code>, <code>DiskEntry</code>, <code>DirEntry</code>, <code>SysStats</code>, <code>HoverZone</code>, <code>ViewMode</code></td></tr>
-          <tr><td><code>src/columns.rs</code></td><td class="num">234</td><td class="num">185</td><td class="num">49</td><td>Column layout: mount / used / size / pct / bar widths, drag-resize math</td></tr>
-          <tr><td><code>src/testutil.rs</code></td><td class="num">135</td><td class="num">43</td><td class="num">92</td><td>Shared test fixtures: synthetic <code>DiskEntry</code> / <code>App</code> builders, temp-config helpers</td></tr>
-          <tr><td><code>src/main.rs</code></td><td class="num">110</td><td class="num">0</td><td class="num">110</td><td>Entry point: terminal setup / teardown, <code>App</code> bootstrap, event loop, signal handling</td></tr>
-          <tr><td><code>src/lib.rs</code></td><td class="num">14</td><td class="num">0</td><td class="num">14</td><td>Module declarations + crate-level lint allows; binary &amp; integration tests both consume the library</td></tr>
-          <tr class="total-row"><td>Total</td><td class="num">14,723</td><td class="num">7,333</td><td class="num">7,390</td><td>Inline tests &asymp; production code (50/50 split inside <code>src/</code>); integration tests (50,242 lines) sit on top</td></tr>
+          <tr><td><code>src/ui.rs</code></td><td class="num">4,129</td><td class="num">3,577</td><td class="num">552</td><td>ratatui widgets: disk list, drill-down, header / footer / tooltips, theme chooser, theme editor, popup chrome, palette tables</td></tr>
+          <tr><td><code>src/keys.rs</code></td><td class="num">2,177</td><td class="num">748</td><td class="num">1,429</td><td>Keyboard event dispatch: navigation, sort, filter, drill-down, theme editor, threshold cycles, bookmarks, export</td></tr>
+          <tr><td><code>src/cli.rs</code></td><td class="num">1,692</td><td class="num">529</td><td class="num">1,163</td><td><code>clap</code> derive: every flag, <code>--no-flag</code> inverses, <code>--list-colors</code>, <code>--export-theme</code>, config merge</td></tr>
+          <tr><td><code>src/system.rs</code></td><td class="num">1,760</td><td class="num">1,027</td><td class="num">733</td><td>Platform probes: IOKit byte counters (macOS), <code>/proc/diskstats</code> (Linux), SMART, NFS latency, sysinfo wrappers, mount discovery</td></tr>
+          <tr><td><code>src/app.rs</code></td><td class="num">1,577</td><td class="num">532</td><td class="num">1,045</td><td><code>App</code> state, refresh thread, alert tracking, bookmark set, filter buffer, view mode (Disks &harr; DrillDown)</td></tr>
+          <tr><td><code>src/mouse.rs</code></td><td class="num">1,001</td><td class="num">240</td><td class="num">761</td><td>Mouse event router: hit-testing rows / headers / column separators / popup / theme rows, drag-to-resize, scroll-wheel</td></tr>
+          <tr><td><code>src/prefs.rs</code></td><td class="num">690</td><td class="num">113</td><td class="num">577</td><td>TOML config schema, load / save, custom-theme merge, default <code>storageshower.default.conf</code> generator</td></tr>
+          <tr><td><code>src/helpers.rs</code></td><td class="num">683</td><td class="num">69</td><td class="num">614</td><td>Pure helpers: byte-pretty-printing (<code>human</code> / <code>gib</code> / <code>mib</code> / <code>bytes</code>), mount-name compaction, gradient interpolation</td></tr>
+          <tr><td><code>src/types.rs</code></td><td class="num">708</td><td class="num">284</td><td class="num">424</td><td><code>ColorMode</code> (30 variants), <code>ThemeColors</code>, <code>UnitMode</code>, <code>SmartHealth</code>, <code>DiskEntry</code>, <code>DirEntry</code>, <code>SysStats</code>, <code>HoverZone</code>, <code>ViewMode</code></td></tr>
+          <tr><td><code>src/columns.rs</code></td><td class="num">234</td><td class="num">49</td><td class="num">185</td><td>Column layout: mount / used / size / pct / bar widths, drag-resize math</td></tr>
+          <tr><td><code>src/clipboard.rs</code></td><td class="num">176</td><td class="num">117</td><td class="num">59</td><td>Copy-key backend: tries <code>pbcopy</code>, <code>/usr/bin/pbcopy</code>, <code>wl-copy</code>, <code>xclip</code>, <code>xsel</code>, <code>clip.exe</code>, <code>termux-clipboard-set</code> in turn, judges each helper by its exit status, falls back to the OSC 52 terminal escape (tmux-wrapped inside tmux)</td></tr>
+          <tr><td><code>src/testutil.rs</code></td><td class="num">135</td><td class="num">92</td><td class="num">43</td><td>Shared test fixtures: synthetic <code>DiskEntry</code> / <code>App</code> builders, temp-config helpers</td></tr>
+          <tr><td><code>src/main.rs</code></td><td class="num">110</td><td class="num">110</td><td class="num">0</td><td>Entry point: terminal setup / teardown, <code>App</code> bootstrap, event loop, signal handling</td></tr>
+          <tr><td><code>src/lib.rs</code></td><td class="num">15</td><td class="num">15</td><td class="num">0</td><td>Module declarations + crate-level lint allows; binary &amp; integration tests both consume the library</td></tr>
+          <tr class="total-row"><td>Total</td><td class="num">15,087</td><td class="num">7,502</td><td class="num">7,585</td><td>Inline tests &asymp; production code (50/50 split inside <code>src/</code>); integration tests (50,244 lines) sit on top</td></tr>
         </tbody>
       </table>
       <p style="font-size:10.5px;color:var(--text-muted);margin-top:6px;">Inline-test rows count lines from each module's <code>#[cfg(test)] mod tests</code> block to EOF. <code>main.rs</code> and <code>lib.rs</code> have no inline tests by design; all behavioral coverage of the binary lives in <code>tests/</code>.</p>
@@ -160,34 +161,36 @@
       <!-- SECTION 3: TEST SURFACE                -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">*</span>TEST SURFACE</h2>
-      <p class="tutorial-subtitle">1,337 integration test files in <code>tests/</code> plus inline <code>#[cfg(test)]</code> modules in every source file. 3,736 total <code>#[test]</code> functions. Integration tests dominate (3,114 of 3,736) and target whole-binary behavior: CLI parsing, config merge, scan output, drill-down sorting, threshold transitions, palette equivalence.</p>
+      <p class="tutorial-subtitle">1,337 integration test files in <code>tests/</code> plus inline <code>#[cfg(test)]</code> modules in every source file. 3,749 total <code>#[test]</code> functions. Integration tests dominate (3,114 of 3,749) and target whole-binary behavior: CLI parsing, config merge, scan output, drill-down sorting, threshold transitions, palette equivalence.</p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">3,736</div><div class="stat-label">Test Functions</div></div>
-        <div class="stat-card"><div class="stat-val accent">3,101</div><div class="stat-label">Integration</div></div>
-        <div class="stat-card"><div class="stat-val green">591</div><div class="stat-label">Inline</div></div>
+        <div class="stat-card"><div class="stat-val">3,749</div><div class="stat-label">Test Functions</div></div>
+        <div class="stat-card"><div class="stat-val accent">3,114</div><div class="stat-label">Integration</div></div>
+        <div class="stat-card"><div class="stat-val green">635</div><div class="stat-label">Inline</div></div>
         <div class="stat-card"><div class="stat-val">1,337</div><div class="stat-label">Test Files</div></div>
-        <div class="stat-card"><div class="stat-val">50,242</div><div class="stat-label">Test LOC</div></div>
-        <div class="stat-card"><div class="stat-val">3.66:1</div><div class="stat-label">Test : Src</div></div>
+        <div class="stat-card"><div class="stat-val">50,244</div><div class="stat-label">Test LOC</div></div>
+        <div class="stat-card"><div class="stat-val">3.33:1</div><div class="stat-label">Test : Src</div></div>
       </div>
 
       <p>Inline coverage by module (counted as <code>#[test]</code> attributes inside each <code>#[cfg(test)] mod tests</code>):</p>
       <table class="file-table">
         <thead><tr><th>Module</th><th class="num">Inline #[test] fns</th></tr></thead>
         <tbody>
-          <tr><td><code>src/keys.rs</code></td><td class="num">120</td></tr>
-          <tr><td><code>src/cli.rs</code></td><td class="num">109</td></tr>
+          <tr><td><code>src/keys.rs</code></td><td class="num">135</td></tr>
+          <tr><td><code>src/cli.rs</code></td><td class="num">112</td></tr>
           <tr><td><code>src/helpers.rs</code></td><td class="num">98</td></tr>
-          <tr><td><code>src/app.rs</code></td><td class="num">57</td></tr>
+          <tr><td><code>src/app.rs</code></td><td class="num">67</td></tr>
           <tr><td><code>src/system.rs</code></td><td class="num">45</td></tr>
-          <tr><td><code>src/ui.rs</code></td><td class="num">41</td></tr>
+          <tr><td><code>src/system.rs</code> (<code>reclaim_tests</code>, <code>feature = "reclaim"</code>)</td><td class="num">5</td></tr>
+          <tr><td><code>src/ui.rs</code></td><td class="num">44</td></tr>
           <tr><td><code>src/types.rs</code></td><td class="num">40</td></tr>
-          <tr><td><code>src/mouse.rs</code></td><td class="num">27</td></tr>
+          <tr><td><code>src/mouse.rs</code></td><td class="num">30</td></tr>
           <tr><td><code>src/prefs.rs</code></td><td class="num">26</td></tr>
           <tr><td><code>src/columns.rs</code></td><td class="num">23</td></tr>
           <tr><td><code>src/testutil.rs</code></td><td class="num">5</td></tr>
+          <tr><td><code>src/clipboard.rs</code></td><td class="num">5</td></tr>
           <tr><td><code>src/main.rs</code></td><td class="num">0</td></tr>
-          <tr class="total-row"><td>Total inline</td><td class="num">591</td></tr>
+          <tr class="total-row"><td>Total inline</td><td class="num">635</td></tr>
         </tbody>
       </table>
 
@@ -196,7 +199,7 @@
 tests/cli_binary_void_walker_deep_net_integration.rs
 tests/helpers_format_bytes_72_kib_human_integration.rs
 tests/scan_directory_two_hundred_sixty_nine_files_integration.rs
-&hellip; (1,332 more)</pre>
+&hellip; (1,333 more)</pre>
       <p>Test fixtures live in <code>src/testutil.rs</code> behind <code>pub(crate)</code> and are exposed only when <code>#[cfg(test)]</code>. End-to-end CLI tests spawn the compiled binary under <code>tempfile</code>-managed config dirs and assert against stdout / stderr / exit code rather than poking internal state.</p>
 
       <hr class="section-rule">
@@ -329,7 +332,7 @@ tests/scan_directory_two_hundred_sixty_nine_files_integration.rs
       <!-- SECTION 7: DEPENDENCIES                -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">+</span>DEPENDENCIES</h2>
-      <p class="tutorial-subtitle">Eight direct production dependencies + four dev-dependencies. <code>Cargo.lock</code> resolves to 269 crates total &mdash; the bulk are transitive pulls from ratatui (signal handling, terminal backends) and sysinfo (per-OS shims).</p>
+      <p class="tutorial-subtitle">Ten direct production dependencies (two of them optional, behind the <code>reclaim</code> feature) + four dev-dependencies. <code>Cargo.lock</code> resolves to 271 crates total &mdash; the bulk are transitive pulls from ratatui (signal handling, terminal backends) and sysinfo (per-OS shims).</p>
 
       <table class="file-table">
         <thead><tr><th>Crate</th><th>Version</th><th>Role</th></tr></thead>
@@ -342,6 +345,8 @@ tests/scan_directory_two_hundred_sixty_nine_files_integration.rs
           <tr><td><code>toml</code></td><td>1.1</td><td>Config file format: parse <code>~/.storageshower.conf</code>, emit <code>--export-theme</code> output</td></tr>
           <tr><td><code>dirs</code></td><td>6</td><td>Cross-platform home directory lookup for the default config path</td></tr>
           <tr><td><code>libc</code></td><td>0.2</td><td>Unix syscalls: <code>getmntinfo</code>, <code>statfs</code>, time, TTY detection, <code>getifaddrs</code></td></tr>
+          <tr><td><code>rayon</code></td><td>1.12 (optional)</td><td><code>reclaim</code> feature: fans the reclaim-map directory walk out across threads</td></tr>
+          <tr><td><code>lz4_flex</code></td><td>0.13 (optional)</td><td><code>reclaim</code> feature: compresses each file's sampled prefix to estimate reclaimable space</td></tr>
           <tr class="total-row"><td colspan="3" style="text-align:center;">&mdash; dev-dependencies &mdash;</td></tr>
           <tr><td><code>criterion</code></td><td>0.8 (html_reports)</td><td>Bench framework: <code>benches/bench.rs</code> measures bar rendering, scan, palette resolve</td></tr>
           <tr><td><code>serde_json</code></td><td>1</td><td>JSON round-trip tests for <code>ThemeColors</code> and config snapshots</td></tr>
@@ -395,7 +400,7 @@ tests/scan_directory_two_hundred_sixty_nine_files_integration.rs
         </div>
         <div class="feature-card">
           <h4>Verbose test filenames</h4>
-          <p><code>tests/scan_directory_two_hundred_sixty_nine_files_integration.rs</code> reads worse than <code>scan_269.rs</code> but is self-describing in CI output. 1,336 such files mean grep-ability matters more than typing.</p>
+          <p><code>tests/scan_directory_two_hundred_sixty_nine_files_integration.rs</code> reads worse than <code>scan_269.rs</code> but is self-describing in CI output. 1,337 such files mean grep-ability matters more than typing.</p>
         </div>
         <div class="feature-card">
           <h4>Every flag has a <code>--no-flag</code> inverse</h4>
@@ -411,11 +416,11 @@ tests/scan_directory_two_hundred_sixty_nine_files_integration.rs
         </div>
         <div class="feature-card">
           <h4>Inline tests &asymp; production code</h4>
-          <p>50 / 50 split inside <code>src/</code> (6,773 prod vs 6,862 test lines). Each module owns its inline coverage; cross-module behavior lives in <code>tests/</code>. Net 50,242 integration lines on top of 14,723 src.</p>
+          <p>50 / 50 split inside <code>src/</code> (7,502 prod vs 7,585 test lines). Each module owns its inline coverage; cross-module behavior lives in <code>tests/</code>. Net 50,244 integration lines on top of 15,087 src.</p>
         </div>
         <div class="feature-card">
           <h4>No async runtime</h4>
-          <p>Threaded refresh + bounded blocking probes (with deadlines) cover the workload without dragging in tokio. The binary stays small (release-stripped LTO), startup is instant, and the dependency tree stops at 269 crates instead of 400+.</p>
+          <p>Threaded refresh + bounded blocking probes (with deadlines) cover the workload without dragging in tokio. The binary stays small (release-stripped LTO), startup is instant, and the dependency tree stops at 271 crates instead of 400+.</p>
         </div>
       </div>
 
