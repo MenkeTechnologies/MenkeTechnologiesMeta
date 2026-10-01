@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zphoto-core engineering report — module map and verification policy for the embeddable pure-Rust image engine behind zphoto. 474 raster + 114 vector commands on a shared layer stack via Engine::invoke, 775 tests, C FFI + Tauri plugin.">
+  <meta name="description" content="zphoto-core engineering report — module map and verification policy for the embeddable pure-Rust image engine behind zphoto. 474 raster + 114 vector commands on a shared layer stack via Engine::invoke, 798 #[test] functions, C FFI + Tauri plugin.">
   <title>zphoto-core — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,7 +57,7 @@
       </div>
     </header>
     <main class="docs-main">
-      <div class="status-banner"><strong>Status: implemented engine.</strong> A working pure-Rust library — 474 raster commands and 114 vector commands over one shared layer stack, reached through <code>Engine::invoke(cmd, args)</code> (73 pixel operators in <code>ops</code>), exercised by 798 <code>#[test]</code> functions. This page describes the engine's structure.</div>
+      <div class="status-banner"><strong>Status: implemented engine.</strong> A working pure-Rust library — 474 raster commands and 114 vector commands over one shared layer stack, reached through <code>Engine::invoke(cmd, args)</code>, exercised by 798 <code>#[test]</code> functions. This page describes the engine's structure.</div>
 
       <h2 class="reg-h">Architecture</h2>
       <p class="note"><strong>zphoto-core</strong> is the engine behind the <a href="https://github.com/MenkeTechnologies/zphoto">zphoto</a> desktop app. The defining decision is a <strong>single shared layer stack</strong>: Illustrator-style vector commands composite onto the same layers as Photoshop-style raster commands, rather than a separate vector document. Every operation is a string command plus JSON args routed through one surface, <code>Engine::invoke(cmd, args) -&gt; Result&lt;Value&gt;</code>; the host renders the result. Pixels are edited at 8-, 16-, and 32-bit depth with f64 geometry. The same engine is reached natively (Rust), through a C FFI (<code>ffi</code>), and through a Tauri v2 plugin (<code>tauri_plugin</code>).</p>
@@ -68,8 +68,9 @@
         <thead><tr><th>module</th><th>responsibility</th><th>status</th></tr></thead>
         <tbody>
           <tr><td>lib</td><td>the <code>Engine</code> type and <code>invoke(cmd, args)</code> command dispatch</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>commands</td><td>the published command list (<code>COMMANDS</code>), each command&rsquo;s reversibility class and compensation, and the named read-only state queries (<code>STATES</code>)</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>model</td><td>document + layer-stack model — the shared raster/vector compositing surface</td><td><span class="tag">implemented</span></td></tr>
-          <tr><td>ops</td><td>73 pixel operators (point / colour adjustments) behind the <code>op.*</code> commands</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>ops</td><td>the pixel operators (point / colour adjustments) behind the <code>op.*</code> commands</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>filter</td><td>raster filters — blur · sharpen · noise · distort · stylize · render</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>fill</td><td>solid · gradient · pattern fills over 8/16/32-bit pixels</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>paint</td><td>brush · eraser · clone / heal · smudge primitives</td><td><span class="tag">implemented</span></td></tr>

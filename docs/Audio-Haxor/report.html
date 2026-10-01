@@ -166,7 +166,7 @@
         <tbody>
                     <tr><td>src-tauri/src/lib.rs</td><td class="num">14,341</td><td>329 <code>#[tauri::command]</code> handlers (of 372 registered), Tauri setup, event emission, window restore, panic handler</td></tr>
           <tr><td>src-tauri/src/db.rs</td><td class="num">13,368</td><td>Connection pool, all CRUD + filter + stats queries, palette preview, cache tables (catalog table/row definitions shared from <code>crates/zpwr-crate</code>)</td></tr>
-          <tr><td>src-tauri/src/track_generator.rs</td><td class="num">7,271</td><td>Per-track ALS clip layout: BPM-locked alignment, scene assembly, automation lanes, kit routing, group sidechain</td></tr>
+          <tr><td>src-tauri/src/track_generator.rs</td><td class="num">7,271</td><td>Per-track ALS clip layout: BPM-locked alignment, scene assembly, automation lanes, kit routing, group-bus routing, loop phase</td></tr>
           <tr><td>src-tauri/src/dsp_editor.rs</td><td class="num">4,748</td><td>Pure-Rust in-engine audio-editor DSP surface: one string-dispatch entry point behind <code>dsp_editor_apply</code> / <code>dsp_editor_generate</code> / <code>dsp_editor_analyze</code></td></tr>
           <tr><td>src-tauri/src/history.rs</td><td class="num">3,399</td><td>Per-domain scan-history store: save / load / diff / list / delete for 7 inventory domains plus prefs round-trip</td></tr>
           <tr><td>src-tauri/src/sample_analysis.rs</td><td class="num">3,252</td><td>Background batch analyzer: BPM + key + LUFS for unanalyzed samples; cancellation tokens; stats aggregation</td></tr>
@@ -294,12 +294,12 @@
       <!-- SECTION 6: ALS GENERATOR                -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">!</span>ALS PROJECT GENERATOR</h2>
-      <p class="tutorial-subtitle">16,992 lines across six files compose the Ableton Live Set generator &mdash; the largest single feature in the app by code mass (19.9% of the Rust slice). Output is gzip'd XML that opens natively in Ableton Live; the generator selects samples from the catalog by genre / BPM / key constraints, lays out scenes, routes groups, attaches sidechain compressors, and emits the complete project file with no post-processing required.</p>
+      <p class="tutorial-subtitle">16,992 lines across six files compose the Ableton Live Set generator &mdash; the largest single feature in the app by code mass (19.9% of the Rust slice). Output is gzip'd XML that opens natively in Ableton Live; the generator selects samples from the catalog by genre / BPM / key constraints, lays out scenes, routes tracks into group buses, and emits the complete project file with no post-processing required.</p>
 
       <table class="file-table">
         <thead><tr><th>File</th><th class="num">Lines</th><th>Role</th></tr></thead>
         <tbody>
-          <tr><td>track_generator.rs</td><td class="num">7,271</td><td>Per-track clip layout: BPM-locked alignment, automation lanes, kit routing, group sidechain insertion</td></tr>
+          <tr><td>track_generator.rs</td><td class="num">7,271</td><td>Per-track clip layout: BPM-locked alignment, automation lanes, kit routing, group-bus routing, loop phase</td></tr>
           <tr><td>midi_generator.rs</td><td class="num">2,882</td><td>SMF synthesis: lead, chord, and drum-kit MIDI emission with scale + key + velocity humanization</td></tr>
           <tr><td>als_generator.rs</td><td class="num">3,042</td><td>Top-level project synthesizer: scene allocation, sample selection by genre / kit, blacklist + whitelist enforcement</td></tr>
           <tr><td>als_project.rs</td><td class="num">1,794</td><td>Standalone ALS-project file emitter: empty / toy / techno / schranz / true-techno starter templates</td></tr>
@@ -317,7 +317,7 @@
         <li><code>group_track_template.xml</code> &mdash; <code>&lt;GroupTrack&gt;</code> fragment with default color</li>
         <li><code>group_sidechain_compressor_template.xml</code> &mdash; <code>&lt;DeviceChain&gt;</code> with sidechain wiring</li>
         <li><code>master_eq8_hpf_template.xml</code> &mdash; <code>&lt;Eq8&gt;</code> with high-pass enabled</li>
-        <li><code>master_limiter_template.xml</code> &mdash; <code>&lt;Limiter&gt;</code> with ceiling -0.3 dB</li>
+        <li><code>master_limiter_template.xml</code> &mdash; <code>&lt;Limiter&gt;</code> with ceiling -0.3 dB (this and the two templates above are exercised by unit tests only; generation does not inject them)</li>
       </ul>
 
       <hr class="section-rule">
@@ -389,23 +389,28 @@
       </div>
 
       <table class="file-table" style="margin-top:1rem;">
-        <thead><tr><th>Domain</th><th class="num">Cmds (approx)</th><th>Examples</th></tr></thead>
+        <thead><tr><th>Domain</th><th class="num">Cmds</th><th>Examples</th></tr></thead>
         <tbody>
-          <tr><td>Scanning</td><td class="num">14</td><td><code>scan_plugins</code>, <code>scan_audio_samples</code>, <code>scan_daw_projects</code>, <code>scan_midi_files</code>, <code>scan_presets</code>, <code>scan_pdfs</code>, <code>scan_video_files</code>, <code>scan_unified</code>, <code>stop_*</code></td></tr>
-          <tr><td>History</td><td class="num">42</td><td><code>history_get_scans</code>, <code>history_diff</code>, <code>*_history_save / get_scans / get_detail / delete / clear / latest / diff</code> for each domain</td></tr>
-          <tr><td>Database Queries</td><td class="num">22</td><td><code>db_query_audio</code>, <code>db_query_plugins</code>, <code>db_query_daw</code>, <code>db_*_filter_stats</code>, <code>db_*_stats</code>, <code>db_cache_stats</code></td></tr>
-          <tr><td>Audio Engine</td><td class="num">9</td><td><code>audio_engine_invoke</code>, <code>audio_engine_restart</code>, EOF watchdog start/stop, playback flags, BG-job throttle</td></tr>
-          <tr><td>Analysis</td><td class="num">10</td><td><code>estimate_bpm</code>, <code>detect_audio_key</code>, <code>measure_lufs</code>, <code>batch_analyze</code>, <code>compute_fingerprint</code>, <code>find_similar_samples</code>, <code>find_content_duplicates</code></td></tr>
-          <tr><td>ALS Generator</td><td class="num">14</td><td><code>generate_als_project</code>, <code>cancel_als_generation</code>, blacklist / whitelist add / remove / clear / count, <code>generate_midi_lead</code>, <code>generate_midi_kits</code>, <code>generate_trance_starter</code></td></tr>
-          <tr><td>Annotations</td><td class="num">26</td><td><code>favorites_*</code>, <code>note_*</code>, <code>tags_*</code>, <code>tag_*</code>, <code>player_history_*</code></td></tr>
-          <tr><td>Export / Import</td><td class="num">16</td><td><code>export_plugins_json / csv</code>, <code>export_audio_json / dsv</code>, <code>export_daw_*</code>, <code>export_presets_*</code>, <code>export_pdfs_*</code>, <code>export_videos_*</code>, <code>export_toml</code>, <code>export_pdf</code></td></tr>
-          <tr><td>Filesystem</td><td class="num">12</td><td><code>fs_list_dir</code>, <code>delete_file</code>, <code>rename_file</code>, <code>write_text_file</code>, <code>write_binary_file</code>, <code>read_text_file</code>, <code>open_with_app</code>, <code>open_*_folder</code></td></tr>
+          <tr><td>Scanning</td><td class="num">19</td><td><code>scan_plugins</code>, <code>scan_audio_samples</code>, <code>scan_daw_projects</code>, <code>scan_midi_files</code>, <code>scan_presets</code>, <code>scan_pdfs</code>, <code>scan_video_files</code>, <code>scan_unified</code>, <code>prepare_unified_scan</code>, <code>get_walker_status</code>, <code>stop_*_scan</code></td></tr>
+          <tr><td>History</td><td class="num">41</td><td><code>history_get_scans / get_detail / delete / clear / latest / diff</code>, <code>{audio,daw,preset,midi,pdf}_history_save / get_scans / get_detail / delete / clear / latest / diff</code></td></tr>
+          <tr><td>Database Queries</td><td class="num">32</td><td><code>db_query_*</code>, <code>db_*_filter_stats</code>, <code>db_*_stats</code>, <code>db_update_bpm / key / lufs / analysis</code>, <code>db_unanalyzed_paths</code>, <code>db_cache_stats</code>, <code>db_clear_caches</code></td></tr>
+          <tr><td>Audio Engine</td><td class="num">10</td><td><code>audio_engine_invoke</code>, <code>audio_engine_restart</code>, EOF watchdog start/stop, next-track hint, playback flags, BG-job throttle get/set, process stats</td></tr>
+          <tr><td>Analysis</td><td class="num">19</td><td><code>estimate_bpm</code>, <code>detect_audio_key</code>, <code>measure_lufs</code>, <code>batch_analyze</code>, <code>audio_qc_scan</code>, <code>loudness_scan</code>, <code>harmonic_scan</code>, <code>compute_fingerprint</code>, <code>find_similar_samples</code>, <code>find_content_duplicates</code>, <code>sample_analysis_*</code></td></tr>
+          <tr><td>DSP Editor / Transcription</td><td class="num">8</td><td><code>dsp_editor_apply / generate / analyze</code>, <code>transcription_probe_signals / solve / apply / score / diff</code></td></tr>
+          <tr><td>Mix / Arrangement Analysis</td><td class="num">9</td><td><code>learn_arrangement_style</code>, <code>apply_arrangement_style</code>, <code>spectral_masking_matrix</code>, <code>groove_collision_matrix</code>, <code>tuning_drift_radar</code>, <code>export_*_stack</code>, <code>masking_index_library</code></td></tr>
+          <tr><td>ALS Generator</td><td class="num">18</td><td><code>generate_als_project</code>, <code>cancel_als_generation</code>, blacklist / whitelist add / remove / clear / count / entries, <code>generate_midi_lead</code>, <code>generate_midi_kits</code>, <code>generate_trance_starter</code>, <code>als_query_samples</code>, <code>read_als_xml</code></td></tr>
+          <tr><td>Crate Browser</td><td class="num">15</td><td><code>crate_query</code>, <code>crate_browse_query / facets</code>, <code>crate_loop_region_get / set</code>, <code>crate_favorite_pack*</code>, <code>crate_similar_candidates</code>, <code>genre_rules_report</code>, <code>waveform_prefetch_start / stop / stats</code></td></tr>
+          <tr><td>Annotations</td><td class="num">28</td><td><code>favorites_*</code>, <code>note_*</code>, <code>notes_get_all</code>, <code>tags_*</code>, <code>tag_*</code>, <code>player_history_*</code></td></tr>
+          <tr><td>Export / Import</td><td class="num">21</td><td><code>export_plugins_json / csv</code>, <code>export_audio_json / dsv</code>, <code>export_daw_*</code>, <code>export_presets_*</code>, <code>export_pdfs_*</code>, <code>export_videos_*</code>, <code>export_toml</code>, <code>export_pdf</code>, <code>import_*_json</code>, <code>import_toml</code></td></tr>
+          <tr><td>Filesystem</td><td class="num">52</td><td><code>fs_*</code> (list / info / hash / grep / diff / exif / thumbnails / disk usage / compress / ...), <code>delete_file</code>, <code>move_to_trash</code>, <code>rename_file</code>, <code>read_text_file</code>, <code>write_text_file</code>, <code>write_binary_file</code>, <code>open_with_app</code>, <code>open_*_folder</code></td></tr>
           <tr><td>Tray / Window</td><td class="num">8</td><td><code>tray_menu::update_tray_now_playing</code>, <code>tray_popover_action / resize / get_state / push_subtitle / get_ui_theme / hide</code>, <code>show_main_window</code></td></tr>
           <tr><td>Terminal (PTY)</td><td class="num">4</td><td><code>terminal::terminal_spawn / write / resize / kill</code></td></tr>
-          <tr><td>Hooks / stryke</td><td class="num">15</td><td><code>hooks_list / events / save / delete / set_enabled / get_script / script_path / set_script / test_run</code>, <code>stryke_lsp_start / send / stop</code>, <code>stryke_filter_rows</code>, <code>stryke_transform_rows</code></td></tr>
-          <tr><td>Misc</td><td class="num">100</td><td>prefs, KVR, file watcher, i18n, log, similarity, waveform prefetch, sample-analysis, crate filters, palette preview, etc.</td></tr>
+          <tr><td>Hooks / stryke</td><td class="num">18</td><td><code>hooks_list / events / fire / save / delete / set_enabled / get_script / script_path / set_script / test_run</code>, <code>stryke_lsp_start / send / stop</code>, <code>run_stryke_hook</code>, <code>stryke_filter_rows</code>, <code>stryke_transform_rows</code>, <code>stryke_compile_*</code></td></tr>
+          <tr><td>Bus / Model Verbs</td><td class="num">5</td><td><code>bus::zgui_bridge_reply / event</code>, <code>zgui_reveal_scripts</code>, <code>model_verb_call / surface</code></td></tr>
+          <tr><td>Embedded Crates</td><td class="num">16</td><td>Commands defined outside <code>src-tauri/src</code>: <code>account_client</code> licence (3), <code>zgui_shell</code> prefs (3), <code>zpwr_clip_engine</code> <code>clip_seq_*</code> (6), <code>zpdf_core</code> (1), <code>zoffice_core</code> (3)</td></tr>
+          <tr><td>Misc</td><td class="num">49</td><td>prefs, KVR / update check, log, cache files, waveform / spectrogram cache entries, PDF metadata / preview, file watcher, i18n strings, native menu, version / build info, process stats</td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td>TOTAL REGISTERED</td><td class="num">372</td><td>From <code>generate_handler!</code> in <code>src-tauri/src/lib.rs</code></td></tr></tfoot>
+        <tfoot><tr class="total-row"><td>TOTAL REGISTERED</td><td class="num">372</td><td>From <code>generate_handler!</code> in <code>src-tauri/src/lib.rs</code>; each entry counted once by its name / module prefix</td></tr></tfoot>
       </table>
 
       <hr class="section-rule">

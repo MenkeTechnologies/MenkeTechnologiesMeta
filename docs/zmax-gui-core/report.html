@@ -47,13 +47,16 @@
       <h2 class="reg-h">webui layout</h2>
       <table class="reg">
         <tr><th>File</th><th>Role</th></tr>
-        <tr><td>webui/menu.js</td><td><code>window.ZmaxMenu</code> — <code>mount(shell)</code> builds the menu bar + ⌘-shortcuts + dialogs + drag-drop; <code>settingsExtra(panel)</code> adds the editor language picker + toggles to the host's settings panel.</td></tr>
+        <tr><td>webui/menu.js</td><td><code>window.ZmaxMenu</code> — <code>mount(shell)</code> builds the in-webview menu bar, toolbar, dialogs and drag-drop and publishes the menu tree through <code>shell.setCommands</code> under stable <code>zmax.&lt;action&gt;</code> ids; <code>settingsExtra(panel)</code> adds the editor language picker + toggles to the host's settings panel; <code>nativeSpec</code> / <code>accelMap</code> build the native macOS app menu that mirrors the bar and carries the ⌘ accelerators; <code>retranslate()</code> rebuilds all of it after a locale change; <code>paletteItems()</code> returns the vocabulary for a host that publishes its own commands beside it.</td></tr>
+        <tr><td>webui/editor-state.js</td><td><code>window.ZmaxEditorState</code> — the return path: a small screen model over the PTY byte stream (cursor motion, erase, SGR foreground, OSC titles) that reads the editor's own statusline and bufferline back off the reconstructed grid. Fields it cannot recover read <code>null</code>.</td></tr>
+        <tr><td>webui/editor-hud.js</td><td><code>window.ZmaxEditorHud</code> — a buffer/tab bar, a status strip and a <code>ZGui.codeMinimap</code>, driven by that reconstructed state.</td></tr>
         <tr><td>webui/zmax.css</td><td>Styles for the menu surface (layout only; colours/fonts come from zgui-core tokens).</td></tr>
         <tr><td>webui/menu.test.cjs</td><td>Headless <code>node --test</code> of the menu→PTY bridge (loads menu.js in a VM context; no DOM).</td></tr>
+        <tr><td>webui/editor-state.test.cjs, webui/editor-hud.test.cjs</td><td>Headless tests of the reconstruction and the HUD, fed the exact escape sequences the editor's backend emits.</td></tr>
       </table>
 
       <h2 class="reg-h">Action map → PTY</h2>
-      <p class="lede">Every menu item, ⌘-shortcut and dialog action is bridged to the editor by writing bytes into the PTY. Esc is sent on its own and the rest follows after a short delay (longer than the editor's esc-disambiguation window), so the editor treats Esc as a discrete keypress rather than parsing <code>ESC&lt;byte&gt;</code> as <code>Alt+&lt;byte&gt;</code>.</p>
+      <p class="lede">Every menu item, ⌘-shortcut and dialog action is bridged to the editor by writing bytes into the PTY. Esc is sent on its own and the rest follows after a short delay (longer than the editor's esc-disambiguation window), so the editor treats Esc as a discrete keypress rather than parsing <code>ESC&lt;byte&gt;</code> as <code>Alt+&lt;byte&gt;</code>. When <code>editor-state.js</code> has a <em>trusted</em> reading that says normal mode, the Esc and the wait are skipped; every outbound burst marks the reading stale until the next observed statusline.</p>
       <pre class="code">// run an ex-command from any mode: Esc -> :cmd -> Enter
 afterEsc(":w\r");        // Save
 afterEsc(":q\r");        // Quit
@@ -62,13 +65,20 @@ ptyWrite("\x13");        // raw control byte for a keymap-bound action</pre>
       <h2 class="reg-h">zgui-core widget inventory</h2>
       <table class="reg">
         <tr><th>Surface</th><th>Widget</th></tr>
-        <tr><td>Menu bar / context menu</td><td><code>ZGui.menubar</code> + <code>ZGui.contextMenu</code></td></tr>
+        <tr><td>Menu bar and its dropdowns</td><td><code>ZGui.menubar</code> + <code>ZGui.contextMenu</code></td></tr>
+        <tr><td>Native macOS app menu</td><td><code>ZGui.menu.install</code> with <code>ZGui.menu.buildSpec</code> replaced by <code>nativeSpec</code></td></tr>
+        <tr><td>Toolbar</td><td><code>ZGui.buttonBar</code></td></tr>
+        <tr><td>Command Directory / keybinding cheat sheet / Open Recent / Snippets</td><td><code>ZGui.dataTable</code> + <code>ZGui.fzf</code></td></tr>
+        <tr><td>Command Center / Session Overview</td><td><code>ZGui.tiles</code> / <code>ZGui.statStrip</code></td></tr>
+        <tr><td>Regex Lab</td><td><code>ZGui.regexLens</code></td></tr>
+        <tr><td>Insert menu pickers</td><td><code>ZGui.emojiPicker</code>, <code>ZGui.iconPicker</code>, <code>ZGui.colorPicker</code></td></tr>
+        <tr><td>Editor HUD minimap</td><td><code>ZGui.codeMinimap</code></td></tr>
         <tr><td>Open / Save-As / Help</td><td><code>ZGui.modal</code> + <code>ZGui.tree</code> (file browser) / <code>ZGui.modal.prompt</code></td></tr>
         <tr><td>Drag-and-drop files</td><td><code>ZGui.fileDrag.initDrop</code></td></tr>
       </table>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="lede"><code>node --test webui/menu.test.cjs</code> exercises the menu→PTY bridge headlessly (426 tests). It is wired into zmax-gui's <code>test:js</code> / <code>scripts/test.sh</code> so the single source is tested in place.</p>
+      <p class="lede"><code>node --test webui/*.test.cjs</code> exercises the menu→PTY bridge, the state reconstruction and the HUD headlessly. This repo has no package.json; zmax-gui's <code>test:js</code> / <code>scripts/test.sh</code> discover these suites through <code>scripts/run-js-tests.mjs</code>, so the single source is tested in place.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zmax-gui-core &middot; engineering report</footer>
     </main>

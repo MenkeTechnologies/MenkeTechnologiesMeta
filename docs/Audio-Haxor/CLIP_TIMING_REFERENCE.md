@@ -130,7 +130,7 @@ let warp_sec = if clip_length_beats < sample_loop_beats {
 <Loop>
     <LoopStart Value="0" />
     <LoopEnd Value="{loop_beats}" />
-    <StartRelative Value="0" />
+    <StartRelative Value="{phase_beats}" />
     <LoopOn Value="true" />
     <OutMarker Value="{loop_beats}" />
     <HiddenLoopStart Value="0" />
@@ -138,19 +138,25 @@ let warp_sec = if clip_length_beats < sample_loop_beats {
 </Loop>
 ```
 
-### Loop Capping
+### Loop Length and Phase
 
-When clip is shorter than sample, cap loop to clip length:
+The loop is always the sample's own length (`SampleInfo::loop_bars`, quantized to
+1/2/4/8/16/32 bars at the sample's BPM); a clip shorter than the loop is not
+capped to the clip, `CurrentEnd` simply cuts it.
+
+`StartRelative` keeps the loop on the song grid so a loop cut into shorter
+arrangement pieces continues its phrase instead of restarting at its first bar
+(`loop_phase_beats` in `src-tauri/src/track_generator.rs`):
 
 ```rust
-let loop_beats = if clip_length_beats < sample_loop_beats {
-    clip_length_beats  // Cap to clip
-} else {
-    sample_loop_beats  // Use sample's natural loop
-};
+// clip_start_bar / anchor_bar are 1-indexed; anchor_bar is bar 1 of the song
+if loop_bars <= 1 || clip_start_bar.fract() != 0.0 {
+    return 0.0; // 1-bar loops, and mid-bar fills / stutters, start at the sample start
+}
+((clip_start_bar - anchor_bar) * 4.0).rem_euclid(loop_bars as f64 * 4.0)
 ```
 
-This prevents the sample from playing beyond the clip boundary.
+A 4-bar loop placed as two 2-bar clips at bars 1 and 3 gets `StartRelative` 0 and 8.
 
 ## Clip Boundaries
 

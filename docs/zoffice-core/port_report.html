@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light">
-<meta name="description" content="zoffice — LibreOffice / Microsoft Office feature port report: 236 of 245 capabilities implemented in the zoffice-core engine.">
-<title>zoffice — LibreOffice/MS Office → zoffice-core Port Report (245 features)</title>
+<meta name="description" content="zoffice — LibreOffice / Microsoft Office feature port report: 263 of 270 capabilities implemented in the zoffice-core engine.">
+<title>zoffice — LibreOffice/MS Office → zoffice-core Port Report (270 features)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../hud-static.css"><style>
@@ -41,7 +41,7 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
 <header class="docs-header"><div class="docs-header-inner"><div class="docs-title-block">
 <h1>LIBREOFFICE / MS OFFICE // ZOFFICE-CORE PORT REPORT</h1>
 <div class="docs-sub">// every Writer/Calc/Impress/Draw/Math/Base capability mapped to the zoffice-core engine symbol that implements it — status derived from source, not declared.</div>
-<div class="docs-build-line">245 features &middot; 236 implemented (96%) &middot; 0 stubbed &middot; 9 planned &middot; generated 2026-08-02</div>
+<div class="docs-build-line">270 features &middot; 263 implemented (97%) &middot; 0 stubbed &middot; 7 planned &middot; generated 2026-10-01</div>
 </div><div class="docs-header-actions"><div class="docs-toolbar">
 <button class="btn btn-secondary" id="btnTheme" type="button">Light</button>
 <button class="btn btn-secondary active" id="btnCrt" type="button">CRT</button>
@@ -50,13 +50,13 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
 </div></div></div></header><main class="docs-main">
 <script id="port-report-data" type="application/json">
 {
-  &quot;generated&quot;: &quot;2026-08-02&quot;,
+  &quot;generated&quot;: &quot;2026-10-01&quot;,
   &quot;stats&quot;: {
-    &quot;total&quot;: 245,
-    &quot;done&quot;: 236,
+    &quot;total&quot;: 270,
+    &quot;done&quot;: 263,
     &quot;stub&quot;: 0,
-    &quot;planned&quot;: 9,
-    &quot;coverage_pct&quot;: 96.3
+    &quot;planned&quot;: 7,
+    &quot;coverage_pct&quot;: 97.4
   },
   &quot;features&quot;: [
     {
@@ -1003,11 +1003,11 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
       &quot;feature&quot;: &quot;Tauri command layer&quot;,
       &quot;source&quot;: &quot;zoffice&quot;,
       &quot;category&quot;: &quot;Engine &amp; Embedding&quot;,
-      &quot;module&quot;: &quot;lib&quot;,
-      &quot;symbol&quot;: &quot;&quot;,
-      &quot;note&quot;: &quot;wired in the app&#x27;s src-tauri&quot;,
-      &quot;status&quot;: &quot;planned&quot;,
-      &quot;via&quot;: &quot;no symbol yet&quot;
+      &quot;module&quot;: &quot;tauri_plugin&quot;,
+      &quot;symbol&quot;: &quot;zoffice_invoke&quot;,
+      &quot;note&quot;: &quot;`tauri` feature: bare #[tauri::command] backend (zoffice_invoke / zoffice_commands / zoffice_recent) for hosts that embed the office view&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;tauri_plugin::zoffice_invoke&quot;
     },
     {
       &quot;feature&quot;: &quot;Streaming/large-file mode&quot;,
@@ -2253,11 +2253,11 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
       &quot;feature&quot;: &quot;Digital signature verification&quot;,
       &quot;source&quot;: &quot;Office&quot;,
       &quot;category&quot;: &quot;Cross-cutting&quot;,
-      &quot;module&quot;: &quot;format&quot;,
-      &quot;symbol&quot;: &quot;&quot;,
-      &quot;note&quot;: &quot;XAdES/PKCS signatures&quot;,
-      &quot;status&quot;: &quot;planned&quot;,
-      &quot;via&quot;: &quot;no symbol yet&quot;
+      &quot;module&quot;: &quot;dsig&quot;,
+      &quot;symbol&quot;: &quot;verify_signatures&quot;,
+      &quot;note&quot;: &quot;XML-DSig in OOXML _xmlsignatures/ and ODF META-INF: part digests, RSA-PKCS#1 v1.5 SignatureValue, X.509 chain (verify_part_digests / verify_cert_chain); no CRL/OCSP, no ECDSA chains&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;dsig::verify_signatures&quot;
     },
     {
       &quot;feature&quot;: &quot;OLE embedded object extraction&quot;,
@@ -2508,6 +2508,256 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
       &quot;note&quot;: &quot;content-word frequency keyword ranking (stop-words removed)&quot;,
       &quot;status&quot;: &quot;done&quot;,
       &quot;via&quot;: &quot;writer::keywords&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Descriptive statistics (Data \u25b8 Statistics)&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;descriptive_stats&quot;,
+      &quot;note&quot;: &quot;per-column count/sum/mean/standard error/median/mode/quartiles/variance/stdev/kurtosis/skewness/range/min/max; calc.descriptive_stats&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::descriptive_stats&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Correlation matrix&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;correlation&quot;,
+      &quot;note&quot;: &quot;Pearson matrix, each pair over rows where both cells are numeric; calc.correlation&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::correlation&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Linear regression&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;regression&quot;,
+      &quot;note&quot;: &quot;least-squares slope/intercept, r, r\u00b2, standard errors; calc.regression&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::regression&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Transpose sheet&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;transpose&quot;,
+      &quot;note&quot;: &quot;whole-sheet transpose with merged ranges; calc.transpose&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::transpose&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Subtotals&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;subtotals&quot;,
+      &quot;note&quot;: &quot;group-by partitions reduced with the shared pivot aggregator; calc.subtotals&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::subtotals&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Remove duplicates&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;remove_duplicates&quot;,
+      &quot;note&quot;: &quot;first row wins; surviving cells re-addressed; calc.remove_duplicates&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::remove_duplicates&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Text to columns&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;text_to_columns&quot;,
+      &quot;note&quot;: &quot;split on a delimiter, later columns shifted right; calc.text_to_columns&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::text_to_columns&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Consolidate&quot;,
+      &quot;source&quot;: &quot;Calc,Excel&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;consolidate&quot;,
+      &quot;note&quot;: &quot;cross-sheet consolidation by label; calc.consolidate&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::consolidate&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Recalculation critical path&quot;,
+      &quot;source&quot;: &quot;zoffice original&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;critical_path&quot;,
+      &quot;note&quot;: &quot;longest formula dependency chain; calc.critical_path&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::critical_path&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Dependency blast radius / keystone cells&quot;,
+      &quot;source&quot;: &quot;zoffice original&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;impact_map&quot;,
+      &quot;note&quot;: &quot;calc.impact_map; per-cell answer via cell_impact&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::impact_map&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Root-cause attribution of value changes&quot;,
+      &quot;source&quot;: &quot;zoffice original&quot;,
+      &quot;category&quot;: &quot;Calc&quot;,
+      &quot;module&quot;: &quot;calc&quot;,
+      &quot;symbol&quot;: &quot;root_cause&quot;,
+      &quot;note&quot;: &quot;which input changes explain a changed result between two versions; calc.rootcause&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;calc::root_cause&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Show / hide slide&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;set_slides_hidden&quot;,
+      &quot;note&quot;: &quot;show=\&quot;0\&quot; on each slide&#x27;s &lt;p:sld&gt; root by byte splice; impress.hide_slides&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;impress::set_slides_hidden&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Outline view authoring&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;from_outline&quot;,
+      &quot;note&quot;: &quot;outline_text emits exactly what from_outline parses; impress.outline&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;impress::from_outline&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Slide sorter (reorder slides)&quot;,
+      &quot;source&quot;: &quot;Impress,PowerPoint&quot;,
+      &quot;category&quot;: &quot;Impress&quot;,
+      &quot;module&quot;: &quot;impress&quot;,
+      &quot;symbol&quot;: &quot;reorder_slides&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;impress::reorder_slides&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Generate table of contents&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;insert_toc&quot;,
+      &quot;note&quot;: &quot;dot-leader tab stops, page numbers from the PDF export&#x27;s pagination&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::insert_toc&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Mail merge from a data source&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;mail_merge_all&quot;,
+      &quot;note&quot;: &quot;.csv/.ods/.xlsx records \u2192 one combined document or one file per record&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::mail_merge_all&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Redaction&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;redact&quot;,
+      &quot;note&quot;: &quot;character-for-character mask across run boundaries&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::redact&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Lossless table-cell editing&quot;,
+      &quot;source&quot;: &quot;Writer,Word&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;edit_table_cell&quot;,
+      &quot;note&quot;: &quot;.docx and .odt/.ott/.fodt; writer.edit_table_cell&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::edit_table_cell&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Reorder pages&quot;,
+      &quot;source&quot;: &quot;zoffice original&quot;,
+      &quot;category&quot;: &quot;Writer&quot;,
+      &quot;module&quot;: &quot;writer&quot;,
+      &quot;symbol&quot;: &quot;reorder_pages&quot;,
+      &quot;note&quot;: &quot;&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;writer::reorder_pages&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Structural blame across versions&quot;,
+      &quot;source&quot;: &quot;zoffice original&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;merge&quot;,
+      &quot;symbol&quot;: &quot;blame&quot;,
+      &quot;note&quot;: &quot;per-paragraph attribution over a version list; writer.blame&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;merge::blame&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;3-way structural merge&quot;,
+      &quot;source&quot;: &quot;zoffice original&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;merge&quot;,
+      &quot;symbol&quot;: &quot;merge3&quot;,
+      &quot;note&quot;: &quot;git merge driver for office documents (git-zoffice-merge)&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;merge::merge3&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Export to EPUB&quot;,
+      &quot;source&quot;: &quot;Writer&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;epub&quot;,
+      &quot;symbol&quot;: &quot;export&quot;,
+      &quot;note&quot;: &quot;EPUB 3 with EPUB 2 toc.ncx fallback; chapters at top-level headings&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;epub::export&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Universal conversion (--convert-to)&quot;,
+      &quot;source&quot;: &quot;LibreOffice&quot;,
+      &quot;category&quot;: &quot;Core I/O&quot;,
+      &quot;module&quot;: &quot;lib&quot;,
+      &quot;symbol&quot;: &quot;convert_to&quot;,
+      &quot;note&quot;: &quot;target from the output extension; cross-family targets refused; bus verb convert&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;lib::convert_to&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Cross-document impact&quot;,
+      &quot;source&quot;: &quot;zoffice original&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;workspace&quot;,
+      &quot;symbol&quot;: &quot;cross_impact&quot;,
+      &quot;note&quot;: &quot;dependents of a cell across the linked files in a folder&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;workspace::cross_impact&quot;
+    },
+    {
+      &quot;feature&quot;: &quot;Folder reconciliation&quot;,
+      &quot;source&quot;: &quot;zoffice original&quot;,
+      &quot;category&quot;: &quot;Cross-cutting&quot;,
+      &quot;module&quot;: &quot;workspace&quot;,
+      &quot;symbol&quot;: &quot;reconcile&quot;,
+      &quot;note&quot;: &quot;compare what each file displays against what its sources hold; optional write-back&quot;,
+      &quot;status&quot;: &quot;done&quot;,
+      &quot;via&quot;: &quot;workspace::reconcile&quot;
     }
   ]
 }
@@ -2515,24 +2765,24 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
 <section class="reality"><h3 class="reality-h">&#9888; What this report is</h3>
 <div class="reality-d">zoffice replaces the LibreOffice / Microsoft Office suite with a pure-Rust, embeddable, paid desktop product. This is a <b>function-presence</b> audit of the engine layer (<b>zoffice-core</b>), not the GUI. Status is <b>computed from source</b>, scoped to the named module: a feature is <b>DONE</b> only when its cited engine symbol exists in that module and is not a <code>NotImplemented</code> stub; <b>STUB</b> means the symbol exists but the body is not written yet; <b>PLANNED</b> means no symbol exists. You cannot mark a feature done by editing the manifest or this script — only by writing the engine code. Rendering, formula evaluation, and the database backend are deliberately staged after the durable document core.</div></section>
 <section class="store-hero"><div class="hero-stats">
-<div class="hero-stat"><span class="num">245</span><span class="lbl">features catalogued</span></div>
-<div class="hero-stat"><span class="num">236</span><span class="lbl">implemented (real)</span></div>
+<div class="hero-stat"><span class="num">270</span><span class="lbl">features catalogued</span></div>
+<div class="hero-stat"><span class="num">263</span><span class="lbl">implemented (real)</span></div>
 <div class="hero-stat"><span class="num">0</span><span class="lbl">stubbed (symbol, no body)</span></div>
-<div class="hero-stat"><span class="num">9</span><span class="lbl">planned</span></div>
-<div class="hero-stat"><span class="num">96%</span><span class="lbl">engine coverage</span></div>
+<div class="hero-stat"><span class="num">7</span><span class="lbl">planned</span></div>
+<div class="hero-stat"><span class="num">97%</span><span class="lbl">engine coverage</span></div>
 <div class="hero-stat"><span class="num">10</span><span class="lbl">categories</span></div>
 </div></section>
 <h2 class="reg-h">By category</h2><div class="bar-wrap">
 <div class="cat"><span class="cat-n">Base</span><span class="cat-bar"><span class="d" style="width:82%"></span><span class="s" style="width:0%"></span><span class="p" style="width:18%"></span></span><span class="cat-pct">9/11</span></div>
-<div class="cat"><span class="cat-n">Calc</span><span class="cat-bar"><span class="d" style="width:97%"></span><span class="s" style="width:0%"></span><span class="p" style="width:3%"></span></span><span class="cat-pct">67/69</span></div>
-<div class="cat"><span class="cat-n">Core I/O</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">33/33</span></div>
-<div class="cat"><span class="cat-n">Cross-cutting</span><span class="cat-bar"><span class="d" style="width:85%"></span><span class="s" style="width:0%"></span><span class="p" style="width:15%"></span></span><span class="cat-pct">17/20</span></div>
+<div class="cat"><span class="cat-n">Calc</span><span class="cat-bar"><span class="d" style="width:98%"></span><span class="s" style="width:0%"></span><span class="p" style="width:2%"></span></span><span class="cat-pct">78/80</span></div>
+<div class="cat"><span class="cat-n">Core I/O</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">35/35</span></div>
+<div class="cat"><span class="cat-n">Cross-cutting</span><span class="cat-bar"><span class="d" style="width:92%"></span><span class="s" style="width:0%"></span><span class="p" style="width:8%"></span></span><span class="cat-pct">22/24</span></div>
 <div class="cat"><span class="cat-n">Draw</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">11/11</span></div>
 <div class="cat"><span class="cat-n">Editing</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">7/7</span></div>
-<div class="cat"><span class="cat-n">Engine &amp; Embedding</span><span class="cat-bar"><span class="d" style="width:90%"></span><span class="s" style="width:0%"></span><span class="p" style="width:10%"></span></span><span class="cat-pct">9/10</span></div>
-<div class="cat"><span class="cat-n">Impress</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">29/29</span></div>
+<div class="cat"><span class="cat-n">Engine &amp; Embedding</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">10/10</span></div>
+<div class="cat"><span class="cat-n">Impress</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">32/32</span></div>
 <div class="cat"><span class="cat-n">Math</span><span class="cat-bar"><span class="d" style="width:83%"></span><span class="s" style="width:0%"></span><span class="p" style="width:17%"></span></span><span class="cat-pct">5/6</span></div>
-<div class="cat"><span class="cat-n">Writer</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">49/49</span></div>
+<div class="cat"><span class="cat-n">Writer</span><span class="cat-bar"><span class="d" style="width:100%"></span><span class="s" style="width:0%"></span><span class="p" style="width:0%"></span></span><span class="cat-pct">54/54</span></div>
 </div>
 <h2 class="reg-h">Every feature</h2>
 <div class="blk-controls"><input id="q" class="blk-search" type="search" placeholder="// filter features: name, source, category, module, status (try 'done', 'stub', 'calc')..." autocomplete="off" spellcheck="false"><span class="blk-count" id="cnt"></span></div>
@@ -2631,7 +2881,7 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
 <tr data-h="c abi invoke zoffice engine &amp; embedding ffi done"><td class="ft">C ABI invoke</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">ffi</td><td><span class="bdg done">DONE</span></td><td class="via">ffi::zoffice_invoke</td></tr>
 <tr data-h="c abi string free zoffice engine &amp; embedding ffi done"><td class="ft">C ABI string free</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">ffi</td><td><span class="bdg done">DONE</span></td><td class="via">ffi::zoffice_string_free</td></tr>
 <tr data-h="flatten inline runs to text zoffice engine &amp; embedding format done"><td class="ft">Flatten inline runs to text</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">format</td><td><span class="bdg done">DONE</span></td><td class="via">format::text_blocks</td></tr>
-<tr data-h="tauri command layer zoffice engine &amp; embedding lib planned"><td class="ft">Tauri command layer</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">lib</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="tauri command layer zoffice engine &amp; embedding tauri_plugin done"><td class="ft">Tauri command layer</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">tauri_plugin</td><td><span class="bdg done">DONE</span></td><td class="via">tauri_plugin::zoffice_invoke</td></tr>
 <tr data-h="streaming/large-file mode zoffice engine &amp; embedding format done"><td class="ft">Streaming/large-file mode</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">format</td><td><span class="bdg done">DONE</span></td><td class="via">format::stream_worksheet_rows</td></tr>
 <tr data-h="document diff zoffice engine &amp; embedding lib done"><td class="ft">Document diff</td><td class="src">zoffice</td><td class="src">Engine &amp; Embedding</td><td class="mod">lib</td><td><span class="bdg done">DONE</span></td><td class="via">lib::diff</td></tr>
 <tr data-h="document properties / metadata libreoffice cross-cutting meta done"><td class="ft">Document properties / metadata</td><td class="src">LibreOffice</td><td class="src">Cross-cutting</td><td class="mod">meta</td><td><span class="bdg done">DONE</span></td><td class="via">meta::read</td></tr>
@@ -2756,7 +3006,7 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
 <tr data-h="vba macro storage extraction office cross-cutting ole2 done"><td class="ft">VBA macro storage extraction</td><td class="src">Office</td><td class="src">Cross-cutting</td><td class="mod">ole2</td><td><span class="bdg done">DONE</span></td><td class="via">ole2::vba_modules</td></tr>
 <tr data-h="vba macro execution office cross-cutting format planned"><td class="ft">VBA macro execution</td><td class="src">Office</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
 <tr data-h="encrypted / password-protected file reading office cross-cutting format done"><td class="ft">Encrypted / password-protected file reading</td><td class="src">Office</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg done">DONE</span></td><td class="via">format::read_part_encrypted</td></tr>
-<tr data-h="digital signature verification office cross-cutting format planned"><td class="ft">Digital signature verification</td><td class="src">Office</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
+<tr data-h="digital signature verification office cross-cutting dsig done"><td class="ft">Digital signature verification</td><td class="src">Office</td><td class="src">Cross-cutting</td><td class="mod">dsig</td><td><span class="bdg done">DONE</span></td><td class="via">dsig::verify_signatures</td></tr>
 <tr data-h="ole embedded object extraction office cross-cutting ole2 done"><td class="ft">OLE embedded object extraction</td><td class="src">Office</td><td class="src">Cross-cutting</td><td class="mod">ole2</td><td><span class="bdg done">DONE</span></td><td class="via">ole2::ole_user_type</td></tr>
 <tr data-h="irm / rights management office cross-cutting format planned"><td class="ft">IRM / rights management</td><td class="src">Office</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg planned">PLANNED</span></td><td class="via">no symbol yet</td></tr>
 <tr data-h="custom xml parts office cross-cutting format done"><td class="ft">Custom XML parts</td><td class="src">Office</td><td class="src">Cross-cutting</td><td class="mod">format</td><td><span class="bdg done">DONE</span></td><td class="via">format::custom_xml_parts</td></tr>
@@ -2782,6 +3032,31 @@ td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: t
 <tr data-h="json path extract (jsonextract) zoffice original calc calc done"><td class="ft">JSON path extract (JSONEXTRACT)</td><td class="src">zoffice original</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::json_extract</td></tr>
 <tr data-h="extractive document summary zoffice original writer writer done"><td class="ft">Extractive document summary</td><td class="src">zoffice original</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::extractive_summary</td></tr>
 <tr data-h="tf keyword extraction zoffice original writer writer done"><td class="ft">TF keyword extraction</td><td class="src">zoffice original</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::keywords</td></tr>
+<tr data-h="descriptive statistics (data ▸ statistics) calc,excel calc calc done"><td class="ft">Descriptive statistics (Data ▸ Statistics)</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::descriptive_stats</td></tr>
+<tr data-h="correlation matrix calc,excel calc calc done"><td class="ft">Correlation matrix</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::correlation</td></tr>
+<tr data-h="linear regression calc,excel calc calc done"><td class="ft">Linear regression</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::regression</td></tr>
+<tr data-h="transpose sheet calc,excel calc calc done"><td class="ft">Transpose sheet</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::transpose</td></tr>
+<tr data-h="subtotals calc,excel calc calc done"><td class="ft">Subtotals</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::subtotals</td></tr>
+<tr data-h="remove duplicates calc,excel calc calc done"><td class="ft">Remove duplicates</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::remove_duplicates</td></tr>
+<tr data-h="text to columns calc,excel calc calc done"><td class="ft">Text to columns</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::text_to_columns</td></tr>
+<tr data-h="consolidate calc,excel calc calc done"><td class="ft">Consolidate</td><td class="src">Calc,Excel</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::consolidate</td></tr>
+<tr data-h="recalculation critical path zoffice original calc calc done"><td class="ft">Recalculation critical path</td><td class="src">zoffice original</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::critical_path</td></tr>
+<tr data-h="dependency blast radius / keystone cells zoffice original calc calc done"><td class="ft">Dependency blast radius / keystone cells</td><td class="src">zoffice original</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::impact_map</td></tr>
+<tr data-h="root-cause attribution of value changes zoffice original calc calc done"><td class="ft">Root-cause attribution of value changes</td><td class="src">zoffice original</td><td class="src">Calc</td><td class="mod">calc</td><td><span class="bdg done">DONE</span></td><td class="via">calc::root_cause</td></tr>
+<tr data-h="show / hide slide impress,powerpoint impress impress done"><td class="ft">Show / hide slide</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg done">DONE</span></td><td class="via">impress::set_slides_hidden</td></tr>
+<tr data-h="outline view authoring impress,powerpoint impress impress done"><td class="ft">Outline view authoring</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg done">DONE</span></td><td class="via">impress::from_outline</td></tr>
+<tr data-h="slide sorter (reorder slides) impress,powerpoint impress impress done"><td class="ft">Slide sorter (reorder slides)</td><td class="src">Impress,PowerPoint</td><td class="src">Impress</td><td class="mod">impress</td><td><span class="bdg done">DONE</span></td><td class="via">impress::reorder_slides</td></tr>
+<tr data-h="generate table of contents writer,word writer writer done"><td class="ft">Generate table of contents</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::insert_toc</td></tr>
+<tr data-h="mail merge from a data source writer,word writer writer done"><td class="ft">Mail merge from a data source</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::mail_merge_all</td></tr>
+<tr data-h="redaction writer,word writer writer done"><td class="ft">Redaction</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::redact</td></tr>
+<tr data-h="lossless table-cell editing writer,word writer writer done"><td class="ft">Lossless table-cell editing</td><td class="src">Writer,Word</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::edit_table_cell</td></tr>
+<tr data-h="reorder pages zoffice original writer writer done"><td class="ft">Reorder pages</td><td class="src">zoffice original</td><td class="src">Writer</td><td class="mod">writer</td><td><span class="bdg done">DONE</span></td><td class="via">writer::reorder_pages</td></tr>
+<tr data-h="structural blame across versions zoffice original cross-cutting merge done"><td class="ft">Structural blame across versions</td><td class="src">zoffice original</td><td class="src">Cross-cutting</td><td class="mod">merge</td><td><span class="bdg done">DONE</span></td><td class="via">merge::blame</td></tr>
+<tr data-h="3-way structural merge zoffice original cross-cutting merge done"><td class="ft">3-way structural merge</td><td class="src">zoffice original</td><td class="src">Cross-cutting</td><td class="mod">merge</td><td><span class="bdg done">DONE</span></td><td class="via">merge::merge3</td></tr>
+<tr data-h="export to epub writer core i/o epub done"><td class="ft">Export to EPUB</td><td class="src">Writer</td><td class="src">Core I/O</td><td class="mod">epub</td><td><span class="bdg done">DONE</span></td><td class="via">epub::export</td></tr>
+<tr data-h="universal conversion (--convert-to) libreoffice core i/o lib done"><td class="ft">Universal conversion (--convert-to)</td><td class="src">LibreOffice</td><td class="src">Core I/O</td><td class="mod">lib</td><td><span class="bdg done">DONE</span></td><td class="via">lib::convert_to</td></tr>
+<tr data-h="cross-document impact zoffice original cross-cutting workspace done"><td class="ft">Cross-document impact</td><td class="src">zoffice original</td><td class="src">Cross-cutting</td><td class="mod">workspace</td><td><span class="bdg done">DONE</span></td><td class="via">workspace::cross_impact</td></tr>
+<tr data-h="folder reconciliation zoffice original cross-cutting workspace done"><td class="ft">Folder reconciliation</td><td class="src">zoffice original</td><td class="src">Cross-cutting</td><td class="mod">workspace</td><td><span class="bdg done">DONE</span></td><td class="via">workspace::reconcile</td></tr>
 </tbody></table>
 <footer class="doc-footer">MenkeTechnologies &middot; zoffice-core &middot; status derived from src/ — feature cannot be marked done without a real engine symbol</footer>
 </main></div><script src="../hud-theme.js"></script><script>

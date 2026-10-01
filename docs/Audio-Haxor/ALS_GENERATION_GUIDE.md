@@ -1582,12 +1582,16 @@ Generator supports placing multiple complete songs sequentially in one `.als` fi
 - [x] MixerInArrangement visibility toggle
 
 ### Bus Topology & Sidechain
-- [x] Six group tracks: **KICKS** (own bus so the kick pulse drives the
-      sidechain without feeding back), **DRUMS**, **BASS**, **BASS FX**,
-      **MELODICS**, **FX**. Groups are skipped entirely when they have no
-      children — track-count math is computed from `song1.*.iter().any(...)`,
-      not hardcoded.
-- [x] **Group-level sidechain** Compressor2 on **DRUMS / BASS / BASS FX /
+- [x] Group tracks: **KICKS** (kick, kick rumble, kick noise; own bus,
+      separate from DRUMS), **DRUMS** (incl. breakbeat, hardcore kick),
+      **BASS**, **BASS FX**, **MELODICS**, **FX**, **SCATTER**. A group is
+      emitted when any of its tracks was requested (`song1.*.is_empty()`
+      checks in `track_generator::generate`); requested tracks are emitted
+      even when no sample matched. MIDI melodic mode adds **BASS / LEADS /
+      PADS / KEYS** MIDI groups instead of the audio melodic buses.
+- [ ] **Group-level sidechain** (template and builder exist, not injected:
+      Ableton's parser rejects the programmatically injected device XML)
+      Compressor2 on **DRUMS / BASS / BASS FX /
       MELODICS**, keyed to `AudioIn/Track.<KICKS_group_id>/PostFxOut`. One
       compressor per bus (not per track) so ducking is uniform and avoids
       double compression. FX bus is deliberately un-sidechained so risers /
@@ -1597,13 +1601,16 @@ Generator supports placing multiple complete songs sequentially in one `.als` fi
   `__SC_SRC_ID__` placeholder substituted at emit time).
 
 ### Master Chain
-- [x] **Eq8** on MainTrack with Band.0 as a 12 dB/oct HPF at **30 Hz** — subsonic
+Template + `inject_master_chain` exist but are not called from
+`track_generator::generate` (same Ableton parser rejection as the sidechain).
+
+- [ ] **Eq8** on MainTrack with Band.0 as a 12 dB/oct HPF at **30 Hz** — subsonic
       rumble cleanup that doesn't cost any low-end warmth.
       Template: `src-tauri/src/master_eq8_hpf_template.xml`.
-- [x] **Limiter** on MainTrack: Ceiling **-0.3 dB**, AutoRelease on, LinkChannels
+- [ ] **Limiter** on MainTrack: Ceiling **-0.3 dB**, AutoRelease on, LinkChannels
       on, Lookahead on. Catches peaks without touching mix gain staging.
       Template: `src-tauri/src/master_limiter_template.xml`.
-- Both devices are injected in front of the template's existing StereoGain
+- `inject_master_chain` places both devices in front of the template's existing StereoGain
   (Utility) — HPF first, Limiter second, then Utility — so the chain order is
   rumble-cleanup → peak-catch → final trim.
 

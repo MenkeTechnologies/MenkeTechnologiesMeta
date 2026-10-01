@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zphoto — Adobe Photoshop + Illustrator port report. One Rust engine (zphoto-core): 474 raster commands (Photoshop/GIMP port, 8/16/32-bit) + 114 vector commands (Illustrator port) sharing the raster layer stack. 775 tests.">
+  <meta name="description" content="zphoto — Adobe Photoshop + Illustrator port report. One Rust engine (zphoto-core): 474 raster commands (Photoshop/GIMP port, 8/16/32-bit) + 114 vector commands (Illustrator port) sharing the raster layer stack. 798 tests.">
   <title>zphoto &mdash; Photoshop + Illustrator Port Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -71,7 +71,7 @@
             <a href="https://github.com/MenkeTechnologies/zphoto" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            One Rust engine (<code>zphoto-core</code>) &middot; raster editor (Photoshop/GIMP port) + vector mode (Illustrator port) &middot; vectors render into the same raster layer stack &middot; source-derived at <code>7a0f323d84</code>
+            One Rust engine (<code>zphoto-core</code>) &middot; raster editor (Photoshop/GIMP port) + vector mode (Illustrator port) &middot; vectors render into the same raster layer stack &middot; source-derived at <code>a16d74fd14</code>
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -134,8 +134,9 @@
           <tr><td>paint.*</td><td class="num">24</td><td>Brush, pencil, eraser, clone, smudge, dodge/burn, gradient</td></tr>
           <tr><td>fill.*</td><td class="num">15</td><td>Bucket, pattern, gradient, content-aware, fill layers, generative render</td></tr>
           <tr><td>edit.*</td><td class="num">10</td><td>Undo / redo / cut / copy / paste / fade / history / timeline / perceptual blame</td></tr>
-          ${1}8${2} and Batch over a folder</td></tr>
-$1          <tr><td>slice.*</td><td class="num">6</td><td>Slice tool &mdash; slices from the selection or guides, one exported file per slice</td></tr>
+          <tr><td>action.*</td><td class="num">8</td><td>Actions panel &mdash; record / replay macros, and Batch over a folder</td></tr>
+          <tr><td>path.*</td><td class="num">6</td><td>Pen paths, path &harr; selection, stroke path</td></tr>
+          <tr><td>slice.*</td><td class="num">6</td><td>Slice tool &mdash; slices from the selection or guides, one exported file per slice</td></tr>
           <tr><td>graph.*</td><td class="num">13</td><td>Node graph &mdash; a non-destructive DAG of recorded Actions</td></tr>
           <tr><td>guard.*</td><td class="num">4</td><td>Perceptual guards &mdash; armed watchpoints over a document region</td></tr>
           <tr><td>comp / sampler</td><td class="num">10</td><td>Layer comps + perceptual edit attribution; Info-panel colour samplers and their solve targets</td></tr>
@@ -182,11 +183,11 @@ $1          <tr><td>slice.*</td><td class="num">6</td><td>Slice tool &mdash; sli
         <div class="feature-card todo"><h4>Single-Channel Buffers (🚧)</h4><p><code>BaseType</code> GRAY desaturates and INDEXED carries a real editable colormap, but pixels stay RGBA-backed &mdash; there is no single-channel or index buffer behind either mode.</p></div>
         <div class="feature-card todo"><h4>Tiled Buffer (⬜)</h4><p>Layer pixels are a flat <code>Vec&lt;RgbaF&gt;</code>; GEGL-style tiling is an optimization left for later.</p></div>
         <div class="feature-card todo"><h4>Progress Streaming (⬜)</h4><p>Long-running ops complete atomically &mdash; no event sink emitting progress, as the sibling engines have.</p></div>
-        <div class="feature-card todo"><h4>GUI Polish Gate (🚧)</h4><p>Terminal, hooks editor, file browser and the 27-locale catalogue are wired; the 18 i18n proof tests, shared-component tables and the rest of the haxor script surface are not.</p></div>
+        <div class="feature-card todo"><h4>GUI Polish Gate (🚧)</h4><p>Terminal, hooks editor, file browser, the shared i18n catalogue with its proof contract, the haxor script surface, the automation bus and R9 are wired. Still owed: the <code>zpdf-core</code> raster-page embed (G2), the catalogue keys <code>zpwr-i18n</code> does not define yet (G3), and the baseline gate&rsquo;s placement finding.</p></div>
         <div class="feature-card todo"><h4>32-bit PSD</h4><p>32-bit documents fold to 16-bit channels on PSD save; 32-bit channel I/O is a follow-up.</p></div>
         <div class="feature-card todo"><h4>High-Bit Project Persistence</h4><p>The native <code>.zpo</code> format stores the document's depth but persists pixels at 8-bit, so older projects load unchanged.</p></div>
         <div class="feature-card todo"><h4>16-bit PNG Export</h4><p>PNG export still routes through the 8-bit <code>image</code>-crate path even for 16/32-bit documents.</p></div>
-        <div class="feature-card todo"><h4>Float Composite</h4><p><code>Image::render()</code> returns the 8-bit display composite; per-layer float precision lives in the layer buffers where the operations run.</p></div>
+        <div class="feature-card todo"><h4>Float Composite</h4><p><code>Image::render()</code>, the composite display and file export use, is 8-bit. A float composite (<code>Image::render_f</code>) exists, but only the perceptual measurements and node-graph blends read it.</p></div>
       </div>
 
       <hr class="section-rule">
@@ -208,7 +209,7 @@ $1          <tr><td>slice.*</td><td class="num">6</td><td>Slice tool &mdash; sli
     </main>
 
     <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
-      ZPHOTO PORT REPORT &middot; 474 RASTER COMMANDS &middot; 114 VECTOR COMMANDS &middot; 8/16/32-BIT &middot; 347 PHOTOSHOP &middot; 119 ILLUSTRATOR FEATURES &middot; 798 TESTS &middot; SOURCE-DERIVED @ 7a0f323d84 &middot; MENKETECHNOLOGIES
+      ZPHOTO PORT REPORT &middot; 474 RASTER COMMANDS &middot; 114 VECTOR COMMANDS &middot; 8/16/32-BIT &middot; 347 PHOTOSHOP &middot; 119 ILLUSTRATOR FEATURES &middot; 798 TESTS &middot; SOURCE-DERIVED @ a16d74fd14 &middot; MENKETECHNOLOGIES
     </footer>
   </div>
 

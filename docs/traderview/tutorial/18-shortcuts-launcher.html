@@ -60,23 +60,23 @@
         <span class="meter-count">18 / 18</span>
       </div>
 
-      <h2 class="tutorial-title"><span class="step-hash">18.</span>Keyboard shortcuts &amp; the 1444-tile Cmd-K launcher</h2>
-      <p class="tutorial-subtitle">58 globals, 225 view-scoped binds, the in-app cheat-sheet, the categorized launcher with live filter, and the right-click context-menu surface across 23 row scopes + 141 symbol-aware view scopes (846 distinct symbol-nav paths).</p>
+      <h2 class="tutorial-title"><span class="step-hash">18.</span>Keyboard shortcuts &amp; the 1448-tile Cmd-K launcher</h2>
+      <p class="tutorial-subtitle">Global and view-scoped key binds, the in-app cheat-sheet, the categorized launcher with live filter, and the right-click context-menu surface across the per-row scopes and the symbol-aware view scopes.</p>
 
       <section class="tutorial-section">
         <h2>The shortcut registry</h2>
         <p><code>frontend/js/_shortcuts.js</code> is the source of truth — every binding the app honors is listed there once. Three tiers:</p>
         <ul>
-          <li><strong>Globals (58 keys)</strong> — fire from any view.</li>
-          <li><strong>View-scoped (225 keys)</strong> — fire only when the named view is active.</li>
+          <li><strong>Globals</strong> — fire from any view.</li>
+          <li><strong>View-scoped</strong> — fire only when the named view is active.</li>
           <li><strong>Modal-scoped</strong> — fire only inside specific overlays (Cmd-K, help overlay, dialog primitives).</li>
         </ul>
         <p>Every view-scoped bind has a visible chip on the topbar / view header stamped with <code>data-shortcut</code>. The tooltip augmenter appends the key combo on hover (<em>"⟳ Refresh (R)"</em>, <em>"+ New Trade (N)"</em>). No hidden keybindings: if a key does something, there's a visible UI element documenting it.</p>
       </section>
 
       <section class="tutorial-section">
-        <h2>The 58 global shortcuts</h2>
-        <p>Eight nav globals (<code>Cmd+Opt+T/J/D/W/C/L/R/M</code>) jump to Trades / Journal / Dashboard / Watchlists / Charts / Live / Reports / Scanner. The remaining 50 cover settings, account picker, theme toggle, search, command palette, help overlay, and a handful of utility actions.</p>
+        <h2>The global shortcuts</h2>
+        <p>Eight nav globals (<code>Cmd+Opt+T/J/D/W/C/L/R/M</code>) jump to Trades / Journal / Dashboard / Watchlists / Charts / Live / Reports / Scanner. The rest cover settings, account picker, theme toggle, search, command palette, help overlay, and a handful of utility actions.</p>
         <table class="tv-table">
           <thead>
             <tr><th>Key</th><th>Action</th></tr>
@@ -99,7 +99,7 @@
             <tr><td><code>Esc</code></td><td>Close overlay / palette / dialog</td></tr>
           </tbody>
         </table>
-        <p>The full 48 is in the cheat-sheet view; the table above is the most-used dozen.</p>
+        <p>The full list is in the cheat-sheet view; the table above is the most-used dozen.</p>
       </section>
 
       <section class="tutorial-section">
@@ -119,7 +119,7 @@
         <h2>The cheat-sheet overlay (<code>?</code>)</h2>
         <p>Pressing <code>?</code> from any view (no modifier) opens a three-table modal:</p>
         <ul>
-          <li><strong>Globals</strong> — all 48, searchable.</li>
+          <li><strong>Globals</strong> — all of them, searchable.</li>
           <li><strong>View-scoped</strong> — current-view bindings only, expandable to all views.</li>
           <li><strong>Right-click actions</strong> — every registered ctxmenu item across all scopes, searchable. ~70+ items.</li>
         </ul>
@@ -128,7 +128,7 @@
 
       <section class="tutorial-section">
         <h2>The Cmd-K launcher</h2>
-        <p>Open with <code>Cmd+K</code>. The launcher is a categorized tile grid (~1444 tiles across 10 categories — see step 01 for the breakdown) with:</p>
+        <p>Open with <code>Cmd+K</code>. The launcher is a categorized tile grid (~1448 tiles across 10 categories — see step 01 for the breakdown) with:</p>
         <ul>
           <li><strong>Live filter</strong> — type any substring; the grid filters in-place.</li>
           <li><strong>Enter-jumps-to-first-match</strong> — fastest path when you know exactly what you want.</li>
@@ -136,7 +136,7 @@
           <li><strong>Pin / unpin</strong> — pin a tile (the small bookmark icon) to put it on the topbar's quick-nav strip.</li>
           <li><strong>Recently used</strong> — pinned to the top of the unfiltered view.</li>
         </ul>
-        <p>The launcher reads its catalog from a single static registry at boot, so the displayed count is generated, not typed — adding a new view registers a new tile automatically. No fixed nav strip; the topbar carries the 11 most-used routes and the launcher carries everything else.</p>
+        <p>The launcher reads its catalog from the <code>TILES</code> and <code>CATEGORIES</code> arrays in <code>frontend/js/views/launcher.js</code> — a new view gets a tile by adding a row there. No fixed nav strip; the topbar carries the 11 most-used routes and the launcher carries everything else.</p>
       </section>
 
       <section class="tutorial-section">
@@ -146,13 +146,14 @@
 api-token-row, account-row, plan-row, share-row, board-row,
 dashboard-sidebar-item, hotkey-row, custom-indicator-row,
 alert-rule-row, strategy-alert-row, watchlist-symbol-row,
-position-row, backtest-preset-row</pre>
-        <p>Plus 141 symbol-aware view scopes give the 6-way symbol-nav menu (Charts / Options / Research / Earnings / News / Copy) on every symbol that appears anywhere. <strong>846 distinct symbol-nav paths.</strong></p>
+position-row, backtest-preset-row, budget-row, tax-wiz-section,
+categorize-group, favorites-manager, bookmarks-manager</pre>
+        <p>Plus every symbol-aware view scope listed in <code>SYMBOL_AWARE_SCOPES</code> (<code>frontend/js/_context_menu.js</code>) gets the 6-way symbol-nav menu (Charts / Options / Research / Earnings / News / Copy) on every symbol that appears anywhere.</p>
       </section>
 
       <section class="tutorial-section">
         <h2>Non-blocking dialogs &amp; toasts</h2>
-        <p><code>tConfirm()</code> / <code>tPrompt()</code> (in <code>frontend/js/dialog.js</code>) replace every native <code>alert()</code> / <code>confirm()</code> / <code>prompt()</code> call site (100 swept across 42 view files). Returns a Promise; themed by level (<code>info</code> / <code>warning</code> / <code>danger</code>); <code>Enter</code> / <code>Esc</code> keybound; required-empty input shake; i18n labels via <code>dialog.btn.*</code> keys.</p>
+        <p><code>tConfirm()</code> / <code>tPrompt()</code> (in <code>frontend/js/dialog.js</code>) replace every native <code>alert()</code> / <code>confirm()</code> / <code>prompt()</code> call site. Returns a Promise; themed by level (<code>info</code> / <code>warning</code> / <code>danger</code>); <code>Enter</code> / <code>Esc</code> keybound; required-empty input shake; i18n labels via <code>dialog.btn.*</code> keys.</p>
         <p>Toasts use <code>toastOk()</code> / <code>toastErr()</code>; auto-dismiss after 4s (configurable per call), stackable, click-to-dismiss.</p>
       </section>
 

@@ -61,20 +61,33 @@
       </div>
 
       <h2 class="tutorial-title"><span class="step-hash">08.</span>Charts &amp; per-symbol research</h2>
-      <p class="tutorial-subtitle">uPlot OHLC + persisted drawings + technical overlays, the per-symbol dossier (quote / signals / news / earnings / dividends / insiders / fundamentals / holders), the options chain + Greeks + IV surface, and the right-click symbol-nav menu that connects every grid in the app.</p>
+      <p class="tutorial-subtitle">uPlot OHLC + persisted drawings + custom-indicator overlays, the chart studies (Seasonals / Performance / Symbol Math / Drawing Alerts), the per-symbol dossier (quote / signals / news / earnings / dividends / insiders / fundamentals / holders), the options chain + Greeks + IV surface, and the right-click symbol-nav menu that connects every grid in the app.</p>
 
       <section class="tutorial-section">
         <h2>The Charts view</h2>
-        <p><code>frontend/js/views/charts.js</code>. uPlot (vendored under <code>frontend/lib/uPlot/</code>, no CDN at runtime) renders the price + volume panes. Bars are fetched from <code>GET /api/symbols/{sym}/bars?tf=&amp;from=&amp;to=</code>, cached locally for the session, and lazy-extended as you scroll the time axis.</p>
+        <p><code>frontend/js/views/charts.js</code>. uPlot (vendored under <code>frontend/lib/</code>, no CDN at runtime) renders the price pane. Bars come from <code>GET /api/bars/{sym}?interval=&amp;from=&amp;to=</code> for the symbol, interval and From / To range in the toolbar.</p>
         <ul>
-          <li><strong>Timeframes</strong> — 1m / 5m / 15m / 30m / 60m / 1d / 1w / 1mo.</li>
-          <li><strong>Overlays</strong> — VWAP, SMA, EMA, Bollinger Bands, Donchian, Ichimoku, anchored VWAP, supertrend. Toggle from the overlay menu; the active set persists per-symbol.</li>
-          <li><strong>Indicator panes</strong> — RSI, MACD, ATR, ADX, OBV, volume profile. Stack as many sub-panes as fit.</li>
-          <li><strong>Drawings</strong> — trend lines, horizontal levels, Fib retracements, rectangles, text labels. Saved to <code>chart_drawings</code> keyed by symbol; survive across launches.</li>
-          <li><strong>Trade markers</strong> — your executions on the symbol appear as up/down arrows at the bar of <code>executed_at</code>, with the trade ID on hover.</li>
-          <li><strong>Crosshair sync</strong> — open the same symbol in two charts (multi-monitor); crosshairs synchronize across them.</li>
+          <li><strong>Intervals</strong> — 1m / 5m / 15m / 1h / 1d / 1w.</li>
+          <li><strong>Indicators</strong> — a multi-select of your custom indicators (step 10), evaluated server-side by <code>POST /api/custom-indicators/eval/{sym}</code> and drawn over the price series. Indicators flagged as default are pre-selected; <em>manage…</em> opens the Custom Indicators view.</li>
+          <li><strong>Drawings</strong> — Trendline and Fib (click two points), H-line and Text (click once), with a color picker and <em>Clear all</em>. Saved per symbol through <code>/api/chart-drawings/{sym}</code> into <code>chart_drawings</code>; they survive across launches and feed the Drawing Alerts study below.</li>
+          <li><strong>Preset</strong> — the selected indicators, interval, lookback and per-symbol zoom are written back to <code>user_settings.chart_preset</code> and restored the next time you open the chart.</li>
         </ul>
-        <p>The chart uses uPlot's tier of canvas rendering — comfortable with 50 000+ bars on screen. Scrolling further back lazy-fetches via the same bars endpoint.</p>
+      </section>
+
+      <section class="tutorial-section">
+        <h2>Chart studies — Seasonals, Performance, Symbol Math, Drawing Alerts</h2>
+        <p>Four Charts &amp; Research tiles that compute over stored price bars. The math lives in <code>traderview-core</code> (<code>seasonals</code>, <code>performance_summary</code>, <code>symbol_math</code>, <code>drawing_alerts</code>); the handlers in <code>crates/traderview-web/src/routes/chart_studies.rs</code> only load bars and shape the response. Each tile is also reachable from the command palette and carries the right-click symbol-nav menu.</p>
+        <table class="tv-table">
+          <thead>
+            <tr><th>Tile</th><th>Route</th><th>What it shows</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Seasonals</strong></td><td><code>GET /seasonals/{sym}?years=&amp;to=</code></td><td>One line per calendar year: cumulative % change from the prior year's last close, aligned by calendar date (29 Feb is folded onto 28 Feb). A highlighted line averages the complete years, and the year in progress is compared against that average on the same date. <code>years</code> defaults to 10.</td></tr>
+            <tr><td><strong>Performance</strong></td><td><code>GET /performance-summary?symbols=A,B&amp;to=</code></td><td>Sortable heat table of trailing returns — 1W, 1M, 3M, 6M, YTD, 1Y, 3Y, 5Y, All — measured from the last daily close on or before each window start to the latest close, plus distance from the 52-week high and all-time high and 1-year realized volatility. A window longer than the stored history shows <code>—</code> rather than a shortened return. Symbols may be separated by commas, spaces or newlines.</td></tr>
+            <tr><td><strong>Symbol Math</strong></td><td><code>POST /symbol-math</code> <code>{expr, interval, from, to}</code></td><td>Charts an arithmetic expression over up to eight tickers — ratios, spreads and baskets such as <code>XLY/XLP</code>, <code>(SPY+QQQ)/2</code>, <code>HYG/IEF*100</code>. Operators <code>+ - * / ^</code> and parentheses; tickers are case-insensitive and may contain <code>. _ :</code> (<code>BRK.B</code>, <code>NYSE:IBM</code>). Series are inner-joined on bar timestamp. A JS mirror of the Rust parser validates the expression as you type and points at the failing position.</td></tr>
+            <tr><td><strong>Drawing Alerts</strong></td><td><code>GET /drawing-alerts/{sym}?interval&amp;from&amp;to&amp;extend_right=</code></td><td>Evaluates the trendlines and H-lines saved on Charts against price: close-based crossings (up when the close moves from at-or-below the line to above it, down for the reverse), touches (the bar's high-low range reaches the line without the close crossing), the side price is on now, and the distance to the line. <em>Extend trendlines right</em> (default on) keeps a line defined past its second anchor. Fib and text drawings are skipped. <em>Arm alert</em> creates a price alert at the line's level on the last bar; a sloped trendline moves, so re-arm to follow it.</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <section class="tutorial-section">
@@ -144,19 +157,20 @@
       </section>
 
       <section class="tutorial-section">
-        <h2>Right-click symbol-nav — 846 paths</h2>
+        <h2>Right-click symbol-nav</h2>
         <p>Every grid that emits a symbol (Trades, Executions, Live Scanner, Halts, Catalysts, Watchlists, Screener results, Scanner results, Reports by-symbol, Tax Lots, Open Positions, Compare results, Sentiment, Top Signals, Earnings Cal, Disclosures, Dark Pool, Short Interest, IV Scan, the chart's own symbol header, …) registers a <code>data-context-scope</code> slug; the global ctxmenu handler attaches the same 6-way symbol-nav menu (<em>Charts / Options / Research / Earnings / News / Copy</em>).</p>
-        <p>141 distinct symbol-aware view scopes × 6 nav targets = 846 distinct nav paths. Items are registered in a single <code>ALL_SCOPED_ITEMS</code> array; handler bodies are 3-4 LoC each via 6 shared helpers (<code>clipboardWrite</code> / <code>refreshView</code> / <code>dataFromTarget</code> / <code>toastErr</code> / <code>toastOk</code> / <code>symbolFromTarget</code>). Two regression tests pin that every emitting tag carries the data-* attrs its handler reads, and that every registered scope is documented.</p>
+        <p>The symbol-aware view scopes are listed in <code>SYMBOL_AWARE_SCOPES</code> (<code>frontend/js/_context_menu.js</code>); each gets the six nav targets. Row-scoped items are registered in a single <code>ALL_SCOPED_ITEMS</code> array; handler bodies are 3-4 LoC each via 6 shared helpers (<code>clipboardWrite</code> / <code>refreshView</code> / <code>dataFromTarget</code> / <code>toastErr</code> / <code>toastOk</code> / <code>symbolFromTarget</code>). Two regression tests pin that every emitting tag carries the data-* attrs its handler reads, and that every registered scope is documented.</p>
       </section>
 
       <section class="tutorial-section">
-        <h2>Per-row context scopes — 18 of them</h2>
+        <h2>Per-row context scopes</h2>
         <p>Symbol nav is one menu; data scopes are another. Per-row scopes give you row-specific actions (delete, edit, copy ID, duplicate, mark reviewed, …):</p>
         <pre>trade-row, symbol-row, journal-entry, tag-chip, webhook-row,
 api-token-row, account-row, plan-row, share-row, board-row,
 dashboard-sidebar-item, hotkey-row, custom-indicator-row,
 alert-rule-row, strategy-alert-row, watchlist-symbol-row,
-position-row, backtest-preset-row</pre>
+position-row, backtest-preset-row, budget-row, tax-wiz-section,
+categorize-group, favorites-manager, bookmarks-manager</pre>
         <p>Every right-click is handled by the same global handler — adding a new scope is one line in <code>ALL_SCOPED_ITEMS</code>.</p>
       </section>
 

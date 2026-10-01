@@ -64,27 +64,36 @@
       <table>
         <thead><tr><th>path</th><th>role</th></tr></thead>
         <tbody>
-          <tr><td>app/src-tauri</td><td>Tauri host: registers <code>ztn_invoke</code> + terminal, prefs, licence, powerline and file-browser commands; <code>setup</code> mounts the engine</td></tr>
+          <tr><td>app/src-tauri</td><td>Tauri host: registers an app-local <code>ztn_invoke</code> (the engine's command plus host-side effects of <code>settings.set</code>) + terminal, prefs, licence, powerline, file-browser and stryke-LSP commands; <code>setup</code> mounts the engine</td></tr>
+          <tr><td>app/src-tauri/src/bus.rs</td><td>GUI automation bus: engine verbs routed Rust-direct, every other <code>appshell.*</code> verb forwarded into the webview; per-verb reversibility class for <code>begin</code>/<code>commit</code>/<code>abort</code> transactions</td></tr>
+          <tr><td>app/src-tauri/src/native_menu.rs</td><td>native menu bar; each item id is routed by <code>frontend/menu-bridge.js</code> to the same opener the ⌘K palette calls</td></tr>
+          <tr><td>app/src-tauri/src/stryke_lsp.rs</td><td>bridge to <code>stryke --lsp</code> for the hooks editor, plus the stryke/bash hook runner</td></tr>
           <tr><td>app/src-tauri/src/net_diag.rs</td><td>app-local host-OS diagnostics: DNS lookup, TCP check, port scan, ping, traceroute, interfaces, routes, public IP</td></tr>
           <tr><td>app/src-tauri/src/net_tools.rs</td><td>app-local probe bench: TLS cert inspect, DNS-over-HTTPS, path-MTU discovery, speedtest, HTTP headers, VPN config parse</td></tr>
           <tr><td>app/src-tauri/src/net_scan.rs</td><td>app-local LAN/registry recon: subnet calc, ping sweep, ARP table, reverse DNS, RDAP, TCP port knock</td></tr>
           <tr><td>app/src-tauri/src/net_mon.rs</td><td>app-local monitor &amp; audit: netstat socket table, firewall ruleset, HTTP benchmark, TLS cipher scan, DNS record dump, AXFR test</td></tr>
           <tr><td>app/src-tauri/src/ssh_tunnel.rs</td><td>app-local SSH port-forwarding manager: profiles, sessions, reachability, keys, <code>~/.ssh/config</code> import/export</td></tr>
           <tr><td>app/src-tauri/src/impact.rs</td><td>Connect Impact Preview host collector — composes the sibling probes into the <code>HostSnapshot</code> the engine correlates</td></tr>
+          <tr><td>app/src-tauri/src/conn_events.rs</td><td>edge detector over the engine's <code>ztn-event</code> status stream: hands each real transition (connecting / connected / reconnecting / disconnected / error) to the two consumers below</td></tr>
+          <tr><td>app/src-tauri/src/conn_scripts.rs</td><td>connection scripts: shell commands bound to a transition, per config or every config, run serialized with a timeout and <code>ZTUNNEL_*</code> environment; persisted as <code>connection-scripts.json</code></td></tr>
+          <tr><td>app/src-tauri/src/ip_check.rs</td><td>public-IP change check: pre-connect baseline, re-check after a settle delay, error toast + OS notification when unchanged; persisted as <code>ip-check.json</code></td></tr>
+          <tr><td>app/src-tauri/src/login_item.rs</td><td>launch at login: applies the engine's <code>launch_at_login</code> setting as a macOS LaunchAgent / Linux XDG autostart entry, reconciled at startup and after every <code>settings.set</code></td></tr>
+          <tr><td>app/src-tauri/src/diag_report.rs</td><td>one redacted, paste-able diagnostic report for a config or the whole app</td></tr>
           <tr><td>crates/ztunnel-core</td><td>the embeddable VPN engine (submodule, <code>tauri</code> + <code>wgprobe</code> features)</td></tr>
           <tr><td>crates/zgui-core · zgui-bridge</td><td>shared GUI toolkit + IPC bridge (submodules)</td></tr>
           <tr><td>crates/zpwr-embed-terminal</td><td>shared embedded PTY terminal (submodule)</td></tr>
           <tr><td>crates/zpwr-i18n</td><td>shared i18n runtime (submodule)</td></tr>
           <tr><td>crates/zpwr-file-browser · zpwr-hooks-editor</td><td>shared file browser + Monaco hooks editor (submodules)</td></tr>
           <tr><td>crates/zwire-host</td><td>shared sysmon reader behind the powerline status bar (submodule)</td></tr>
+          <tr><td>frontend/vendor/zpwr-clip-engine</td><td>shared arrangement grid behind the session timeline (submodule; web assets, mounted where the WebView imports it)</td></tr>
           <tr><td>frontend</td><td>app shell + the app-owned bench front-ends; webui/terminal/i18n assets synced from the submodules before each dev/build</td></tr>
-          <tr><td>scripts</td><td>clean · bust · rebuild · nuke · test · ship-check · deploy · localinstall · release-macos · i18n-sort/audit (cyberpunk-styled, ported from Audio-Haxor)</td></tr>
+          <tr><td>scripts</td><td>clean · bust · rebuild · nuke · test · ship-check · deploy · localinstall · release-macos (cyberpunk-styled via <code>cyberpunk.sh</code>, ported from Audio-Haxor) · i18n-sort · i18n-audit · i18n-used-keys · i18n-seed-app · run-js-tests</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Front-end surface</h2>
       <p class="note">The HUD (mounted from the engine's webui) renders a configuration list with live status dots, a connect/disconnect action, a status/throughput grid, per-connection options (route-all, tunnel DNS, auto-reconnect, connect-at-launch), a live log viewer, an import modal (paste <code>.ovpn</code> / WireGuard <code>.conf</code>), a ⌘K command palette, a native menu bar, and the shared embedded terminal. It drives the engine entirely through <code>invoke('ztn_invoke', { cmd, args })</code> and listens for <code>ztn-event</code>; all wiring is CSP-safe (no inline handlers or styles).</p>
-      <p class="note">Beside it the repository owns its own bench front-ends under <code>frontend/</code>, each a tabbed HUD modal on the ⌘K palette. Four drive the app-local Rust above — <code>net-diag.js</code>, <code>net-tools.js</code>, <code>net-scan.js</code>, <code>net-mon.js</code> — plus <code>ssh-tunnels.js</code>. Six add no Rust at all and wire the engine's analytical command surface directly: <code>vpn-toolkit.js</code> (WireGuard keypair, handshake probe, config security lint, tunnel MTU/MSS, path MTU, IP classify, range→CIDR, obfuscation catalog), <code>config-lab.js</code> (parse, migrate, redact, normalize, inline blocks, PUSH_REPLY, log analyze), <code>routing-lab.js</code> (subnet/VLSM/aggregate/contains, route conflicts &amp; coverage, AllowedIPs dedup &amp; build, ULA, EUI-64, NAT64), <code>dns-lab.js</code> (resolver classify, query wire, blocklist match, bootstrap plan, split-horizon), <code>crypto-lab.js</code> (Noise layout, handshake timers, cookie/MAC, IPsec proposal, TS narrowing, proxy plan, static key) and <code>ops-lab.js</code> (data budget, usage rollup, uptime/SLA, link quality, quality ranking, failover plan, port forward, MSS clamp, app policy, reconnect backoff, feature matrix, platform probe). <code>impact-preview.js</code> renders the Connect Impact Preview verdict sheet (⌘⇧I).</p>
+      <p class="note">Beside it the repository owns its own bench front-ends under <code>frontend/</code>, each a tabbed HUD modal on the ⌘K palette. The host benches drive the app-local Rust above — <code>net-diag.js</code>, <code>net-tools.js</code>, <code>net-scan.js</code>, <code>net-mon.js</code> — plus <code>ssh-tunnels.js</code> and <code>conn-ops.js</code> (connection scripts, public-IP check, launch at login, diagnostic report; ⌘K rows <code>co-*</code> and the Connections / Help menus). The engine labs add no Rust at all and wire the engine's analytical command surface directly: <code>vpn-toolkit.js</code> (WireGuard keypair, handshake probe, config security lint, tunnel MTU/MSS, path MTU, IP classify, range→CIDR, obfuscation catalog), <code>config-lab.js</code> (parse, migrate, redact, normalize, inline blocks, PUSH_REPLY, log analyze), <code>routing-lab.js</code> (subnet/VLSM/aggregate/contains, route conflicts &amp; coverage, AllowedIPs dedup &amp; build, ULA, EUI-64, NAT64), <code>dns-lab.js</code> (resolver classify, query wire, blocklist match, bootstrap plan, split-horizon), <code>crypto-lab.js</code> (Noise layout, handshake timers, cookie/MAC, IPsec proposal, TS narrowing, proxy plan, static key) and <code>ops-lab.js</code> (data budget, usage rollup, uptime/SLA, link quality, quality ranking, failover plan, port forward, MSS clamp, app policy, reconnect backoff, feature matrix, platform probe). <code>impact-preview.js</code> renders the Connect Impact Preview verdict sheet (⌘⇧I), and <code>session-timeline.js</code> puts outages, the reconnect ladder, the WireGuard rekey window and throughput buckets on one ruler over the shared <code>zpwr-clip-engine</code> grid.</p>
 
       <h2 class="reg-h">Roadmap</h2>
       <table>
@@ -95,11 +104,13 @@
           <tr><td>Connection manager + logs + throughput</td><td>implemented in engine</td></tr>
           <tr><td>Host-OS benches (diagnostics · tools · scan · monitor) + SSH tunnels</td><td>implemented — app-local Tauri commands, engine-independent</td></tr>
           <tr><td>Engine benches (VPN toolkit · config · routing · DNS · crypto · ops labs)</td><td>implemented — front-end only, over <code>ztn_invoke</code></td></tr>
-          <tr><td>WireGuard handshake probe (<code>wg.probe</code> / <code>wg.probe_all</code>)</td><td>implemented in engine — <code>wgprobe</code> feature, device-free and unprivileged</td></tr>
+          <tr><td>WireGuard handshake probe + peer ranking (<code>wg.probe</code> / <code>wg.probe_all</code> / <code>wg.rank</code>)</td><td>implemented in engine — <code>wgprobe</code> feature, device-free and unprivileged</td></tr>
           <tr><td>Connect Impact Preview (pre-connect blast radius)</td><td>implemented — host collector <code>impact.rs</code> + engine <code>vpn.impact_preview</code></td></tr>
+          <tr><td>Session timeline (arrangement grid)</td><td>implemented — front-end only, engine replies on the shared <code>zpwr-clip-engine</code> grid</td></tr>
+          <tr><td>Connection scripts · public-IP change check · launch at login · diagnostic info</td><td>implemented — app-local Tauri commands + <code>conn-ops.js</code></td></tr>
           <tr><td>OpenVPN process supervision + WireGuard data path</td><td>implemented in engine — the unprivileged half; device/route creation still gated on the helper</td></tr>
-          <tr><td>Privileged helper (utun/tun, routing, DNS)</td><td>planned — macOS SMAppService / Linux polkit; until then connect reports <code>needs_privilege</code></td></tr>
-          <tr><td>On-demand connect, full preferences</td><td>planned</td></tr>
+          <tr><td>Privileged helper (utun/tun, routing, DNS)</td><td>planned — macOS SMAppService / Linux polkit; the engine already applies its plan directly when the process holds root, and reports <code>needs_privilege</code> otherwise</td></tr>
+          <tr><td>On-demand connect triggers, full preferences window</td><td>planned</td></tr>
         </tbody>
       </table>
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zstation-core — the embeddable pure-Rust workspace-of-isolated-webviews engine behind zstation (a from-scratch station.app port). Service catalog, tile board model and session-isolation registry behind one command surface, plus a mountable Trello-board view. No GUI deps; builds as rlib, staticlib and cdylib.">
+  <meta name="description" content="zstation-core — the embeddable pure-Rust workspace-of-isolated-webviews engine behind zstation (a from-scratch station.app port). Service catalog, tile board model, per-tile settings, workspace lock and SQLite persistence behind one command surface, plus a mountable Trello-board view. No GUI deps; builds as rlib, staticlib and cdylib.">
   <title>zstation-core — Embeddable Isolated-Webviews Engine</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zstation-core" target="_blank" rel="noopener noreferrer">Source</a>
           </nav>
-          <p class="docs-build-line">// pure-Rust service catalog · tile board model · session-isolation registry — the core behind zstation, embeddable in any host</p>
+          <p class="docs-build-line">// pure-Rust service catalog · tile board model · workspace lock · SQLite persistence — the core behind zstation, embeddable in any host</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -50,12 +50,15 @@
       </div>
     </header>
     <main class="docs-main">
-      <p class="lede">zstation-core is the embeddable engine behind <strong>zstation</strong>, a from-scratch port of the defunct <a href="https://en.wikipedia.org/wiki/Station_(software)" target="_blank" rel="noopener noreferrer">station.app</a>: one window that arranges your web apps (Slack, Gmail, Discord, Notion, Linear, Claude, …) as <strong>Trello-like draggable tiles</strong>, each running in its <em>own isolated session</em> so logging into one never leaks cookies or storage into another. The crate owns the service catalog, the tile board model and its on-disk persistence, and exposes them through <em>one</em> command surface (<code>Engine::invoke</code>) so every host drives identical behaviour. It ships a mountable Trello-board view built entirely from <code>zgui-core</code> widgets. It carries no GUI and no platform UI deps, so the standalone app and every embed share the exact same code. The crate builds as <code>rlib</code> for native Rust/Tauri hosts and as <code>staticlib</code>/<code>cdylib</code>. This project is in active development.</p>
+      <p class="lede">zstation-core is the embeddable engine behind <strong>zstation</strong>, a from-scratch port of the defunct <a href="https://en.wikipedia.org/wiki/Station_(software)" target="_blank" rel="noopener noreferrer">station.app</a>: one window that arranges your web apps (Slack, Gmail, Discord, Notion, Linear, Claude, …) as <strong>Trello-like draggable tiles</strong>, each running in its <em>own isolated session</em> so logging into one never leaks cookies or storage into another. The crate owns the service catalog, the tile board model, per-tile settings, the workspace lock and the SQLite workspace database, and exposes them through <em>one</em> command surface (<code>Engine::invoke</code>) so every host drives identical behaviour. It ships a mountable Trello-board view built entirely from <code>zgui-core</code> widgets. It carries no GUI and no platform UI deps, so the standalone app and every embed share the exact same code. The crate builds as <code>rlib</code> for native Rust/Tauri hosts and as <code>staticlib</code>/<code>cdylib</code>. This project is in active development.</p>
 
       <div class="card-grid">
         <div class="card"><h3>Embeddable</h3><p>One command surface — <code>Engine::invoke(cmd, args_json)</code> — drives every host identically: native Rust, or a Tauri v2 app command (<code>zst_invoke</code>) behind the <code>tauri</code> feature.</p></div>
         <div class="card"><h3>Real session isolation</h3><p>The engine stays host-agnostic; the mountable view drives the host's native, separately-partitioned webviews through a small shim (<code>window.__stationHost</code>) — never an <code>iframe</code>, which cannot isolate sessions.</p></div>
-        <div class="card"><h3>Pure Rust</h3><p>Foundational, vendorable deps only — <code>serde</code>, <code>serde_json</code>, <code>thiserror</code>, <code>dirs</code>. No system stack, no copyleft, no native UI toolkit; <code>cargo test</code> runs headless.</p></div>
+        <div class="card"><h3>Pure Rust</h3><p>Foundational, vendorable deps only — <code>serde</code>, <code>serde_json</code>, <code>thiserror</code>, <code>dirs</code>, <code>sha2</code>, and <code>rusqlite</code> with SQLite vendored (<code>bundled</code>). No system stack, no copyleft, no native UI toolkit; <code>cargo test</code> runs headless.</p></div>
+        <div class="card"><h3>Per-tile settings</h3><p>Each tile carries a new-window link rule (<code>link_mode</code>: default · system browser · this tile), its own User-Agent, and an auto-reload interval. <code>tile.update</code> validates them and rejects the whole patch on a bad value.</p></div>
+        <div class="card"><h3>Workspace lock</h3><p><code>lock.*</code> keeps the PIN in the engine as a salted RFC 4880 iterated-and-salted S2K SHA-256 digest, with an idle auto-lock delay and lock-on-launch. Changing the PIN or policy needs the PIN. A privacy screen, not encryption.</p></div>
+        <div class="card"><h3>Session analysis</h3><p>Station Wiring and its static proof, convoys, trails, Session Branching, and Session Lens with Rewind, Drift, Attribution, Probe and Workspace Census — all webview-free and unit-tested; the host owns only the impure ends.</p></div>
         <div class="card"><h3>Honest Status</h3><p>Engine commands and tests are derived from source. Current state: what exists is implemented and tested; the rest is on the roadmap, not faked.</p></div>
       </div>
 

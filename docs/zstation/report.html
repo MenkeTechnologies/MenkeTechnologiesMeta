@@ -54,12 +54,12 @@
     </header>
     <main class="docs-main">
       <section class="hero-stats">
-        <div class="hero-stat"><span class="num">0.1.26</span><span class="lbl">version</span></div>
+        <div class="hero-stat"><span class="num">0.1.28</span><span class="lbl">version</span></div>
         <div class="hero-stat"><span class="num">2</span><span class="lbl">layers (app shell · core)</span></div>
-        <div class="hero-stat"><span class="num">6</span><span class="lbl">native-webview host commands</span></div>
+        <div class="hero-stat"><span class="num">28</span><span class="lbl">native host commands (station_*)</span></div>
         <div class="hero-stat"><span class="num">10</span><span class="lbl">GUI baseline points</span></div>
       </section>
-      <p class="note">zstation is in active development. The figures on this page are derived from the repository as it stands today (<code>app/src-tauri/</code>, <code>frontend/</code>, and the <code>zstation-core</code> submodule). Anything not yet in the codebase is described as planned — this is a roadmap, not a claim of coverage.</p>
+      <p class="note">zstation is in active development. The figures above are measured from the repository: version from <code>app/src-tauri/Cargo.toml</code> (matching <code>tauri.conf.json</code>); host commands = the <code>station_*</code> commands registered in the <code>generate_handler!</code> list (<code>perl -0ne 'print "$1\n" while /generate_handler!\[(.*?)\]/sg' app/src-tauri/src/lib.rs | grep -o '::station_[a-z_]*' | sort -u | wc -l</code>). Anything not yet in the codebase is described as planned — this is a roadmap, not a claim of coverage.</p>
 
       <h2 class="reg-h">What zstation is</h2>
       <p class="note">zstation is a from-scratch port of the defunct station.app: one window that arranges your web apps as Trello-like tiles, each in its own isolated session. The desktop shell is a <strong>Tauri v2</strong> application with a cyberpunk HUD front-end. The board logic is factored out into a separate, embeddable engine, <a href="https://github.com/MenkeTechnologies/zstation-core" target="_blank" rel="noopener noreferrer">zstation-core</a>, so the same engine can be reused inside the other MenkeTechnologies GUI apps without dragging GUI or platform dependencies into them. It is a paid product, created by MenkeTechnologies.</p>
@@ -68,30 +68,38 @@
       <table>
         <thead><tr><th>layer</th><th>repository</th><th>responsibility</th></tr></thead>
         <tbody>
-          <tr><td>desktop app</td><td>zstation (this repo)</td><td>Tauri v2 shell, cyberpunk HUD front-end, native isolated-webview host, shared-submodule wiring</td></tr>
-          <tr><td>engine + view</td><td>zstation-core</td><td>service catalog, tile board model, board persistence, and the mountable Trello-board view</td></tr>
+          <tr><td>desktop app</td><td>zstation (this repo)</td><td>Tauri v2 shell, cyberpunk HUD front-end, native isolated-webview host (link rules, User-Agent, session clone/restore, pop-out windows, OS idle time), native menu, shared-submodule wiring</td></tr>
+          <tr><td>engine + view</td><td>zstation-core</td><td>service catalog, tile board model with per-tile settings, workspace lock, SQLite workspace database, wiring/lens/branching analysis, and the mountable Trello-board view</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Native isolated-webview host</h2>
-      <p class="note">Real per-service session isolation requires native, separately-partitioned webviews (an <code>iframe</code> cannot isolate a login: services forbid framing and iframes share the cookie jar). The host places one child webview per tile via Tauri v2 <code>WebviewWindow::add_child</code> and isolates each by <code>partition</code> — <code>data_store_identifier</code> on macOS/iOS, <code>data_directory</code> on Windows. The host exposes these commands to the mountable view (in <code>app/src-tauri/src/station_webview.rs</code>):</p>
+      <p class="note">Real per-service session isolation requires native, separately-partitioned webviews (an <code>iframe</code> cannot isolate a login: services forbid framing and iframes share the cookie jar). The host places one child webview per tile via Tauri v2 <code>WebviewWindow::add_child</code> and isolates each by <code>partition</code> — <code>data_store_identifier</code> on macOS/iOS, <code>data_directory</code> on Windows. The mountable view reaches these commands through <code>frontend/station-host.js</code>; they live in <code>app/src-tauri/src/station_webview.rs</code> unless another file is named.</p>
       <table>
         <thead><tr><th>command</th><th>role</th></tr></thead>
         <tbody>
-          <tr><td>station_webview_open</td><td>create/show the isolated child webview for a tile, isolated by partition</td></tr>
-          <tr><td>station_webview_set_bounds</td><td>keep the webview aligned to the tile body as it drags/resizes</td></tr>
-          <tr><td>station_webview_set_visible</td><td>hide the webview when the Board tab is not active (it paints above the DOM)</td></tr>
-          <tr><td>station_webview_navigate</td><td>point a tile's webview at a new URL</td></tr>
-          <tr><td>station_webview_reload</td><td>reload a tile's webview</td></tr>
-          <tr><td>station_webview_close</td><td>tear down a tile's webview</td></tr>
+          <tr><td>station_webview_open</td><td>create/show a tile's isolated child webview; takes the tile's own User-Agent and new-window link rule</td></tr>
+          <tr><td>station_webview_set_bounds · station_webview_set_visible · station_webview_restack</td><td>keep the webview on its tile body, park it under overlays and off-board tabs, apply the board's z-order natively</td></tr>
+          <tr><td>station_webview_navigate · station_webview_reload · station_webview_close</td><td>point at a URL, reload (also driven by per-tile auto-reload), tear down</td></tr>
+          <tr><td>station_webview_set_link_mode</td><td>change a tile's new-window link rule live: default · system browser · this tile (only <code>http(s)</code> is rerouted, so OAuth popups keep working)</td></tr>
+          <tr><td>station_webview_zoom · station_webview_set_volume · station_webview_set_autoplay · station_webview_set_css</td><td>per-tile zoom, volume/mute, media autoplay, injected CSS</td></tr>
+          <tr><td>station_report_unread · station_report_url · station_report_tap</td><td>relays from each tile's injected scripts: unread badge, current URL, Station Wiring / Session Lens DOM taps</td></tr>
+          <tr><td>station_set_taps · station_dom_action</td><td>install a tile's DOM taps; inject a resolved sink action into a tile</td></tr>
+          <tr><td>station_session_info · station_session_clear · station_session_fork</td><td>partition store size and reflink support; clear a session; clone a logged-in session into a new partition</td></tr>
+          <tr><td>station_session_snapshot · station_session_restore · station_session_materialize · station_session_drop_clones</td><td>Session Branching capture/restore (copy-on-write where the volume supports it), Rewind ghost partitions, release pruned clones</td></tr>
+          <tr><td>station_board_popout_open · station_board_popout_close · station_board_popout_list (<code>popout.rs</code>)</td><td>pop a dashboard out into its own OS window</td></tr>
+          <tr><td>station_system_idle_secs (<code>idle.rs</code>)</td><td>OS input idle time on macOS (<code>CGEventSourceSecondsSinceLastEventType</code>) for the workspace lock's auto-lock; <code>null</code> elsewhere</td></tr>
         </tbody>
       </table>
+
+      <h2 class="reg-h">Per-tile settings and the workspace lock</h2>
+      <p class="note">A web tile's <strong>Tile settings</strong> (context menu, &#8984;K palette, <strong>Tile ▸ Tile Settings…</strong>) set where new-window links open, the tile's own User-Agent (applied by reopening the webview; the session store is untouched) and an auto-reload interval that skips sleeping, minimised or in-use tiles. All three are engine <code>Tile</code> fields validated by <code>tile.update</code>. <strong>Lock workspace</strong> (&#8984;&#8679;L, <strong>Tools ▸ Lock Workspace</strong>) parks every tile webview behind a PIN pad; the PIN is held by the engine (<code>lock.*</code>) as a salted, stretched SHA-256 digest, with an idle auto-lock delay and lock-on-launch set from <strong>Tools ▸ Lock Settings…</strong>. A lock or unlock is broadcast on <code>zst://lock</code> so every pop-out window locks together. It is a privacy screen and does not encrypt the session stores.</p>
 
       <h2 class="reg-h">GUI baseline</h2>
       <p class="note">zstation consumes the 10-point MenkeTechnologies family GUI contract from the shared submodules: &#8984;K command palette, Stryke Hooks editor, embedded terminal, shared cyberpunk theme, tab bar + tile dashboard, top-left logo, fuzzy filters, sortable/resizable tables, clip-engine arrangement grid, and a multi-pane file browser — wired in the app shell rather than reimplemented per app.</p>
 
       <h2 class="reg-h">Verification</h2>
-      <p class="note">The embeddable engine carries in-source Rust unit tests plus a headless Node test suite for the mountable view (see the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zstation-core/report" target="_blank" rel="noopener noreferrer">zstation-core report</a>). The Tauri host layer is exercised through the app build; the pure engine runs without network access and passes identically in headless CI.</p>
+      <p class="note"><code>pnpm test</code> runs the app-repo JS suites under <code>tests/</code> (the served build and the submodule seams: palette ids, i18n staging, the Drift grid domain, overlay tokens) and the Rust tests of both the host crate and <code>zstation-core</code>. The embeddable engine carries its own in-source unit tests plus headless Node suites for the mountable view (see the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zstation-core/report.html" target="_blank" rel="noopener noreferrer">zstation-core report</a>). The pure engine runs without network access and is intended to pass identically in headless CI.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zstation &middot; engineering report</footer>
     </main>

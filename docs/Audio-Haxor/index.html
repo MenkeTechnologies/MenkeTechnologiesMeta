@@ -133,7 +133,7 @@
           <li><strong>16 — Audio Engine tab</strong>: device selection, plugin insert chain, diagnostics. <a href="tutorial/16-audio-engine.html">Read &rarr;</a></li>
           <li><strong>17 — Theme &amp; color schemes</strong>: Cyberpunk, Midnight, Matrix, Ember, Arctic + custom editor. <a href="tutorial/17-theme.html">Read &rarr;</a></li>
           <li><strong>18 — Keyboard shortcuts</strong>: full default keymap, rebinding UI, FZF syntax. <a href="tutorial/18-shortcuts.html">Read &rarr;</a></li>
-          <li><strong>19 — ALS generator</strong>: genre / key / hardness, 27-slider track counts, 6-lane × 8-bar-block section timeline, KICKS bus + group-level sidechain, return sends, Eq8 HPF + Limiter master chain. <a href="tutorial/19-als-generator.html">Read &rarr;</a></li>
+          <li><strong>19 — ALS generator</strong>: genre / key / hardness, per-type track-count sliders, 6-lane × 8-bar-block section timeline, KICKS / DRUMS / BASS / BASS FX / MELODICS / FX / SCATTER group buses, per-category return sends, stem / construction-kit and 32-bar sample filters, loop phase across section cuts. <a href="tutorial/19-als-generator.html">Read &rarr;</a></li>
         </ul>
       </section>
 
@@ -226,12 +226,11 @@
             riser, downlifter, crash, impact, hit, sweep up/down, snare roll,
             reverse, sub drop, boom kick, atmos, glitch, scatter, vox) across
             seven sections (intro / build / breakdown / drop 1 / drop 2 /
-            fadedown / outro). Schranz adds a dedicated <strong>hardcore kick</strong>
-            track (<code>HARDCORE_KICK</code>) and a <strong>layered kick group</strong>
-            (PUNCH / RUMBLE / NOISE on three child tracks under one <code>KICK_LAYER</code>
-            bus, so the body / sub / hiss layers can be mixed independently and
-            sidechained as one source). All genres add a <strong>breakbeat</strong>
-            track (chopped break loops on the drum group) and a <strong>pre-drop fill</strong>
+            fadedown / outro), each with a wizard slider. Every genre also
+            gets one <strong>kick rumble</strong> and one <strong>kick noise</strong>
+            track on the KICKS bus and one <strong>hardcore kick</strong> and one
+            <strong>breakbeat</strong> track on the DRUMS bus (backend defaults,
+            no slider), plus a <strong>pre-drop fill</strong>
             pattern derived from real schranz template analysis (snare
             roll + filtered downsweep + impact landing on the downbeat).
             Default bar counts per genre: 224 Techno (32×7), 256 Trance
@@ -263,25 +262,36 @@
             (LUFS, spectral centroid, transient density, length bucket) to
             decide whether the sample looks like a kick, hat, pad, etc., so
             generation does not silently drop the slot. Blacklist / whitelist
-            modals filter the pool.</li>
-          <li><strong>Bus topology</strong> — six group buses emitted only when
-            populated (count is computed from the sample pool, not a magic
-            number): <strong>KICKS</strong> (its own bus so the kick pulse can
-            safely drive every sidechain), <strong>DRUMS</strong>,
+            modals filter the pool. Independent of both, selection skips
+            stem exports and construction-kit parts
+            (<code>sample_filters::is_construction_kit_or_stem</code>,
+            word-by-word on every path segment) and samples longer than
+            32 bars at their own BPM (<code>exceeds_max_loop_bars</code>).
+            Looped clips loop over the sample&rsquo;s own length and keep
+            phrase position across section cuts via Ableton
+            <code>StartRelative</code> (<code>loop_phase_beats</code>).</li>
+          <li><strong>Bus topology</strong> — group buses emitted when any of
+            their tracks was requested (requested tracks are emitted even
+            when no sample matched): <strong>KICKS</strong> (its own bus,
+            separate from DRUMS), <strong>DRUMS</strong>,
             <strong>BASS</strong>, <strong>BASS&nbsp;FX</strong>,
-            <strong>MELODICS</strong>, <strong>FX</strong>. Colors per category,
+            <strong>MELODICS</strong>, <strong>FX</strong>,
+            <strong>SCATTER</strong>; with MIDI melodic tracks on, MIDI
+            <strong>BASS</strong> / <strong>LEADS</strong> /
+            <strong>PADS</strong> / <strong>KEYS</strong> groups replace the
+            audio melodic buses. Colors per category,
             <code>TrackGroupId</code> wired so children nest in Ableton&rsquo;s
             mixer.</li>
-          <li><strong>Group-level sidechain</strong> — a Compressor2 with
-            <code>SideChain</code> pre-enabled is injected into DRUMS / BASS /
-            BASS&nbsp;FX / MELODICS buses, routed to
-            <code>AudioIn/Track.&lt;KICKS_group_id&gt;/PostFxOut</code>.
-            One compressor per bus (not per track) to avoid stacked
-            compression. FX bus is deliberately un-ducked so risers / impacts /
-            crashes stay transient. Template:
-            <code>src-tauri/src/group_sidechain_compressor_template.xml</code>
-            (Threshold &asymp; &minus;14 dB, Ratio 4:1, Attack &asymp; 5 ms,
-            Release &asymp; 150 ms).</li>
+          <li><strong>Device templates (not injected)</strong> — a group
+            sidechain Compressor2
+            (<code>src-tauri/src/group_sidechain_compressor_template.xml</code>)
+            and a master Eq8 HPF + Limiter
+            (<code>master_eq8_hpf_template.xml</code>,
+            <code>master_limiter_template.xml</code>) are kept in the source,
+            but <code>track_generator::generate</code> does not insert them:
+            Ableton&rsquo;s parser rejects the programmatically injected
+            device XML, so sidechain and master processing are added in
+            Live.</li>
           <li><strong>Return-bus sends</strong> — every AudioTrack&rsquo;s two
             Sends are populated per category by
             <code>send_levels_for()</code>: low-end (kick / sub / bass / sub
@@ -289,16 +299,6 @@
             arps add both reverb and delay; pads / atmos run wettest; FX send
             moderate reverb but little delay. The base template&rsquo;s Return&nbsp;A
             (Reverb) and Return&nbsp;B (Delay) remain untouched.</li>
-          <li><strong>Master chain</strong> — MainTrack&rsquo;s DeviceChain now
-            gets an <strong>Eq8</strong> with Band.0 as a 12&nbsp;dB/oct HPF at
-            <strong>30 Hz</strong> (rumble cleanup), followed by a
-            <strong>Limiter</strong> at Ceiling <strong>&minus;0.3 dB</strong>,
-            AutoRelease on, Lookahead on, LinkChannels on. These sit
-            <em>before</em> the template&rsquo;s existing StereoGain (Utility),
-            so the chain runs rumble-cleanup &rarr; peak-catch &rarr; final
-            trim. Templates live at
-            <code>src-tauri/src/master_eq8_hpf_template.xml</code> and
-            <code>src-tauri/src/master_limiter_template.xml</code>.</li>
           <li><strong>Locators</strong> at every section boundary (Intro /
             Build / Drop 1 / &hellip;) across all songs, including the song key
             label, so in-Ableton navigation is immediate. Inserted by
@@ -333,7 +333,9 @@
             back-to-back locked runs never collide on disk.
             <code>restoreAlsPrefs</code> drops the stored seed on startup
             when Lock is off, preventing a previous session&rsquo;s seed from
-            silently pinning every new generation.</li>
+            silently pinning every new generation. Within a session the seed echoed into the field after a run is
+            resent only while Lock is ticked (<code>alsSeedForIpc</code>);
+            unlocked, every Generate draws a fresh seed and project name.</li>
         </ul>
 
         <h3>Deeper reference documents</h3>

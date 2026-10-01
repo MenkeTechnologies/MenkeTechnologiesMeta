@@ -69,13 +69,14 @@
           <tr><td>crates/zpwr-embed-terminal</td><td>shared embedded PTY terminal (submodule)</td></tr>
           <tr><td>crates/zpwr-i18n</td><td>shared i18n runtime (submodule)</td></tr>
           <tr><td>crates/…</td><td>the rest of the shared stack, all submodules: <code>zgui-core</code>, <code>zgui-bridge</code>, <code>zwire-host</code>, <code>zpwr-file-browser</code>, <code>zpwr-hooks-editor</code>, and the <code>zpdf-core</code> / <code>zemail-core</code> / <code>zoffice-core</code> engines (see <code>.gitmodules</code>)</td></tr>
+          <tr><td>frontend/lib/zpwr-clip-engine</td><td>shared clip/timeline engine behind the Transfer Schedule overlay (submodule)</td></tr>
           <tr><td>frontend</td><td>app shell; engine-view/terminal/i18n assets synced from the submodules before each dev/build</td></tr>
-          <tr><td>scripts</td><td>clean · bust · rebuild · nuke (cyberpunk-styled, ported from Audio-Haxor)</td></tr>
+          <tr><td>scripts</td><td>clean · bust · rebuild · nuke · deploy · ship-check (cyberpunk-styled, ported from Audio-Haxor); test.sh + run-js-tests.mjs (engine and JS suites); localinstall.sh and release-macos.sh (local install, .pkg/.zip release); the i18n catalog audit and sort tools</td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Front-end surface</h2>
-      <p class="note">The HUD (mounted from <code>zftp-core/frontend</code>) renders a bookmark list with live status dots, a connect/disconnect action, a remote-file browser with a name filter, a transfer queue with per-transfer progress, a live log viewer, a connect-to-server modal (enter a <code>scheme://user@host/path</code> URL), a command palette, and the shared embedded terminal. It drives the engine entirely through <code>invoke('zftp_invoke', { cmd, args })</code> and listens for <code>zftp-event</code>; all wiring is CSP-safe (no inline handlers).</p>
+      <p class="note">The HUD (mounted from <code>zftp-core/frontend</code>) renders a bookmark list with live status dots, a connect/disconnect action, a remote-file browser with a name filter, a transfer queue with per-transfer progress, a live log viewer, a connect-to-server modal (enter a <code>scheme://user@host/path</code> URL), a command palette, and the shared embedded terminal. The browser also edits a remote text file in place with a server-change guard (<code>fs.read_text</code> / <code>fs.write_text</code>), duplicates a file or folder on the server (<code>fs.copy</code>), creates an empty file (<code>fs.touch</code>), calculates a folder size (<code>fs.du</code>) and copies an entry's full URL (<code>fs.url</code>), from the row menu, the keymap and the palette. It drives the engine entirely through <code>invoke('zftp_invoke', { cmd, args })</code> and listens for <code>zftp-event</code>; all wiring is CSP-safe (no inline handlers).</p>
       <p class="note">An app-owned <strong>Network Toolkit</strong> overlay (<code>frontend/nettools.js</code>, ⇧⌘N / ⌘K palette) adds host-side server testing and discovery: DNS resolve, a TCP reachability probe with latency, a parallel scan of the well-known file-transfer ports, the local outbound IP, and importable entries from <code>~/.ssh/config</code>, <code>~/.ssh/*.pub</code> and <code>~/.netrc</code> (secrets never surfaced). It calls the app-local <code>nettools.rs</code> commands directly (not <code>zftp_invoke</code>) and is fully CSP-safe.</p>
       <p class="note">An app-owned <strong>Transfer Planner</strong> overlay (<code>frontend/planner.js</code>, ⇧⌘P / ⌘K palette) surfaces the <em>engine's own</em> transfer-planning commands — <code>transfer.estimate</code> (preflight cost/ETA), <code>queue.schedule</code> (weighted-fair scheduler), <code>transfer.segments</code>, <code>transfer.backoff</code> and <code>transfer.resume_check</code> — that the mounted view never exposes. Unlike the other overlays it dispatches through the engine via <code>zftp_invoke</code>; every command is pure-compute, so it works with no live transport. Adds no Rust (those commands are already registered) and is fully CSP-safe.</p>
 
@@ -90,7 +91,7 @@
           <tr><td>Network transports (FTP/FTPS/SFTP/WebDAV, plus SCP)</td><td>implemented in engine (default <code>net</code> feature; OpenDAL + russh)</td></tr>
           <tr><td>Cloud object stores (S3/GCS/Azure/B2/Swift/Drive/Dropbox/OneDrive/Box)</td><td>implemented in engine (OpenDAL backends)</td></tr>
           <tr><td>Keychain credentials + recursive bidirectional sync</td><td>implemented in engine (keyring; newest-wins sync)</td></tr>
-          <tr><td>Full preferences</td><td>planned</td></tr>
+          <tr><td>Preferences</td><td>implemented (show hidden files, download folder, concurrent transfers, bandwidth limit, reconnect attempts); the log buffer size is not exposed</td></tr>
         </tbody>
       </table>
 

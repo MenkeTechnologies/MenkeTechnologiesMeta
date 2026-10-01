@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpdf engineering report — status and module map for the from-scratch Rust PDF editor (Tauri v2 desktop app over the implemented zpdf-core engine). Engine implemented; GUI in progress. Honest, no invented metrics.">
+  <meta name="description" content="zpdf engineering report — status and module map for the from-scratch Rust PDF editor (Tauri v2 desktop app over the implemented zpdf-core engine). Feature status is derived from source.">
   <title>zpdf — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,7 +46,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/zpdf" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
-          <p class="docs-build-line">// implemented engine · module map · GUI in progress</p>
+          <p class="docs-build-line">// architecture · module map · verification</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -59,30 +59,33 @@
       </div>
     </header>
     <main class="docs-main">
-      <div class="status-banner"><strong>Status: implemented engine — GUI in progress.</strong> The <a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a> engine is implemented and every capability in the <a href="zpdf_port_report.html">feature port report</a> is marked <code>done</code> — each cited to a real, non-stub engine symbol — except camera signature capture, which carries no symbol and is reported <code>planned</code>. This application repository ships real source: the Tauri v2 backend in <code>app/src-tauri/</code> and the cyberpunk HUD front end in <code>frontend/</code>, with the GUI under active development. Feature status is derived from source and verifiable against this repo and zpdf-core — no invented metrics.</div>
+      <div class="status-banner"><strong>Status: shipping.</strong> The <a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a> engine is implemented and every capability in the <a href="zpdf_port_report.html">feature port report</a> is marked <code>done</code> — each cited to a real, non-stub engine symbol — except camera signature capture, which carries no symbol and is reported <code>planned</code>. This application repository ships real source: the Tauri v2 backend in <code>app/src-tauri/</code> and the cyberpunk HUD front end in <code>frontend/</code>, with every engine capability wired through a Tauri command and surfaced in the ⌘K command palette. Feature status is derived from source and verifiable against this repo and zpdf-core — no invented metrics.</div>
 
       <h2 class="reg-h">Architecture</h2>
-      <p class="note"><strong>zpdf</strong> is the GUI — a from-scratch PDF editor delivered as a <strong>Tauri v2</strong> desktop app with a cyberpunk HUD. It consumes <strong><a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a></strong>, the implemented, embeddable pure-Rust engine that owns the PDF object model and the editing, annotation, form, signature, and security operations. The split keeps the app layer thin: the desktop GUI, a scriptable CLI, and any in-app embed (traderview and the other MenkeTechnologies apps) all share one engine. The engine writes the PDF object model directly — no third-party PDF engine, no C++ blob, no AGPL — so structure-level operations (linearization, font subsetting, redaction that truly removes content) are first-class.</p>
+      <p class="note"><strong>zpdf</strong> is the GUI — a from-scratch PDF editor delivered as a <strong>Tauri v2</strong> desktop app with a cyberpunk HUD. It consumes <strong><a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a></strong>, the implemented, embeddable pure-Rust engine that owns the PDF object model and the editing, annotation, form, signature, and security operations. The split keeps the app layer thin: the desktop GUI (whose every ⌘K command is also an automation-bus verb) and any in-app embed (traderview and the other MenkeTechnologies apps) all share one engine. The engine writes the PDF object model directly — no third-party PDF engine, no C++ blob, no AGPL — so structure-level operations (linearization, font subsetting, redaction that truly removes content) are first-class.</p>
 
       <h2 class="reg-h">Module map</h2>
-      <p class="note">The capability map for the engine zpdf consumes. Each module below corresponds to a real source file in the <a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a> engine; per-module symbol status is derived from source and cross-checked in the <a href="zpdf_port_report.html">port report</a>.</p>
+      <p class="note">The engine's core modules and the ones the latest feature round added. Each corresponds to a real source file in the <a href="https://github.com/MenkeTechnologies/zpdf-core">zpdf-core</a> engine, whose own engineering report (<code>docs/report.html</code> there) maps every module; per-module symbol status is derived from source and cross-checked in the <a href="zpdf_port_report.html">port report</a>.</p>
       <table>
         <thead><tr><th>module</th><th>responsibility</th><th>status</th></tr></thead>
         <tbody>
           <tr><td>doc</td><td>open / save · in-memory from_bytes / to_bytes · version · metadata</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>page</td><td>count · rotate · delete · reorder · extract / split · crop · watermark · merge</td><td><span class="tag">implemented</span></td></tr>
-          <tr><td>text</td><td>extract · edit-in-place · find / replace · reflow</td><td><span class="tag">implemented</span></td></tr>
-          <tr><td>annot</td><td>notes · highlight · ink · stamp · shapes · measure</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>text</td><td>extract · edit-in-place · find / replace · Advanced Search (match case, whole words, hits in context)</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>annot</td><td>notes · highlight · ink · shapes · measure · links · comment import / export</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>form</td><td>AcroForm fields · fill · flatten · create · FDF / XFDF</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>sign</td><td>certificate sign · verify · timestamp · certify</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>security</td><td>encrypt · decrypt · redact · sanitize</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>ocr</td><td>rasterize · recognize · searchable text layer</td><td><span class="tag">implemented</span></td></tr>
           <tr><td>render</td><td>page rasterizer for viewer · image export · thumbnails</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>stamp</td><td>standard + dynamic stamps, each with its own appearance stream</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>hairline</td><td>Fix Hairlines — find and thicken strokes at their rendered width</td><td><span class="tag">implemented</span></td></tr>
+          <tr><td>textpdf</td><td>create a PDF from a plain-text file in Courier, columns kept</td><td><span class="tag">implemented</span></td></tr>
         </tbody>
       </table>
 
       <h2 class="reg-h">Roadmap</h2>
-      <p class="note">The <a href="zpdf_port_report.html">port report</a> enumerates the Adobe-Acrobat / macOS-Preview feature set and tracks status per feature; every row is now cited as <code>done</code> in the engine. No feature is marked done without verifiable code. The engine landed area by area, and the GUI now wires onto it:</p>
+      <p class="note">The <a href="zpdf_port_report.html">port report</a> enumerates the Adobe-Acrobat / macOS-Preview feature set and tracks status per feature; every row is now cited as <code>done</code> in the engine. No feature is marked done without verifiable code. The engine landed area by area, with the GUI wired onto each:</p>
       <ol class="phases">
         <li><b>Core PDF model</b> — direct parse / serialize of the PDF object model (objects, xref, streams, content streams); linearization and incremental update.</li>
         <li><b>Viewer + render</b> — page rasterizer, thumbnails, zoom and page-layout modes wired into the Tauri HUD.</li>
@@ -90,11 +93,11 @@
         <li><b>Annotation / markup</b> — the Preview-style toolbar surface on top of the engine's annotation model.</li>
         <li><b>Forms</b> — AcroForm create / fill / flatten, FDF / XFDF.</li>
         <li><b>Signatures &amp; security</b> — certificate signing, validation, encryption, true-removal redaction, sanitize.</li>
-        <li><b>OCR · convert / export · compare · optimize · accessibility · automation</b> — the remaining Acrobat surface, batch and CLI included.</li>
+        <li><b>OCR · convert / export · compare · optimize · accessibility · automation</b> — the remaining Acrobat surface, batch automation included.</li>
       </ol>
 
       <h2 class="reg-h">Verification policy</h2>
-      <p class="note">Status is never asserted from a roadmap. A capability counts as done only when a real, non-stub symbol exists in the engine and the port report can cite it. Integration tests build valid PDFs in memory (no external fixtures) and exercise the engine's capabilities — runnable on headless Linux CI. Every claim on this page is verifiable against source in this repo and in the zpdf-core engine.</p>
+      <p class="note">Status is never asserted from a roadmap. A capability counts as done only when a real, non-stub symbol exists in the engine and the port report can cite it. The engine's integration tests build valid PDFs in memory &mdash; the only binary fixtures (qpdf- and pyHanko-written encrypted files, a public-domain TTF) are compiled in with <code>include_bytes!</code>, nothing is fetched &mdash; and exercise the engine's capabilities — runnable on headless Linux CI. Every claim on this page is verifiable against source in this repo and in the zpdf-core engine.</p>
 
       <footer class="doc-footer">MenkeTechnologies &middot; zpdf &middot; engineering report &middot; <a href="https://github.com/MenkeTechnologies/zpdf">zpdf</a> &middot; <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a></footer>
     </main>

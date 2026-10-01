@@ -101,7 +101,7 @@ Rust callers behave identically.
 | Native layered project save/load (layers+pixels+masks+modes+paths) | `project.save` / `project.load` (JSON + base64 RGBA; the round-trippable format `image.save` PNG can't be) | ✅ |
 | Native **`.zpo`** format (compressed) | `project.save {format:"zpo"}` → `ZPO1` magic + zlib(JSON); `image.open` sniffs the magic and reloads the full layered document | ✅ |
 | XCF (GIMP native format) read + write, flat + layered + masks | `image.save` xcf (`encode_xcf`/`encode_xcf_layered`, `layered:true` — per-layer bounds/offsets/mode/opacity/name **+ 1-bpp mask channels**) + `image.open` → `decode_xcf` (none **+ RLE** compression). Writer↔reader round-trips stack order, modes, opacity, masks, pixels exactly; RLE plane decode ports GIMP `xcf_load_tile_rle` | ✅ |
-| Export Layers to Files (one file per layer) | `image.export_layers` (PS File ▸ Export ▸ Layers to Files; each top-level layer rendered on its own — opacity/mode/mask/group children apply, other layers and spot channels do not — in any flat format incl. XCF; `trim` crops to the opaque bounds and reports the offset; names `<prefix>_<NNNN>_<layer>` numbered from the top; layers that render nothing alone are reported `skipped`) + File menu (one folder picker) | ✅ |
+| Export Layers to Files (one file per layer) | `image.export_layers` (PS File ▸ Export ▸ Layers to Files; each top-level layer rendered on its own — opacity/mode/mask/group children apply, other layers and spot channels do not — in any flat format incl. XCF; `visible_only` skips hidden layers; `trim` crops to the opaque bounds and reports the offset; names `<prefix>_<NNNN>_<layer>` numbered from the top; layers that render nothing alone are reported `skipped`) + File menu (one folder picker) | ✅ |
 | Animated GIF from layers | `image.save_animation` (PS Timeline ▸ Make Frames From Layers + animated-GIF export; one frame per top-level layer bottom-up, per-frame `delays`, NETSCAPE `loops` (0 = forever), `backdrop` holds the bottom layer under every frame) + File menu | ✅ |
 | Slices (Slice tool, Slices From Guides, per-slice export) | `slice.add` (rectangle or the selection bounds) / `slice.from_guides` (grid cut by the guide positions) / `slice.list` / `slice.delete` / `slice.clear` / `slice.export` (composite once, one file per slice, clamped to the current canvas) — stored on the image and in the project format; bus state `slices:<id>`; outlined on the canvas | ✅ |
 | Batch (play an Action over a folder) | `action.batch` (PS File ▸ Automate ▸ Batch; open → play → encode → close per input, per-file error envelopes without aborting the run, output keeps the input stem, internal steps never recorded) + File ▸ Automate ▸ Batch… (source + destination folder pickers, one engine call per file) | ✅ |
@@ -389,14 +389,14 @@ and a test — not ports.
 | Canvas display of the real composite | `drawCanvas` via `image.render` | ✅ |
 | Layers panel | `zphoto-view.js` table | ✅ basic |
 | New image / add layer / fill | toolbar + palette | ✅ |
-| Save/export dialog | `saveAs` → PNG/JPEG/BMP/TIFF/PSD/XCF (`image.save`) + Save Project (`.zpo`) / Save Vector Project (`.json`) | ✅ |
-| Tools UI (selection, brush, transform) | left tool dock (59 buttons: 32 selection/shape/vector tools local to the view + the 27 paint tools contributed by `ZGui.paint`) + context-sensitive tool options bar + `pickTool`/`renderOptionsBar` | ✅ |
+| Save/export dialog | Export Image → PNG/JPEG/BMP/GIF/WebP/TIFF/PSD/XCF, PSD and XCF also layered (`image.save`) + Save Project (`.zpo`) / Save Vector Project (`.json`) | ✅ |
+| Tools UI (selection, brush, transform) | left tool dock (the selection/shape/vector tools local to the view + the paint tools contributed by `ZGui.paint`) + context-sensitive tool options bar + `pickTool`/`renderOptionsBar` | ✅ |
 | Eyedropper (colour pick) + Histogram (bins + mean/median/std/min/max) | `image.pick` / `image.histogram` + GUI tool & modal chart | ✅ |
 | Count tool (connected-blob object count) | `image.count` (PS Analysis ▸ Count Tool; flood-fills the composite for connected opaque blobs above an alpha `threshold` and returns the tally) + Image menu (threshold dialog → toast) | ✅ |
 | Measure / Ruler (distance + angle between two points) | `image.measure` (PS Ruler tool / Analysis; returns Euclidean `distance`, `angle`, `dx`, `dy` between two canvas points) + Image menu (two-point dialog → toast) | ✅ |
 | Colour Sampler points (Info-panel markers) | `sampler.add`/`sampler.list`/`sampler.target`/`sampler.delete`/`sampler.clear` (PS Info-panel colour samplers; persistent `(x,y)` markers that report the live composite colour under each, and optionally carry a *target* colour that drives `program.solve`) | ✅ |
 | Annotations (Note tool) | `note.add`/`note.list`/`note.delete`/`note.clear` (PS Note tool; `(x,y,text)` notes anchored on the document) | ✅ |
-| GUI Polish Gate (G1–G4 / R1–R10) | see `README.md` — terminal, hooks editor, file browser and the 27-locale i18n catalogue are wired; the 18 i18n proof tests, shared-component tables and the full haxor script surface are still owed | 🚧 |
+| GUI Polish Gate (G1–G4 / R1–R10) | see `README.md` — terminal, hooks editor, file browser, the shared i18n catalogue with its proof contract (`tests/i18n/`), the haxor `pnpm` script surface, the automation bus and R9 are wired; still owed: the `zpdf-core` raster-page embed (G2), the catalogue keys `zpwr-i18n` does not define yet (G3), and the baseline gate's placement finding | 🚧 |
 
 ## Command surface today
 
@@ -405,14 +405,14 @@ The engine dispatches a single app command (`zphoto_invoke { cmd, args }`) over 
 
 `image.*` · `layer.*` (+ `layer.smart_*`) · `op.*` (point/colour adjustments) · `filter.*`
 (neighbourhood + gallery filters) · `fill.*` (bucket / gradient / pattern / generative render) ·
-`select.*` · `channel.*` · `pattern.*` · `comp.*` · `brush.*` · `sampler.*` · `note.*` · `slice.*` · `path.*`
+`select.*` · `channel.*` · `pattern.*` · `comp.*` · `brush.*` · `sampler.*` · `note.*` · `slice.*` · `path.*` · `graph.*` (node graph of Actions) · `guard.*` (perceptual watchpoints)
 · `vec.*` (the Illustrator vector engine) · `project.*` · `paint.*` · `text.*` · `edit.*`
-(undo / redo / copy / paste / fade / history) · `action.*` (record / replay macros) · `program.*` (the edit-program compiler and Constraint Solve) · `capabilities`.
+(undo / redo / copy / paste / fade / history) · `action.*` (record / replay macros, Batch over a set of files) · `program.*` (the edit-program compiler and Constraint Solve) · `capabilities`.
 
 The `zphoto` GUI (`crates/zphoto-core/webui/zphoto-view.js`, served by the app) exposes these through
 the menu bar (File / Edit / Image / Layer / Select / Adjust / Filter / Vector / Type / View / Window),
 the tool dock, and the Photoshop-style docked panels (Layers / Channels / Histogram / Navigator /
-History / Adjustments / Styles / Colour / Swatches / Paths / Vector Objects / Properties / Symbols).
+History / Info / Colour Samplers / Notes / Guards / Blame / Metadata / Attribution / Adjustments / Styles / Colour / Colour Guide / Swatches / Paths / Vector Objects / Properties / Symbols).
 The Adjust menu carries one-click auto ops plus live-preview slider dialogs (Exposure, Temperature,
 CLAHE, Retinex, Velvia, …); the Filter menu is a full gallery over every `filter.*` op grouped like
 Photoshop (Artistic / Blur / Distort / Noise / Pixelate / Render / Sharpen / Sketch / Stylize /

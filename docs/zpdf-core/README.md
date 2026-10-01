@@ -160,6 +160,14 @@ width + opacity) is built entirely from `zgui-core` components and drives the `a
 separate set of draw tools (line, box, Bézier, polyline, polygon, filled polygon) writes into the
 page content stream instead.
 
+Four ⌘K rows drive the print-production, stamp, conversion and search modules directly:
+**Stamp…** opens a palette of the standard and dynamic stamps and places the choice through
+`add_stamp`; **Fix Hairlines…** asks for a threshold, reports what `find_hairlines` found (count,
+pages, thinnest width) and thickens them through `fix_hairlines`; **Create PDF from Text File…**
+picks a text file and a destination and runs `create_from_text`; **Advanced Search…** takes Match
+case / Whole words only, lists every `search_matches` hit with its context in a sortable table, and
+jumps to a hit's page on click.
+
 `js/revision-grid.js` is the **revision timeline** — the in-file Merkle history drawn on the
 shared `zpwr-clip-engine` arrangement grid (one lane per page, one column per revision, the
 playhead on the checked-out revision, double-click a cell to time-travel there). It reuses
@@ -197,8 +205,8 @@ rename the verb on every locale change and break every saved chain that referenc
 
 The shell reports a breach of that contract — a row with no id, or an id containing whitespace — on
 `window.ZGui.diagnostics` and a `zgui:diagnostic` document event rather than printing it;
-`index.html` forwards that event to the page's error log. `test/palette-id-contract.test.js` in the
-host repo pins the contract over the real vocabulary.
+`index.html` forwards that event to the page's error log. A contract test in the host repo pins this
+over the real vocabulary.
 
 There are two freehand brushes, and they are not the same tool. **Ink** and **ink eraser** are
 vector: a drag is captured on the page image, crossed into PDF user space through the same

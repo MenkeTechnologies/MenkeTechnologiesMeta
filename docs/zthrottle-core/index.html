@@ -58,6 +58,7 @@
         <div class="card"><h3>Four Benchmarks</h3><p>Disk (direct I/O, page-cache-bypassing), network (loopback + peer throughput and RTT), multi-threaded compute, and memory bandwidth + latency — each a real device measurement behind <code>bench.disk</code> / <code>bench.net</code> / <code>bench.cpu</code> / <code>bench.mem</code>.</p></div>
         <div class="card"><h3>Contention Profiler</h3><p><code>bench.contention</code> loads every axis at once and returns the degradation matrix plus the bottleneck-migration timeline — the world-first surface this engine exists for.</p></div>
         <div class="card"><h3>Monitor + Tree</h3><p>Optional <code>monitor</code> feature (sysinfo) harvests processes/CPU/memory/disks/network and sends signals; optional <code>treedb</code> feature (bundled SQLite) persists the directory tree for instant load + mtime-diff refresh.</p></div>
+        <div class="card"><h3>Process Control</h3><p><code>proc.limit</code> caps a process with a SIGSTOP/SIGCONT duty cycle (the way cpulimit does it) on one scheduler thread that continues every held process on a normal host exit; <code>proc.renice</code> changes priority and returns the value it replaced; <code>proc.energy</code> reports per-process power draw and wake-up rates; <code>sys.mempressure</code> reads the kernel memory-pressure level (PSI memory stall on Linux).</p></div>
         <div class="card"><h3>Embeddable</h3><p>One command surface — <code>Engine::invoke(cmd, args_json)</code> — drives every host identically: native Rust, a Tauri v2 plugin (<code>zth_invoke</code>), or a C/C++ host over the FFI. Live facts (progress samples, event signals) are pushed through an installed event sink.</p></div>
       </div>
 
@@ -71,7 +72,7 @@ let mut engine = Engine::new();
 let caps = engine.invoke("capabilities", &amp;json!({}))?;
 
 // Run a single axis, then the contention profiler across all of them.
-let disk = engine.invoke("bench.disk", &amp;json!({ "seconds": 3 }))?;
+let disk = engine.invoke("bench.disk", &amp;json!({ "config": { "total_bytes": 64 &lt;&lt; 20 } }))?;
 let prof = engine.invoke("bench.contention", &amp;json!({}))?;</pre>
 
       <h2 class="reg-h">Surfaces</h2>

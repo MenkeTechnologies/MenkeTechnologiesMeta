@@ -87,37 +87,37 @@
     <main class="tutorial-main">
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">This report describes <code>zcite-core</code>, the embeddable reference-manager engine inside the zcite app &mdash; a pure-Rust crate (<code>crates/zcite-core</code>) that drives the whole library behind one JSON command surface (<code>Engine::invoke(cmd, args)</code>, 199 commands). The pure core compiles with zero TLS or socket dependencies; networked metadata lookup (<code>net</code>) and PDF text extraction (<code>pdf</code>) are default-on Cargo features, and a Tauri v2 host layer is gated behind <code>tauri</code>. The crate builds three artifacts &mdash; <code>rlib</code> for native Tauri hosts, plus <code>staticlib</code>/<code>cdylib</code> with a C ABI (<code>include/zcite_core.h</code>) for non-Rust hosts.</p>
+      <p class="tutorial-subtitle">This report describes <code>zcite-core</code>, the embeddable reference-manager engine inside the zcite app &mdash; a pure-Rust crate (<code>crates/zcite-core</code>) that drives the whole library behind one JSON command surface (<code>Engine::invoke(cmd, args)</code>, 213 commands). The pure core compiles with zero TLS or socket dependencies; networked metadata lookup (<code>net</code>) and PDF text extraction (<code>pdf</code>) are default-on Cargo features, and a Tauri v2 host layer is gated behind <code>tauri</code>. The crate builds three artifacts &mdash; <code>rlib</code> for native Tauri hosts, plus <code>staticlib</code>/<code>cdylib</code> with a C ABI (<code>include/zcite_core.h</code>) for non-Rust hosts.</p>
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">53</div><div class="stat-label">Source Modules</div></div>
-        <div class="stat-card"><div class="stat-val accent">~33.5k</div><div class="stat-label">Lines of Rust</div></div>
-        <div class="stat-card"><div class="stat-val green">404</div><div class="stat-label">Tests</div></div>
+        <div class="stat-card"><div class="stat-val">58</div><div class="stat-label">Source Modules</div></div>
+        <div class="stat-card"><div class="stat-val accent">35,075</div><div class="stat-label">Lines of Rust</div></div>
+        <div class="stat-card"><div class="stat-val green">440</div><div class="stat-label">Rust Tests</div></div>
         <div class="stat-card"><div class="stat-val">5</div><div class="stat-label">Core Dependencies</div></div>
-        <div class="stat-card"><div class="stat-val">199</div><div class="stat-label">Engine Commands</div></div>
+        <div class="stat-card"><div class="stat-val">213</div><div class="stat-label">Engine Commands</div></div>
         <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Build Artifacts</div></div>
       </div>
 
       <hr class="section-rule">
 
       <h2 class="tutorial-title"><span class="step-hash">~</span>MODULE MAP</h2>
-      <p class="tutorial-subtitle">Fifty-two source modules make up the engine, each with a single responsibility &mdash; from the <code>Engine</code> dispatcher and persisted data model through citation formatting, import/export, identifier lookup and the FFI/Tauri host layers.</p>
+      <p class="tutorial-subtitle">The engine's source modules each carry a single responsibility &mdash; from the <code>Engine</code> dispatcher and persisted data model through citation formatting, import/export, identifier lookup and the FFI/Tauri host layers.</p>
       <table class="file-table">
         <thead><tr><th>Module</th><th>Responsibility</th></tr></thead>
         <tbody>
-          <tr><td>lib.rs</td><td>The <code>Engine</code> and its <code>invoke</code> dispatcher &mdash; the single JSON command surface (199 commands) over the whole library.</td></tr>
+          <tr><td>lib.rs</td><td>The <code>Engine</code> and its <code>invoke</code> dispatcher &mdash; the single JSON command surface over the whole library.</td></tr>
           <tr><td>model.rs</td><td>The persisted library data model: typed <code>Item</code>s, the <code>Collection</code> tree, colored tags, related items and saved searches.</td></tr>
           <tr><td>schema.rs</td><td>The Zotero item-type schema &mdash; reference types (book, journalArticle, thesis, &hellip;), the fields each declares and base-field renames.</td></tr>
           <tr><td>store.rs</td><td>On-disk persistence &mdash; the whole library round-trips through one versioned pretty-JSON file with an upgrade path.</td></tr>
           <tr><td>search.rs</td><td>Library search &mdash; quick all-field text filter and condition-based saved searches sharing one matcher.</td></tr>
-          <tr><td>bib.rs</td><td>Built-in citation &amp; bibliography formatting (APA / MLA / Chicago / IEEE) plus BibTeX cite-key generation.</td></tr>
+          <tr><td>bib.rs</td><td>Built-in citation &amp; bibliography formatting (APA / MLA / Chicago author-date + notes / IEEE / Vancouver / Harvard / AMA / Nature) plus BibTeX cite-key generation.</td></tr>
           <tr><td>csl.rs</td><td>A CSL 1.0.2 subset processor &mdash; load an arbitrary <code>.csl</code> stylesheet and render references through it, citeproc-style.</td></tr>
-          <tr><td>import.rs</td><td>Bibliographic import &mdash; BibTeX, RIS and CSL-JSON parsers mapping foreign records onto the item model.</td></tr>
-          <tr><td>export.rs</td><td>Bibliographic export &mdash; items rendered out to BibTeX, RIS and CSL-JSON.</td></tr>
+          <tr><td>import.rs</td><td>Bibliographic import &mdash; BibTeX, BibLaTeX, RIS, EndNote/Refer tagged and CSL-JSON parsers mapping foreign records onto the item model.</td></tr>
+          <tr><td>export.rs</td><td>Bibliographic export &mdash; BibTeX, BibLaTeX, RIS, CSL-JSON, CSL-YAML, MediaWiki, EndNote tagged, JSON-LD, COinS, the HTML bibliography and the HTML item report; the Z39.88 OpenURL builder shared by COinS and Library lookup.</td></tr>
           <tr><td>xml_formats.rs</td><td>XML interchange (via quick-xml) &mdash; EndNote XML, MODS, MARCXML and Zotero RDF import/export.</td></tr>
-          <tr><td>identifier.rs</td><td>Identifier detection and metadata lookup &mdash; DOI (CrossRef), ISBN (Open Library) and PMID (NCBI).</td></tr>
+          <tr><td>identifier.rs</td><td>Identifier detection and metadata lookup &mdash; DOI (CrossRef), ISBN (Open Library), PMID (NCBI) and arXiv.</td></tr>
           <tr><td>pdf.rs</td><td>PDF text extraction for full-text indexing plus DOI/arXiv/ISBN recognition for "retrieve metadata for PDF".</td></tr>
           <tr><td>duplicates.rs</td><td>Duplicate-item detection by shared DOI/ISBN or matching title+creator signals, for merge.</td></tr>
-          <tr><td>zotero.rs</td><td>Zotero Web API (v3) sync client &mdash; pull a user or group library as CSL-JSON via an API key.</td></tr>
+          <tr><td>zotero.rs</td><td>Zotero Web API (v3) sync client &mdash; pull a user or group library as CSL-JSON and push items as Zotero item-JSON via an API key.</td></tr>
           <tr><td>webdav.rs</td><td>WebDAV transport &mdash; Zotero-style attachment-file sync: verify, upload, download and delete files.</td></tr>
           <tr><td>ffi.rs</td><td>The C ABI for non-Rust hosts &mdash; a process-global engine behind a mutex, driven by <code>zct_invoke</code>.</td></tr>
           <tr><td>tauri_plugin.rs</td><td>Tauri v2 integration &mdash; exposes the engine as ordinary app commands so any host embeds it.</td></tr>
@@ -140,8 +140,13 @@
           <tr><td>refgraph.rs</td><td>Second-order citation mining &mdash; reads the reference list out of each attached PDF and builds the graph of what your sources cite.</td></tr>
           <tr><td>provenance.rs</td><td>Sentence-level citation provenance (a zcite original) &mdash; walks a claim from the draft sentence into the cited work's prose, follows the marker printed on the sentence that carries it through that work's own reference list, and repeats until a sentence asserts the claim instead of attributing it.</td></tr>
           <tr><td>drift.rs</td><td>Claim drift along a provenance chain (a zcite original) &mdash; reads the chain evidence-first and compares each restatement against the one below it on certainty, scope and quantity, naming which document first stated the claim more firmly than its source did.</td></tr>
-          <tr><td>commands.rs</td><td>The command name table behind <code>Engine::invoke</code> (199 entries).</td></tr>
-          <tr><td colspan="2"><em>Plus backup, cleanup, cluster, csv, fidelity, locale, markdown, metadata, names, network, quality, reports, tex, textproc and wordproc &mdash; 54 modules in all.</em></td></tr>
+          <tr><td>feed.rs</td><td>Feeds &mdash; RSS 2.0, RSS 1.0 (RDF) and Atom parsing with PRISM / Dublin Core metadata, library matching and entry-to-item conversion.</td></tr>
+          <tr><td>extra.rs</td><td>The Extra field's <code>Key: value</code> convention &mdash; port of Zotero's <code>extractExtraFields</code> / <code>migrateExtraFields</code> and the CSL variables citations read from Extra.</td></tr>
+          <tr><td>template.rs</td><td>Port of Zotero's template engine &mdash; the rename-template language.</td></tr>
+          <tr><td>filename.rs</td><td>Attachment file names from parent metadata, rendered through <code>template.rs</code>.</td></tr>
+          <tr><td>lineage.rs</td><td>Reference lineage &mdash; the typed transform chain behind a reference's current state, projected from the op log.</td></tr>
+          <tr><td>commands.rs</td><td>The command name table behind <code>Engine::invoke</code>, held equal to its match arms by a drift-guard test.</td></tr>
+          <tr><td colspan="2"><em>Plus attested_bib, backup, cleanup, cluster, csv, fidelity, locale, markdown, metadata, names, network, quality, reports, tex, textproc and wordproc.</em></td></tr>
         </tbody>
       </table>
 
@@ -160,26 +165,28 @@
           <tr><td>reqwest <code>net</code></td><td>Blocking HTTP + native-tls for DOI/ISBN/PMID and Zotero/WebDAV sync.</td><td>MIT / Apache-2.0</td></tr>
           <tr><td>lopdf <code>pdf</code></td><td>Pure-Rust PDF text extraction and build (no native libs).</td><td>MIT</td></tr>
           <tr><td>tauri <code>tauri</code></td><td>Tauri v2 host integration for the desktop app.</td><td>MIT / Apache-2.0</td></tr>
+          <tr><td>zoffice-core <code>docx</code></td><td>Office-document I/O for the citation-aware <code>.docx</code> 3-way merge (path dependency, vendored as a submodule).</td><td>UNLICENSED (proprietary)</td></tr>
         </tbody>
       </table>
       <div class="feature-grid" style="margin-top:1.2rem;">
         <div class="feature-card"><h4>Pure Core</h4><p>The five base crates carry no TLS or socket stack, so <code>zcite-core</code> compiles headless in CI with default features stripped.</p></div>
-        <div class="feature-card"><h4>Optional net</h4><p>The default-on <code>net</code> feature pulls in <code>reqwest</code> for DOI/ISBN/PMID lookup and Zotero/WebDAV sync.</p></div>
+        <div class="feature-card"><h4>Optional net</h4><p>The default-on <code>net</code> feature pulls in <code>reqwest</code> for DOI/ISBN/PMID/arXiv lookup, feed fetching and Zotero/WebDAV sync.</p></div>
         <div class="feature-card"><h4>Optional pdf</h4><p>The default-on <code>pdf</code> feature uses pure-Rust <code>lopdf</code> for text extraction &mdash; no native PDF libraries required.</p></div>
+        <div class="feature-card"><h4>docx + lsp</h4><p>Also default-on: <code>docx</code> adds <code>zoffice-core</code> for the <code>.docx</code> merge and the <code>zcite-merge</code> binary; <code>lsp</code> adds no dependency and builds the <code>zcite-lsp</code> binary.</p></div>
         <div class="feature-card"><h4>Tauri host</h4><p>The <code>tauri</code> feature gates the Tauri v2 integration so non-desktop hosts never compile it.</p></div>
       </div>
 
       <hr class="section-rule">
 
       <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
-      <p class="tutorial-subtitle">The suite carries <strong>404</strong> tests in total &mdash; <strong>352</strong> unit tests living alongside the modules (<code>#[test]</code> / <code>#[tokio::test]</code> across schema, store, search, bib, csl, import, export, xml_formats, identifier, pdf, duplicates, provenance, zotero, webdav and util), <strong>49</strong> integration tests in <code>tests/integration.rs</code> that exercise the public <code>Engine::invoke</code> command surface end to end, and <strong>3</strong> in <code>tests/lsp_stdio.rs</code> that drive the shipped <code>zcite-lsp</code> binary over real stdio. Tests use no external fixtures &mdash; lopdf both builds and reads back the PDFs the pdf tests need &mdash; so the suite runs headless. Coverage against the full Zotero feature surface is hand-assessed conservatively in <code>crates/zcite-core/scripts/port_features.tsv</code> and grep-verified against the real source; see the <a href="https://github.com/MenkeTechnologies/zcite/blob/main/crates/zcite-core/PORT_REPORT.md">port report</a> for the per-feature breakdown.</p>
+      <p class="tutorial-subtitle">The Rust suite carries <strong>440</strong> tests in total &mdash; <strong>388</strong> unit tests living alongside the modules, <strong>49</strong> integration tests in <code>tests/integration.rs</code> that exercise the public <code>Engine::invoke</code> command surface end to end, and <strong>3</strong> in <code>tests/lsp_stdio.rs</code> that drive the shipped <code>zcite-lsp</code> binary over real stdio. Tests use no external fixtures &mdash; lopdf both builds and reads back the PDFs the pdf tests need &mdash; so the suite runs headless. Coverage against the full Zotero feature surface is hand-assessed conservatively in <code>crates/zcite-core/scripts/port_features.tsv</code> and grep-verified against the real source; see the <a href="https://github.com/MenkeTechnologies/zcite/blob/main/crates/zcite-core/PORT_REPORT.md">port report</a> for the per-feature breakdown.</p>
       <table class="file-table">
         <thead><tr><th>Suite</th><th>Location</th><th class="num">Tests</th><th>Coverage</th></tr></thead>
         <tbody>
-          <tr><td>Unit tests</td><td><code>#[test]</code> / <code>#[tokio::test]</code> alongside modules</td><td class="num">352</td><td>schema, store, search, bib, csl, import, export, xml_formats, identifier, pdf, duplicates, provenance, zotero, webdav, util</td></tr>
+          <tr><td>Unit tests</td><td><code>#[test]</code> alongside modules</td><td class="num">388</td><td>per-module behaviour across the engine</td></tr>
           <tr><td>Integration tests</td><td><code>tests/integration.rs</code></td><td class="num">49</td><td>public <code>Engine::invoke</code> command surface, end to end</td></tr>
           <tr><td>LSP wire tests</td><td><code>tests/lsp_stdio.rs</code></td><td class="num">3</td><td>the shipped <code>zcite-lsp</code> binary, driven over real stdio</td></tr>
-          <tr class="total-row"><td>Total</td><td>headless, no external fixtures</td><td class="num">404</td><td>lopdf builds and reads back the PDFs the pdf tests need</td></tr>
+          <tr class="total-row"><td>Total</td><td>headless, no external fixtures</td><td class="num">440</td><td>lopdf builds and reads back the PDFs the pdf tests need</td></tr>
         </tbody>
       </table>
 

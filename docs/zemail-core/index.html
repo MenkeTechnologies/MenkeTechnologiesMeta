@@ -55,7 +55,7 @@
       <div class="card-grid">
         <div class="card"><h3>Embeddable</h3><p>One command surface — <code>Engine::invoke(cmd, args_json)</code> — drives every host identically: native Rust, a Tauri plugin, or a C/C++ host over the FFI (<code>zml_invoke</code>).</p></div>
         <div class="card"><h3>Pure Rust</h3><p>Foundational, vendorable deps only — <code>serde</code>, <code>mail-parser</code>, <code>blake3</code>, <code>rayon</code>, <code>imap</code>, <code>lettre</code>. No system mail stack, no copyleft, no native UI toolkit.</p></div>
-        <div class="card"><h3>Archive-Scoped Audits</h3><p>Analysis surfaces that work across the whole local archive, offline: the <strong>Sender Identity Firewall</strong> (per-sender behavioural baselines → impersonation / account-takeover scoring), the <strong>Quote Integrity</strong> and <strong>Conversation Roster</strong> audits, and the two-layer <strong>Document Revision Ledger</strong> + <strong>Revision Delta Ledger</strong> over attachment lineage.</p></div>
+        <div class="card"><h3>Archive-Scoped Audits</h3><p>Analysis surfaces that work across the whole local archive, offline: the <strong>Sender Identity Firewall</strong> (per-sender behavioural baselines → impersonation / account-takeover scoring), the <strong>Quote Integrity</strong> and <strong>Conversation Roster</strong> audits, the two-layer <strong>Document Revision Ledger</strong> + <strong>Revision Delta Ledger</strong> over attachment lineage, attachment quote attestation, and the <strong>Knowledge Exposure</strong>, <strong>Conversation Fork</strong> and <strong>Divergent Reading</strong> ledgers.</p></div>
         <div class="card"><h3>Feature-Gated Net</h3><p>The <code>net</code> feature carries IMAP/SMTP over one native-tls stack. Build <code>--no-default-features</code> for a pure, network-free core that compiles in headless CI with zero TLS deps.</p></div>
         <div class="card"><h3>Honest Status</h3><p>Engine commands, FFI exports and tests are derived from source. Current state: what exists is implemented and tested; the rest is on the roadmap, not faked.</p></div>
       </div>
@@ -67,15 +67,15 @@ use serde_json::json;
 let mut engine = Engine::new()?;
 
 // One dotted command surface for every host.
-let info = engine.invoke('version', &json!({}))?;
-let folders = engine.invoke('folder.list', &json!({}))?;
+let info = engine.invoke("version", &json!({}))?;
+let folders = engine.invoke("folder.list", &json!({}))?;
 
 // Import a message, then run filters over the folder.
-engine.invoke('import.eml', &json!({ 'path': 'msg.eml' }))?;
-engine.invoke('filter.run', &json!({ 'folder': 'Imported' }))?;</pre>
+engine.invoke("import.eml", &json!({ "path": "msg.eml" }))?;
+engine.invoke("filter.run", &json!({ "folder": "Imported" }))?;</pre>
 
       <h2 class="reg-h">Surfaces</h2>
-      <p class="lede">Depend on the <code>rlib</code> and call <code>Engine</code> directly, or go through <code>Engine::invoke</code> with JSON for parity across hosts. Enable the <code>tauri</code> feature to mount the engine as a Tauri v2 plugin. Link the <code>staticlib</code>/<code>cdylib</code> and call <code>zml_invoke</code> from a C ABI host. Asynchronous facts (sync progress, received mail) are pushed to the host through an installed event sink.</p>
+      <p class="lede">Depend on the <code>rlib</code> and call <code>Engine</code> directly, or go through <code>Engine::invoke</code> with JSON for parity across hosts. Enable the <code>tauri</code> feature to mount the engine as a Tauri v2 plugin. Link the <code>staticlib</code>/<code>cdylib</code> and call <code>zml_invoke</code> from a C ABI host. Asynchronous facts (sync started / finished, message sent, a folder changed by a bulk operation, errors) are pushed to the host through an installed event sink.</p>
 
       <h2 class="reg-h">Where it goes next</h2>
       <p class="lede">See the <a href="report.html">engineering report</a> for the module map, dependency footprint, FFI surface and test status, and the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> umbrella for the wider stack this engine plugs into.</p>

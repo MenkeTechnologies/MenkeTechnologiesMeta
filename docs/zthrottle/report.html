@@ -59,7 +59,7 @@
       <section class="hero-stats">
         <div class="hero-stat"><span class="num">0.5.35</span><span class="lbl">version (early-stage)</span></div>
         <div class="hero-stat"><span class="num">4</span><span class="lbl">benchmark axes + contention</span></div>
-        <div class="hero-stat"><span class="num">4</span><span class="lbl">monitor tabs</span></div>
+        <div class="hero-stat"><span class="num">10</span><span class="lbl">GUI tabs</span></div>
         <div class="hero-stat"><span class="num">v2</span><span class="lbl">Tauri</span></div>
       </section>
       <p class="note">zthrottle is a thin Tauri v2 host binary; all benchmark logic, the monitor data harvest, the command surface and the served frontend live in the <a href="https://github.com/MenkeTechnologies/zthrottle-core" target="_blank" rel="noopener noreferrer"><code>zthrottle-core</code></a> engine — see the <a href="https://menketechnologies.github.io/MenkeTechnologiesMeta/zthrottle-core/report.html" target="_blank" rel="noopener noreferrer">engine report</a> for the module map and command list. This page covers what the host adds around the engine. Early-stage and in active development.</p>
@@ -70,8 +70,9 @@
         <tbody>
           <tr><td>engine bridge</td><td><code>zth_invoke</code> forwards every benchmark and monitor command to <code>zthrottle-core</code>; stateless data-harvest runs on the tokio blocking pool without the engine mutex</td></tr>
           <tr><td>job manager</td><td>a background-job registry (<code>job_start</code> / <code>job_list</code> / <code>job_result</code> / <code>job_partial</code> / <code>job_cancel</code> / <code>job_clear</code>) — cancellable, streaming, unlimited-concurrency storage scans surfaced in a drawer</td></tr>
-          <tr><td>tree index</td><td><code>tree_load</code> (instant cached read) + <code>tree_forget</code> (targeted delete) over the persistent SQLite directory map; <code>tree.index</code> / <code>tree.refresh</code> run as jobs</td></tr>
-          <tr><td>gear menu</td><td><code>save_screenshot</code> (xcap window capture) and <code>quit_app</code></td></tr>
+          <tr><td>tree index</td><td><code>tree_load</code> (instant cached read), <code>tree_verify</code> (prune painted rows deleted outside the app), <code>tree_resize</code>, <code>tree_forget</code> / <code>tree_forget_many</code> (targeted delete), <code>delete_candidates</code> and <code>junk_patterns_list</code> / <code>junk_pattern_edit</code> over the persistent SQLite directory map; <code>tree.index</code> / <code>tree.refresh</code> / <code>tree.resize</code> run as jobs and each fs-watch burst lands as a <code>tree.update</code> row</td></tr>
+          <tr><td>gear menu</td><td><code>save_screenshot</code> (xcap window capture), <code>export_save</code>, <code>open_file_dialog</code>, <code>print_report</code> and <code>quit_app</code></td></tr>
+          <tr><td>automation bus</td><td><code>zgui_bridge_reply</code> / <code>zgui_bridge_event</code>: the app shell, the engine commands and the view verbs reachable from a stryke script over the zgui-bridge socket</td></tr>
           <tr><td>Stryke Hooks (R2)</td><td>a bundled <code>stryke --lsp</code> sidecar + hook runner for the in-app scripting editor</td></tr>
           <tr><td>shared embeds</td><td>the shared embedded PTY terminal (R3) and the multi-pane file browser (R10) from the zpwr component crates</td></tr>
         </tbody>
@@ -81,10 +82,16 @@
       <table>
         <thead><tr><th>tab</th><th>surface</th></tr></thead>
         <tbody>
-          <tr><td>Benchmark</td><td>four axis gauges (Blackmagic-style sweeping needles), single-axis runs, RUN ALL, and the contention matrix + bottleneck-migration timeline</td></tr>
-          <tr><td>Processes</td><td>CPU/memory table, CPU-history graph, per-core bars, filter, and a left-/right-click signal menu (TERM · KILL · STOP · CONT · HUP · INT · QUIT · ABRT · USR1 · USR2)</td></tr>
-          <tr><td>Network</td><td>per-interface throughput with live download/upload sparkline history</td></tr>
+          <tr><td>Overview</td><td>CPU, memory, load and root-volume free space at a glance (<code>sys.overview</code> · <code>sys.disks</code>)</td></tr>
+          <tr><td>Benchmark</td><td>four axis gauges (Blackmagic-style sweeping needles), single-axis runs, RUN ALL, the contention matrix + bottleneck-migration timeline, and the interference / recovery / spectrum / plant / governor panels</td></tr>
+          <tr><td>Processes</td><td>CPU/memory table, CPU-history graph, per-core bars, filter, and a left-/right-click signal menu (TERM · KILL · STOP · CONT · HUP · INT · QUIT · ABRT · USR1 · USR2), CPU-limit and priority entries in the same menu, a LIMIT column and ⏬ limits list, the ⚡ energy view (<code>proc.energy</code>) and a memory-pressure badge (<code>sys.mempressure</code>); long command lines are clipped with an ellipsis on screen and kept whole in export and the detail overlay</td></tr>
+          <tr><td>Network</td><td>per-interface throughput with live download/upload sparkline history, the live flow monitor (<code>net.flows</code>) and the config inspector (<code>net.info</code>)</td></tr>
+          <tr><td>Sensors</td><td>temperatures, GPU, fan RPM and power draw (<code>sys.sensors</code> · <code>sys.gpu</code> · <code>sys.fans</code> · <code>sys.power</code>)</td></tr>
+          <tr><td>IOReg</td><td>IORegistry node walk and search (<code>ioreg.node</code> · <code>ioreg.find</code>)</td></tr>
+          <tr><td>Lsof</td><td>whole-system open files and sockets mapped to their process (<code>lsof.snapshot</code>)</td></tr>
           <tr><td>Storage</td><td>a global macOS-Storage-style overview by auto-category, drill-down, find-biggest (the dirs Storage hides), build/cache-junk flags, SMB/NFS mount detection, and delete-to-reclaim (🗑 button or a right-click row menu: open · reveal in Finder/Explorer · open in Terminal · copy path · delete, with stale index rows verified away on every paint), plus a per-directory ↻ refresh that re-walks just that subtree — all backed by the persistent tree index for instant load</td></tr>
+          <tr><td>Replay</td><td>the <code>gov.replay</code> counterfactual scrubber over the lease ledger, drawn on the shared clip-engine arrangement grid</td></tr>
+          <tr><td>Headroom</td><td>the live <code>gov.headroom</code> reading per axis, the ⚖ ARBITER (<code>gov.arbitrate</code>) and the ⧗ CHOPPER (<code>gov.chop</code>)</td></tr>
         </tbody>
       </table>
 
