@@ -1,21 +1,19 @@
 ## Checklist
 
-Zmax releases are versioned in the Calendar Versioning scheme:
-`YY.0M(.MICRO)`, for example, `22.05` for May of 2022, or in a patch release,
-`22.05.1`. In these instructions we'll use `<tag>` as a placeholder for the tag
-being published.
+Zmax releases are versioned in Semantic Versioning: `vMAJOR.MINOR.PATCH`, for
+example `v0.4.49`. In these instructions we'll use `<tag>` as a placeholder for
+the tag being published. Pushing a `v*` tag is what triggers
+`.github/workflows/release.yml`.
 
 * Merge the PR with the release updates. That branch should:
     * Update the version:
-        * Update the `workspace.package.version` key in `Cargo.toml`. Cargo only accepts
-          SemVer versions so a CalVer version of `22.07` for example must be formatted
-          as `22.7.0`. Patch/bugfix releases should increment the SemVer patch number. A
-          patch release for 22.07 would be `22.7.1`.
+        * Update the `workspace.package.version` key in `Cargo.toml` to match the tag
+          without its leading `v`. Bugfix releases increment the patch number.
         * Run `cargo check` and commit the resulting change to `Cargo.lock`
     * Add changelog notes to `CHANGELOG.md`
     * Add new `<release>` entry in `contrib/Zmax.appdata.xml` with release information according to the [AppStream spec](https://www.freedesktop.org/software/appstream/docs/sect-Metadata-Releases.html)
 * Tag and push
-    * Switch to master and pull
+    * Switch to main and pull
     * `git tag -s -m "<tag>" -a <tag> && git push origin <tag>` (note the `-s` which signs the tag)
 * Wait for the Release CI to finish
     * It will automatically turn the git tag into a GitHub release when it uploads artifacts
@@ -30,17 +28,17 @@ being published.
 * Post to reddit
     * [Example: the r/rust subreddit](https://www.reddit.com/r/rust/)
 
-[homebrew formula]: https://github.com/Homebrew/homebrew-core/blob/master/Formula/h/zmax.rb
+[homebrew formula]: https://github.com/MenkeTechnologies/homebrew-menketech/blob/main/Formula/zmax.rb
 
 ## Changelog Curation
 
 The changelog is currently created manually by reading through commits in the
 log since the last release. GitHub's compare view is a nice way to approach
-this. For example, when creating the 22.07 release notes, this compare link
+this. For example, when creating the v0.4.49 release notes, this compare link
 may be used
 
 ```
-https://github.com/MenkeTechnologies/zmax/compare/22.05...master
+https://github.com/MenkeTechnologies/zmax/compare/v0.4.48...main
 ```
 
 Either side of the triple-dot may be replaced with an exact revision, so if
@@ -49,7 +47,7 @@ or so, record the revision where you stopped, and use that as a starting point
 next week:
 
 ```
-https://github.com/MenkeTechnologies/zmax/compare/7706a4a0d8b67b943c31d0c5f7b00d357b5d838d...master
+https://github.com/MenkeTechnologies/zmax/compare/7706a4a0d8b67b943c31d0c5f7b00d357b5d838d...main
 ```
 
 A work-in-progress commit for a changelog might look like

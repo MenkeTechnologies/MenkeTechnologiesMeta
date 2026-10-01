@@ -31,7 +31,7 @@ native-fn bridge from C++.
 ## 2. Current state (verified)
 
 ### Frontend — two *separate, hardwired* grids exist; neither is general
-- `webui/clip/clip.js` (293 lines): a **DOM** piano-roll. Domain = notes:
+- `webui/clip/clip.js` (321 lines): a **DOM** piano-roll. Domain = notes:
   rows are pitches `CLIP_LO=36..CLIP_HI=96`, columns are steps, cell value =
   note length. Has per-layer patterns, scales/random/presets, swing, divisions,
   native-clock + JS-timeout fallback. Already host-agnostic via dependency
@@ -145,8 +145,10 @@ Domain mappings:
 - **automation** (ALS): lanes = the 6 macro params, cells = 8-bar blocks, value =
   `unit` 0..1, `resizableRegions` on. Serialize to the ALS
   `{param:{bar:value}}` shape.
-- **triggers** (ztranslator): lanes = actions/outputs, cells = time slots, value =
-  `bool`. Serialize to a trigger-list shape (TBD with ztranslator owner).
+- **triggers** (ztranslator, the LOGIC view): lanes = actions/outputs, cells = time
+  slots, value = `bool`. Each painted cell carries a verified rule program;
+  serializes to `[{ slot, action, program: { source, rules } }]` sorted by
+  `(slot, action)`. See §10.3.
 
 Note: clip.js drags the **right edge** for note *length* (horizontal); als drags
 the **top edge** for *value* (vertical). The unified engine must support **both
@@ -265,8 +267,19 @@ Each phase is independently shippable; the plugins must keep working at every st
    supports both; velocity is currently fixed at 100 in `clipSeqPatternJson`.)
 2. **Time axis for notes**: fixed step grid (current) vs. resizable regions like
    ALS sections? Default: notes off `resizableRegions`; revisit for an arranger view.
-3. **ztranslator trigger schema**: what does a "trigger" cell emit (action id +
-   payload)? Needs the ztranslator owner's contract before `domains/triggers.js`.
+3. ~~**ztranslator trigger schema**: what does a "trigger" cell emit (action id +
+   payload)?~~ **RESOLVED — verified logic clips.** A trigger cell emits
+   `{ slot, action, program: { source, rules } }`, where `rules` is a ztranslator
+   `Rule` program. `deserialize` stays permanently tolerant of the older flat
+   `{ slot, action, payload }` shape so grids saved before this load. The host
+   statically verifies each program through `zt_invoke("ztr_verify_source",
+   { text, label })` -> `verify::analyze_program` and refuses to arm any clip whose
+   analysis reports a `Severity::Error` finding, so a scheduled logic clip is
+   proven free of dead code, contradictions, division by zero, infinite loops and
+   broken gotos. On the engine side `ClipEvent::Logic = 2` (additive over
+   `NoteOn = 0` / `NoteOff = 1`) fires from `setLogicClips` / `zpc_clip_set_logic`
+   on the same swung step boundary as notes — one timebase, so logic never drifts
+   against the notes it accompanies. The rules VM never runs on the audio thread.
 4. **Tauri playhead**: poll `invoke('clip_seq_step')` vs. Rust-emitted Tauri event?
    Event is lower-latency; poll is simpler. Default poll, revisit if jittery.
 5. **cdylib vs staticlib** for Rust linkage on macOS universal + Linux: default

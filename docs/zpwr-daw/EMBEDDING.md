@@ -44,7 +44,7 @@ This is the generic, non-audio path, and the point of the engine:
 
 - **Clips** fire events when the arrangement clock reaches them.
 - **Automation lanes** fire their value live every step: `nf("clipAutoValue")(cc, byte0..127, laneId, value0..1)`.
-- The **`triggers` domain** (`webui/grid/domains/triggers.js`) is bool action lanes — one cell = one host action.
+- The **`triggers` domain** (`libs/zpwr-clip-engine/webui/grid/domains/triggers.js`) is bool action lanes — one cell = one host action.
 
 The host binds the meaning:
 
@@ -72,5 +72,5 @@ api.buildClip();   // renders the arranger into #clip-grid; wire your toolbar id
 ```
 
 Serve over **http://** (ES modules are CORS-blocked over `file://`). See
-`webui/clip/clip-seq-demo.html` for a complete standalone wiring, and the
+`libs/zpwr-clip-engine/webui/clip/clip-seq-demo.html` for a complete standalone wiring, and the
 [port report](arranger_port_report.html) for the full feature coverage.

@@ -1577,7 +1577,7 @@ Generator supports placing multiple complete songs sequentially in one `.als` fi
 - [ ] Pan (-1 to 1)
 - [x] Sends (per ReturnTrack) — category-aware Send A (Reverb) / Send B (Delay)
       amounts in `send_levels_for`. Kick/sub/bass stay dry; pads wettest; leads
-      add delay. See `src-tauri/src/techno_generator.rs` helper.
+      add delay. See `src-tauri/src/track_generator.rs` helper.
 - [x] Routing (Master/Group)
 - [x] MixerInArrangement visibility toggle
 

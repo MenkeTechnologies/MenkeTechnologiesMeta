@@ -7,19 +7,21 @@
 ╚══════╝╚═╝      ╚══╝╚══╝ ╚═╝  ╚═╝    ╚═╝     ╚═╝  ╚═╝
 ```
 
-![JUCE](https://img.shields.io/badge/JUCE-8.0.13-ff2a6d?style=flat-square)
+![JUCE](https://img.shields.io/badge/JUCE-8.0.14-ff2a6d?style=flat-square)
 ![C++](https://img.shields.io/badge/C%2B%2B-20-05d9e8?style=flat-square)
-![Version](https://img.shields.io/badge/version-0.1.14-ff2a6d?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.1.24-ff2a6d?style=flat-square)
 ![Formats](https://img.shields.io/badge/VST3%20%C2%B7%20AU%20%C2%B7%20CLAP%20%C2%B7%20Standalone-39ff14?style=flat-square)
-![MenkeTechnologies](https://img.shields.io/badge/MenkeTechnologies-audio%20stack-d300c5?style=flat-square)
+![MTAudio](https://img.shields.io/badge/MTAudio-audio%20stack-d300c5?style=flat-square)
 
 ### `[MODULAR PATCH EFFECTS]`
 
 > *"Wire your own algorithm."*
 
-A **modular patch effects** plugin built on [JUCE](https://juce.com), in the spirit of the Eventide H3000 Factory — wire primitive DSP blocks together to build your own algorithms — wrapped in a modern cyberpunk WebView UI. Created by MenkeTechnologies.
+A **modular patch effects** plugin built on [JUCE](https://juce.com), in the spirit of the Eventide H3000 Factory — wire primitive DSP blocks together to build your own algorithms — wrapped in a modern cyberpunk WebView UI. Created by MTAudio.
 
 ### [`zpwr-synth`](https://github.com/MenkeTechnologies/zpwr-synth) · [`zpwr-midi-fx`](https://github.com/MenkeTechnologies/zpwr-midi-fx) · [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core)
+
+### [`Read the Docs`](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-fx) &middot; [`Engineering Report`](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-fx/report)
 
 ---
 
@@ -36,9 +38,10 @@ A **modular patch effects** plugin built on [JUCE](https://juce.com), in the spi
 - [\[0x08\] Presets](#0x08-presets)
 - [\[0x09\] Build](#0x09-build)
 - [\[0x0A\] Tests](#0x0a-tests)
-- [\[0x0B\] Key Files](#0x0b-key-files)
-- [\[0x0C\] Adding a Module](#0x0c-adding-a-module)
-- [\[0x0D\] Known Limitations](#0x0d-known-limitations)
+- [\[0x0B\] Automatic Latency Alignment](#0x0b-automatic-latency-alignment)
+- [\[0x0C\] Key Files](#0x0c-key-files)
+- [\[0x0D\] Adding a Module](#0x0d-adding-a-module)
+- [\[0x0E\] Known Limitations](#0x0e-known-limitations)
 - [\[0xFF\] License](#0xff-license)
 
 ---
@@ -57,7 +60,7 @@ INPUTS            BLOCKS (add/delete any N)     OUTPUTS
 
 The block palette is the shared audio module pack from
 [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core) —
-**2782 audio blocks** (3654 total across the audio/synth/MIDI stack, every name
+**3366 audio blocks** (4238 total across the audio/synth/MIDI stack, every name
 globally unique). Any block type can be dropped into any node.
 
 ---
@@ -93,13 +96,13 @@ Every block param has a **mod source + depth** (detail panel → MODULATION). An
 
 ## [0x03] SOFT KEYS
 
-JUCE's parameter list must be static for host automation. So the **host-automatable params are the Soft Keys + Master In/Out/Bypass**; the patch itself (block types, routing, block params) is plugin state the UI edits and the plugin persists. The Soft Keys are an **expandable pool** — a fixed ceiling of host params is created up front, and the `+`/`−` controls above the knob row set how many are active (16 by default); the active count is saved with the plugin state. Soft keys are patchable as modulation sources — exactly the H3000 model. Editing is lock-free: atomic param writes for live tweaks, an atomic graph swap on structural edits.
+JUCE's parameter list must be static for host automation. So the **host-automatable params are the Soft Keys + Master In/Out/Bypass + a reserved pool of 96 `Auto N` params**; the patch itself (block types, routing, block params) is plugin state the UI edits and the plugin persists. The Soft Keys are an **expandable pool** — a fixed ceiling of host params is created up front (32), and the `+`/`−` controls above the knob row set how many are active (16 by default); the active count is saved with the plugin state. Soft keys are patchable as modulation sources — exactly the H3000 model. The **reserved auto-param pool** lets you right-click any block param and bind it to an `Auto N` host slot (the Kontakt/Reaktor model), so any module parameter becomes host-automatable / CC-mappable — 32 soft keys + 96 auto params = **128 CC-mappable slots**, one per MIDI CC. Editing is lock-free: atomic param writes for live tweaks, an atomic graph swap on structural edits.
 
 ---
 
 ## [0x04] MODULES
 
-The block palette is the shared **audio module pack** registered on the core by `zpc::registerAudioModules` (re-exported as `zfx::registerAudioModules` in `src/dsp/AudioModules.h`). It is **2782 audio blocks** — filters, delays, reverbs, distortions, dynamics, modulation, oscillators, utility math, sequencers, and a large circuit-modeled set (component-level analog emulations: zero-delay-feedback ladders/SVFs, Shockley-diode and Ebers-Moll clippers, Koren triode/EL34 amp stages, Jiles-Atherton tape, Lambert-W wavefolder, four-diode ring mod). Catalog and counts are kept in [`zpwr-patch-core/BLOCKS.md`](https://github.com/MenkeTechnologies/zpwr-patch-core/blob/main/BLOCKS.md), regenerated from the registration sites — never hand-typed here so they never drift.
+The block palette is the shared **audio module pack** registered on the core by `zpc::registerAudioModules` (re-exported as `zfx::registerAudioModules` in `src/dsp/AudioModules.h`). It is **3366 audio blocks** — filters, delays, reverbs, distortions, dynamics, modulation, oscillators, utility math, sequencers, and a large circuit-modeled set (component-level analog emulations: zero-delay-feedback ladders/SVFs, Shockley-diode and Ebers-Moll clippers, Koren triode/EL34 amp stages, Jiles-Atherton tape, Lambert-W wavefolder, four-diode ring mod). Catalog and counts are kept in [`zpwr-patch-core/BLOCKS.md`](https://github.com/MenkeTechnologies/zpwr-patch-core/blob/main/BLOCKS.md), regenerated from the registration sites — never hand-typed here so they never drift.
 
 The authoritative per-block reference (inputs + parameters, grouped by category) is `docs/reference.html` / `docs/reference.pdf`, generated from the live module registry — see [§0x09 Build → Reference docs](#0x09-build).
 
@@ -122,7 +125,7 @@ A few of the building blocks:
 
 ## [0x05] THE EXPR MODULE
 
-`Expr` blocks run a user-written per-sample expression compiled by an in-house RT-safe VM (`src/dsp/ScriptEngine.*`). It can do things the fixed blocks can't, and it's edited live in the block's detail panel.
+`Expr` blocks run a user-written per-sample expression compiled by an in-house RT-safe VM (`include/zpc/ScriptEngine.h` + `src/ScriptEngine.cpp` in `libs/zpwr-patch-core`). It can do things the fixed blocks can't, and it's edited live in the block's detail panel.
 
 - **Vars:** `in` (In 1), `t`, `sr`, `p0..p7` (p0–p5 = knobs, p6 = In 2, p7 = Mod), `s0..s3` (persistent state), `pi tau e`.
 - **Funcs:** `sin cos tan tanh … floor frac wrap saw sqr tri min max pow fmod clamp lerp if step noise rand`, and **`tap(d)`** — the block's own output `d` samples ago (fractional) for combs / karplus / feedback.
@@ -155,6 +158,14 @@ Stacked patch-cable gains and fanned-in summing buses make it easy to drive the 
 
 Both are per block, so each stage is independent; the live cable glow tracks each block's level. Turn either off in Settings for raw gain. MIDI-effect blocks carry no audio level, so neither applies there. Distinct from the master **Brickwall Limiter**, a single hard ceiling on the final summed output.
 
+### Output recorder
+
+An in-plugin recorder (`zpc::WavRecorder`, shared with zpwr-synth) captures the master output to a **32-bit float WAV** under `~/Music/zpwr/<product>_<timestamp>.wav`. It is RT-safe — `recorder.pushBlock()` runs at the end of `processBlock`, a no-op until armed — and the editor drives it through the `startRecord` / `stopRecord` native functions (`PluginEditor.cpp`). `startRecord` returns the path it opened.
+
+### Master-insert plugin host
+
+The plugin can host one external **VST3 / AU** plugin on its master insert (`zpc::PluginInsert` + `zpc::PluginHost`, the same surface zpwr-synth ships; `JUCE_PLUGINHOST_VST3` / `JUCE_PLUGINHOST_AU` are enabled in CMake). The hosted plugin processes in `processBlock` after the stereo widener, so it sits on the final master path. Editor native functions drive it: `pluginScan`, `pluginList`, `pluginLoad`, `pluginClear`, `pluginCurrent`, and `pluginEditorOpen` (a floating `zpc::PluginInsertWindow` for the hosted editor). The hosted plugin's id and its own serialized state save/restore with the host's `get/setStateInformation`.
+
 ---
 
 ## [0x07] PERFORM & STEREO
@@ -186,24 +197,26 @@ Both toggles default **on** (`PluginProcessor.cpp`):
 
 ## [0x08] PRESETS
 
-- **Factory** (in code): Stereo Slap, Filter Sweep, Comb Resonator, Wavefolder.
-- **User** patches save as JSON (`patch` + soft-key values) under `<userAppData>/zpwr-fx/Presets/*.zfxpatch` (e.g. `~/Library/zpwr-fx/Presets`).
+- **Factory** (in code, `ZfxProcessor::factoryNames()`): 42 presets, exposed as host programs for MIDI Program Change — e.g. DL Stereo Slap, FL Filter Sweep, FL Comb Resonator, FL Auto Wah, FX Feedback Howl, DS Wavefolder, RV Iceverb Cathedral.
+- **User** patches save as gzip-compressed JSON (`patch` + soft-key values) under `<userAppData>/zfx/Presets/*.zfp` (e.g. `~/Library/zfx/Presets`; data from the pre-rename `zpwr-fx` folder is copied over once on first launch). The BROWSE tab exports/imports a **bank** — a `.zfb` collection of presets (gzip JSON) — via ⤓/⤒ BANK.
 - The full plugin/host state (patch + all params) round-trips through JUCE's `get/setStateInformation`.
 
 ---
 
 ## [0x09] BUILD
 
-CMake ≥ 3.22, a C++20 compiler. Dependencies are vendored git submodules (JUCE 8.0.13, `clap-juce-extensions`).
+CMake ≥ 3.22, a C++20 compiler. JUCE 8.0.14 and `clap-juce-extensions` are vendored as tracked source under `libs/`; `zpwr-patch-core` and `zpwr-clip-engine` are git submodules.
 
 ```sh
 git clone --recurse-submodules <repo-url>
 cd zpwr-fx
 cmake -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --target ZpwrFX_All -j$(sysctl -n hw.ncpu)
+cmake --build build --target Zfx_All -j$(sysctl -n hw.ncpu)
 ```
 
-Already cloned without submodules: `git submodule update --init --recursive`. Launch the standalone: `open "build/ZpwrFX_artefacts/Debug/Standalone/ZpwrFx.app"`.
+Already cloned without submodules: `git submodule update --init --recursive`. Launch the standalone: `open "build/Zfx_artefacts/Debug/Standalone/Zfx.app"`.
+
+For parity with the MenkeTechnologies desktop apps, a `pnpm` wrapper drives the same CMake build: `pnpm build` (configure-if-needed + Release build), `pnpm dev` (build then launch the Standalone), `pnpm rebuild` / `pnpm clean` / `pnpm nuke` (wipe `build/` + WebView caches and rebuild). The scripts live in `scripts/` and require no Node dependencies.
 
 On macOS the default build is a **universal binary** (`x86_64;arm64`) — the VST3/AU/CLAP load on both Intel and Apple Silicon hosts. For a faster host-only dev build, configure with `-DCMAKE_OSX_ARCHITECTURES=arm64` (re-use a fresh build dir, since the architecture is cached).
 
@@ -213,8 +226,8 @@ On macOS the default build is a **universal binary** (`x86_64;arm64`) — the VS
 
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target ZpwrFX_VST3 ZpwrFX_AU ZpwrFX_CLAP ZpwrFX_Standalone -j$(sysctl -n hw.ncpu)
-scripts/build_pkg.sh        # -> dist/ZpwrFx-<version>.pkg
+cmake --build build --target Zfx_VST3 Zfx_AU Zfx_CLAP Zfx_Standalone -j$(sysctl -n hw.ncpu)
+scripts/build_pkg.sh        # -> dist/Zfx-<version>.pkg
 ```
 
 ### Windows
@@ -250,21 +263,52 @@ The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared
 Two headless unit tests (no GUI/audio device, CI-friendly):
 
 ```sh
-cmake --build build --target ScriptEngineTest PatchGraphTest
+cmake --build build --target ScriptEngineTest FxPatchGraphTest
 build/ScriptEngineTest_artefacts/Debug/ScriptEngineTest
-build/PatchGraphTest_artefacts/Debug/PatchGraphTest
+build/FxPatchGraphTest_artefacts/Debug/FxPatchGraphTest
+```
+
+The latency-alignment pass itself is covered by `LatencyTest` in zpwr-patch-core (it needs the
+shared registry and the shared DSP primitives, so it lives with them):
+
+```sh
+cmake --build libs/zpwr-patch-core/build --target LatencyTest
 ```
 
 ---
 
-## [0x0B] KEY FILES
+## [0x0B] AUTOMATIC LATENCY ALIGNMENT
+
+The pack ships genuinely latent blocks — the linear-phase `LinearEQ` and the rest of the STFT
+`Spec*` family (1023 samples), `Convolution` (256), every 4x-oversampled drive/fuzz/wavefolder
+(7), and the windowed smoothers (1-3). Put one of those on a parallel branch of a hand-wired
+patch, sum it with a direct wire, and the two arrive at different times: a comb filter at 7
+samples, an audible pre-echo at 1023.
+
+zpwr-fx aligns them automatically. On every patch load and every structural edit, each engine in
+the rack (layers, aux buses, master) runs the longest-path relaxation in
+[`zpc/Latency.h`](https://github.com/MenkeTechnologies/zpwr-patch-core) over the topological order
+it was already computing, and pads every shorter branch entering a node — and every output cable
+— to match the longest. There is nothing to configure and nothing to hand-align.
+
+The rack's total is reported to the host with `setLatencySamples`, so the plugin also lines up
+with the rest of the session. That figure is the path every signal takes: the longest layer graph
+plus the master bus graph.
+
+**Known gap:** aux buses are aligned internally, but a latent block placed *inside* an aux still
+returns late against the dry sum — aligning a bus RETURN is a rack-level pass, not a patch-level
+one, and is not implemented.
+
+---
+
+## [0x0C] KEY FILES
 
 The routing engine itself lives in **[zpwr-patch-core](https://github.com/MenkeTechnologies/zpwr-patch-core)** (a git submodule under `libs/`), shared with zpwr-synth and zpwr-midi-fx. zpwr-fx supplies the audio module pack and the external sources (In L/R, noise, soft keys, MIDI/MPE); the core does the routing, topo eval, mod matrix, cables, and JSON.
 
 | File | Role |
 |------|------|
 | `libs/zpwr-patch-core/`  | Shared routing core (submodule): graph, mod matrix, serialization, `ScriptEngine` |
-| `src/dsp/AudioModules.h` | Re-exports the shared `zpc::registerAudioModules` (2782 audio blocks) as `zfx::` |
+| `src/dsp/AudioModules.h` | Re-exports the shared `zpc::registerAudioModules` (3366 audio blocks) as `zfx::` |
 | `src/FxConfig.h`         | Soft-key/MIDI counts + external source-id layout |
 | `src/PluginProcessor.*`  | `AudioProcessor`, soft-key/master params, MIDI/MPE, audio loop feeding the core |
 | `src/PluginEditor.*`     | WebView editor: catalog/patch/preset native functions over `zpc::PatchEngine` |
@@ -272,7 +316,7 @@ The routing engine itself lives in **[zpwr-patch-core](https://github.com/MenkeT
 
 ---
 
-## [0x0C] ADDING A MODULE
+## [0x0D] ADDING A MODULE
 
 1. Add the enum to `ModType` and its name to `PatchDef::allTypeNames()`.
 2. Add its param metadata to `blockParamSpecs()`.
@@ -282,7 +326,7 @@ The new type appears in every block's type dropdown automatically.
 
 ---
 
-## [0x0D] KNOWN LIMITATIONS
+## [0x0E] KNOWN LIMITATIONS
 
 - **Structural edits** (type/routing/script changes) rebuild the graph and reset block DSP state; live param tweaks are lock-free and don't.
 - The per-sample graph is interpreted; a JIT path (via fusevm/Cranelift) is the performance endgame.
@@ -291,4 +335,4 @@ The new type appears in every block's type dropdown automatically.
 
 ## [0xFF] LICENSE
 
-© MenkeTechnologies. Part of the MenkeTechnologies audio stack alongside [zpwr-synth](https://github.com/MenkeTechnologies/zpwr-synth), [zpwr-midi-fx](https://github.com/MenkeTechnologies/zpwr-midi-fx), and [zpwr-patch-core](https://github.com/MenkeTechnologies/zpwr-patch-core).
+© MenkeTechnologies. Part of the MTAudio audio stack alongside [zpwr-synth](https://github.com/MenkeTechnologies/zpwr-synth), [zpwr-midi-fx](https://github.com/MenkeTechnologies/zpwr-midi-fx), and [zpwr-patch-core](https://github.com/MenkeTechnologies/zpwr-patch-core).

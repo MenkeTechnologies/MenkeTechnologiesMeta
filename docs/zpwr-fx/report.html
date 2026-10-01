@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-fx engineering report — module map, dependency footprint, and test status for the JUCE 8 modular patch-effects plugin: 3346 audio blocks across 19 categories, 128 CC-mappable slots, 42 factory presets, 4 plugin formats.">
+  <meta name="description" content="zpwr-fx engineering report — module map, dependency footprint, and test status for the JUCE 8 modular patch-effects plugin: 3366 audio blocks across 19 categories, 128 CC-mappable slots, 42 factory presets, 4 plugin formats.">
   <title>zpwr-fx &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,24 +87,24 @@
     <main class="tutorial-main">
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">zpwr-fx (project <code>Zfx</code>, v0.1.23) is a JUCE 8 modular patch-effects
+      <p class="tutorial-subtitle">zpwr-fx (project <code>Zfx</code>, v0.1.24) is a JUCE 8 modular patch-effects
         plugin. The audio engine is a dynamic patch graph of mono DSP blocks wired by per-input source selection,
         summing into two stereo output buses. The block palette is not built here &mdash; it is the shared audio module
         pack from <strong>zpwr-patch-core</strong> (registered via <code>zpc::registerAudioModules</code>, re-exported as
-        <code>zfx::registerAudioModules</code>): <strong>3346 audio blocks</strong> across 19 categories (4218 total
+        <code>zfx::registerAudioModules</code>): <strong>3366 audio blocks</strong> across 19 categories (4238 total
         across the wider audio/synth/MIDI stack). This repo is the FX host: the JUCE processor/editor, the host-param and
         automation surface, factory presets, and the embedded WebView UI. The plugin's own C++ is compact &mdash;
-        <code>src/</code> is ~1,400 lines (PluginProcessor.cpp 812, PluginEditor.cpp 340, plus headers and
+        <code>src/</code> is ~1,500 lines (PluginProcessor.cpp 844, PluginEditor.cpp 374, plus headers and
         <code>FxConfig.h</code>) &mdash; with the heavy DSP and registry living in the shared submodule.</p>
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val accent">3346</div><div class="stat-label">Audio Blocks</div></div>
+        <div class="stat-card"><div class="stat-val accent">3366</div><div class="stat-label">Audio Blocks</div></div>
         <div class="stat-card"><div class="stat-val">19</div><div class="stat-label">Block Categories</div></div>
         <div class="stat-card"><div class="stat-val">128</div><div class="stat-label">CC-Mappable Slots</div></div>
         <div class="stat-card"><div class="stat-val">42</div><div class="stat-label">Factory Presets</div></div>
         <div class="stat-card"><div class="stat-val green">4</div><div class="stat-label">Plugin Formats</div></div>
-        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Submodule Deps</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Submodule Deps</div></div>
         <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Headless Test Apps</div></div>
-        <div class="stat-card"><div class="stat-val">~1.4k</div><div class="stat-label">Host C++ Lines</div></div>
+        <div class="stat-card"><div class="stat-val">~1.5k</div><div class="stat-label">Host C++ Lines</div></div>
       </div>
 
       <hr class="section-rule">
@@ -118,7 +118,7 @@
           <tr><td style="color:var(--accent);">ZfxProcessor</td><td><code>src/PluginProcessor.cpp/.h</code></td><td>AudioProcessor: patch graph host, processBlock, state save/restore, factory programs, MIDI PC/Bank Select, master-insert plugin host</td></tr>
           <tr><td style="color:var(--accent);">ZfxEditor</td><td><code>src/PluginEditor.cpp/.h</code></td><td>JUCE 8 WebBrowserComponent editor; binds native JS&harr;C++ functions and the soft-key sliders</td></tr>
           <tr><td style="color:var(--accent);">FxConfig</td><td><code>src/FxConfig.h</code></td><td>Host layout constants: 16 active / 32 max soft keys, 96 auto-param pool, 11 MIDI/MPE sources, 12 default nodes, source-id map</td></tr>
-          <tr><td style="color:var(--accent);">Audio module pack</td><td><code>libs/zpwr-patch-core</code></td><td>The 3346-block palette + graph engine (topological sort, one-sample feedback resolution); registered onto the core</td></tr>
+          <tr><td style="color:var(--accent);">Audio module pack</td><td><code>libs/zpwr-patch-core</code></td><td>The 3366-block palette + graph engine (topological sort, one-sample feedback resolution); registered onto the core</td></tr>
           <tr><td style="color:var(--accent);">ScriptEngine (Expr)</td><td><code>zpwr-patch-core (Expr block)</code></td><td>RT-safe expression VM for user per-sample code; tested here via tests/ScriptEngineTest.cpp</td></tr>
           <tr><td style="color:var(--accent);">Soft keys + Auto pool</td><td><code>PluginProcessor (APVTS)</code></td><td>32 soft-key host params + 96 reserved Auto N slots = 128 CC-mappable, bind any block param for host automation</td></tr>
           <tr><td style="color:var(--accent);">Master insert host</td><td><code>zpc::PluginInsert / PluginHost</code></td><td>Hosts one external VST3/AU on the master path (JUCE_PLUGINHOST_VST3/AU enabled)</td></tr>
@@ -130,7 +130,7 @@
       <hr class="section-rule">
 
       <h2 class="tutorial-title"><span class="step-hash">~</span>BLOCK CATEGORIES</h2>
-      <p class="tutorial-subtitle">The 3346 blocks are grouped into 19 categories: Oscillator, Filter, Distortion, Amp,
+      <p class="tutorial-subtitle">The 3366 blocks are grouped into 19 categories: Oscillator, Filter, Distortion, Amp,
         Modulation, Delay, Reverb, Dynamics, Pitch, Utility, EQ, Effect, Envelope, Routing, Sequencing, Spectral,
         Stereo, Physical, and Tape. Each block exposes three inputs (In 1, In 2, Mod), six parameters, and one output. The set includes a
         large circuit-modeled group (zero-delay-feedback ladders/SVFs, Shockley-diode and Ebers-Moll clippers, Koren
@@ -140,21 +140,21 @@
       <hr class="section-rule">
 
       <h2 class="tutorial-title"><span class="step-hash">~</span>DEPENDENCY FOOTPRINT</h2>
-      <p class="tutorial-subtitle">No external package registry: every dependency is a git submodule. The plugin links a
+      <p class="tutorial-subtitle">No external package registry: JUCE and clap-juce-extensions are vendored as tracked source, zpwr-patch-core and zpwr-clip-engine are git submodules. The plugin links a
         focused set of JUCE modules and the shared patch-core engine.</p>
       <table class="file-table">
         <thead><tr><th>Dependency</th><th>Kind</th><th>Use</th></tr></thead>
         <tbody>
-          <tr><td style="color:var(--accent);">JUCE</td><td><code>submodule (libs/JUCE)</code></td><td>Framework. Linked modules: juce_audio_utils, juce_gui_extra, juce_dsp (+ recommended config/warning flags)</td></tr>
+          <tr><td style="color:var(--accent);">JUCE</td><td><code>vendored (libs/JUCE)</code></td><td>Framework. Linked modules: juce_audio_utils, juce_gui_extra, juce_dsp (+ recommended config/warning flags)</td></tr>
           <tr><td style="color:var(--accent);">zpwr-patch-core</td><td><code>submodule (libs/zpwr-patch-core)</code></td><td>The audio module pack, patch graph engine, and shared WebView UI assets</td></tr>
-          <tr><td style="color:var(--accent);">clap-juce-extensions</td><td><code>submodule (libs/clap-juce-extensions)</code></td><td>Wraps the same plugin as a CLAP (CLAP_ID com.menketechnologies.zfx, features audio-effect/multi-effects)</td></tr>
+          <tr><td style="color:var(--accent);">clap-juce-extensions</td><td><code>vendored (libs/clap-juce-extensions)</code></td><td>Wraps the same plugin as a CLAP (CLAP_ID com.menketechnologies.zfx, features audio-effect/multi-effects)</td></tr>
           <tr><td style="color:var(--accent);">zpwr-clip-engine</td><td><code>submodule (libs/zpwr-clip-engine)</code></td><td>Clip/pattern engine for the Clip tab (from zpwr-daw)</td></tr>
         </tbody>
       </table>
       <div class="feature-grid" style="margin-top:1.2rem;">
         <div class="feature-card"><h4>Build System</h4><p>CMake (&ge; 3.22), <code>juce_add_plugin</code> with FORMATS VST3 / AU / Standalone, plus a CLAP target via clap-juce-extensions &mdash; <strong>four shipped formats</strong>.</p></div>
         <div class="feature-card"><h4>Embedded UI</h4><p>UI is embedded via <code>juce_add_binary_data</code> (<code>JUCE_WEB_BROWSER=1</code>, <code>JUCE_USE_CURL=0</code>, no node build) &mdash; self-contained, no external files.</p></div>
-        <div class="feature-card"><h4>Submodules</h4><p>All four dependencies are git submodules: <code>JUCE</code>, <code>zpwr-patch-core</code>, <code>clap-juce-extensions</code>, and <code>zpwr-clip-engine</code>. No external package registry.</p></div>
+        <div class="feature-card"><h4>Submodules</h4><p><code>zpwr-patch-core</code> and <code>zpwr-clip-engine</code> are git submodules; <code>JUCE</code> and <code>clap-juce-extensions</code> are vendored as plain tracked source. No external package registry.</p></div>
       </div>
 
       <hr class="section-rule">
@@ -171,7 +171,7 @@
       </table>
       <div class="feature-grid" style="margin-top:1.2rem;">
         <div class="feature-card"><h4>Scope</h4><p>These are correctness/sanity checks (registry integrity, numerical finiteness, output bounding, compile-time rejection of unsafe scripts) rather than a perceptual audio-quality suite. The tests here target the FX-side integration and the Expr VM.</p></div>
-        <div class="feature-card"><h4>No Committed CI</h4><p>There is <strong>no CI workflow committed</strong> in this repo, and the broader 3346-block catalog is validated upstream in <code>zpwr-patch-core</code>.</p></div>
+        <div class="feature-card"><h4>No Committed CI</h4><p>There is <strong>no CI workflow committed</strong> in this repo, and the broader 3366-block catalog is validated upstream in <code>zpwr-patch-core</code>.</p></div>
         <div class="feature-card"><h4>RT-Safety</h4><p>Both suites are RT-safety oriented &mdash; the engine guarantees finite, sanitized output (NaN/Inf &rarr; 0) and rejects over-limit scripts at compile time.</p></div>
       </div>
 

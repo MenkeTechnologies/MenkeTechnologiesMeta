@@ -92,7 +92,7 @@
       <p class="tutorial-subtitle">
         zpwr-patch-core (<code>zpc</code>) is the signal-agnostic modular patch graph shared by the
         MenkeTechnologies plugin stack &mdash; zpwr-fx, zpwr-synth and zpwr-midi-fx. It is built as a
-        static library (<code>zpwr::patch_core</code>) from eight translation units and ~57 headers
+        static library (<code>zpwr::patch_core</code>) from eight translation units and ~61 headers
         under <code>include/zpc/</code>, and ships universal (x86_64 + arm64) on macOS. The graph is
         templated on the signal type carried between nodes: <code>float</code> for audio, a note-event
         stream for MIDI. The headline numbers are taken from the live registries the plugins run
@@ -105,8 +105,8 @@
         <div class="stat-card"><div class="stat-val accent">4238</div><div class="stat-label">Blocks Registered</div></div>
         <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Registries (FX / Synth / MIDI)</div></div>
         <div class="stat-card"><div class="stat-val green">1</div><div class="stat-label">Runtime Dependency</div></div>
-        <div class="stat-card"><div class="stat-val">7</div><div class="stat-label">Headless Test Suites</div></div>
-        <div class="stat-card"><div class="stat-val">~57</div><div class="stat-label">Headers (include/zpc)</div></div>
+        <div class="stat-card"><div class="stat-val">11</div><div class="stat-label">Headless Test Suites</div></div>
+        <div class="stat-card"><div class="stat-val">~61</div><div class="stat-label">Headers (include/zpc)</div></div>
         <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Translation Units</div></div>
         <div class="stat-card"><div class="stat-val">v4</div><div class="stat-label">Patch JSON Version</div></div>
         <div class="stat-card"><div class="stat-val">7374</div><div class="stat-label">Modules Audited (Port Report)</div></div>
@@ -164,22 +164,27 @@
 
       <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
       <p class="tutorial-subtitle">
-        Seven headless console-app test suites live under <code>tests/</code> and are built through the
-        JUCE CMake API when <code>juce::juce_core</code> is available. <code>GlobalModsTest</code> and
-        <code>ZdspCheck</code> are gated on <code>juce_audio_basics</code> / the vendored
-        <code>zdsp-core</code> submodule respectively. These suites and the lint were inventoried from
+        Eleven headless test suites live under <code>tests/</code>. Ten are console apps built through the
+        JUCE CMake API when <code>juce::juce_core</code> is available; <code>EuclidMirrorTest</code> is a plain
+        executable that needs no JUCE at all. <code>DspModulesTest</code> and <code>LatencyTest</code> link the JUCE audio
+        modules, <code>HostSupportTest</code> / <code>GlobalModsTest</code> are gated on <code>juce_audio_processors</code> /
+        <code>juce_audio_basics</code>, and <code>ZdspCheck</code> on the vendored <code>zdsp-core</code> submodule. These suites and the lint were inventoried from
         the source tree for this report; they were not executed here, so no pass/fail counts are claimed.
       </p>
       <table class="file-table">
         <thead><tr><th>Suite</th><th>Gate</th><th>Covers</th></tr></thead>
         <tbody>
           <tr><td><code>PatchCoreTest</code></td><td><code>juce_core</code></td><td>Core patch model, routing, eval, serialization / migration.</td></tr>
+          <tr><td><code>PatchGraphTest</code></td><td><code>juce_core</code></td><td>Signal-agnostic graph layer: topoOrder() eval ordering + cycle handling, the topo-&gt;evaluation contract, ParamSpec mapping.</td></tr>
           <tr><td><code>LayeredEngineTest</code></td><td><code>juce_core</code></td><td>Layer stacking + per-layer parallel/series bus routing + JSON round-trip.</td></tr>
-          <tr><td><code>DspModulesTest</code></td><td><code>juce_core</code></td><td>juce-free synthesis DSP primitives.</td></tr>
+          <tr><td><code>DspModulesTest</code></td><td><code>juce_audio_formats / basics / dsp</code></td><td>DSP module pack (Scala / Multisample / Traktor / Valhalla / Physical / Eventide / synthesis blocks) on the audio registry.</td></tr>
+          <tr><td><code>SpectralBakeTest</code></td><td><code>juce_core</code></td><td>Spectral bake (<code>zpc/dsp/SpectralBake.h</code>): freezing a live node signal into a band-limited single-cycle wavetable frame.</td></tr>
+          <tr><td><code>LatencyTest</code></td><td><code>juce_audio_formats / basics / dsp</code></td><td>Intra-patch latency alignment (<code>zpc/Latency.h</code>): re-measures declared group delays against the real DSP and proves the relaxation aligns real graphs.</td></tr>
           <tr><td><code>MidiModulesTest</code></td><td><code>juce_core</code></td><td>Note-stream registry, chord &amp; scale engines, arpeggiator.</td></tr>
-          <tr><td><code>HostSupportTest</code></td><td><code>juce_core</code></td><td>Soft-knob pool, host state, meters, MidiInbox.</td></tr>
+          <tr><td><code>HostSupportTest</code></td><td><code>juce_audio_processors</code></td><td>Soft-knob pool, host state, meters, MidiInbox.</td></tr>
           <tr><td><code>GlobalModsTest</code></td><td><code>juce_audio_basics</code></td><td>Global-modulator bus: slot layout, MIDI routing, generated sources.</td></tr>
           <tr><td><code>ZdspCheck</code></td><td>vendored <code>zdsp-core</code></td><td>Vendored shared real-time DSP sanity check.</td></tr>
+          <tr><td><code>EuclidMirrorTest</code></td><td>none (plain executable)</td><td>Engine/editor Euclidean lock against <code>tests/euclid_golden.txt</code> (<code>zpc/midi/Euclidean.h</code> is JUCE-free).</td></tr>
         </tbody>
       </table>
       <div class="feature-grid" style="margin-top:1.2rem;">
@@ -191,14 +196,13 @@
         <div class="feature-card">
           <h4>ASCII String Lint</h4>
           <p>An ASCII string-literal linter (<code>scripts/lint_ascii_strings.py</code>) rejects
-          non-ASCII bytes inside C++ string / char literals. It runs in CI on every push
-          (<code>.github/workflows/lint-ascii.yml</code>) and is wired as a
-          <code>.githooks/pre-commit</code> hook.</p>
+          non-ASCII bytes inside C++ string / char literals. It is wired as a <code>.githooks/pre-commit</code> hook
+          (the CI workflow that also ran it was removed when Actions were disabled).</p>
         </div>
       </div>
 
       <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
-      ZPWR-PATCH-CORE &middot; ENGINEERING REPORT &middot; v0.3.0 &middot; 4238 BLOCKS &middot; 3 REGISTRIES &middot; PATCH JSON v4 &middot; juce_core-ONLY &middot; 7 HEADLESS TEST SUITES &middot; MENKETECHNOLOGIES
+      ZPWR-PATCH-CORE &middot; ENGINEERING REPORT &middot; v0.3.0 &middot; 4238 BLOCKS &middot; 3 REGISTRIES &middot; PATCH JSON v4 &middot; juce_core-ONLY &middot; 11 HEADLESS TEST SUITES &middot; MENKETECHNOLOGIES
     </footer>
   </div>
 

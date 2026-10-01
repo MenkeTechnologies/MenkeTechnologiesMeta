@@ -1,6 +1,6 @@
 # zphoto — GIMP → Rust Port Checklist
 
-Tracks the port of GIMP (vendored reference: `vendor/gimp`, v3.3.1) into `zphoto-core`
+Tracks the port of GIMP (reference: upstream GNOME/gimp v3.3.1) into `zphoto-core`
 (engine) + `zphoto` (GUI). Status: ✅ done · 🚧 in progress · ⬜ not started · N/A out of scope.
 
 The engine is GUI-agnostic (mirrors GIMP's `app/core` vs GTK split). Every capability is
@@ -13,7 +13,8 @@ Rust callers behave identically.
 | --- | --- | --- |
 | `GimpImage` (canvas + layer stack) | `model::Image` | ✅ |
 | `GimpLayer` / `GimpDrawable` | `model::Layer` | ✅ (paint attrs: opacity, offset, visible) |
-| `GimpImageBaseType` (RGB/GRAY/INDEXED) | `model::BaseType` | 🚧 enum exists; only RGB pixels real |
+| `GimpImageBaseType` (RGB/GRAY/INDEXED) | `model::BaseType` | 🚧 GRAY desaturates; INDEXED now carries a real stored/editable/serialized `colormap` (snapped pixels). Pixels are still RGBA-backed (no single-channel/index buffer) |
+| Indexed colour table (`GimpImage` colormap / PS Color Table edit) | `Image::colormap` + `image.color_table {colors}` — replace the table and re-map every pixel to its nearest new entry; `image.palette` returns the stored table | ✅ |
 | Pixel / colour | `model::Rgba` (8-bit) | ✅ |
 | Image mode convert (RGB / grayscale / indexed median-cut, optional dither) | `image.convert` (indexed mode does median-cut palette + nearest-colour, or Floyd–Steinberg `dither` to diffuse the quantization error — smooth gradients instead of banding) | ✅ |
 | Canvas Size (resize without scaling) | `image.resize_canvas` | ✅ |
@@ -32,6 +33,7 @@ Rust callers behave identically.
 | Merge to HDR / Exposure Fusion | `image.merge_hdr` (PS File ▸ Automate ▸ Merge to HDR Pro, fused à la Mertens; collapses a bracketed-exposure layer stack into one image, averaging each pixel weighted by well-exposedness — a Gaussian on luma peaking at mid-grey — so clipped shadows/highlights contribute little) | ✅ |
 | Image Stack Modes (per-pixel statistics) | `image.stack_mode` (PS Layer ▸ Smart Objects ▸ Stack Mode; collapses the layer stack by a per-pixel per-channel statistic — `mean`/`median`/`max`/`min`/`range`/`sum`/`stddev`; median is the classic transient remover / burst denoiser) | ✅ |
 | Contact Sheet (thumbnail grid) | `image.contact_sheet` (PS File ▸ Automate ▸ Contact Sheet II; tiles aspect-fit, centred thumbnails of an `images` list into a `cols`×`rows` grid of `cell`-px cells with `padding`/`background` on a fresh canvas) | ✅ |
+| Depth Merge (luminance-depth composite of two docs) | `image.depth_merge` (GIMP Script-Fu ▸ Depth Merge; composites two equal-size docs by per-pixel luminance depth — nearer wins, `overlap` softens the crossover, `offset` biases doc 1 forward — returns a new document) + Image menu (overlap/offset dialog + second-doc picker) | ✅ |
 | Content-Aware Fill (inpaint a selection from its surroundings) | `layer.content_aware_fill` (PS Edit ▸ Fill ▸ Content-Aware; Laplace diffusion) | ✅ |
 | Fill ▸ History (fill a selection from a history state) | `fill.history` (PS Edit ▸ Fill ▸ Contents: History; fills the whole selection from a history snapshot `state` steps back — the instant whole-region counterpart of the History Brush) | ✅ |
 | Content-Aware Move (relocate a selection + heal the hole) | `layer.content_aware_move` (PS Content-Aware Move tool; captures the selection, `content_aware_fill` heals the vacated source, then pastes the captured pixels at `(dx, dy)`) | ✅ |
@@ -54,7 +56,7 @@ Rust callers behave identically.
 | Layer modes — non-separable (hue, saturation, color, luminosity) | `LayerMode` + `blend_rgb` (W3C SetLum/SetSat) | ✅ |
 | Layer mode — Dissolve (stochastic) | `LayerMode::Dissolve` + compositor (each pixel painted fully or not at all, probability = effective coverage, via a deterministic per-pixel hash — the grainy transition; not a per-channel blend) | ✅ |
 | Paint mode — Behind / Clear | `PaintMode::Behind` (PS Behind; the brush colour fills only the layer's transparent areas, existing opaque pixels stay on top — paint composited *under* the destination). `clear` maps to the Eraser (PS Clear = erase). | ✅ |
-| Layer modes — non-separable whole-pixel (darker-color, lighter-color) | `LayerMode` + `blend_rgb` (luminance min/max; full PS 28-mode set) | ✅ |
+| Layer modes — non-separable whole-pixel (darker-color, lighter-color) | `LayerMode` + `blend_rgb` (luminance min/max; completes a 29-variant `LayerMode` — the full PS set plus GIMP's grain-extract/grain-merge) | ✅ |
 | Layer attrs (opacity/visible/name/offset/mode), duplicate, reorder | `layer.set`/`layer.duplicate`/`layer.reorder` | ✅ |
 | Merge Down (composite a layer into the one below) | `layer.merge_down` (GIMP Layer ▸ Merge Down / PS Ctrl+E) | ✅ |
 | Merge Group (flatten a group to one raster layer) | `layer.merge_group` (GIMP Merge Layer Group / PS Merge Group) | ✅ |
@@ -95,8 +97,14 @@ Rust callers behave identically.
 | Save PNG/JPEG/BMP/TIFF/GIF | `image.save` + File menu | ✅ |
 | PSD export (Photoshop document) | `image.save` format `psd` — flattened, or `layered:true` for editable layers (per-layer rect/channels/blend-mode/opacity/name + composite preview), RLE/PackBits-compressed by default (`rle:false` for raw); spec-correct, opens in Photoshop | ✅ |
 | PSD import (open layered .psd) | `image.open` auto-detects `8BPS` → `codec::decode_psd` (raw + RLE/PackBits, 8-bit RGB) reconstructs the layer stack (rect/pixels/blend-mode/opacity/name/**visibility**/**clipping** + layer masks via the `-2` channel); round-trips the writer | ✅ |
+| PSD open→edit→save round-trip | verified lossless on real multi-layer PSDs (size-safe mask channels) | ✅ |
 | Native layered project save/load (layers+pixels+masks+modes+paths) | `project.save` / `project.load` (JSON + base64 RGBA; the round-trippable format `image.save` PNG can't be) | ✅ |
-| XCF (GIMP native format) read + write, flat + layered + masks | `image.save` xcf (`encode_xcf`/`encode_xcf_layered`, `layered:true` — per-layer bounds/offsets/mode/opacity/name **+ 1-bpp mask channels**) + `image.open` → `decode_xcf` (uncompressed v0). Writer↔reader round-trips stack order, modes, opacity, masks, pixels exactly. GIMP-open + RLE not verified in CI | 🚧 |
+| Native **`.zpo`** format (compressed) | `project.save {format:"zpo"}` → `ZPO1` magic + zlib(JSON); `image.open` sniffs the magic and reloads the full layered document | ✅ |
+| XCF (GIMP native format) read + write, flat + layered + masks | `image.save` xcf (`encode_xcf`/`encode_xcf_layered`, `layered:true` — per-layer bounds/offsets/mode/opacity/name **+ 1-bpp mask channels**) + `image.open` → `decode_xcf` (none **+ RLE** compression). Writer↔reader round-trips stack order, modes, opacity, masks, pixels exactly; RLE plane decode ports GIMP `xcf_load_tile_rle` | ✅ |
+| Export Layers to Files (one file per layer) | `image.export_layers` (PS File ▸ Export ▸ Layers to Files; each top-level layer rendered on its own — opacity/mode/mask/group children apply, other layers and spot channels do not — in any flat format incl. XCF; `trim` crops to the opaque bounds and reports the offset; names `<prefix>_<NNNN>_<layer>` numbered from the top; layers that render nothing alone are reported `skipped`) + File menu (one folder picker) | ✅ |
+| Animated GIF from layers | `image.save_animation` (PS Timeline ▸ Make Frames From Layers + animated-GIF export; one frame per top-level layer bottom-up, per-frame `delays`, NETSCAPE `loops` (0 = forever), `backdrop` holds the bottom layer under every frame) + File menu | ✅ |
+| Slices (Slice tool, Slices From Guides, per-slice export) | `slice.add` (rectangle or the selection bounds) / `slice.from_guides` (grid cut by the guide positions) / `slice.list` / `slice.delete` / `slice.clear` / `slice.export` (composite once, one file per slice, clamped to the current canvas) — stored on the image and in the project format; bus state `slices:<id>`; outlined on the canvas | ✅ |
+| Batch (play an Action over a folder) | `action.batch` (PS File ▸ Automate ▸ Batch; open → play → encode → close per input, per-file error envelopes without aborting the run, output keeps the input stem, internal steps never recorded) + File ▸ Automate ▸ Batch… (source + destination folder pickers, one engine call per file) | ✅ |
 
 ## Operations / filters (`app/operations`, `plug-ins`, GEGL)
 
@@ -128,6 +136,17 @@ Rust callers behave identically.
 | Dehaze (haze removal) | `op.dehaze` (PS/Camera Raw ▸ Dehaze; per-channel contrast stretch around mid-grey + saturation boost, scaled by `amount`; negative adds haze) | ✅ |
 | Whites / Blacks (tone endpoints) | `op.whites` / `op.blacks` (PS/Camera Raw ▸ Whites/Blacks; push the highlight endpoint by `amount`·luma² / the shadow endpoint by `amount`·(1−luma)² — each end moves independently) | ✅ |
 | Camera Raw Filter (Basic panel) | `op.camera_raw` (PS Filter ▸ Camera Raw Filter; runs temperature/tint → exposure/contrast → highlights/shadows/whites/blacks → texture/clarity/dehaze → vibrance/saturation in CR order, each stage skipped at 0, composing the existing + new tone ops) | ✅ |
+| Retinex / local colour constancy | `op.retinex` (GIMP Colors ▸ Retinex / darktable Retinex; multiscale single-scale retinex — reflectance `log(I)−log(gaussian(I))` accumulated over three scales (¼·`scale`, ½·`scale`, `scale`), averaged and rescaled to full range; `strength` cross-fades — equalizes illumination and lifts shadow detail) | ✅ |
+| CLAHE (adaptive local histogram equalization) | `op.clahe` (Krita Filters ▸ Enhance ▸ CLAHE / darktable local contrast; `tiles`×`tiles` grid, each tile a clip-limited (`clip`) equalization LUT of luma, bilinearly blended between tiles to kill block seams — local contrast without the global-equalize washout) | ✅ |
+| Colour-blindness proof (deficient-vision simulation) | `op.color_blind_sim` (GIMP Colors ▸ Display Filters ▸ Colour Deficient Vision / PS View ▸ Proof ▸ Colour Blindness; Vischeck sRGB dichromat matrices for `protanopia`/`deuteranopia`/`tritanopia` — an accessibility proofing view) | ✅ |
+| Velvia (film-saturation boost) | `op.velvia` (darktable Velvia module; boosts saturation more where it is currently low (`bias` spares already-saturated pixels) and rolls off toward black/white via `1−(2l−1)²` — punchy landscape colour without posterizing shadows/highlights) | ✅ |
+| Three-way colour wheels (Lift / Gamma / Gain) | `op.color_wheels` (DaVinci Resolve / Premiere Lumetri / Lightroom Colour Grading; per-`[r,g,b]` shadow lift (additive), highlight gain (multiplicative) and midtone gamma (power), applied in 0–1 space — the standard 3-way colour corrector) + Adjust menu (9-slider Lift/Gamma/Gain dialog) | ✅ |
+| Frequency Separation (Low/High-frequency retouching) | `layer.frequency_separation` (Affinity Photo Filters ▸ Frequency Separation; splits a layer into a **Low Frequency** blur layer + a **High Frequency** detail layer (`orig − low + 128`, Grain-Merge blend) that composite back to the exact original — retouch tone and texture independently) + Layer menu (radius dialog) | ✅ |
+| Tone Equalizer (per-zone exposure) | `op.tone_equalizer` (darktable Tone Equalizer; splits luma into `gains.len()` zones, each pixel picks up a Gaussian-weighted blend of the per-zone EV `gains` by its own luma, scaled by `2^gain` — soft zone-system exposure map, distinct from a contrast curve) + Adjust menu (5-zone Blacks/Shadows/Midtones/Highlights/Whites EV dialog) | ✅ |
+| Bleach Bypass (silver-retention film look) | `op.bleach_bypass` (Premiere Lumetri looks / film-emulation; overlays a high-contrast luminance layer over the desaturated image, `amount` cross-fades to the punchy low-saturation silvery grade) | ✅ |
+| Cross Processing (C-41/E-6 crossover) | `op.cross_process` (Lomo / film-emulation cross-processing; per-channel contrast S-curve + the signature colour crossover — greens pushed in the mids, blue lifted in shadows and pulled from highlights) | ✅ |
+| HSL-targeted hue curve (Hue-vs-Hue/Sat/Lum) | `op.hue_curve` (Lightroom Point Color / Capture One / DaVinci Resolve HSL curves; control points `(hue°, hue_shift°, sat_mult, lum_mult)` interpolated cyclically around the wheel — continuous per-hue qualification, unlike the fixed 6-band Hue/Saturation) | ✅ |
+| Channel swap / rotate | `op.channel_swap` (GIMP Colors ▸ Components; `order` is a 3-char r/g/b permutation picking which source channel feeds each output — quick swap-red-and-blue / colour rotation) | ✅ |
 | Split Toning / Color Grading (separate shadow + highlight tints) | `op.split_tone` (Lightroom/PS Split Toning) | ✅ |
 | Auto White Balance (gray-world cast removal) | `op.auto_white_balance` (GIMP Colors ▸ Auto / PS Auto Color neutralization) | ✅ |
 | Set Gray Point (neutral eyedropper) | `op.gray_point` (PS Levels/Curves neutral eyedropper; scales each channel by `gray/channel` so a sampled `color` that should be neutral becomes grey, removing the cast — anchored to a known-neutral pixel, unlike gray-world auto white balance) | ✅ |
@@ -137,7 +156,7 @@ Rust callers behave identically.
 | Color Lookup / 3D LUT (apply a colour cube, film looks) | `op.color_lookup` (PS Color Lookup adjustment; trilinear `n×n×n` cube; loads `.cube` files via `cube_text`) | ✅ |
 | Match Color (transfer a reference's colour statistics) | `op.match_color` (PS Image ▸ Adjustments ▸ Match Color; Reinhard mean/std transfer) | ✅ |
 | Match Histogram (exact per-channel distribution specification) | `op.match_histogram` (CDF mapping to a reference image; more precise than mean/std) | ✅ |
-| Apply Image (blend another image with any blend mode) | `op.apply_image` (PS Image ▸ Apply Image; `source`/`mode`/`opacity`, all 28 modes via `LayerMode::blend_pixel`) | ✅ |
+| Apply Image (blend another image with any blend mode) | `op.apply_image` (PS Image ▸ Apply Image; `source`/`mode`/`opacity`, all 29 modes via `LayerMode::blend_pixel`) | ✅ |
 | Calculations (channel math → selection) | `op.calculations` (PS Image ▸ Calculations; blends two composite channels `channel_a`/`channel_b` (red/green/blue/gray) with any blend `mode` into a grayscale result stored as the new selection — the channel-math mask route) | ✅ |
 | Displace (warp pixels by a map image's brightness) | `op.displace` (PS/GIMP Distort ▸ Displace; `map`/`amount`/`amount_y`) | ✅ |
 | Bump Map (light the layer using a map as a height field) | `op.bump_map` (GIMP Map ▸ Bump Map; `map`/`azimuth`/`elevation`/`depth`) | ✅ |
@@ -179,6 +198,9 @@ Rust callers behave identically.
 | Torn Edges (ragged 2-tone) | `filter.torn_edges` (PS Sketch ▸ Torn Edges; threshold at `level` jittered ±`roughness` per pixel → frayed `light`/`dark` boundary, flats stay solid; `seed`) | ✅ |
 | Reticulation (clumpy film grain) | `filter.reticulation` (PS Sketch ▸ Reticulation; threshold tone against coherent value-noise (cell ≈ `density`) → dark tones get dense clumped black grain, distinct from `mezzotint` speckle; `seed`) | ✅ |
 | Softglow (dreamy highlight bloom) | `filter.softglow` (GIMP Artistic ▸ Softglow; sigmoidal highlight curve → Gaussian blur → screen-blend; `radius`/`brightness`/`sharpness` — distinct from additive `glow`) | ✅ |
+| Bloom (highlight-only light bleed) | `filter.bloom` (GIMP Light and Shadow ▸ Bloom / `gegl:bloom`; soft-knee bright pass above `threshold` → Gaussian blur `radius` → screen back scaled by `strength` — only highlights bleed, shadows stay crisp, unlike whole-image `glow`) | ✅ ⭐ NEW |
+| Long Shadow (Finite cast shadow) | `filter.long_shadow` (GIMP Light and Shadow ▸ Long Shadow / `gegl:long-shadow`, Finite; every opaque pixel casts a solid `color` shadow `length` px along `angle`, original composited on top) | ✅ ⭐ NEW |
+| Antialias (edge-directed Scale3X) | `filter.antialias` (`gegl:antialias`; Scale3X/Eagle super-samples each pixel's implied 3×3 block, box-averaged back to 1× — smooths jagged flat-region boundaries, leaves smooth areas untouched) | ✅ ⭐ NEW |
 | Wind / Stagger (directional edge streaks) | `filter.wind` (PS Stylize ▸ Wind; bleeds bright-edge colour downwind with falloff; `direction`/`strength`/`threshold` + `method` — "wind" (uniform) or "stagger" (alternates streak direction every row, the shaky look)) | ✅ |
 | Glowing Edges / Neon (coloured edge glow) | `filter.glowing_edges` (PS Stylize ▸ Glowing Edges / GIMP Edge-Detect ▸ Neon; per-channel Sobel × `intensity` → edges glow in the original hue on black, distinct from grey `edge`) | ✅ |
 | Trace Contour (per-channel iso-level outlines, Lower/Upper edge) | `filter.trace_contour` (PS Stylize ▸ Trace Contour; dark line per channel where the value crosses `level`, on white; `edge` "lower" inks the below-level side of each crossing, "upper" the at/above side — a 1px shift) | ✅ |
@@ -188,6 +210,9 @@ Rust callers behave identically.
 | Lens Correction (distortion + CA + vignette) | `filter.lens_correction` (PS Filter ▸ Lens Correction; one pass of geometric `distortion`/`edge` (via `lens_distortion`), `chromatic` aberration recombination, and `vignette` *removal* — brightening each pixel by `1 + vignette·r²` to lift darkened corners) | ✅ |
 | Whirl & pinch (swirl + radial pull within a circle) | `filter.whirl_pinch` (GIMP Distorts ▸ Whirl and Pinch; `whirl`/`pinch`/`radius`) | ✅ |
 | ZigZag (Pond Ripples / Around Center styles) | `filter.zigzag` (PS Distort ▸ ZigZag; ridge field `amount·sin(2π·ridges·r/maxr)` applied as a radial displacement (`pond`/out — dropped-pebble rings) or a `style:"around"` tangential one (oscillating rotational swirl, distinct from the monotonic `whirl_pinch`); `amount` 0 is identity) | ✅ |
+| Kaleidoscope (mirror-wedge radial symmetry) | `filter.kaleidoscope` (Krita Filters ▸ Artistic ▸ Kaleidoscope / GIMP Distorts; `segments` angular wedges, each output angle folded into the base wedge (odd wedges reflected so seams mirror) and rotated by `angle`, sampled bilinearly — turns any region into a seamless radial mandala) | ✅ |
+| Guided Filter (edge-preserving smoothing) | `filter.guided` (He/Sun/Tang 2013; the fast edge-preserving smoother behind modern detail-enhance / matting / dehaze. Each channel self-guides: fits `q = a·I + b` per `radius` window with `eps` regularization — flat areas smooth, high-variance edges kept) | ✅ |
+| Pixel Sort (databending / glitch) | `filter.pixel_sort` (Kim Asendorf pixel-sorting, in most glitch tools; within each row/`vertical` column, contiguous spans whose luma is in `[low, high]` are sorted by luma — the molten/streaked glitch look) | ✅ |
 | Oilify / oil painting (neighbourhood mode filter) | `filter.oilify` (GIMP Artistic ▸ Oilify) | ✅ |
 | Kuwahara (edge-preserving painterly smoothing) | `filter.kuwahara` (lowest-variance quadrant mean; keeps edges crisp) | ✅ |
 | Surface Blur / Selective Gaussian (edge-preserving smooth) | `filter.surface_blur` (PS Blur ▸ Surface Blur / GIMP Selective Gaussian) | ✅ |
@@ -230,8 +255,36 @@ Rust callers behave identically.
 | Sketch ▸ Water Paper | `filter.water_paper` (PS Sketch ▸ Water Paper; a vertical `fiber` motion blur runs colour along the grain, then a value-noise blotch (`contrast`) mottles brightness — soaked-fibre look; `seed`) | ✅ |
 | Video ▸ De-Interlace | `filter.deinterlace` (PS Filter ▸ Video ▸ De-Interlace; discards one field — `eliminate` "odd"/"even" — rebuilding those scanlines by `method` "interpolate" (mean of the rows above/below) or "duplicate" (copy the row above)) | ✅ |
 | Video ▸ NTSC Colors | `filter.ntsc_colors` (PS Filter ▸ Video ▸ NTSC Colors; clamps each channel into the broadcast-legal studio-swing range [16,235]) | ✅ |
-| Coverage note: PS near-duplicates already covered | Shape Blur → `lens_blur` (disc); Spin Blur → `radial_blur` spin; Path Blur → `motion_blur`; Pinch → `spherize` (negative); Render ▸ Tree out of scope (L-system generator) | N/A |
+| Blur ▸ Shape Blur | `filter.shape_blur` (PS Filter ▸ Blur ▸ Shape Blur, default round preset; average over a filled disc of `radius` — rotationally-symmetric, softer than the square Box Blur) | ✅ |
+| Blur Gallery ▸ Path Blur | `filter.path_blur` (PS Filter ▸ Blur Gallery ▸ Path Blur; spatially-varying directional blur — each pixel smears along the tangent of the nearest segment of a guide `path` over `length` samples; a curved guide curves the streaks) | ✅ |
+| Render ▸ Tree | `fill.tree` (PS Filter ▸ Render ▸ Tree; recursive L-system from the bottom-centre — `branches` children per node across `spread`°, `depth` levels, seeded jitter; branches thin and lerp `trunk`→`leaf` toward the tips) | ✅ |
+| Coverage note: PS near-duplicates already covered | Spin Blur → `radial_blur` spin; Pinch → `spherize` (negative) | N/A |
 | Progress streaming for long ops | (event sink, like sibling engines) | ⬜ |
+
+## ⭐ zphoto originals — invented capabilities beyond every competitor
+
+Features with no equivalent in Photoshop / Lightroom / GIMP / Affinity / Capture One / Krita /
+darktable / Pixelmator / RawTherapee. Real pure-Rust in-engine algorithms, each with a command
+and a test — not ports.
+
+| Invention | zphoto-core | Status |
+| --- | --- | --- |
+| ⭐ Rarity Vibrance (hue-frequency-weighted saturation) | `op.rarity_vibrance` — builds a saturation-weighted 36-bin hue histogram of the layer, then boosts each pixel's saturation *inversely* to how common its hue is, so statistically rare accent colours pop while the prevailing tones are protected. Competitor Vibrance weights only by a pixel's own current saturation; this is scene-statistics-aware. `strength` 0–2. | ✅ ⭐ NEW |
+| ⭐ Colour-Harmony Snap (conform a photo to a colour scheme) | `op.harmonize` — finds the image's dominant hue, derives the target hues of a classical scheme (`complementary`/`analogous`/`triadic`/`split`/`tetradic`) anchored there, and rotates every pixel along the shortest arc toward its nearest target by `strength`, leaving S/L intact. Krita/Illustrator harmony wheels only *pick swatches*; nothing conforms an existing image to a harmony. | ✅ ⭐ NEW |
+| ⭐ Isoluminance Remap (flatten to one perceived brightness) | `op.isoluminant` — rescales every pixel's RGB so its Rec.709 luminance equals `target`, preserving chromaticity. Single-step isoluminant-stimulus generation for chromatic-contrast / accessibility testing, the "colour-only" look, and luminance-neutral texture maps. No competitor exposes this as an operator. | ✅ ⭐ NEW |
+| ⭐ Auto Dodge & Burn (automatic volume sculpting) | `op.auto_dodge_burn` — extracts the broad illumination envelope with a very large Gaussian, then soft-light dodges the lit areas and burns the shadowed ones (`amount` −1…1), exaggerating a form's existing light modelling. Every competitor's dodge/burn is a manual brush; this automates the retoucher's dimensionality pass (distinct from midtone-micro-contrast `clarity`). | ✅ ⭐ NEW |
+| ⭐ Tonal Hue Rotation (luminance-parameterized hue twist) | `op.tonal_hue_shift` — rotates each pixel's existing hue by an angle interpolated from `shadow_deg` at black to `highlight_deg` at white, leaving S/L intact. Split-toning *adds* colour and colour-grading *offsets* tones; none *rotate the hues already present* by luminance — a filmic cross-processed twist. | ✅ ⭐ NEW |
+| ⭐ Chroma Clarity (local contrast on colour, not luma) | `op.chroma_clarity` — the colour analogue of Clarity: local contrast applied to the CIE L\*a\*b\* opponent (a/b) channels, so adjacent colours are pushed apart in chroma while brightness is untouched. Boosts colour separation / "pop" without the luminance halos of clarity or the global blanket of saturation. | ✅ ⭐ NEW |
+| ⭐ Reaction–Diffusion generator (Gray–Scott Turing patterns) | `fill.reaction_diffusion` — simulates two virtual chemicals diffusing and reacting (`feed`/`kill` select the regime: spots, stripes, coral, mazes, mitosis) from a seeded perturbation, then maps the settled concentration through `c1`→`c2`. No competitor ships a reaction–diffusion texture engine; produces the organic patterns of nature. | ✅ ⭐ NEW |
+| ⭐ Scene-aware Auto Tone (classifying auto-corrector) | `op.auto_tone_scene` — *classifies* the scene from its luma histogram + mean saturation (backlit / low-key / high-key / hazy / normal) and applies the strategy that scene needs (lift shadows / open midtones / recover highlights / dehaze / endpoint auto-contrast), reporting the detected scene. Every competitor "Auto" runs one fixed algorithm. | ✅ ⭐ NEW |
+| ⭐ Select by Texture (detail-energy masking) | `select.texture` — selects regions whose local texture energy (mean absolute luma gradient in a `radius` window) matches a sampled point within `tolerance`, rather than by colour (magic wand) or brightness (luminosity). Isolates smooth vs busy regions — skin vs fabric, sky vs foliage, blurred background vs sharp subject — independent of hue. | ✅ ⭐ NEW |
+| ⭐ Perceptual JND Audit (will anyone *see* this edit?) | `op.jnd_audit` (`ops::jnd_audit`, `src/ops.rs:2712`) — scores the active layer against a reference with **CIEDE2000** attenuated by a spatial contrast-masking model, inserts a visibility heatmap layer (transparent below the just-noticeable difference) and reports mean/median/p95/max ΔE₀₀ plus the share of pixels a human would actually notice. A per-channel *Difference* blend weights an invisible highlight shift and a glaring shadow artefact identically; this does not. | ✅ ⭐ NEW |
+| ⭐ 8-bit Banding Forecast (pre-export posterisation prediction) | `op.banding_forecast` (`ops::banding_forecast`, `src/ops.rs:2953`) — predicts from the float working buffer *where* quantisation contours will appear once the image is flattened to 8-bit, before the export runs: plateau width `1/\|∇luma\|`, 8-bit step-edge detection, and the local texture that masks banding. Paints the predicted contours as a heatmap and reports risk %, smooth at-risk area and the widest band. No editor forecasts banding. | ✅ ⭐ NEW |
+| ⭐ Dichromatic Specular Separation (split by reflection physics) | `op.specular_separation` (`ops::specular_separation`, `src/ops.rs:3110`) — splits a photograph into stacked, editable **Diffuse** and **Specular** layers per Shafer's dichromatic reflection model (`β = max(0, Vmin − Tv)`, `Tv = mean(Vmin) + threshold·std(Vmin)`), so Diffuse + Specular reconstruct the original exactly at Amount = 1. Frequency separation splits by spatial frequency; this splits by the physics of reflection. | ✅ ⭐ NEW |
+| ⭐ Banding-Negotiated Export (export settings chosen against a predicted artefact) | `image.export_negotiate` + `image.save { negotiate: true }` (`ops::negotiate_export`, `ops::apply_export_dither`) — takes the banding forecast as an objective function and searches the **per-region dither amplitude** that drives it to zero, then reports a "0 predicted visible contours" certificate; regions dither cannot reach at the amplitude budget are escalated as needing more than 8 bits rather than left banding. Amplitudes are blended between region centres so per-region settings do not replace a banding seam with a noise seam. Every editor that dithers on export dithers blind, with one global setting and no statement about whether it worked. | ✅ ⭐ NEW |
+| ⭐ Perceptual Edit Attribution (which layer earns its place?) | `comp.attribute` (`Engine::dispatch_comp_attribute`, `src/lib.rs:3084`) — re-renders the stack with each candidate ablated and compares the two composites with the contrast-masked CIEDE2000 metric, ranking layers, a Smart Object's filter stack (`scope: "smart_filters"`) or a recorded Action (`scope: "action"`). Because the reference is the *whole composite*, a layer hidden behind an opaque one scores zero — the failure mode of every pairwise difference view. Read-only: never mutates the document, never burns an undo slot. | ✅ ⭐ NEW |
+| ⭐ Edit-Program Compiler (an Action as a compiled program) | `program.analyze` / `program.optimize` / `program.apply` (`program::fuse_luts` `src/program.rs:194`, `program::optimize` `src/program.rs:305`) — fuses runs of adjacent pointwise tone ops into one 256-entry LUT (`fused[i] = lut2[lut1[i]]`, asserted **bit-exact** at 8/16/32 bits rather than within a tolerance), removing K−1 buffer traversals, quantisation passes and selection clones per fused run. Refuses to fuse under a feathered selection or across non-LUT ops, and names the reason. Always writes a new named program; the source Action is untouched. | ✅ ⭐ NEW |
+| ⭐ Constraint Solve (run an edit program backwards) | `program.solve` (`solve::solve`, `src/solve.rs:543`) — the user pins colour samplers, states the colour each must land on (`sampler.target`), and the engine solves the parameters of their own recorded program to get there, minimising CIEDE2000 at the pinned points. The answer is written back as ordinary arguments of the ordinary commands (a solved `gamma`, `in_low`, `brightness`, curve control point), so the result stays an editable stack, not a baked LUT. Constraints are `equal` / `at_most` / `at_least`, individually weighted; the objective is regularised toward the user's existing values; per-constraint residuals are reported in ΔE₀₀ against the JND threshold rather than a silent best-effort. Never touches a pixel buffer, so it converges independently of image size. | ✅ ⭐ NEW |
 
 ## Selections, paths, tools (`app/core` selection, `app/paint`, `app/tools`)
 
@@ -293,6 +346,9 @@ Rust callers behave identically.
 | Render: plasma (colourful turbulence) | `fill.plasma` (GIMP Render ▸ Noise ▸ Plasma; independent per-channel fractal noise → colourful turbulence, `scale`/`turbulence`/`seed`, distinct from grey `clouds`) | ✅ |
 | Render: difference clouds (marbling) | `fill.difference_clouds` (PS Render ▸ Difference Clouds; renders clouds and difference-blends onto existing pixels — on black = clouds, on white = inverted, repeated = marbled veins) | ✅ |
 | Render: lighting effects (spotlight) | `filter.lighting_effects` (PS Render ▸ Lighting Effects spotlight subset; light field peaks at `lx`/`ly`, linear falloff to `radius`, plus `ambient` — lit near the lamp, shadowed away; `brightness`) | ✅ |
+| Render: maze (perfect maze, two-tone) | `fill.maze` (GIMP Render ▸ Pattern ▸ Maze; recursive-backtracker depth-first carve on a `cell`-px lattice → `wall`/`path` colours, deterministic per `seed`, selection-aware) | ✅ ⭐ NEW |
+| Render: sinus (interference weave) | `fill.sinus` (GIMP Render ▸ Pattern ▸ Sinus / `gegl:sinus`; two colours blended by `sin(2π·x/scale_x)·sin(2π·y/scale_y)` shaped by `complexity`, canvas-keyed, selection-aware) | ✅ ⭐ NEW |
+| Render: spiral (two-colour Archimedean bands) | `fill.spiral` (GIMP Render ▸ Pattern ▸ Spiral / `gegl:spiral`; `thickness`-px bands winding `turns` times about the layer centre, alternating `color1`/`color2`, selection-aware) | ✅ ⭐ NEW |
 | Paint: clone stamp + smudge | `paint.clone` / `paint.smudge` + GUI tools | ✅ |
 | Paint: Spot Healing Brush (auto-source) | `paint.spot_heal` (PS Spot Healing Brush; each dab is inpainted from the mean of the ring just outside the brush — removes a blemish from its surroundings, no manual source unlike `paint.heal`) | ✅ |
 | Paint: History Brush (paint from an earlier state) | `paint.history` (PS History Brush; brushes this layer's pixels from a snapshot `state` steps back — default 1 = the last edit's prior state — so a region can be reverted by hand) | ✅ |
@@ -333,19 +389,31 @@ Rust callers behave identically.
 | Canvas display of the real composite | `drawCanvas` via `image.render` | ✅ |
 | Layers panel | `zphoto-view.js` table | ✅ basic |
 | New image / add layer / fill | toolbar + palette | ✅ |
-| Save/export dialog | — | ⬜ |
-| Tools UI (selection, brush, transform) | — | ⬜ |
+| Save/export dialog | `saveAs` → PNG/JPEG/BMP/TIFF/PSD/XCF (`image.save`) + Save Project (`.zpo`) / Save Vector Project (`.json`) | ✅ |
+| Tools UI (selection, brush, transform) | left tool dock (59 buttons: 32 selection/shape/vector tools local to the view + the 27 paint tools contributed by `ZGui.paint`) + context-sensitive tool options bar + `pickTool`/`renderOptionsBar` | ✅ |
 | Eyedropper (colour pick) + Histogram (bins + mean/median/std/min/max) | `image.pick` / `image.histogram` + GUI tool & modal chart | ✅ |
-| Colour Sampler points (Info-panel markers) | `sampler.add`/`sampler.list`/`sampler.delete`/`sampler.clear` (PS Info-panel colour samplers; persistent `(x,y)` markers that report the live composite colour under each) | ✅ |
+| Count tool (connected-blob object count) | `image.count` (PS Analysis ▸ Count Tool; flood-fills the composite for connected opaque blobs above an alpha `threshold` and returns the tally) + Image menu (threshold dialog → toast) | ✅ |
+| Measure / Ruler (distance + angle between two points) | `image.measure` (PS Ruler tool / Analysis; returns Euclidean `distance`, `angle`, `dx`, `dy` between two canvas points) + Image menu (two-point dialog → toast) | ✅ |
+| Colour Sampler points (Info-panel markers) | `sampler.add`/`sampler.list`/`sampler.target`/`sampler.delete`/`sampler.clear` (PS Info-panel colour samplers; persistent `(x,y)` markers that report the live composite colour under each, and optionally carry a *target* colour that drives `program.solve`) | ✅ |
 | Annotations (Note tool) | `note.add`/`note.list`/`note.delete`/`note.clear` (PS Note tool; `(x,y,text)` notes anchored on the document) | ✅ |
-| GUI Polish Gate (G1–G4 / R1–R10) | see `README.md` | 🚧 scaffold only |
+| GUI Polish Gate (G1–G4 / R1–R10) | see `README.md` — terminal, hooks editor, file browser and the 27-locale i18n catalogue are wired; the 18 i18n proof tests, shared-component tables and the full haxor script surface are still owed | 🚧 |
 
 ## Command surface today
 
-`capabilities` · `image.new` · `image.open` · `image.save` · `image.list` · `image.get`
-· `image.render` · `image.crop` · `image.scale` · `image.delete` · `layer.add` · `layer.list`
-· `layer.remove` · `layer.fill` · `layer.set` · `layer.duplicate` · `layer.reorder`
-· `op.invert` · `op.desaturate` · `op.gamma` · `op.threshold` · `op.brightness_contrast`
-· `op.levels` · `edit.undo` · `edit.redo` · `edit.history`
+The engine dispatches a single app command (`zphoto_invoke { cmd, args }`) over these namespaces
+(source of truth = the `dispatch_*` arms in `crates/zphoto-core/src/lib.rs`):
 
-Next up: curves, neighbourhood ops (gaussian blur / sharpen), hue-saturation, then selections.
+`image.*` · `layer.*` (+ `layer.smart_*`) · `op.*` (point/colour adjustments) · `filter.*`
+(neighbourhood + gallery filters) · `fill.*` (bucket / gradient / pattern / generative render) ·
+`select.*` · `channel.*` · `pattern.*` · `comp.*` · `brush.*` · `sampler.*` · `note.*` · `slice.*` · `path.*`
+· `vec.*` (the Illustrator vector engine) · `project.*` · `paint.*` · `text.*` · `edit.*`
+(undo / redo / copy / paste / fade / history) · `action.*` (record / replay macros) · `program.*` (the edit-program compiler and Constraint Solve) · `capabilities`.
+
+The `zphoto` GUI (`crates/zphoto-core/webui/zphoto-view.js`, served by the app) exposes these through
+the menu bar (File / Edit / Image / Layer / Select / Adjust / Filter / Vector / Type / View / Window),
+the tool dock, and the Photoshop-style docked panels (Layers / Channels / Histogram / Navigator /
+History / Adjustments / Styles / Colour / Swatches / Paths / Vector Objects / Properties / Symbols).
+The Adjust menu carries one-click auto ops plus live-preview slider dialogs (Exposure, Temperature,
+CLAHE, Retinex, Velvia, …); the Filter menu is a full gallery over every `filter.*` op grouped like
+Photoshop (Artistic / Blur / Distort / Noise / Pixelate / Render / Sharpen / Sketch / Stylize /
+Texture / Other) plus generative renders (Clouds, Plasma, Reaction-Diffusion, Tree, …).

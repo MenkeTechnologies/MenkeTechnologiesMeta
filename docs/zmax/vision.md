@@ -23,9 +23,9 @@ can `brew install`.**
    bundled languages, a fuzzy file picker, a project file tree, a real PTY
    terminal, magit-style git, diff/merge tooling, run configurations, a
    minimap, narrowing, folding, multiple selections, an org-mode agenda, a hex
-   editor, settings/theme/keymap editors, a searchable help browser, and **five
+   editor, settings/theme/keymap editors, a searchable help browser, and **ten
    embedded scripting languages with a live REPL** (elisp, vimscript, awk, zsh,
-   stryke) — no FFI, no external executables.
+   stryke, ruby, php, python, node, arb) — no FFI, no external executables.
 
 3. **CLI-first, native.** Terminal is the primary surface, not a fallback. No
    Electron, no DOM, no Node. Native-compiled Rust that runs in an SSH session
@@ -43,9 +43,13 @@ can `brew install`.**
 
 Coverage is not asserted by hand; it is **re-derived from zmax source on every
 report run** and measured against the *exhaustive, cited* feature inventories of
-Vim/Neovim, Emacs, Spacemacs, and JetBrains (parsed from each tool's own
-documentation). A mapping that points at non-existent code is flagged as broken,
-not counted. See [`port/README.md`](../port/README.md) for the honesty contract.
+the other terminal editors — Vim/Neovim, Emacs, Spacemacs and JetBrains, and
+beside them kakoune, vis, sam, ed, nvi, vile, mg, nano, micro, mcedit, ne, dte
+and the Neovim distributions — each parsed from that tool's own documentation or,
+where its docs are prose, from the table its build reads (vile's `cmdtbl`,
+nano's `src/global.c`, mc's shipped keymap). A mapping that points at
+non-existent code is flagged as broken, not counted. See
+[`port/README.md`](../port/README.md) for the honesty contract.
 
 The headline measure is **functionality coverage** — distinct editor
 *capabilities*, counted once regardless of how many ancestor editors expose the
