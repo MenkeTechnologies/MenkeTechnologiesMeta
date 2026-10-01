@@ -16,17 +16,19 @@
 ![JUCE](https://img.shields.io/badge/JUCE-8.0.13-ff2a6d?style=flat-square)
 ![C++](https://img.shields.io/badge/C%2B%2B-20-05d9e8?style=flat-square)
 ![Formats](https://img.shields.io/badge/VST3%20%C2%B7%20AU%20%C2%B7%20CLAP%20%C2%B7%20Standalone-39ff14?style=flat-square)
-![MenkeTechnologies](https://img.shields.io/badge/MenkeTechnologies-audio%20stack-d300c5?style=flat-square)
+![MTAudio](https://img.shields.io/badge/MTAudio-audio%20stack-d300c5?style=flat-square)
 
 ### `[MODULAR MIDI EFFECT / GENERATOR]`
 
 > *"A patchable grid of note-stream modules."*
 
-A modular MIDI effect / generator plugin (VST3 · AU · CLAP · Standalone) built on JUCE, with a cyberpunk WebView UI. Created by MenkeTechnologies. Part of the MenkeTechnologies audio stack alongside [zpwr-synth](https://github.com/MenkeTechnologies/zpwr-synth) and [zpwr-fx](https://github.com/MenkeTechnologies/zpwr-fx).
+A modular MIDI effect / generator plugin (VST3 · AU · CLAP · Standalone) built on JUCE, with a cyberpunk WebView UI. Created by MTAudio. Part of the MTAudio audio stack alongside [zpwr-synth](https://github.com/MenkeTechnologies/zpwr-synth) and [zpwr-fx](https://github.com/MenkeTechnologies/zpwr-fx).
 
 Where [Xfer Cthulhu](https://xferrecords.com/products/cthulhu) is a fixed chord + arp, zpwr-midi-fx is a **patchable grid of MIDI modules** — the same modular-patch model as zpwr-fx, but the signal flowing between blocks is a stream of note events, not audio. Wire `MIDI In → blocks → Out`, cross-modulate block parameters from a mod matrix, and drive it all from soft keys, LFOs, envelopes and live MIDI/MPE expression. The audio path is pass-through, so it drops in front of any instrument.
 
 ### [`zpwr-fx`](https://github.com/MenkeTechnologies/zpwr-fx) · [`zpwr-synth`](https://github.com/MenkeTechnologies/zpwr-synth) · [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core)
+
+### [`Read the Docs`](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-midi-fx) &middot; [`Engineering Report`](https://menketechnologies.github.io/MenkeTechnologiesMeta/zpwr-midi-fx/report)
 
 ---
 
@@ -39,7 +41,8 @@ Where [Xfer Cthulhu](https://xferrecords.com/products/cthulhu) is a fixed chord 
 - [\[0x04\] Architecture](#0x04-architecture)
 - [\[0x05\] Build](#0x05-build)
 - [\[0x06\] Test](#0x06-test)
-- [\[0x07\] Presets](#0x07-presets)
+- [\[0x07\] Note Safety (Static Prover)](#0x07-note-safety-static-prover)
+- [\[0x08\] Presets](#0x08-presets)
 - [\[0xFF\] License](#0xff-license)
 
 ---
@@ -62,11 +65,11 @@ MIDI In ─▶ [B1 Chord] ─▶ [B2 Arp] ─▶ Out A ─▶ MIDI Out
 
 ## [0x01] MODULE LIBRARY
 
-**66 note-stream modules** — harmony, sequencing, probability, routing, control sources, dynamics, tuning, MPE/voicing, plus a family of cellular-automaton sequencers (Game of Life, Brian's Brain, Langton's Ant). The table below is a representative selection; `docs/reference.html` lists every block with its inputs and parameters, generated from the live registry so it never drifts.
+**563 note-stream modules** across 11 categories — harmony, sequencing, probability, routing, control sources, dynamics, expression, tuning, MPE/voicing, plus a family of cellular-automaton sequencers (Game of Life, Brian's Brain, Langton's Ant). The table below is a representative selection; `docs/reference.html` lists every block with its inputs and parameters, generated from the live registry so it never drifts.
 
 | Module | What it does |
 |--------|--------------|
-| **Chord** | one key → a voiced chord (165 types, inversion, spread, octave-double, transpose, strum) |
+| **Chord** | one key → a voiced chord (166 types, inversion, spread, octave-double, transpose, strum) |
 | **Arp** | host-synced arpeggiator (9 play modes, divisions, gate, octaves, swing) |
 | **Scale** | snap every note onto the nearest in-key pitch (20 scales) |
 | **Transpose** | shift notes by semitones (modulatable) |
@@ -76,30 +79,30 @@ MIDI In ─▶ [B1 Chord] ─▶ [B2 Arp] ─▶ Out A ─▶ MIDI Out
 | **Harmonize** | stack up to three fixed intervals |
 | **Echo** | MIDI delay with feedback (decaying repeats) |
 | **Merge** | combine two note streams |
-| **LFO** | scalar control source (sine / tri / saw / square) |
-| **Env** | ADSR envelope follower, gated by held notes — a scalar control source |
+| **MidiLFO** | scalar control source (sine / tri / saw / square) |
+| **MidiEnv** | ADSR envelope follower, gated by held notes — a scalar control source |
 | **Octave** | add octave-up / octave-down copies |
 | **NoteFilter** | pass only notes within a note + velocity range (key zone) |
 | **Mono** | collapse to monophonic with note priority (last / lowest / highest) |
-| **Latch** | toggle-hold notes — sustain until re-pressed, ignore note-offs |
+| **MidiLatch** | toggle-hold notes — sustain until re-pressed, ignore note-offs |
 | **Strum** | spread simultaneous notes in time (up / down) |
-| **Quantize** | snap note timing to a grid (rate + strength) |
+| **MidiQuantize** | snap note timing to a grid (rate + strength) |
 | **Channel** | remap the output MIDI channel |
 | **FixedNote** | force every note to one pitch (drum triggering) |
-| **Random** | clock-driven random-note generator over a range |
-| **SampleHold** | sample a scalar source on note triggers — a control source |
-| **Slew** | smooth a scalar source — a control source |
+| **MidiRandom** | clock-driven random-note generator over a range |
+| **MidiSampleHold** | sample a scalar source on note triggers — a control source |
+| **MidiSlew** | smooth a scalar source — a control source |
 | **VelCurve** | reshape velocity through a gamma curve |
 | **RandOctave** | randomly shift notes by ± octaves (probability) |
 | **Humanize** | jitter note timing and velocity for a played feel |
 | **SeqRatchet** | split each note into N rapid retriggers over one division |
 | **KeySwitch** | keyboard split — one zone plays, the other holds back |
-| **Fold** | octave-fold every note into a fixed [low, high] window |
+| **MidiFold** | octave-fold every note into a fixed [low, high] window |
 | **NoteLength** | force every note to a fixed gate length |
 | **Accent** | boost the velocity of every Nth note (downbeat) |
 | **VelClip** | clamp note velocity into a [min, max] window |
 | **Invert** | melodic inversion — reflect notes around a pivot |
-| **Unison** | layer each note as N copies, optional channel spread (MPE) |
+| **MidiUnison** | layer each note as N copies, optional channel spread (MPE) |
 | **Ramp** | velocity crescendo/decrescendo cycling over N notes |
 
 ---
@@ -108,7 +111,8 @@ MIDI In ─▶ [B1 Chord] ─▶ [B2 Arp] ─▶ Out A ─▶ MIDI Out
 
 A dynamic list of routes, each mapping a **scalar source → any block parameter** with a depth. Sources:
 
-- **Soft Keys** (expandable pool of host-automatable macros; 16 active by default, `+`/`−` to add/remove, active count saved in plugin state)
+- **Soft Keys** (expandable pool of host-automatable macros, ceiling 32; 16 active by default, `+`/`−` to add/remove, active count saved in plugin state)
+- **Auto-param pool** — a reserved pool of 96 `Auto N` host params; right-click any block param to bind it (the Kontakt/Reaktor model), so any module parameter becomes host-automatable / CC-mappable. 32 soft keys + 96 auto params = **128 CC-mappable slots**, one per MIDI CC.
 - **LFO** and **Env** block outputs
 - **Random**
 - **Performance controllers** — Mod Wheel, Pitch Bend, Aftertouch, Velocity, Expression (CC11), Sustain (CC64)
@@ -119,8 +123,6 @@ Routing (source / destination) rebuilds the graph; depth is a live, lock-free tw
 ---
 
 ## [0x03] PERFORM & GLOBAL
-
-**Stereo** — `⊞ STEREO` mirrors every block, cable and mod into an independent right-channel chain (`In R → Out R`), kept in sync as you edit; knobs stay independent so you can dial width. `🔒 LOCK` additionally keeps the mirrored knobs locked to the left channel — the lock is **bidirectional** (moving either the left knob or its clone moves the partner) and **offset-preserving** (the partner moves by the same delta, so a width you dialled in plain Stereo isn't reset to L=R). Locked clone blocks are dimmed.
 
 **PERFORM tab** — a macros-and-pads view with no patching, for live play:
 
@@ -139,9 +141,9 @@ Routing (source / destination) rebuilds the graph; depth is a live, lock-free tw
 
 ```
 libs/zpwr-patch-core/  the shared zpc graph (submodule) + the shared cyberpunk webui
-dsp/    JUCE-independent note engines (headless-testable)
-        MidiTypes · ChordDictionary · ChordEngine · Scale · Euclidean · Arpeggiator
-        MidiModules    — the 66 MIDI modules + note-stream signal policy, on zpc
+        src/midi/      JUCE-independent note engines (headless-testable)
+                       MidiTypes · ChordDictionary · ChordEngine · Scale · Euclidean · Arpeggiator
+                       MidiModules — the 563 MIDI modules + note-stream signal policy, on zpc
 src/    JUCE plugin shell
         PluginProcessor — APVTS soft keys, MIDI/MPE capture, transport-driven processBlock
                           feeding zpc::PatchEngine<NoteStream>
@@ -162,19 +164,21 @@ cmake -S . -B build
 cmake --build build
 ```
 
+For parity with the MenkeTechnologies desktop apps, a `pnpm` wrapper drives the same CMake build: `pnpm build` (configure-if-needed + Release build), `pnpm dev` (build then launch the Standalone), `pnpm rebuild` / `pnpm clean` / `pnpm bust` / `pnpm nuke` (wipe `build/` + WebView caches and rebuild). The scripts live in `scripts/` and require no Node dependencies. `scripts/build.sh` configures with `-DCMAKE_BUILD_TYPE=Release`, so its artefacts land under a `Release/` config directory.
+
 Build a single format/target instead of all of them:
 
 ```sh
-cmake --build build --target ZpwrMidiFx_Standalone   # or _VST3 / _AU / _CLAP
+cmake --build build --target Zmidifx_Standalone   # or _VST3 / _AU / _CLAP
 ```
 
 On macOS the default build is a **universal binary** (`x86_64;arm64`) — the VST3/AU/CLAP load on both Intel and Apple Silicon hosts. For a faster host-only dev build, configure a fresh build dir with `-DCMAKE_OSX_ARCHITECTURES=arm64` (the architecture is cached).
 
-`scripts/build_pkg.sh` bundles the built universal VST3/AU/CLAP into a macOS `.pkg` that installs into the system plug-in folders (`/Library/Audio/Plug-Ins/{VST3,Components,CLAP}`) and the Standalone app into `/Applications`; run it after building the `ZpwrMidiFx_VST3 ZpwrMidiFx_AU ZpwrMidiFx_CLAP ZpwrMidiFx_Standalone` targets → `dist/ZpwrMidiFx-<version>.pkg`. Product name, version and bundle id are read from the build tree — nothing is hardcoded.
+`scripts/build_pkg.sh` bundles the built universal VST3/AU/CLAP into a macOS `.pkg` that installs into the system plug-in folders (`/Library/Audio/Plug-Ins/{VST3,Components,CLAP}`) and the Standalone app into `/Applications`; run it after building the `Zmidifx_VST3 Zmidifx_AU Zmidifx_CLAP Zmidifx_Standalone` targets → `dist/zmidifx-<version>.pkg`. Product name, version and bundle id are read from the build tree — nothing is hardcoded.
 
 **Windows:** builds **VST3 + CLAP** (AU is macOS-only, auto-dropped); x64 and ARM64 are separate builds (no universal binary). `scripts/build_win.ps1` configures, builds each arch and stages to `dist\win\<arch>\` — `scripts\build_win.ps1 [-Arch x64|ARM64|both] [-Install]`. Requires Visual Studio 2022 (Desktop C++) + CMake; it installs the `Microsoft.Web.WebView2` NuGet package (needed by the WebView UI via `NEEDS_WEBVIEW2`) if missing. Validate with [pluginval](https://github.com/Tracktion/pluginval) (VST3) and [clap-validator](https://github.com/free-audio/clap-validator) (CLAP).
 
-With `COPY_PLUGIN_AFTER_BUILD` the VST3/AU are installed to the user plugin folders automatically. To build against a local JUCE clone (offline):
+`COPY_PLUGIN_AFTER_BUILD` is `FALSE`, so the VST3/AU/CLAP are **not** auto-installed into the user plugin folders — copy them manually (or run `scripts/build_pkg.sh`) if you want the host to scan them. To build against a local JUCE clone (offline):
 
 ```sh
 cmake -S . -B build -DFETCHCONTENT_SOURCE_DIR_JUCE=/path/to/JUCE
@@ -187,10 +191,19 @@ cmake -S . -B build -DFETCHCONTENT_SOURCE_DIR_JUCE=/path/to/JUCE
 ```sh
 # regenerate docs/reference.html from the registry
 cmake --build build --target gen_reference
-build/gen_reference_artefacts/Debug/gen_reference docs/reference.html
+build/gen_reference_artefacts/<config>/gen_reference docs/reference.html   # <config> = Release via scripts/build.sh
 # rebuild docs/reference.pdf (needs pandoc + xelatex) — also refreshes the HTML
 scripts/reference_pdf.sh
 ```
+
+`scripts/reference_pdf.sh` builds the dark screen edition by default. `PRINT=1` builds the print edition instead — the same content re-themed to a white page with a grayscale ramp (KDP bills a `\pagecolor` page at the premium-colour rate) and a 0.9in margin, written to `docs/reference-print.tex` / `docs/reference-print.pdf`; the screen PDF is left untouched. `scripts/print_cover.sh` then wraps that interior in a KDP full-wrap paperback cover (back · spine · front as one 300 DPI sRGB JPEG). The spine width is measured from the interior's page count, so the cover must be rebuilt whenever the interior is:
+
+```sh
+PRINT=1 scripts/reference_pdf.sh   # → docs/reference-print.pdf (+ .tex)
+scripts/print_cover.sh             # → docs/cover-print.jpg (needs ImageMagick 7 + poppler)
+```
+
+`print_cover.sh` reads `INTERIOR` / `OUT` / `EDITION` from the environment if you want to point it at a different interior or output path.
 
 The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared by all four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw); per-block docs come from each block's `description`/`category` metadata.
 
@@ -204,14 +217,61 @@ ctest --test-dir build --output-on-failure
 
 Coverage: the chord dictionary and voicing engine, scale quantizer, Euclidean generator, arpeggiator traversal, and the full patch graph — routing, pass-through, every module, the mod matrix (soft-key / aftertouch / envelope modulation) and JSON round-tripping.
 
+The NOTE SAFETY prover (below) is pure JS with its own node test:
+
+```sh
+node libs/zpwr-patch-core/webui/zpc-note-safety.test.mjs
+```
+
 ---
 
-## [0x07] PRESETS
+## [0x07] NOTE SAFETY (STATIC PROVER)
 
-A factory bank ships with the plugin (Chord Arp, Strummed Chords, Euclidean Pulse, Fifth Harmonizer, Arp Echo, Random Walk, Step Melody, Tone Cluster, Jazz Voicing, MPE Spread and more) spanning arps, harmony, rhythm, generative and FX chains. User patches are saved as `zpwr-midi-fx/Presets/*.zmfxpatch` under the user application data directory and managed from the PRESETS tab.
+The note graph is a compiler problem, and nobody in the field treats it as one: Cthulhu,
+Scaler, Bome and the Logic / Live MIDI-FX racks ship **no** static analysis. A hung note is
+discovered by hearing it, and the industry's answer is a panic button.
+
+NOTE SAFETY proves the defect absent **before playback**, over the whole reachable graph, by
+abstract interpretation — the same technique the verified logic clips already use, on a new
+domain. It decides two properties from the patch JSON alone, with no engine round-trip:
+
+**1. Hung notes.** A block that can hold a note with no bounded release admits an input
+sequence that leaves a note sounding forever, and the prover constructs that witness:
+
+- `Sustain` — engage Hold, play a key, release it, leave Hold engaged.
+- `MidiLatch` — strike a key once and stop (the latch releases only when that same pitch is
+  struck again).
+
+It is only a defect if the note reaches MIDI Out without passing a block that re-imposes a
+bounded gate on **every** path (`StaccatoCut` / `TenutoHold` swallow the incoming note-off and
+schedule their own, so they discharge the hold). A note-stream feedback loop reaching MIDI Out
+is reported the same way: each block re-injects its own notes, so the count grows without bound.
+
+**2. Polyphony budget.** An interval of simultaneously sounding notes is propagated from the
+note inputs through each block's transfer function to the outputs, and compared against a
+declared budget. `Chord`, `Harmonize`, `MidiCluster`, `MidiUnison`, `Drone` and `Cascade`
+multiply; `NoteLimit` and `MaxPolyphony` are the only blocks that can clamp an unbounded stream
+back to a bounded one; `Arp` collapses the held pool to one sounding note.
+
+**Soundness.** Most note-stream blocks are count-preserving, so that is the default — but the
+prover does not simply trust its table. It re-derives suspicion from the catalog: a block
+carrying a count-shaped parameter (`Voices` / `Max` / `Steps` / `Width` / `Octaves` / …) or
+sitting in a note-multiplying category with no modelled transfer drives the count to unbounded
+and **reports itself as unmodelled**. A newly added multiplier therefore degrades the proof to
+"cannot prove" and says which block did it — it never silently under-counts.
+
+Findings compose into the whole-session SESSION PROOF report exactly like the patch analyzers:
+a provable hang or an unbounded loop is an Error (it blocks a render), an unmodelled multiplier
+or an unprovable budget is a Warning.
+
+---
+
+## [0x08] PRESETS
+
+A factory bank ships with the plugin (Chord Arp, Strummed Chords, Euclidean Pulse, Fifth Harmonizer, Arp Echo, Random Walk, Step Melody, Tone Cluster, Jazz Voicing, MPE Spread and more) spanning arps, harmony, rhythm, generative and FX chains. User patches are saved as gzip-compressed JSON `zmidifx/Presets/*.zmp` under the user application data directory (data saved before the rename under `zpwr-midi-fx/` is copied across once on first launch, never overwriting a file of the same name) and managed from the PRESETS tab; the BROWSE tab exports/imports a **bank** — a `.zmb` collection of presets — via ⤓/⤒ BANK.
 
 ---
 
 ## [0xFF] LICENSE
 
-© MenkeTechnologies. Part of the MenkeTechnologies audio stack alongside [zpwr-fx](https://github.com/MenkeTechnologies/zpwr-fx), [zpwr-synth](https://github.com/MenkeTechnologies/zpwr-synth), and [zpwr-patch-core](https://github.com/MenkeTechnologies/zpwr-patch-core).
+© MenkeTechnologies. Part of the MTAudio audio stack alongside [zpwr-fx](https://github.com/MenkeTechnologies/zpwr-fx), [zpwr-synth](https://github.com/MenkeTechnologies/zpwr-synth), and [zpwr-patch-core](https://github.com/MenkeTechnologies/zpwr-patch-core).
