@@ -167,8 +167,8 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/traderview/issues" target="_blank" rel="noopener noreferrer">Issues</a>
           </nav>
-          <p class="docs-build-line">traderview v0.30.19 · Tauri v2 + axum · embedded or external Postgres · vanilla JS + uPlot frontend · 15 broker importers · 1444-tile launcher · MIT</p>
-          <p class="docs-build-line"><span id="tvLoc">988,071 Rust LOC · 8 library crates + Tauri shell · 128 tables · 111 migrations · 3,120 axum routes · 1447 view modules · 1444 launcher tiles · 312,828 JS LOC · 7,876 CSS LOC</span></p>
+          <p class="docs-build-line">traderview v0.30.20 · Tauri v2 + axum · embedded or external Postgres · vanilla JS + uPlot frontend · 15 broker importers · 1444-tile launcher · MIT</p>
+          <p class="docs-build-line"><span id="tvLoc">988,194 Rust LOC · 8 library crates + Tauri shell · 128 tables · 111 migrations · 3,120 axum routes · 1447 view modules · 1444 launcher tiles · 312,196 JS LOC · 7,876 CSS LOC</span></p>
           <!-- Rust LOC derived from: git ls-files '*.rs' | xargs wc -l | tail -1  (git ls-files skips the vendored submodule crates) -->
           <!-- axum routes derived from: grep -rE '\.route\(' crates/traderview-web/src/ | wc -l -->
           <!-- JS LOC derived from: find frontend/js -name '*.js' | xargs wc -l | tail -1 -->
@@ -271,16 +271,16 @@ cargo run -p traderview-web --bin server
             <tr><th>Crate</th><th>Lines</th><th>Purpose</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>traderview-core</code></td><td>316,378</td><td>Domain types (User / Account / Execution / Trade / Plan / Goal / Strategy), FIFO roll-up, statistics (win-rate / expectancy / R-multiple / SQN / Sharpe / Sortino), Kelly + correlation-aware position sizing, Monte Carlo equity forecaster, stryke-JIT backtest engine + walk-forward sweeper, sentiment scoring, custom indicator AST, and 1,500+ pure financial calculators (trading / investing / wealth / accounting / small-business / rental).</td></tr>
-            <tr><td><code>traderview-db</code></td><td>96,664</td><td>sqlx pool factory + 111 embedded migrations, embedded PostgreSQL lifecycle (stale-PID lock cleanup, persisted password file), 50+ repo modules covering everything from <code>trades</code> &amp; <code>journal</code> to live <code>halts</code> &amp; <code>catalysts</code> &amp; <code>live_ticks</code> stores, plus the stryke lifecycle-hook store + edge-detection ledger. Background pollers for Yahoo / FINRA / EDGAR / nasdaqtrader / Finnhub WS / Reddit WSB / StockTwits / CoinGecko. In-process LRU caches with eviction.</td></tr>
+            <tr><td><code>traderview-core</code></td><td>320,094</td><td>Domain types (User / Account / Execution / Trade / Plan / Goal / Strategy), FIFO roll-up, statistics (win-rate / expectancy / R-multiple / SQN / Sharpe / Sortino), Kelly + correlation-aware position sizing, Monte Carlo equity forecaster, stryke-JIT backtest engine + walk-forward sweeper, sentiment scoring, custom indicator AST, and 1,500+ pure financial calculators (trading / investing / wealth / accounting / small-business / rental).</td></tr>
+            <tr><td><code>traderview-db</code></td><td>96,716</td><td>sqlx pool factory + 111 embedded migrations, embedded PostgreSQL lifecycle (stale-PID lock cleanup, persisted password file), 50+ repo modules covering everything from <code>trades</code> &amp; <code>journal</code> to live <code>halts</code> &amp; <code>catalysts</code> &amp; <code>live_ticks</code> stores, plus the stryke lifecycle-hook store + edge-detection ledger. Background pollers for Yahoo / FINRA / EDGAR / nasdaqtrader / Finnhub WS / Reddit WSB / StockTwits / CoinGecko. In-process LRU caches with eviction.</td></tr>
             <tr><td><code>traderview-import</code></td><td>2,614</td><td>15 broker CSV parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, Coinbase, Kraken — plus a Generic <code>ColumnMap</code> parser for unknown sources (column-mapping wizard). Asset classes: stocks, options, futures, forex.</td></tr>
             <tr><td><code>traderview-web</code></td><td>89,405</td><td>axum 0.7 router — 3,120 routes split across 181 route files. argon2 + JWT auth, multipart upload, WebSocket endpoints for halts / catalysts / live ticks / Webull. Custom request/response logging middleware (snippets bodies on 4xx/5xx). <code>client-errors</code> sink for browser-side reports.</td></tr>
             <tr><td><code>traderview-expense</code></td><td>463,026</td><td>Trading-expense tracker — categorization rules engine, OCR-pipeline integration, Schedule-C report generator, multi-account reconciliation. Used by the expense view + receipt upload.</td></tr>
             <tr><td><code>traderview-ocr</code></td><td>5,247</td><td>Receipt OCR via the system <code>tesseract</code> binary + image preprocessing (binarize, deskew). Extracts merchant / amount / date for the expense matcher.</td></tr>
             <tr><td><code>traderview-tax</code></td><td>6,583</td><td>Tax computation crate — wage / cap-gains / Schedule-C lines, multi-state nexus, fed/state bracketing. Backs the tax wizard view.</td></tr>
-            <tr><td><code>traderview-stryke</code></td><td>974</td><td>Host bridge that runs stryke-language lifecycle hooks as sandboxed subprocesses. Invokes the embedded stryke binary (<code>&lt;bin&gt; run &lt;script&gt;</code>, context as JSON on stdin, effects as JSON on stdout) with a 5s timeout + output cap, then validates each emitted effect (tag / note / alert / webhook / journal) against the hook's capability grant. No compile-time fusevm dependency — the binary is a runtime resource.</td></tr>
-            <tr><td><code>src-tauri</code> &middot; <code>traderview-desktop</code></td><td>2,588</td><td>Tauri v2 shell. Worker-thread bring-up of embedded Postgres → migrations → axum on a random localhost port; main thread waits on a channel for either an <code>ApiConfig</code> or a String error. Native-dialog on failure. <code>tracing-appender</code> non-blocking file log + panic hook to <code>~/Library/Application Support/traderview/traderview.log</code>. <code>Embedded</code> handle held across <code>axum::serve</code> so Postgres can't be dropped mid-request.</td></tr>
-            <tr class="total"><td><strong>Total</strong></td><td><strong>988,071</strong></td><td>Plus 312,828 LOC vanilla JS (1447 view modules) and 7,876 LOC CSS. No bundler, no npm.</td></tr>
+            <tr><td><code>traderview-stryke</code></td><td>1,017</td><td>Host bridge that runs stryke-language lifecycle hooks as sandboxed subprocesses. Invokes the embedded stryke binary (<code>&lt;bin&gt; run &lt;script&gt;</code>, context as JSON on stdin, effects as JSON on stdout) with a 5s timeout + output cap, then validates each emitted effect (tag / note / alert / webhook / journal) against the hook's capability grant. No compile-time fusevm dependency — the binary is a runtime resource.</td></tr>
+            <tr><td><code>src-tauri</code> &middot; <code>traderview-desktop</code></td><td>2,715</td><td>Tauri v2 shell. Worker-thread bring-up of embedded Postgres → migrations → axum on a random localhost port; main thread waits on a channel for either an <code>ApiConfig</code> or a String error. Native-dialog on failure. <code>tracing-appender</code> non-blocking file log + panic hook to <code>~/Library/Application Support/traderview/traderview.log</code>. <code>Embedded</code> handle held across <code>axum::serve</code> so Postgres can't be dropped mid-request.</td></tr>
+            <tr class="total"><td><strong>Total</strong></td><td><strong>988,194</strong></td><td>Plus 312,196 LOC vanilla JS (1447 view modules) and 7,876 LOC CSS. No bundler, no npm.</td></tr>
           </tbody>
         </table>
       </section>
@@ -348,7 +348,7 @@ cargo run -p traderview-web --bin server
 
       <section class="tutorial-section">
         <h2>Frontend — Vanilla JS + uPlot, 1447 Views, 1444-Tile Launcher</h2>
-        <p>Zero npm. Zero bundler. Zero JS framework. <strong>311,844 LOC vanilla ES modules + 7,854 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
+        <p>Zero npm. Zero bundler. Zero JS framework. <strong>312,196 LOC vanilla ES modules + 7,876 LOC CSS</strong> served as static files. axum's <code>tower-http</code> <code>fs</code> middleware in web mode; Tauri loads from disk via custom <code>tauri://localhost</code> scheme in desktop mode.</p>
         <p><strong>The launcher (<kbd>Cmd</kbd>+<kbd>K</kbd>) is the entry point</strong> — 1444 tiles across 10 categories with a live-filter search and Enter-jumps-to-first-match. There is no fixed nav strip; the topbar carries 11 shortcuts and the rest is the launcher.</p>
         <div class="tv-card-grid">
           <div class="tv-card">
@@ -652,7 +652,7 @@ cargo run -p traderview-web --bin server
         <p>Built by <a href="https://github.com/MenkeTechnologies">MenkeTechnologies</a>, part of the <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta">MenkeTechnologiesMeta</a> stack alongside <a href="https://github.com/MenkeTechnologies/strykelang">strykelang</a>, <a href="https://github.com/MenkeTechnologies/zshrs">zshrs</a>, <a href="https://github.com/MenkeTechnologies/zpwr">zpwr</a>, and the broader Rust + CLI family.</p>
       </section>
 
-      <p class="doc-footer">traderview v0.30.19 &middot; <a href="https://github.com/MenkeTechnologies/traderview">GitHub</a> &middot; <a href="report.html">Engineering Report</a> &middot; MIT License</p>
+      <p class="doc-footer">traderview v0.30.20 &middot; <a href="https://github.com/MenkeTechnologies/traderview">GitHub</a> &middot; <a href="report.html">Engineering Report</a> &middot; MIT License</p>
     </main>
   </div>
 
