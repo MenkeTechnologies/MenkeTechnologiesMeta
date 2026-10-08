@@ -719,7 +719,7 @@
     },
     {
       id: 'ztmux', name: 'ztmux', glyph: 'zx', category: 'CLI Tools', badge: 'FREE',
-      tagline: 'A from-source port of tmux to Rust — the whole program (server + client), not a wrapper or control-mode client: the grid/screen model, the VT input parser, layouts, the command language, formats, and the terminal back end, reimplemented in memory-safe Rust and diffed byte-for-byte against the upstream tmux C source of truth — 1631/1631 gated parity cases passing. MIT-licensed.',
+      tagline: 'A from-source port of tmux to Rust — the whole program (server + client), not a wrapper or control-mode client: the grid/screen model, the VT input parser, layouts, the command language, formats, and the terminal back end, reimplemented in memory-safe Rust and diffed byte-for-byte against the upstream tmux C source of truth — all gated parity cases passing. MIT-licensed.',
       pills: ['Rust', 'tmux port', 'MIT / OSS'], price: 0,
       tiers: [{ name: 'Open Source', desc: 'MIT licensed', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/ztmux/tags',
@@ -751,7 +751,7 @@
     },
     {
       id: 'zwire-host', name: 'zwire-host', glyph: 'wh', category: 'CLI Tools', badge: 'FREE',
-      tagline: 'A universal local host — one ~500 KB Rust binary that exposes the machine (sysinfo, PTY terminals, the real tmux server over its own wire protocol, filesystem watch/tail, exec, background jobs, wire-level transactions, a peered-mesh pub/sub event bus, and a per-app KV store) over both Chrome native-messaging and a newline-JSON local-socket daemon. Also embeddable as a Rust library.',
+      tagline: 'A universal local host — one Rust binary that exposes the machine (sysinfo, PTY terminals, the real tmux server over its own wire protocol, filesystem watch/tail, exec, background jobs, wire-level transactions, a peered-mesh pub/sub event bus, and a per-app KV store) over both Chrome native-messaging and a newline-JSON local-socket daemon. Also embeddable as a Rust library.',
       pills: ['Rust', 'native host · daemon', 'sysinfo · PTY · FS · exec', 'Free / OSS'], price: 0,
       tiers: [{ name: 'Open Source', desc: 'MIT licensed', price: 0 }],
       download: 'https://github.com/MenkeTechnologies/zwire-host/releases/latest',
@@ -1005,7 +1005,7 @@
     },
     {
       id: 'ztmux-book', name: 'The ztmux Book', glyph: 'xB', category: 'Publications', badge: 'REFERENCE',
-      tagline: 'The companion book to ztmux — the world\'s first 100%-functional tmux in Rust (the whole server + client, not a wrapper or control-mode client): the client/server split and libevent loop, the grid/screen and scrollback model, the VT input parser, the layout engine, the lalrpop command language and its one-file-per-command mirror of tmux\'s cmd-*.c, formats/config/keys, and the terminal back end — plus the port methodology (diffed byte-for-byte against the vendored tmux C source of truth, 1631/1631 gated parity cases passing) and the anti-drift gate that forbids fake functions. Pandoc + LaTeX typeset.',
+      tagline: 'The companion book to ztmux — the world\'s first 100%-functional tmux in Rust (the whole server + client, not a wrapper or control-mode client): the client/server split and libevent loop, the grid/screen and scrollback model, the VT input parser, the layout engine, the lalrpop command language and its one-file-per-command mirror of tmux\'s cmd-*.c, formats/config/keys, and the terminal back end — plus the port methodology (diffed byte-for-byte against the vendored tmux C source of truth, all gated parity cases passing) and the anti-drift gate that forbids fake functions. Pandoc + LaTeX typeset.',
       pills: ['Reference', 'ztmux', 'DRM-free PDF'], price: 20,
       tiers: [{ name: 'PDF', desc: 'DRM-free PDF download', price: 20 }],
     },
@@ -1363,7 +1363,7 @@
         "The type system — structs with value-copy semantics and embedded-field promotion, pointers and new(T), interfaces with dynamic dispatch, type assertions and type switches, defined types, arrays and backing-array-sharing slices",
         "Functions — variadics and spread, multi-value returns, named results, closures capturing by reference, first-class func values via Op::CallDynamic",
         "Go semantics — automatic semicolon insertion, int/int truncation, %v formatting, string concatenation and ordering, bitwise ops and base literals",
-        "The go CLI — go run / build (AOT native executable via fusevm) / vet / env / doc / install-std / version / help, plus --tiers, --dump-tokens, --dump-ast and --disasm",
+        "The go CLI — go run / build (AOT native executable via fusevm; goroutine/channel/select programs use go run) / vet / env / doc / install-std / version / help, plus --tiers, --dump-tokens, --dump-ast and --disasm",
         "The standard library is executed, not reimplemented — a non-native import is resolved to its Go source and compiled into the same unit as main",
         "Standalone go binary with an LSP language server (--lsp) and DAP debugger (--dap)",
         "Inline rust {} FFI, corpus-driven reference docs, and --dump-tokens/--dump-ast/--disasm introspection",
@@ -1441,15 +1441,15 @@
       ]
     },
     "texrs": {
-      "overview": "TeX in Rust — Knuth's mouth and expander, compiled to bytecode rather than interpreted. TeX is two machines: the mouth turns bytes into tokens under a mutable category-code table, and the expander turns tokens into other tokens (\\def, \\csname, \\the, the conditionals). texrs implements those two — the half a macro-heavy document spends its time in — by lowering them to fusevm bytecode and running them on the shared three-tier Cranelift JIT behind zshrs, stryke, rubylang and pythonrs. Every mainstream engine (pdfTeX, XeTeX, LuaTeX) descends from tex.web through web2c and interprets the expander instead. Free and open source.",
+      "overview": "TeX in Rust — Knuth's mouth and expander, compiled to bytecode rather than interpreted. TeX is two machines: the mouth turns bytes into tokens under a mutable category-code table, and the expander turns tokens into other tokens (\\def, \\csname, \\the, the conditionals). texrs implements those two — the half a macro-heavy document spends its time in — by lowering them to fusevm bytecode and running them on the shared three-tier Cranelift JIT behind zshrs, stryke, rubylang and pythonrs, plus a stomach that typesets to DVI and PDF. Every mainstream engine (pdfTeX, XeTeX, LuaTeX) descends from tex.web through web2c and interprets the expander instead. Free and open source.",
       "features": [
         "The mouth: category codes and \\catcode over INITEX's sparse defaults, the three-state line scanner (blank line to \\par, collapsed spaces), and ^^X notation",
         "The expander: \\def with undelimited and delimited parameters, \\csname/\\endcsname, \\string, \\the, \\number, \\expandafter, \\let, \\edef/\\xdef/\\gdef, \\global, \\begingroup/\\endgroup",
         "Conditionals (\\iftrue, \\iffalse, \\ifnum, \\ifodd, \\ifx, \\ifcase …), groups that scope the macro table and the count registers written under them, \\count registers, `x character codes, and \\advance/\\multiply/\\divide",
         "\\input resolved where a real document expects it, verbatim / Verbatim / the fancyvrb family, and the LaTeX layer — \\newcommand and its three relatives",
-        "--dvi: a deliberately small stomach — text measured in a real .tfm font, first-fit lines at a measure, stacked down a page and shipped as DVI; not tex.web's stomach, and the README says exactly what that costs",
+        "--dvi: text measured in a real .tfm font, broken into total-fit lines with Liang hyphenation by the same breaker as --pdf, and shipped as DVI through hlist_out/vlist_out; no maths (--pdf sets maths)",
         "Readers for the binary formats a TeX installation is made of, each printing what it parsed",
-        "4.0x faster than tex 3.141592653 (TeX Live 2026) on a 5.6 MB / 120k-statement / 691k-token document (0.259 s vs 1.038 s), and an 800-statement document from 248 ms to 11.7 ms; 60 documents across all cores in 0.198 s",
+        "Batch mode runs documents across all cores; bench/compare.sh compares against tex",
         "Parity is the \\message stream compared byte-for-byte against the real tex binary — no expectation written by hand, and both harnesses refuse to run against an oracle version other than the one recorded in BUGS.md",
         "\\intercept advice (before / after / around) on macro expansion, and inline Rust blocks",
         "Free / OSS — MIT licensed"
@@ -1484,12 +1484,12 @@
       "features": [
         "Python interpreter in Rust — runs .py files standalone, no CPython required",
         "Python frontend lowered to fusevm bytecode on a PyHost object heap",
-        "Runs on the shared bytecode VM + 3-tier Cranelift JIT (stryke, zshrs, awkrs, vimlrs, elisprs, rubyrs, arb)",
+        "Runs on the shared bytecode VM + 3-tier Cranelift JIT behind every fusevm frontend",
         "Standalone python binary with an LSP language server (--lsp) and DAP debugger (--dap)",
-        "576 vendored CPython stdlib modules plus 12 native C-accelerator ports (_io, _struct, binascii, _codecs, _csv, _ast, _opcode, _tokenize, _imp, marshal, _thread, _signal)",
+        "Vendored CPython pure-Python stdlib (pylib/) plus native Rust ports of the C-accelerator modules (_io, _struct, binascii, _codecs, _csv, _ast, _opcode, _tokenize, _imp, _sre, hashing, _thread, _signal, marshal)",
         "Two build modes: CPython-free (vendored pylib on fusevm) or bridged to an embedded libpython for full drop-in imports and python -m",
         "Bignums, closures, classes with MRO dispatch, generators on stackful coroutines, match/case, comprehensions, f-strings incl. PEP 750 t-strings",
-        "AOT native-binary compilation and a transparent rkyv bytecode cache",
+        "AOT native-binary compilation (python --build, CPython-free build) and a transparent rkyv bytecode cache",
         "Free and open source (MIT)"
       ]
     },
@@ -1498,13 +1498,13 @@
       "features": [
         "PHP interpreter in Rust — runs .php files standalone, no Zend engine or PHP-FPM required",
         "PHP frontend lowered to fusevm bytecode on a PhpHost object heap",
-        "Runs on the shared bytecode VM + 3-tier Cranelift JIT (stryke, zshrs, awkrs, vimlrs, elisprs, rubyrs, arb, pythonrs)",
+        "Runs on the shared bytecode VM + 3-tier Cranelift JIT behind every fusevm frontend",
         "OOP: classes, constructor property promotion, interfaces, traits, instanceof, abstract classes, static members and enforced visibility",
         "Enums (pure and backed), match expressions, named arguments, nullsafe ?->, first-class callable syntax and Closure::bind",
         "Generators and yield from as host-side stackful coroutines, so yield costs one stack switch and needs no VM change",
         "Arrays with true PHP value semantics, references ($b = &$a, &$x parameters), and by-reference OUT parameters",
         "Standard library across 26 dispatch modules including GMP and bcmath arbitrary precision, preg, mbstring, DateTime and the SPL data structures",
-        "841 names across 40 chapters documented against the runtime, 617 with examples executed against the built binary, gated in both directions by tests/corpus_coverage.rs so a builtin cannot ship undocumented",
+        "Every builtin documented against the runtime and examples executed against the built binary, gated in both directions by tests/corpus_coverage.rs so a builtin cannot ship undocumented",
         "Standalone php binary with an interactive REPL (php -a), an LSP language server (--lsp), a DAP debugger (--dap) and --tiers tier reporting",
         "zsh completion, man pages, and an HTML docs/report site",
         "Free and open source (MIT)"
@@ -1515,12 +1515,12 @@
       "features": [
         "JavaScript runtime in Rust — runs JS standalone on the fusevm engine",
         "JS frontend lowered to fusevm bytecode, no bespoke VM or JIT",
-        "Runs on the shared bytecode VM + 3-tier Cranelift JIT (stryke, zshrs, awkrs, vimlrs, elisprs, rubyrs, arb, pythonrs, php)",
+        "Runs on the shared bytecode VM + 3-tier Cranelift JIT behind every fusevm frontend",
         "Language surface: classes and inheritance, async/await, generators, destructuring, Map/Set/WeakRef, Promise, BigInt on num-bigint, TypedArrays, and RegExp on fancy-regex",
         "Real I/O event loop with promises, microtasks and timers; a CommonJS loader whose require() executes real npm packages off disk",
-        "47 core module implementations — fs, http, http2, net, tls and https on rustls, crypto, zlib, dgram, worker_threads, cluster, stream, child_process, dns, readline, vm, v8",
+        "Core module implementations — fs, http, http2, net, tls and https on rustls, crypto, zlib, dgram, worker_threads, cluster, stream, child_process, dns, readline, vm, v8",
         "Unimplemented modules throw a named error instead of returning a silent fake",
-        "A 120-script byte-parity corpus against the reference node, plus a delta-debugging differential fuzzer",
+        "A byte-parity script corpus against the reference node (parity-scripts/), plus a delta-debugging differential fuzzer",
         "Standalone node binary with a REPL, an LSP language server (--lsp), a DAP debugger (--dap), AOT --build and an rkyv bytecode cache",
         "zsh completion, man pages, and an HTML docs/report site",
         "Free and open source (MIT)"
@@ -1530,9 +1530,9 @@
       "overview": "Java in Rust — a compiled standalone Java runtime with no JVM. Java as a fusevm frontend that lexes and parses Java to an AST, lowers it to fusevm bytecode, and runs on the shared bytecode VM + 3-tier Cranelift JIT behind the rest of the fleet, with a JavaHost object heap serving Java semantics. Free and open source.",
       "features": [
         "Java runtime in Rust — runs .java files standalone, no JVM required",
-        "Hand-written lexer and recursive-descent parser; the single-class main-entry model",
+        "Hand-written lexer and recursive-descent parser; the public-class main-entry model, with other top-level, nested, local and anonymous classes",
         "Java frontend lowered to fusevm bytecode on a JavaHost object heap",
-        "Runs on the shared bytecode VM + 3-tier Cranelift JIT (stryke, zshrs, awkrs, vimlrs, elisprs, rubyrs, arb, pythonrs, php, node-js)",
+        "Runs on the shared bytecode VM + 3-tier Cranelift JIT behind every fusevm frontend",
         "The class model — fields, constructors, single inheritance with extends/super, virtual dispatch, instanceof, abstract classes, interfaces with default methods, and overload resolution by most-specific parameter type",
         "record types with derived accessors and component-wise equals; enum types with per-constant state and bodies; anonymous classes that capture their enclosing scope",
         "Type-erased generics, lambdas, method references, functional interfaces, java.util.stream and Optional",
@@ -1555,7 +1555,7 @@
         "Inheritance the compiler enforces — open/abstract/sealed/interface, the supertype list, override, interface default bodies, and qualified super&lt;T&gt;.m()",
         "Extension functions and extension/computed properties, vararg parameters, default and named arguments, overload resolution, generics, and casts",
         "Delegated properties — by lazy, user-written delegates, and Delegates.observable / vetoable, plus top-level properties",
-        "Standalone kotlinrs binary with an LSP language server (--lsp), a DAP debugger (--dap), --tiers reporting, and inline rust { } FFI compiled to a cached cdylib",
+        "Standalone kotlin binary with an LSP language server (--lsp), a DAP debugger (--dap), --tiers reporting, and inline rust { } FFI compiled to a cached cdylib",
         "Free and open source (MIT)"
       ]
     },
@@ -1565,13 +1565,13 @@
         "Scala runtime in Rust — runs .scala files standalone, no JVM required",
         "Newline-inferring lexer; object/def-main and extends App entry models, val/var, range for",
         "Scala frontend lowered to fusevm bytecode on a ScalaHost object heap; the SDIV integer-division op vs native float arithmetic",
-        "Runs on the shared bytecode VM + 3-tier Cranelift JIT (stryke, zshrs, awkrs, vimlrs, elisprs, rubyrs, arb, pythonrs, php, node-js)",
+        "Runs on the shared bytecode VM + 3-tier Cranelift JIT behind every fusevm frontend",
         "The object model — class/object/case class, trait, extends/with, override, super, virtual dispatch, apply/unapply, constructor patterns, isInstanceOf, structural equals/hashCode/toString, copy, Option",
         "First-class functions — x => …, block bodies, _ placeholders, enclosing-frame capture, and { case … } partial-function literals with a real isDefinedAt behind collect/collectFirst/lift/orElse",
         "The immutable collections List/Seq/Vector/Set/Map with the full combinator set, ::, k -> v and for … yield, reproducing Scala's own HashSet/HashMap trie ordering through a ported MurmurHash3",
         "The mutable collections — ListBuffer, ArrayBuffer, mutable.Set/Map with their hash table's own iteration order, LinkedHashMap/Set, PriorityQueue, ArrayDeque, Queue, Stack, StringBuilder, and sorted(Ordering) / Ordering.by",
         "Double.toString fidelity — plain in [1e-3, 1e7), Java computerized scientific notation outside it, matching scala",
-        "A differential parity-fuzz harness across twenty-four generators, byte-diffed against a live scala",
+        "A differential parity-fuzz harness across its generator modes, byte-diffed against a live scala",
         "Free and open source (MIT)"
       ]
     },
@@ -1581,25 +1581,25 @@
         "Groovy runtime in Rust — runs .groovy scripts standalone, no JVM required",
         "Newline-significant lexer and the Groovy script-model parser",
         "Groovy frontend lowered to fusevm bytecode on a GroovyHost object heap; the GDIV division op and for-in range desugaring",
-        "Runs on the shared bytecode VM + 3-tier Cranelift JIT (stryke, zshrs, awkrs, vimlrs, elisprs, rubyrs, arb, pythonrs, php, node-js)",
+        "Runs on the shared bytecode VM + 3-tier Cranelift JIT behind every fusevm frontend",
         "Real BigDecimal literals — an unsuffixed decimal keeps its scale (1.10 + 2.20 == 3.30) and integer / promotes to it, so 7 / 2 is 3.5",
         "Operator overloading — a user class's plus/minus/multiply/div/remainder/power/negative/getAt/compareTo drives +, -, *, /, %, **, unary -, [] and the comparisons, with primitives left on the native fast path",
         "Classes, single inheritance with virtual dispatch and super chaining, interfaces with Java 8 default methods, traits, and method and constructor overloading by parameter type",
         "The list/map GDK with spread — collect, collectEntries, takeWhile, dropWhile, flatten, findAll and the rest, over Groovy-printed insertion-ordered literals",
-        "assert with Groovy's power-assert rendering, switch, do/while, labeled break/continue, static imports, and runtime faults raised as catchable Groovy throwables",
+        "assert with Groovy's power-assert rendering, switch, do/while, labeled break/continue, and runtime faults raised as catchable Groovy throwables",
         "Category use blocks — use (NumCat) { 3.twice() } — and method overloading by arity as well as by parameter type",
         "Every program in examples/ diffed byte-for-byte against Apache Groovy in the test suite",
         "Free and open source (MIT)"
       ]
     },
     "zvcs": {
-      "overview": "A git-shadowing superset VCS: a single Rust binary named git that replaces stock git on PATH and serves subcommands natively over vendored gitoxide — no fork/exec of stock git, and no fallthrough when a subcommand is unported. The superset is the reason it exists: 119 z-verbs add the coordination layer git cannot have for a meta-repo of nested submodules driven by many concurrent automated agents. The parity harness scores git-compat depth separately from dispatch: the generated report is 100% dispatch coverage (all 184 stock git subcommands answered natively) and 90.3% behavioural parity (3851/4264 corpus assertions). Free and open source.",
+      "overview": "A git-shadowing superset VCS: a single Rust binary named git that replaces stock git on PATH and serves subcommands natively over vendored gitoxide — no fork/exec of stock git, and no fallthrough when a subcommand is unported. The superset is the reason it exists: the z-verbs add the coordination layer git cannot have for a meta-repo of nested submodules driven by many concurrent automated agents. The parity harness scores git-compat depth separately from dispatch: the generated report is 100% dispatch coverage (every stock git main subcommand answered natively) with behavioural parity scored separately against stock git. Free and open source.",
       "features": [
-        "One binary named git — shadows stock git on PATH; 181 git-compat porcelain verbs served natively over vendored gitoxide, never shelling out to stock git",
-        "100% dispatch coverage — every one of stock git's 184 main subcommands is answered by the binary, with 90.3% behavioural parity (3851/4264) reported separately so a narrow corpus never inflates the score",
+        "One binary named git — shadows stock git on PATH; git-compat porcelain verbs served natively over vendored gitoxide, never shelling out to stock git",
+        "100% dispatch coverage — every one of stock git's main subcommands is answered by the binary, with behavioural parity scored separately against stock git so a narrow corpus never inflates the score",
         "zdaemon — a machine-wide daemon with a per-repo FIFO lane replaces git's O_EXCL index.lock, so a contended writer waits in arrival order instead of failing",
         "zsync / zbump — submodules reconciled to their tracked mainline with HEAD left attached, and forward-only gitlink bumps that are committed, never regressed",
-        "119 superset z-verbs — parallel fleet query and fan-out, secret scan, commit-signature check, queryable audit trail, scheduler, AOP intercepts, and policy gates across every indexed repo",
+        "Superset z-verbs — parallel fleet query and fan-out, secret scan, commit-signature check, queryable audit trail, scheduler, AOP intercepts, and policy gates across every indexed repo",
         "zworktree — a private, object-sharing worktree of the whole submodule tree per agent",
         "git zverbs prints the live verb list with usage, and every read verb takes --json for NDJSON, checked by an integration test so the surface cannot drift",
         "Free and open source (MIT)"
@@ -2490,8 +2490,8 @@
       ]
     },
     "ztmux-book": {
-      "overview": "The companion book to ztmux — the world's first 100%-functional tmux in Rust. Not a wrapper around the tmux binary and not a control-mode client: it reimplements the whole program — server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end — in memory-safe Rust, seeded from the tmux-rs port and validated module-by-module against the vendored upstream tmux C source of truth. The book walks that architecture and the port methodology: a parity suite that runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte (1631/1631 gated cases passing) and an anti-drift gate that fails the build on any Rust function with no tmux C counterpart.",
-      "features": ["ztmux, end to end — the whole tmux program reimplemented in Rust", "The client/server split, the libevent loop, and the session/window/pane state tree", "The grid/screen + scrollback model, the VT input parser, and the layout engine", "The lalrpop command language, one file per command mirroring tmux's cmd-*.c", "The port methodology: byte-for-byte parity vs the vendored tmux C source, 1631/1631 gated cases passing", "The anti-drift gate: no Rust function survives without a tmux C counterpart", "Pandoc + LaTeX typeset, DRM-free PDF"]
+      "overview": "The companion book to ztmux — the world's first 100%-functional tmux in Rust. Not a wrapper around the tmux binary and not a control-mode client: it reimplements the whole program — server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end — in memory-safe Rust, seeded from the tmux-rs port and validated module-by-module against the vendored upstream tmux C source of truth. The book walks that architecture and the port methodology: a parity suite that runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte (all gated parity cases passing) and an anti-drift gate that fails the build on any Rust function with no tmux C counterpart.",
+      "features": ["ztmux, end to end — the whole tmux program reimplemented in Rust", "The client/server split, the libevent loop, and the session/window/pane state tree", "The grid/screen + scrollback model, the VT input parser, and the layout engine", "The lalrpop command language, one file per command mirroring tmux's cmd-*.c", "The port methodology: byte-for-byte parity vs the vendored tmux C source, all gated parity cases passing", "The anti-drift gate: no Rust function survives without a tmux C counterpart", "Pandoc + LaTeX typeset, DRM-free PDF"]
     },
     "zwire-book": {
       "overview": "The companion book to zwire — a Chromium/Blink browser forked into the strykelang cyberpunk HUD. Not a WebView wrapper (WebKit, no MV3) and not a fresh engine: a real Blink base, patched and extended, on a dedicated profile that never touches system Chrome. The book walks the full stack the project is built on — the HUD extension workspace (the ztmux tiling overlay, the ⌘K palette, sessions, the internal-page skin) and, under it, the 27 authored C++ patches that compile the native chrome an extension cannot reach (tab geometry, UI fonts, the neon toolbar, native menus and dialogs, the 8 schemes in the color mixer + DevTools, and a browser-wide DSP engine inside Chromium's audio service) against a pinned Chromium tag.",
@@ -2657,7 +2657,7 @@
       ]
     },
     "ztorrent": {
-      "overview": "A from-scratch BitTorrent client in Rust (Tauri v2 desktop app) modeled on Transmission, behind a cyberpunk HUD. The engine carries the session model — torrents, files, peers, trackers, labels — and the policy Transmission applies above the wire: the download/seed queue, ratio and idle seeding limits, the alt-speed (turtle) scheduler, blocklists, and watch folders. Two hand-assessed reports track it — Transmission's feature surface, and a second surface taken from qBittorrent, Deluge, uTorrent, BiglyBT and Tixati. Formats are handled byte-exactly, and a Transmission RPC translation over HTTP or HTTPS lets existing remotes drive it. Its pure-Rust ztorrent-core engine is extracted so the same client embeds across the GUI stack. In development.",
+      "overview": "A from-scratch BitTorrent client in Rust (Tauri v2 desktop app) modeled on Transmission, behind a cyberpunk HUD. The engine carries the session model — torrents, files, peers, trackers, labels — and the policy Transmission applies above the wire: the download/seed queue, ratio and idle seeding limits, the alt-speed (turtle) scheduler, blocklists, and watch folders. Two hand-assessed reports track it — Transmission's feature surface, and a second surface taken from the other major BitTorrent clients. Formats are handled byte-exactly, and a Transmission RPC translation over HTTP or HTTPS lets existing remotes drive it. Its pure-Rust ztorrent-core engine is extracted so the same client embeds across the GUI stack. In development.",
       "features": [
         "Session model — torrents, queue order, labels, per-torrent limits, per-file wanted/priority flags, with atomic JSON persistence",
         "Download / seed queue — slot limits, stalled detection, and priority",
@@ -2674,7 +2674,7 @@
         "Disk preallocation and content layout for new torrents — off, sparse, or a real block reservation",
         "Play a torrent while it is still downloading — first and last pieces first, files queued in order",
         "Transmission RPC compatibility over HTTP or HTTPS — transmission-remote and the phone apps speak to this engine unchanged; email notification on completion",
-        "Client view from zgui-core — status-filter sidebar with live counts, a sortable/resizable table with fuzzy filtering, and an Info / Files / Peers / Trackers / Options details pane",
+        "Client view from zgui-core — status-filter sidebar with live counts, a sortable/resizable table with fuzzy filtering, and an Info / Files / Peers / Trackers / Pieces / Options details pane",
         "Embeddable ztorrent-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps",
         "In development — the app and its core are being built out"
       ],
@@ -2702,7 +2702,7 @@
         "Books, not just files — \\input and \\include resolve against the open document, so a book split across chapter files previews as one book with one outline",
         "The reference fixed point, proved or refuted — a document is finished only when a pass reads exactly the numbers and pages it wrote, so the layout iterates in memory and reports either the pass it converged on or the cycle and its period, naming every entry that alternates and every \\ref / \\pageref site that read one, at a source line and column, with what it printed on each pass",
         "TeX Live package manager in the editor — Updates / Packages / This document tabs, status joined from the local texlive.tlpdb against the mirror, installs unpacked into ~/.zlatex/texmf with no tlmgr, no perl and no root; Ingest macros mines a .sty and reports what it could not honour",
-        "Editor pane with syntax highlighting, minimap, Vim and Emacs keymaps, and 50–200% preview zoom",
+        "Editor pane with syntax highlighting, minimap, Vim and Emacs keymaps, and continuous preview zoom",
         "Embeddable zlatex-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps",
         "In development — the app and its core are being built out"
       ],
@@ -2711,7 +2711,7 @@
       ]
     },
     "zpdf": {
-      "overview": "A from-scratch PDF editor in Rust (Tauri v2 desktop app) that replaces Adobe Acrobat and macOS Preview — full document editing, annotation, forms, and signatures behind a cyberpunk HUD, with a scriptable CLI on the same engine. The port report catalogs the Acrobat Pro + Preview surface: every feature but one implemented, 0 stubbed, 1 planned, each cited to real code — a feature can only be marked done by writing the engine, never by editing the manifest. zpdf-core parses and writes the PDF object model directly, so linearization, font subsetting and redaction that truly removes content are first-class rather than bolt-ons, and the same pure-Rust engine embeds inside the other apps.",
+      "overview": "A from-scratch PDF editor in Rust (Tauri v2 desktop app) that replaces Adobe Acrobat and macOS Preview — full document editing, annotation, forms, and signatures behind a cyberpunk HUD, with scripting through the automation bus on the same engine. The port report catalogs the Acrobat Pro + Preview surface, each feature cited to real code — a feature can only be marked done by writing the engine, never by editing the manifest. zpdf-core parses and writes the PDF object model directly, so linearization, font subsetting and redaction that truly removes content are first-class rather than bolt-ons, and the same pure-Rust engine embeds inside the other apps.",
       "features": [
         "Full PDF editing — text, images, and objects on parsed content streams",
         "Annotation & markup — highlight, notes, shapes, freehand ink, stamps, measure",
@@ -2724,7 +2724,7 @@
         "Review & compare — diff two PDFs at line, word and structural level, comment summary, review tracking",
         "Accessibility — tags, reading order, alt text, accessibility check, PDF/A and PDF/UA preflight validation",
         "Optimize & print production — reduce size, lossless stream recompression, downsample, embed/subset fonts, linearize, color separations, per-page ink coverage (TAC)",
-        "Automation — Action Wizard batch, a CLI on the same engine, and a document JavaScript console",
+        "Automation — Action Wizard batch, scripting over the automation bus (every command palette entry is a verb), and a document JavaScript console",
         "Document tabs and 2 / 3 / 4-up split-view panes — many PDFs open at once, each pane with its own document, scroll and zoom; Page Organizer (⌘⇧P) reassembles a new PDF from any pages of any open document",
         "Beyond every competitor — an in-file content-addressed Merkle version-control DAG (log / diff / blame / bisect / time-travel checkout, plus branching and three-way merge) stored in the .pdf's own trailer, a PII scanner with one-shot privacy-sweep redaction, a machine-checkable verifiable-redaction guarantee, deterministic byte-stable export, and live recalculable page tables with per-number provenance",
         "Embeddable zpdf-core engine (rlib + staticlib + cdylib) — embeds into traderview and the other GUI apps"
@@ -2737,15 +2737,15 @@
       ]
     },
     "zphoto": {
-      "overview": "A from-scratch image editor in Rust (Tauri v2 desktop app) that replaces GIMP, Photoshop and Illustrator, behind a cyberpunk HUD. Two engines behind one command surface: a raster engine that is a Photoshop / GIMP port — 444 commands across 19 groups, nearly all in-scope checklist rows done — and a separate Illustrator port exposed through 114 vec.* commands at 119 of 119 in-scope rows (100%) that rasterizes into the same layer stack, so layer opacity, blend modes, masks, filters and PSD save apply to vector artwork for free. SVG is the interchange format, and AI files route through the zpdf-core PDF engine. 709 engine tests. Its pure-Rust zphoto-core engine is extracted so the same imaging engine embeds inside the other apps.",
+      "overview": "A from-scratch image editor in Rust (Tauri v2 desktop app) that replaces GIMP, Photoshop and Illustrator, behind a cyberpunk HUD. Two engines behind one command surface: a raster engine that is a Photoshop / GIMP port — a raster command surface of filters, point ops, layer ops, image ops, selection ops, paint tools and fills, nearly all in-scope checklist rows done — and a separate Illustrator port exposed through 114 vec.* commands at 119 of 119 in-scope rows (100%) that rasterizes into the same layer stack, so layer opacity, blend modes, masks, filters and PSD save apply to vector artwork for free. SVG is the interchange format, and AI files (a PDF container) are parsed natively by the engine. Its pure-Rust zphoto-core engine is extracted so the same imaging engine embeds inside the other apps.",
       "features": [
         "Layer-based raster editing with blend modes, masks, groups and adjustment layers — 8, 16 and 32-bit pixels (f32 working space) with an editable indexed colour table",
-        "444 raster commands across 19 groups — 138 filters, 80 point ops, 65 layer ops, 36 image ops, 31 selection ops, 24 paint tools, 15 fills, actions, paths and history",
+        "Raster command surface — filters, point ops, layer ops, image ops, selection ops, paint tools, fills, actions, paths and history",
         "Filters and non-destructive adjustments — destructive point ops (Exposure, Temperature, Colour Balance, …) preview live on-canvas while you drag and only commit on OK, through the engine undo stack",
         "Open / edit / export common image formats, plus layered PSD and XCF read and write",
         "Vector mode — 114 vec.* commands, a 12.5k-line Illustrator port: Bézier paths, fills and strokes, compound paths, Pathfinder, expand, path editing, scissors and knife, transform-each, radial / grid / mirror Repeat, Select-Same, symbols, type and masks",
         "Vector effects — Warp envelopes, Tweak / Free Distort / Convert-to-Shape, 2.5-D Extrude and Revolve, 3D rotate, linear / radial / mesh / freeform gradients, Live Paint bucket, Flare and Symbol Sprayer",
-        "SVG / PDF / AI / EPS round-trip, with AI parsed through the shared zpdf-core engine",
+        "SVG / PDF / AI / EPS round-trip, with AI files (a PDF container) parsed natively by the engine",
         "Photoshop-style chrome — menu bar, context-sensitive Tool Options Bar, and right-dock Layers / Channels / Paths / Swatches / Adjustments / Styles / Color panels, on the Photoshop default keyboard map",
         "Cyberpunk HUD interface from the shared zgui-core chrome",
         "Embeddable zphoto-core engine (rlib + staticlib + cdylib) — embeds into the other GUI apps"
@@ -2758,9 +2758,9 @@
       ]
     },
     "zemail": {
-      "overview": "A from-scratch desktop email client in Rust (Tauri v2) behind a cyberpunk HUD — 100% coverage of the Thunderbird feature surface (69 features) plus a 76-feature cross-client layer ported from Gmail, Apple Mail, Outlook, ProtonMail, Hey, Spark and Superhuman. IMAP (IDLE push, UID-incremental sync), POP3 and SMTP with browser OAuth2 / XOAUTH2 sign-in; OpenPGP message crypto and CardDAV contact sync; seven engine consoles (Mail Tools, Lab, Workbench, Ops, Forensics, Crypto, Settings) drive the raw command surface with no stubs. Its pure-Rust zemail-core engine is extracted so the same mail engine embeds across the GUI stack.",
+      "overview": "A from-scratch desktop email client in Rust (Tauri v2) behind a cyberpunk HUD — a hand-assessed port of the Thunderbird feature surface (coverage tracked in the port report) plus a 76-feature cross-client layer ported from Gmail, Apple Mail, Outlook, ProtonMail, Hey, Spark and Superhuman. IMAP (IDLE push, UID-incremental sync), POP3 and SMTP with browser OAuth2 / XOAUTH2 sign-in; OpenPGP message crypto and CardDAV contact sync; engine consoles (Mail Tools, Lab, Workbench, Ops, Forensics, Crypto, Settings, Revision Timeline) drive the raw command surface with no stubs. Its pure-Rust zemail-core engine is extracted so the same mail engine embeds across the GUI stack.",
       "features": [
-        "100% Thunderbird port coverage (69 features) + 76 cross-client features",
+        "Hand-assessed Thunderbird port (coverage tracked in the port report) plus a 76-feature cross-client layer",
         "IMAP with IDLE push and UID-incremental sync, POP3 download, SMTP send",
         "Browser OAuth2 / XOAUTH2 sign-in for Google, Microsoft 365 and Outlook.com",
         "OpenPGP sign / verify / encrypt via rPGP; CardDAV vCard sync; S/MIME in the engine",
@@ -2783,12 +2783,12 @@
       ]
     },
     "zstation": {
-      "overview": "A workspace of isolated web apps in Rust (Tauri v2) behind a cyberpunk HUD — a from-scratch port of the defunct station.app. Named dashboards arrange your web apps as Trello-like draggable, resizable tiles, each running in its OWN native, session-isolated webview (per-partition WKWebView data store on macOS / WebView2 data directory on Windows) so logging into one never spills cookies or storage into another; any dashboard pops out into its own OS window for multi-monitor use. A tile is not only a site — 77 native widget kinds render in the tile body, and the whole workspace is one SQLite database with an FTS5 index across every tile and note. Its pure-Rust zstation-core engine is extracted so the same station board embeds across the GUI stack.",
+      "overview": "A workspace of isolated web apps in Rust (Tauri v2) behind a cyberpunk HUD — a from-scratch port of the defunct station.app. Named dashboards arrange your web apps as Trello-like draggable, resizable tiles, each running in its OWN native, session-isolated webview (per-partition WKWebView data store on macOS / WebView2 data directory on Windows) so logging into one never spills cookies or storage into another; any dashboard pops out into its own OS window for multi-monitor use. A tile is not only a site — dozens of native widget kinds render in the tile body, and the whole workspace is one SQLite database with an FTS5 index across every tile and note. Its pure-Rust zstation-core engine is extracted so the same station board embeds across the GUI stack.",
       "features": [
         "Workspace of web apps in Rust + Tauri v2, ported from station.app",
         "Per-service session isolation via native child webviews (WKWebView / WebView2), not iframes",
-        "143-service built-in catalog plus arbitrary custom URLs, each in its own partition",
-        "77 native widget-tile kinds — notes, todos, kanban, charts, timers, PTY terminal, MIDI-style control surfaces",
+        "Built-in service catalog plus arbitrary custom URLs, each in its own partition",
+        "Native widget tiles — notes, todos, kanban, charts, timers, PTY terminal, MIDI-style control surfaces",
         "Named dashboards with ⌘1–9 switching; pop a dashboard into its own OS window, one per monitor",
         "Station Wiring — a local Source → Transform → Sink bus that drives one logged-in app from another, no OAuth, no cloud",
         "Session Lens — fire one path at N authenticated tiles and field-wise diff what each account sees",
@@ -2832,12 +2832,12 @@
       "overview": "A drop-in zsh replacement written in Rust (a 4-crate workspace) that compiles every command to fusevm bytecode, hands hot blocks to a tiered Cranelift JIT emitting x86-64/aarch64 machine code, and persists that bytecode across processes in rkyv images. A persistent worker thread pool replaces fork+exec. Framed as the first Unix shell to JIT-compile to native code: Nushell's IR is interpreted, compiled per parse and discarded at exit; zsh's .zwc is wordcode for zsh's own interpreter.",
       "features": [
         "A 4-crate workspace — zshrs runtime + zshrs-daemon + znative (the published plugin-ABI SDK) + zshrs-runtime",
-        "Structurally split into a strict 1:1 port directory (src/ported/, 106 files, every fn mapped to a real zsh Src/*.c function and enforced by tests/port_purity.rs) and a non-port extensions directory (src/extensions/, 102 files)",
+        "Structurally split into a strict 1:1 port directory (src/ported/, 106 files, every fn mapped to a real zsh Src/*.c function and enforced by tests/port_purity.rs) and a non-port extensions directory (src/extensions/, features zsh C does not have)",
         "Compiles commands to fusevm bytecode with a three-tier Cranelift JIT; rkyv-backed bytecode images with an mmap hot path, plus read-only SQLite mirrors for dbview / SQL inspection only",
-        "Persistent worker thread pool (2–18 threads) replaces fork+exec; 23 coreutils commands run in-process at 2000–5000× per invocation",
+        "Persistent worker thread pool (2–18 threads) replaces fork+exec; coreutils commands run in-process at 2000–5000× per invocation",
         "100× warm-start speedup — 717ms cold (lex + parse + compile + cache write) to 7ms warm (deserialize + execute)",
-        "243 builtins — 152 zsh ports plus 91 extensions (23 coreutils and the parallel primitives among them)",
-        "193 ZLE widgets registered, 47 fish-ported line-editor builtins (syntax highlight, autosuggest, history search, autopair — opt-in, so bare zshrs -f stays byte-identical to zsh -f)",
+        "Builtins: the zsh ports plus extensions (coreutils and the parallel primitives among them)",
+        "193 ZLE widgets registered, 47 fish-ported line-editor builtins (syntax highlight, autosuggest, history search, autopair — on by default in shells that read rc files (refused when RCS is unset, so bare zshrs -f stays byte-identical to zsh -f; per-feature opt-out in [zle]))",
         "A differential test suite asserting against real zsh, plus an upstream .ztst runner",
         "First shell to publish its native-plugin interface as a stable versioned ABI (cargo add znative, load a cdylib with zmodload -R), and the first Bourne-lineage shell to ship an LSP server and DAP adapter in its own binary",
         "AOP intercepts, parallel primitives (pmap/pgrep/peach), and a JetBrains IDE plugin"
@@ -2850,8 +2850,8 @@
         "Lisp-2 obarray with separate value and function cells, lexical and dynamic binding",
         "Elisp-correct reader — dotted pairs, backquote/unquote, #' desugaring, ?c char literals",
         "Lowering onto the fusevm bytecode VM (the engine behind stryke, zshrs, awkrs, vimlrs)",
-        "18 special forms and 271 subrs, plus a 1,198-name elisp prelude porting subr.el, cl-lib, seq.el, map.el, ring.el, nadvice and text-property-search",
-        "Buffers, markers, text properties and an interval tree; generalized setf, pcase and backquote patterns",
+        "Special forms, macros and a subr standard library, plus an elisp prelude porting subr.el, cl-lib, seq.el, map.el, ring.el, nadvice and text-property-search",
+        "Buffers, markers and text properties; generalized setf, pcase and backquote patterns",
         "AOP pattern intercepts — glob across many function names at once",
         "Standalone elisp binary with an interactive REPL and an rkyv bytecode cache at ~/.elisprs",
         "LSP language server, DAP debugger, and AOT compilation to standalone native binaries (--aot-exe)",
@@ -2859,16 +2859,16 @@
       ]
     },
     "zmax": {
-      "overview": "A zero-configuration modal IDE in Rust: install the binary, open a project, and get LSP, a DAP debugger, tree-sitter, a fuzzy file picker, a project tree, a real PTY terminal, magit-style git, and run configs — no init.el, no plugin manager, no setup ritual. It is a Vim / Emacs / Spacemacs / JetBrains superset with 5 keymap presets (spacemacs by default, plus vim, helix, emacs and cua), switchable at runtime. The generated port report measures it against cited Vim/Neovim, GNU Emacs, Spacemacs, kakoune, vis, sam, ed, nvi, vile, mg, nano, micro, mcedit, ne, dte, LazyVim/AstroNvim/LunarVim, fzf.vim, JetBrains and Cursor inventories: 8,972 of 9,924 items ported (90.4%, plus 574 partial), and 186 of 186 deduplicated capabilities (100%). This is the terminal editor; the windowed GUI front-end ships separately as zmax-gui. Free and open source.",
+      "overview": "A zero-configuration modal IDE in Rust: install the binary, open a project, and get LSP, a DAP debugger, tree-sitter, a fuzzy file picker, a project tree, a real PTY terminal, magit-style git, and run configs — no init.el, no plugin manager, no setup ritual. It is a Vim / Emacs / Spacemacs / JetBrains superset with keymap presets (spacemacs by default, plus hybrid, vim, helix, kakoune, emacs, cua, micro and nano), switchable at runtime with :keymap. The generated port report measures it against cited Vim/Neovim, GNU Emacs, Spacemacs, kakoune, vis, sam, ed, nvi, vile, mg, nano, micro, mcedit, ne, dte, LazyVim/AstroNvim/LunarVim, fzf.vim, JetBrains and Cursor inventories and every deduplicated capability. This is the terminal editor; the windowed GUI front-end ships separately as zmax-gui. Free and open source.",
       "features": [
         "Zero configuration — LSP, DAP debugger, tree-sitter, fuzzy picker, project tree, PTY terminal, magit-style git and run configs all work on first launch, from one static binary",
         "12 embedded scripting interpreters — elisp, vimscript, awk, zsh, stryke, ruby, php, python, node, arb, tcl and R, each a pure-Rust crate sharing one host API with no FFI between them",
         ":xpipe — filter a selection through a chain of those languages in-process; an N-stage chain is N function calls, no fork and no execve, landing as one undo step",
-        "5 keymap presets — spacemacs (default), vim, helix, emacs and cua; switchable at runtime with :keymap",
+        "Keymap presets — spacemacs by default, plus hybrid, vim, helix, kakoune, emacs, cua, micro and nano; switchable at runtime with :keymap",
         "Native plugins — an ordinary Rust cdylib loaded at runtime over a frozen, versioned C ABI, registering typable : commands with no editor recompile",
         "Built-in TUIs — snippet library, hex editor, 3-pane merge resolver, org-mode with a date-aware agenda, IDE workbench, comint shell and a searchable help browser",
         "Embedded Arduino / PlatformIO toolchain surface — boards, ports, library and board managers, build, flash, serial monitor and debug driven from the editor",
-        "2,505 static commands, 3,118 typable : commands and 4,606 default keybindings, re-derived from source by the port report on every run",
+        "Static commands, typable : commands and default keybindings are re-derived from source by the port report on every run",
         "Terminal IDE; the windowed GUI build is zmax-gui",
         "Free / OSS — MPL-2.0 licensed"
       ],
@@ -2883,7 +2883,7 @@
       "overview": "A native desktop GUI for the zmax IDE. It wraps the zmax modal-editing core in a windowed front-end, the way MacVim wraps the Vim CLI editor: a Tauri v2 shell running the editor in an embedded PTY under a full menu bar, toolbar, ⌘K palette and native file dialogs, with an IDE project workbench and in-process office/PDF document search and blame layered on top. Every GUI action is also a typed automation-bus verb, and a multi-step refactor runs as a real transaction. Free and open source.",
       "features": [
         "GUI front-end over the zmax terminal IDE — same modal core, native window",
-        "A 21-menu menu bar, a toolbar, a ⌘K palette over every action, and a right-click context menu — each bridged into the editor as an ex-command",
+        "A full menu bar, a toolbar, a ⌘K palette over every action, and a right-click context menu — each bridged into the editor as an ex-command",
         "Editor state reconstructed from the PTY stream, so the native chrome tracks the embedded editor without a second source of truth",
         "Native open/save dialogs and drag-and-drop",
         "Scriptable — every GUI action is an automation-bus verb, published as a typed, parameterised surface",
@@ -2892,7 +2892,7 @@
         "Batch Plan — paint a refactor across the project and run it as one transaction",
         "Hooks editor, bundled self-contained binaries, and an app-local English seed derived from its own call sites",
         "Modal editing, tree-sitter syntax, and LSP inherited from the zmax core",
-        "Cross-platform",
+        "macOS desktop app",
         "Free / OSS — MPL-2.0 licensed"
       ],
       "screenshots": [
@@ -2936,10 +2936,10 @@
       ]
     },
     "zwire-host": {
-      "overview": "A single self-contained Rust binary (~500 KB, no Python, no psutil) that exposes the local machine to any app over one JSON message protocol. It began as the Chrome native-messaging host for zwire's HUD and is now a universal local endpoint — reachable from a browser extension and, as a newline-delimited-JSON local-socket daemon, from tmux, emacs, desktop apps, plugins, shell scripts, and any language. Both transports feed the same dispatcher, so every command works over either one. Free and open source.",
+      "overview": "A single self-contained Rust binary (no Python, no psutil) that exposes the local machine to any app over one JSON message protocol. It began as the Chrome native-messaging host for zwire's HUD and is now a universal local endpoint — reachable from a browser extension and, as a newline-delimited-JSON local-socket daemon, from tmux, emacs, desktop apps, plugins, shell scripts, and any language. All transports feed the same dispatcher, so every command works over any of them. Free and open source.",
       "features": [
         "One static Rust binary, zero runtime dependencies — no system Python, no pip install psutil, nothing to break on a fresh machine",
-        "Two transports, one dispatcher — Chrome native messaging (u32-length + JSON) and a local-socket daemon (Unix domain socket / Windows named pipe, newline-delimited JSON)",
+        "Three transports, one dispatcher — Chrome native messaging (u32-length + JSON), a local-socket daemon (Unix domain socket / Windows named pipe, newline-delimited JSON), and the GUI Automation Bus",
         "Streams live system stats (sysinfo), runs PTY terminals (portable-pty), crawls and watches/tails the filesystem, and execs commands",
         "Background jobs that notify on completion, process list/kill, clipboard / notify / open, and a per-app key/value store",
         "A pub/sub event bus that federates across a mesh of peered hosts",
@@ -2963,8 +2963,8 @@
         "Three-tier regex: regex, fancy-regex, pcre2",
         "Bytecode VM plus Cranelift block and linear JIT on the shared fusevm engine",
         "Rayon work-stealing parallelism across all cores",
-        "10,488 stdlib primaries in %b (11,266 keys in %all including aliases and keywords) — clears Wolfram v14.3's high-band estimate by roughly 3,188",
-        "44 MB single static binary — every builtin in one file, ~4.3 KB amortized per builtin, sub-10ms cold start",
+        "Standard library of thousands of bareword primaries in %b (more keys in %all including aliases and keywords)",
+        "Single static binary — every builtin in one file, sub-10ms cold start",
         "Parallel primitives: pmap/pgrep/psort/preduce, streaming iterators, varsync shared state",
         "rkyv KV store (mmap + validate + cast reads), sketch algebra, zsh glob qualifiers",
         "Built-in HTTP, JSON, CSV, SQLite, crypto, STUN/TURN/NAT-punching and AI primitives",
@@ -2979,12 +2979,12 @@
         "Hosted on fusevm: lex/parse → AST → fusevm bytecode → Cranelift JIT, ~15–100× faster on traced loops",
         "Vim-native value types ported: list, dict (insertion-ordered), blob, typval",
         "rkyv-backed bytecode script cache, mmap hot path — versioned from day one",
-        "882 documented builtins; the 107 that need a live editor are flagged as standalone stubs rather than faked",
+        "Documented builtins; those that need a live editor are flagged as standalone stubs rather than faked",
         "vim9script foundation — :vim9script, def … enddef with bare parameters and defaults, and vim9 automatic line continuation",
         "Vim's own assert_* unit-testing framework with byte-exact v:errors message wording, checked against real vim",
         "AOP :Intercept advice on user-function calls — before/after/around, no Vim counterpart",
         "Inline rust { } FFI blocks callable as VimL functions",
-        "164 self-testing examples/*.vim run in CI, plus a differential fuzzer against Vim 9.2 and Neovim 0.12",
+        "Self-testing examples/*.vim run in CI, plus a differential fuzzer against Vim 9.2 and Neovim 0.12",
         "Standalone binary, REPL, LSP language server, DAP debugger, and AOT native compiler",
         "Free / OSS — MIT licensed"
       ]
@@ -3097,8 +3097,8 @@
         "FIFO trade roll-up from atomic execution rows per account/symbol",
         "15 broker importers plus a Generic CSV column-mapping wizard",
         "17 reports plus R-multiple, Monte Carlo, fill-quality TCA, tax-lot tracker",
-        "139 stateless financial calculators under /calc",
-        "Asset classes: stocks, options, futures, forex",
+        "Stateless financial calculators under /calc",
+        "Asset classes: stocks, options, futures, forex, crypto",
         "On-device receipt OCR with 20-bucket Schedule C taxonomy",
         "stryke-JIT backtest engine, walk-forward sweeper, strategy alerts",
         "Schema: 128 tables, 180 indexes, 25 enum types across 111 migrations; money is NUMERIC(20,8)"
@@ -3111,14 +3111,14 @@
       ]
     },
     "ztranslator": {
-      "overview": "A real-time event-translation desktop app written in pure Rust that watches MIDI, OSC, DMX, and many other sources for triggers, matches each event against per-translator rules running on a signed-32-bit integer VM, and fires an outgoing action. The same engine is embeddable inside a host GUI/CLI app via its Rust library API. The generated port report scores it against the vendored BOME manual, conservatively hand-assessed: 67.8% weighted coverage — 46 full, 19 partial, 8 missing, 4 out of scope over 73 tracked features.",
+      "overview": "A real-time event-translation desktop app written in pure Rust that watches MIDI, OSC, DMX, and many other sources for triggers, matches each event against per-translator rules running on a signed-32-bit integer VM, and fires an outgoing action. The same engine is embeddable inside a host GUI/CLI app via its Rust library API. The generated port report scores it against the vendored BOME manual, conservatively hand-assessed, with coverage tracked in the generated port report.",
       "features": [
         "Ships its own GUI; the engine also drops into a host GUI/CLI app",
-        "28 incoming trigger variants — MIDI message / 14-bit, keystroke, timer, preset, plus OSC, Art-Net DMX, sACN/E1.31, filesystem watch, serial, gamepad, USB-HID, MIDI clock, MTC, MMC, RTP-MIDI, Ableton Link, cron, system events, audio amplitude/onset/pitch, CV/gate, HTTP, TCP, WebSocket, MQTT",
+        "Incoming triggers spanning MIDI / 14-bit, keystroke, timer, preset, project and port events, app focus, OSC, Art-Net DMX, sACN/E1.31, filesystem watch, serial, gamepad, USB-HID, MIDI clock, MTC, MMC, Ableton Link, cron, system events, audio amplitude/onset/pitch, CV/gate, HTTP, TCP, WebSocket, MQTT",
         "Another MenkeTechnologies app's automation-bus event can itself be a trigger — the fleet as a MIDI device",
         "Faithful BOME rules VM: arithmetic + bitwise, IF/THEN, Goto/Skip",
         "10 local + global registers, wrap-on-overflow signed-32-bit integers",
-        "Outgoing actions: MIDI / OSC / DMX out, keystroke, mouse, AppleScript",
+        "Outgoing actions across MIDI, OS control, network and bus protocols (OSC, Art-Net/sACN DMX, HTTP, MQTT, WebSocket, TCP, serial, HID, MTC/MMC, Link, CV/gate), file and clipboard, engine control, and stryke scripts",
         "Timer and host-defined custom command actions",
         "Imports and exports BOME MIDI Translator Pro .bmtp projects, lossless; stores native projects as JSON",
         "Superset transforms beyond BOME — response curves, quantize, deadzone, slew limiting, musical scale snap, transpose, 14-bit packing, LFO (6 shapes incl. sample-and-hold) and ADSR generators, swing quantize, groove templates, chord strum, note-repeat rolls, velocity compression, and an offline rules-VM debugger"
@@ -3225,7 +3225,7 @@
         "Contention governor — gov.tune synthesizes SIMC/IMC constants in closed form from the fit, gov.admit bounds worker count against a QoS floor and the throughput knee, and gov.report / gov.ledger record what each grant was actually worth",
         "⌂ HEADROOM tab and a menu-bar headroom HUD rendering the same gov.headroom report through one engine module, so the strip and the panel cannot drift",
         "Storage snapshots drawer — list, purge, and Time Machine exclusion, so a snapshot holding space a delete just freed is visible instead of silent",
-        "Cross-platform — macOS, Linux, and Windows",
+        "macOS and Linux (hardware sensors and IORegistry are macOS-only; PSI is Linux-only)",
         "Embeddable zthrottle-core engine (rlib + staticlib + cdylib) — mounts into the other GUI apps"
       ],
       "screenshots": [
@@ -3352,7 +3352,7 @@
         "Parallel record processing via rayon, deterministic reordered output",
         "Memory-mapped files scanned with raw-byte field extraction",
         "JIT loops measured 14–110× over the bytecode interpreter",
-        "1.0–31.7× faster than BSD awk, gawk, and mawk across 30 benchmark comparisons",
+        "Benchmarked against BSD awk, gawk, and mawk with hyperfine (see README)",
         "LSP language server, DAP debug adapter, and a reedline REPL with a live stats banner",
         "AOP command-intercept engine on awk function calls, ported from zshrs",
         "Inline Rust FFI (rust { } blocks) plus --disasm / --dump-tokens / --dump-ast / --dump-bytecode introspection",
@@ -3378,11 +3378,11 @@
     "nmaprs": {
       "overview": "A Rust-native network scanner speaking nmap's CLI dialect with parallel sockets and real TCP/UDP/ICMP and raw half-open scans, without the embedded NSE Lua runtime.",
       "features": [
-        "1.5–5.1× faster than nmap 7.99 across port counts",
+        "Faster than nmap in loopback TCP-connect benchmarks (see README)",
         "Raw half-open TCP: SYN, NULL, FIN, Xmas, ACK, Window, Maimon",
         "SCTP (-sY/-sZ), idle scan (-sI), IP protocol (-sO), FTP bounce",
         "UDP probes, ICMP ping discovery, IPv6 (-6), traceroute",
-        "Evasion at packet level: decoys, spoofing, fragmentation",
+        "Packet-level evasion: decoys, source spoofing, source port, bad checksum, custom payload",
         "Service version scan (-sV) with rustls TLS",
         "IPv4 OS detection (-O) scoring nmap-os-db",
         "SOCKS4/HTTP proxies, custom DNS via hickory-resolver",
@@ -3404,9 +3404,9 @@
       ]
     },
     "htoprs": {
-      "overview": "A from-source Rust port of htop 3.5.1 — the interactive process viewer ported against the vendored htop C source rather than wrapping the htop binary. Coverage is generated from source at report time, not asserted: 1069 of 1093 C functions (97.8%) across 130 of the 131 C files, with 1 stub remaining. The process model, container/util layer, the full meter set, the UI panels and main loop, key dispatch, the CRT terminal layer and the per-OS backends are ported end-to-end; the TUI assembles and runs on macOS and Linux. On top sits a 21-module src/extensions/ layer, exempt from the port-purity gate, holding htoprs-original monitoring and theming. Crate v0.5.16, MIT.",
+      "overview": "A from-source Rust port of htop 3.5.1 — the interactive process viewer ported against the upstream htop C source rather than wrapping the htop binary. Coverage is generated from source at report time (docs/port_report.html), not asserted: nearly all C functions across 130 of the 131 C files are ported, with one stub remaining. The process model, container/util layer, the full meter set, the UI panels and main loop, key dispatch, the CRT terminal layer and the per-OS backends are ported end-to-end; the TUI assembles and runs on macOS and Linux. On top sits a 21-module src/extensions/ layer, exempt from the port-purity gate, holding htoprs-original monitoring and theming. Crate v0.5.16, MIT.",
       "features": [
-        "1069 of 1093 htop 3.5.1 C functions ported (97.8%), 130 of 131 C files, 1 stub — number generated from source by scripts/gen_port_report.py, nothing hardcoded",
+        "Port coverage of htop 3.5.1 C functions and C files is generated from source by scripts/gen_port_report.py (see docs/port_report.html), nothing hardcoded",
         "Every fn under src/ported/ carries a /// Port of &lt;File&gt;.c:&lt;line&gt; citation; an anti-drift gate fails the build on a Rust fn with no C counterpart",
         "Interactive process viewer: live table and tree, per-core CPU / memory / swap / load / battery / network / DiskIO / GPU / ZFS meters, dynamic meters",
         "Sort, filter, search, tag; signal sending and renice; the setup / columns / colors / display-options screens",
@@ -3472,7 +3472,7 @@
     "powerliners": {
       "overview": "A Rust port of Python's powerline-status statusline/prompt renderer, shipping as a 5-binary suite with zero Python runtime and sub-millisecond render.",
       "features": [
-        "134/137 upstream files ported (97.8%), 2529 lib tests",
+        "Upstream files ported, with a lib test suite",
         "462 parity tests byte-compared against live upstream Python",
         "5 binaries: powerline, -daemon, -config, -render, -lint",
         "UNIX-socket daemon speaks the upstream powerline wire format",
@@ -3484,16 +3484,16 @@
       ]
     },
     "ztmux": {
-      "overview": "The world's first 100%-functional tmux in Rust — a from-source port of the whole program, not a wrapper around the tmux binary and not a control-mode client. The server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end, reimplemented in memory-safe Rust. Correctness is measured, not claimed: a parity suite runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte — 1631/1631 gated cases passing (100%) against the vendored tmux next-3.7, with 12 cases quarantined over a Linux-only divergence that is still being root-caused. MIT-licensed.",
+      "overview": "The world's first 100%-functional tmux in Rust — a from-source port of the whole program, not a wrapper around the tmux binary and not a control-mode client. The server, client, grid/screen model, input parser, layouts, command language, formats, and terminal back end, reimplemented in memory-safe Rust. Correctness is measured, not claimed: a parity suite runs identical inputs through the real tmux and ztmux and diffs them byte-for-byte — every case gated and nothing quarantined. MIT-licensed.",
       "features": [
         "The whole tmux program in Rust: server + client, not a wrapper",
-        "1631/1631 gated parity cases passing — byte-for-byte against the vendored tmux next-3.7, plus 12 quarantined and still diffed on every pass",
+        "Byte-for-byte parity suite against the vendored tmux source, all cases gated, none quarantined",
         "Validated module-by-module against the vendored upstream tmux C source of truth",
         "Grid/screen + scrollback model, VT input parser, and the layout engine",
         "lalrpop command grammar; one file per command mirroring tmux's cmd-*.c",
-        "libevent event loop and the tmux client/server socket protocol",
+        "Rust event loop (replaces libevent) and the tmux client/server socket protocol",
         "Anti-drift gate: build fails on any Rust function with no tmux C counterpart",
-        "MIT-licensed, self-contained (vendors tmux C + tmux-rs as references)"
+        "MIT-licensed, self-contained (vendors the tmux C source as a read-only reference)"
       ],
       "screenshots": [
         {
@@ -3517,17 +3517,17 @@
       ]
     },
     "zpwrchrome": {
-      "overview": "A Chrome MV3 extension bundling a browser power-user's whole toolchain into one toolbar icon — 20 capabilities, 55 keyboard commands, and a vendored Rust native-messaging host that is a 1:1 port of browserpass-native v3.1.2 plus seven Rust-only tool families upstream never had.",
+      "overview": "A Chrome MV3 extension bundling a browser power-user's whole toolchain into one toolbar icon — 55 keyboard commands, and a vendored Rust native-messaging host that is a 1:1 port of browserpass-native v3.1.2 plus seven Rust-only tool families upstream never had.",
       "features": [
         "UNIX pass integration: fill, copy, OTP, auto-submit, basic-auth injection, full CRUD manager",
         "Profile + credit-card autofill from pass entries — shadow-DOM piercing, custom combobox and intl-tel-input widgets, cross-origin card iframes reported rather than silently skipped",
-        "Segmented multi-connection download manager that intercepts every browser download by default (HEAD probe + parallel Range GETs), with glob-matched post-download commands run without a shell",
+        "Segmented multi-connection download manager that intercepts every browser GET download by default (HEAD probe + parallel Range GETs), with glob-matched post-download commands run without a shell",
         "JetBrains-style tab switcher with cross-window MRU, named scenes, opener-tree and minimap",
         "fzf-fuzzy search over up to 5000 history entries, plus find-in-all-tabs full-text search",
         "Tampermonkey-equivalent userscript engine with a GM_* / GM.* shim",
-        "Wappalyzer-compatible detection against a vendored 3,993-fingerprint corpus, every matcher group implemented",
+        "Wappalyzer-compatible detection against a vendored fingerprint corpus, every matcher group implemented",
         "Full-page screenshot capture with OffscreenCanvas stitching; JSON + XML viewers, cinema dimmer, page-theme injector, UA switcher and a ModHeader-style header/redirect manager",
-        "55 commands (4 default-keyed, 51 user-bindable); 3,083 node:test + 134 cargo test cases, all passing"
+        "55 commands (4 default-keyed, 51 user-bindable); node:test and cargo test suites run in CI"
       ],
       "screenshots": [
         {
@@ -3537,22 +3537,22 @@
       ]
     },
     "zpwr-daw": {
-      "overview": "A two-view DAW built on one generalized grid engine — one canvas renderer, one interaction model, one value model, bound to a domain (notes / arrangement / automation / triggers). An Arrangement timeline and a Session clip launcher share the same engine: a pure C++ ClipEngine with a swung audio-thread step clock, reachable directly from C++ and from Rust over a C ABI. Formerly zpwr-clip-engine; the clip / arranger engine behind the MenkeTechnologies audio stack.",
+      "overview": "A two-view DAW built on one generalized grid engine — one canvas renderer, one interaction model, one value model, bound to a domain (notes, arranger, automation, triggers, launcher, and others). An Arrangement timeline and a Session clip launcher share the same engine: a pure C++ ClipEngine with a swung audio-thread step clock, reachable directly from C++ and from Rust over a C ABI. Formerly zpwr-clip-engine; the clip / arranger engine behind the MenkeTechnologies audio stack. The arranger timeline also carries video clips.",
       "features": [
-        "Two-view DAW: an Arrangement timeline and a Session clip launcher on one engine",
+        "Two-view DAW: an Arrangement timeline and a Session clip launcher on one engine. The arranger timeline also carries video clips.",
         "Arrangement: tracks, clips, sections, tempo / meter maps, markers, breakpoint automation",
         "Session: scene launching with follow actions",
-        "One generalized grid engine over notes / arrangement / automation / trigger domains",
+        "One generalized grid engine over multiple domains (notes, arranger, automation, triggers, launcher, and more)",
         "Pure C++ ClipEngine — JUCE-free pattern model, swung step clock, event queue",
         "Native audio-thread step clock keeps playing when the host window is minimised",
         "Byte-identical C++/JS Type-0 MIDI export plus JSON project save / load",
         "Host-agnostic frontend: JUCE WebBrowserComponent and Tauri invoke bridges",
         "C ABI (FFI) with Rust bindings so Rust hosts drive the same engine the plugins do",
-        "Shared across the stack — the CLIP tab in zpwr-synth / fx / midi-fx and the timelines in ztranslator / Audio-Haxor"
+        "Shared across the stack — the CLIP tab in the synth / fx / midi-fx plugins and the timelines in ztranslator / Audio-Haxor / traderview"
       ]
     },
     "zpwr-synth": {
-      "overview": "A fully modular patch-graph synthesizer on the shared zpwr-patch-core engine: each voice is a free patch graph of 309 voice modules (VA/wavetable/FM/additive/supersaw/Karplus oscillators, filters, ADSR/LFO/S&H modulators, VCA/mixer) plus the shared 3,366-block audio pack merged into the same graph, unlimited stacked layers, with a per-param mod matrix and a master + unlimited-aux FX-bus rack. 3,675 blocks in all, 194 of them component-level analog-circuit models. Not a fixed voice path.",
+      "overview": "A fully modular patch-graph synthesizer on the shared zpwr-patch-core engine: each voice is a free patch graph of voice modules (VA/wavetable/FM/additive/supersaw/Karplus oscillators, filters, ADSR/LFO/S&H modulators, VCA/mixer) plus the shared audio pack (including component-level analog-circuit models) merged into the same graph, unlimited stacked layers, with a per-param mod matrix and a master + unlimited-aux FX-bus rack. Not a fixed voice path.",
       "features": [
         "World first: part of the first fully-modular patch-graph audio plugin quartet (with zpwr-daw) to pair patch-graph wiring with a no-cable knob panel, EZ auto-wiring, and stereo mirror + offset-preserving stereo link",
         "Oscillator modules — virtual-analog, wavetable, FM, additive, supersaw, Karplus-Strong — wired freely into each voice's patch graph",
@@ -3564,22 +3564,22 @@
         "ADSR / LFO / sample-and-hold modulator modules, freely routable to any parameter",
         "Modulation by patching — route any modulator to any parameter, no fixed mod-matrix slot limit",
         "Unlimited stackable layers, each its own voice pool",
-        "Master-FX bus: the shared 3,366-block patch-core audio pack (incl. 189 component-level analog-circuit models) runs once on the summed output",
-        "300 factory presets — 256 general (two 128-voice banks) plus Trance (20), Hard Techno (13) and Schranz (11) genre banks"
+        "Master-FX bus: the shared patch-core audio pack (including component-level analog-circuit models) runs once on the summed output",
+        "Factory presets: two general banks plus Trance, Hard Techno and Schranz genre banks"
       ],
       "screenshots": [
         { "src": "assets/zsynth-synth.webp", "cap": "Synth view: per-voice oscillator, filter, and envelope panel" },
-        { "src": "assets/zsynth-patch.webp", "cap": "Patch view: modular patch-graph wiring of the 309-module voice" },
+        { "src": "assets/zsynth-patch.webp", "cap": "Patch view: modular patch-graph wiring of the modular voice" },
         { "src": "assets/zsynth-peform.webp", "cap": "Perform view: macros, mod matrix, and layer controls" }
       ]
     },
     "zpwr-fx": {
-      "overview": "A modular patch-graph effects plugin — not a fixed slot rack. Wire 3,366 DSP module types freely (fan-out and feedback allowed) into your own algorithms, with a per-param mod matrix, unlimited layers, and an EZ-wire mode that auto-routes the signal path. Built on the shared zpwr-patch-core engine.",
+      "overview": "A modular patch-graph effects plugin — not a fixed slot rack. Wire DSP module types freely (fan-out and feedback allowed) into your own algorithms, with a per-param mod matrix, unlimited layers, and an EZ-wire mode that auto-routes the signal path. Built on the shared zpwr-patch-core engine.",
       "features": [
         "World first: part of the first fully-modular patch-graph audio plugin quartet (with zpwr-daw) to pair patch-graph wiring with a no-cable knob panel, EZ auto-wiring, and stereo mirror + offset-preserving stereo link",
-        "3,366 audio module types across every effect family",
+        "Audio module types across every effect family",
         "Free patch graph: any node to any node, feedback with one-sample delay",
-        "189 component-level analog-circuit models across the Amp / Analog / Distortion / Filter / Oscillator families — per-sample nodal and Newton device solves, no IR or sample clones",
+        "Component-level analog-circuit models across the Amp / Analog / Distortion / Filter / Oscillator families — per-sample nodal and Newton device solves, no IR or sample clones",
         "Analog filters: Minimoog, Jupiter-8, MS-20, SEM, EMS VCS3, Wasp, TB-303",
         "Analog comps: 1176, LA-2A, Fairchild, dbx 160, SSL bus, Distressor",
         "Analog EQs/pre: Pultec, API 550, Neve 1073, SSL E/G, Manley + tube/tape",
@@ -3601,12 +3601,12 @@
         "Chord inversion, octave-doubling, spread, transpose, strum",
         "Per-key chord mapping (Chromatic, Circle-of-Fifths, Lowest-Note)",
         "Scale-lock quantizer across 20 scale/mode types",
-        "Step arpeggiator: Up/Down/UpDown/Converge/AsPlayed/Random/Chord",
+        "Step arpeggiator: Up/Down/UpDown/DownUp/Converge/Diverge/AsPlayed/Random/Chord",
         "Per-step velocity, gate, transpose, ratchet, probability, tie",
         "Euclidean (Bjorklund) gate overlay with pulses and rotation",
         "Latch, swing, octave span, timing/velocity humanize",
-        "Disk-backed .zpwrpreset manager (name/category/author)",
-        "CyberLookAndFeel neon UI with step-indicator readout"
+        "Disk-backed `.zmp` preset manager with `.zmb` bank import/export",
+        "Cyberpunk WebView UI on the shared zpc patch editor"
       ],
       "screenshots": [
         { "src": "assets/zpwr-midi-fx.webp", "cap": "Note-stream patch graph with arp + Euclidean" }
