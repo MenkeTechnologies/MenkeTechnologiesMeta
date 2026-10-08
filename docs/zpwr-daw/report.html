@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-daw — Engineering report. A standalone DAW arranger engine: 16,304 C/C++ lines + 79,217 JavaScript lines + 396 Rust lines (tokei), one generalized grid with 7 domains, a pure C++ ClipEngine with a swung audio-thread step clock, a C ABI for Rust hosts, and byte-identical C++/JS Type-0 MIDI export. 173 arranger features mapped to file:line.">
+  <meta name="description" content="zpwr-daw — Engineering report. A standalone DAW arranger engine: 16,304 C/C++ lines + 79,217 JavaScript lines + 396 Rust lines (tokei), one generalized grid with 8 domains, a pure C++ ClipEngine with a swung audio-thread step clock, a C ABI for Rust hosts, and byte-identical C++/JS Type-0 MIDI export. 173 arranger features mapped to file:line.">
   <title>zpwr-daw &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,7 +75,7 @@
             <a href="https://github.com/MenkeTechnologies/zpwr-daw" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            DAW arranger engine &middot; one generalized grid, 7 domains &middot; pure C++ <code>ClipEngine</code> + swung audio-thread step clock &middot; C ABI for Rust hosts &middot; byte-identical C++/JS Type-0 MIDI export
+            DAW arranger engine &middot; one generalized grid, 8 domains &middot; pure C++ <code>ClipEngine</code> + swung audio-thread step clock &middot; C ABI for Rust hosts &middot; byte-identical C++/JS Type-0 MIDI export
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -161,7 +161,7 @@
   │  grid engine │──────────────────────▶│ domains/  notes · arranger ·      │
   │  render loop │                       │           automation · triggers · │
   │  hit-test    │                       │           autolanes · launcher ·  │
-  │  all gestures│                       │           highway                 │
+  │  all gestures│                       │           highway · requests      │
   │  popover     │                       └──────────────────────────────────┘
   └──────┬───────┘
          │  nf(name)(...args)
@@ -200,7 +200,7 @@
       <!-- SECTION 4: GRID ENGINE & DOMAINS        -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>GRID ENGINE &amp; DOMAINS</h2>
-      <p class="tutorial-subtitle">A <strong>domain</strong> supplies everything that differs (lanes, time-axis cells, value type, which gestures apply, serialize shape); the grid engine supplies everything shared (render loop, hit-test, all gestures, popover bulk-edit, persistence). The single most important merge detail: <code>value.type</code> selects the edit-drag axis &mdash; <code>'length'</code> &rarr; horizontal right-edge note resize, <code>'unit'</code> &rarr; vertical top-band value height, <code>'bool'</code> &rarr; click toggle. There are 7 domain files under <code>libs/zpwr-clip-engine/webui/grid/domains/</code>.</p>
+      <p class="tutorial-subtitle">A <strong>domain</strong> supplies everything that differs (lanes, time-axis cells, value type, which gestures apply, serialize shape); the grid engine supplies everything shared (render loop, hit-test, all gestures, popover bulk-edit, persistence). The single most important merge detail: <code>value.type</code> selects the edit-drag axis &mdash; <code>'length'</code> &rarr; horizontal right-edge note resize, <code>'unit'</code> &rarr; vertical top-band value height, <code>'bool'</code> &rarr; click toggle. There are 8 domain files under <code>libs/zpwr-clip-engine/webui/grid/domains/</code>.</p>
 
       <table class="file-table">
         <thead><tr><th>Domain</th><th>Lanes &times; cells</th><th>Value</th><th>Serialize shape</th></tr></thead>
@@ -212,8 +212,9 @@
           <tr><td style="color:var(--accent);">autolanes.js</td><td>MPE / CC lanes</td><td>per-block</td><td>Pitch Bend / CC74 / Channel Pressure as their real MIDI messages</td></tr>
           <tr><td style="color:var(--accent);">launcher.js</td><td>scene grid</td><td>clip slots</td><td>the Session clip launcher (scenes, follow actions)</td></tr>
           <tr><td style="color:var(--accent);">highway.js</td><td>keys / pads / drums lanes &times; steps</td><td><code>length</code></td><td>read-only play-along note highway over the same ClipSeq pattern the editor domains edit; renders verdicts, never grades</td></tr>
+          <tr><td style="color:var(--accent);">requests.js</td><td>request lanes &times; millisecond ticks</td><td>clip ids</td><td>a network run on the arrangement grid &mdash; each send is a region (left edge = send time, width = duration), with latency, status class and retry backoff as breakpoint lanes on the same axis; <code>{ laneId: { startUnit: { clipId, len } } }</code></td></tr>
         </tbody>
-        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">DOMAINS</td><td class="num" colspan="3">7 files in <code>libs/zpwr-clip-engine/webui/grid/domains/</code></td></tr></tfoot>
+        <tfoot><tr class="total-row"><td style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">DOMAINS</td><td class="num" colspan="3">8 files in <code>libs/zpwr-clip-engine/webui/grid/domains/</code></td></tr></tfoot>
       </table>
 
       <h3 style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);letter-spacing:1.5px;margin:1.5rem 0 0.5rem;">// INTERACTION PARITY CHECKLIST (REGRESSION CONTRACT)</h3>
@@ -304,13 +305,13 @@
       <table class="file-table">
         <thead><tr><th>Surface</th><th>Where</th><th class="num">Cases</th><th>What it pins</th></tr></thead>
         <tbody>
-          <tr><td style="color:var(--accent);">JavaScript</td><td><code>libs/zpwr-clip-engine/webui/grid/tests/*.mjs</code></td><td class="num">1955</td><td><code>node --test</code> over 338 files. Model, domains, layout/hit math, MIDI round-trip.</td></tr>
+          <tr><td style="color:var(--accent);">JavaScript</td><td><code>libs/zpwr-clip-engine/webui/grid/tests/*.mjs</code></td><td class="num">2011</td><td><code>node --test</code> over 341 files. Model, domains, layout/hit math, MIDI round-trip.</td></tr>
           <tr><td style="color:var(--accent);">Rust</td><td><code>bindings/rust/zpwr-clip-engine/tests/integration.rs</code></td><td class="num">10</td><td><code>#[test]</code> functions driving the engine through the safe FFI wrapper: set pattern, transport, advance, poll events, MIDI render.</td></tr>
           <tr><td style="color:var(--accent);">C++</td><td><code>tests/*.cpp</code></td><td class="num">116</td><td><code>check</code> / <code>CHECK</code> assertions across <code>MidiModulesTest.cpp</code> (registry builds, every module is finite + leaves no hung notes), <code>audio_dsp_test.cpp</code> and <code>audio_clip_render_test.cpp</code> (the two ctest-registered audio suites).</td></tr>
         </tbody>
         <tfoot><tr class="total-row"><td colspan="2" style="font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;">TOTAL</td><td class="num">2081</td><td>across the JS / Rust / C++ layers</td></tr></tfoot>
       </table>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">JS: <code>grep -cE "^\s*(test|it)\("</code> over <code>libs/zpwr-clip-engine/webui/grid/tests/*.mjs</code> = 1955 across 338 files. Rust: <code>grep -c "#[test]"</code> over <code>bindings/</code> = 10. C++: <code>grep -cE "\b(check|CHECK)\s*\("</code> over <code>tests/*.cpp</code> = 116 (8 + 42 + 66). The exporters are additionally cross-checked by round-trip parsing inside the JS and Rust suites.</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:0.5rem;">JS: <code>grep -cE "^\s*(test|it)\("</code> over <code>libs/zpwr-clip-engine/webui/grid/tests/*.mjs</code> = 2011 across 341 files. Rust: <code>grep -c "#[test]"</code> over <code>bindings/</code> = 10. C++: <code>grep -cE "\b(check|CHECK)\s*\("</code> over <code>tests/*.cpp</code> = 116 (8 + 42 + 66). The exporters are additionally cross-checked by round-trip parsing inside the JS and Rust suites.</p>
 
       <hr class="section-rule">
 

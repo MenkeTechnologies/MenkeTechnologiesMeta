@@ -79,7 +79,7 @@
             <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            Single static Rust binary &middot; two transports, one dispatcher &middot; 71 commands &middot; also a library &middot; macOS · Linux · Windows
+            Single static Rust binary &middot; two transports, one dispatcher &middot; 134 host verbs &middot; also a library &middot; macOS · Linux · Windows
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -101,7 +101,7 @@
         <div class="stat-card"><div class="stat-val">v0.3.21</div><div class="stat-label">Version</div></div>
         <div class="stat-card"><div class="stat-val cyan">30</div><div class="stat-label">src .rs files</div></div>
         <div class="stat-card"><div class="stat-val green">10,473</div><div class="stat-label">Source lines</div></div>
-        <div class="stat-card"><div class="stat-val cyan">71</div><div class="stat-label">Protocol commands</div></div>
+        <div class="stat-card"><div class="stat-val cyan">134</div><div class="stat-label">Host verbs</div></div>
         <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Transports</div></div>
         <div class="stat-card"><div class="stat-val green">18</div><div class="stat-label">Capabilities</div></div>
         <div class="stat-card"><div class="stat-val cyan">15</div><div class="stat-label">Dependencies</div></div>
@@ -125,7 +125,7 @@
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>COMMAND SURFACE</h2>
-      <p>66 host commands, all reachable over both transports &mdash; the surface <code>SURFACE_VERBS</code> advertises on <code>App::open("zwire")-&gt;verbs()</code>, alongside the 100 <code>browser.*</code> verbs the Chromium HUD executes. The <code>hello</code> reply advertises which capability tags were compiled in so a client can feature-test.</p>
+      <p>134 host verbs, all reachable over both transports &mdash; the surface <code>SURFACE_VERBS</code> advertises on <code>App::open("zwire")-&gt;verbs()</code>, alongside the 115 <code>browser.*</code> verbs the Chromium HUD executes. The <code>hello</code> reply advertises which capability tags were compiled in so a client can feature-test.</p>
       <p>Every verb declares a reversibility class, published as <code>rev</code>: <code>inverse</code> (a compensation exists), <code>pure</code> (reads only &mdash; runs but is not journaled), or <code>irreversible</code> (the default). While a transaction is open every reversible call is journaled; <code>txn_abort</code> compensates the journal in reverse order and fires the <code>txn-aborted</code> hook event, and calling an <code>irreversible</code> verb is refused at call time with <code>verb not reversible: &lt;id&gt;</code> so a chain fails fast instead of stranding itself half-undone. Compensation for <code>browser.*</code> verbs is replayed by the HUD service worker, which captured each step's pre-state; the host contributes the order.</p>
       <p><strong>The bus is scriptable everywhere and transactional only where a compensation genuinely exists &mdash; most of the surface is <code>irreversible</code>, deliberately.</strong> No host command is ever <code>inverse</code>: the journal records a step's verb and args, never its pre-state, so <code>fs_write</code>, <code>kv_set</code>, <code>clipboard_set</code>, the <code>hooks_*</code> writers and <code>exec</code> have nothing to restore from. A <code>browser.*</code> verb qualifies only when the HUD journal can observe all of its effects &mdash; it watches tab created / removed / moved / detached / pinned / muted / url / activated / zoomed and window created, and replays a matching set of inverse ops. Verbs outside that vocabulary (window state and bounds, tab groups, downloads, bookmarks, the reading list, browsing data, extension management) journal nothing, so classing one <code>inverse</code> would produce an abort reporting a clean revert having restored nothing. Every deliberately irreversible verb is listed with its reason in <code>tests/rev_coverage.rs</code>, whose coverage gate fails when a verb reaches the surface unclassified.</p>
       <table class="arch-table">
@@ -144,6 +144,10 @@
           <tr><td>Lifecycle hooks</td><td><code>hooks_list</code>, <code>hooks_events</code>, <code>hooks_save</code>, <code>hooks_delete</code>, <code>hooks_set_enabled</code>, <code>hooks_get_script</code>, <code>hooks_set_script</code>, <code>hooks_script_path</code>, <code>hooks_test_run</code>, <code>hook_fire</code></td></tr>
           <tr><td>stryke scripting &amp; LSP</td><td><code>stryke_run</code>, <code>stryke_lsp_start</code>, <code>stryke_lsp_send</code>, <code>stryke_lsp_stop</code></td></tr>
           <tr><td>Transactions</td><td><code>txn_begin</code>, <code>txn_commit</code>, <code>txn_abort</code></td></tr>
+          <tr><td>Filesystem (extended)</td><td><code>fs_chmod</code>, <code>fs_compare_dirs</code>, <code>fs_compress</code>, <code>fs_copy_path</code>, <code>fs_create_dir</code>, <code>fs_create_file</code>, <code>fs_delete_file</code>, <code>fs_diff</code>, <code>fs_disk_usage</code>, <code>fs_duplicate</code>, <code>fs_extract</code>, <code>fs_find_duplicates</code>, <code>fs_folder_size</code>, <code>fs_get_info</code>, <code>fs_git_status</code>, <code>fs_grep</code>, <code>fs_hash</code>, <code>fs_home_dir</code>, <code>fs_list_dir</code>, <code>fs_list_subdirs</code>, <code>fs_move_to_trash</code>, <code>fs_read_file_base64</code>, <code>fs_read_head</code>, <code>fs_read_head_bytes</code>, <code>fs_rename_file</code>, <code>fs_secure_delete</code>, <code>fs_symlink_retarget</code>, <code>fs_touch</code>, <code>fs_xattrs</code></td></tr>
+          <tr><td>Page serving</td><td><code>page_get</code>, <code>page_reply</code>, <code>page_serve</code>, <code>page_states</code></td></tr>
+          <tr><td>Suite bridge</td><td><code>suite_call</code>, <code>suite_get</code>, <code>suite_list</code>, <code>suite_verbs</code></td></tr>
+          <tr><td>tmux</td><td><code>tmux_broadcast_list</code>, <code>tmux_buffer</code>, <code>tmux_buffers</code>, <code>tmux_capture</code>, <code>tmux_command</code>, <code>tmux_delete_buffer</code>, <code>tmux_export_state</code>, <code>tmux_focus</code>, <code>tmux_import_state</code>, <code>tmux_keys</code>, <code>tmux_options</code>, <code>tmux_panes</code>, <code>tmux_paste_buffer</code>, <code>tmux_run</code>, <code>tmux_search</code>, <code>tmux_send</code>, <code>tmux_sessions</code>, <code>tmux_set_buffer</code>, <code>tmux_set_key</code>, <code>tmux_set_option</code>, <code>tmux_snap_delete</code>, <code>tmux_snap_detail</code>, <code>tmux_snap_list</code>, <code>tmux_snap_rename</code>, <code>tmux_snap_restore</code>, <code>tmux_snap_save</code>, <code>tmux_status</code>, <code>tmux_sync</code>, <code>tmux_tree</code>, <code>tmux_unbind_key</code></td></tr>
           <tr><td>Legacy zwire bridge</td><td><code>get</code>, <code>theme</code> + <code>scheme</code>/<code>ui</code> keys over <code>~/.zwire/hud-scheme</code> and <code>~/.zwire/hud-ui.json</code></td></tr>
         </tbody>
       </table>

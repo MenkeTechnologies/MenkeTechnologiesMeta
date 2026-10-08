@@ -66,8 +66,9 @@ The download target is chosen automatically:
 - Distinct products (apps, plugins, CLI tools) are explicit objects in the
   `PRODUCTS` array.
 - The stryke packages are generated from a compact table via `strykePkg()`.
-- The other repos (zsh plugins, dev tools, arb packages) are generated via
-  `metaProduct()`. The arb dashboards ship no build artifacts — `arb install
+- Most arb dashboard packages are generated via `arbPkg()`.
+- The other repos (zsh plugins, dev tools, remaining arb packages) are generated
+  via `metaProduct()`. The arb dashboards ship no build artifacts — `arb install
   <name>` is a git clone through the `arb-registry` git index — so they carry
   `hasRelease: false` and link their `/tags` page of source archives.
 - Long-form detail copy (`overview` + rich `features`) lives in the `DETAILS`
@@ -239,18 +240,12 @@ URL for the wallet buttons, or the Stripe / Braintree SDKs).
 
 ## Hosting
 
-The repo carries no Pages deploy workflow and has no Pages site configured —
-`.github/workflows/ci.yml` is the only workflow. The `docs/` pages are mirrored
-by the meta repo and published at
+The store is deployed to GitHub Pages by `.github/workflows/jekyll-gh-pages.yml` on every push to `main` (Pages source: GitHub Actions), served at
+`https://menketechnologies.github.io/app-store/`. `.github/workflows/ci.yml` runs the checks. The `docs/` pages are also mirrored by the meta repo and published at
 `https://menketechnologies.github.io/MenkeTechnologiesMeta/app-store/`.
 
-The store itself is pure static files, so any static file server works. To host
-it on GitHub Pages, enable **Settings → Pages → Source: Deploy from a branch →
-`main` / root**, or via the CLI:
+The store itself is pure static files, so any static file server works. To re-enable Pages on a fresh repo:
 
 ```
-gh api -X POST repos/MenkeTechnologies/app-store/pages \
-  -f 'source[branch]=main' -f 'source[path]=/'
+gh api -X POST repos/MenkeTechnologies/app-store/pages -f build_type=workflow
 ```
-
-The site would then serve at `https://menketechnologies.github.io/app-store/`.

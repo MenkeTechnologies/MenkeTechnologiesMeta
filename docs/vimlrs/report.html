@@ -78,7 +78,7 @@
       <p class="tutorial-subtitle">vimlrs is a standalone interpreter for VimL (Vimscript), ported faithfully from Neovim's C eval engine and hosted on the <code>fusevm</code> bytecode VM. This report describes the architecture, the porting methodology, the current state of the tree, and the dependency posture. The numbers below are facts about the design and the manifest, not aspirational metrics.</p>
 
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val accent">4th</div><div class="stat-label">fusevm language host</div></div>
+        <div class="stat-card"><div class="stat-val accent">fusevm</div><div class="stat-label">language host</div></div>
         <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Cranelift JIT tiers</div></div>
         <div class="stat-card"><div class="stat-val">v0.2.17</div><div class="stat-label">version</div></div>
         <div class="stat-card"><div class="stat-val">MIT</div><div class="stat-label">license · free / OSS</div></div>
@@ -86,7 +86,7 @@
 
       <section class="tutorial-section">
         <h2>Summary</h2>
-        <p>Vimscript has historically been inseparable from its host editor. vimlrs separates the two: it ports the language semantics out of Neovim's C <code>eval/*</code> tree and runs them on a compiled VM, so <code>.vim</code> scripts execute as standalone programs. It is the fourth consumer of <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a> — after <code>zshrs</code>, <code>stryke</code>, and <code>awkrs</code> — and reuses that shared bytecode VM and three-tier Cranelift JIT rather than shipping its own.</p>
+        <p>Vimscript has historically been inseparable from its host editor. vimlrs separates the two: it ports the language semantics out of Neovim's C <code>eval/*</code> tree and runs them on a compiled VM, so <code>.vim</code> scripts execute as standalone programs. It is a consumer of <a href="https://github.com/MenkeTechnologies/fusevm">fusevm</a> and reuses that shared bytecode VM and three-tier Cranelift JIT rather than shipping its own.</p>
         <p>The current tree has the Vim-native value layer ported (<code>typval</code>, <code>list</code>, insertion-ordered <code>dict</code>, <code>blob</code>); the lexer/parser, AST-to-bytecode lowering, and builtin surface are implemented (and the builtin surface keeps growing); and the standalone binary, rkyv bytecode cache, AOT native compiler, DAP debugger, and LSP server are implemented.</p>
       </section>
 
@@ -97,7 +97,7 @@
         <p>vimlrs contains no virtual machine or JIT of its own. The execution path is:</p>
 <pre>VimL source  →  lexer  →  parser → AST  →  lower to fusevm bytecode  →  fusevm VM + Cranelift JIT</pre>
         <div class="feature-grid">
-          <div class="feature-card"><h4>Shared engine</h4><p>fusevm is pulled from crates.io with the <code>jit</code> and <code>jit-disk-cache</code> features. JIT and VM improvements land once and benefit zshrs, stryke, awkrs, and vimlrs together.</p></div>
+          <div class="feature-card"><h4>Shared engine</h4><p>fusevm is pulled from crates.io with the <code>jit</code> and <code>jit-disk-cache</code> features. JIT and VM improvements land once and benefit every fusevm language host together.</p></div>
           <div class="feature-card"><h4>Persistent native code</h4><p><code>jit-disk-cache</code> persists compiled machine code across runs, so warm starts skip recompilation.</p></div>
           <div class="feature-card"><h4>Portable bytecode</h4><p>The bytecode is architecture-portable; the Cranelift JIT covers x86-64 and aarch64 (macOS + Linux) today.</p></div>
           <div class="feature-card"><h4>Same pattern as zshrs</h4><p>vimlrs hosts VimL the way zshrs hosts zsh — lower to bytecode, run on the shared VM — rather than re-implementing an interpreter loop.</p></div>

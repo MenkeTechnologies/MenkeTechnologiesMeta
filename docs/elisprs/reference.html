@@ -142,7 +142,7 @@
           <span class="sep">/</span>
           <a href="https://github.com/MenkeTechnologies/elisprs" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
-        <p class="docs-build-line">elisprs v0.1.19 · 290 builtins &amp; special forms · 10 chapters · generated from <code>elisprs/lsp.rs</code></p>
+        <p class="docs-build-line">elisprs v0.1.19 · 311 builtins &amp; special forms · 10 chapters · generated from <code>elisprs/lsp.rs</code></p>
       </div>
       <div class="tutorial-toolbar">
         <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -176,7 +176,7 @@
         <li><a href="#ch-i-o-print-format">I/O, Print &amp; Format</a> <span class="chapter-count">10</span></li>
         <li><a href="#ch-control-functional">Control &amp; Functional</a> <span class="chapter-count">11</span></li>
         <li><a href="#ch-association-lists-hash-tables">Association Lists &amp; Hash Tables</a> <span class="chapter-count">11</span></li>
-        <li><a href="#ch-other">Other</a> <span class="chapter-count">109</span></li>
+        <li><a href="#ch-other">Other</a> <span class="chapter-count">130</span></li>
       </ul>
     </section>
     <section class="tutorial-section" id="ch-special-forms">
@@ -562,7 +562,7 @@
         <h3><a class="doc-anchor" href="#doc-random">#</a> <code>random</code></h3>
         <pre><code class="lang-elisp">(random &amp;optional LIMIT)
 </code></pre>
-        <p>Pseudo-random integer; if LIMIT is a positive integer, in the range [0, LIMIT).</p>
+        <p>Pseudo-random integer; if LIMIT is a positive integer (a bignum too), in the range [0, LIMIT). A non-positive integer LIMIT signals args-out-of-range; t reseeds from the clock and a string reseeds from its contents; otherwise any fixnum.</p>
       </article>
       <article class="doc-entry" id="doc-string-to-number">
         <h3><a class="doc-anchor" href="#doc-string-to-number">#</a> <code>string-to-number</code></h3>
@@ -978,15 +978,15 @@
       </article>
       <article class="doc-entry" id="doc-match-data">
         <h3><a class="doc-anchor" href="#doc-match-data">#</a> <code>match-data</code></h3>
-        <pre><code class="lang-elisp">(match-data)
+        <pre><code class="lang-elisp">(match-data &amp;optional INTEGERS REUSE RESEAT)
 </code></pre>
-        <p>Last match&#39;s positions as a flat list (beg0 end0 beg1 end1 …).</p>
+        <p>Last match&#39;s positions as a flat list (beg0 end0 beg1 end1 …). After a buffer search they are markers into that buffer; with INTEGERS they are integers and the buffer is appended. A cons REUSE is filled in place and returned.</p>
       </article>
       <article class="doc-entry" id="doc-set-match-data">
         <h3><a class="doc-anchor" href="#doc-set-match-data">#</a> <code>set-match-data</code></h3>
-        <pre><code class="lang-elisp">(set-match-data LIST)
+        <pre><code class="lang-elisp">(set-match-data LIST &amp;optional RESEAT)
 </code></pre>
-        <p>Restore match positions from a match-data list.</p>
+        <p>Restore match positions from a match-data list (integers or markers, optionally ending in a buffer). RESEAT detaches the markers in LIST.</p>
       </article>
       <article class="doc-entry" id="doc-replace-regexp-in-string">
         <h3><a class="doc-anchor" href="#doc-replace-regexp-in-string">#</a> <code>replace-regexp-in-string</code></h3>
@@ -1126,9 +1126,9 @@
       </article>
       <article class="doc-entry" id="doc-read">
         <h3><a class="doc-anchor" href="#doc-read">#</a> <code>read</code></h3>
-        <pre><code class="lang-elisp">(read STRING)
+        <pre><code class="lang-elisp">(read &amp;optional STREAM)
 </code></pre>
-        <p>Read and return one Lisp object from STRING.</p>
+        <p>Read and return one Lisp object from STREAM: a string (from its start), a buffer (from its point, which moves past the object) or a marker (from its position, which advances).</p>
       </article>
       <article class="doc-entry" id="doc-read-from-string">
         <h3><a class="doc-anchor" href="#doc-read-from-string">#</a> <code>read-from-string</code></h3>
@@ -1226,7 +1226,7 @@
       </article>
       <article class="doc-entry" id="doc-signal">
         <h3><a class="doc-anchor" href="#doc-signal">#</a> <code>signal</code></h3>
-        <pre><code class="lang-elisp">(signal ERROR-SYMBOL DATA)
+        <pre><code class="lang-elisp">(signal ERROR-SYMBOL &amp;optional DATA)
 </code></pre>
         <p>Signal the error named ERROR-SYMBOL with associated DATA.</p>
       </article>
@@ -1303,7 +1303,7 @@
     </section>
     <section class="tutorial-section" id="ch-other">
       <h2>Other</h2>
-      <p class="chapter-meta">109 entries</p>
+      <p class="chapter-meta">130 entries</p>
       <article class="doc-entry" id="doc-format-time-string">
         <h3><a class="doc-anchor" href="#doc-format-time-string">#</a> <code>format-time-string</code></h3>
         <pre><code class="lang-elisp">(format-time-string FORMAT &amp;optional TIME ZONE)
@@ -1712,6 +1712,48 @@
 </code></pre>
         <p>Delete the entire contents of the current buffer.</p>
       </article>
+      <article class="doc-entry" id="doc-buffer-modified-p">
+        <h3><a class="doc-anchor" href="#doc-buffer-modified-p">#</a> <code>buffer-modified-p</code></h3>
+        <pre><code class="lang-elisp">(buffer-modified-p &amp;optional BUFFER)
+</code></pre>
+        <p>Non-nil if BUFFER (default the current one) was modified since it was last marked unmodified: t, or `autosaved&#39; when it was auto-saved since its last change.</p>
+      </article>
+      <article class="doc-entry" id="doc-set-buffer-modified-p">
+        <h3><a class="doc-anchor" href="#doc-set-buffer-modified-p">#</a> <code>set-buffer-modified-p</code></h3>
+        <pre><code class="lang-elisp">(set-buffer-modified-p FLAG)
+</code></pre>
+        <p>Mark the current buffer modified (FLAG non-nil) or unmodified (nil). Returns nil.</p>
+      </article>
+      <article class="doc-entry" id="doc-restore-buffer-modified-p">
+        <h3><a class="doc-anchor" href="#doc-restore-buffer-modified-p">#</a> <code>restore-buffer-modified-p</code></h3>
+        <pre><code class="lang-elisp">(restore-buffer-modified-p FLAG)
+</code></pre>
+        <p>Like <code>set-buffer-modified-p&#39; without the side effects; FLAG </code>autosaved&#39; also marks the buffer auto-saved. Returns FLAG.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-modified-tick">
+        <h3><a class="doc-anchor" href="#doc-buffer-modified-tick">#</a> <code>buffer-modified-tick</code></h3>
+        <pre><code class="lang-elisp">(buffer-modified-tick &amp;optional BUFFER)
+</code></pre>
+        <p>BUFFER&#39;s modification count: it advances on every change to its text or text properties.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-chars-modified-tick">
+        <h3><a class="doc-anchor" href="#doc-buffer-chars-modified-tick">#</a> <code>buffer-chars-modified-tick</code></h3>
+        <pre><code class="lang-elisp">(buffer-chars-modified-tick &amp;optional BUFFER)
+</code></pre>
+        <p>BUFFER&#39;s character-change count: like `buffer-modified-tick&#39;, but text-property changes leave it alone.</p>
+      </article>
+      <article class="doc-entry" id="doc-position-bytes">
+        <h3><a class="doc-anchor" href="#doc-position-bytes">#</a> <code>position-bytes</code></h3>
+        <pre><code class="lang-elisp">(position-bytes POSITION)
+</code></pre>
+        <p>The byte position of character POSITION in the whole buffer, or nil if POSITION is outside it.</p>
+      </article>
+      <article class="doc-entry" id="doc-byte-to-position">
+        <h3><a class="doc-anchor" href="#doc-byte-to-position">#</a> <code>byte-to-position</code></h3>
+        <pre><code class="lang-elisp">(byte-to-position BYTEPOS)
+</code></pre>
+        <p>The character position whose bytes include byte position BYTEPOS, or nil if it is outside the buffer.</p>
+      </article>
       <article class="doc-entry" id="doc-char-after">
         <h3><a class="doc-anchor" href="#doc-char-after">#</a> <code>char-after</code></h3>
         <pre><code class="lang-elisp">(char-after &amp;optional POS)
@@ -1915,6 +1957,90 @@
         <pre><code class="lang-elisp">(backward-word &amp;optional N)
 </code></pre>
         <p>Move point backward N words (default 1).</p>
+      </article>
+      <article class="doc-entry" id="doc-current-indentation">
+        <h3><a class="doc-anchor" href="#doc-current-indentation">#</a> <code>current-indentation</code></h3>
+        <pre><code class="lang-elisp">(current-indentation)
+</code></pre>
+        <p>Return the indentation of the current line: the column of its first character that is not a space or tab.</p>
+      </article>
+      <article class="doc-entry" id="doc-indent-to">
+        <h3><a class="doc-anchor" href="#doc-indent-to">#</a> <code>indent-to</code></h3>
+        <pre><code class="lang-elisp">(indent-to COLUMN &amp;optional MINIMUM)
+</code></pre>
+        <p>Indent from point with tabs (if `indent-tabs-mode&#39;) and spaces to reach COLUMN, inserting at least MINIMUM columns; return the column reached.</p>
+      </article>
+      <article class="doc-entry" id="doc-move-to-column">
+        <h3><a class="doc-anchor" href="#doc-move-to-column">#</a> <code>move-to-column</code></h3>
+        <pre><code class="lang-elisp">(move-to-column COLUMN &amp;optional FORCE)
+</code></pre>
+        <p>Move point to COLUMN on the current line, or as close as the line allows. FORCE non-nil splits a tab that spans COLUMN; FORCE t also pads a short line. Return the column reached.</p>
+      </article>
+      <article class="doc-entry" id="doc-back-to-indentation">
+        <h3><a class="doc-anchor" href="#doc-back-to-indentation">#</a> <code>back-to-indentation</code></h3>
+        <pre><code class="lang-elisp">(back-to-indentation)
+</code></pre>
+        <p>Move point to the first non-whitespace character on this line.</p>
+      </article>
+      <article class="doc-entry" id="doc-backward-prefix-chars">
+        <h3><a class="doc-anchor" href="#doc-backward-prefix-chars">#</a> <code>backward-prefix-chars</code></h3>
+        <pre><code class="lang-elisp">(backward-prefix-chars)
+</code></pre>
+        <p>Move point backward over characters with expression-prefix syntax or the `p&#39; syntax flag.</p>
+      </article>
+      <article class="doc-entry" id="doc-buffer-narrowed-p">
+        <h3><a class="doc-anchor" href="#doc-buffer-narrowed-p">#</a> <code>buffer-narrowed-p</code></h3>
+        <pre><code class="lang-elisp">(buffer-narrowed-p)
+</code></pre>
+        <p>Return non-nil if the current buffer is narrowed.</p>
+      </article>
+      <article class="doc-entry" id="doc-insert-buffer-substring">
+        <h3><a class="doc-anchor" href="#doc-insert-buffer-substring">#</a> <code>insert-buffer-substring</code></h3>
+        <pre><code class="lang-elisp">(insert-buffer-substring BUFFER &amp;optional START END)
+</code></pre>
+        <p>Insert BUFFER&#39;s text from START to END (default its accessible region), with text properties, before point.</p>
+      </article>
+      <article class="doc-entry" id="doc-insert-buffer-substring-no-properties">
+        <h3><a class="doc-anchor" href="#doc-insert-buffer-substring-no-properties">#</a> <code>insert-buffer-substring-no-properties</code></h3>
+        <pre><code class="lang-elisp">(insert-buffer-substring-no-properties BUFFER &amp;optional START END)
+</code></pre>
+        <p>Like `insert-buffer-substring&#39;, without text properties.</p>
+      </article>
+      <article class="doc-entry" id="doc-delete-and-extract-region">
+        <h3><a class="doc-anchor" href="#doc-delete-and-extract-region">#</a> <code>delete-and-extract-region</code></h3>
+        <pre><code class="lang-elisp">(delete-and-extract-region START END)
+</code></pre>
+        <p>Delete the text between START and END and return it as a string.</p>
+      </article>
+      <article class="doc-entry" id="doc-point-min-marker">
+        <h3><a class="doc-anchor" href="#doc-point-min-marker">#</a> <code>point-min-marker</code></h3>
+        <pre><code class="lang-elisp">(point-min-marker)
+</code></pre>
+        <p>Return a marker at the start of the accessible region.</p>
+      </article>
+      <article class="doc-entry" id="doc-point-max-marker">
+        <h3><a class="doc-anchor" href="#doc-point-max-marker">#</a> <code>point-max-marker</code></h3>
+        <pre><code class="lang-elisp">(point-max-marker)
+</code></pre>
+        <p>Return a marker at the end of the accessible region.</p>
+      </article>
+      <article class="doc-entry" id="doc-replace-string-in-region">
+        <h3><a class="doc-anchor" href="#doc-replace-string-in-region">#</a> <code>replace-string-in-region</code></h3>
+        <pre><code class="lang-elisp">(replace-string-in-region STRING REPLACEMENT &amp;optional START END)
+</code></pre>
+        <p>Replace STRING with REPLACEMENT from START (default point) to END (default point-max), case-sensitively; return the count, or nil if none.</p>
+      </article>
+      <article class="doc-entry" id="doc-replace-regexp-in-region">
+        <h3><a class="doc-anchor" href="#doc-replace-regexp-in-region">#</a> <code>replace-regexp-in-region</code></h3>
+        <pre><code class="lang-elisp">(replace-regexp-in-region REGEXP REPLACEMENT &amp;optional START END)
+</code></pre>
+        <p>Replace REGEXP with REPLACEMENT (<code>\&amp;&#39;, </code>\N&#39;, `\\&#39;) from START to END, case-sensitively; return the count, or nil if none.</p>
+      </article>
+      <article class="doc-entry" id="doc-delete-blank-lines">
+        <h3><a class="doc-anchor" href="#doc-delete-blank-lines">#</a> <code>delete-blank-lines</code></h3>
+        <pre><code class="lang-elisp">(delete-blank-lines)
+</code></pre>
+        <p>On a blank line, delete the surrounding blank lines, leaving one; on an isolated blank line, delete it; on a nonblank line, delete the blank lines after it.</p>
       </article>
       <article class="doc-entry" id="doc-push-output-capture">
         <h3><a class="doc-anchor" href="#doc-push-output-capture">#</a> <code>--push-output-capture--</code></h3>
