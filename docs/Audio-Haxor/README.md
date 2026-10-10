@@ -9,6 +9,6 @@
 
   Do not edit files under `api/` by hand; they are overwritten on each sync.
 
-- **Root `README.md`** — Full product and developer guide (features, testing counts, architecture).
+- **Root `README.md`** — Full product and developer guide (features, testing, architecture).
 
 JavaScript tests (`pnpm test` / `node --test test/*.test.js`) are **Node-only unit** checks; they do **not** run the WebView, Tauri IPC, or the real `applyFilter` / filter-persistence pipeline. See README → *[0x04] TESTING* for the suite scope.

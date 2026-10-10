@@ -5,12 +5,16 @@
 | zmax-core      | Core editing primitives, functional.                             |
 | zmax-lsp       | Language server client                                           |
 | zmax-lsp-types | Language Server Protocol type definitions                        |
+| zmax-dap-types | Debug Adapter Protocol type definitions                          |
 | zmax-dap       | Debug Adapter Protocol (DAP) client                              |
 | zmax-event     | Primitives for defining and handling events within the editor    |
 | zmax-loader    | Functions for building, fetching, and loading external resources |
 | zmax-view      | UI abstractions for use in backends, imperative shell.           |
 | zmax-term      | Terminal UI                                                      |
 | zmax-tui       | TUI primitives, forked from tui-rs, inspired by Cursive          |
+| zmax-vcs       | Version-control integration                                      |
+| zmax-parsec    | Parser combinators                                               |
+| zmax-native    | C-ABI SDK for native plugins loaded at runtime                   |
 
 
 This document contains a high-level overview of Zmax internals.

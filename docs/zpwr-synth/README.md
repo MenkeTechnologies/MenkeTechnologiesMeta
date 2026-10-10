@@ -22,7 +22,7 @@
 
 > *"The patch is the voice."*
 
-A JUCE software synthesizer by MTAudio — a **fully modular** instrument in the lineage of [VCV Rack](https://vcvrack.com), [Cherry Audio Voltage Modular](https://cherryaudio.com) and [NI Reaktor Blocks](https://www.native-instruments.com): there is no fixed signal path, you build the entire voice by wiring DSP blocks with cables. Builds as **AU**, **VST3**, **CLAP**, and **Standalone** on macOS (Apple Silicon / Intel) and Linux (x86_64 / aarch64).
+A JUCE software synthesizer by MTAudio — a **fully modular** instrument in the lineage of [VCV Rack](https://vcvrack.com), [Cherry Audio Voltage Modular](https://cherryaudio.com) and [NI Reaktor Blocks](https://www.native-instruments.com): there is no fixed signal path, you build the entire voice by wiring DSP blocks with cables. Builds as **AU**, **VST3**, **CLAP**, and **Standalone** on macOS (Apple Silicon / Intel) and Linux (x86_64 / aarch64); AU is macOS-only.
 
 ### [`zpwr-fx`](https://github.com/MenkeTechnologies/zpwr-fx) · [`zpwr-midi-fx`](https://github.com/MenkeTechnologies/zpwr-midi-fx) · [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core)
 
@@ -59,10 +59,7 @@ ZsynthProcessor (JUCE AudioProcessor)
   └─ zsynth::PolyEngine                 # pool of voices, one zpc::RuntimeGraph each
        └─ zpc::RuntimeGraph (per voice) # the shared core graph, evaluated per sample
             ├─ nodes[N]   each: type + 4 inputs + up to 12 params + 1 output
-            │    types: Osc, Wt, Supersaw, FM, Karplus, Additive, Sync, ChordOsc,
-            │           HardKick, Screech, Hoover, Reese, Sub, Noise, Sample,
-            │           Granular, Env, VCA, Filter, Folder, Waveshaper, Crusher,
-            │           Glide, SampleHold, Delay, LFO, RingMod, Drive, Gain, Mixer …
+            │    (registered block types: see [0x04] Node Types and docs/reference.html)
             ├─ external sources fed per voice (id → value, supplied each sample):
             │    In L/R, Noise, Soft Keys (expandable pool), Note, Gate, Velocity, Mod Wheel,
             │    Pitch Bend, Aftertouch, MPE Pressure / Slide / Bend
@@ -70,7 +67,7 @@ ZsynthProcessor (JUCE AudioProcessor)
             └─ out L / out R  (each selects a source)
 ```
 
-The synth-specific node types (`dsp/SynthModules.cpp`, namespace `zsynth`) are a DSP pack registered onto the core registry; the generators (`Osc`, `Wt`, `Sample`, `Granular`) read each voice's `Note`/`Gate` straight from the core's `ComputeContext::external` array, so one patch definition plays polyphonically.
+The synth-specific node types (`dsp/SynthModules.cpp`, namespace `zsynth`) are a DSP pack registered onto the core registry; the generators (`Osc`, `Wt`, `Sample`, `SynthGranular`) read each voice's `Note`/`Gate` straight from the core's `ComputeContext::external` array, so one patch definition plays polyphonically.
 
 > The DSP module pack and per-voice graph are headless-unit-tested (`tests/synth_modules_test.cpp`: oscillator tuning, ADSR, generators). MIDI/MPE reaches the synth from the host or the standalone's MIDI input.
 
@@ -78,11 +75,11 @@ The synth-specific node types (`dsp/SynthModules.cpp`, namespace `zsynth`) are a
 
 ## [0x02] USER INTERFACE
 
-The editor is a **WebView** hosting the **shared zpwr-patch-core cyberpunk patcher** (`libs/zpwr-patch-core/webui`, served from `BinaryData`) — byte-for-byte the same UI zpwr-fx uses: drag-to-patch neon cables (fan-out, feedback, per-cable gain + colour), a dynamic block grid (**+ ADD BLOCK** / delete any number — no fixed node count), double-click a block for its detail modal, and a per-param mod matrix. Panes:
+The editor is a **WebView** hosting the **shared zpwr-patch-core cyberpunk patcher** (`libs/zpwr-patch-core/webui`, served from `BinaryData`) — byte-for-byte the same UI zpwr-fx uses: drag-to-patch neon cables (fan-out, feedback, per-cable gain + colour), a dynamic block grid (**+ ADD BLOCK** / delete any number — no fixed node count), double-click a block for its detail modal, and a per-param mod matrix. Panes (the editor also has SYNTH, CLIP, VIZ, MOD MATRIX, MIXER and ABOUT tabs):
 
 - **PATCH** — the node grid + cable routing + an expandable row of soft-key macro knobs (`+`/`−` to add/remove; 16 active by default). The toolbar carries an **INIT** button (unplug every cable & mod, keep the blocks) and **🗑** (blank the whole patch). An **⚡ EZ MODE** toggle lays down (and keeps) a playable voice — generators(Note) → VCA ← amp Env(Gate), then VCA → Filter (cutoff swept by a second filter Env) → out. While on, oscillators you add are summed straight into the voice; your generator types are kept. Two toolbar toggles drive the stereo image: **Stereo** mirrors every block into a right-channel clone (an independent dual-mono voice per side), and **Stereo Lock** (shown only when Stereo is on) keeps the two channels in sync — moving a knob on either side moves its clone by the *same delta*, so the L/R offset you dialled in is preserved rather than reset, and the mirror is bidirectional (dragging the clone moves the original too).
 - **PERFORM** — a play surface with no patching. A **PRESET MORPH** pad bilinearly interpolates between four corner presets (A/B/C/D, host-automatable `morphX`/`morphY` so it runs editor-closed; 🎲 fills all four corners at random). An Omnisphere-style **ORB**: drag the puck where the **angle** selects one of 8 randomised scenes and the **distance** from centre scales intensity, 🎲 rolls fresh scenes, and ⏺ / ▶ record the orb gesture and loop it back (the recorded motion drives the same host-automatable macro params). XY macro pads (each drives a pair of soft keys, per-pad **HOLD**/**SPRING** release: HOLD leaves the dot, SPRING snaps both axes back to centre), a row of macro knobs, eight macro-surface **SNAPSHOTS** (click empty to save, filled to recall, right-click to clear), dice/🎲 **RANDOMIZE** for all macros, **scale/key** quantize + **CHORD** stacking (Oct/5th/Maj/Min/Maj7/Min7/Sus4/Power), and an on-screen keyboard with pitch-bend / mod wheels that follow an external MIDI keyboard's wheels. The control panel also carries the **MIDI IN** toggles (**PROGRAM** = respond to MIDI Program Change, **BANK** = respond to Bank Select CC0/CC32; both default ON) and the **ARP** controls — mode (Up/Down/Up-Down/Random/As-Played), rate (`1/4`…`1/16T`) and **LATCH** (keep arpeggiating held notes after the keys are released).
-- **PRESETS** — **256 general factory voices** across **Factory 1 + Factory 2** (128 each; category-prefixed names: `BA` bass, `LD` lead, `PD` pad, `KY` keys, `PL` pluck, `BR` brass, `BE` bell, `ST` strings, `DR` perc, `SEQ`/`FX` etc.) spanning subtractive, FM, additive, supersaw, wavetable, vector, sync and Karplus voices, **plus three genre banks designed from documented production techniques** — an **uplifting `Trance` bank** (stacked supersaw pluck-leads, no-sustain plucks, slow-swell pads, a square-LFO `1/16` trance gate, and saw-LFO sidechain-pumped rolling bass), a **`Hard Techno` bank** (Drumcode-style FM stabs with a 100%-env-swept dirty low-pass and `1/4` resonance LFO, screaming `DiodeLadder` 303 acid, detuned reese/rumble, hoover, and driven lead-bass), and a **`Schranz` bank** (bitcrushed/folded metallic stabs, filtered-noise sweeps and `1/16` gated-noise loops, two-octave siren wails, and distorted hypnotic pulses, ≈160 BPM). Each is generated by an offline tool in `tools/gen_*_bank.cpp` (shared scaffolding in `tools/preset_gen.h`). Every preset carries facet tags (Type / Character / Style / Author / Desc) stored in the preset JSON, so the browser's TYPE / CHARACTER / STYLE / BANK facets are fully populated. Every patch ships with named soft-knob macros plus mod-wheel / velocity routed to its own nodes, so each loads playable. The browser's BANK facet groups presets by their JSON bank name (Factory 1 = 0–127, Factory 2 = 128–255, then Trance, Hard Techno, Schranz). Plus user presets (gzip JSON `.zsp` under `~/Library/zsynth/Presets`; data saved before the rename under `~/Library/zpwr-synth` — presets, user modules, block presets, favourites — is copied across once on first launch, never overwriting a file of the same name and leaving the old directory untouched); the BROWSE tab exports/imports a **bank** — a `.zsb` collection of presets — via ⤓/⤒ BANK.
+- **BROWSE** — **256 general factory voices** across **Factory 1 + Factory 2** (128 each; category-prefixed names: `BA` bass, `LD` lead, `PD` pad, `KY` keys, `PL` pluck, `BR` brass, `BE` bell, `ST` strings, `DR` perc, `SEQ`/`FX` etc.) spanning subtractive, FM, additive, supersaw, wavetable, vector, sync and Karplus voices, **plus three genre banks designed from documented production techniques** — an **uplifting `Trance` bank** (stacked supersaw pluck-leads, no-sustain plucks, slow-swell pads, a square-LFO `1/16` trance gate, and saw-LFO sidechain-pumped rolling bass), a **`Hard Techno` bank** (Drumcode-style FM stabs with a 100%-env-swept dirty low-pass and `1/4` resonance LFO, screaming `DiodeLadder` 303 acid, detuned reese/rumble, hoover, and driven lead-bass), and a **`Schranz` bank** (bitcrushed/folded metallic stabs, filtered-noise sweeps and `1/16` gated-noise loops, two-octave siren wails, and distorted hypnotic pulses, ≈160 BPM). Each is generated by an offline tool in `tools/gen_*_bank.cpp` (shared scaffolding in `tools/preset_gen.h`). Every preset carries facet tags (Type / Character / Style / Author / Desc) stored in the preset JSON, so the browser's TYPE / CHARACTER / STYLE / BANK facets are fully populated. Every patch ships with named soft-knob macros plus mod-wheel / velocity routed to its own nodes, so each loads playable. The browser's BANK facet groups presets by their JSON bank name (Factory 1 = 0–127, Factory 2 = 128–255, then Trance, Hard Techno, Schranz). Plus user presets (gzip JSON `.zsp` under `~/Library/zsynth/Presets`; data saved before the rename under `~/Library/zpwr-synth` — presets, user modules, block presets, favourites — is copied across once on first launch, never overwriting a file of the same name and leaving the old directory untouched); the BROWSE tab exports/imports a **bank** — a `.zsb` collection of presets — via ⤓/⤒ BANK.
 - **NKS export** — every factory voice can be written as a Native Kontrol Standard `.nksf` preset (RIFF/NIKS container: NISI summary metadata from the facet tags, PLID plugin match, PCHK = the real plugin state, NICA controller page). Each also gets a Komplete Kontrol preview — a 7 s offline render (single sustained C3 + release tail, faded, 44.1 kHz Ogg Vorbis) written to `<bank>/.previews/<name>.nksf.ogg`. Launch the standalone with `ZPWR_EXPORT_NKS=<dir>` to export every factory voice (`.nksf` + previews) into one subfolder per bank (`<dir>/<bank name>/`, e.g. `Factory 1`, `Factory 2`, `Trance`). (NICNT library/controller registration is the remaining step to full hardware browsing.)
 - **SETTINGS** — master in/out (dB) + bypass, **Auto Gain Stage** + target, the brickwall limiter, the rest of the audio-engine settings, about.
 
@@ -109,35 +106,35 @@ Host-automatable parameters are the **soft keys** (`sk0`…, an expandable pool,
 |-------|------|-----------|
 | Osc | analog oscillator (note-driven) | wave, octave, fine, PW |
 | Wt | wavetable oscillator | table, position, octave, fine |
-| Supersaw | 7 detuned saws (JP-8000 style) | octave, detune, mix |
-| FM | 2-operator phase-modulation sine | ratio, index, octave |
+| Supersaw | 2-11 detuned saws, default 7 (JP-8000 style) | octave, detune, mix, voices |
+| SynthFM | 2-operator phase-modulation sine | ratio, index, octave |
 | Karplus | plucked-string physical model | octave, damping, feedback |
-| Additive | summed sine harmonics | partials, rolloff, octave, odd/even |
-| Sync | hard-sync sawtooth | tune, sync ratio, octave |
+| SynthAdditive | summed sine harmonics | partials, rolloff, octave, odd/even |
+| SynthSync | hard-sync sawtooth | tune, sync ratio, octave |
 | ChordOsc | one note → 3-note chord of saws | type, octave, detune |
 | HardKick | hardstyle/rawstyle kick (gate-struck pitch-sweep + tanh drive) | tune, punch, psweep, decay, click, drive |
 | Screech | hardstyle/gabber screech lead (detuned saws → drive → formant BP) | octave, fine, detune, drive, formant, reso |
 | Hoover | Alpha Juno "What The" hoover / Mentasm (saw + sawtooth-PWM comb + square sub + note-on pitch sweep) | octave, fine, PWM, chorus, sweep, sweepT |
 | Reese | DnB / neurofunk Reese bass (detuned beating saws → LP → drive) | octave, fine, detune, voices, tone, drive |
-| Sub | sub-oscillator below the note | octave, wave, level |
-| Noise | white/pink noise source | color, level |
-| Sample / Granular | sample playback / granular | slot, start/pos, size, rate |
+| SynthSub | sub-oscillator below the note | octave, wave, level |
+| SynthNoise | white/pink noise source | color, level |
+| Sample / SynthGranular | sample playback / granular | slot, start/pos, size, rate |
 | Env | ADSR (gate-driven) | A, D, S, R |
 | VCA | `in1 × in2` (audio × CV) | — |
-| Filter | TPT state-variable | cutoff, reso, mode, mod |
+| SynthFilter | TPT state-variable | cutoff, reso, mode, mod |
 | Folder | sine wavefolder (west-coast) | fold, bias, mix |
-| Waveshaper | 4-curve shaper | drive, shape, mix |
+| SynthWaveshaper | 4-curve shaper | drive, shape, mix |
 | Crusher | bit + sample-rate reduction | bits, downsample, mix |
-| Glide | portamento on the note CV | time |
-| SampleHold | clocked sample-and-hold CV source | rate, glide |
-| Vector | 4-source XY-morph oscillator (Prophet-VS) | octave, X, Y, detune |
+| SynthGlide | portamento on the note CV | time |
+| SynthSampleHold | clocked sample-and-hold CV source | rate, glide |
+| SynthVector | 4-source XY-morph oscillator (Prophet-VS) | octave, X, Y, detune |
 | DiodeLadder | 4-pole diode-ladder LP (TB-303 grit) | cutoff, reso, mod, drive |
 | StepLFO | stepped LFO (stair / random S&H) | rate, steps, shape, smooth |
 | NoiseLFO | coloured-noise CV (white/pink/brown) + S&H | rate, color, depth |
 | Scaler | scale/offset/curve a CV (waveshaper for mod) | scale, offset, curve |
-| Delay / LFO / RingMod / Drive / Gain / Mixer | shaping + modulation | per-type |
+| SynthDelay / SynthLFO / SynthRingMod / SynthDrive / SynthGain / SynthMixer | shaping + modulation | per-type |
 
-Every oscillator (`Osc`, `Wt`, `Supersaw`, `FM`, `Sub`, `Sync`, `Additive`) has a **Voices** (1–11) unison param plus **Detune** (cents) — detuned copies summed and loudness-normalised. `Voices = 1` is the classic mono behaviour, so existing patches are unchanged. A first-class **Trigger** modulation source (a 1-sample impulse on each note-on edge) sits alongside Note / Gate / Velocity for modular-style routing.
+Every oscillator (`Osc`, `Wt`, `Supersaw`, `SynthFM`, `SynthSub`, `SynthSync`, `SynthAdditive`) has a **Voices** (1–11; Supersaw 2–11) unison param plus **Detune** (cents) — detuned copies summed and loudness-normalised. `Voices = 1` is the classic mono behaviour, so existing patches are unchanged. A first-class **Trigger** modulation source (a 1-sample impulse on each note-on edge) sits alongside Note / Gate / Velocity for modular-style routing.
 
 ### Spectrum bake (`✻ BAKE`, on any `Wt` block)
 

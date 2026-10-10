@@ -6,8 +6,7 @@
 > **Spacemacs** and **JetBrains** already wired in.
 
 zmax is a modal IDE in Rust, built on a tree-sitter + LSP engine. It aims at a
-single, opinionated target: **the most capable out-of-the-box terminal IDE you
-can `brew install`.**
+single, opinionated target: **a terminal IDE you can `brew install` and use out of the box.**
 
 ## The four pillars
 
@@ -23,9 +22,9 @@ can `brew install`.**
    bundled languages, a fuzzy file picker, a project file tree, a real PTY
    terminal, magit-style git, diff/merge tooling, run configurations, a
    minimap, narrowing, folding, multiple selections, an org-mode agenda, a hex
-   editor, settings/theme/keymap editors, a searchable help browser, and **ten
+   editor, settings/theme/keymap editors, a searchable help browser, and **twelve
    embedded scripting languages with a live REPL** (elisp, vimscript, awk, zsh,
-   stryke, ruby, php, python, node, arb) — no FFI, no external executables.
+   stryke, ruby, php, python, node, arb, tcl, rlang) — no FFI, no external executables.
 
 3. **CLI-first, native.** Terminal is the primary surface, not a fallback. No
    Electron, no DOM, no Node. Native-compiled Rust that runs in an SSH session

@@ -205,7 +205,7 @@ scripts/print_cover.sh             # → docs/cover-print.jpg (needs ImageMagick
 
 `print_cover.sh` reads `INTERIOR` / `OUT` / `EDITION` from the environment if you want to point it at a different interior or output path.
 
-The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared by all four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw); per-block docs come from each block's `description`/`category` metadata.
+The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared by the zpc-based plugins; per-block docs come from each block's `description`/`category` metadata.
 
 ---
 

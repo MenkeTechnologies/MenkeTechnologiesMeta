@@ -1,8 +1,10 @@
 # zpwr-clip-engine — Handoff Plan
 
-Status: planning. No implementation in this document — this is the execution spec
-for turning `zpwr-clip-engine` into the canonical, embeddable **FL-Studio-style
-clip / timeline / arranger / sequencer** used across the whole stack.
+Status: historical plan. The grid engine (`webui/grid`), `ClipEngine.h`, the C ABI and
+the Rust bindings it specifies now exist; §2 describes the state the plan
+started from. This was the execution spec for turning `zpwr-clip-engine` into the
+canonical, embeddable **FL-Studio-style clip / timeline / arranger / sequencer**
+used across the whole stack.
 
 ## 1. Vision (what this repo becomes)
 
@@ -28,7 +30,7 @@ native-fn bridge from C++.
 | audio_haxor | Rust/Tauri + JS | ALS generator (section-override timeline) |
 | ztranslator | Rust/Tauri | trigger source (sequencer fires triggers/actions) |
 
-## 2. Current state (verified)
+## 2. Starting state (at the time of the plan)
 
 ### Frontend — two *separate, hardwired* grids exist; neither is general
 - `webui/clip/clip.js` (321 lines): a **DOM** piano-roll. Domain = notes:

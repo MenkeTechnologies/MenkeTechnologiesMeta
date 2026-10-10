@@ -56,10 +56,8 @@
       <section class="hero-stats">
         <div class="hero-stat"><span class="num">0.1.1</span><span class="lbl">version</span></div>
         <div class="hero-stat"><span class="num">3</span><span class="lbl">crate-types (rlib · staticlib · cdylib)</span></div>
-        <div class="hero-stat"><span class="num">80</span><span class="lbl">engine commands</span></div>
-        <div class="hero-stat"><span class="num">148</span><span class="lbl">in-source unit tests</span></div>
       </section>
-      <p class="note">zstation-core is in active development. The figures above are measured from the crate source: version from <code>Cargo.toml</code>; engine commands = the entries of <code>COMMANDS</code> in <code>src/commands.rs</code> (<code>grep -c '^    "' src/commands.rs</code>), which a unit test pins against <code>Engine::invoke</code>'s match arms; unit tests = <code>cargo test --lib -- --list | grep -c ': test$'</code>. The "planned" column lists work that is not yet implemented — it is a roadmap, not a claim of coverage.</p>
+      <p class="note">zstation-core is in active development. The version is read from <code>Cargo.toml</code>; the engine command list is <code>COMMANDS</code> in <code>src/commands.rs</code>, which a unit test pins against <code>Engine::invoke</code>'s match arms. The "planned" column lists work that is not yet implemented — it is a roadmap, not a claim of coverage.</p>
 
       <h2 class="reg-h">Module map</h2>
       <table>
@@ -68,7 +66,7 @@
           <tr><td>lib (Engine)</td><td>one dotted command surface via <code>Engine::invoke</code>; JSON in / JSON out</td><td>more dispatch coverage as the board model grows</td></tr>
           <tr><td>commands</td><td>the sorted command-name list (the automation-bus surface), pinned against <code>invoke</code> by a test</td><td>—</td></tr>
           <tr><td>model</td><td>service · tile · board types: position, size, z-order, partition/session, widget kind, facets, and the per-tile <code>link_mode</code> / <code>user_agent</code> / <code>reload_every_mins</code></td><td>tile groups, richer layout</td></tr>
-          <tr><td>catalog</td><td>the built-in service catalog (Slack, Gmail, Discord, Notion, Linear, Claude, … + custom URL tiles)</td><td>editable/user-supplied catalog</td></tr>
+          <tr><td>catalog</td><td>the built-in service catalog (Slack, Gmail, Discord, Notion, Linear, Claude, … + custom URL tiles); user-defined services via <code>service.custom_set</code></td><td>—</td></tr>
           <tr><td>store</td><td>authoritative SQLite workspace database (<code>rusqlite</code>, bundled): boards, tiles, notes, snapshots, lens captures, toast history, FTS5 search; imports a legacy <code>board.json</code></td><td>import/export</td></tr>
           <tr><td>lock</td><td>workspace lock: salted RFC 4880 iterated-and-salted S2K SHA-256 PIN digest plus <code>auto_lock_mins</code> / <code>lock_on_start</code> policy</td><td>—</td></tr>
           <tr><td>layout</td><td>auto-tiling: grid · columns · master · attention</td><td>—</td></tr>
@@ -87,12 +85,12 @@
       <table>
         <thead><tr><th>namespace</th><th>commands</th></tr></thead>
         <tbody>
-          <tr><td>version · service</td><td>version · service.catalog · service.get</td></tr>
+          <tr><td>version · service</td><td>version · service.catalog · service.get · service.custom_set · service.custom_remove</td></tr>
           <tr><td>board</td><td>board.get · board.reset · board.list · board.all · board.create · board.rename · board.set_icon · board.delete · board.switch · board.recent</td></tr>
-          <tr><td>tile</td><td>tile.add · tile.remove · tile.update (incl. link_mode / user_agent / reload_every_mins) · tile.bring_front · tile.send_back · tile.set_unread · tile.set_muted · tile.touch</td></tr>
+          <tr><td>tile</td><td>tile.add · tile.remove · tile.update (incl. link_mode / user_agent / reload_every_mins) · tile.bring_front · tile.send_back · tile.set_unread · tile.set_muted · tile.touch · tile.move · tile.home</td></tr>
           <tr><td>settings · prefs</td><td>settings.get · settings.update · prefs.get · prefs.update</td></tr>
           <tr><td>lock</td><td>lock.status · lock.set · lock.configure · lock.verify · lock.clear</td></tr>
-          <tr><td>notes · library · toast · notifications · log</td><td>notes.get · notes.add · notes.update · notes.remove · library.search · toast.append · toast.list · toast.clear · notifications.summary · log.path · log.read</td></tr>
+          <tr><td>notes · library · toast · notifications · log</td><td>notes.get · notes.add · notes.update · notes.remove · library.search · toast.append · toast.list · toast.clear · notifications.summary · notifications.badge · notifications.snooze · notifications.unsnooze · notifications.next_unread · log.path · log.read</td></tr>
           <tr><td>layout</td><td>layout.save · layout.arrange</td></tr>
           <tr><td>wiring</td><td>wiring.add · wiring.process · wiring.list · wiring.update · wiring.set_enabled · wiring.remove · wiring.analyze</td></tr>
           <tr><td>convoy · trail</td><td>convoy.set · convoy.go · convoy.list · convoy.remove · trail.set · trail.step · trail.list · trail.remove</td></tr>
@@ -103,7 +101,7 @@
       </table>
 
       <h2 class="reg-h">The host shim</h2>
-      <p class="note">Real per-service session isolation <strong>cannot</strong> use <code>iframe</code>s: Slack/Gmail/etc. send <code>X-Frame-Options</code> / CSP <code>frame-ancestors</code> that forbid framing, and iframes share the page's cookie jar anyway. It requires <em>native, separately-partitioned webviews</em>. Positioning one is a host concern, so the engine stays host-agnostic and the mountable view calls a small shim the host provides — <code>window.__stationHost</code>. The floor is <code>open</code> (which also takes the tile's <code>userAgent</code> and <code>linkMode</code>), <code>setBounds</code>, <code>setVisible</code>, <code>reload</code>, <code>navigate</code>, <code>close</code> and <code>clearSession</code>; the optional rest (<code>restack</code>, <code>zoom</code>, <code>volume</code>, <code>autoplay</code>, <code>setCss</code>, <code>setLinkMode</code>, <code>idleSecs</code>, <code>setTaps</code>, <code>domAction</code>, the session/pop-out/branching calls) degrade the matching feature when absent. In <code>zstation</code> this shim is backed by Tauri v2 <code>WebviewWindow::add_child</code> plus per-webview <code>data_store_identifier</code> / <code>data_directory</code>. With no shim present (plain browser preview) the view falls back to a best-effort <code>iframe</code> so the UI still renders for frontend dev.</p>
+      <p class="note">Real per-service session isolation <strong>cannot</strong> use <code>iframe</code>s: Slack/Gmail/etc. send <code>X-Frame-Options</code> / CSP <code>frame-ancestors</code> that forbid framing, and iframes share the page's cookie jar anyway. It requires <em>native, separately-partitioned webviews</em>. Positioning one is a host concern, so the engine stays host-agnostic and the mountable view calls a small shim the host provides — <code>window.__stationHost</code>. The floor is <code>open</code> (which also takes the tile's <code>userAgent</code> and <code>linkMode</code>), <code>setBounds</code>, <code>setVisible</code>, <code>reload</code>, <code>navigate</code>, <code>close</code> and <code>clearSession</code>; the optional rest (<code>restack</code>, <code>zoom</code>, <code>volume</code>, <code>autoplay</code>, <code>setCss</code>, <code>setLinkMode</code>, <code>idleSecs</code>, <code>setTaps</code>, the session/pop-out/branching calls) degrade the matching feature when absent. In <code>zstation</code> this shim is backed by Tauri v2 <code>WebviewWindow::add_child</code> plus per-webview <code>data_store_identifier</code> / <code>data_directory</code>. With no shim present (plain browser preview) the view falls back to a best-effort <code>iframe</code> so the UI still renders for frontend dev.</p>
 
       <h2 class="reg-h">Build surfaces</h2>
       <p class="note">The crate declares <code>crate-type = ["rlib", "staticlib", "cdylib"]</code>. The <code>rlib</code> links natively into Rust/Tauri hosts. Dependencies are foundational and vendorable — <code>serde</code>, <code>serde_json</code>, <code>thiserror</code>, <code>dirs</code>, <code>sha2</code>, and <code>rusqlite</code> with the <code>bundled</code> feature (SQLite's C source is vendored, no system library) — with no network, TLS or UI stack, so the default build compiles in headless CI. The optional <code>tauri</code> feature adds the Tauri v2 app-command layer.</p>

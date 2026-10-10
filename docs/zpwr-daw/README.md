@@ -82,7 +82,7 @@ clip+automation timeline that emits MIDI and audio now emits a cut.
 
 ## Modular DAW-feature library
 
-The DAW capabilities the arranger and Premiere reports don't cover ship as eight
+The DAW capabilities the arranger and Premiere reports don't cover ship as
 pure, deterministic, host-agnostic ES modules under `libs/zpwr-clip-engine/webui`,
 aggregated by the [`daw-features.js`](libs/zpwr-clip-engine/webui/daw-features.js)
 barrel. Each function is unit-tested (`grid/tests/*.test.mjs`, run with
@@ -128,7 +128,7 @@ graph** — `zpc::StereoGraph` (`PatchEngineT<StereoSample>`), where **one cable
 carries an L/R pair**. It's a separate graph alongside the note-stream MIDI graph
 and the mono float graph, shared across all four products (`libs/zpwr-patch-core`):
 
-- **mono FX run in stereo for free** — `wrapMonoAsStereo` runs any of the ~3.5k
+- **mono FX run in stereo for free** — `wrapMonoAsStereo` runs any of the
   mono blocks once per channel with independent L/R state (no hand-written stereo
   block set). `registerStereoModules` wraps every mono block **except** Oscillators
   (excluded) and the **Plugin** host (already stereo → `registerStereoPluginBlock`,
@@ -149,7 +149,7 @@ cue/crossfade) is **compile/link-verified**, and the **in-app editor already exi
 a 2nd `WebEditor` (namespaced `trk`, bound to the per-track `audioEngine`) drives the
 same modular patch panel against a track's stereo graph: `selectTrkGraph(track)` →
 `trksetActiveLayer` then `trkaddBlock`/`trksetBlockType`/`trksetBlockParam`/`trkaddCable`
-load any of the ~3.5k blocks into that track's `StereoGraph` and wire them. Each track's
+load any of the blocks into that track's `StereoGraph` and wire them. Each track's
 **whole** stereo graph (instrument node + FX blocks + cables + mod routes) now
 round-trips through save/reload — `tracksToJson`/`restoreTracksFromJson` serialize the
 full `PatchDef` per track (`patchToJson`), not just the hosted plugin. It still sums
@@ -200,7 +200,7 @@ sample offset) is the signal type; every generator/transform is a
 runs the MIDI FX — dynamic blocks, summed cables, the mod matrix, topo eval,
 lock-free edits, JSON, and the shared WebEditor come for free
 (`include/zpc/midi/MidiModules.h`). `registerMidiModules(reg, dict)` installs the
-23 module bodies (ported verbatim from the former hand-rolled `MidiPatchGraph`);
+module bodies (ported verbatim from the former hand-rolled `MidiPatchGraph`);
 `defaultMidiPatch()` wires the showcase **Chord → Arp** patch;
 `convertLegacyMidiPatch()` upgrades the pre-zpc JSON schema. The note-stream signal
 policy is `SignalTraits<NoteStream>`: a cable's stream folds into the slot sum with
@@ -248,7 +248,7 @@ The generators:
   cells in that column emit notes — non-repeating evolving patterns past a fixed
   step grid. `MidiNoteState` also carries Turing shift-register, Polymeter,
   Counterpoint, Bassline, and Scoop/Fall pitch-bend-sweep state for the rest of the
-  23-module pack.
+  module pack.
 
 The JUCE bridge is separate (`include/zpc/midi/NoteGraphHost.h`, host-only):
 `midiToNoteEvents()` parses a `juce::MidiBuffer` into the stream,
@@ -297,7 +297,7 @@ It carries these pieces:
 | Command palette & automation vocabulary | `libs/zpwr-patch-core/webui/zpc-command-palette.js` | The ⌘K palette over every visible tab and enabled header action (the toolbar `⌘K` button is the reliable trigger inside a plugin host that eats the keystroke). The same list is published on the shared bus via `ZGui.palette.setCommands()`, so each row is also addressable **by id** from a saved `ZGui.userCommands` chain — the ids fill the chain editor's action dropdown and the `zgui:user-command` router resolves them. Ids come from structure, never from a translated label: `tab.<data-pane>` for a tab (`tab.produce`, `tab.ztranslate`, `tab.pdf` are the DAW-only ones), `action.<element-id>` for a header button, and literals for the analyzers (`audit.patch`, `audit.mod-reach`, `audit.sum-map`, `audit.euclid-orbit`, `audit.session-proof`, `terminal.toggle`). The DAW-only tabs reveal themselves after their module boots, so the vocabulary is republished on init, on every open, and right before the router resolves an id. |
 | Clip editor command bus | `libs/zpwr-clip-engine/webui/clip/editor-commands.js`, `libs/zpwr-clip-engine/webui/clip/clip-command-palette.js` | The clip editor's own catalog — every registered feature as a `tool` command, plus the video / audio / MIDI / transform / automation / measure / project-tool clip effects — published so each command is addressable **by id**, not only clickable. `publishCommandBus()` registers it wherever the host has somewhere to put it — as typed verbs on `ZGui.automation` where that bus is loaded (zgui-core `automation.js`, now bundled — see **GUI Automation Bus** below; the clip catalog reaches the bus through the vocabulary mirror rather than this call, because a classic script injected after the clip module graph has evaluated arrives too late for it) and as rows in the zpc command vocabulary (`window.zpcRegisterCommands` → `ZGui.palette.setCommands()` → the `zgui:user-command` router), at editor init rather than on first ⌘K, so a saved chain resolves the ids even if the palette is never opened. A verb id is `clip.<surface>.<catalog id>` — structural, never derived from a translated label, and surface-qualified because the bare catalog id is not unique (a scalar feature is both a video effect and a tool). Each verb declares a reversibility class: `tool` / `measure` / `project-tool` only compute, so they are `pure`; a media command with a host `onRun` writes an effect onto the clip with no inverse, so it declares `irreversible` and a transaction refuses it rather than stranding a chain half-undone at abort. Rows are tagged `bulk`, which keeps a four-figure catalog out of the zpc overlay's row list while leaving every id routable — the editor ships its own filtered palette for browsing them, reachable from the zpc palette as one row. Totals are never written down: `commandCount()` / `paletteStats()` derive them from the live catalog. |
 | Plugin block picker | `libs/zpwr-patch-core/webui/index.html`, `app/src/PluginEditor.cpp` | A `Plugin` block in the track's audio graph hosts a real VST3 / AU. The card's **⭳ PLUGIN** button calls the `trkloadPluginIntoNode` native function, which opens the host's plugin picker and loads the chosen plugin into that node's `PluginNodeState`. The button renders only where the host wired `EditorConfig::loadPluginIntoNode` — the DAW's audio graph does, the note-stream graph does not. |
-| Native-fn coverage gate | `test/webeditor-native-fn-coverage.test.js` | `zpc::WebEditor` registers 154 native functions and never removes one (a registered name is an ABI an out-of-tree host may depend on), so a name nobody calls is indistinguishable from a wiring bug. This test parses the `pfx("name")` registrations out of `WebEditor.h`, parses the frontend bundle list out of `app/CMakeLists.txt`, and asserts every registered name is either called by a bundled file or carries a self-naming `no frontend caller (<name>):` note within 30 lines of its own registration. 9 names are on the explained list — see the table in `libs/zpwr-patch-core/README.md` for each one's reason and consumer. Reachability is decided by the quoted-string-literal test ``/['"`][A-Za-z0-9_]*name['"`]/``, because a caller writes the name verbatim or composes it onto the graph's `uiPrefix` (`"trkgetPatch"`); the looser "is it mentioned" test reports eight, hiding `morphSet` behind an unrelated JS local of the same name in `index.html`. |
+| Native-fn coverage gate | `test/webeditor-native-fn-coverage.test.js` | `zpc::WebEditor` registers 155 native functions and never removes one (a registered name is an ABI an out-of-tree host may depend on), so a name nobody calls is indistinguishable from a wiring bug. This test parses the `pfx("name")` registrations out of `WebEditor.h`, parses the frontend bundle list out of `app/CMakeLists.txt`, and asserts every registered name is either called by a bundled file or carries a self-naming `no frontend caller (<name>):` note within 30 lines of its own registration. 9 names are on the explained list — see the table in `libs/zpwr-patch-core/README.md` for each one's reason and consumer. Reachability is decided by the quoted-string-literal test ``/['"`][A-Za-z0-9_]*name['"`]/``, because a caller writes the name verbatim or composes it onto the graph's `uiPrefix` (`"trkgetPatch"`); the looser "is it mentioned" test reports eight, hiding `morphSet` behind an unrelated JS local of the same name in `index.html`. |
 | Pure C++ engine | `include/zpc/ClipEngine.h` | JUCE-free pattern model + swung step clock + event queue. Timing/length semantics ported verbatim from the clip.js fallback sequencer. `ClipEvent::Logic` (additive over `NoteOn`/`NoteOff`) schedules verified logic clips via `setLogicClips` on the same timebase. |
 | MIDI File export | `include/zpc/MidiFile.h`, `libs/zpwr-clip-engine/webui/grid/export/midi.js` | Renders a pattern to a Type-0 Standard MIDI File — import the sequencer into any compatible DAW (Ableton, FL, Logic, Reaper). Byte-identical C++ and JS exporters. |
 | Ableton `.als` import | `libs/zpwr-clip-engine/webui/grid/als-import.js` | Reads an Ableton Live Set (gzip XML) into a project — tracks, clips, MIDI notes, tempo, time signature, arrangement placement, locators, audio-clip paths. Float-time notes (fractional grid-step + exact beat length). Dependency-free XML parser; verified across Live 8.2.1 → Live 12.2. |
@@ -529,7 +529,7 @@ The composition below zpwr-daw:
 
 - **`zpwr-patch-core`** — the graph engine + mod matrix + the shared WebEditor and
   patch-panel UI. It in turn vendors:
-  - **`zdsp-core`** (`libs/zdsp-core` inside patch-core) — the ~3.5k mono DSP
+  - **`zdsp-core`** (`libs/zdsp-core` inside patch-core) — the mono DSP
     blocks + presets that the audio graph and the built-in device library load;
   - **`zgui-core`** (`webui/lib/zgui-core` inside patch-core) — the web UI toolkit
     the grid, patch panel and (planned) device panels render with.
@@ -645,7 +645,7 @@ grid.setPlayhead(currentStep);   // drive the playhead column from the transport
 Domains: `createNotesDomain` (piano-roll, serializes to the `[{s,l,n,len,v}]`
 ClipSeq shape), `createAutomationDomain` (ALS lanes, serializes to the Rust
 `{param:{bar:value}}` shape, resizable sections), `createTriggersDomain`
-(provisional trigger shape, pending the ztranslator contract).
+(cells carry a ztranslator `{ source, rules }` program, verified before it arms).
 
 Pure-logic tests (model, domains, layout/hit math) run headless:
 

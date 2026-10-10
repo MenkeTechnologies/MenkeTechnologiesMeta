@@ -59,9 +59,8 @@ INPUTS            BLOCKS (add/delete any N)     OUTPUTS
 ```
 
 The block palette is the shared audio module pack from
-[`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core) —
-**3366 audio blocks** (4238 total across the audio/synth/MIDI stack, every name
-globally unique). Any block type can be dropped into any node.
+[`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core).
+Every block name is globally unique across the audio/synth/MIDI stack. Any block type can be dropped into any node.
 
 ---
 
@@ -102,7 +101,7 @@ JUCE's parameter list must be static for host automation. So the **host-automata
 
 ## [0x04] MODULES
 
-The block palette is the shared **audio module pack** registered on the core by `zpc::registerAudioModules` (re-exported as `zfx::registerAudioModules` in `src/dsp/AudioModules.h`). It is **3366 audio blocks** — filters, delays, reverbs, distortions, dynamics, modulation, oscillators, utility math, sequencers, and a large circuit-modeled set (component-level analog emulations: zero-delay-feedback ladders/SVFs, Shockley-diode and Ebers-Moll clippers, Koren triode/EL34 amp stages, Jiles-Atherton tape, Lambert-W wavefolder, four-diode ring mod). Catalog and counts are kept in [`zpwr-patch-core/BLOCKS.md`](https://github.com/MenkeTechnologies/zpwr-patch-core/blob/main/BLOCKS.md), regenerated from the registration sites — never hand-typed here so they never drift.
+The block palette is the shared **audio module pack** registered on the core by `zpc::registerAudioModules` (re-exported as `zfx::registerAudioModules` in `src/dsp/AudioModules.h`). It covers filters, delays, reverbs, distortions, dynamics, modulation, oscillators, utility math, sequencers, and a large circuit-modeled set (component-level analog emulations: zero-delay-feedback ladders/SVFs, Shockley-diode and Ebers-Moll clippers, Koren triode/EL34 amp stages, Jiles-Atherton tape, Lambert-W wavefolder, four-diode ring mod). Catalog and counts are kept in [`zpwr-patch-core/BLOCKS.md`](https://github.com/MenkeTechnologies/zpwr-patch-core/blob/main/BLOCKS.md), regenerated from the registration sites — never hand-typed here so they never drift.
 
 The authoritative per-block reference (inputs + parameters, grouped by category) is `docs/reference.html` / `docs/reference.pdf`, generated from the live module registry — see [§0x09 Build → Reference docs](#0x09-build).
 
@@ -254,7 +253,7 @@ build/gen_reference_artefacts/Debug/gen_reference docs/reference.html
 scripts/reference_pdf.sh
 ```
 
-The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared by all four plugins (zpwr-synth, zpwr-fx, zpwr-midi-fx, zpwr-daw); per-block docs come from each block's `description`/`category` metadata.
+The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared by the plugins built on it; per-block docs come from each block's `description`/`category` metadata.
 
 ---
 
@@ -308,19 +307,20 @@ The routing engine itself lives in **[zpwr-patch-core](https://github.com/MenkeT
 | File | Role |
 |------|------|
 | `libs/zpwr-patch-core/`  | Shared routing core (submodule): graph, mod matrix, serialization, `ScriptEngine` |
-| `src/dsp/AudioModules.h` | Re-exports the shared `zpc::registerAudioModules` (3366 audio blocks) as `zfx::` |
+| `src/dsp/AudioModules.h` | Re-exports the shared `zpc::registerAudioModules` as `zfx::` |
 | `src/FxConfig.h`         | Soft-key/MIDI counts + external source-id layout |
 | `src/PluginProcessor.*`  | `AudioProcessor`, soft-key/master params, MIDI/MPE, audio loop feeding the core |
 | `src/PluginEditor.*`     | WebView editor: catalog/patch/preset native functions over `zpc::PatchEngine` |
-| `webui/`                 | Cyberpunk patcher UI (`index.html`, `css/cyberpunk.css`, JS, fonts) |
+| `libs/zpwr-patch-core/webui/` | Cyberpunk patcher UI (shared; embedded via `juce_add_binary_data`) |
 
 ---
 
 ## [0x0D] ADDING A MODULE
 
-1. Add the enum to `ModType` and its name to `PatchDef::allTypeNames()`.
-2. Add its param metadata to `blockParamSpecs()`.
-3. Add per-sample compute + any state to `RuntimeGraph::Block` / `computeBlock()`.
+Blocks are registered in the shared core ([`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core)), not in this repo:
+
+1. Register the block in a `register*` function (or in `registerAudioModules`) in `include/zpc/AudioModules.h` with `add (reg, name, description, category, numIns, state, { ParamSpec… }, compute)`.
+2. Use a name no other block in the stack uses, then regenerate the catalog with `scripts/gen_blocks.py`.
 
 The new type appears in every block's type dropdown automatically.
 

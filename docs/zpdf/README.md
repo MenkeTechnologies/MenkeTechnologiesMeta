@@ -14,9 +14,9 @@
 
 ### `[THE FROM-SCRATCH PDF EDITOR]`
 
-> *"Every feature in Acrobat and Preview, in one Rust binary."*
+> *"The Acrobat and Preview feature sets in one Rust binary."*
 
-**zpdf** is a from-scratch PDF editor written in Rust, porting the full feature set of Adobe Acrobat (Pro) and macOS Preview into a single Tauri desktop GUI whose every command is also a scriptable automation verb. Created by MenkeTechnologies.
+**zpdf** is a PDF editor written in Rust, porting the full feature set of Adobe Acrobat (Pro) and macOS Preview into a single Tauri desktop GUI whose every command is also a scriptable automation verb. Created by MenkeTechnologies.
 
 ### [`Read the Docs`](https://menketechnologies.github.io/zpdf/) &middot; [`Engineering Report`](https://menketechnologies.github.io/zpdf/report.html) · [`Feature Port Report`](https://menketechnologies.github.io/zpdf/zpdf_port_report.html)
 
@@ -36,15 +36,15 @@
 
 ## [0x00] STATUS
 
-**Shipping.** zpdf is a working Rust + Tauri desktop PDF editor, built on the `zpdf-core` engine that parses and writes the PDF object model directly. The [feature port report](https://menketechnologies.github.io/zpdf/zpdf_port_report.html) catalogs the full Acrobat (Pro) + Preview surface — every catalogued row except camera signature capture is implemented and cited to real code, each engine capability wired through a Tauri command and surfaced in the ⌘K command palette.
+**Shipping.** zpdf is a working Rust + Tauri desktop PDF editor, built on the `zpdf-core` engine, a pure-Rust PDF library built on `lopdf` that parses and writes the PDF object model. The [feature port report](https://menketechnologies.github.io/zpdf/zpdf_port_report.html) catalogs the full Acrobat (Pro) + Preview surface — every catalogued row except camera signature capture is implemented and cited to real code, each engine capability wired through a Tauri command and surfaced in the ⌘K command palette.
 
 ---
 
 ## [0x01] WHAT ZPDF IS
 
-A from-scratch PDF editor in Rust. The goal is breadth: cover the union of what Adobe Acrobat Pro and macOS Preview can do — viewing, page management, text/object editing, annotation/markup, forms, signatures and security, redaction, OCR, convert/export, review/compare, optimization, accessibility, and batch automation — in one desktop tool whose commands are scriptable through the automation bus.
+A PDF editor in Rust. The goal is breadth: cover the union of what Adobe Acrobat Pro and macOS Preview can do — viewing, page management, text/object editing, annotation/markup, forms, signatures and security, redaction, OCR, convert/export, review/compare, optimization, accessibility, and batch automation — in one desktop tool whose commands are scriptable through the automation bus.
 
-zpdf parses and writes the PDF object model directly (no shelling out to a third-party PDF engine for the core), so editing, optimization, and structure-level operations (linearization, font subsetting, redaction that truly removes content) are first-class rather than bolt-ons.
+zpdf parses and writes the PDF object model in-process through `zpdf-core` (pure Rust on `lopdf`; no shelling out to an external PDF tool), so editing, optimization, and structure-level operations (linearization, font subsetting, redaction that truly removes content) are first-class rather than bolt-ons.
 
 Feature status lives in the port report; every implemented row is cited to verifiable code.
 
@@ -86,7 +86,7 @@ The catalog is grouped into these areas (see the port report for the per-feature
 
 The shipped architecture — `zpdf-core` (the engine) plus the Tauri desktop GUI and its automation bus.
 
-- **Core PDF model** — direct parse/serialize of the PDF object model (objects, xref, streams, content streams). Owns linearization, incremental update, and object-level edits.
+- **Core PDF model** — parse/serialize of the PDF object model (objects, xref, streams, content streams) in `zpdf-core` over `lopdf`. Owns linearization, incremental update, and object-level edits.
 - **Render** — a page rasterizer for the viewer and for raster export (image export, OCR input, thumbnails).
 - **Editing engine** — text and object editing on parsed content streams; page-tree operations for insert/delete/extract/reorder/merge.
 - **Forms / signatures** — AcroForm field model, FDF/XFDF, and the cryptographic path for signing/validation and encryption.
