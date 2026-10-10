@@ -5,7 +5,7 @@ in-process and from the shell, with cross-app orchestration. Extends the existin
 command palette (`zgui-core/webui/user-commands.js`) from a fire-and-forget step runner into a
 bidirectional automation surface. Companion to `GUI_APP_ARCHITECTURE.md` (shell/view boundary) and
 `GUI_APP_REQUIREMENTS.md`. The live surface every app exposes is catalogued in
-[`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) (generated from each app's verb source).
+[`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md) (generated from each running app's live bus surface).
 
 ---
 

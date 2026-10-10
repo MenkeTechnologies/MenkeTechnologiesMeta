@@ -20,8 +20,10 @@ were running at generation time, so its per-app totals move with each `bin/gen-g
 Still open: typed-verb `register({app,verbs})` surfaces exist only for **traderview** + **zwire**;
 the other socket-wired apps run a **webview-forward** `bus.rs` (forward every verb to the webview →
 `ZGui.automation` verb or `invoke` fallback) until their verbs are promoted into the catalog.
-**Track B (JUCE) substrate is still unbuilt** — the `sock`/`verbs` cells below are current for
-Track A only; do not read the Track B matrix as started.
+**Track B (JUCE) substrate is partly built** — `zpwr-daw` hosts a native socket through
+`app/src/DawBus.h` (a JUCE-free C++ port of the `zgui-bridge` transport, started from
+`PluginEditor.cpp`); `zpwr-synth`, `zpwr-fx` and `zpwr-midi-fx` are not on the bus and
+plugin-instance addressing is unbuilt. The Track A cells below are current for Track A only.
 
 ## Roster (25 apps, two tracks)
 
@@ -70,8 +72,9 @@ perl -0777 -ne 'while(/name:\s*['"'"'"]([^'"'"'"]+)['"'"'"][^}]*?category:\s*['"
 ### 0B — Track B substrate (JUCE / C-ABI)
 - [ ] C++ automation-surface API mirroring §4 (`registerVerb/registerState/emitEvent`) inside the JUCE
       shared layer — the plugins have no `window.ZGui`.
-- [ ] Socket host reachable from C++ — either link `zgui-bridge` over the existing **C ABI** (`zpwr-daw`
-      already ships "C ABI + Rust bindings") or a thin C++ server speaking the same §7.1 frames.
+- [x] Socket host reachable from C++ — a thin C++ server speaking the same §7.1 frames: `zpwr-daw`
+      `app/src/DawBus.h` (headless-tested by `tests/daw_bus_test.cpp`). Not yet shared with
+      `zpwr-synth` / `zpwr-fx` / `zpwr-midi-fx`.
 - [ ] **Plugin-instance addressing** — a VST3/AU/CLAP plugin runs *inside a DAW*, N instances at once.
       Decide the socket name scheme (`zgui/zpwr-synth.<pid>.<instance>.sock`) + a discovery list so
       `App::list()` / `App::open` can target one instance. **Standalone** builds are single-instance and
@@ -153,16 +156,22 @@ transport. zterminal is N/A: native terminal, no webview shell, not on this bus 
 `sock` box is ✅, but they were not running the last time `bin/gen-gui-actions-live` swept the fleet —
 their verbs are therefore absent from the generated catalog and `verbs`/`docs` stay ◐/☐ until the next
 sweep with all apps open. (zcontainer's earlier catalog-without-bus discrepancy is resolved: its
-`serve("zcontainer")` call site is live at `zcontainer/app/src-tauri/src/bus.rs:752`.)
+`serve("zcontainer")` call site is live at `zcontainer/app/src-tauri/src/bus.rs`.)
 
 ## Status matrix — Track B (JUCE)
 
 | App | surface | sock(standalone) | inst(plugin) | stryke-embed | verify-standalone | verify-plugin | docs |
 | --- |:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| zpwr-daw (engine) | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+| zpwr-daw (engine) | ☐ | ◐¹ | ☐ | ☐ | ☐ | ☐ | ☐ |
 | zpwr-synth | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 | zpwr-fx | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 | zpwr-midi-fx | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
+
+¹ `zpwr-daw` starts a socket host from its editor (`ZpwrDawEditor::startBus` in
+`app/src/PluginEditor.cpp`, transport in `app/src/DawBus.h`) and the webview side binds through
+`webui/bus/daw-bus.js`. The verb surface is not yet catalogued in
+[`GUI_SCRIPT_ACTIONS.md`](GUI_SCRIPT_ACTIONS.md), and the cell is ◐ because a failed bind (socket held
+by another instance) is logged and dropped rather than addressed per instance.
 
 ---
 

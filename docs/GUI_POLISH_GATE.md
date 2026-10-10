@@ -32,7 +32,7 @@ Every capability that exists in Audio-Haxor must exist in the app **if it is rel
 | Command palette — **Cmd/Ctrl+K**, fzf-matched (app-owned, see below) | end-app shell | R1 / R7 |
 | Stryke Hooks editor (Monaco) | `zpwr-hooks-editor` | R2 |
 | Embedded PTY terminal (Ctrl+\` / Cmd+T) | `zpwr-embed-terminal` | R3 |
-| Cyberpunk tokens (`Orbitron` + `Share Tech Mono`, glass surfaces) | `zpwr-patch-core/.../cyberpunk.css` | R4 |
+| Cyberpunk tokens (`Orbitron` + `Share Tech Mono`, glass surfaces) | `zgui-core/webui/cyberpunk.css` (JUCE plugins: `zpwr-patch-core/webui/css/cyberpunk.css`) | R4 |
 | Tile dashboard + tab bar | shared tile/tab components | R5 |
 | Logo top-left, shared header strip | shared header | R6 |
 | Fuzzy filters with matched-char highlight | shared fzf matcher | R7 |
@@ -201,7 +201,7 @@ task-by-task work list to close every gap is [`GUI_POLISH_GATE_CHECKLIST.md`](GU
 | **traderview** | partial | ✓ | ✓ | partial | FAIL |
 | **ztranslator** | partial | ✓ | ✓ | partial | FAIL |
 | **zpwr-daw** | partial | ✓ | ✗ | partial | FAIL |
-| **zcontainer** | partial (appShell ⌘K/⌘, ✓; hand-rolled skin, no shared tokens/header) | partial (`zcontainer-core` + `zpwr-hooks-editor` + `zpwr-file-browser` + `zpwr-embed-terminal` + `zgui-core` + `zgui-bridge` + `zwire-host`; **no office/mail/pdf-core**) | ✗ | partial (dev/build/clean/bust/rebuild/nuke + test/test:rust) | FAIL |
+| **zcontainer** | partial (appShell ⌘K/⌘, ✓; shared tokens/header ✓; R9 grid and exec-terminal routing open) | partial (`zcontainer-core` + `zpwr-hooks-editor` + `zpwr-file-browser` + `zpwr-embed-terminal` + `zgui-core` + `zgui-bridge` + `zwire-host`; **no office/mail/pdf-core**) | ✗ | partial (dev/build/clean/bust/rebuild/nuke + test/test:rust) | FAIL |
 | **zcite** | partial (R1–R10 ✓; R9 N/A — no timeline) | partial (terminal/hooks/file-browser/i18n + `zoffice-core` + `zemail-core`; **no `zpdf-core`**) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/test/doc/ship-check/deploy/nuke/build:hooks-editor) | FAIL |
 | **zreq** | partial (R1–R10 ✓; R9 N/A — no timeline) | partial (terminal/hooks/file-browser/i18n + `zoffice-core` + `zemail-core` + `zpdf-core` all submoduled; views not verified) | partial (935-key seed across 27 locales; 18 proof tests not ported, locales are English stubs) | partial (dev/build/nuke/build:hooks-editor) | FAIL |
 
@@ -230,19 +230,19 @@ To reach **PASS** each still owes the gate:
 `zcontainer` embeds `zcontainer-core`, `zpwr-hooks-editor`, `zpwr-file-browser`,
 `zpwr-embed-terminal`, `zgui-core`, `zgui-bridge` and `zwire-host` (its `.gitmodules`), and its UI
 mounts `ZGui.appShell` — so it already has the ⌘K palette, the ⌘, settings panel, `ZGui.fzf` and
-`ZGui.dataTable`. The bus has landed too (`app/src-tauri/src/bus.rs:752` calls
+`ZGui.dataTable`. The bus has landed too (`app/src-tauri/src/bus.rs` calls
 `serve("zcontainer", handler)`). The remaining gap is the skin, routing the exec terminal onto the
 embedded module, and localization:
 
-- **G1**: shared cyberpunk tokens (R4) — the current skin is hand-rolled, move to `cyberpunk.css`
-  tokens; embedded terminal (R3) — the `zpwr-embed-terminal` submodule is now wired, but the exec
-  terminal still has to route through it; tile dashboard + tab bar (R5); shared header/logo (R6); context menu,
-  keyboard nav, help overlay. R1 (palette), R2 (hooks editor), R7 (fzf) and R8 (tables) are already
-  met through the appShell + the `zgui-core` widgets.
+- **G1**: embedded terminal (R3) — the `zpwr-embed-terminal` submodule is wired, but the exec
+  terminal still has to route through it; arrangement grid (R9, relevant — see G2); context menu,
+  keyboard nav, help overlay. R1 (palette), R2 (hooks editor), R4 (tokens — `lib/zgui-core/webui/all.css`),
+  R5, R6, R7 (fzf), R8 (tables) and R10 are measured PASS in the [checklist](GUI_POLISH_GATE_CHECKLIST.md)
+  status matrix, via the appShell + the `zgui-core` widgets.
 - **G2**: add `zoffice-core` / `zemail-core` / `zpdf-core` with views. (`zpwr-hooks-editor`,
   `zpwr-file-browser` and `zpwr-embed-terminal` are already submodules; `zpwr-i18n` arrives
   transitively, vendored inside `zcontainer-core`.) The automation bus has landed:
-  `app/src-tauri/src/bus.rs:752` calls `serve("zcontainer", handler)`. Arrangement grid (R9) is
+  `app/src-tauri/src/bus.rs` calls `serve("zcontainer", handler)`. Arrangement grid (R9) is
   relevant — container/pod events and log timelines fit `createGrid` with a new domain; `zpwr-crate`
   and `ztranslator-core` are **N/A** (no audio/show-control domain).
 - **G3**: `zpwr-i18n` is already present (vendored inside `zcontainer-core`); extract every string

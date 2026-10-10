@@ -226,9 +226,10 @@ Per app, all ten must be true:
 - **Command palette is single-source for the Tauri apps.** The canonical module is
   `zgui-core/webui/command-palette.js`; ztranslator loads it
   (`ztranslator-core/frontend/index.html:370`). The older `zpwr-patch-core` copy is gone — that repo
-  ships no `command-palette.js` at all. The JUCE shell is the remaining consumer to converge.
-- **Styles are split by substrate.** JUCE apps share `cyberpunk.css`; the Tauri apps
-  (Audio-Haxor, traderview, ztranslator) carry their own stylesheets. Extract the shared
+  ships only its own `zpc-command-palette.js`. The JUCE shell is the remaining consumer to converge.
+- **Styles are split by substrate.** JUCE apps read `zpwr-patch-core/webui/css/cyberpunk.css`; the Tauri apps
+  read `zgui-core/webui/cyberpunk.css` (Audio-Haxor still carries its own stylesheets — R4 is ◐ for it in
+  [`GUI_POLISH_GATE_CHECKLIST.md`](GUI_POLISH_GATE_CHECKLIST.md)). Extract the shared
   design tokens so both substrates read the same theme source.
 - **Tables and fuzzy filters: shared modules now exist; finish routing every app through them.**
   `zgui-core` ships the canonical `ZGui.fzf` matcher, `ZGui.table`/`ZGui.dataTable`, and a

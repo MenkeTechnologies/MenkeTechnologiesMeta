@@ -143,10 +143,10 @@
       <ol>
         <li><strong>.gitmodules syntax</strong> — path/url count match, every URL is canonical <code>https://github.com/MenkeTechnologies/*.git</code>, no nested paths</li>
         <li><strong>Submodule URL reachability</strong> — <code>git ls-remote</code> every URL</li>
-        <li><strong>Shellcheck</strong> across <code>bin/*</code> helper scripts</li>
-        <li><strong>bin/ smoke</strong> — <code>bin/status-all</code> + <code>bin/foreach</code> don't crash on empty checkout</li>
+        <li><strong>Shellcheck</strong> across the <code>sh</code>/<code>bash</code> helper scripts in <code>bin/</code> (selected by shebang)</li>
+        <li><strong>bin/ smoke</strong> — <code>bin/status-all</code> + <code>bin/foreach</code> don't crash on empty checkout; <code>tests/bin-scripts.sh</code> and <code>tests/submodule-integrity.sh</code> run on the same empty checkout</li>
         <li><strong>Homebrew tap formula quality</strong> — every <code>homebrew-menketech/Formula/*.rb</code> parses, declares <code>version</code>, <code>homepage</code>, <code>license</code>, and ships per-platform <code>sha256</code> + <code>url</code></li>
-        <li><strong>Cargo.toml ↔ docs/*.html version sync</strong> — every Rust crate's shipped version in <code>Cargo.toml</code> agrees with what <code>docs/index.html</code> and per-repo report cards advertise</li>
+        <li><strong>Cargo.toml ↔ docs/*.html version sync</strong> — every Rust crate's shipped version in <code>Cargo.toml</code> agrees with what <code>docs/index.html</code> and per-repo report cards advertise. This job also carries the rest of the <code>tests/*.sh</code> gate suite (Cargo.toml, README, docs, formula, workflow and man-page invariants), one step per script, run against the initialized submodules</li>
         <li><strong>README link sanity</strong> — 7 independent drift gates: (a) every <code>.gitmodules</code> path is referenced from README, (b) submodule-count badge matches actual entry count, (c) each <code>### Tier N — Label (M)</code> header has exactly M table rows + tier-counts sum to total submodules, (d) <code>docs/index.html</code> stat-cards for <em>submodules</em>, <em>tiers</em>, and <em>zsh plugins</em> match README values, (e) <em>rust crates</em> stat-card matches actual top-level <code>Cargo.toml</code> count (skipped when submodules aren't initialized in this job's checkout), (f) all seven per-tier counts in <code>docs/index.html</code> cards and <code>docs/report.html</code> rows match the README <code>### Tier N</code> headers, (g) the ASCII-banner tagline and the <code>[0x08]</code> Disk Footprint per-tier repo-counts + Total match the tier headers and the <code>.gitmodules</code> count</li>
       </ol>
     </section>
@@ -160,6 +160,15 @@
         <tr><td><code>bin/foreach</code></td><td>Run an arbitrary shell command inside every submodule</td></tr>
         <tr><td><code>bin/sync-pointers</code></td><td>Stage + commit all submodule pointer bumps as one commit</td></tr>
         <tr><td><code>bin/release-all</code></td><td>Coordinated <code>Cargo.toml</code> bump + commit + tag + push across every submodule that backs a homebrew formula (derives the tag prefix from each formula's release URL, dedupes formulae that share a repo)</td></tr>
+        <tr><td><code>bin/gen-ci-board</code></td><td>Regenerate the README CI status board from the submodule map + live workflow lists</td></tr>
+        <tr><td><code>bin/gen-code-volume</code></td><td>Regenerate the README code-volume tables (de-duplicated across nested submodules)</td></tr>
+        <tr><td><code>bin/gen-doc-inventory.mjs</code></td><td>Regenerate <code>docs/inventory.html</code>, the index of every page under <code>docs/</code> with a chrome-sync audit</td></tr>
+        <tr><td><code>bin/sync-inventions-html.mjs</code></td><td>Rebuild the entry cards of <code>docs/inventions.html</code> from the <code>docs/INVENTIONS.md</code> ledger (<code>--check</code> verifies)</td></tr>
+        <tr><td><code>bin/sync-doc-mirrors</code></td><td>Refresh the per-project doc mirrors under <code>docs/&lt;repo&gt;/</code> from each submodule's own <code>docs/</code></td></tr>
+        <tr><td><code>bin/gen-gui-actions-live</code></td><td>Regenerate <code>docs/GUI_SCRIPT_ACTIONS.md</code> from each running GUI app's live automation-bus surface</td></tr>
+        <tr><td><code>bin/gen-gui-actions.sh</code></td><td>Static fallback for the same catalog, grepped from each app's verb sources</td></tr>
+        <tr><td><code>bin/gen-app-icon.sh</code>, <code>bin/gen-all-icons.sh</code></td><td>Render one GUI app icon / regenerate every GUI app's icon set from the shared brand template</td></tr>
+        <tr><td><code>bin/deploy-apps</code>, <code>bin/ship-apps</code>, <code>bin/ship-sync-zgui.sh</code></td><td>GUI-app release pipeline: build + install + publish, bumping the bundled <code>zgui-core</code> and meta gitlinks, and pinning every nested <code>zgui-core</code> worktree before a build</td></tr>
       </table>
     </section>
 

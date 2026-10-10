@@ -92,7 +92,7 @@ the webview registers, so it is also proof the frontend booted: a dead webview r
 verbs alone. It mounts the powerline bar but not the tmux tiling WM — a two-pane editor/preview
 does not tile.
 
-⁴ **zcontainer**'s bus has since landed in git — `zcontainer/app/src-tauri/src/bus.rs:752` now calls
+⁴ **zcontainer**'s bus has since landed in git — `zcontainer/app/src-tauri/src/bus.rs` now calls
 `serve("zcontainer", handler)`, so the 25 verbs the live catalog lists are reproducible from source
 and the row is ✓. (It was the one row that wasn't, when no `bus.rs` existed on any ref.) **19** apps
 now call `serve("<app>")`: Audio-Haxor, traderview, zcite, **zcontainer**, zemail, zftp, zgo,
@@ -112,21 +112,21 @@ list minus `ztunnel`, `zlatex`, `zstation`, `zcite`, `zcontainer` and `ztranslat
 bar without the tiling WM. The remaining apps (`zgo`, `traderview`, `Audio-Haxor`) load neither
 script outside their vendored `lib/zgui-core` copy, so `ZGui.powerline` / `ZGui.tmux` never exist in
 their document. Nine apps additionally call `.powerline.init(` to feed the already-booted bar an app
-sig + stat providers — **ztunnel** (`frontend/main.js:42`), **zstation** (`frontend/main.js:43`),
-**zoffice** (`frontend/tmux-config.js:82`), **zthrottle** (`frontend/main.js:218`), **zlatex**
-(`frontend/main.js:249`), **zmusic** (`frontend/zmusic.js:7828`), **zcite** (`frontend/main.js:41`),
-**ztranslator** (`frontend/main.js:121`) and **zcontainer** (`frontend/zcontainer.js:8545`); the
-rest run the bar's auto-booted defaults.
+sig + stat providers — **ztunnel**, **zstation**, **zoffice** (`frontend/tmux-config.js`),
+**zthrottle**, **zlatex**, **zmusic**, **zcite**, **ztranslator** and **zcontainer**; the rest run
+the bar's auto-booted defaults.
 
 ---
 
 ## Track B — JUCE plugins (`zpwr-daw` engine · `zpwr-synth` · `zpwr-fx` · `zpwr-midi-fx`)
 
-No `window.ZGui`, no Tauri `invoke`. The automation-bus, powerline bar, and tmux WM are **not
-wired** for the JUCE surface — the bus substrate for Track B (C++/C-ABI surface, per-plugin-instance
-socket addressing) is still unbuilt (see [`GUI_AUTOMATION_BUS_CHECKLIST.md`](GUI_AUTOMATION_BUS_CHECKLIST.md)
-§0B). `zpwr-daw`'s **Tauri shell** carries monaco-vim + the hooks editor through its embedded
-`ztranslator-core` webview; the JUCE `ClipEngine` half does not.
+No `window.ZGui`, no Tauri `invoke`. The powerline bar and tmux WM are **not wired** for the JUCE
+surface. The automation bus is hosted natively by `zpwr-daw` alone (`app/src/DawBus.h`, a JUCE-free
+C++ port of the `zgui-bridge` transport, started from `PluginEditor.cpp`); `zpwr-synth`, `zpwr-fx` and
+`zpwr-midi-fx` are not on the bus, and per-plugin-instance socket addressing is still unbuilt (see
+[`GUI_AUTOMATION_BUS_CHECKLIST.md`](GUI_AUTOMATION_BUS_CHECKLIST.md) §0B). `zpwr-daw`'s **Tauri
+shell** carries monaco-vim + the hooks editor through its embedded `ztranslator-core` webview; the
+JUCE `ClipEngine` half does not.
 
 ---
 

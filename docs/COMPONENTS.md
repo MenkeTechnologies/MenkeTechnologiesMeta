@@ -8,7 +8,7 @@ every GUI app embeds the full shared component set it needs.
 > vim / hooks editor) — as opposed to which submodules it embeds — see
 > [`GUI_FEATURE_MATRIX.md`](GUI_FEATURE_MATRIX.md).
 
-_Last reconciled: 2026-09-02, from each app's `.gitmodules` at the SHAs this meta repo pins._
+_Last reconciled: 2026-10-10, from each app's `.gitmodules` at the SHAs this meta repo pins._
 
 ## Components
 
@@ -134,7 +134,7 @@ than as a submodule; its own submodules are `zgui-core`, `zpwrchrome`, `zwire-ho
 - **zmusic / ztorrent (new rows):** both wire the same standard Tauri set —
   `zpwr-clip-engine`, `zpwr-embed-terminal`, `zpwr-hooks-editor`, `zpwr-file-browser`, `zpwr-i18n`,
   plus `zgui-core`, `zgui-bridge` and `zwire-host`. `zmusic` additionally mounts `zdsp-core`
-  directly (the only Tauri app that does). Their own engines `zmusic-core` / `ztorrent-core` follow
+  directly (with `Audio-Haxor`, the only Tauri apps that do). Their own engines `zmusic-core` / `ztorrent-core` follow
   the app-specific `-core` model and have no matrix column, same as `zphoto-core` / `ztmux-core`.
 - **patch-core** is JUCE-plugin-only (daw + synth/fx/midi-fx); the Tauri apps don't use it.
 - **zgui-core (extracted):** the shared `window.ZGui` chrome toolkit (shell/settings/dialog/table/

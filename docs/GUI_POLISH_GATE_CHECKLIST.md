@@ -125,13 +125,13 @@ shared module before it can be embedded everywhere.
 
 - [ ] **A1 Single command palette** — converge `Audio-Haxor/frontend/js/command-palette.js` and
   ztranslator's inline palette onto the canonical `zgui-core/webui/command-palette.js`; route all
-  apps through it (R1). (`zpwr-patch-core` no longer ships a `command-palette.js` of its own.)
-- [ ] **A2 Shared fzf matcher** — promote `zpwr-patch-core`'s `fzfMatch` to a shared module
-  with one highlight style; every filter + the palette imports it (R7).
+  apps through it (R1). (`zpwr-patch-core` ships only its own `zpc-command-palette.js`, for the JUCE shell.)
+- [ ] **A2 Shared fzf matcher** — the shared module exists (`zgui-core/webui/fzf.js`, `ZGui.fzf.fzfMatch`)
+  with one highlight style; remaining work is routing every filter + the palette through it (R7).
 - [ ] **A3 Shared table component** — one sortable + resizable + width-persisting table; no
   hand-rolled tables (R8).
-- [ ] **A4 Shared cyberpunk tokens** — extract `cyberpunk.css` design tokens so Tauri apps
-  read the same theme source as the JUCE apps (R4).
+- [ ] **A4 Shared cyberpunk tokens** — the canonical source is `zgui-core/webui/cyberpunk.css`; the JUCE
+  plugins still read `zpwr-patch-core/webui/css/cyberpunk.css`. Converge the two (R4).
 - [ ] **A5 File browser is shared** — `zpwr-file-browser` is the promoted multi-pane browser behind
   an fs shim (C ABI + JUCE shim), embedded in **21/22** (R10). Still missing from **`zpwr-daw`** —
   the only Desktop App that does not list it in `.gitmodules`.
