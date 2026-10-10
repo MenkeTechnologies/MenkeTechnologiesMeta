@@ -11,6 +11,10 @@
 # or third-party repo. Caught MenkeTechnologiesPublications (+4 others)
 # shipping a plain `# Heading` instead of the banner.
 #
+# A README may instead open with the product's logo image (an <img> or
+# markdown image whose path contains "logo", within the first few non-blank
+# lines); either form satisfies the gate.
+#
 # Detection (font-agnostic — the org uses ANSI Shadow AND the figlet
 # "standard" slash font): within the first few non-blank lines the
 # README must open a ``` fence, and that fenced block must contain at
@@ -52,6 +56,21 @@ is_fork() {
     return 1
 }
 
+# Returns 0 if the README opens with the project's logo image instead: an
+# <img> or markdown image whose source path contains "logo", within the
+# first few non-blank lines. A product may lead with its logo OR with the
+# fenced wordmark; either satisfies the banner requirement.
+has_logo() {
+    LC_ALL=C awk '
+        /^[ \t]*$/ { next }
+        { seen++ }
+        seen > 6 { exit 1 }
+        /<img[^>]*src=["'"'"'][^"'"'"']*logo/ { found = 1; exit 0 }
+        /!\[[^]]*\]\([^)]*logo/ { found = 1; exit 0 }
+        END { exit (found ? 0 : 1) }
+    ' "$1"
+}
+
 # Returns 0 if the README opens with a cyberpunk ASCII-art banner.
 # LC_ALL=C so awk byte-processes the multibyte box-drawing banner
 # (en_US.UTF-8 awk aborts with "towc: multibyte conversion failure").
@@ -59,6 +78,7 @@ is_fork() {
 # the art-line alphanumeric ratio is still near zero — the threshold
 # holds for both ANSI-Shadow (█╗║) and figlet "standard" (_/\|) banners.
 has_banner() {
+    has_logo "$1" && return 0
     LC_ALL=C awk '
         BEGIN { seen = 0; in_fence = 0; art = 0; found_fence = 0 }
         # Locate the opening fence within the first few non-blank lines.
@@ -114,7 +134,7 @@ for p in "${paths[@]}"; do
     if has_banner "$readme"; then
         echo "PASS  $readme: opens with the cyberpunk ASCII-art banner"
     else
-        echo "FAIL  $readme: no cyberpunk banner — README must open with a fenced ASCII-art wordmark (see strykelang/zshrs/stryke-* READMEs)"
+        echo "FAIL  $readme: no cyberpunk banner — README must open with a fenced ASCII-art wordmark or the product logo image (see strykelang/zshrs/stryke-* READMEs)"
         missing=$((missing + 1))
         ok=0
     fi
