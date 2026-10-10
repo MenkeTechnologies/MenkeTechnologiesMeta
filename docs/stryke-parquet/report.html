@@ -118,7 +118,7 @@
           <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Parquet</code>; stateless &mdash; parquet operations are file transforms with no process-level cache; lives until the runtime exits</td></tr>
           <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
           <tr><td>Install path</td><td><code>~/.stryke/store/parquet@&lt;version&gt;/</code> after <code>make install</code>; <code>use Parquet</code> from any stryke script resolves it</td></tr>
-          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code>; self-contained round-trip suite built on a generated fixture, no external services</td></tr>
           <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
         </tbody>
       </table>
@@ -126,16 +126,16 @@
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
       <p>Schema + footer / row-group introspection is a different workload from reading parquet into a typed DataFrame. Lightweight tool for ops + debugging.</p>
-      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays small precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
       <p>JSON in / JSON out across the FFI boundary. Each <code>Parquet::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>parquet__*</code> symbol resolved out of <code>libstryke_parquet.{dylib,so}</code>; the cdylib returns a JSON <code>CString</code> the wrapper parses. The exports span inspection (<code>version</code>, <code>inspect</code>, <code>schema</code>, <code>dtypes</code>, <code>count</code>, <code>rowgroups</code>, <code>row_group_summary</code>, <code>stats</code>, <code>metadata</code>, <code>schema_diff</code>), row read (<code>head</code>, <code>tail</code>, <code>slice</code>, <code>sample</code>, <code>reverse</code>, <code>gather</code>, <code>random_sample</code>, <code>to_json</code>, <code>to_csv</code>, <code>to_ndjson</code>, <code>column</code>), row predicates and reshaping (<code>filter</code>, <code>where_count</code>, <code>filter_to</code>, <code>distinct</code>, <code>sort</code>, <code>top_k</code>, <code>value_counts</code>, <code>group_by</code>), aggregates (<code>sum</code>, <code>min</code>, <code>max</code>, <code>mean</code>, <code>n_unique</code>, <code>quantile</code>, <code>describe</code>), conversion and write (<code>from_csv</code>, <code>from_json</code>, <code>write</code>, <code>write_partitioned</code>, <code>compress</code>, <code>repartition</code>, <code>merge</code>, <code>hstack</code>, <code>select</code>, <code>drop</code>, <code>rename</code>, <code>with_row_index</code>), and diagnostics (<code>validate</code>, <code>column_chunk_stats</code>, <code>size_report</code>, <code>null_summary</code>, <code>encoding_summary</code>, <code>bloom_filter_summary</code>, <code>sorting_columns_summary</code>, <code>features</code>); the authoritative list is <code>[ffi].exports</code> in <code>stryke.toml</code>. The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>.</p>
 <pre># request shape (built by the .stk wrapper)
-{"verb": "&lt;op&gt;", "...": ...}
+{"path": "...", "...": ...}   # per-fn args dict, no verb field
 
 # response shape
-{"result": ...}            # success — per-fn shape
+&lt;per-fn JSON value&gt;      # success — returned as-is, no wrapper envelope
 {"error": "&lt;msg&gt;"}        # failure — wrapper die()s with the message</pre>
 
       <hr class="section-rule">
@@ -163,8 +163,8 @@
       <table class="arch-table">
         <thead><tr><th>Crate</th><th>Version</th><th>Role</th></tr></thead>
         <tbody>
-          <tr><td><code>parquet</code></td><td>58</td><td>parquet reader/writer; codec features snap / brotli / flate2 / lz4 / zstd / base64</td></tr>
-          <tr><td><code>arrow</code>, <code>arrow-json</code>, <code>arrow-csv</code></td><td>58</td><td>columnar bridge + CSV/JSON conversion</td></tr>
+          <tr><td><code>parquet</code></td><td>60</td><td>parquet reader/writer; codec features snap / brotli / flate2 / lz4 / zstd / base64</td></tr>
+          <tr><td><code>arrow</code>, <code>arrow-json</code>, <code>arrow-csv</code></td><td>60</td><td>columnar bridge + CSV/JSON conversion</td></tr>
           <tr><td><code>serde</code> / <code>serde_json</code></td><td>1</td><td>FFI JSON envelope (<code>preserve_order</code>)</td></tr>
           <tr><td><code>anyhow</code></td><td>1</td><td>error propagation into the <code>{"error": ...}</code> envelope</td></tr>
           <tr><td><code>once_cell</code></td><td>1</td><td>lazily-initialized statics</td></tr>

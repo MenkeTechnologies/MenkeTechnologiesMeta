@@ -122,7 +122,7 @@ s pkg install -g .               # cdylib lands in ~/.stryke/store/docker@&lt;ve
 
 # one-liner
 make install</pre>
-        <p>The cdylib is dlopened in-process on first <code>use Docker</code> &mdash; no helper-binary fork per call. A shared tokio runtime + persistent <code>bollard::Docker</code> client is held in <code>OnceCell</code> for the life of the process; any stryke script that declares <code>use Docker</code> resolves the package automatically. The package is versioned <code>0.19.0</code> (<code>stryke.toml</code> / <code>Cargo.toml</code>) and is published with <code>publish = false</code> &mdash; it installs from a GitHub release or a local checkout, not from crates.io. <code>make install</code> wraps the build + <code>s pkg install -g .</code> step.</p>
+        <p>The cdylib is dlopened in-process on first <code>use Docker</code> &mdash; no helper-binary fork per call. A shared tokio runtime + persistent <code>bollard::Docker</code> client is held in <code>OnceCell</code> for the life of the process; any stryke script that declares <code>use Docker</code> resolves the package automatically. The package version is set in <code>stryke.toml</code> and <code>Cargo.toml</code> and is published with <code>publish = false</code> &mdash; it installs from a GitHub release or a local checkout, not from crates.io. <code>make install</code> wraps the build + <code>s pkg install -g .</code> step.</p>
       </section>
 
       <section class="tutorial-section">
@@ -138,7 +138,7 @@ make install</pre>
             <tr><td>exec (captured stdout+stderr)</td><td><code>p Docker::exec("web", ["sh", "-c", "nginx -v"])</code></td></tr>
             <tr><td>stop (timeout secs) + remove</td><td><code>Docker::stop("web", timeout =&gt; 5); Docker::rm("web")</code></td></tr>
             <tr><td>networks + volumes</td><td><code>Docker::network_create("appnet"); Docker::volume_create("appdata")</code></td></tr>
-            <tr><td>reclaim space</td><td><code>val $report = Docker::prune(all =&gt; 1)</code></td></tr>
+            <tr><td>reclaim space</td><td><code>val $report = Docker::prune(kind =&gt; "images")</code></td></tr>
           </tbody>
         </table>
         <p>Every wrapper accepts a trailing <code>host =&gt; "&lt;socket-or-tcp-url&gt;"</code> to override the daemon for that one call (see <a href="#connection">Connection model</a> below); with no override the package targets <code>$DOCKER_HOST</code> or the local socket. The full API surface is enumerated in <a href="#daemon-api">Daemon &amp; container API</a> and <a href="#helpers">Daemon-free helpers</a>, and in the <a href="https://github.com/MenkeTechnologies/stryke-docker#0x02-api-reference" target="_blank" rel="noopener noreferrer">README "API reference" section</a>.</p>
@@ -170,7 +170,7 @@ make install</pre>
             <tr><td>Images</td><td><code>pull($img)</code> &middot; <code>rmi($img, force =&gt; 1)</code> &middot; <code>tag($src, $dst)</code> &middot; <code>search($term)</code> &middot; <code>inspect_registry($img)</code></td></tr>
             <tr><td>Networks</td><td><code>network_create($n)</code> &middot; <code>network_rm($n)</code> &middot; <code>network_connect($n, $c)</code> &middot; <code>network_disconnect($n, $c)</code></td></tr>
             <tr><td>Volumes</td><td><code>volume_create($n)</code> &middot; <code>volume_rm($n)</code></td></tr>
-            <tr><td>Prune</td><td><code>prune(containers =&gt; 1, images =&gt; 1, volumes =&gt; 1, networks =&gt; 1, all =&gt; 1)</code></td></tr>
+            <tr><td>Prune</td><td><code>prune(kind =&gt; "containers|images|volumes|networks")</code></td></tr>
           </tbody>
         </table>
         <p><code>create</code>/<code>run</code> forward <code>name</code>, <code>cmd</code> (arrayref) and <code>env</code> (arrayref of <code>KEY=VALUE</code>) to the daemon; <code>run</code> is <code>create</code> with <code>start =&gt; 1</code>. <code>exec</code> requires an arrayref command and returns captured stdout+stderr as a single string. The per-call result shapes (container dicts, inspect documents, prune report) are documented field-by-field in the <a href="https://github.com/MenkeTechnologies/stryke-docker#0x02-api-reference" target="_blank" rel="noopener noreferrer">README API reference</a>.</p>
@@ -270,7 +270,7 @@ docker__stop({"container": "web", "timeout": 5})
           <tbody>
             <tr><td><code>Docker::ping</code> returns false / version <code>die</code>s</td><td>No daemon at the resolved endpoint. Start Docker Desktop, <code>sudo systemctl start docker</code>, or set <code>DOCKER_HOST</code> to a reachable socket / tcp url.</td></tr>
             <tr><td><code>die "Docker::&lt;fn&gt;: &lt;msg&gt;"</code></td><td>The daemon returned an error (no such container, image not found, &hellip;). The message is the daemon's, passed through the FFI <code>error</code> envelope.</td></tr>
-            <tr><td>a deferred op <code>die</code>s</td><td><code>logs_follow</code>, <code>events</code>, <code>push</code>, <code>build</code> are not implemented in the <code>0.19.0</code> cdylib &mdash; see <a href="#deferred">Deferred operations</a>.</td></tr>
+            <tr><td>a deferred op <code>die</code>s</td><td><code>logs_follow</code>, <code>events</code>, <code>push</code>, <code>build</code> are not implemented in the cdylib &mdash; see <a href="#deferred">Deferred operations</a>.</td></tr>
             <tr><td><code>Docker::exec: cmd must be arrayref</code></td><td><code>exec</code> takes the command as an arrayref: <code>Docker::exec("web", ["sh","-c","&hellip;"])</code>.</td></tr>
             <tr><td>helper validators want pure input</td><td>The <code>parse_*</code> / <code>valid_*</code> / <code>build_*</code> helpers never touch a socket &mdash; if they fail it is bad input, not a daemon problem. <code>valid_*</code> returns <code>{ valid, reason }</code> rather than dying.</td></tr>
           </tbody>

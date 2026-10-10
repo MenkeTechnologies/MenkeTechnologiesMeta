@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="emacs-viml — engineering report. vimlrs-mode font-lock for VimL statement keywords, ex commands, scope-namespaced and special v: variables, built-in functions and function definitions, the command-position quote-comment split, block-keyword indentation, run via vimlrs, eldoc + completion, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
+  <meta name="description" content="emacs-viml — engineering report. vimlrs-mode font-lock for VimL statement keywords, ex commands, scope-namespaced and special v: variables, built-in functions and function definitions, the command-position quote-comment split, block-keyword indentation, run via viml, eldoc + completion, LSP via eglot + lsp-mode, and how the mode is verified with batch face assertions.">
   <title>emacs-viml — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,7 +44,7 @@
             <a href="https://github.com/MenkeTechnologies/emacs-viml" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            Emacs major mode for VimL (vimlrs) &middot; font-lock for keywords, ex commands, scope/special vars, builtins, function defs &middot; run via vimlrs &middot; LSP via vimlrs --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
+            Emacs major mode for VimL (vimlrs) &middot; font-lock for keywords, ex commands, scope/special vars, builtins, function defs &middot; run via viml &middot; LSP via viml --lsp (eglot + lsp-mode) &middot; verified with batch face assertions
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -58,8 +58,8 @@
     <main class="tutorial-main">
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle"><strong>emacs-viml</strong> is the Emacs major mode for <strong>VimL (Vimscript)</strong>, targeting the <strong>vimlrs</strong> standalone interpreter — a Rust port of Neovim's eval engine on fusevm. <code>vimlrs-mode</code> derives from <code>prog-mode</code> and provides font-lock, a syntax table, block-keyword-aware indentation, filetype detection, a buffer runner (<code>vimlrs FILE</code> via <code>compile</code>), eldoc + completion for builtin functions, and an LSP client that launches <code>vimlrs --lsp</code>.</p>
-      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is VimL's actual surface as the interpreter accepts it &mdash; statement keywords, ex commands, scope-namespaced variables, special <code>v:</code> variables, built-in functions, and function definitions. Because <code>vimlrs</code> ports a fixed finite builtin set (unlike the sibling <strong>stryke</strong> with its ~10,493 generated builtins), the lists are plain <code>regexp-opt</code> alternations in <code>vimlrs-mode.el</code>; no generated hash-table stdlib is required. The mode is named <code>vimlrs-mode</code> so it never clashes with Emacs' built-in <code>vimrc-mode</code>.</p>
+      <p class="tutorial-subtitle"><strong>emacs-viml</strong> is the Emacs major mode for <strong>VimL (Vimscript)</strong>, targeting the <strong>vimlrs</strong> standalone interpreter — a Rust port of Neovim's eval engine on fusevm. <code>vimlrs-mode</code> derives from <code>prog-mode</code> and provides font-lock, a syntax table, block-keyword-aware indentation, filetype detection, a buffer runner (<code>viml FILE</code> via <code>compile</code>), eldoc + completion for builtin functions, and an LSP client that launches <code>viml --lsp</code>.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> the highlighted surface is VimL's actual surface as the interpreter accepts it &mdash; statement keywords, ex commands, scope-namespaced variables, special <code>v:</code> variables, built-in functions, and function definitions. Because <code>vimlrs</code> ports a fixed finite builtin set (unlike the sibling <strong>stryke</strong> with its generated builtin table), the lists are plain <code>regexp-opt</code> alternations in <code>vimlrs-mode.el</code>; no generated hash-table stdlib is required. The mode is named <code>vimlrs-mode</code> so it never clashes with Emacs' built-in <code>vimrc-mode</code>.</p>
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">94</div><div class="stat-label">Builtin functions</div></div>
@@ -74,7 +74,7 @@
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">~</span>WHY NO GENERATED STDLIB</h2>
-      <p class="tutorial-subtitle">The sibling <code>emacs-stryke</code> generates a 170&nbsp;KB <code>stryke-stdlib.el</code> of hash tables because a single <code>regexp-opt</code> over stryke's ~10,493 builtins overflows Emacs' regexp compiler (<code>invalid-regexp "Regular expression too big"</code>). VimL as ported by <code>vimlrs</code> has no such problem: its surface is fixed &mdash; 34 statement keywords, 29 ex commands, 18 special <code>v:</code> variables, and 94 built-in functions &mdash; comfortably within the regexp-size limit. So <code>vimlrs-mode.el</code> uses plain <code>regexp-opt</code> alternations, and <code>vimlrs-stdlib.el</code> holds only the hand-authored builtin-function signatures used for eldoc and <code>completion-at-point</code>. The command-position <code>"</code> comment (which the in-expression double-quoted string must not be mistaken for) is resolved with a <code>syntax-propertize</code> rule that only fires at line start or after a <code>|</code> bar.</p>
+      <p class="tutorial-subtitle">The sibling <code>emacs-stryke</code> generates a 170&nbsp;KB <code>stryke-stdlib.el</code> of hash tables because a single <code>regexp-opt</code> over stryke's builtins overflows Emacs' regexp compiler (<code>invalid-regexp "Regular expression too big"</code>). VimL as ported by <code>vimlrs</code> has no such problem: its surface is fixed &mdash; 34 statement keywords, 29 ex commands, 18 special <code>v:</code> variables, and 94 built-in functions &mdash; comfortably within the regexp-size limit. So <code>vimlrs-mode.el</code> uses plain <code>regexp-opt</code> alternations, and <code>vimlrs-stdlib.el</code> holds only the hand-authored builtin-function signatures used for eldoc and <code>completion-at-point</code>. The command-position <code>"</code> comment (which the in-expression double-quoted string must not be mistaken for) is resolved with a <code>syntax-propertize</code> rule that only fires at line start or after a <code>|</code> bar.</p>
 
       <table class="parity-table">
         <thead><tr><th>Component</th><th>Detail</th></tr></thead>
@@ -82,7 +82,7 @@
           <tr><td><code>vimlrs-mode.el</code></td><td>Major mode &mdash; syntax table (<code>"</code>/<code>'</code> strings, <code>:</code> in scope symbols, command-position <code>"</code> comments), font-lock keyword lists, <code>"</code>-comment <code>syntax-propertize</code>, <code>vimlrs-indent-line</code>, <code>vimlrs-run-buffer</code> (<code>C-c C-c</code>), eldoc + completion, eglot + lsp-mode registration, <code>auto-mode-alist</code> + <code>interpreter-mode-alist</code>.</td></tr>
           <tr><td><code>vimlrs-stdlib.el</code></td><td>Hand-authored builtin-function signatures (the subset of Vim's <code>funcs.c</code> that vimlrs ports) for eldoc and completion. Byte-compiles cleanly; loads instantly.</td></tr>
           <tr><td><code>scripts/face-test.el</code></td><td>Fontify a sample buffer and assert the face at each probe token.</td></tr>
-          <tr><td><code>vimlrs --lsp</code></td><td>Launched with <strong>only</strong> <code>--lsp</code>; an appended <code>--stdio</code> is rejected by the binary, so neither client adds one.</td></tr>
+          <tr><td><code>viml --lsp</code></td><td>Launched with <strong>only</strong> <code>--lsp</code>; an appended <code>--stdio</code> is rejected by the binary, so neither client adds one.</td></tr>
         </tbody>
       </table>
 

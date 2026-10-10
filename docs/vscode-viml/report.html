@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="vscode-viml — engineering report. Standalone TextMate grammar (source.viml) for the VimL (Vimscript) language, filetype detection, language-server integration via vimlrs --lsp, debugging via vimlrs --dap, and how the grammar is verified with vscode-textmate.">
+  <meta name="description" content="vscode-viml — engineering report. Standalone TextMate grammar (source.viml) for the VimL (Vimscript) language, filetype detection, language-server integration via viml --lsp, debugging via viml --dap, and how the grammar is verified with vscode-textmate.">
   <title>vscode-viml — Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,7 +44,7 @@
             <a href="https://github.com/MenkeTechnologies/vscode-viml" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            VS Code / VSCodium support for VimL &middot; standalone TextMate grammar (source.viml) &middot; LSP via vimlrs --lsp &middot; DAP via vimlrs --dap &middot; verified with vscode-textmate
+            VS Code / VSCodium support for VimL &middot; standalone TextMate grammar (source.viml) &middot; LSP via viml --lsp &middot; DAP via viml --dap &middot; verified with vscode-textmate
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -58,8 +58,8 @@
     <main class="tutorial-main">
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle"><strong>vscode-viml</strong> is the VS Code / VSCodium extension for <strong>VimL (Vimscript)</strong>, backed by the <strong>vimlrs</strong> interpreter &mdash; a standalone Vimscript engine written in Rust (a port of Neovim's eval engine on fusevm). It ships a declarative language contribution (filetype, grammar, editor config), an LSP client that launches <code>vimlrs --lsp</code>, a debug adapter that launches <code>vimlrs --dap</code>, and a TextMate grammar (<code>source.viml</code>) covering the VimL surface.</p>
-      <p class="tutorial-subtitle"><strong>Design principle:</strong> mirror the proven vscode-stryke runtime wiring. The LSP transport is omitted so the client spawns bare <code>vimlrs --lsp</code> and never appends <code>--stdio</code> (the arg-rejection / &ldquo;connection got disposed&rdquo; failure mode learned from vscode-stryke). The binary is resolved to an absolute path through <code>$PATH</code> plus common install dirs (<code>~/.cargo/bin</code>, <code>/opt/homebrew/bin</code>, &hellip;), so it works even when the editor is launched from the macOS Dock and doesn&rsquo;t inherit the shell <code>$PATH</code>.</p>
+      <p class="tutorial-subtitle"><strong>vscode-viml</strong> is the VS Code / VSCodium extension for <strong>VimL (Vimscript)</strong>, backed by the <strong>vimlrs</strong> interpreter &mdash; a standalone Vimscript engine written in Rust (a port of Neovim's eval engine on fusevm). It ships a declarative language contribution (filetype, grammar, editor config), an LSP client that launches <code>viml --lsp</code>, a debug adapter that launches <code>viml --dap</code>, and a TextMate grammar (<code>source.viml</code>) covering the VimL surface.</p>
+      <p class="tutorial-subtitle"><strong>Design principle:</strong> mirror the proven vscode-stryke runtime wiring. The LSP transport is omitted so the client spawns bare <code>viml --lsp</code> and never appends <code>--stdio</code> (the arg-rejection / &ldquo;connection got disposed&rdquo; failure mode learned from vscode-stryke). The binary is resolved to an absolute path through <code>$PATH</code> plus common install dirs (<code>~/.cargo/bin</code>, <code>/opt/homebrew/bin</code>, &hellip;), so it works even when the editor is launched from the macOS Dock and doesn&rsquo;t inherit the shell <code>$PATH</code>.</p>
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">94</div><div class="stat-label">Built-in functions scoped</div></div>
@@ -79,7 +79,7 @@
         <tbody>
           <tr><td><code>package.json</code></td><td>Extension manifest &mdash; <code>contributes.languages</code> (id <code>vim</code>, <code>*.vim</code>, config <code>filenames</code>, shebang <code>firstLine</code>), <code>contributes.grammars</code> (<code>source.viml</code>), <code>contributes.configuration</code> (LSP settings), <code>contributes.commands</code> (run / debug), <code>contributes.debuggers</code> (type <code>vim</code>), and the <code>vscode-languageclient</code> dependency.</td></tr>
           <tr><td><code>language-configuration.json</code></td><td>Line comment <code>"</code>, brackets, auto-closing / surrounding pairs (both quote styles), word pattern, and block-keyword <code>indentationRules</code>.</td></tr>
-          <tr><td><code>extension.js</code></td><td>Activates on <code>onLanguage:vim</code>. Starts a <code>LanguageClient</code> running <code>vimlrs --lsp</code> over stdio, registers the run command (terminal <code>vimlrs &lt;file&gt;</code>), and registers a <code>DebugAdapterDescriptorFactory</code> launching <code>vimlrs --dap</code>. Missing binary &rarr; one non-fatal warning; highlighting still works.</td></tr>
+          <tr><td><code>extension.js</code></td><td>Activates on <code>onLanguage:vim</code>. Starts a <code>LanguageClient</code> running <code>viml --lsp</code> over stdio, registers the run command (terminal <code>viml &lt;file&gt;</code>), and registers a <code>DebugAdapterDescriptorFactory</code> launching <code>viml --dap</code>. Missing binary &rarr; one non-fatal warning; highlighting still works.</td></tr>
           <tr><td><code>lib/resolveBinary.js</code></td><td>Pure (vscode-free) resolver that turns the <code>vim.path</code> setting into an absolute, executable path &mdash; searching <code>$PATH</code> then the GUI-missed fallback dirs. Unit-tested in CI.</td></tr>
           <tr><td><code>syntaxes/vim.tmLanguage.json</code></td><td>TextMate grammar &mdash; comments, shebang, single + double strings, numbers, special <code>v:</code> vars, function definitions, built-in functions, statement keywords, ex commands, scope variables, options, environment, registers, and operators.</td></tr>
           <tr><td><code>scripts/tokenize_test.js</code></td><td>Loads the grammar under <code>vscode-textmate</code> + <code>vscode-oniguruma</code> (the engine VS Code itself uses) and asserts the scope of 12 sample tokens.</td></tr>

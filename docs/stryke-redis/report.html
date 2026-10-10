@@ -94,7 +94,7 @@
 
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
       <p class="tutorial-subtitle"><strong>stryke-redis</strong> is one of the opt-in connector packages in the stryke ecosystem. Redis / Valkey client for stryke. KV, lists, sets, hashes, sorted sets, streams, geospatial, scripting, bitmaps, HyperLogLog, pub/sub publish, pipeline, scan, server admin. Opt-in package &mdash; ships as a Rust cdylib that stryke <code>dlopen</code>s in-process on first <code>use Redis</code>.</p>
-      <p class="tutorial-subtitle"><code>redis</code> Rust crate (sync) with rustls TLS. Single highest-leverage daily-use connector after Postgres / MySQL.</p>
+      <p class="tutorial-subtitle"><code>redis</code> Rust crate (sync) with rustls TLS.</p>
 
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-val">184</div><div class="stat-label">Public Redis:: fns</div></div>
@@ -117,24 +117,24 @@
         <tbody>
           <tr><td>stryke wrappers (<code>lib/*.stk</code>)</td><td>Thin <code>Redis.stk</code> wrapper; each public fn serializes its args to JSON and parses the response</td></tr>
           <tr><td>cdylib (<code>libstryke_redis.{dylib,so}</code>)</td><td>Single Rust <code>cdylib</code> crate; every public surface fn is an <code>extern "C" fn redis__&lt;verb&gt;(*const c_char) -&gt; *mut c_char</code></td></tr>
-          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Redis</code>; one <code>redis::Connection</code> per <code>(url, db, auth)</code> tuple cached in <code>OnceCell&lt;Mutex&lt;HashMap&gt;&gt;</code>; lives until the runtime exits</td></tr>
+          <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Redis</code>; one <code>redis::Connection</code> per <code>(url, db, tls, username, password)</code> tuple cached in <code>OnceCell&lt;Mutex&lt;HashMap&gt;&gt;</code>; lives until the runtime exits</td></tr>
           <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
           <tr><td>Install path</td><td><code>~/.stryke/store/redis@&lt;version&gt;/</code> after <code>make install</code>; <code>use Redis</code> from any stryke script resolves it</td></tr>
-          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code>; the live round-trip suite needs a reachable Redis (<code>$REDIS_URL</code> or 127.0.0.1:6379)</td></tr>
           <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
         </tbody>
       </table>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
-      <p><code>redis</code> Rust crate (sync) with rustls TLS. Single highest-leverage daily-use connector after Postgres / MySQL.</p>
-      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+      <p><code>redis</code> Rust crate (sync) with rustls TLS.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays small precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
       <p>JSON in / JSON out across the FFI boundary. Each <code>Redis::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>redis__*</code> symbol on the dlopen'd cdylib; the cdylib returns a JSON <code>CString</code> the wrapper parses. <code>catch_unwind</code> on every call converts panics to JSON errors. The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>.</p>
 <pre># request shape (built by the .stk wrapper)
-{"verb": "&lt;op&gt;", "...": ...}
+{"key": "...", "...": ...}   # per-fn args dict, no verb field
 
 # response shape
 {"value": ...} | {"values": [...]} | {"hash": {...}} | {"pairs": [[m, score], ...]}   # success

@@ -150,8 +150,8 @@ make install</pre>
             <tr><td>aggregate a CSV</td><td><code>my $count = DuckDB::query_scalar "SELECT COUNT(*) FROM read_csv_auto('orders.csv') WHERE total &gt; 100"</code></td></tr>
             <tr><td>hit remote files</td><td><code>DuckDB::query "SELECT * FROM 'https://example.com/data.parquet' LIMIT 5", extensions =&gt; ["httpfs"]</code></td></tr>
             <tr><td>persistent file db</td><td><code>DuckDB::execute "CREATE TABLE users (id INT, name VARCHAR)", db =&gt; "app.duckdb"</code></td></tr>
-            <tr><td>bulk load a parquet</td><td><code>DuckDB::import "events.parquet", "events", db =&gt; "app.duckdb", replace =&gt; 1</code></td></tr>
-            <tr><td>stream large results</td><td><code>DuckDB::query_stream "SELECT * FROM events", db =&gt; "app.duckdb", callback =&gt; sub ($row) { process $row }</code></td></tr>
+            <tr><td>bulk load a parquet</td><td><code>DuckDB::import "events.parquet", "events", db =&gt; "app.duckdb"</code></td></tr>
+            <tr><td>per-row callback (buffered)</td><td><code>DuckDB::query_stream "SELECT * FROM events", db =&gt; "app.duckdb", callback =&gt; sub ($row) { process $row }</code></td></tr>
             <tr><td>describe a table's columns</td><td><code>my @cols = DuckDB::describe "sales", session =&gt; $s</code></td></tr>
             <tr><td>scalar aggregate over a column</td><td><code>my $total = DuckDB::sum_ "sales", "amount", session =&gt; $s</code></td></tr>
             <tr><td>frequency by group</td><td><code>my @freq = DuckDB::group_count "sales", "region", session =&gt; $s</code></td></tr>
@@ -229,8 +229,8 @@ p DuckDB::query "SELECT COUNT(*) FROM 's3://my-bucket/events/*.parquet'"</pre>
             <tr><td>insert_many $table, $rows_aref, %opts</td><td>$inserted_count &mdash; single multi-row INSERT, columns inferred from first row's keys</td></tr>
             <tr><td>appender $table, $rows_aref, %opts</td><td>$appended_count &mdash; native Appender, arrayref of arrayrefs in column order (fastest bulk load)</td></tr>
             <tr><td>appender_columns $table, $cols_aref, $rows_aref, %opts</td><td>$appended_count &mdash; Appender into a column subset; unnamed cols take DEFAULT/NULL</td></tr>
-            <tr><td>import $path, $table, %opts</td><td>{ table, kind, source, num_rows } &mdash; CREATE TABLE AS; opts: <code>kind</code> (parquet|csv|json|auto), <code>replace</code></td></tr>
-            <tr><td>export $table, $path, %opts</td><td>{ table, kind, path, file_size } &mdash; opts: <code>kind</code> (parquet|csv|json), <code>compression</code> (parquet only)</td></tr>
+            <tr><td>import $path, $table, %opts</td><td>{ table, rows } &mdash; CREATE OR REPLACE TABLE AS; opts: <code>kind</code> (parquet|csv|json|auto)</td></tr>
+            <tr><td>export $table, $path, %opts</td><td>{ path, kind } &mdash; opts: <code>kind</code> (parquet|csv|json)</td></tr>
             <tr><td>copy_from $table, $file, %opts</td><td>{ table, path, copied } &mdash; COPY … FROM into an existing table; opts: <code>kind</code> (csv|parquet|json|auto)</td></tr>
             <tr><td>create_index $name, $table, \@columns, %opts</td><td>{ index, table, columns } &mdash; opts: <code>unique</code>, <code>if_not_exists</code></td></tr>
             <tr><td>drop $name, %opts</td><td>{ dropped, kind } &mdash; opts: <code>kind</code> (table|view|index, default table), <code>if_exists</code> (default 1), <code>cascade</code></td></tr>
@@ -291,15 +291,15 @@ p DuckDB::query "SELECT COUNT(*) FROM 's3://my-bucket/events/*.parquet'"</pre>
           <tbody>
             <tr><td>version</td><td>$version_string &mdash; the stryke-duckdb package version</td></tr>
             <tr><td>server_version %opts</td><td>$version_string &mdash; live SELECT version() (e.g. "v1.5.3")</td></tr>
-            <tr><td>ping %opts</td><td>1 | ""</td></tr>
-            <tr><td>inspect %opts</td><td>{ version, file, file_size, databases: [...] }</td></tr>
-            <tr><td>tables %opts</td><td>@{ {name, schema}, … }</td></tr>
+            <tr><td>ping %opts</td><td>1 | 0</td></tr>
+            <tr><td>inspect %opts</td><td>{ path, duckdb_version, table_count }</td></tr>
+            <tr><td>tables %opts</td><td>@{ {name}, … }</td></tr>
             <tr><td>databases %opts</td><td>@names &mdash; attached + system/temp catalogs</td></tr>
             <tr><td>views %opts</td><td>@names &mdash; view names in current schema</td></tr>
             <tr><td>functions %opts</td><td>@names &mdash; distinct function names</td></tr>
             <tr><td>settings %opts</td><td>@{ {name, value, description} }</td></tr>
             <tr><td>extensions %opts</td><td>@{ {extension_name, loaded, installed, description} }</td></tr>
-            <tr><td>schema $table, %opts</td><td>{ table, num_rows, columns: [...] }</td></tr>
+            <tr><td>schema $table, %opts</td><td>{ table, columns: [{name, type, nullable}, ...] }</td></tr>
             <tr><td>count $table, $where?, %opts</td><td>$row_count &mdash; SELECT count(*) [WHERE $where]</td></tr>
             <tr><td>exists $table, $where?, %opts</td><td>1 | 0 &mdash; SELECT EXISTS(…), short-circuits</td></tr>
             <tr><td>table_exists $name, %opts</td><td>1 | 0 &mdash; $name must be a plain identifier</td></tr>

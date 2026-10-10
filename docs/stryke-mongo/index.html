@@ -188,7 +188,7 @@ Mongo::drop_index "app/users", $idx</pre>
         <p>The default URI comes from <code>$ENV{MONGODB_URI}</code> (falling back to <code>mongodb://127.0.0.1:27017</code>). Every public function accepts a trailing <code>uri =&gt;</code> option that overrides the connection for that single call &mdash; the cdylib keeps a <code>mongodb::Client</code> cache keyed by URI, so multiple URIs each get their own pooled client.</p>
 <pre>val %prod = (uri =&gt; "mongodb+srv://user:pass@cluster.example.com")
 Mongo::find "logs/errors", filter =&gt; { level =&gt; "error" }, %prod</pre>
-        <p>The <code>find_stream</code> default connect timeout is short (v0.2.1+), so an unreachable server trips quickly &mdash; <code>eval { Mongo::ping() }</code> is the idiomatic liveness guard before live work (used by every example).</p>
+        <p>Connections use a 2000 ms server-selection timeout and a 2000 ms connect timeout unless the URI sets <code>serverSelectionTimeoutMS</code> / <code>connectTimeoutMS</code>, so an unreachable server trips quickly &mdash; <code>eval { Mongo::ping() }</code> is the idiomatic liveness guard before live work (used by every example).</p>
       </section>
 
       <section class="tutorial-section">
@@ -328,15 +328,15 @@ Mongo::find "logs/errors", filter =&gt; { level =&gt; "error" }, %prod</pre>
 
       <section class="tutorial-section">
         <h2>BSON type encoding</h2>
-        <p>The cdylib converts BSON &harr; JSON via MongoDB's <strong>relaxed extended JSON</strong>, so non-JSON types round-trip cleanly. You can pass extended-JSON wrappers back through filters / updates: a filter like <code>{"_id": {"$oid": "65f9…"}}</code> is re-parsed to a real <code>ObjectId</code> before hitting the wire.</p>
+        <p>The cdylib converts BSON &harr; JSON with the <code>bson</code> crate serializer, which emits MongoDB extended-JSON wrappers for non-JSON types so they round-trip cleanly. You can pass extended-JSON wrappers back through filters / updates: a filter like <code>{"_id": {"$oid": "65f9…"}}</code> is re-parsed to a real <code>ObjectId</code> before hitting the wire.</p>
         <table class="example-tbl">
           <tbody>
             <tr><td>String, Int32/Int64, Double, Boolean, Null</td><td><code>string / number / number / bool / null</code></td></tr>
             <tr><td>Array, Document</td><td><code>array / object</code></td></tr>
             <tr><td>Decimal128</td><td><code>{"$numberDecimal": "12.34"}</code></td></tr>
             <tr><td>ObjectId</td><td><code>{"$oid": "65f9b1d2c3f6e9..."}</code></td></tr>
-            <tr><td>DateTime</td><td><code>{"$date": "2026-05-17T02:30:00Z"}</code></td></tr>
-            <tr><td>Binary</td><td><code>{"$binary": {"base64":"…","subType":"00"}}</code></td></tr>
+            <tr><td>DateTime</td><td><code>{"$date": {"$numberLong": "1778985000000"}}</code> (epoch milliseconds)</td></tr>
+            <tr><td>Binary</td><td><code>{"$binary": {"base64":"…","subType":"80"}}</code> (generic subtype <code>00</code> serializes as an array of byte values)</td></tr>
             <tr><td>UUID</td><td>wrapped via <code>$binary</code> subtype 04</td></tr>
             <tr><td>Regex</td><td><code>{"$regularExpression": {"pattern":"^foo","options":"i"}}</code></td></tr>
             <tr><td>Timestamp</td><td><code>{"$timestamp": {"t":..., "i":...}}</code></td></tr>

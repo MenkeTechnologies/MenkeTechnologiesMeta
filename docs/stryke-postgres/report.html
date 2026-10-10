@@ -114,7 +114,7 @@
           <tr><td>Process model</td><td>Library is <code>dlopen</code>'d once per stryke session on first <code>use Postgres</code>; a <code>postgres::Client</code> cache keyed by connection URL is held in <code>OnceCell</code>; lives until the runtime exits</td></tr>
           <tr><td>Build</td><td>Cargo with <code>[lib] crate-type = ["cdylib"]</code>; <code>publish = false</code>; the package itself ships via <code>s pkg install -g .</code></td></tr>
           <tr><td>Install path</td><td><code>~/.stryke/store/postgres@&lt;version&gt;/</code> after <code>make install</code>; <code>use Postgres</code> from any stryke script resolves it</td></tr>
-          <tr><td>Tests</td><td>zunit-style under <code>t/</code> with live-service variants when applicable</td></tr>
+          <tr><td>Tests</td><td>zunit-style under <code>t/</code>; the end-to-end suite runs against a live Postgres and skips when no connection URL is set</td></tr>
           <tr><td>CI</td><td>GitHub Actions <code>.github/workflows/ci.yml</code> &mdash; cargo fmt + clippy + test, plus stryke pkg install verification</td></tr>
         </tbody>
       </table>
@@ -122,16 +122,16 @@
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">$</span>WHY OPT-IN (NOT BUILTIN)</h2>
       <p>Sync <code>postgres</code> crate. Designed for shell pipelines + scripts, not as an ORM layer.</p>
-      <p>The trade-off is intentional. The core <code>stryke</code> binary stays under ~40 MB precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
+      <p>The trade-off is intentional. The core <code>stryke</code> binary stays small precisely because each connector ships separately. Daily-driver work (one-liners, awk replacement, data scripting) doesn't need MongoDB drivers, AWS SDKs, or Spark Connect bindings linked in.</p>
 
       <hr class="section-rule">
       <h2 class="tutorial-title"><span class="step-hash">&amp;</span>FFI ENVELOPE</h2>
       <p>JSON in / JSON out across the FFI boundary. Each <code>Postgres::*</code> wrapper serializes its args to a JSON dict and calls the matching <code>pg__*</code> symbol resolved out of <code>libstryke_postgres.{dylib,so}</code>; the cdylib returns a JSON <code>CString</code> the wrapper parses. JSON binds map to wire values via the cdylib's <code>json_to_param</code> (null → NULL, bool → bool, int → <code>i64</code>, float → <code>f64</code>, string → text, array/object → jsonb). The returned <code>CString</code> is freed via the cdylib-exported <code>stryke_free_cstring</code>, wired automatically by <code>rust_ffi::load_cdylib</code>.</p>
 <pre># request shape (built by the .stk wrapper)
-{"verb": "&lt;op&gt;", "...": ...}
+{"sql": "...", "...": ...}   # per-fn args dict, no verb field
 
 # response shape
-{"result": ...}            # success — per-fn shape
+&lt;per-fn JSON value&gt;      # success — returned as-is, no wrapper envelope
 {"error": "&lt;msg&gt;"}        # failure — wrapper die()s with the message</pre>
 
       <hr class="section-rule">

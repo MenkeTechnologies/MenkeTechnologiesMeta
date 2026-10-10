@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="zpwr-crate — the shared sample-library crate browser for the MenkeTechnologies audio stack. Filesystem + SQLite/FTS5 scanner and a faceted query layer, linked natively (rlib) by Audio-Haxor and over a C ABI (staticlib/cdylib) by zpwr-daw.">
+  <meta name="description" content="zpwr-crate — the shared sample-library crate browser for the MenkeTechnologies audio stack. Filesystem + SQLite/FTS5 scanner and a faceted query layer, linked natively (rlib) by the Tauri apps (Audio-Haxor, traderview, ztranslator) and over a C ABI (staticlib/cdylib) by zpwr-daw.">
   <title>zpwr-crate — Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,7 +84,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
           </nav>
-          <p class="docs-build-line">private internal library &middot; rlib + staticlib + cdylib &middot; 19 <code>crate_*</code> C ABI exports &middot; native rlib for Audio-Haxor &middot; C ABI for zpwr-daw &middot; one SQLite/FTS5 schema</p>
+          <p class="docs-build-line">private internal library &middot; rlib + staticlib + cdylib &middot; 19 <code>crate_*</code> C ABI exports &middot; native rlib for the Tauri apps &middot; C ABI for zpwr-daw &middot; one SQLite/FTS5 schema</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -108,10 +108,10 @@
       <p class="tutorial-subtitle"><strong>One source of truth for the sample library.</strong> The shared <strong>crate</strong> browser behind the MenkeTechnologies audio stack &mdash; filesystem + SQLite/FTS5 sample scanning and the faceted "crate" query layer. The scanner, schema and query code are lifted <strong>verbatim</strong> from the Audio-Haxor backend (<code>src-tauri/src/</code>) with the Tauri glue stripped, so both front ends run byte-for-byte identical indexing and browsing against the same database.</p>
 
       <section class="tutorial-section">
-        <h2>Two consumers, one library</h2>
+        <h2>Consumers, one library</h2>
         <table class="example-tbl">
           <tbody>
-            <tr><td>Audio-Haxor (Tauri / Rust)</td><td>links it natively as an <code>rlib</code> and calls the API directly</td></tr>
+            <tr><td>Audio-Haxor &middot; traderview &middot; ztranslator (Tauri / Rust)</td><td>links it natively as an <code>rlib</code> and calls the API directly</td></tr>
             <tr><td>zpwr-daw (JUCE / C++)</td><td>links <code>libzpwr_crate.a</code> (or the cdylib) over the C ABI in <code>include/zpwr_crate.h</code></td></tr>
           </tbody>
         </table>
@@ -201,7 +201,7 @@ crate_free(h);</pre>
             <tr><td>FTS5 trigram</td><td><code>audio_samples_fts</code> is a contentless FTS5 virtual table with the trigram tokenizer (substring search); its rowid links to <code>audio_samples.id</code></td></tr>
             <tr><td>REGEXP</td><td>a SQLite user function backed by a cached <code>regex::Regex</code> map, matching <code>name</code>/<code>path</code> like JS <code>new RegExp(pat, 'i')</code></td></tr>
             <tr><td>Incremental</td><td><code>IncrementalDirState</code> records a per-directory mtime snapshot under the <code>"unified"</code> domain so rescans skip unchanged trees</td></tr>
-            <tr><td>Migrations</td><td>15 versioned migrations <code>v1 / v2 / v6 / v8 / v9 / v10 / v12 / v14 / v15 / v16 / v17 / v20 / v24 / v27 / v28</code>; the subset <code>v1 / v9 / v10 / v12 / v14 / v24 / v27</code> is aligned with Audio-Haxor; the <code>sample_analysis</code> pipeline is separate &mdash; this crate owns the schema + read side and creates the analysis tables so browser joins resolve</td></tr>
+            <tr><td>Migrations</td><td>Versioned migrations in <code>src/db.rs</code>, version-aligned with Audio-Haxor; the <code>sample_analysis</code> pipeline is separate &mdash; this crate owns the schema + read side and creates the analysis tables so browser joins resolve</td></tr>
           </tbody>
         </table>
       </section>
@@ -212,7 +212,7 @@ crate_free(h);</pre>
 cargo test           # headless; scans temp dirs, exercises the query layer
 cargo fmt --all --check
 cargo clippy --all-targets -- -D warnings</pre>
-        <p>Builds and tests on Linux x86_64 and macOS aarch64. These gates are run locally &mdash; this repo ships no GitHub Actions workflow. <code>rusqlite</code> is bundled, so no system SQLite is required.</p>
+        <p><code>.github/workflows/ci.yml</code> runs fmt, clippy (<code>-D warnings</code>), build, doc and test on <code>ubuntu-latest</code> and <code>macos-latest</code>. <code>rusqlite</code> is bundled, so no system SQLite is required.</p>
       </section>
 
       <section class="tutorial-section">

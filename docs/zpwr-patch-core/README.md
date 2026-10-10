@@ -16,7 +16,7 @@
 
 > *"Knows nothing about audio or MIDI."*
 
-The signal-agnostic **modular patch graph** behind the MenkeTechnologies plugin stack — the cable routing system shared by **zpwr-fx**, **zpwr-synth**, and **zpwr-midi-fx**. Created by MenkeTechnologies.
+The signal-agnostic **modular patch graph** behind the MenkeTechnologies plugin stack — the cable routing system shared by **zpwr-fx**, **zpwr-synth**, **zpwr-midi-fx** and **zpwr-daw**. Created by MenkeTechnologies.
 
 ### [`zpwr-fx`](https://github.com/MenkeTechnologies/zpwr-fx) · [`zpwr-synth`](https://github.com/MenkeTechnologies/zpwr-synth) · [`zpwr-midi-fx`](https://github.com/MenkeTechnologies/zpwr-midi-fx)
 
@@ -141,14 +141,14 @@ rendered docs. Use a plain `-`. A linter enforces this (see Build / Test).
 
 ## [0x03] SHARED WEBEDITOR & EXPANDABLE SOFT KNOBS
 
-`zpc::WebEditor<Engine>` is the WebView backend every host shares (catalog/patch JSON, BinaryData serving, preset I/O, 155 native functions). Soft knobs are an **expandable pool**: hosts create a fixed ceiling of automatable params up front (`EditorConfig::maxSoftKeys`) and expose the runtime *active* count through `getSoftKeyCount` / `setSoftKeyCount` callbacks; the UI's `+`/`−` controls call the `setSoftKeyCount` native function, which returns a fresh catalog so the source list and knob row rebuild. The first soft knob's source id is `EditorConfig::srcSK0`, and host MIDI/perf sources sit after the whole pool so growing the count never shifts their ids.
+`zpc::WebEditor<Engine>` is the WebView backend every host shares (catalog/patch JSON, BinaryData serving, preset I/O, and the native-function surface). Soft knobs are an **expandable pool**: hosts create a fixed ceiling of automatable params up front (`EditorConfig::maxSoftKeys`) and expose the runtime *active* count through `getSoftKeyCount` / `setSoftKeyCount` callbacks; the UI's `+`/`−` controls call the `setSoftKeyCount` native function, which returns a fresh catalog so the source list and knob row rebuild. The first soft knob's source id is `EditorConfig::srcSK0`, and host MIDI/perf sources sit after the whole pool so growing the count never shifts their ids.
 
 **Native functions the web UI deliberately does not call.** A registered name is an ABI an
 out-of-tree host may already depend on, so nothing here is removed once shipped — but a name with no
 caller is indistinguishable from a wiring bug unless the reason is written down. Every such name
 carries an inline `no frontend caller (<name>):` note at its `withNativeFunction` registration in
 `WebEditor.h`, saying whether it is superseded and by what, and naming the consumer where one
-exists. Today the set is 9 names:
+exists. Today the set is:
 
 | Name | Why no caller | Consumer |
 | --- | --- | --- |

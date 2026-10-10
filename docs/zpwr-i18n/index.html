@@ -111,8 +111,8 @@
         <h2>One file, many hosts</h2>
         <table class="example-tbl">
           <tbody>
-            <tr><td>Tauri (Rust / WebView)</td><td>Audio-Haxor, traderview, ztranslator &mdash; a copy script syncs <code>i18n.js</code> into the served <code>frontend/</code>; the app loads it as a classic script and calls <code>bootI18n()</code> after the DOM exists</td></tr>
-            <tr><td>JUCE (C++ / WebView)</td><td>synth, fx, midi-fx, daw &mdash; embed <code>i18n.js</code> + the locale JSONs via <code>juce_add_binary_data</code>; the resource provider serves them by basename</td></tr>
+            <tr><td>Tauri (Rust / WebView)</td><td>Audio-Haxor, traderview, ztranslator and other Tauri apps &mdash; a copy script syncs <code>i18n.js</code> into the served <code>frontend/</code>; the app loads it as a classic script and calls <code>bootI18n()</code> after the DOM exists</td></tr>
+            <tr><td>JUCE (C++ / WebView)</td><td>zpwr-daw (<code>libs/zpwr-i18n</code>) &mdash; embed <code>i18n.js</code> + the locale JSONs via <code>juce_add_binary_data</code>; the resource provider serves them by basename</td></tr>
           </tbody>
         </table>
         <p>No build step, no framework, no module bundler &mdash; it attaches its API to <code>window</code> and works wherever a browser <code>fetch</code> and <code>document</code> exist. A missing locale never breaks boot: <code>fetchCatalog</code> returns <code>{}</code> on any failure and <code>appFmt</code> falls back to the key, so an untranslated UI still reads.</p>
@@ -142,7 +142,7 @@
 // optional: override the catalog directory (default 'i18n/')
 window.__i18nBase = 'i18n/';
 // optional: merge a bundled shared-component fragment on top
-window.__i18nExtraBases = ['zpwr-file-browser/i18n/'];
+window.__i18nExtraBases = ['path/to/fragment/i18n/'];
 
 document.addEventListener('DOMContentLoaded', () =&gt; {
   bootI18n();                   // detect + load + apply
@@ -179,7 +179,7 @@ t('menu.unknownKey');           // → "menu.unknownKey" (no catalog entry)</pre
 
       <section class="tutorial-section">
         <h2>Catalogs</h2>
-        <p>Flat <code>{ "namespace.key": "string with {vars}" }</code>, one JSON per locale at <code>&lt;base&gt;&lt;locale&gt;.json</code> (default base <code>i18n/</code>). Hyphenated codes map to underscores in the filename &mdash; <code>es-419</code> &rarr; <code>es_419.json</code>, <code>pt-BR</code> &rarr; <code>pt_br.json</code> (see <code>localeFile</code>, which lowercases). Shared components ship their own per-locale fragment (e.g. <code>zpwr-file-browser/i18n/&lt;locale&gt;.json</code>) which the host merges via <code>extraBases</code>. Locale persistence uses the shared <code>prefs</code> store when present, else <code>localStorage</code>.</p>
+        <p>Flat <code>{ "namespace.key": "string with {vars}" }</code>, one JSON per locale at <code>&lt;base&gt;&lt;locale&gt;.json</code> (default base <code>i18n/</code>). Hyphenated codes map to underscores in the filename &mdash; <code>es-419</code> &rarr; <code>es_419.json</code>, <code>pt-BR</code> &rarr; <code>pt_br.json</code> (see <code>localeFile</code>, which lowercases). A shared component may ship its own per-locale fragment, which the host merges via <code>extraBases</code>; no shared component currently does. Locale persistence uses the shared <code>prefs</code> store when present, else <code>localStorage</code>.</p>
       </section>
 
       <section class="tutorial-section">
@@ -196,8 +196,7 @@ ko  nb  nl  pl  pt  pt-BR  ro  ru  sv  tr  uk  vi  zh</pre>
           <li><a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">MenkeTechnologiesMeta</a> &mdash; umbrella repo orchestrating every shared component and host app</li>
           <li>Audio-Haxor &mdash; Tauri v2 desktop app; the runtime's original home</li>
           <li>traderview / ztranslator &mdash; Tauri apps consuming the runtime over JSON catalogs</li>
-          <li>zpwr-synth / zpwr-fx / zpwr-midi-fx / zpwr-daw &mdash; JUCE WebView apps that embed the runtime + locale JSONs</li>
-          <li>zpwr-file-browser / zpwr-embed-terminal &mdash; shared components that ship their own per-locale fragments merged via <code>extraBases</code></li>
+          <li>zpwr-daw &mdash; JUCE WebView app that embeds the runtime + locale JSONs</li>
         </ul>
       </section>
 
