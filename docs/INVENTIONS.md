@@ -104,7 +104,7 @@ frontends declare `features = [… "jit-disk-cache" …]` on `fusevm` (arb, awkr
 groovyrs, javars, kotlinrs, node-js, phplang, pythonrs, rlang, rubylang, scalars, strykelang,
 vimlrs, zshrs `Cargo.toml`; tclrs `Cargo.toml:105`). Editor path:
 `zmax/zmax-term/src/commands/scripting/mod.rs` `load_init_scripts` → `vimlrs::fusevm_bridge::eval_file`
-(`:1092`) → `vimlrs/src/fusevm_bridge.rs:8316` `eval_file` (rkyv bytecode cache, `script_cache::try_load` `:8329`) + `enable_tracing_jit` `:7310`; elisp `load`/`require` → `elisprs/src/host.rs:6336` `intrinsic_load` →
+(`:1209`; the `:source` path `source_viml_file` calls it at `:821`) → `vimlrs/src/fusevm_bridge.rs:8316` `eval_file` (rkyv bytecode cache, `script_cache::try_load` `:8329`) + `enable_tracing_jit` `:7310`; elisp `load`/`require` → `elisprs/src/host.rs:6336` `intrinsic_load` →
 `run_top_forms` (`elisprs/src/lib.rs:113`) → `run_chunk` (`elisprs/src/host.rs:7013`,
 `enable_tracing_jit` `:6993`).
 *Caveat:* persistent native/AOT caches exist (JVM AppCDS/JWarmup, .NET ReadyToRun, V8 code
@@ -146,7 +146,7 @@ real JIT acceleration. *Basis:* `vimlrs/src/fusevm_bridge.rs:7310` `enable_traci
 `src/fusevm_bridge.rs` asserting `trace_is_compiled`, plus `src/tiers.rs:280`) assert loop bodies
 lower to `Op::GetSlot/SetSlot/NumLt/Add` with no `CallBuiltin`; `for i in range(N)` lowers to a
 native counter loop with no list materialized. *Caveat:* only numeric/float/bitwise loops trace;
-builtin surface is the 856-row `BUILTIN_ARGC` table (`src/ported/eval/funcs_argc.rs`, generated
+builtin surface is the 492-row `BUILTIN_ARGC` table (`src/ported/eval/funcs_argc.rs:16-507`, generated
 from Neovim's `eval.lua`), with the rest of `funcs.c` marked pending (`README.md:61,82`);
 `:command`/`:autocmd` now ship (`README.md:117`, CI self-tests `examples/user_commands.vim`,
 `examples/autocommands.vim`).
@@ -1725,8 +1725,8 @@ angle.
 
 ## VI. Language connectors & data ecosystem
 
-**106. First-party connector ecosystem for a Perl5-like language (33 packages)** — `med`
-strykelang ships a 33-package first-party connector ecosystem spanning cloud (AWS/GCP/Azure),
+**106. First-party connector ecosystem for a Perl5-like language (32 packages in 33 repos)** — `med`
+strykelang ships a 32-package first-party connector ecosystem spanning cloud (AWS/GCP/Azure),
 orchestration (Docker, k8s), messaging (Kafka, ZeroMQ), 9+ databases (Postgres/MySQL/MSSQL/
 Mongo/Redis/Scylla/Neo4j/ClickHouse/DuckDB), columnar (Arrow/Parquet/Polars/Spark), search
 (Elasticsearch/OpenSearch), gRPC, browser/GUI automation, web scraping, email, a headless
@@ -1736,7 +1736,7 @@ offered for a Perl5-lineage language. *Basis:* 33 `stryke-*` submodules in the m
 (`stryke-app` does not). *Caveat:* "first for a Perl5-like language" is a framing claim; tiers
 vary in maturity; breadth, not any single deep integration, is the novelty.
 `stryke-demo/README.md:19,65` covers only the 14 packages it ships live demos for (a single
-`s install` pulls those 14, per its `stryke.toml` `[deps]`) — it is not evidence for the full 33.
+`s install` pulls those 14, per its `stryke.toml` `[deps]`) — it is not evidence for the full 32.
 
 **107. No-FFI "policy layer" connectors built entirely from language core builtins** — `med`
 Several connectors are pure-`.stk` packages (zero FFI table, zero cdylib, zero helper binary)
