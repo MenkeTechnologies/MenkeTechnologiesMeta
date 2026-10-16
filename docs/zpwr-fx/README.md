@@ -142,6 +142,7 @@ A JUCE 8 `WebBrowserComponent` rendering an embedded cyberpunk UI (the strykelan
 - **Synth** — a fixed-layout panel showing every module's knobs in a grid, no cables (Serum/Spire-style).
 - **Perform** — macros + XY pads only, no patching (see §0x07).
 - **Clip** — draw a MIDI pattern and play it (with key/scale, key-trigger).
+- **Viz** — oscilloscope, spectrum, FFT waterfall, 3D spectral, phase scope, octave bands and meters.
 - **Mod Matrix** — every modulation connection in one list.
 - **Mixer** — per-layer channel strips (gain / pan / mute / solo) with sends to the aux FX buses, the aux returns, and the master strip, with peak + LUFS metering.
 - **Browse** — search, save, tag and load patches; filter by bank, type, style, character.
@@ -196,7 +197,7 @@ Both toggles default **on** (`PluginProcessor.cpp`):
 
 ## [0x08] PRESETS
 
-- **Factory** (in code, `ZfxProcessor::factoryNames()`): 42 presets, exposed as host programs for MIDI Program Change — e.g. DL Stereo Slap, FL Filter Sweep, FL Comb Resonator, FL Auto Wah, FX Feedback Howl, DS Wavefolder, RV Iceverb Cathedral.
+- **Factory** (in code, `ZfxProcessor::factoryNames()`): presets exposed as host programs for MIDI Program Change — e.g. DL Stereo Slap, FL Filter Sweep, FL Comb Resonator, FL Auto Wah, FX Feedback Howl, DS Wavefolder, RV Iceverb Cathedral.
 - **User** patches save as gzip-compressed JSON (`patch` + soft-key values) under `<userAppData>/zfx/Presets/*.zfp` (e.g. `~/Library/zfx/Presets`; data from the pre-rename `zpwr-fx` folder is copied over once on first launch). The BROWSE tab exports/imports a **bank** — a `.zfb` collection of presets (gzip JSON) — via ⤓/⤒ BANK.
 - The full plugin/host state (patch + all params) round-trips through JUCE's `get/setStateInformation`.
 
@@ -312,6 +313,8 @@ The routing engine itself lives in **[zpwr-patch-core](https://github.com/MenkeT
 | `src/PluginProcessor.*`  | `AudioProcessor`, soft-key/master params, MIDI/MPE, audio loop feeding the core |
 | `src/PluginEditor.*`     | WebView editor: catalog/patch/preset native functions over `zpc::PatchEngine` |
 | `libs/zpwr-patch-core/webui/` | Cyberpunk patcher UI (shared; embedded via `juce_add_binary_data`) |
+| `libs/zpwr-clip-engine/` | Clip-tab module and grid (submodule): `webui/clip`, `webui/grid`, `zpc/ClipSeq.h` |
+| `tests/`, `tools/gen_reference.cpp` | `ScriptEngineTest`, `FxPatchGraphTest`; reference-doc generator |
 
 ---
 

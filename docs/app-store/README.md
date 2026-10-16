@@ -168,6 +168,11 @@ HTML sanity check on every push and pull request.
 | `hud-static.css` | Vendored design system — CSS variables, header, buttons, CRT  |
 | `tutorial.css`  | Vendored section / card / animation styles                    |
 | `hud-theme.js`  | Theme / CRT / neon toggles + color-scheme switcher            |
+| `fzf.js`        | Vendored fzf-style fuzzy matcher (extended-query syntax) used by storefront and product search |
+| `zgui-core/`   | Git submodule: shared GUI component library; `zgui-core/demo/index.html` is the live demo linked from the storefront |
+| `assets/`      | Product screenshots (WebP only)                               |
+| `brand/`       | SVG brand artwork: corporate mark and favicon                 |
+| `test/store.test.js` | `node:test` suite run by `node --test`                  |
 
 ## Editing the catalog
 

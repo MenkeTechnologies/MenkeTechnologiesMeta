@@ -196,11 +196,11 @@ sudo nmaprs -oG scan.gnmap target &amp;&amp; grep '/open/' scan.gnmap</pre>
         <div class="cat-grid">
           <div class="cat-card">
             <h4>-sT &middot; TCP connect</h4>
-            <p>Default when unprivileged. Async, parallel, timeout-bound. Goes through SOCKS4 / HTTP CONNECT when <code>--proxies</code> is set.</p>
+            <p>Default scan type. Async, parallel, timeout-bound. Goes through SOCKS4 / HTTP CONNECT when <code>--proxies</code> is set.</p>
           </div>
           <div class="cat-card">
             <h4>-sS &middot; TCP SYN (raw)</h4>
-            <p>Default when root. Raw IPv4 + IPv6 via <code>pnet</code>. Pipelined recv + main-thread sends; sharded up to <strong>16</strong> concurrent pipelines per family. Falls back to connect on raw failure.</p>
+            <p>Selected with <code>-sS</code>; requires root, otherwise falls back to connect. Raw IPv4 + IPv6 via <code>pnet</code>. Pipelined recv + main-thread sends; sharded up to <strong>16</strong> concurrent pipelines per family. Falls back to connect on raw failure.</p>
           </div>
           <div class="cat-card">
             <h4>-sN / -sF / -sX / -sM</h4>
@@ -349,8 +349,8 @@ nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP fram
         <table class="parity-table">
           <thead><tr><th>Flag</th><th>Probe &amp; default</th></tr></thead>
           <tbody>
-            <tr><td><code>-PS</code></td><td>Raw TCP SYN; RST / SYN-ACK &rarr; up. Sharded pipeline + connect fallback.</td></tr>
-            <tr><td><code>-PA</code></td><td>Raw TCP ACK; RST / SYN-ACK &rarr; up. Same pipeline + connect fallback.</td></tr>
+            <tr><td><code>-PS</code></td><td>Raw TCP SYN; default port <strong>80</strong>; RST / SYN-ACK &rarr; up. Sharded pipeline + connect fallback.</td></tr>
+            <tr><td><code>-PA</code></td><td>Raw TCP ACK; default port <strong>80</strong>; RST / SYN-ACK &rarr; up. Same pipeline + connect fallback.</td></tr>
             <tr><td><code>-PU</code></td><td>UDP / ICMP-style socket errors. Default port <strong>40125</strong>.</td></tr>
             <tr><td><code>-PY</code></td><td>SCTP INIT (default port <strong>80</strong>); INIT-ACK / ABORT &rarr; up. Privileged.</td></tr>
             <tr><td><code>-PO</code></td><td>IP-protocol ping; default protocols <strong>1,2,4</strong>; open or closed &rarr; up. Privileged.</td></tr>
@@ -364,7 +364,7 @@ nmaprs -sS --spoof-mac 00:11:22:33:44:55 target   # spoof source MAC on ARP fram
       <section class="tutorial-section">
         <h2>Privilege model &amp; troubleshooting</h2>
         <ul>
-          <li><strong>Auto privilege detect.</strong> nmaprs checks <code>geteuid()</code>. Unprivileged, the default downgrades SYN &rarr; TCP connect (<code>-sT</code>); <code>--privileged</code> forces raw even when not root, <code>--unprivileged</code> forces connect.</li>
+          <li><strong>Auto privilege detect.</strong> nmaprs checks <code>geteuid()</code>. Unprivileged, <code>-sS</code> downgrades to TCP connect (<code>-sT</code>, the default scan type); <code>--privileged</code> forces raw even when not root, <code>--unprivileged</code> forces connect.</li>
           <li><strong>Raw-only modes need root.</strong> <code>-sO</code>, <code>-sI</code>, and SCTP (<code>-sY</code> / <code>-sZ</code>) are rejected when unprivileged &mdash; run them under <code>sudo</code>.</li>
           <li><strong>Raw send failures fall back per family.</strong> SYN / NULL / FIN / Xmas / Maimon retry as TCP connect on outright raw-socket failure (PERM, EAFNOSUPPORT). <code>-sA</code> / <code>-sW</code> do <em>not</em> fall back &mdash; connect can't produce ACK/Window states.</li>
           <li><strong>Windows.</strong> Only the non-Unix fallbacks exist &mdash; TCP connect + UDP via system sockets; raw modes are unavailable. CI builds and tests Linux + macOS only, and no Windows release binary is published.</li>

@@ -197,11 +197,11 @@
 
     <main class="tutorial-main">
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>TRADERVIEW — FULL DESKTOP TRADING SUITE</h2>
-      <p class="tutorial-subtitle"><strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) + StockInvest in one self-hosted binary — $2,604/yr saved.</strong> Tauri v2 desktop that downloads and runs an embedded PostgreSQL on first launch with a local auto-user, plus an axum web binary with argon2 + JWT for multi-user deployment. Both build on the same workspace library crates and the vanilla JS + uPlot frontend. 1458 view modules across a 1448-tile categorized launcher (Cmd-K). Live streams: Nasdaq halts (3s RSS), SEC EDGAR + 4 PR wires (catalyst radar), Finnhub WebSocket (6-panel intraday scanner), Webull broker (read-only positions). Executions are the atom; trades are FIFO-derived; the journal is markdown; expenses get OCR receipts and Schedule-C export.</p>
+      <p class="tutorial-subtitle"><strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) + StockInvest in one self-hosted binary — $2,604/yr saved.</strong> Tauri v2 desktop that downloads and runs an embedded PostgreSQL on first launch with a local auto-user, plus an axum web binary with argon2 + JWT for multi-user deployment. Both build on the same workspace library crates and the vanilla JS + uPlot frontend. 1458 view modules across a 1455-tile categorized launcher (Cmd-K). Live streams: Nasdaq halts (3s RSS), SEC EDGAR + 4 PR wires (catalyst radar), Finnhub WebSocket (6-panel intraday scanner), Webull broker (read-only positions). Executions are the atom; trades are FIFO-derived; the journal is markdown; expenses get OCR receipts and Schedule-C export.</p>
 
       <section class="tutorial-section">
         <h2>End-user walkthrough</h2>
-        <p>If you're trying TraderView for the first time, jump into the <strong><a href="tutorial/index.html">18-step tutorial</a></strong> — first launch through every major view, the 1448-tile Cmd-K launcher, broker imports, FIFO trade roll-up, journal + AI post-mortem, the 17-cut report engine, live halt / catalyst / scanner streams, stryke-JIT backtests, custom indicators, strategy alerts, Schedule D / C tax exports, and the community surface. Each step is self-contained and references the route handlers in <code>crates/traderview-web/src/routes/</code> and the view modules in <code>frontend/js/</code> by path.</p>
+        <p>If you're trying TraderView for the first time, jump into the <strong><a href="tutorial/index.html">18-step tutorial</a></strong> — first launch through every major view, the 1455-tile Cmd-K launcher, broker imports, FIFO trade roll-up, journal + AI post-mortem, the 17-cut report engine, live halt / catalyst / scanner streams, stryke-JIT backtests, custom indicators, strategy alerts, Schedule D / C tax exports, and the community surface. Each step is self-contained and references the route handlers in <code>crates/traderview-web/src/routes/</code> and the view modules in <code>frontend/js/</code> by path.</p>
         <p><a class="btn btn-secondary" href="tutorial/index.html">Open tutorial →</a></p>
       </section>
 
@@ -247,7 +247,7 @@ cargo run -p traderview-web --bin server
                   │  traderview-{core, db, import}   │
                   │  shared library crates           │
                   └──────────────────────────────────┘</div>
-        <p>The desktop and web binaries are thin shells. All domain logic, all SQL, all broker parsing lives in the three library crates. The decision <em>"embedded vs external Postgres"</em> and <em>"local auto-user vs multi-user with auth"</em> is the only thing that distinguishes them.</p>
+        <p>The desktop and web binaries are thin shells. All domain logic, all SQL, all broker parsing lives in the workspace library crates. The decision <em>"embedded vs external Postgres"</em> and <em>"local auto-user vs multi-user with auth"</em> is the only thing that distinguishes them.</p>
 
         <div class="tv-card-grid">
           <div class="tv-card">
@@ -260,7 +260,7 @@ cargo run -p traderview-web --bin server
           </div>
           <div class="tv-card magenta">
             <h4>Shared &middot; traderview-{core,db,import}</h4>
-            <p>Three library crates that both binaries link. <code>core</code> owns models + FIFO roll-up + stats. <code>db</code> owns sqlx pool + migrations + embedded-Postgres lifecycle. <code>import</code> owns broker parsers (Webull first). One-way dependency graph: <code>desktop</code> and <code>web</code> both depend on all three; <code>import</code> and <code>db</code> both depend on <code>core</code>; nothing depends on <code>desktop</code> or <code>web</code>.</p>
+            <p>Library crates that both binaries link; the three foundational ones are: <code>core</code> owns models + FIFO roll-up + stats. <code>db</code> owns sqlx pool + migrations + embedded-Postgres lifecycle. <code>import</code> owns broker parsers (Webull first). One-way dependency graph: <code>desktop</code> and <code>web</code> both depend on them; <code>import</code> and <code>db</code> both depend on <code>core</code>; nothing depends on <code>desktop</code> or <code>web</code>.</p>
           </div>
         </div>
       </section>
@@ -277,7 +277,7 @@ cargo run -p traderview-web --bin server
             <tr><td><code>traderview-import</code></td><td>2,614</td><td>15 broker CSV parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, Coinbase, Kraken — plus a Generic <code>ColumnMap</code> parser for unknown sources (column-mapping wizard). Asset classes: stocks, options, futures, forex.</td></tr>
             <tr><td><code>traderview-web</code></td><td>90,345</td><td>axum 0.7 router — 3,137 routes split across 182 route files. argon2 + JWT auth, multipart upload, WebSocket endpoints for halts / catalysts / live ticks / Webull. Custom request/response logging middleware (snippets bodies on 4xx/5xx). <code>client-errors</code> sink for browser-side reports.</td></tr>
             <tr><td><code>traderview-expense</code></td><td>463,026</td><td>Trading-expense tracker — categorization rules engine, OCR-pipeline integration, Schedule-C report generator, multi-account reconciliation. Used by the expense view + receipt upload.</td></tr>
-            <tr><td><code>traderview-ocr</code></td><td>5,247</td><td>Receipt + tax-form OCR. Engine ensemble: Apple Vision sidecar (macOS) + Tesseract psm4/psm6 + optional PaddleOCR (<code>--features paddle</code>), fused per field. Preprocessing: grayscale, Lanczos3 upscale, Sauvola adaptive thresholding. PDF text-layer extraction. W-2 / 1099 / 1098 box parser. Extracts merchant / amount / date for the expense matcher.</td></tr>
+            <tr><td><code>traderview-ocr</code></td><td>5,247</td><td>Receipt + tax-form OCR. Engine ensemble: Apple Vision sidecar (macOS) + Tesseract psm4/psm6 + PaddleOCR (<code>paddle</code> feature, on by default in the web and desktop builds), fused per field. Preprocessing: grayscale, Lanczos3 upscale, Sauvola adaptive thresholding. PDF text-layer extraction. W-2 / 1099 / 1098 box parser. Extracts merchant / amount / date for the expense matcher.</td></tr>
             <tr><td><code>traderview-tax</code></td><td>6,583</td><td>US federal tax compute engine — brackets, SE tax, QBI § 199A, credits, capital gains, AMT, NIIT, safe harbor, § 179, home office, mileage, retirement limits, what-if. Backs the tax wizard view.</td></tr>
             <tr><td><code>traderview-stryke</code></td><td>1,017</td><td>Host bridge that runs stryke-language lifecycle hooks as sandboxed subprocesses. Invokes the embedded stryke binary (<code>&lt;bin&gt; run &lt;script&gt;</code>, context as JSON on stdin, effects as JSON on stdout) with a 5s timeout + output cap, then validates each emitted effect (tag / note / alert / webhook / journal) against the hook's capability grant. No compile-time fusevm dependency — the binary is a runtime resource.</td></tr>
             <tr><td><code>traderview-bus</code></td><td>777</td><td>Rust half of the GUI Automation Bus. <code>rev</code> — the reversibility class of every generated verb, mirroring <code>frontend/js/_zg_automation_rev.js</code>. <code>admit</code> — asks the <code>zthrottle</code> governor how wide a parameter sweep may fan out, with a fallback when that app is not running. Used by <code>traderview-core</code>'s <code>sweep_pool</code> and the desktop shell.</td></tr>
@@ -399,7 +399,7 @@ cargo run -p traderview-web --bin server
       </section>
 
       <section class="tutorial-section">
-        <h2>Importing — 13 Brokers + Column-Mapping Wizard</h2>
+        <h2>Importing — 15 Brokers + Column-Mapping Wizard</h2>
         <p>Built-in parsers (<code>crates/traderview-import/src/brokers.rs</code>):</p>
         <ul>
           <li><strong>Webull</strong> · <strong>Lightspeed</strong> · <strong>IBKR Flex</strong> · <strong>ThinkOrSwim</strong> · <strong>TD Ameritrade</strong> · <strong>Schwab</strong> · <strong>Fidelity</strong> · <strong>ETrade</strong> · <strong>Robinhood</strong> · <strong>TradeStation</strong> · <strong>DAS Trader</strong> · <strong>TradeZero</strong> · <strong>Tradervue</strong> · <strong>Coinbase</strong> · <strong>Kraken</strong> · <strong>Generic</strong> (column-mapping wizard)</li>

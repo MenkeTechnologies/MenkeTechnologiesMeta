@@ -398,6 +398,24 @@ python3 scripts/lint_ascii_strings.py # or run it directly over the source tree
 | `include/zpc/Traktor.h`     | Barberpole / Mulholland / Bouncer / Beatmasher |
 | `include/zpc/Traktor2.h`    | Spinback / Iceverb / PeakFilter / BeatSlicer / ReverseGrain / PeakPhaser / FilterLFO / PeakFlanger |
 | `include/zpc/Latency.h`     | Per-block group-delay table + intra-patch latency alignment (longest-path relaxation over `topoOrder`) |
+| `include/zpc/Analog.h`, `AnalogExtra*.h` | Classic-analog hardware models, each defined by its specific circuit nonlinearity |
+| `include/zpc/Circuit.h`     | `zpc::ckt` component-level circuit-simulation primitives (diode and reactive companion models) |
+| `include/zpc/TubeAmp.h`     | `zpc::tube` physics-based guitar amp models |
+| `include/zpc/PhysicalModel.h` | `zpc::phys` physical-modelling framework behind the Physical category |
+| `include/zpc/Eventide.h`    | Eventide-class algorithm effects (the buildable gaps from `FX_PARITY.md`) |
+| `include/zpc/NovelBlocks.h` | Blocks built on novel mechanisms |
+| `include/zpc/Utility.h`     | Math / utility nodes (arithmetic, comparators, signal-calculator modules) |
+| `include/zpc/BlockPresets.h`| Factory block presets: named param-sets for a single module type |
+| `include/zpc/PresetTags.h`  | Preset facet-tag vocabulary and factory tag tables |
+| `include/zpc/TechBadge.h`   | Canonical DSP-technique badge table (`ModuleInfo::tech`) |
+| `include/zpc/JsonFile.h`    | gzip-compressed JSON file I/O shared by every host |
+| `include/zpc/Nksf.h`        | Writer for NKS `.nksf` preset files |
+| `include/zpc/PolyEngine.h`  | Whole-synth engine: one patch instantiated across a polyphonic voice pool (`src/PolyEngine.cpp`) |
+| `include/zpc/SynthConfig.h` | zpwr-synth host configuration (soft-knob pool ceiling and defaults) |
+| `include/zpc/StereoGraph.h` | Stereo patch graph: one cable carries L/R (`StereoPluginBlock.h` is its plugin host block) |
+| `include/zpc/PluginBlock.h`, `PluginHost.h` | VST3/AU hosting as a graph block and as a master-bus insert |
+| `include/zpc/Recorder.h`    | Real-time-safe output recorder (lock-free ring to a float WAV writer) |
+| `include/zpc/midi/`         | Note-stream pack: `MidiModules.h`, `NoteGraphHost.h`, arpeggiator, chord/scale engines, Euclidean, cellular-automaton generators (`src/midi/`) |
 | `include/zpc/dsp/SpectralBake.h` | Freeze a live signal into one band-limited single-cycle wavetable frame (pitch detect → harmonic resynthesis) |
 | `webui/zpc-note-safety.js`  | NOTE SAFETY: static hung-note + polyphony-budget prover over a note-stream graph |
 | `src/PatchCore.cpp`         | Routing/topo/mod-matrix/eval + core modules + serialization/migration |
@@ -406,6 +424,13 @@ python3 scripts/lint_ascii_strings.py # or run it directly over the source tree
 | `tests/GlobalModsTest.cpp`  | Headless `GlobalMods` test (slot layout, MIDI routing, generated sources) |
 | `tests/LatencyTest.cpp`     | Headless latency-alignment test (re-measures the declared delays against the real DSP) |
 | `tests/SpectralBakeTest.cpp`| Headless spectral-bake test (pitch detection, resynthesis fidelity, refusal cases) |
+| `tests/PatchGraphTest.cpp`  | Headless graph-layer test (topo order, cycle handling) |
+| `tests/LayeredEngineTest.cpp` | Headless `LayeredEngine` test (layers, mute/solo/gain, serialization round-trip) |
+| `tests/DspModulesTest.cpp`  | Headless DSP module pack test (Scala, Multisample, Traktor, Valhalla, Physical) |
+| `tests/MidiModulesTest.cpp` | Headless note-stream pack test (registry builds, finite output, no hung notes) |
+| `tests/HostSupportTest.cpp` | Headless `HostSupport` test (CPU meter, RSS, host-state XML round-trips) |
+| `tests/EuclidMirrorTest.cpp`| Euclidean golden-file test shared with the JS port |
+| `tests/ZdspCheck.cpp`       | Compile + link check for the shared zdsp-core headers |
 
 ---
 

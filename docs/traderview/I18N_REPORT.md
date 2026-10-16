@@ -17,9 +17,9 @@ statically and are not counted. *Missing* = used but absent from
 
 | Metric | Count |
 |---|---|
-| Source files scanned | 1703 |
-| Distinct statically-resolvable keys used | 51779 |
-| Keys defined in `app_i18n_en.json` | 58751 |
+| Source files scanned | 1717 |
+| Distinct statically-resolvable keys used | 51980 |
+| Keys defined in `app_i18n_en.json` | 59083 |
 | **Missing keys** (used but not defined) | **186** |
 | Coverage (used keys that resolve) | 99.6% |
 

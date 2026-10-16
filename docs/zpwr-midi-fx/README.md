@@ -65,13 +65,13 @@ MIDI In ─▶ [B1 Chord] ─▶ [B2 Arp] ─▶ Out A ─▶ MIDI Out
 
 ## [0x01] MODULE LIBRARY
 
-**563 note-stream modules** across 11 categories — harmony, sequencing, probability, routing, control sources, dynamics, expression, tuning, MPE/voicing, plus a family of cellular-automaton sequencers (Game of Life, Brian's Brain, Langton's Ant). The table below is a representative selection; `docs/reference.html` lists every block with its inputs and parameters, generated from the live registry so it never drifts.
+**Note-stream modules** across many categories — harmony, sequencing, probability, routing, control sources, dynamics, expression, tuning, MPE/voicing, plus a family of cellular-automaton sequencers (Game of Life, Brian's Brain, Langton's Ant). The table below is a representative selection; `docs/reference.html` lists every block with its inputs and parameters, generated from the live registry so it never drifts.
 
 | Module | What it does |
 |--------|--------------|
-| **Chord** | one key → a voiced chord (166 types, inversion, spread, octave-double, transpose, strum) |
-| **Arp** | host-synced arpeggiator (9 play modes, divisions, gate, octaves, swing) |
-| **Scale** | snap every note onto the nearest in-key pitch (20 scales) |
+| **Chord** | one key → a voiced chord (chord-dictionary types, inversion, spread, octave-double, transpose, strum) |
+| **Arp** | host-synced arpeggiator (play modes incl. up / down / converge / diverge / as-played / random / chord, divisions, gate, octaves, swing) |
+| **Scale** | snap every note onto the nearest in-key pitch (scale table in `Scale.h`) |
 | **Transpose** | shift notes by semitones (modulatable) |
 | **Velocity** | scale / offset note velocity (modulatable) |
 | **SeqEuclid** | retrigger held notes on a Euclidean rhythm (Bjorklund) |
@@ -141,13 +141,16 @@ Routing (source / destination) rebuilds the graph; depth is a live, lock-free tw
 
 ```
 libs/zpwr-patch-core/  the shared zpc graph (submodule) + the shared cyberpunk webui
-        src/midi/      JUCE-independent note engines (headless-testable)
+        include/zpc/midi/, src/midi/
+                       JUCE-independent note engines (headless-testable)
                        MidiTypes · ChordDictionary · ChordEngine · Scale · Euclidean · Arpeggiator
-                       MidiModules — the 563 MIDI modules + note-stream signal policy, on zpc
+                       MidiModules — the note-stream modules + signal policy, on zpc
+libs/zpwr-clip-engine/ shared clip/arranger webui (CLIP tab, grid) + clip engine (submodule)
 src/    JUCE plugin shell
-        PluginProcessor — APVTS soft keys, MIDI/MPE capture, transport-driven processBlock
-                          feeding zpc::PatchEngine<NoteStream>
+        PluginProcessor — APVTS soft keys, auto-param pool, MIDI/MPE capture, transport-driven
+                          processBlock feeding zpc::LayeredEngineT<zpc::PatchEngineT<NoteStream>>
         PluginEditor    — thin host over zpc::WebEditor (shared catalog/preset bridge)
+tools/  gen_reference (docs/reference.html from the registry) · gen_midi_modules (zpwr-modules seeds)
 tests/  dsp_smoke.cpp (engines) · patchgraph_smoke.cpp (zpc graph, modules, JSON)
 ```
 
