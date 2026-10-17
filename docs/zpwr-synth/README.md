@@ -69,7 +69,7 @@ ZsynthProcessor (JUCE AudioProcessor)
 
 The synth-specific node types (`dsp/SynthModules.cpp`, namespace `zsynth`) are a DSP pack registered onto the core registry; the generators (`Osc`, `Wt`, `Sample`, `SynthGranular`) read each voice's `Note`/`Gate` straight from the core's `ComputeContext::external` array, so one patch definition plays polyphonically.
 
-> The DSP module pack and per-voice graph are headless-unit-tested (`tests/synth_modules_test.cpp`: oscillator tuning, ADSR, generators); `tests/midifx_stage_test.cpp` covers MIDI/MPE input staging. MIDI/MPE reaches the synth from the host or the standalone's MIDI input.
+> The DSP module pack and per-voice graph are headless-unit-tested (oscillator tuning, ADSR, generators), and MIDI/MPE input staging is covered separately. MIDI/MPE reaches the synth from the host or the standalone's MIDI input.
 
 ---
 
@@ -162,8 +162,6 @@ Repeated bakes **append** frames (up to 64), so sweeping a filter and baking as 
 morphing table out of the patch's own evolution. A signal with no stable pitch — silence, noise,
 a dead node — is **refused** with a reason rather than frozen into a garbage table. Baked frames
 live in the same user-wavetable store as imports, so they persist with the patch.
-
-Covered headless by `SpectralBakeTest` in zpwr-patch-core.
 
 ---
 

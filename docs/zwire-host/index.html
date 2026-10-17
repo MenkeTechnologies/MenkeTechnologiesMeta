@@ -84,7 +84,7 @@
             <span class="sep">/</span>
             <a href="https://github.com/MenkeTechnologies/MenkeTechnologiesMeta" target="_blank" rel="noopener noreferrer">Meta</a>
           </nav>
-          <p class="docs-build-line">single static Rust binary (~500 KB) &middot; sysinfo &middot; fs &middot; exec &middot; pty &middot; kv &middot; jobs &middot; bus &middot; peer &middot; 134 host verbs &middot; two transports, one dispatcher &middot; also a library</p>
+          <p class="docs-build-line">single static Rust binary (~500 KB) &middot; sysinfo &middot; fs &middot; exec &middot; pty &middot; kv &middot; jobs &middot; bus &middot; peer &middot; 134 host verbs &middot; three transports, one dispatcher &middot; also a library</p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -108,12 +108,13 @@
       <p class="tutorial-subtitle"><strong>One pipe. One binary. The whole machine &mdash; reachable from anywhere.</strong> <code>zwire-host</code> is a single self-contained Rust binary (~500&nbsp;KB, no Python, no <code>psutil</code>) that exposes the local machine to <strong>any app</strong> over one JSON message protocol. It began as the Chrome <strong>native-messaging host</strong> for <a href="https://github.com/MenkeTechnologies/zwire" target="_blank" rel="noopener noreferrer">zwire</a>'s HUD; it is now a <strong>universal local endpoint</strong> reachable from a browser extension <em>and</em> from tmux, emacs, desktop apps, plugins, shell scripts, and any language &mdash; because it also runs as a <strong>local-socket daemon speaking newline-delimited JSON</strong>, the one protocol every tool already has.</p>
 
       <section class="tutorial-section">
-        <h2>Two transports, one dispatcher</h2>
-        <p>Both transports feed the <strong>same capability router</strong> (<code>src/session.rs</code>), so every command works over either one. A request may carry an <code>id</code> that is echoed on the matching reply, so a client can multiplex many in-flight requests, streams and terminals over one connection.</p>
+        <h2>Three transports, one dispatcher</h2>
+        <p>All three transports feed the <strong>same capability router</strong> (<code>src/session.rs</code>), so every command works over any of them. A request may carry an <code>id</code> that is echoed on the matching reply, so a client can multiplex many in-flight requests, streams and terminals over one connection.</p>
         <table class="example-tbl">
           <tbody>
             <tr><td>Native messaging (default)</td><td>Chrome / browser extensions &mdash; little-endian <code>u32</code> length + JSON body on <code>stdin</code>/<code>stdout</code></td></tr>
             <tr><td>Local-socket daemon (<code>serve</code>)</td><td>tmux, emacs, desktop apps, plugins, any language &mdash; newline-delimited JSON, one object per line, over a Unix domain socket (macOS/Linux) or a named pipe (Windows)</td></tr>
+            <tr><td>GUI Automation Bus (<code>App::open("zwire")</code>)</td><td>other suite apps, stryke scripts, shell plugins &mdash; NDJSON zgui-bridge frames: <code>{"t":"call"&hellip;}</code> in, <code>{"t":"reply"&hellip;}</code> / <code>{"t":"event"&hellip;}</code> out</td></tr>
           </tbody>
         </table>
         <p>The socket is created <code>0600</code> under a <code>0700</code> dir &mdash; owner-only, since it exposes <code>exec</code>/<code>fs</code>/<code>pty</code>. Inbound TCP peers are gated by a shared <code>--token</code>; local Unix-socket clients are trusted.</p>

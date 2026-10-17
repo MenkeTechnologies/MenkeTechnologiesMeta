@@ -51,13 +51,13 @@ stryke transforms in Audio-Haxor — and it also runs standalone. See
 [`docs/EMBEDDING.md`](docs/EMBEDDING.md) for the seams, and the live coverage
 audit in [`docs/arranger_port_report.html`](docs/arranger_port_report.html).
 
-## The first DAW that is also a full video editor
+## Video editing
 
 A `video` clip is just another thing the grid arranger carries. Because the
 timeline already moves notes and audio along one shared clock, dropping a **video
 track type** onto it turned the DAW into a non-linear video editor on the same
 canvas — and we then built out the whole Adobe Premiere Pro surface against it
-until **no Premiere feature is left uncovered**. The live, citation-backed audit is
+until every row of the Premiere audit is covered. The live, citation-backed audit is
 [`docs/premiere_port_report.html`](docs/premiere_port_report.html): every feature
 names the exact `file:line` in `libs/zpwr-clip-engine/webui` where it lives.
 
@@ -165,7 +165,7 @@ third-party plugins (`ZpwrSynth`/`ZpwrFx`/… are external, not the stdlib). A
 **device** is exactly the `factoryPatch` pattern (a `PatchDef` of blocks + real
 factory params), authored as data in
 [`libs/zpwr-clip-engine/webui/devices/devices.js`](libs/zpwr-clip-engine/webui/devices/devices.js):
-**66 devices** across the DAW's **three track types**:
+the roster covers devices across the DAW's **three track types**:
 
 - **Instruments** (MIDI-in / stereo-out) — mono-block synth voices whose source
   block is pitched by the note: Mallet (Modal), Wind (Blown), Strings (Bowed),
@@ -188,7 +188,7 @@ editable face from the existing auto-generated patch panel; bespoke zgui-core
 device panels and a drag-in browser are the next layer.
 
 ```sh
-node --test webui/grid/tests/devices.test.mjs
+node --test libs/zpwr-clip-engine/webui/grid/tests/devices.test.mjs
 ```
 
 ## Note-stream generative MIDI engine (`include/zpc/midi/`)
@@ -650,7 +650,7 @@ ClipSeq shape), `createAutomationDomain` (ALS lanes, serializes to the Rust
 Pure-logic tests (model, domains, layout/hit math) run headless:
 
 ```sh
-node --test webui/grid/tests/grid.test.mjs
+node --test libs/zpwr-clip-engine/webui/grid/tests/grid.test.mjs
 ```
 
 ## Projects & banks (BROWSE)
@@ -700,7 +700,7 @@ const back = deserializeBank(JSON.parse(text));   // null if not a zpwr-clip-ban
 ```
 
 ```sh
-node --test webui/grid/tests/bank.test.mjs
+node --test libs/zpwr-clip-engine/webui/grid/tests/bank.test.mjs
 ```
 
 ## C ABI + Rust bindings (for Rust hosts)
@@ -755,7 +755,7 @@ downloadMidi(patternToMidi(grid.serialize(), { bpm, perBeat, steps, repeats: 4 }
 
 C ABI: `zpc_clip_render_midi(engine, repeats, &data, &len)` (free with
 `zpc_bytes_free`). The exporters are verified by round-trip parsing in the test
-suites (`cargo test`, `node --test webui/grid/tests/midi.test.mjs`).
+suites (`cargo test`, `node --test libs/zpwr-clip-engine/webui/grid/tests/midi.test.mjs`).
 
 ## Proof-carrying export
 
@@ -791,7 +791,7 @@ const { ok, reason, recomputed } = clip.verifyProjectProof(project);
 
 There is no signature and no key: a seal proves the *integrity of the claim against the
 content*, not authorship. Anyone can recompute it, which is the point. Covered by
-`node --test webui/grid/tests/proofseal.test.mjs`, which tests every property in both
+`node --test libs/zpwr-clip-engine/webui/grid/tests/proofseal.test.mjs`, which tests every property in both
 directions (a forged verdict, a lifted seal, an edited file and a deleted finding are
 each rejected with their own reason).
 

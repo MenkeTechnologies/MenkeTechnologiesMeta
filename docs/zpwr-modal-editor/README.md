@@ -94,8 +94,12 @@ const h = window.ZModal.create(hostEl, {
   mode: "vim",          // 'default' | 'vim' | 'emacs'
   statusBar: statusEl,  // optional — vim mode / key-buffer / ex line render here
   language: "plaintext",
+  readOnly: false,       // optional
+  minimap: false,        // optional, default off
+  wordWrap: false,       // optional, default off
   onChange: (text) => save(text),
 });
+h.editor;               // the underlying Monaco editor
 h.getValue(); h.setValue("…"); h.setMode("emacs"); h.focus(); h.layout(); h.destroy();
 
 // Monaco-agnostic — attach a mode to an editor the host already created (no 2nd Monaco):

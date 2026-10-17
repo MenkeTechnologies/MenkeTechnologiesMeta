@@ -230,9 +230,7 @@ node libs/zpwr-patch-core/webui/zpc-note-safety.test.mjs
 
 ## [0x07] NOTE SAFETY (STATIC PROVER)
 
-The note graph is a compiler problem, and nobody in the field treats it as one: Cthulhu,
-Scaler, Bome and the Logic / Live MIDI-FX racks ship **no** static analysis. A hung note is
-discovered by hearing it, and the industry's answer is a panic button.
+A hung note in a note-stream graph is otherwise discovered by hearing it.
 
 NOTE SAFETY proves the defect absent **before playback**, over the whole reachable graph, by
 abstract interpretation — the same technique the verified logic clips already use, on a new

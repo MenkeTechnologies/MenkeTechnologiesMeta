@@ -197,7 +197,7 @@ lsf -t -c nginx               # just PIDs (for scripting)
 lsf --json | jq '.[] | select(.fd == "cwd")'
 lsf --csv  > snapshot.csv
 lsf -F pcfn                   # field output (p=pid, c=cmd, f=fd, n=name)</pre>
-        <p>Full install + usage live in the <a href="https://github.com/MenkeTechnologies/lsofrs#readme">README</a>. Man page: <code>man lsofrs</code> (386-line roff under <code>man/man1/lsofrs.1</code>). Zsh completion ships under <code>completions/_lsofrs</code>.</p>
+        <p>Full install + usage live in the <a href="https://github.com/MenkeTechnologies/lsofrs#readme">README</a>. Man page: <code>man lsofrs</code> (428-line roff under <code>man/man1/lsofrs.1</code>). Zsh completion ships under <code>completions/_lsofrs</code>.</p>
       </section>
 
       <section class="tutorial-section">
@@ -263,7 +263,7 @@ lsf -F pcfn                   # field output (p=pid, c=cmd, f=fd, n=name)</pre>
           <li><strong>Platform gather</strong> — <code>src/darwin.rs</code> (1,861 lines, libproc FFI), <code>src/linux.rs</code> (1,065 lines, <code>/proc</code> reader), <code>src/freebsd.rs</code> (849 lines, sysctl + procfs). All three return the same <code>Vec&lt;Process&gt;</code> from <code>types.rs</code>; each per-PID FD scan is parallelized with rayon's work-stealing pool.</li>
           <li><strong>Selection</strong> — <code>src/filter.rs</code> (3,037 lines) implements OR-mode (default) and AND-mode (<code>-a</code>) filter composition over PID / PGID / user / command / FD / network-spec / path. Supports comma-lists, ranges (<code>0-10</code>), exclusion (<code>^root</code>), and regex (<code>/nginx|apache/</code>).</li>
           <li><strong>Output</strong> — <code>src/output.rs</code> (columnar + field), <code>src/json.rs</code> (serde), <code>src/csv_out.rs</code> (RFC 4180). TTY detection auto-switches between cyberpunk headers (<code>H4XOR</code> / <code>CL4SS</code> / <code>T4RGET</code>) and plain headers for pipelines.</li>
-          <li><strong>Live modes</strong> — <code>--tui</code> (7-tab dashboard, 5,558 lines), <code>--top</code> (1,009 lines), <code>--summary -r</code> (1,032 lines), <code>--monitor</code> (398 lines), <code>--watch FILE</code>, <code>--follow PID</code>, <code>--leak-detect</code>. All share <code>src/tui_app.rs</code>'s <code>TuiMode</code> trait for common keybindings, alternate-screen entry/exit, and atomic frame rendering.</li>
+          <li><strong>Live modes</strong> — <code>--tui</code> (7-tab dashboard, 5,558 lines), <code>--top</code> (1,009 lines), <code>--summary -r</code> (1,032 lines), <code>--monitor</code> (398 lines), <code>--watch FILE</code>, <code>--follow PID</code>, <code>--leak-detect</code>, <code>--stall</code>. <code>--top</code> and <code>--summary -r</code> share <code>src/tui_app.rs</code>'s <code>TuiMode</code> trait for common keybindings, alternate-screen entry/exit, and atomic frame rendering; <code>--tui</code> has its own key handler in <code>src/tui_tabs.rs</code>.</li>
           <li><strong>Themes</strong> — <code>src/theme.rs</code> (1,005 lines) defines 31 named palettes via the <code>ThemeName</code> enum. Custom 6-color themes persist to <code>~/.lsofrs.conf</code> through <code>src/config.rs</code> (TOML).</li>
         </ul>
       </section>
@@ -374,8 +374,10 @@ lsf -i TCP:443                 # TCP on port 443</pre>
             <tr><td><code>--watch</code></td><td><code>FILE</code></td><td>Watch who opens / closes a file over time</td></tr>
             <tr><td><code>--follow</code></td><td><code>PID</code></td><td>Watch one process's FDs, highlight opens / closes</td></tr>
             <tr><td><code>--leak-detect</code></td><td><code>[=I[,N]]</code></td><td>Detect FD leaks: poll every <code>I</code> s, flag after <code>N</code> rises (default <code>5,3</code>)</td></tr>
+            <tr><td><code>--stall</code></td><td>&mdash;</td><td>Socket backpressure classifier: TX-STALLED / RX-STARVED / HEALTHY per socket FD</td></tr>
             <tr><td><code>-h</code> / <code>--help</code></td><td>&mdash;</td><td>Display help</td></tr>
-            <tr><td><code>-V</code> / <code>--version</code></td><td>&mdash;</td><td>Display version</td></tr>
+            <tr><td><code>-v</code> / <code>--version</code></td><td>&mdash;</td><td>Display version</td></tr>
+            <tr><td><code>-V</code></td><td>&mdash;</td><td>Report search items that matched nothing</td></tr>
           </tbody>
         </table>
       </section>
@@ -394,7 +396,7 @@ lsf -i TCP:443                 # TCP on port 443</pre>
             <tr><td>Data / minimal</td><td><code>Classic</code>, <code>DeepNet</code>, <code>DataStream</code>, <code>Overlock</code></td></tr>
           </tbody>
         </table>
-        <p>Inside any TUI mode press <code>c</code> for the theme chooser (live preview), <code>C</code> for the 6-color editor. Selections persist to <code>~/.lsofrs.conf</code> via <code>src/config.rs</code>.</p>
+        <p>In <code>--tui</code> press <code>c</code> for the theme chooser (live preview) and <code>C</code> for the 6-color editor; in <code>--top</code> and <code>--summary -r</code>, <code>c</code> cycles to the next theme. Selections persist to <code>~/.lsofrs.conf</code> via <code>src/config.rs</code>.</p>
       </section>
 
       <section class="tutorial-section">
@@ -418,12 +420,15 @@ hover_tooltips = true     # auto-tooltips after 1s hover (T toggles; right-click
       </section>
 
       <section class="tutorial-section">
-        <h2>Interactive controls (shared across TUI modes)</h2>
+        <h2>Interactive controls</h2>
+        <p><code>--tui</code> keys:</p>
         <table class="reflection-table">
           <thead><tr><th>Key</th><th>Action</th></tr></thead>
           <tbody>
-            <tr><td><code>1</code>&ndash;<code>9</code></td><td>Set refresh interval (seconds)</td></tr>
-            <tr><td><code>&lt;</code> / <code>&gt;</code></td><td>Fine-adjust refresh interval (&plusmn;1s)</td></tr>
+            <tr><td><code>1</code>&ndash;<code>7</code></td><td>Jump to tab by number</td></tr>
+            <tr><td><code>8</code> / <code>9</code></td><td>Set refresh interval (seconds)</td></tr>
+            <tr><td><code>f</code></td><td>Cycle refresh rate (1, 2, 5, 10 s)</td></tr>
+            <tr><td><code>&lt;</code> / <code>&gt;</code></td><td>Adjust refresh interval (&plusmn;1s; <code>[</code> / <code>]</code> also work)</td></tr>
             <tr><td><code>p</code></td><td>Pause / resume data collection</td></tr>
             <tr><td><code>?</code> / <code>h</code></td><td>Toggle help overlay</td></tr>
             <tr><td><code>c</code> / <code>C</code></td><td>Theme chooser / editor</td></tr>
@@ -439,7 +444,7 @@ hover_tooltips = true     # auto-tooltips after 1s hover (T toggles; right-click
             <tr><td><code>q</code> / <code>Esc</code> / <code>Ctrl-C</code></td><td>Quit</td></tr>
           </tbody>
         </table>
-        <p><code>--tui</code> adds tab navigation (<code>Tab</code> / <code>BackTab</code> / <code>1</code>&ndash;<code>7</code> / click). <code>--top</code> adds <code>s</code> sort, <code>r</code> reverse, <code>+/-</code> grow/shrink, <code>b</code> bar toggle, <code>d</code> delta toggle.</p>
+        <p><code>--tui</code> also has tab navigation (<code>Tab</code> / <code>BackTab</code> / click). <code>--top</code> and <code>--summary -r</code> support only <code>1</code>&ndash;<code>9</code>, <code>&lt;</code> / <code>&gt;</code>, <code>p</code>, <code>?</code> / <code>h</code>, <code>q</code> / <code>Esc</code> / <code>Ctrl-C</code>, and <code>c</code> (cycle to the next theme). <code>--top</code> adds <code>s</code> sort, <code>S</code> sort and reverse, <code>r</code> reverse, <code>+/-</code> grow/shrink, <code>b</code> bar toggle, <code>d</code> delta toggle.</p>
       </section>
 
       <section class="tutorial-section">
@@ -461,6 +466,7 @@ hover_tooltips = true     # auto-tooltips after 1s hover (T toggles; right-click
 ├── monitor.rs     # 398  classic full-screen alternate-buffer monitor
 ├── follow.rs      # 192  single-PID FD tracker (status transitions)
 ├── leak.rs        # 340  circular-buffer FD-count leak detector
+├── stall.rs       # 419  per-FD socket backpressure classifier
 ├── delta.rs       # iteration-diff engine for change highlighting
 ├── summary.rs     # 1,032 aggregate stats + bars (+ live TUI mode)
 ├── tree.rs        # 556  process tree w/ FD inheritance
@@ -474,7 +480,7 @@ hover_tooltips = true     # auto-tooltips after 1s hover (T toggles; right-click
 ├── ports.rs       # 450  listening-ports summary
 ├── pipe_chain.rs  # 364  pipe / unix-socket IPC topology
 └── net_map.rs     # 608  connections grouped by remote host
-man/man1/lsofrs.1  # 386-line roff man page
+man/man1/lsofrs.1  # 428-line roff man page
 completions/_lsofrs # 129-line zsh completion (#compdef lsofrs)</pre>
       </section>
 
@@ -536,7 +542,7 @@ completions/_lsofrs # 129-line zsh completion (#compdef lsofrs)</pre>
           <li><a href="report.html">Engineering report</a> &mdash; per-subsystem LOC, top-20 files, dependency table, test surface.</li>
           <li><a href="https://github.com/MenkeTechnologies/lsofrs#readme">README</a> &mdash; full install, every flag, full benchmark table.</li>
           <li><a href="https://docs.rs/lsofrs">docs.rs/lsofrs</a> &mdash; rustdoc for the library crate (<code>pub mod cli; pub mod types; pub mod filter; &hellip;</code>).</li>
-          <li><a href="https://github.com/MenkeTechnologies/lsofrs/blob/main/man/man1/lsofrs.1">man/man1/lsofrs.1</a> &mdash; 386-line roff man page (also <code>man lsofrs</code> after install).</li>
+          <li><a href="https://github.com/MenkeTechnologies/lsofrs/blob/main/man/man1/lsofrs.1">man/man1/lsofrs.1</a> &mdash; 428-line roff man page (also <code>man lsofrs</code> after install).</li>
         </ul>
       </section>
     </main>
