@@ -7,9 +7,9 @@
 ╚══════╝╚═╝      ╚══╝╚══╝ ╚═╝  ╚═╝    ╚═╝     ╚═╝  ╚═╝
 ```
 
-![JUCE](https://img.shields.io/badge/JUCE-8.0.14-ff2a6d?style=flat-square)
+![JUCE](https://img.shields.io/badge/JUCE-8-ff2a6d?style=flat-square)
 ![C++](https://img.shields.io/badge/C%2B%2B-20-05d9e8?style=flat-square)
-![Version](https://img.shields.io/badge/version-0.1.24-ff2a6d?style=flat-square)
+![Version](https://img.shields.io/github/package-json/v/MenkeTechnologies/zpwr-fx?style=flat-square&color=ff2a6d)
 ![Formats](https://img.shields.io/badge/VST3%20%C2%B7%20AU%20%C2%B7%20CLAP%20%C2%B7%20Standalone-39ff14?style=flat-square)
 ![MTAudio](https://img.shields.io/badge/MTAudio-audio%20stack-d300c5?style=flat-square)
 
@@ -62,6 +62,19 @@ The block palette is the shared audio module pack from
 [`zpwr-patch-core`](https://github.com/MenkeTechnologies/zpwr-patch-core).
 Every block name is globally unique across the audio/synth/MIDI stack. Any block type can be dropped into any node.
 
+### Signal path
+
+The patch above is one **layer**. The processor (`ZfxProcessor::processBlock`, `src/PluginProcessor.cpp`) runs a rack of them:
+
+1. Input is scaled by **Master In**.
+2. Every **layer** (any number; each a full copy of the engine) processes the input and sums into the dry mix, and each layer sends to the **aux FX buses** (two by default, each seeded with a full-wet reverb; add or remove from the Mixer).
+3. Each aux bus processes its accumulated send and returns into the mix through its return level, pan, mute/solo and mono switches.
+4. The **master FX bus** (a limiter by default) runs over the summed mix unless **Master Bypass** is on (Master Bypass gates the master FX bus, not the layers). Master pan/mono apply after it.
+5. **Master Out** gain, the master stereo widener (M/S), the hosted master-insert plugin, and the brickwall limiter, in that order.
+6. Non-finite samples are zeroed, then the recorder captures the result.
+
+A hosted-sidechain input (second input bus, mono or stereo) feeds the **Sidechain** global mod source. Output layouts: mono or stereo, input matching output.
+
 ---
 
 ## [0x01] FORMATS
@@ -77,8 +90,8 @@ Platforms: **macOS** (ARM + Intel; the default build is a universal binary) and 
 
 ## [0x02] THE PATCH MODEL
 
-- **Sources** an input can read: silence, In L, In R, Noise, the Soft Keys, **MIDI/MPE** (Mod Wheel, Aftertouch, Pitch Bend, Velocity, Expression, Breath, Sustain, Note, and MPE Press/Slide/Bend), or any block's output (`src id = 100 + blockIndex`). The plugin accepts MIDI input; MPE is parsed via `juce::MPEInstrument` and aggregated to the most recent note.
-- Each block has three inputs (**In 1, In 2, Mod**), six params, and one output.
+- **Sources** an input can read: silence, In L, In R, Noise, the Soft Keys, **MIDI/MPE** (Mod Wheel, Aftertouch, Pitch Bend, Velocity, Expression, Breath, Sustain, Note, and MPE Press/Slide/Bend), the shared **global mod sources** (LFOs, envelopes, random, sample-and-hold, MIDI-derived sources, assignable CC slots, the host **Sidechain** level and the touch strip, from `zpc::GlobalMods`, ids from `zpc::kGlobalModBase`), or any block's output (`src id = zpc::kBlockBase + blockIndex`). The external source-id layout is defined in `src/FxConfig.h`. The plugin accepts MIDI input; MPE is parsed via `juce::MPEInstrument` and aggregated to the most recent note.
+- Each block has one output, up to `zpc::kMaxIns` input slots and up to `zpc::kMaxParams` params (`PatchCore.h`); the block's own input count and param list decide how many are used.
 - The graph is **topologically sorted** each rebuild; cycles (feedback) resolve with a one-sample delay automatically — wire any output back to an earlier input to build feedback patches.
 - Any source can fan out to **unlimited destinations**.
 
@@ -138,7 +151,7 @@ Example wavefolder: `out = sin(in * (1 + p0 * 8) * pi)`
 
 A JUCE 8 `WebBrowserComponent` rendering an embedded cyberpunk UI (the strykelang neon theme: cyan/magenta on near-black, Orbitron + Share Tech Mono, grid + CRT scanlines), self-contained via `juce_add_binary_data` (no node build, no external files). The UI is shared with zpwr-synth and zpwr-midi-fx; the tab set:
 
-- **Patch** — drag an output jack onto an input jack to wire it (drag an input away to disconnect); an **⚡ EZ WIRE** button (auto-wires In L → your blocks → Out L/R so a beginner gets sound without touching cables), an **INIT** button (unplug every cable & mod, keep the blocks), **🗑** (blank the whole patch), the **Stereo** / **🔒 LOCK** toggles (see §0x07), the soft-key strip, the sources / blocks / outputs grid with SVG cables, and a detail panel (params + code) for the selected block. Cables glow with each source block's live signal level, so the gain structure between blocks is visible while you patch.
+- **Patch** — drag an output jack onto an input jack to wire it (drag an input away to disconnect); an **⚡ EZ WIRE** toggle (while on, keeps In L → your blocks → Out L/R auto-wired as blocks are added, removed or retyped, so a beginner gets sound without touching cables), an **INIT** button (unplug every cable & mod, keep the blocks), **🗑** (blank the whole patch), the **Stereo** / **🔒 LOCK** toggles (see §0x07), the soft-key strip, the sources / blocks / outputs grid with SVG cables, and a detail panel (params + code) for the selected block. Cables glow with each source block's live signal level, so the gain structure between blocks is visible while you patch.
 - **Synth** — a fixed-layout panel showing every module's knobs in a grid, no cables (Serum/Spire-style).
 - **Perform** — macros + XY pads only, no patching (see §0x07).
 - **Clip** — draw a MIDI pattern and play it (with key/scale, key-trigger).
@@ -148,6 +161,8 @@ A JUCE 8 `WebBrowserComponent` rendering an embedded cyberpunk UI (the strykelan
 - **Browse** — search, save, tag and load patches; filter by bank, type, style, character.
 - **Settings** — Master In/Out + Bypass, **Auto Gain Stage** + target, the brickwall limiter, **MIDI Program Change / Bank Select** toggles (see §0x07), scale-key/scale quantize, UI scale, interface toggles.
 - **About** — version + engine info.
+
+A **command palette** (`⌘K` / `Ctrl+K`, or the `⌘K` tab button in hosts that grab the key) fuzzy-jumps to any tab or action.
 
 ### Auto gain staging
 
@@ -164,7 +179,7 @@ An in-plugin recorder (`zpc::WavRecorder`, shared with zpwr-synth) captures the 
 
 ### Master-insert plugin host
 
-The plugin can host one external **VST3 / AU** plugin on its master insert (`zpc::PluginInsert` + `zpc::PluginHost`, the same surface zpwr-synth ships; `JUCE_PLUGINHOST_VST3` / `JUCE_PLUGINHOST_AU` are enabled in CMake). The hosted plugin processes in `processBlock` after the stereo widener, so it sits on the final master path. Editor native functions drive it: `pluginScan`, `pluginList`, `pluginLoad`, `pluginClear`, `pluginCurrent`, and `pluginEditorOpen` (a floating `zpc::PluginInsertWindow` for the hosted editor). The hosted plugin's id and its own serialized state save/restore with the host's `get/setStateInformation`.
+The plugin can host one external **VST3 / AU** plugin on its master insert (`zpc::PluginInsert` + `zpc::PluginHost`, the same surface zpwr-synth ships; `JUCE_PLUGINHOST_VST3` / `JUCE_PLUGINHOST_AU` are enabled in CMake). The hosted plugin processes in `processBlock` after the stereo widener and before the brickwall limiter, so it sits on the final master path. Editor native functions drive it: `pluginScan` (with `pluginScanStatus` for scan progress), `pluginList`, `pluginLoad`, `pluginClear`, `pluginCurrent`, and `pluginEditorOpen` (a floating `zpc::PluginInsertWindow` for the hosted editor). The hosted plugin's id and its own serialized state save/restore with the host's `get/setStateInformation`.
 
 ---
 
@@ -174,7 +189,7 @@ The plugin can host one external **VST3 / AU** plugin on its master insert (`zpc
 
 A play-the-patch surface that drives only host-automatable params, so it works editor-closed and records as automation:
 
-- **Preset Morph** — a 4-corner XY pad (A/B/C/D) that bilinearly interpolates between four captured patches; the corner snapshots live on the processor, X/Y are reserved host params (`morphX`/`morphY`), and a **🎲** assigns a random preset to all four corners.
+- **Preset Morph** — a 4-corner XY pad (A/B/C/D) that bilinearly interpolates between four captured patches; a **🎲** assigns a random preset to all four corners. The corner snapshots and the `morphX`/`morphY` host params are provided by the host side of the shared UI contract (`setMorphCorner`, `morphState`); `ZfxProcessor` registers neither (`createLayout` in `src/PluginProcessor.cpp` creates only the Soft Keys, Master In/Out/Bypass and the `Auto N` pool), so the pad does not blend in zpwr-fx (see §0x0E).
 - **Orb** — a radial pad where the puck's *angle* selects a scene and *distance* sets its intensity; **🎲** rolls a new random scene set, **⏺** records the puck's motion, and **▶** loops the recorded motion back through the host-automatable params (so a hands-free performance gesture becomes automatable param moves).
 - **XY macro pads** — each with a per-pad **HOLD** / **SPRING** toggle (spring snaps back to centre on release).
 - **Macro knobs** — the soft knobs surfaced as plain 0..1 APVTS params.
@@ -188,10 +203,10 @@ A play-the-patch surface that drives only host-automatable params, so it works e
 
 ### MIDI Program Change / Bank Select
 
-Both toggles default **on** (`PluginProcessor.cpp`):
+Both toggles default **on** (`zpc::HostState`, `include/zpc/HostSupport.h` in zpwr-patch-core). The resulting program index is clamped to the last factory preset (`ZfxProcessor::setCurrentProgram`):
 
 - **Program Change** — an incoming PC selects the matching program (preset). Turn off to ignore PC.
-- **Bank Select** — CC0 (MSB) / CC32 (LSB) are captured and combined with the next PC (`bank × 128 + program`) for banked preset addressing. Turn off and PCs address program 0..127 directly.
+- **Bank Select** — CC0 (MSB) / CC32 (LSB) are captured and combined with the next PC (`(MSB × 128 + LSB) × 128 + PC`) for banked preset addressing. Turn off and PCs address program 0..127 directly.
 
 ---
 
@@ -199,6 +214,7 @@ Both toggles default **on** (`PluginProcessor.cpp`):
 
 - **Factory** (in code, `ZfxProcessor::factoryNames()`): presets exposed as host programs for MIDI Program Change — e.g. DL Stereo Slap, FL Filter Sweep, FL Comb Resonator, FL Auto Wah, FX Feedback Howl, DS Wavefolder, RV Iceverb Cathedral.
 - **User** patches save as gzip-compressed JSON (`patch` + soft-key values) under `<userAppData>/zfx/Presets/*.zfp` (e.g. `~/Library/zfx/Presets`; data from the pre-rename `zpwr-fx` folder is copied over once on first launch). The BROWSE tab exports/imports a **bank** — a `.zfb` collection of presets (gzip JSON) — via ⤓/⤒ BANK.
+- **User modules** are saved sub-graphs (`.zfxmod`) that can be cloned, renamed, deleted and spliced into the current patch as one undoable edit; modules published to the shared module registry index can be fetched and imported into the local store.
 - The full plugin/host state (patch + all params) round-trips through JUCE's `get/setStateInformation`.
 
 ---
@@ -214,9 +230,9 @@ cmake -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --target Zfx_All -j$(sysctl -n hw.ncpu)
 ```
 
-Already cloned without submodules: `git submodule update --init --recursive`. Launch the standalone: `open "build/Zfx_artefacts/Debug/Standalone/Zfx.app"`.
+Already cloned without submodules: `git submodule update --init --recursive`. Launch the standalone: `open "build/Zfx_artefacts/Debug/Standalone/zfx.app"`.
 
-For parity with the MenkeTechnologies desktop apps, a `pnpm` wrapper drives the same CMake build: `pnpm build` (configure-if-needed + Release build), `pnpm dev` (build then launch the Standalone), `pnpm rebuild` / `pnpm clean` / `pnpm nuke` (wipe `build/` + WebView caches and rebuild). The scripts live in `scripts/` and require no Node dependencies.
+For parity with the MenkeTechnologies desktop apps, a `pnpm` wrapper drives the same CMake build: `pnpm build` (configure-if-needed + Release build), `pnpm dev` (build then launch the Standalone), `pnpm clean` (delete `build/`), `pnpm rebuild` (delete `build/` and rebuild), `pnpm nuke` (purge the Standalone WebView caches, delete `build/`, rebuild) and `pnpm bust` (a no-op: the UI is embedded as BinaryData, so a rebuild already refreshes it). The scripts live in `scripts/` and require no Node dependencies.
 
 On macOS the default build is a **universal binary** (`x86_64;arm64`) — the VST3/AU/CLAP load on both Intel and Apple Silicon hosts. For a faster host-only dev build, configure with `-DCMAKE_OSX_ARCHITECTURES=arm64` (re-use a fresh build dir, since the architecture is cached).
 
@@ -244,7 +260,7 @@ Validate with [pluginval](https://github.com/Tracktion/pluginval) (VST3) and [cl
 
 ### Reference docs
 
-`docs/reference.html` is the full module reference — every patch block with its inputs and parameters, grouped by category. It is generated from the **live module registry** (the same catalog the plugin's UI shows), so it never drifts from the build. `docs/reference.pdf` is the same content paginated for print, built from that same HTML.
+`docs/reference.html` is the full module reference — every patch block with its inputs and parameters, grouped by category. It is generated from the **live module registry** (the same catalog the plugin's UI shows), so it never drifts from the build. `docs/reference.pdf` is the same content paginated for print, built from that same HTML with the guide from `docs/index.html` prepended (`docs/reference.tex` is the intermediate LaTeX).
 
 ```sh
 # regenerate docs/reference.html from the registry
@@ -280,10 +296,10 @@ cmake --build libs/zpwr-patch-core/build --target LatencyTest
 ## [0x0B] AUTOMATIC LATENCY ALIGNMENT
 
 The pack ships genuinely latent blocks — the linear-phase `LinearEQ` and the rest of the STFT
-`Spec*` family (1023 samples), `Convolution` (256), every 4x-oversampled drive/fuzz/wavefolder
-(7), and the windowed smoothers (1-3). Put one of those on a parallel branch of a hand-wired
-patch, sum it with a direct wire, and the two arrive at different times: a comb filter at 7
-samples, an audible pre-echo at 1023.
+`Spec*` family, `Convolution`, every 4x-oversampled nonlinearity, and the windowed smoothers.
+Their declared delays live in `zpc/Latency.h` (`kStftLatency`, `kConvolutionLatency` and the per-block table). Put one of
+those on a parallel branch of a hand-wired patch, sum it with a direct wire, and the two arrive at
+different times: a comb filter for short delays, an audible pre-echo for long ones.
 
 zpwr-fx aligns them automatically. On every patch load and every structural edit, each engine in
 the rack (layers, aux buses, master) runs the longest-path relaxation in
@@ -315,6 +331,8 @@ The routing engine itself lives in **[zpwr-patch-core](https://github.com/MenkeT
 | `libs/zpwr-patch-core/webui/` | Cyberpunk patcher UI (shared; embedded via `juce_add_binary_data`) |
 | `libs/zpwr-clip-engine/` | Clip-tab module and grid (submodule): `webui/clip`, `webui/grid`, `zpc/ClipSeq.h` |
 | `tests/`, `tools/gen_reference.cpp` | `ScriptEngineTest`, `FxPatchGraphTest`; reference-doc generator |
+| `scripts/`               | pnpm build wrappers, `build_pkg.sh` (macOS installer), `build_win.ps1` (Windows), `reference_pdf.sh` (reference PDF) |
+| `docs/`                  | GitHub Pages: `index.html` (guide), `report.html` (engineering report), generated `reference.html` / `reference.pdf` |
 
 ---
 
@@ -331,6 +349,7 @@ The new type appears in every block's type dropdown automatically.
 
 ## [0x0E] KNOWN LIMITATIONS
 
+- **Preset Morph** (Perform tab): the pad renders, but zpwr-fx does not register the corner-snapshot callbacks or the `morphX`/`morphY` host params, so dragging it does not blend presets.
 - **Structural edits** (type/routing/script changes) rebuild the graph and reset block DSP state; live param tweaks are lock-free and don't.
 - The per-sample graph is interpreted; a JIT path (via fusevm/Cranelift) is the performance endgame.
 

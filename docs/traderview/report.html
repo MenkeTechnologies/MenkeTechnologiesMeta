@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="traderview engineering report — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace, 9 library crates + Tauri shell, 989,701 Rust LOC + 355,464 JS LOC. Tauri v2 + embedded Postgres OR axum + external Postgres + JWT. 128 tables, 111 migrations, 3,130 routes, 1451 view modules, 1455 launcher tiles, 15 broker importers, live halts + catalysts + Finnhub scanner.">
+  <meta name="description" content="traderview engineering report — full desktop trading suite replacing TraderVue + DayTradeDash + StockInvest. Rust workspace of library crates plus a Tauri shell. Tauri v2 + embedded Postgres OR axum + external Postgres + JWT. Migration-defined Postgres schema, axum route surface, per-view JS modules behind a tile launcher, broker importers, live halts + catalysts + Finnhub scanner.">
   <title>TraderView &mdash; Engineering Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,7 +89,7 @@
             <a href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.78;">
-            Full desktop trading suite &middot; replaces TraderVue + DayTradeDash + StockInvest ($2,604/yr saved) &middot; Rust workspace, 9 library crates + Tauri shell &middot; 989,701 Rust LOC + 355,464 JS LOC &middot; 128 tables, 111 migrations, 3,130 routes, 1451 view modules, 1455 launcher tiles &middot; 15 broker importers &middot; live halts + catalysts + Finnhub scanner
+            Full desktop trading suite &middot; replaces TraderVue + DayTradeDash + StockInvest ($2,604/yr saved) &middot; Rust workspace of library crates + Tauri shell &middot; broker importers &middot; live halts + catalysts + Finnhub scanner
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -107,36 +107,9 @@
       <!-- SECTION 1: EXECUTIVE SUMMARY            -->
       <!-- ═══════════════════════════════════════ -->
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>EXECUTIVE SUMMARY</h2>
-      <p class="tutorial-subtitle">traderview is a full desktop trading suite that ships as <strong>two binaries from one workspace</strong>: a Tauri v2 desktop app with embedded PostgreSQL for single-user offline use, and an axum web server with external Postgres + argon2 + JWT for multi-user hosted deployment. Both binaries depend on eight shared library crates (<code>core / db / import / web / expense / ocr / tax / stryke</code>) and a vanilla JS + uPlot frontend with no bundler. The data model treats broker fills as atoms (one row per <code>execution</code>) and derives <code>trades</code> via deterministic FIFO roll-up — re-running it is always safe. Fifteen broker importers cover Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, Coinbase, Kraken, plus a Generic column-mapping wizard for anything else. Live streams (Nasdaq halts, SEC EDGAR + PR wires for catalysts, Finnhub WebSocket scanner, Webull read-only broker) push through bounded in-process stores to browsers via WebSocket. <strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) — $2,604/yr saved.</strong></p>
+      <p class="tutorial-subtitle">traderview is a full desktop trading suite that ships as <strong>two binaries from one workspace</strong>: a Tauri v2 desktop app with embedded PostgreSQL for single-user offline use, and an axum web server with external Postgres + argon2 + JWT for multi-user hosted deployment. Both binaries build on the shared workspace library crates (<code>core / db / import / web / expense / ocr / tax / stryke / bus</code>) and a vanilla JS + uPlot frontend with no bundler. The data model treats broker fills as atoms (one row per <code>execution</code>) and derives <code>trades</code> via deterministic FIFO roll-up — re-running it is always safe. Broker importers cover Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, Coinbase, Kraken, plus a Generic column-mapping wizard for anything else. Live streams (Nasdaq halts, SEC EDGAR + PR wires for catalysts, Finnhub WebSocket scanner, Webull read-only broker) push through bounded in-process stores to browsers via WebSocket. <strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) — $2,604/yr saved.</strong></p>
 
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val">989,701</div><div class="stat-label">Rust Lines</div></div>
-        <div class="stat-card"><div class="stat-val accent">9+1</div><div class="stat-label">Library Crates + Tauri Shell</div></div>
-        <div class="stat-card"><div class="stat-val green">128</div><div class="stat-label">Postgres Tables</div></div>
-        <div class="stat-card"><div class="stat-val">111</div><div class="stat-label">Migrations</div></div>
-        <div class="stat-card"><div class="stat-val">3,130</div><div class="stat-label">HTTP API Routes</div></div>
-        <div class="stat-card"><div class="stat-val magenta">1451</div><div class="stat-label">Frontend View Modules</div></div>
-        <div class="stat-card"><div class="stat-val accent">1455</div><div class="stat-label">Launcher Tiles</div></div>
-        <div class="stat-card"><div class="stat-val">355,464</div><div class="stat-label">JS Frontend Lines</div></div>
-        <div class="stat-card"><div class="stat-val">7,894</div><div class="stat-label">Frontend CSS Lines</div></div>
-        <div class="stat-card"><div class="stat-val green">15</div><div class="stat-label">Broker Importers</div></div>
-        <div class="stat-card"><div class="stat-val magenta">25</div><div class="stat-label">Postgres Enum Types</div></div>
-        <div class="stat-card"><div class="stat-val">180</div><div class="stat-label">Indexes</div></div>
-      </div>
 
-      <div style="margin:1.2rem 0;">
-        <p style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif;font-weight:700;">Source distribution — 989,701 Rust + 363,358 frontend = 1,353,059 total lines (tracked files; frontend excludes <code>frontend/vendor/</code> and <code>frontend/lib/</code>)</p>
-        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Counted with <code>wc -l</code> over <code>git ls-files</code>: <code>&#39;*.rs&#39;</code> for Rust, and <code>&#39;frontend/*.js&#39;</code> / <code>&#39;frontend/*.css&#39;</code> minus <code>frontend/vendor/</code> and <code>frontend/lib/</code> for the frontend. Schema figures are grepped from the tracked <code>migrations/*.sql</code>. Measured 2026-10-01.</p>
-        <!-- Rust: git ls-files '*.rs' | xargs wc -l | tail -1 ; per crate: git ls-files '<crate>/*.rs' | xargs wc -l | tail -1 -->
-        <!-- JS: git ls-files 'frontend/*.js' | grep -vE '^frontend/(vendor|lib)/' | xargs wc -l | tail -1 ; CSS: same with 'frontend/*.css' -->
-        <!-- library crates: "crates/*" entries in the Cargo.toml [workspace] members list ; broker importers: grep -cE '^pub struct [A-Za-z]+Parser;' crates/traderview-import/src/brokers.rs, minus GenericCsvParser -->
-        <!-- supporting modules: git ls-files 'frontend/js/*.js' | grep -v '^frontend/js/views/' | wc -l ; api helpers: function-valued keys of the exported api object in frontend/js/api.js ; view route cases: case labels inside switch (view) in frontend/js/app.js -->
-        <div class="bar-wrap" style="height:26px;">
-          <div class="bar-fill cyan" style="width:73.1%;"></div>
-          <span class="bar-pct" style="font-size:12px;">989,701 Rust (73.1%) &middot; 355,464 JS (26.3%) &middot; 7,894 CSS (0.6%)</span>
-        </div>
-        <p style="font-size:10px;color:var(--text-muted);margin-top:4px;">Rust dominates because both the desktop and web binaries import the same workspace library crates (no duplication). Frontend is vanilla ES modules with zero npm, zero bundler, zero framework — one render function per view, all routed by hash dispatch.</p>
-      </div>
 
       <hr class="section-rule">
 
@@ -150,89 +123,49 @@
         <thead>
           <tr>
             <th>Crate</th>
-            <th class="num">Lines</th>
-            <th class="num">Share</th>
-            <th>Distribution</th>
             <th>Notable modules</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><code>traderview-core</code></td>
-            <td class="num">321,253</td>
-            <td class="num">32.5%</td>
-            <td><div class="bar-wrap"><div class="bar-fill cyan" style="width:32.5%;"></div></div></td>
             <td>Domain types &middot; FIFO roll-up &middot; statistics (R-multiple / SQN / Sharpe / Sortino) &middot; position sizing &middot; Monte Carlo &middot; stryke-JIT backtest engine &middot; walk-forward &middot; sentiment scoring &middot; custom indicator AST</td>
           </tr>
           <tr>
             <td><code>traderview-db</code></td>
-            <td class="num">96,716</td>
-            <td class="num">9.8%</td>
-            <td><div class="bar-wrap"><div class="bar-fill magenta" style="width:9.8%;"></div></div></td>
-            <td>sqlx pool factory + 111 migrations &middot; embedded PostgreSQL lifecycle (stale-PID cleanup, persisted password) &middot; ~50 repo modules &middot; live stores for halts / catalysts / ticks &middot; Yahoo / FINRA / EDGAR / Finnhub / WSB / StockTwits / CoinGecko pollers</td>
+            <td>sqlx pool factory + embedded migrations &middot; embedded PostgreSQL lifecycle (stale-PID cleanup, persisted password) &middot; per-domain repo modules &middot; live stores for halts / catalysts / ticks &middot; Yahoo / FINRA / EDGAR / Finnhub / WSB / StockTwits / CoinGecko pollers</td>
           </tr>
           <tr>
             <td><code>traderview-import</code></td>
-            <td class="num">2,614</td>
-            <td class="num">0.3%</td>
-            <td><div class="bar-wrap"><div class="bar-fill yellow" style="width:0.3%;"></div></div></td>
-            <td>15 broker parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, Coinbase, Kraken — plus a Generic <code>ColumnMap</code> parser. <code>Parser</code> trait + column-mapping wizard for unknown sources.</td>
+            <td>Broker parsers — Webull, Lightspeed, IBKR Flex, ThinkOrSwim, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, Coinbase, Kraken — plus a Generic <code>ColumnMap</code> parser. <code>Parser</code> trait + column-mapping wizard for unknown sources.</td>
           </tr>
           <tr>
             <td><code>traderview-web</code></td>
-            <td class="num">89,753</td>
-            <td class="num">9.1%</td>
-            <td><div class="bar-wrap"><div class="bar-fill green" style="width:9.1%;"></div></div></td>
-            <td>axum 0.7 router &middot; 3,130 routes split across 182 route files &middot; argon2 + JWT auth &middot; multipart upload &middot; WebSocket endpoints for halts / catalysts / live ticks / Webull &middot; request/response logging middleware &middot; browser-error sink</td>
+            <td>axum 0.7 router &middot; routes split across per-domain route files &middot; argon2 + JWT auth &middot; multipart upload &middot; WebSocket endpoints for halts / catalysts / live ticks / Webull &middot; request/response logging middleware &middot; browser-error sink</td>
           </tr>
           <tr>
             <td><code>traderview-expense</code></td>
-            <td class="num">463,026</td>
-            <td class="num">46.8%</td>
-            <td><div class="bar-wrap"><div class="bar-fill cyan" style="width:46.8%;"></div></div></td>
-            <td>Trading-expense tracker &middot; categorization rules engine &middot; OCR-pipeline integration &middot; Schedule-C report generator &middot; multi-account reconciliation</td>
+            <td>Trading-expense tracker &middot; statement parsers (Amazon / BoA / Chase / Apple Card / generic sheet) &middot; categorization rules engine &middot; Schedule-C report generator &middot; cross-account transfer dedup &middot; pure-compute rule modules for U.S. federal tax-code sections (<code>section_*</code>) and residential landlord-tenant compliance (<code>rental_*</code> and related per-topic modules)</td>
           </tr>
           <tr>
             <td><code>traderview-ocr</code></td>
-            <td class="num">5,247</td>
-            <td class="num">0.5%</td>
-            <td><div class="bar-wrap"><div class="bar-fill yellow" style="width:0.5%;"></div></div></td>
             <td>Receipt + tax-form OCR &middot; engine ensemble: Apple Vision sidecar (macOS) + Tesseract psm4/psm6 + PaddleOCR (<code>paddle</code> feature, on by default in the web and desktop builds), fused per field &middot; grayscale + Lanczos3 upscale + Sauvola thresholding &middot; PDF text layer &middot; W-2 / 1099 / 1098 box parser &middot; merchant / amount / date extraction for the expense matcher</td>
           </tr>
           <tr>
             <td><code>traderview-tax</code></td>
-            <td class="num">6,583</td>
-            <td class="num">0.7%</td>
-            <td><div class="bar-wrap"><div class="bar-fill magenta" style="width:0.7%;"></div></div></td>
             <td>US federal tax compute engine &middot; brackets &middot; SE tax &middot; QBI § 199A &middot; credits &middot; capital gains &middot; AMT &middot; NIIT &middot; safe harbor &middot; § 179 &middot; home office &middot; mileage &middot; retirement limits &middot; what-if &middot; backs the tax wizard view</td>
           </tr>
           <tr>
             <td><code>traderview-stryke</code></td>
-            <td class="num">1,017</td>
-            <td class="num">0.1%</td>
-            <td><div class="bar-wrap"><div class="bar-fill green" style="width:0.1%;"></div></div></td>
             <td>Host bridge for stryke-language lifecycle hooks &middot; runs the embedded stryke binary as a sandboxed subprocess (5s timeout, output cap) &middot; validates emitted effects (tag / note / alert / webhook / journal) against each hook's capability grant &middot; no compile-time fusevm dependency</td>
           </tr>
           <tr>
             <td><code>traderview-bus</code></td>
-            <td class="num">777</td>
-            <td class="num">0.1%</td>
-            <td><div class="bar-wrap"><div class="bar-fill magenta" style="width:0.1%;"></div></div></td>
             <td>Rust half of the GUI Automation Bus &middot; <code>rev</code>: reversibility class of every generated verb, mirroring <code>frontend/js/_zg_automation_rev.js</code> &middot; <code>admit</code>: asks the <code>zthrottle</code> governor how wide a parameter sweep may fan out, with a fallback when that app is not running</td>
           </tr>
           <tr>
             <td><code>src-tauri</code> (<code>traderview-desktop</code>)</td>
-            <td class="num">2,715</td>
-            <td class="num">0.3%</td>
-            <td><div class="bar-wrap"><div class="bar-fill pink" style="width:0.3%;"></div></div></td>
             <td>Tauri v2 shell &middot; worker-thread bring-up of embedded PG → migrations → axum &middot; native-dialog on failure &middot; <code>tracing-appender</code> non-blocking file log + panic hook &middot; <code>Embedded</code> handle held across <code>axum::serve</code></td>
-          </tr>
-          <tr class="total-row">
-            <td>Total</td>
-            <td class="num">989,701</td>
-            <td class="num">100%</td>
-            <td></td>
-            <td>Plus 355,464 LOC frontend JS + 7,894 LOC CSS (no bundler, no npm).</td>
           </tr>
         </tbody>
       </table>
@@ -297,36 +230,34 @@
       <!-- ═══════════════════════════════════════ -->
       <!-- SECTION 4: SCHEMA                       -->
       <!-- ═══════════════════════════════════════ -->
-      <h2 class="tutorial-title"><span class="step-hash">~</span>SCHEMA — 111 MIGRATIONS, 128 TABLES</h2>
-      <p class="tutorial-subtitle">Each migration adds a self-contained feature (<code>0001_initial.sql</code> → <code>0111_strategy_arming_gate.sql</code>). 128 content tables, 180 indexes, 25 PostgreSQL enum types. <code>pgcrypto</code> for <code>gen_random_uuid()</code>. Money is <code>NUMERIC(20,8)</code> everywhere. All foreign keys cascade on delete; the user is the root of every ownership chain. Grouped by domain:</p>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>SCHEMA — MIGRATIONS</h2>
+      <p class="tutorial-subtitle">Each migration adds a self-contained feature (<code>0001_initial.sql</code> → <code>0111_strategy_arming_gate.sql</code>). <code>pgcrypto</code> for <code>gen_random_uuid()</code>. Money is <code>NUMERIC(20,8)</code> everywhere. All foreign keys cascade on delete; the user is the root of every ownership chain. Grouped by domain:</p>
 
       <table class="file-table">
         <thead>
           <tr>
             <th>Domain</th>
-            <th class="num">Tables</th>
             <th>Representative members</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td><strong>Identity &amp; accounts</strong></td><td class="num">4</td><td><code>users</code>, <code>accounts</code>, <code>api_tokens</code>, <code>mentorships</code></td></tr>
-          <tr><td><strong>Executions &amp; trades</strong></td><td class="num">6</td><td><code>executions</code>, <code>trades</code>, <code>trade_executions</code>, <code>trade_tags</code>, <code>tags</code>, <code>imports</code></td></tr>
-          <tr><td><strong>Journal</strong></td><td class="num">5</td><td><code>journal_entries</code>, <code>note_templates</code>, <code>trade_reviews</code>, <code>chart_drawings</code>, <code>screenshots</code></td></tr>
-          <tr><td><strong>Plans / goals / discipline</strong></td><td class="num">4</td><td><code>plans</code>, <code>trading_goals</code>, <code>goal_progress</code>, <code>discipline_violations</code></td></tr>
-          <tr><td><strong>Price data &amp; quotes</strong></td><td class="num">5</td><td><code>bars</code>, <code>quote_snapshots</code>, <code>news_items</code>, <code>earnings_events</code>, <code>dividends</code></td></tr>
-          <tr><td><strong>Live feeds</strong></td><td class="num">4</td><td><code>halts</code>, <code>catalysts</code>, <code>mentions</code> (sentiment), <code>tick_snapshots</code></td></tr>
-          <tr><td><strong>Watchlists &amp; screening</strong></td><td class="num">3</td><td><code>watchlists</code>, <code>watchlist_symbols</code>, <code>filter_sets</code></td></tr>
-          <tr><td><strong>Alerts / webhooks / hotkeys</strong></td><td class="num">7</td><td><code>alerts</code>, <code>strategy_alerts</code>, <code>strategy_alert_fires</code>, <code>hotkeys</code>, <code>webhooks</code>, <code>webhook_deliveries</code>, <code>disclosures_watchers</code></td></tr>
-          <tr><td><strong>Backtest &amp; strategy</strong></td><td class="num">4</td><td><code>backtest_runs</code>, <code>backtest_presets</code>, <code>walk_forward_runs</code>, <code>custom_indicators</code></td></tr>
-          <tr><td><strong>Paper trading</strong></td><td class="num">3</td><td><code>paper_accounts</code>, <code>paper_orders</code>, <code>paper_positions</code></td></tr>
-          <tr><td><strong>Portfolio / risk</strong></td><td class="num">3</td><td><code>rebalance_targets</code>, <code>rebalance_runs</code>, <code>tax_lots</code></td></tr>
-          <tr><td><strong>Disclosures</strong></td><td class="num">1</td><td><code>disclosures</code> (Form 4, 13D/G, Senate / House STOCK Act)</td></tr>
-          <tr><td><strong>Community</strong></td><td class="num">7</td><td><code>shares</code>, <code>shared_comments</code>, <code>forum_categories</code>, <code>forum_threads</code>, <code>forum_posts</code>, <code>boards</code>, <code>board_items</code></td></tr>
-          <tr><td><strong>Settings &amp; AI</strong></td><td class="num">4</td><td><code>user_settings</code>, <code>ai_settings</code>, <code>ai_journal_cache</code>, <code>dashboards</code></td></tr>
-          <tr><td><strong>Expenses + OCR</strong></td><td class="num">5</td><td><code>expense_accounts</code>, <code>expense_categories</code>, <code>expense_transactions</code>, <code>expense_rules</code>, <code>expense_receipts</code></td></tr>
-          <tr><td><strong>sqlx tracker</strong></td><td class="num">1</td><td><code>_sqlx_migrations</code> (auto)</td></tr>
-          <tr class="total-row"><td>Total</td><td class="num">128</td><td>180 indexes &middot; 25 enum types &middot; 111 migrations</td></tr>
-        </tbody>
+          <tr><td><strong>Identity &amp; accounts</strong></td><td><code>users</code>, <code>accounts</code>, <code>api_tokens</code>, <code>mentorships</code></td></tr>
+          <tr><td><strong>Executions &amp; trades</strong></td><td><code>executions</code>, <code>trades</code>, <code>trade_executions</code>, <code>trade_tags</code>, <code>tags</code>, <code>imports</code></td></tr>
+          <tr><td><strong>Journal</strong></td><td><code>journal_entries</code>, <code>note_templates</code>, <code>trade_reviews</code>, <code>chart_drawings</code>, <code>screenshots</code></td></tr>
+          <tr><td><strong>Plans / goals / discipline</strong></td><td><code>plans</code>, <code>trading_goals</code>, <code>goal_progress</code>, <code>discipline_violations</code></td></tr>
+          <tr><td><strong>Price data &amp; quotes</strong></td><td><code>bars</code>, <code>quote_snapshots</code>, <code>news_items</code>, <code>earnings_events</code>, <code>dividends</code></td></tr>
+          <tr><td><strong>Live feeds</strong></td><td><code>halts</code>, <code>catalysts</code>, <code>mentions</code> (sentiment), <code>tick_snapshots</code></td></tr>
+          <tr><td><strong>Watchlists &amp; screening</strong></td><td><code>watchlists</code>, <code>watchlist_symbols</code>, <code>filter_sets</code></td></tr>
+          <tr><td><strong>Alerts / webhooks / hotkeys</strong></td><td><code>alerts</code>, <code>strategy_alerts</code>, <code>strategy_alert_fires</code>, <code>hotkeys</code>, <code>webhooks</code>, <code>webhook_deliveries</code>, <code>disclosures_watchers</code></td></tr>
+          <tr><td><strong>Backtest &amp; strategy</strong></td><td><code>backtest_runs</code>, <code>backtest_presets</code>, <code>walk_forward_runs</code>, <code>custom_indicators</code></td></tr>
+          <tr><td><strong>Paper trading</strong></td><td><code>paper_accounts</code>, <code>paper_orders</code>, <code>paper_positions</code></td></tr>
+          <tr><td><strong>Portfolio / risk</strong></td><td><code>rebalance_targets</code>, <code>rebalance_runs</code>, <code>tax_lots</code></td></tr>
+          <tr><td><strong>Disclosures</strong></td><td><code>disclosures</code> (Form 4, 13D/G, Senate / House STOCK Act)</td></tr>
+          <tr><td><strong>Community</strong></td><td><code>shares</code>, <code>shared_comments</code>, <code>forum_categories</code>, <code>forum_threads</code>, <code>forum_posts</code>, <code>boards</code>, <code>board_items</code></td></tr>
+          <tr><td><strong>Settings &amp; AI</strong></td><td><code>user_settings</code>, <code>ai_settings</code>, <code>ai_journal_cache</code>, <code>dashboards</code></td></tr>
+          <tr><td><strong>Expenses + OCR</strong></td><td><code>expense_accounts</code>, <code>expense_categories</code>, <code>expense_transactions</code>, <code>expense_rules</code>, <code>expense_receipts</code></td></tr>
+          <tr><td><strong>sqlx tracker</strong></td><td><code>_sqlx_migrations</code> (auto)</td></tr>
+                  </tbody>
       </table>
 
       <p style="font-size:11px;color:var(--text-muted);margin-top:0.6rem;"><strong>Enum types (25).</strong> Sides (<code>side_t</code>, <code>trade_side_t</code>), statuses (<code>trade_status_t</code>, <code>order_status_t</code>, <code>review_status_t</code>), asset classes, alert triggers, sentiment sources, halt reason codes, plus per-feature enums introduced by later migrations. See <code>migrations/0001_initial.sql</code> + feature-incremental migrations.</p>
@@ -336,44 +267,42 @@
       <!-- ═══════════════════════════════════════ -->
       <!-- SECTION 5: HTTP API                     -->
       <!-- ═══════════════════════════════════════ -->
-      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>HTTP API SURFACE — 3,130 ROUTES</h2>
-      <p class="tutorial-subtitle">3,130 axum routes mounted at <code>/api/</code> across 182 route files in <code>crates/traderview-web/src/routes/</code>. Bearer-auth required on everything except <code>/health</code>, <code>/config</code>, <code>/auth/*</code>, and <code>/client-errors</code>. WebSocket endpoints expose 15 live feeds. Same surface served from either deploy target.</p>
+      <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>HTTP API SURFACE</h2>
+      <p class="tutorial-subtitle">axum routes mounted at <code>/api/</code> across per-domain route files in <code>crates/traderview-web/src/routes/</code>. Bearer-auth required on everything except <code>/health</code>, <code>/config</code>, <code>/auth/*</code>, and <code>/client-errors</code>. WebSocket endpoints expose the live feeds. Same surface served from either deploy target.</p>
 
       <table class="file-table">
         <thead>
           <tr>
             <th>Group</th>
-            <th class="num">Endpoints</th>
             <th>Sample routes</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td><strong>Auth + config</strong></td><td class="num">~6</td><td><code>GET /config</code>, <code>GET /auth/me</code>, <code>POST /auth/login</code>, <code>POST /auth/register</code></td></tr>
-          <tr><td><strong>Trades + executions</strong></td><td class="num">~20</td><td><code>GET/POST /trades</code>, <code>POST /trades/rollup</code>, <code>POST /trades/{id}/risk</code>, <code>POST /trades/merge</code>, <code>POST /trades/bulk</code>, <code>GET/POST /executions</code></td></tr>
-          <tr><td><strong>Journal + AI + reviews</strong></td><td class="num">~15</td><td><code>GET /journal/day/{day}</code>, <code>POST /journal-ai/{id}/analyze</code>, <code>GET /trade-reviews/needed/{acct}</code>, <code>GET/POST /note-templates</code></td></tr>
-          <tr><td><strong>Reports (17 cuts)</strong></td><td class="num">~20</td><td><code>/reports/{overview, by-symbol, by-day-of-week, by-hour, by-hold, r-distribution, comparison, exit-efficiency, liquidity, drawdown, risk-adjusted, calendar}</code></td></tr>
-          <tr><td><strong>Live streams (WS)</strong></td><td class="num">15</td><td><code>WS /ws/halts</code>, <code>/ws/catalysts</code>, <code>/ws/ticks</code>, <code>/ws/webull</code>, <code>/ws/after-hours</code>, <code>/ws/gamma-squeeze</code>, <code>/ws/breadth-divergence</code>, <code>/ws/rvol-accel</code>, <code>/ws/insider-stream</code>, <code>/ws/uoa-stream</code>, <code>/ws/squeeze</code>, <code>/ws/confluence</code>, <code>/ws/catalyst-correlations</code>, <code>/ws/sentiment-velocity</code>, <code>/ws/stryke-lsp</code></td></tr>
-          <tr><td><strong>Research per-symbol</strong></td><td class="num">~10</td><td><code>/symbols/{sym}/{quote, signals, news, earnings, dividends, recommendations, insiders, fundamentals, holders}</code></td></tr>
-          <tr><td><strong>Screener + scanners</strong></td><td class="num">~4</td><td><code>GET /screener/run</code>, <code>GET /screener/top</code>, <code>GET /scans/run</code> (24 Warrior / Zendoo presets)</td></tr>
-          <tr><td><strong>Chart studies</strong></td><td class="num">4</td><td><code>GET /seasonals/{sym}?years=</code>, <code>GET /performance-summary?symbols=A,B</code>, <code>POST /symbol-math</code> (<code>{expr, interval, from, to}</code>), <code>GET /drawing-alerts/{sym}?interval&amp;from&amp;to&amp;extend_right=</code></td></tr>
-          <tr><td><strong>Options + vol</strong></td><td class="num">~7</td><td><code>/options/{sym}</code>, <code>/greeks</code>, <code>/vol-surface/{sym}</code>, <code>/iv/scan</code>, <code>/iv/symbols/{sym}</code>, <code>/vol/{vix,yields,dollar}</code></td></tr>
-          <tr><td><strong>Markets + breadth</strong></td><td class="num">~7</td><td><code>/markets/snapshot</code> (60s cache), <code>/premarket/snapshot</code>, <code>/breadth/snapshot</code>, <code>/fear-greed</code>, <code>/sector-rotation</code>, <code>/heatmap</code></td></tr>
-          <tr><td><strong>Backtest + custom indicators</strong></td><td class="num">~12</td><td><code>POST /backtest/run</code>, <code>POST /backtest/walk-forward</code>, <code>GET/POST /backtest-presets</code>, <code>POST /custom-indicators/eval/{sym}</code></td></tr>
-          <tr><td><strong>Paper trading</strong></td><td class="num">~8</td><td><code>POST /paper/accounts</code>, <code>GET /paper/accounts/{id}/positions</code>, <code>POST /paper/accounts/{id}/orders</code>, <code>POST /paper/accounts/{id}/reset</code></td></tr>
-          <tr><td><strong>Alerts + webhooks + hotkeys</strong></td><td class="num">~15</td><td><code>GET/POST /alerts</code>, <code>POST /alerts/{id}/toggle</code>, <code>GET/POST /strategy-alerts</code>, <code>GET/POST /hotkeys</code>, <code>GET/POST /webhooks</code>, <code>POST /webhooks/{id}/test</code></td></tr>
-          <tr><td><strong>Sentiment</strong></td><td class="num">~5</td><td><code>/sentiment/{feed, ranked, symbol/{sym}, series/{sym}, poll}</code> (Reddit WSB + StockTwits)</td></tr>
-          <tr><td><strong>Crypto</strong></td><td class="num">3</td><td><code>/crypto/markets</code>, <code>/crypto/global</code>, <code>/crypto/btc/chain</code></td></tr>
-          <tr><td><strong>Tax + analytics</strong></td><td class="num">~10</td><td><code>/tax-lots/{acct}?year=&amp;method=FIFO|LIFO</code>, <code>/r-distribution/{acct}</code>, <code>/discipline/{acct}</code>, <code>/mood-analytics/{acct}</code>, <code>/equity-forecast</code>, <code>/fill-quality/{acct}</code></td></tr>
-          <tr><td><strong>Webull (read-only)</strong></td><td class="num">2</td><td><code>POST /webull/connect</code> (tokens in memory only), <code>GET /webull/snapshot</code></td></tr>
-          <tr><td><strong>Expenses + OCR</strong></td><td class="num">~15</td><td><code>GET/POST /expense/transactions</code>, <code>POST /expense/import</code>, <code>POST /expense/receipts</code>, <code>POST /expense/receipts/{id}/attach</code>, <code>GET /expense/report/schedule_c?year=</code></td></tr>
-          <tr><td><strong>Community</strong></td><td class="num">~12</td><td><code>/shares</code>, <code>/shared/{slug}</code>, <code>/forum/threads</code>, <code>/forum/threads/{id}/posts</code>, <code>/mentorships</code>, <code>/boards</code></td></tr>
-          <tr><td><strong>Watchlists + filter-sets</strong></td><td class="num">~10</td><td><code>GET/POST /watchlists</code>, <code>GET /watchlists/{id}/symbols</code>, <code>GET /watchlists/{id}/quotes</code>, <code>GET/POST /filter-sets</code></td></tr>
-          <tr><td><strong>Custom dashboards</strong></td><td class="num">~5</td><td><code>GET/POST /dashboards</code>, <code>GET /dashboards/{id}</code> — user-defined boards built from widgets</td></tr>
-          <tr><td><strong>Disclosures + earnings + news</strong></td><td class="num">~10</td><td><code>GET /disclosures</code>, <code>POST /disclosures/poll</code>, <code>GET /earnings/calendar</code>, <code>GET /news/recent</code>, <code>GET /news/search</code></td></tr>
-          <tr><td><strong>API tokens + import sources</strong></td><td class="num">~7</td><td><code>GET/POST /api-tokens</code>, <code>PATCH /api-tokens/{id}/rate-limit</code>, <code>GET /imports/sources</code>, <code>POST /imports</code></td></tr>
-          <tr><td><strong>Client error sink</strong></td><td class="num">1</td><td><code>POST /client-errors</code> — no auth; <code>window.onerror</code> + <code>unhandledrejection</code> + <code>console.error</code> funnel</td></tr>
-          <tr class="total-row"><td>Total</td><td class="num">3,130</td><td>182 route files. Frontend bindings: <code>frontend/js/api.js</code> exposes 1,869 method-bound helpers on the <code>api</code> object (some routes only used by direct fetch).</td></tr>
-        </tbody>
+          <tr><td><strong>Auth + config</strong></td><td><code>GET /config</code>, <code>GET /auth/me</code>, <code>POST /auth/login</code>, <code>POST /auth/register</code></td></tr>
+          <tr><td><strong>Trades + executions</strong></td><td><code>GET/POST /trades</code>, <code>POST /trades/rollup</code>, <code>POST /trades/{id}/risk</code>, <code>POST /trades/merge</code>, <code>POST /trades/bulk</code>, <code>GET/POST /executions</code></td></tr>
+          <tr><td><strong>Journal + AI + reviews</strong></td><td><code>GET /journal/day/{day}</code>, <code>POST /journal-ai/{id}/analyze</code>, <code>GET /trade-reviews/needed/{acct}</code>, <code>GET/POST /note-templates</code></td></tr>
+          <tr><td><strong>Reports</strong></td><td><code>/reports/{overview, by-symbol, by-day-of-week, by-hour, by-hold, r-distribution, comparison, exit-efficiency, liquidity, drawdown, risk-adjusted, calendar}</code></td></tr>
+          <tr><td><strong>Live streams (WS)</strong></td><td><code>WS /ws/halts</code>, <code>/ws/catalysts</code>, <code>/ws/ticks</code>, <code>/ws/webull</code>, <code>/ws/after-hours</code>, <code>/ws/gamma-squeeze</code>, <code>/ws/breadth-divergence</code>, <code>/ws/rvol-accel</code>, <code>/ws/insider-stream</code>, <code>/ws/uoa-stream</code>, <code>/ws/squeeze</code>, <code>/ws/confluence</code>, <code>/ws/catalyst-correlations</code>, <code>/ws/sentiment-velocity</code>, <code>/ws/stryke-lsp</code></td></tr>
+          <tr><td><strong>Research per-symbol</strong></td><td><code>/symbols/{sym}/{quote, signals, news, earnings, dividends, recommendations, insiders, fundamentals, holders}</code></td></tr>
+          <tr><td><strong>Screener + scanners</strong></td><td><code>GET /screener/run</code>, <code>GET /screener/top</code>, <code>GET /scans/run</code> (24 Warrior / Zendoo presets)</td></tr>
+          <tr><td><strong>Chart studies</strong></td><td><code>GET /seasonals/{sym}?years=</code>, <code>GET /performance-summary?symbols=A,B</code>, <code>POST /symbol-math</code> (<code>{expr, interval, from, to}</code>), <code>GET /drawing-alerts/{sym}?interval&amp;from&amp;to&amp;extend_right=</code>, <code>GET /technical-ratings?symbols=A,B&amp;interval=</code>, <code>GET /pattern-analogs/{sym}</code>, <code>GET /rvol-at-time/{sym}</code>, <code>GET /chart-patterns/{sym}</code>, <code>GET /session-volume-profile/{sym}</code>, <code>GET /moon-phases/{sym}</code>, <code>GET /trading-sessions/{sym}</code></td></tr>
+          <tr><td><strong>Options + vol</strong></td><td><code>/options/{sym}</code>, <code>/greeks</code>, <code>/vol-surface/{sym}</code>, <code>/iv/scan</code>, <code>/iv/symbols/{sym}</code>, <code>/vol/{vix,yields,dollar}</code></td></tr>
+          <tr><td><strong>Markets + breadth</strong></td><td><code>/markets/snapshot</code> (60s cache), <code>/premarket/snapshot</code>, <code>/breadth/snapshot</code>, <code>/fear-greed</code>, <code>/sector-rotation</code>, <code>/heatmap</code></td></tr>
+          <tr><td><strong>Backtest + custom indicators</strong></td><td><code>POST /backtest/run</code>, <code>POST /backtest/walk-forward</code>, <code>GET/POST /backtest-presets</code>, <code>POST /custom-indicators/eval/{sym}</code></td></tr>
+          <tr><td><strong>Paper trading</strong></td><td><code>POST /paper/accounts</code>, <code>GET /paper/accounts/{id}/positions</code>, <code>POST /paper/accounts/{id}/orders</code>, <code>POST /paper/accounts/{id}/reset</code></td></tr>
+          <tr><td><strong>Alerts + webhooks + hotkeys</strong></td><td><code>GET/POST /alerts</code>, <code>POST /alerts/{id}/toggle</code>, <code>GET/POST /strategy-alerts</code>, <code>GET/POST /hotkeys</code>, <code>GET/POST /webhooks</code>, <code>POST /webhooks/{id}/test</code></td></tr>
+          <tr><td><strong>Sentiment</strong></td><td><code>/sentiment/{feed, ranked, symbol/{sym}, series/{sym}, poll}</code> (Reddit WSB + StockTwits)</td></tr>
+          <tr><td><strong>Crypto</strong></td><td><code>/crypto/markets</code>, <code>/crypto/global</code>, <code>/crypto/btc/chain</code>, <code>POST /crypto/calc/funding-arb</code>, <code>POST /crypto/calc/funding-arb-live</code>, <code>GET /crypto/funding-scan</code>, <code>POST /crypto/positioning</code>, <code>POST /crypto/carry-basis</code>, <code>POST /crypto/vol-surface</code>, <code>POST /crypto/vrp</code>, <code>POST /crypto/book-depth</code></td></tr>
+          <tr><td><strong>Tax + analytics</strong></td><td><code>/tax-lots/{acct}?year=&amp;method=FIFO|LIFO</code>, <code>/r-distribution/{acct}</code>, <code>/discipline/{acct}</code>, <code>/mood-analytics/{acct}</code>, <code>/equity-forecast</code>, <code>/fill-quality/{acct}</code></td></tr>
+          <tr><td><strong>Webull (read-only)</strong></td><td><code>POST /webull/connect</code> (tokens in memory only), <code>GET /webull/snapshot</code></td></tr>
+          <tr><td><strong>Expenses + OCR</strong></td><td><code>GET/POST /expense/transactions</code>, <code>POST /expense/import</code>, <code>POST /expense/receipts</code>, <code>POST /expense/receipts/{id}/attach</code>, <code>GET /expense/report/schedule_c?year=</code></td></tr>
+          <tr><td><strong>Community</strong></td><td><code>/shares</code>, <code>/shared/{slug}</code>, <code>/forum/threads</code>, <code>/forum/threads/{id}/posts</code>, <code>/mentorships</code>, <code>/boards</code></td></tr>
+          <tr><td><strong>Watchlists + filter-sets</strong></td><td><code>GET/POST /watchlists</code>, <code>GET /watchlists/{id}/symbols</code>, <code>GET /watchlists/{id}/quotes</code>, <code>GET/POST /filter-sets</code></td></tr>
+          <tr><td><strong>Custom dashboards</strong></td><td><code>GET/POST /dashboards</code>, <code>GET /dashboards/{id}</code> — user-defined boards built from widgets</td></tr>
+          <tr><td><strong>Disclosures + earnings + news</strong></td><td><code>GET /disclosures</code>, <code>POST /disclosures/poll</code>, <code>GET /earnings/calendar</code>, <code>GET /news/recent</code>, <code>GET /news/search</code></td></tr>
+          <tr><td><strong>API tokens + import sources</strong></td><td><code>GET/POST /api-tokens</code>, <code>PATCH /api-tokens/{id}/rate-limit</code>, <code>GET /imports/sources</code>, <code>POST /imports</code></td></tr>
+          <tr><td><strong>Client error sink</strong></td><td><code>POST /client-errors</code> — no auth; <code>window.onerror</code> + <code>unhandledrejection</code> + <code>console.error</code> funnel</td></tr>
+                  </tbody>
       </table>
 
       <p style="font-size:11px;color:var(--text-muted);margin-top:0.6rem;"><strong>Auth middleware.</strong> All bearer-protected routes go through <code>auth.rs</code> which decodes the JWT against <code>TRADERVIEW_JWT_SECRET</code>, loads the <code>users</code> row, and injects a <code>CurrentUser</code> extractor into the handler. Desktop mode auto-mints a local-user JWT at boot. <strong>Custom logging middleware</strong> (<code>log_mw.rs</code>) records every request with elapsed_ms; 4xx/5xx responses get a 4KB body snippet for offline debugging.</p>
@@ -401,7 +330,7 @@
           <tr><td>Auth</td><td>auto-login one <code>local</code> user (<code>is_local = true</code>, nullable email/hash)</td><td>argon2 password hashing on registration, JWT bearer on every protected call</td></tr>
           <tr><td>Server lifetime</td><td>spawned by Tauri on a random localhost port; shut down on window close</td><td>long-running on <code>TRADERVIEW_BIND</code> (default <code>0.0.0.0:8080</code>)</td></tr>
           <tr><td>Frontend transport</td><td>Tauri WebView <code>fetch</code> against <code>http://127.0.0.1:&lt;port&gt;</code></td><td>browser <code>fetch</code> against the configured origin</td></tr>
-          <tr><td>CORS</td><td>not needed — same-origin via Tauri</td><td><code>TRADERVIEW_CORS_ORIGIN</code> allowlist</td></tr>
+          <tr><td>CORS</td><td>not needed — same-origin via Tauri</td><td>permissive (<code>CorsLayer::permissive()</code>)</td></tr>
           <tr><td>Bundling</td><td>Tauri v2 — <code>.dmg</code>, <code>.app</code>, <code>.AppImage</code>, <code>.msi</code></td><td>plain Rust binary — Docker, systemd, fly.io, etc.</td></tr>
         </tbody>
       </table>
@@ -525,30 +454,30 @@
       <!-- ═══════════════════════════════════════ -->
       <!-- SECTION 10: FRONTEND                    -->
       <!-- ═══════════════════════════════════════ -->
-      <h2 class="tutorial-title"><span class="step-hash">~</span>FRONTEND — VANILLA JS + uPlot, 1451 VIEWS</h2>
-      <p class="tutorial-subtitle">Zero npm. Zero bundler. Zero JS framework. 355,464 lines of JS across 1451 view modules + 250 supporting modules, 7,894 lines of CSS, no build step. Same files serve both deploy targets — Tauri loads them via the <code>tauri://localhost</code> custom scheme, axum serves them with <code>tower-http</code> <code>fs</code>.</p>
-      <p class="tutorial-subtitle">The 1455 launcher tiles are grouped into 10 category filters (defined in <code>frontend/js/views/launcher.js</code> <code>CATEGORIES</code>): Live Markets (41), Trading (136), Journal (13), Charts &amp; Research (163), Reports (683 — equity valuation, retirement, fixed income, real estate, accounting, small-business, rental, and business &amp; legal docs), Strategy &amp; Automation (15), Community (4), Admin &amp; Data (21), Tax Code (273 — one calculator per Internal Revenue Code section), and Misc / Specialized (99). The Tax Code bucket is a dedicated category for the per-IRC-section calculators.</p>
+      <h2 class="tutorial-title"><span class="step-hash">~</span>FRONTEND — VANILLA JS + uPlot</h2>
+      <p class="tutorial-subtitle">Zero npm. Zero bundler. Zero JS framework. One JS module per view plus supporting modules, plain CSS, no build step. Same files serve both deploy targets — Tauri loads them via the <code>tauri://localhost</code> custom scheme, axum serves them with <code>tower-http</code> <code>fs</code>.</p>
+      <p class="tutorial-subtitle">The launcher tiles are grouped into category filters (defined in <code>frontend/js/views/launcher.js</code> <code>CATEGORIES</code>): Live Markets, Trading, Journal, Charts &amp; Research, Reports (equity valuation, retirement, fixed income, real estate, accounting, small-business, rental, and business &amp; legal docs), Strategy &amp; Automation, Community, Admin &amp; Data, Tax Code (one calculator per Internal Revenue Code section), and Misc / Specialized. The Tax Code bucket is a dedicated category for the per-IRC-section calculators.</p>
 
       <table class="file-table">
         <thead>
-          <tr><th>Module</th><th class="num">LOC</th><th>Purpose</th></tr>
+          <tr><th>Module</th><th>Purpose</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>frontend/index.html</code></td>          <td class="num">341</td><td>Single-page shell, slimmed topbar (11 shortcuts), auth screen, <code>&lt;main id="app"&gt;</code> mount point. Loads <code>error_reporter.js</code> before <code>app.js</code>.</td></tr>
-          <tr><td><code>frontend/js/app.js</code></td>           <td class="num">~6,467</td><td>Boot sequence (initApi → config → me → accounts → dispatch). 1,451 view route cases via hash dispatch. <strong>Per-view race-token machinery</strong> (<code>currentViewToken()</code>, <code>viewIsCurrent(tok)</code>) bumped on every navigation. Cmd-K launcher hotkey, <kbd>?</kbd> tutorial hotkey.</td></tr>
-          <tr><td><code>frontend/js/api.js</code></td>           <td class="num">~2,760</td><td><code>fetch</code> wrapper with 1,869 method-bound endpoints on the <code>api</code> object. JWT bearer in web mode, auto-token in desktop mode. ApiError class, 401 token-clear, 4xx body extraction, error reporting funnel. <code>wsUrl()</code> helper derives WS URL from real backend port (not Tauri's <code>tauri://localhost</code>).</td></tr>
-          <tr><td><code>frontend/js/auth.js</code></td>          <td class="num">~58</td><td>Login / register screens for web mode.</td></tr>
-          <tr><td><code>frontend/js/ws.js</code></td>            <td class="num">~84</td><td>Global stream connection; reconnect; ping watchdog; <code>onWsEvent(kind, fn)</code> pub/sub.</td></tr>
-          <tr><td><code>frontend/js/error_reporter.js</code></td><td class="num">~122</td><td><code>window.onerror</code> + <code>unhandledrejection</code> + overridden <code>console.error</code> → POST <code>/api/client-errors</code>. Queue-capped at 200, oldest-evicted (drop counter surfaces in extras). Loads pre-init and drains once <code>__tvApiBase</code> is set.</td></tr>
-          <tr><td><code>frontend/js/alert_engine.js</code></td>  <td class="num">~120</td><td>Polls <code>/api/alerts</code> every 60s, evaluates triggers vs current quotes, fires sound + SpeechSynthesis voice + Notification. SecurityError-guarded under Tauri custom scheme.</td></tr>
-          <tr><td><code>frontend/js/hotkey_engine.js</code></td> <td class="num">~108</td><td>Global keydown listener, dispatches to actions. Skips when typing in input/textarea/contenteditable. Local-date helper avoids UTC drift for "today" navigation.</td></tr>
-          <tr><td><code>frontend/js/hud-theme.js</code></td>     <td class="num">~446</td><td>Cyberpunk HUD chrome — color schemes (8), CRT scanlines, neon-border pulse, scheme-grid renderer.</td></tr>
-          <tr><td><code>frontend/js/util.js</code></td>          <td class="num">~209</td><td>esc, fmt*, fmtMoney, fmtPct, fmtSecs, fmtDateTime, pnlClass, statCard helpers.</td></tr>
-          <tr><td><code>frontend/js/charts.js</code></td>        <td class="num">~517</td><td>uPlot wrappers — equity curve, OHLC, bar chart, line+area.</td></tr>
-          <tr><td><code>frontend/js/views/*.js</code></td>       <td class="num">1451 files</td><td>One module per launcher tile. Each exports a single <code>renderX(mount, state, ...)</code> async function. Largest by line count: <code>expenses.js</code>, <code>algo.js</code>, <code>strategy_tools.js</code>.</td></tr>
-          <tr><td><code>frontend/css/styles.css</code></td>      <td class="num">5,065</td><td>Full cyberpunk theme — neon palette, Orbitron + Share Tech Mono, CRT scanlines, panel borders, tile grid, modal styles. Light/dark toggle.</td></tr>
-          <tr><td><code>frontend/lib/</code></td>                <td class="num">vendored</td><td>uPlot — pinned via <code>./scripts/vendor-uplot.sh</code>, no CDN at runtime.</td></tr>
-          <tr class="total-row"><td>Total</td><td class="num">355,464 JS + 7,894 CSS</td><td>No transpiler, no minifier, no module bundler. Native ES modules + import maps.</td></tr>
+          <tr><td><code>frontend/index.html</code></td><td>Single-page shell, slimmed topbar, auth screen, <code>&lt;main id="app"&gt;</code> mount point. Loads <code>error_reporter.js</code> before <code>app.js</code>.</td></tr>
+          <tr><td><code>frontend/js/app.js</code></td><td>Boot sequence (initApi → config → me → accounts → dispatch). View route cases via hash dispatch. <strong>Per-view race-token machinery</strong> (<code>currentViewToken()</code>, <code>viewIsCurrent(tok)</code>) bumped on every navigation. Cmd-K launcher hotkey, <kbd>?</kbd> tutorial hotkey.</td></tr>
+          <tr><td><code>frontend/js/api.js</code></td><td><code>fetch</code> wrapper with method-bound endpoints on the <code>api</code> object. JWT bearer in web mode, auto-token in desktop mode. ApiError class, 401 token-clear, 4xx body extraction, error reporting funnel. <code>wsUrl()</code> helper derives WS URL from real backend port (not Tauri's <code>tauri://localhost</code>).</td></tr>
+          <tr><td><code>frontend/js/auth.js</code></td><td>Login / register screens for web mode.</td></tr>
+          <tr><td><code>frontend/js/ws.js</code></td><td>Global stream connection; reconnect; ping watchdog; <code>onWsEvent(kind, fn)</code> pub/sub.</td></tr>
+          <tr><td><code>frontend/js/error_reporter.js</code></td><td><code>window.onerror</code> + <code>unhandledrejection</code> + overridden <code>console.error</code> → POST <code>/api/client-errors</code>. Queue-capped at 200, oldest-evicted (drop counter surfaces in extras). Loads pre-init and drains once <code>__tvApiBase</code> is set.</td></tr>
+          <tr><td><code>frontend/js/alert_engine.js</code></td><td>Polls <code>/api/alerts</code> every 60s, evaluates triggers vs current quotes, fires sound + SpeechSynthesis voice + Notification. SecurityError-guarded under Tauri custom scheme.</td></tr>
+          <tr><td><code>frontend/js/hotkey_engine.js</code></td><td>Global keydown listener, dispatches to actions. Skips when typing in input/textarea/contenteditable. Local-date helper avoids UTC drift for "today" navigation.</td></tr>
+          <tr><td><code>frontend/js/hud-theme.js</code></td><td>Cyberpunk HUD chrome — color schemes (8), CRT scanlines, neon-border pulse, scheme-grid renderer.</td></tr>
+          <tr><td><code>frontend/js/util.js</code></td><td>esc, fmt*, fmtMoney, fmtPct, fmtSecs, fmtDateTime, pnlClass, statCard helpers.</td></tr>
+          <tr><td><code>frontend/js/charts.js</code></td><td>uPlot wrappers — equity curve, OHLC, bar chart, line+area.</td></tr>
+          <tr><td><code>frontend/js/views/*.js</code></td><td>One module per launcher tile. Each exports a single <code>renderX(mount, state, ...)</code> async function. Largest by line count: <code>expenses.js</code>, <code>algo.js</code>, <code>strategy_tools.js</code>.</td></tr>
+          <tr><td><code>frontend/css/styles.css</code></td><td>Full cyberpunk theme — neon palette, Orbitron + Share Tech Mono, CRT scanlines, panel borders, tile grid, modal styles. Light/dark toggle.</td></tr>
+          <tr><td><code>frontend/lib/</code></td><td>uPlot — pinned via <code>./scripts/vendor-uplot.sh</code>, no CDN at runtime.</td></tr>
+          <tr class="total-row"><td>Total</td><td>No transpiler, no minifier, no module bundler. Native ES modules + import maps.</td></tr>
         </tbody>
       </table>
 
@@ -638,7 +567,7 @@
           <tr><td>Foundation</td><td>FIFO trade roll-up + stats (expectancy / R-multiple / SQN / Sharpe / Sortino)</td><td><code>traderview-core</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Foundation</td><td>Tauri v2 desktop + embedded Postgres bootstrap (stale-PID cleanup, persisted password)</td><td><code>src-tauri</code> + <code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Foundation</td><td>axum web binary with argon2 + JWT auth, custom logging middleware</td><td><code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
-          <tr><td>Import</td><td>15 broker parsers + Generic — Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, Coinbase, Kraken</td><td><code>traderview-import</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
+          <tr><td>Import</td><td>Broker parsers + Generic — Webull, Lightspeed, IBKR, TOS, TD Ameritrade, Schwab, Fidelity, ETrade, Robinhood, TradeStation, DAS Trader, TradeZero, Tradervue, Coinbase, Kraken</td><td><code>traderview-import</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Import</td><td>CSV column-mapping wizard for unknown sources</td><td><code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Live</td><td>Nasdaq halts (3s RSS) + SEC EDGAR + 4 PR wires (catalyst radar)</td><td><code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Live</td><td>Finnhub WebSocket 6-panel intraday scanner with TTS voice alerts</td><td><code>traderview-db</code> + <code>frontend</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
@@ -651,7 +580,7 @@
           <tr><td>Analytics</td><td>Pre-arming robustness gates — Shapley edge attribution, edge-fragility (leave-<em>k</em>-out) certificate, and CSCV backtest-overfitting probability (PBO)</td><td><code>traderview-core</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Strategy</td><td>Strategy alerts (AND/OR/NOT compound rules) + price alerts + webhooks (Discord / Slack / generic)</td><td><code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Research</td><td>Options chain + Greeks + IV surface + earnings-IV crush + short interest + dark pool</td><td><code>traderview-db</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
-          <tr><td>Research</td><td>Chart studies — Seasonals (calendar-year overlay vs the average of complete years), Performance (trailing-return table), Symbol Math (expressions over up to 8 tickers), Drawing Alerts (crossings against saved trendlines / horizontal lines, arm as a price alert)</td><td><code>traderview-core</code> + <code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
+          <tr><td>Research</td><td>Chart studies — Seasonals (calendar-year overlay vs the average of complete years), Performance (trailing-return table), Symbol Math (expressions over up to 8 tickers), Drawing Alerts (crossings against saved trendlines / horizontal lines, arm as a price alert), Technical Ratings, Pattern Analogs, RVOL at Time, Chart Patterns, Session Volume Profile, Moon Phases, Trading Sessions</td><td><code>traderview-core</code> + <code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Community</td><td>Public trade shares + forum + mentorship + symbol boards</td><td><code>traderview-web</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>Expenses</td><td>Multi-account expense tracker + receipt OCR (tesseract) + Schedule-C report</td><td><code>traderview-expense</code> + <code>-ocr</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>
           <tr><td>UX</td><td>1455-tile launcher (Cmd-K) + 11-shortcut topbar + in-app tutorial (<kbd>?</kbd>)</td><td><code>frontend</code></td><td><span style="color:var(--green);font-weight:700;">Done</span></td></tr>

@@ -218,7 +218,7 @@ The renderer (`zpc::renderReferenceHtml`) lives in zpwr-patch-core and is shared
 ctest --test-dir build --output-on-failure
 ```
 
-Coverage: the chord dictionary and voicing engine, scale quantizer, Euclidean generator, arpeggiator traversal, and the full patch graph — routing, pass-through, every module, the mod matrix (soft-key / aftertouch / envelope modulation) and JSON round-tripping.
+Coverage: the chord dictionary and voicing engine, scale quantizer, Euclidean generator, cellular-automaton cores, arpeggiator traversal, and the full patch graph — routing, pass-through, every module, the mod matrix (soft-key / aftertouch / envelope modulation) and JSON round-tripping.
 
 The NOTE SAFETY prover (below) is pure JS with its own node test:
 

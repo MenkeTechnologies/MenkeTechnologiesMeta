@@ -68,7 +68,7 @@
     <p class="hub-lede">Modular patch effects — wire primitive DSP blocks (oscillators, filters, delays,
       reverbs, dynamics, modulation) into your own algorithm, Eventide-H3000 style, in a cyberpunk WebView UI.
       The reference below is generated from the live module registry the plugin runs, so it never drifts from the build.</p>
-    <p class="docs-build-line">zpwr-fx v0.1.24 &middot; VST3 / AU / CLAP / Standalone &middot; by MTAudio</p>
+    <p class="docs-build-line">zpwr-fx &middot; VST3 / AU / CLAP / Standalone &middot; by MTAudio</p>
     <div class="hub-cards">
       <a class="hub-card" href="reference.html">
         <h3>Module Reference</h3>
@@ -106,6 +106,29 @@
       </div>
     </section>
 
+    <section class="tutorial-section" id="signal-path">
+      <h2>Signal Path</h2>
+      <div class="hub-prose">
+        <p>The patch above is one <strong>layer</strong>. The processor runs a rack of them
+          (<code>ZfxProcessor::processBlock</code>):</p>
+        <ol>
+          <li>Input is scaled by <strong>Master In</strong>.</li>
+          <li>Every <strong>layer</strong> (any number; each a full copy of the engine) processes the input and sums into the
+            dry mix, and each layer sends to the <strong>aux FX buses</strong> (two by default, each seeded with a full-wet
+            reverb; add or remove from the Mixer).</li>
+          <li>Each aux bus processes its accumulated send and returns into the mix through its return level, pan, mute/solo
+            and mono switches.</li>
+          <li>The <strong>master FX bus</strong> (a limiter by default) runs over the summed mix unless <strong>Master
+            Bypass</strong> is on (Master Bypass gates the master FX bus, not the layers). Master pan/mono apply after it.</li>
+          <li><strong>Master Out</strong> gain, the master stereo widener (M/S), the hosted master-insert plugin, and the
+            brickwall limiter, in that order.</li>
+          <li>Non-finite samples are zeroed, then the recorder captures the result.</li>
+        </ol>
+        <p>A host sidechain input (second input bus, mono or stereo) feeds the <strong>Sidechain</strong> global mod source.
+          Output layouts: mono or stereo, input matching output.</p>
+      </div>
+    </section>
+
     <section class="tutorial-section" id="formats">
       <h2>Formats &amp; Platforms</h2>
       <div class="hub-prose">
@@ -128,9 +151,9 @@
         <ul>
           <li><strong>Sources</strong> an input can read: silence, In&nbsp;L, In&nbsp;R, Noise, the Soft Keys,
             <strong>MIDI/MPE</strong> (Mod Wheel, Aftertouch, Pitch Bend, Velocity, Expression, Breath, Sustain, Note,
-            and MPE Press/Slide/Bend), or any block's output (<code>src id = 100 + blockIndex</code>). MPE is parsed via
+            and MPE Press/Slide/Bend), the shared <strong>global mod sources</strong> (LFOs, envelopes, random, sample-and-hold, MIDI-derived sources, assignable CC slots, the host <strong>Sidechain</strong> level and the touch strip, from <code>zpc::GlobalMods</code>), or any block's output (<code>src id = zpc::kBlockBase + blockIndex</code>). MPE is parsed via
             <code>juce::MPEInstrument</code> and aggregated to the most recent note.</li>
-          <li>Each block has three inputs (<strong>In 1, In 2, Mod</strong>), six params, and one output.</li>
+          <li>Each block has one output, up to <code>zpc::kMaxIns</code> input slots and up to <code>zpc::kMaxParams</code> params (<code>PatchCore.h</code>); the block's own input count and param list decide how many are used.</li>
           <li>The graph is <strong>topologically sorted</strong> each rebuild; cycles (feedback) resolve with a
             one-sample delay automatically — wire any output back to an earlier input to build feedback patches.</li>
           <li>Any source can fan out to <strong>unlimited destinations</strong>.</li>
@@ -236,8 +259,7 @@
           Orbitron + Share Tech Mono, grid + CRT scanlines), self-contained via <code>juce_add_binary_data</code> (no node
           build, no external files). The UI is shared with zpwr-synth and zpwr-midi-fx; the tab set:</p>
         <ul>
-          <li><strong>Patch</strong> — drag an output jack onto an input jack to wire it; an <strong>&#9889; EZ WIRE</strong>
-            button (auto-wires In&nbsp;L &rarr; your blocks &rarr; Out&nbsp;L/R), an <strong>INIT</strong> button (unplug
+          <li><strong>Patch</strong> — drag an output jack onto an input jack to wire it; an <strong>&#9889; EZ WIRE</strong> toggle (while on, keeps In&nbsp;L &rarr; your blocks &rarr; Out&nbsp;L/R auto-wired as blocks are added, removed or retyped), an <strong>INIT</strong> button (unplug
             every cable &amp; mod, keep the blocks), <strong>&#128465;</strong> (blank the whole patch), the
             <strong>Stereo</strong> / <strong>&#128274; LOCK</strong> toggles, the soft-key strip, the sources / blocks /
             outputs grid with SVG cables, and a detail panel for the selected block. Cables glow with each source block's
@@ -253,6 +275,7 @@
           <li><strong>Settings</strong> — Master In/Out + Bypass, Auto Gain Stage + target, the brickwall limiter, MIDI
             Program Change / Bank Select toggles, scale-key/scale quantize, UI scale, interface toggles.</li>
           <li><strong>About</strong> — version + engine info.</li>
+          <li><strong>Command palette</strong> &mdash; <code>Cmd/Ctrl+K</code> (or the command-palette tab button) fuzzy-jumps to any tab or action.</li>
         </ul>
         <p><strong>Auto gain staging:</strong> two Settings (both on by default) keep inter-block levels sane per block.
           <strong>Auto Gain Stage</strong> rides levels with a fast-attack / slow-release peak follower that pulls each
@@ -270,8 +293,7 @@
           editor-closed and records as automation:</p>
         <ul>
           <li><strong>Preset Morph</strong> — a 4-corner XY pad (A/B/C/D) that bilinearly interpolates between four
-            captured patches; X/Y are reserved host params (<code>morphX</code>/<code>morphY</code>), and
-            <strong>&#127922;</strong> assigns a random preset to all four corners.</li>
+            captured patches; <strong>&#127922;</strong> assigns a random preset to all four corners. The corner snapshots and the <code>morphX</code>/<code>morphY</code> host params are not registered by <code>ZfxProcessor</code> (<code>createLayout</code> creates only the Soft Keys, Master In/Out/Bypass and the <code>Auto N</code> pool), so the pad does not blend in zpwr-fx.</li>
           <li><strong>Orb</strong> — a radial pad where the puck's angle selects a scene and distance sets its intensity;
             <strong>&#127922;</strong> rolls a new random scene set, <strong>&#9210;</strong> records the puck's motion,
             and <strong>&#9654;</strong> loops the recorded motion back through the host-automatable params.</li>
@@ -288,7 +310,7 @@
           persist in plugin state.</p>
         <p><strong>MIDI Program Change / Bank Select</strong> (both default on): an incoming PC selects the matching
           program (preset); CC0 (MSB) / CC32 (LSB) are captured and combined with the next PC
-          (<code>bank &times; 128 + program</code>) for banked preset addressing.</p>
+          (<code>(MSB &times; 128 + LSB) &times; 128 + PC</code>) for banked preset addressing; the resulting index is clamped to the last factory preset.</p>
         <p><strong>Output recorder:</strong> an in-plugin recorder (<code>zpc::WavRecorder</code>) captures the master
           output to a <strong>32-bit float WAV</strong> under <code>~/Music/zpwr/&lt;product&gt;_&lt;timestamp&gt;.wav</code>.
           It is RT-safe — <code>recorder.pushBlock()</code> runs at the end of <code>processBlock</code>, a no-op until
@@ -297,11 +319,28 @@
         <p><strong>Master-insert plugin host:</strong> the plugin can host one external <strong>VST3 / AU</strong> plugin on
           its master insert (<code>zpc::PluginInsert</code> + <code>zpc::PluginHost</code>;
           <code>JUCE_PLUGINHOST_VST3</code> / <code>JUCE_PLUGINHOST_AU</code> are enabled in CMake). The hosted plugin
-          processes in <code>processBlock</code> after the stereo widener, so it sits on the final master path. Editor
-          native functions drive it: <code>pluginScan</code>, <code>pluginList</code>, <code>pluginLoad</code>,
+          processes in <code>processBlock</code> after the stereo widener and before the brickwall limiter, so it sits on the final master path. Editor
+          native functions drive it: <code>pluginScan</code> (with <code>pluginScanStatus</code> for progress), <code>pluginList</code>, <code>pluginLoad</code>,
           <code>pluginClear</code>, <code>pluginCurrent</code>, and <code>pluginEditorOpen</code> (a floating
           <code>zpc::PluginInsertWindow</code> for the hosted editor). The hosted plugin's id and its own serialized state
           save/restore with the host's <code>get/setStateInformation</code>.</p>
+      </div>
+    </section>
+
+    <section class="tutorial-section" id="latency">
+      <h2>Automatic Latency Alignment</h2>
+      <div class="hub-prose">
+        <p>The pack ships genuinely latent blocks &mdash; the linear-phase <code>LinearEQ</code> and the rest of the STFT
+          <code>Spec*</code> family, <code>Convolution</code>, every 4x-oversampled nonlinearity, and the windowed smoothers.
+          Their declared delays live in <code>zpc/Latency.h</code>. Put one on a parallel branch of a hand-wired patch, sum it
+          with a direct wire, and the two would arrive at different times.</p>
+        <p>zpwr-fx aligns them automatically. On every patch load and every structural edit, each engine in the rack (layers,
+          aux buses, master) runs the longest-path relaxation in <code>zpc/Latency.h</code> over the topological order it was
+          already computing, and pads every shorter branch entering a node &mdash; and every output cable &mdash; to match the
+          longest. Nothing to configure. The rack total (the longest layer graph plus the master bus graph) is reported to
+          the host with <code>setLatencySamples</code>.</p>
+        <p><strong>Known gap:</strong> aux buses are aligned internally, but a latent block placed <em>inside</em> an aux still
+          returns late against the dry sum; aligning a bus return is a rack-level pass and is not implemented.</p>
       </div>
     </section>
 
@@ -312,8 +351,9 @@
           <li><strong>Factory</strong> (in code, <code>ZfxProcessor::factoryNames()</code>): presets exposed as
             host programs for MIDI Program Change — e.g. DL Stereo Slap, FL Filter Sweep, FL Comb Resonator, FL Auto Wah,
             FX Feedback Howl, DS Wavefolder, RV Iceverb Cathedral.</li>
-          <li><strong>User</strong> patches save as JSON (<code>patch</code> + soft-key values) under
+          <li><strong>User</strong> patches save as gzip-compressed JSON (<code>patch</code> + soft-key values) under
             <code>&lt;userAppData&gt;/zfx/Presets/*.zfp</code> (e.g. <code>~/Library/zfx/Presets</code>; data from the pre-rename <code>zpwr-fx</code> folder is copied over once on first launch).</li>
+          <li><strong>User modules</strong> are saved sub-graphs (<code>.zfxmod</code>) that can be cloned, renamed, deleted and spliced into the current patch as one undoable edit; modules published to the shared module registry index can be fetched and imported into the local store.</li>
           <li>The full plugin/host state (patch + all params) round-trips through JUCE's
             <code>get/setStateInformation</code>.</li>
         </ul>

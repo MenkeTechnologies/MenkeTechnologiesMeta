@@ -76,7 +76,7 @@
             <a href="https://github.com/MenkeTechnologies/zpwr-patch-core" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           <p style="margin:0.35rem 0 0;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:0.03em;opacity:0.75;">
-            v0.3.0 &middot; patch JSON v4 &middot; juce_core-only routing graph &middot; module map &middot; dependency footprint &middot; test status
+            juce_core-only routing graph &middot; module map &middot; dependency footprint &middot; test status
           </p>
         </div>
         <div class="tutorial-toolbar">
@@ -92,26 +92,14 @@
       <p class="tutorial-subtitle">
         zpwr-patch-core (<code>zpc</code>) is the signal-agnostic modular patch graph shared by the
         MenkeTechnologies plugin stack &mdash; zpwr-fx, zpwr-synth and zpwr-midi-fx. It is built as a
-        static library (<code>zpwr::patch_core</code>) from eight translation units and ~61 headers
-        under <code>include/zpc/</code>, and ships universal (x86_64 + arm64) on macOS. The graph is
+        static library (<code>zpwr::patch_core</code>) from a small set of translation units and a
+        header-only block library under <code>include/zpc/</code>, and ships universal (x86_64 + arm64) on macOS. The graph is
         templated on the signal type carried between nodes: <code>float</code> for audio, a note-event
-        stream for MIDI. The headline numbers are taken from the live registries the plugins run
-        (4238 blocks across the Audio / Synth / MIDI registries, per
-        <a href="blocks.html" style="color:var(--accent-light);">the Block Catalog</a>); coverage against the
-        VCV Rack / Voltage Modular / Eurorack ecosystems (7374 modules audited) is in the
+        stream for MIDI. Block counts are generated from the live registries the plugins run and
+        published in <a href="blocks.html" style="color:var(--accent-light);">the Block Catalog</a>; coverage against the
+        VCV Rack / Voltage Modular / Eurorack ecosystems is in the
         <a href="vcv_port_report.html" style="color:var(--accent-light);">Port Report</a>.
       </p>
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-val accent">4238</div><div class="stat-label">Blocks Registered</div></div>
-        <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Registries (FX / Synth / MIDI)</div></div>
-        <div class="stat-card"><div class="stat-val green">1</div><div class="stat-label">Runtime Dependency</div></div>
-        <div class="stat-card"><div class="stat-val">11</div><div class="stat-label">Headless Test Suites</div></div>
-        <div class="stat-card"><div class="stat-val">~61</div><div class="stat-label">Headers (include/zpc)</div></div>
-        <div class="stat-card"><div class="stat-val">8</div><div class="stat-label">Translation Units</div></div>
-        <div class="stat-card"><div class="stat-val">v4</div><div class="stat-label">Patch JSON Version</div></div>
-        <div class="stat-card"><div class="stat-val">7374</div><div class="stat-label">Modules Audited (Port Report)</div></div>
-      </div>
-
       <hr class="section-rule">
 
       <h2 class="tutorial-title"><span class="step-hash">~</span>MODULE MAP</h2>
@@ -133,7 +121,11 @@
           <tr><td><code>include/zpc/ReferenceDoc.h</code></td><td>header</td><td>Offline reference-page renderer (registry &rarr; reference.html / PDF).</td></tr>
           <tr><td><code>include/zpc/PresetStore.h</code>, <code>PresetTags.h</code>, <code>BlockPresets.h</code></td><td>header</td><td>File-based preset CRUD, BROWSE-tab tag vocabulary, and per-block factory presets.</td></tr>
           <tr><td><code>include/zpc/Wavetables.h</code>, <code>Scala.h</code>, <code>Multisample.h</code>, <code>Sfz/SampleLoad.h</code>, <code>Nksf.h</code></td><td>header</td><td>Wavetable oscillator + tables, Scala microtuning, multisample / SFZ / NKSF sample loading.</td></tr>
-          <tr><td><code>include/zpc/dsp/*</code> + <code>src/dsp/WavetableBank.cpp</code></td><td>dsp</td><td>juce-free synthesis DSP primitives &mdash; virtual-analog oscillator, filter, wavetable bank.</td></tr>
+          <tr><td><code>include/zpc/dsp/*</code> + <code>src/dsp/WavetableBank.cpp</code></td><td>dsp</td><td>juce-free synthesis DSP primitives &mdash; virtual-analog oscillator, filter, wavetable bank, plus the spectral bake (<code>SpectralBake.h</code>).</td></tr>
+          <tr><td><code>include/zpc/PolyEngine.h</code> + <code>src/PolyEngine.cpp</code></td><td>engine</td><td>Whole-synth engine: one patch instantiated across a polyphonic voice pool with a parallel voice-render worker pool.</td></tr>
+          <tr><td><code>include/zpc/StereoGraph.h</code>, <code>PluginBlock.h</code>, <code>StereoPluginBlock.h</code>, <code>PluginHost.h</code></td><td>header</td><td>Stereo patch graph (one cable carries L/R) and VST3/AU hosting as a graph block or master-bus insert.</td></tr>
+          <tr><td><code>include/zpc/Latency.h</code></td><td>header</td><td>Per-block group-delay table and intra-patch latency alignment.</td></tr>
+          <tr><td><code>include/zpc/Recorder.h</code>, <code>JsonFile.h</code>, <code>SynthConfig.h</code></td><td>header</td><td>Real-time-safe output recorder, gzip JSON file I/O, and zpwr-synth host configuration.</td></tr>
           <tr><td><code>src/midi/*</code> (Scale, ChordDictionary, ChordEngine, Arpeggiator, MidiModules)</td><td>midi</td><td>Shared note-stream module registry + chord &amp; scale engines, used by zpwr-midi-fx and zpwr-synth.</td></tr>
           <tr><td>block packs: <code>AudioModules.h</code>, <code>Analog*.h</code>, <code>Circuit.h</code>, <code>TubeAmp.h</code>, <code>Eventide.h</code>, <code>Valhalla.h</code>, <code>Traktor*.h</code>, <code>Physical*.h</code>, <code>Synthesis.h</code>, <code>MoreOscillators.h</code>, <code>GranularSpectral.h</code>, <code>Convolution.h</code>, <code>NovelBlocks.h</code></td><td>header</td><td>Register the audio and synthesis blocks listed in the catalog; per-block jacks / params / badges live in <a href="blocks.html" style="color:var(--accent-light);">Blocks</a>.</td></tr>
         </tbody>
@@ -164,34 +156,18 @@
 
       <h2 class="tutorial-title"><span class="step-hash">~</span>VERIFICATION</h2>
       <p class="tutorial-subtitle">
-        Eleven headless test suites live under <code>tests/</code>. Ten are console apps built through the
-        JUCE CMake API when <code>juce::juce_core</code> is available; <code>EuclidMirrorTest</code> is a plain
-        executable that needs no JUCE at all. <code>DspModulesTest</code> and <code>LatencyTest</code> link the JUCE audio
-        modules, <code>HostSupportTest</code> / <code>GlobalModsTest</code> are gated on <code>juce_audio_processors</code> /
-        <code>juce_audio_basics</code>, and <code>ZdspCheck</code> on the vendored <code>zdsp-core</code> submodule. These suites and the lint were inventoried from
-        the source tree for this report; they were not executed here, so no pass/fail counts are claimed.
+        Headless test executables live under <code>tests/</code> and are declared in <code>CMakeLists.txt</code>.
+        Most are console apps built through the JUCE CMake API when <code>juce::juce_core</code> is available
+        (some are gated on additional JUCE modules or on the vendored <code>zdsp-core</code> submodule); the
+        Euclidean golden-file check is a plain executable that needs no JUCE. The JS analyzers under
+        <code>webui/</code> carry their own node tests. These are inventoried from the source tree and were not
+        executed for this report, so no pass/fail results are claimed.
       </p>
-      <table class="file-table">
-        <thead><tr><th>Suite</th><th>Gate</th><th>Covers</th></tr></thead>
-        <tbody>
-          <tr><td><code>PatchCoreTest</code></td><td><code>juce_core</code></td><td>Core patch model, routing, eval, serialization / migration.</td></tr>
-          <tr><td><code>PatchGraphTest</code></td><td><code>juce_core</code></td><td>Signal-agnostic graph layer: topoOrder() eval ordering + cycle handling, the topo-&gt;evaluation contract, ParamSpec mapping.</td></tr>
-          <tr><td><code>LayeredEngineTest</code></td><td><code>juce_core</code></td><td>Layer stacking + per-layer parallel/series bus routing + JSON round-trip.</td></tr>
-          <tr><td><code>DspModulesTest</code></td><td><code>juce_audio_formats / basics / dsp</code></td><td>DSP module pack (Scala / Multisample / Traktor / Valhalla / Physical / Eventide / synthesis blocks) on the audio registry.</td></tr>
-          <tr><td><code>SpectralBakeTest</code></td><td><code>juce_core</code></td><td>Spectral bake (<code>zpc/dsp/SpectralBake.h</code>): freezing a live node signal into a band-limited single-cycle wavetable frame.</td></tr>
-          <tr><td><code>LatencyTest</code></td><td><code>juce_audio_formats / basics / dsp</code></td><td>Intra-patch latency alignment (<code>zpc/Latency.h</code>): re-measures declared group delays against the real DSP and proves the relaxation aligns real graphs.</td></tr>
-          <tr><td><code>MidiModulesTest</code></td><td><code>juce_core</code></td><td>Note-stream registry, chord &amp; scale engines, arpeggiator.</td></tr>
-          <tr><td><code>HostSupportTest</code></td><td><code>juce_audio_processors</code></td><td>Soft-knob pool, host state, meters, MidiInbox.</td></tr>
-          <tr><td><code>GlobalModsTest</code></td><td><code>juce_audio_basics</code></td><td>Global-modulator bus: slot layout, MIDI routing, generated sources.</td></tr>
-          <tr><td><code>ZdspCheck</code></td><td>vendored <code>zdsp-core</code></td><td>Vendored shared real-time DSP sanity check.</td></tr>
-          <tr><td><code>EuclidMirrorTest</code></td><td>none (plain executable)</td><td>Engine/editor Euclidean lock against <code>tests/euclid_golden.txt</code> (<code>zpc/midi/Euclidean.h</code> is JUCE-free).</td></tr>
-        </tbody>
-      </table>
       <div class="feature-grid" style="margin-top:1.2rem;">
         <div class="feature-card">
           <h4>Developer Tools</h4>
           <p>The build also produces <code>GenSeedModules</code> (seed/registry generation) and
-          <code>DspBench</code> (DSP benchmarking) alongside the test suites.</p>
+          <code>DspBench</code> (DSP benchmarking) alongside the test executables.</p>
         </div>
         <div class="feature-card">
           <h4>ASCII String Lint</h4>
@@ -202,7 +178,7 @@
       </div>
 
       <footer style="text-align:center;padding:2rem;font-size:10px;color:var(--text-muted);font-family:'Orbitron',sans-serif;letter-spacing:2px;">
-      ZPWR-PATCH-CORE &middot; ENGINEERING REPORT &middot; v0.3.0 &middot; 4238 BLOCKS &middot; 3 REGISTRIES &middot; PATCH JSON v4 &middot; juce_core-ONLY &middot; 11 HEADLESS TEST SUITES &middot; MENKETECHNOLOGIES
+      ZPWR-PATCH-CORE &middot; ENGINEERING REPORT &middot; 3 REGISTRIES &middot; juce_core-ONLY &middot; MENKETECHNOLOGIES
     </footer>
   </div>
 

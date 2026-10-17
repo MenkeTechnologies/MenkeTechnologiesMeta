@@ -269,10 +269,9 @@ int base = spliceInsert (dst, sub, externalRemap);          <span class="c">// l
           <p>Depends only on <code>juce::juce_core</code>. Consumers add it via <code>add_subdirectory</code> and link <code>zpwr::patch_core</code>; the consumer's <code>CMAKE_OSX_ARCHITECTURES</code> (default <code>x86_64;arm64</code>) propagates here, so the core compiles universal as part of each plugin. To build the headless test standalone, point at a JUCE checkout:</p>
         </div>
         <pre class="idx-pre">cmake -B build -DZPC_JUCE_DIR=/path/to/JUCE
-cmake --build build --target PatchCoreTest
-build/PatchCoreTest_artefacts/Debug/PatchCoreTest</pre>
+cmake --build build            <span class="c"># or --target &lt;name&gt; for one headless executable</span></pre>
         <div class="idx-prose">
-          <p><code>GlobalModsTest</code> (built when <code>juce::juce_audio_basics</code> is available) covers the global-modulator bus. The ASCII lint — <code>scripts/lint_ascii_strings.py</code> — rejects non-ASCII bytes inside C++ string / char literals (comments may keep any Unicode). The CI workflow that ran it on every push was removed when Actions were disabled; enable it locally as a pre-commit hook:</p>
+          <p>Headless test executables live in <code>tests/</code> and are declared in <code>CMakeLists.txt</code>; some are gated on extra JUCE modules or the vendored <code>zdsp-core</code> submodule. The webui analyzers carry node tests (<code>node --test webui/*.test.mjs</code>). The ASCII lint — <code>scripts/lint_ascii_strings.py</code> — rejects non-ASCII bytes inside C++ string / char literals (comments may keep any Unicode). The CI workflow that ran it on every push was removed when Actions were disabled; enable it locally as a pre-commit hook:</p>
         </div>
         <pre class="idx-pre">git config core.hooksPath .githooks   <span class="c"># blocks commits with non-ASCII string literals</span>
 python3 scripts/lint_ascii_strings.py <span class="c"># or run it directly over the source tree</span></pre>
@@ -298,8 +297,14 @@ python3 scripts/lint_ascii_strings.py <span class="c"># or run it directly over 
             <tr><td><code>src/PatchCore.cpp</code></td><td>Routing / topo / mod-matrix / eval + core modules + serialization / migration</td></tr>
             <tr><td><code>src/ScriptEngine.cpp</code></td><td>Expression VM implementation</td></tr>
             <tr><td><code>src/midi/</code></td><td>MIDI registry — arpeggiator, chord engine/dictionary, scale, MIDI modules</td></tr>
-            <tr><td><code>tests/PatchCoreTest.cpp</code></td><td>Headless unit test</td></tr>
-            <tr><td><code>tests/GlobalModsTest.cpp</code></td><td>Headless <code>GlobalMods</code> test (slot layout, MIDI routing, generated sources)</td></tr>
+            <tr><td><code>include/zpc/PolyEngine.h</code> + <code>src/PolyEngine.cpp</code></td><td>Whole-synth engine: one patch across a polyphonic voice pool, parallel voice rendering</td></tr>
+            <tr><td><code>include/zpc/Latency.h</code></td><td>Per-block group-delay table + intra-patch latency alignment</td></tr>
+            <tr><td><code>include/zpc/StereoGraph.h</code></td><td>Stereo patch graph: one cable carries L/R</td></tr>
+            <tr><td><code>include/zpc/PluginBlock.h</code>, <code>PluginHost.h</code></td><td>VST3/AU hosting as a graph block and as a master-bus insert</td></tr>
+            <tr><td><code>include/zpc/dsp/</code> + <code>src/dsp/</code></td><td>JUCE-free synthesis primitives: filter, virtual-analog oscillator, wavetable bank/oscillator, spectral bake</td></tr>
+            <tr><td><code>include/zpc/midi/</code></td><td>Note-stream pack headers (module registry, note-graph host, arpeggiator, chord/scale engines, Euclidean, cellular-automaton generators)</td></tr>
+            <tr><td><code>webui/</code></td><td>Shared web editor assets and the client-side analyzers (patch audit, mod reach, sum map, junction meter, note safety, Euclid mirror, command palette)</td></tr>
+            <tr><td><code>tests/</code>, <code>tools/</code>, <code>scripts/</code></td><td>Headless tests, developer tools (DSP benchmark, seed-module generator), and the doc generators plus ASCII lint</td></tr>
           </tbody>
         </table>
         <div class="idx-prose">

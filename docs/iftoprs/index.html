@@ -165,7 +165,6 @@
             <a href="https://docs.rs/iftoprs" target="_blank" rel="noopener noreferrer">docs.rs</a>
           </nav>
           <p class="docs-build-line">iftoprs v2.22.16 &middot; ratatui 0.30 + crossterm 0.29 + pcap 2.4 &middot; 31 cyberpunk themes &middot; per-flow process attribution &middot; JSON streaming &middot; mouse + sparklines &middot; auto-restart capture</p>
-          <p class="docs-build-line"><span id="iftoprsLoc">23,127 production Rust src &middot; 6,672 integration-test src &middot; 2,293 test functions</span></p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -225,7 +224,7 @@ iftoprs --completions fish &gt; iftoprs.fish</pre>
           </thead>
           <tbody>
             <tr><td>Memory safety</td><td style="color:var(--green);">Rust &mdash; no UB, no leaks</td><td>raw C</td></tr>
-            <tr><td>Async capture loop</td><td style="color:var(--green);">tokio + <code>mpsc</code></td><td>blocking <code>pcap_loop</code></td></tr>
+            <tr><td>Async capture loop</td><td style="color:var(--green);">capture thread + tokio <code>mpsc</code> channel</td><td>blocking <code>pcap_loop</code></td></tr>
             <tr><td>Per-flow process attribution</td><td style="color:var(--green);">PID + name, native (<code>libproc</code> / <code>/proc</code>)</td><td>none</td></tr>
             <tr><td>Mouse support</td><td style="color:var(--green);">left/right/middle, scroll, hover tooltips</td><td>none</td></tr>
             <tr><td>Tooltips on hover &amp; right-click</td><td style="color:var(--green);">10 segment tooltips + flow drill-down</td><td>none</td></tr>
@@ -250,9 +249,9 @@ iftoprs --completions fish &gt; iftoprs.fish</pre>
         <p>The capture pipeline is built around three concerns &mdash; <strong>read packets</strong>, <strong>parse to flow tuples</strong>, <strong>survive transient errors</strong>:</p>
         <ul>
           <li><strong>libpcap</strong> &mdash; <code>pcap::Capture</code> opens the device with the configured BPF filter, snaplen, and promiscuous flag. The capture thread lives in <code>src/capture/sniffer.rs</code>.</li>
-          <li><strong>async hand-off</strong> &mdash; raw packets flow over a <code>tokio::sync::mpsc</code> channel to the parser task; the UI thread reads parsed flow updates from a second channel. Lossy capture (kernel drop) is logged but never panics.</li>
+          <li><strong>async hand-off</strong> &mdash; the capture thread parses each packet and sends the result over a <code>tokio::sync::mpsc</code> unbounded channel to the main loop, which folds it into the flow tracker. Capture and DNS resolution run on plain threads; tokio supplies only the channel.</li>
           <li><strong>parser</strong> &mdash; <code>src/capture/parser.rs</code> walks Ethernet/IPv4/IPv6/TCP/UDP/ICMP headers, tracks 5-tuples, classifies protocol, and folds bytes into the per-flow counters.</li>
-          <li><strong>auto-restart</strong> &mdash; transient pcap errors trigger an exponential-backoff reopen instead of crash. v2.22.2 release notes (<code>76f42105bd</code>) wired this in.</li>
+          <li><strong>auto-restart</strong> &mdash; transient pcap errors trigger an exponential-backoff reopen instead of crash. The backoff starts at 250 ms, doubles, and caps at 30 s.</li>
           <li><strong>sliding windows</strong> &mdash; bandwidth is tracked over 2&nbsp;s / 10&nbsp;s / 40&nbsp;s averages with a per-flow ring buffer in <code>src/data/history.rs</code>. Cumulative + peak counters live alongside.</li>
         </ul>
       </section>
@@ -278,7 +277,7 @@ iftoprs --completions fish &gt; iftoprs.fish</pre>
         <table class="reflection-table">
           <thead><tr><th>Flag</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td><code>-i, --interface NAME</code></td><td>Network interface to monitor (auto-detect default gateway interface if absent).</td></tr>
+            <tr><td><code>-i, --interface NAME</code></td><td>Network interface to monitor (pcap default device if absent; the config file <code>interface</code> key applies before that).</td></tr>
             <tr><td><code>-f, --filter EXPR</code></td><td>BPF filter expression, e.g. <code>"tcp port 80"</code>, <code>"host 10.0.0.1"</code>.</td></tr>
             <tr><td><code>-F, --net-filter CIDR</code></td><td>IPv4 network filter, e.g. <code>192.168.1.0/24</code>. Auto-detected from interface if omitted.</td></tr>
             <tr><td><code>-p, --promiscuous</code></td><td>Enable promiscuous mode &mdash; capture all traffic on the segment.</td></tr>
@@ -310,6 +309,7 @@ iftoprs --completions fish &gt; iftoprs.fish</pre>
         <table class="reflection-table">
           <thead><tr><th>Flag</th><th>Description</th></tr></thead>
           <tbody>
+            <tr><td><code>-c, --config FILE</code></td><td>Path to the preferences file (default <code>~/.iftoprs.conf</code>).</td></tr>
             <tr><td><code>-l, --list-interfaces</code></td><td>List available capture interfaces and exit.</td></tr>
             <tr><td><code>--list-colors</code></td><td>Preview all 31 color themes with swatches and exit.</td></tr>
             <tr><td><code>--completions SHELL</code></td><td>Generate shell completions: <code>zsh</code> / <code>bash</code> / <code>fish</code> / <code>elvish</code> / <code>powershell</code>.</td></tr>
@@ -338,7 +338,7 @@ iftoprs --completions fish &gt; iftoprs.fish</pre>
         <table class="reflection-table">
           <thead><tr><th>Key</th><th>Action</th></tr></thead>
           <tbody>
-            <tr><td><code>Tab</code></td><td>Switch view &mdash; Flows / Processes.</td></tr>
+            <tr><td><code>Tab</code></td><td>Switch view &mdash; Flows / Processes / Publishers (<code>Shift+Tab</code> cycles backwards).</td></tr>
             <tr><td><code>n</code></td><td>Toggle DNS resolution.</td></tr>
             <tr><td><code>N</code></td><td>Toggle service-name resolution.</td></tr>
             <tr><td><code>t</code></td><td>Cycle line display &mdash; two-line / one-line / sent-only / recv-only.</td></tr>
@@ -379,8 +379,8 @@ iftoprs --completions fish &gt; iftoprs.fish</pre>
             <tr><td><code>Ctrl+U</code></td><td>Half-page up.</td></tr>
             <tr><td><code>G</code> <code>End</code></td><td>Jump to last.</td></tr>
             <tr><td><code>Home</code></td><td>Jump to first.</td></tr>
-            <tr><td><code>Esc</code></td><td>Deselect / clear process filter / close overlay.</td></tr>
-            <tr><td><code>Enter</code></td><td>Drill into selected process (Processes tab).</td></tr>
+            <tr><td><code>Esc</code></td><td>Deselect / clear process or publisher filter / close overlay.</td></tr>
+            <tr><td><code>Enter</code></td><td>Drill into selected process / publisher (Processes / Publishers tab).</td></tr>
           </tbody>
         </table>
 
@@ -564,10 +564,10 @@ pinned = []
 
 # Custom themes (six 256-color indices) — written when you save with C.
 # Omitted entirely until at least one custom theme exists.
+# active_custom_theme = "mytheme"   # must precede the table header
 # [custom_themes.mytheme]
 # c1 = 51
-# c2 = 201
-# active_custom_theme = "mytheme"</pre>
+# c2 = 201</pre>
         <p>Serialization lives in <code>src/config/prefs.rs</code>. Every key carries a <code>serde</code> default, so missing keys fall back to sane values and old configs keep working across upgrades. The <code>interface</code>, <code>custom_themes</code>, and <code>active_custom_theme</code> keys are skipped when empty (<code>skip_serializing_if</code>), so a fresh config never writes them.</p>
       </section>
 
@@ -593,11 +593,14 @@ pinned = []
       "sent_40s":   65000.0,  "recv_40s": 3500.0,
       "total_sent": 1048576,  "total_recv": 65536,
       "process_name": "firefox",  // omitted if unknown
-      "pid":          4821        // omitted if unknown
+      "pid":          4821,       // omitted if unknown
+      "publisher":    "Apple System",  // omitted if unresolved
+      "team_id":      "EXAMPLE123",    // macOS only; omitted if unresolved
+      "package":      "firefox"        // Linux only; omitted if unresolved
     }
   ]
 }</pre>
-        <p>The <code>sent_*</code> / <code>recv_*</code> rate fields are emitted in <strong>bits/sec</strong> by default (each byte rate is multiplied by 8); pass <code>-B</code> / <code>--bytes</code> to emit them in bytes/sec instead. <code>process_name</code> and <code>pid</code> are skipped when attribution is unavailable (<code>serde</code> <code>skip_serializing_if</code>), so consumers must treat them as optional. The capture engine, parser, and tracker are identical to TUI mode &mdash; only the renderer is replaced.</p>
+        <p>The <code>sent_*</code> / <code>recv_*</code> rate fields are emitted in <strong>bits/sec</strong> by default (each byte rate is multiplied by 8); pass <code>-B</code> / <code>--bytes</code> to emit them in bytes/sec instead. <code>process_name</code>, <code>pid</code>, <code>publisher</code>, <code>team_id</code>, and <code>package</code> are skipped when attribution is unavailable (<code>serde</code> <code>skip_serializing_if</code>), so consumers must treat them as optional. The capture engine, parser, and tracker are identical to TUI mode &mdash; only the renderer is replaced.</p>
 <pre>sudo iftoprs --json | jq -c '.flows[] | select(.sent_2s &gt; 1000000)'
 sudo iftoprs --json &gt; /var/log/iftoprs.ndjson &amp;
 sudo iftoprs --json -f "tcp port 443" | head -n 1 | jq .
@@ -610,8 +613,9 @@ sudo iftoprs --json -B | jq '.flows[] | {dst, recv_2s}'   # byte rates</pre>
         <ul>
           <li><strong>Flows tab (default)</strong> &mdash; per-flow process column.</li>
           <li><strong>Processes tab</strong> &mdash; press <code>Tab</code> &mdash; aggregates bandwidth per process across all of that process's flows.</li>
-          <li><strong>Drill-down</strong> &mdash; press <code>Enter</code> on a process row to filter the Flows tab to that process. <code>Esc</code> clears the filter.</li>
-          <li><strong>Cost</strong> &mdash; the poller runs at the refresh-rate interval, not per-packet; even on busy hosts the overhead stays measurable but small.</li>
+          <li><strong>Publishers tab</strong> &mdash; press <code>Tab</code> again &mdash; aggregates bandwidth by the binary's code identity (macOS: code-signing Team ID and authority; Linux: owning dpkg/rpm package and executable SHA-256), cached per (dev, inode, mtime).</li>
+          <li><strong>Drill-down</strong> &mdash; press <code>Enter</code> on a process or publisher row to filter the Flows tab to that group. <code>Esc</code> clears the filter.</li>
+          <li><strong>Cost</strong> &mdash; the poller re-reads the socket table every 2 s, not per-packet; even on busy hosts the overhead stays measurable but small.</li>
         </ul>
       </section>
 
@@ -620,7 +624,7 @@ sudo iftoprs --json -B | jq '.flows[] | {dst, recv_2s}'   # byte rates</pre>
         <p>The status header bar is split into pipe-delimited segments; each one carries a rich contextual tooltip built by <code>header_segment_tooltip</code> in <code>src/ui/app.rs</code>. Hover triggers after 1&nbsp;s with a 3&nbsp;s auto-hide; right-click triggers instantly and persists until dismissed. Disable hover (right-click still works) with <code>T</code>. The cards below describe the actual fields each segment emits &mdash; live values, not placeholders.</p>
         <div class="cat-grid">
           <div class="cat-card"><h4>App (iftoprs)</h4><p>Version (<code>v2.22.16</code>), description, author, repo, crate, license, install command, runtime platform (OS + arch), build stack, config path, tracked-flow count.</p></div>
-          <div class="cat-card"><h4>Interface</h4><p>Selected interface (or <em>auto-detected</em>), mode (auto gateway vs <code>-i</code> manual), DNS / port-name / port-display state, promisc note, active-connection count, <code>i</code> chooser hint, <code>pcap::Device::list()</code> source.</p></div>
+          <div class="cat-card"><h4>Interface</h4><p>Selected interface (or <em>auto-detected</em>), mode (default device vs <code>-i</code> manual), DNS / port-name / port-display state, promisc note, active-connection count, <code>i</code> chooser hint, <code>pcap::Device::list()</code> source.</p></div>
           <div class="cat-card"><h4>Flows</h4><p>Total / visible / hidden / pinned / unique-process counts, total + combined TX/RX, peak TX/RX + peak total, cumulative TX/RX, current view tab, <code>j/k</code> &middot; <code>/</code> &middot; <code>F</code> key hints.</p></div>
           <div class="cat-card"><h4>Clock</h4><p>Local time, date + weekday, timezone + UTC offset, Unix epoch seconds, refresh interval, <code>chrono::Local::now()</code> source.</p></div>
           <div class="cat-card"><h4>Sort</h4><p>Active sort key (2s / 10s / 40s / src / dst), direction (normal vs reversed), freeze status, first + last flow, sorted-flow count, rate / host key hints, <code>r</code> reverse hint.</p></div>
@@ -628,7 +632,7 @@ sudo iftoprs --json -B | jq '.flows[] | {dst, recv_2s}'   # byte rates</pre>
           <div class="cat-card"><h4>Theme</h4><p>Active theme display name, <strong>31</strong> builtin palette count, custom-theme count, total available, bar style, <code>c</code> chooser + <code>C</code> editor hints, <code>--list-colors</code> hint, prefs keys.</p></div>
           <div class="cat-card"><h4>Filter</h4><p>Active substring filter, length, matched / hidden counts, match type (case-insensitive host/IP), cursor position, nav keys, edit keys (<code>Ctrl+a/e</code>), delete keys (<code>Ctrl+w/u/k</code>), <code>0</code> clear hint.</p></div>
           <div class="cat-card"><h4>Pause state</h4><p>Paused vs live, effect (stats frozen), refresh rate, tracked-flow count, <code>P</code> resume / pause hint &mdash; layout differs depending on whether capture is paused.</p></div>
-          <div class="cat-card"><h4>Help</h4><p>Open / close keys (<code>h</code> / <code>H</code> / <code>?</code> / <code>Esc</code>), 3-column keybind layout, category list, mouse hint, <code>e</code> export, <code>y</code> copy, <code>q</code> quit.</p></div>
+          <div class="cat-card"><h4>Help</h4><p>Open / close keys (<code>h</code> / <code>?</code> / <code>Esc</code>), 3-column keybind layout, category list, mouse hint, <code>e</code> export, <code>y</code> copy, <code>q</code> quit.</p></div>
         </div>
         <p>Any other segment text falls through to a generic <code>▶ Header</code> tooltip that echoes the raw segment label. Flow rows themselves carry a separate right-click tooltip: TX / RX rates across the three windows, cumulative totals, attributed process, and a 40-sample sparkline of recent bandwidth (▁▂▃▅▇█).</p>
       </section>
@@ -658,13 +662,15 @@ alert_threshold = 125000000.0   # 1 Gbit/s</pre>
 
       <section class="tutorial-section">
         <h2>Tests &amp; CI</h2>
-        <p>2,293 test functions across the production crate and integration suite. CI runs on every push and PR to <code>main</code> via <a href="https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml">GitHub Actions</a>.</p>
+        <p>CI runs on every push and PR to <code>main</code> via <a href="https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml">GitHub Actions</a>.</p>
         <table class="reflection-table">
           <thead><tr><th>Job</th><th>Command</th><th>Notes</th></tr></thead>
           <tbody>
             <tr><td>Format</td><td><code>cargo --locked fmt --all --check</code></td><td>No <code>pcap</code> link &mdash; no <code>libpcap-dev</code> needed.</td></tr>
             <tr><td>Clippy</td><td><code>cargo clippy --all-targets --locked -- -D warnings</code></td><td>Linux installs <code>libpcap-dev</code> via <code>apt</code>.</td></tr>
+            <tr><td>Doc</td><td><code>cargo doc --locked --no-deps</code></td><td><code>RUSTDOCFLAGS=-D warnings</code>; Linux installs <code>libpcap-dev</code>.</td></tr>
             <tr><td>Test</td><td><code>cargo build --locked &amp;&amp; cargo test --locked</code></td><td>Ubuntu + macOS matrix, <code>fail-fast: false</code>.</td></tr>
+            <tr><td>Gates</td><td><code>bash tests/*.sh</code></td><td>Docs HTML hygiene, man-page format, final newlines, README structure, workflow format.</td></tr>
           </tbody>
         </table>
         <p>Integration tests in <code>tests/integration.rs</code> launch the built binary via the <code>CARGO_BIN_EXE_iftoprs</code> environment variable &mdash; not <code>cargo run</code> &mdash; so CLI output is read directly from the process and stays reliable in CI. The toolchain is pinned through <code>rust-toolchain.toml</code> with <code>stable</code> + <code>rustfmt</code> + <code>clippy</code> so local and CI runs share the same compiler.</p>
@@ -676,22 +682,22 @@ cargo test --locked</pre>
 
       <section class="tutorial-section">
         <h2>Crate layout</h2>
-        <p>Single binary, eight modules, ~21k lines of production Rust:</p>
+        <p>Single binary with a library crate (<code>src/lib.rs</code>) exposing five modules (<code>capture</code>, <code>config</code>, <code>data</code>, <code>ui</code>, <code>util</code>):</p>
         <div class="cat-grid">
-          <div class="cat-card"><h4>src/main.rs</h4><p>Entry point: CLI parse, capture spawn, TUI bootstrap, signal handling. 1,193 lines.</p></div>
-          <div class="cat-card"><h4>src/capture/</h4><p><code>sniffer.rs</code> &mdash; pcap loop + restart. <code>parser.rs</code> &mdash; Ethernet/IP/TCP/UDP/ICMP decode. ~3.3k lines.</p></div>
-          <div class="cat-card"><h4>src/data/</h4><p><code>flow.rs</code> 5-tuple model + counters. <code>tracker.rs</code> &mdash; flow store. <code>history.rs</code> sparkline ring. ~3.6k lines.</p></div>
-          <div class="cat-card"><h4>src/ui/</h4><p><code>app.rs</code> &mdash; TUI state + input. <code>render.rs</code> &mdash; ratatui paint. ~6.9k lines.</p></div>
-          <div class="cat-card"><h4>src/config/</h4><p><code>cli.rs</code> &mdash; clap derive. <code>theme.rs</code> &mdash; 31 themes. <code>prefs.rs</code> &mdash; TOML auto-save. ~4.6k lines.</p></div>
-          <div class="cat-card"><h4>src/util/</h4><p><code>format.rs</code> &mdash; rate/byte formatters. <code>resolver.rs</code> &mdash; async DNS + port names. <code>procinfo.rs</code> &mdash; native socket→PID poll. provenance.rs &mdash; code-signing identity. clipboard.rs &mdash; clipboard copy. ~3.5k lines.</p></div>
-          <div class="cat-card"><h4>tests/integration.rs</h4><p>479 binary-driven integration tests. 5,258 lines.</p></div>
+          <div class="cat-card"><h4>src/main.rs</h4><p>Entry point: CLI parse, capture spawn, TUI bootstrap, signal handling.</p></div>
+          <div class="cat-card"><h4>src/capture/</h4><p><code>sniffer.rs</code> &mdash; pcap loop + restart. <code>parser.rs</code> &mdash; Ethernet/IP/TCP/UDP/ICMP decode.</p></div>
+          <div class="cat-card"><h4>src/data/</h4><p><code>flow.rs</code> 5-tuple model + counters. <code>tracker.rs</code> &mdash; flow store. <code>history.rs</code> sparkline ring.</p></div>
+          <div class="cat-card"><h4>src/ui/</h4><p><code>app.rs</code> &mdash; TUI state + input. <code>render.rs</code> &mdash; ratatui paint.</p></div>
+          <div class="cat-card"><h4>src/config/</h4><p><code>cli.rs</code> &mdash; clap derive. <code>theme.rs</code> &mdash; 31 themes. <code>prefs.rs</code> &mdash; TOML auto-save.</p></div>
+          <div class="cat-card"><h4>src/util/</h4><p><code>format.rs</code> &mdash; rate/byte formatters. <code>resolver.rs</code> &mdash; async DNS + port names. <code>procinfo.rs</code> &mdash; native socket→PID poll. provenance.rs &mdash; code-signing identity. clipboard.rs &mdash; clipboard copy.</p></div>
+          <div class="cat-card"><h4>tests/integration.rs</h4><p>Binary-driven integration tests; more test files sit alongside it in <code>tests/</code>.</p></div>
           <div class="cat-card"><h4>completions/</h4><p>Shipped zsh completion file (<code>_iftoprs</code>). Other shells generated on demand.</p></div>
         </div>
         <p>Full per-file breakdown is in the <a href="report.html">engineering report</a>.</p>
       </section>
 
       <section class="tutorial-section">
-        <h2>Dependencies &mdash; 18 direct</h2>
+        <h2>Dependencies</h2>
         <table class="reflection-table">
           <thead><tr><th>Crate</th><th>Version</th><th>Role</th></tr></thead>
           <tbody>
@@ -736,7 +742,7 @@ cargo test --locked</pre>
           <li><strong>Rust API docs</strong> &mdash; <a href="https://docs.rs/iftoprs">docs.rs</a>.</li>
           <li><strong>Issues</strong> &mdash; <a href="https://github.com/MenkeTechnologies/iftoprs/issues">issue tracker</a>.</li>
           <li><strong>CI status</strong> &mdash; <a href="https://github.com/MenkeTechnologies/iftoprs/actions/workflows/ci.yml">GitHub Actions</a>.</li>
-          <li><strong>Engineering report</strong> &mdash; <a href="report.html">report.html</a> (LOC breakdown, subsystem map, dependency table, test surface).</li>
+          <li><strong>Engineering report</strong> &mdash; <a href="report.html">report.html</a> (subsystem map, dependency table, test surface).</li>
           <li><strong>README</strong> &mdash; <a href="https://github.com/MenkeTechnologies/iftoprs#readme">full README on GitHub</a>.</li>
         </ul>
       </section>

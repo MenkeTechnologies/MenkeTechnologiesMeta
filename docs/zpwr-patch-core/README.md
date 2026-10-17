@@ -75,7 +75,7 @@ setLatencySamples (engine.latencySamples());
 ```
 
 Cost when nothing is latent is zero: no cable gets a delay ring and the per-sample path is
-byte-identical (asserted by `LatencyTest`). Note-stream graphs are unaffected — events carry
+byte-identical (asserted by the latency test). Note-stream graphs are unaffected — events carry
 their own sample offsets, so `applyLatencyPlan` is a no-op for any `S` other than `float`.
 
 It knows **nothing about audio or MIDI**. Each host supplies:
@@ -163,7 +163,7 @@ contains **as the tail of a quoted string literal** — ``/['"`][A-Za-z0-9_]*nam
 a caller writes it, verbatim or composed onto the `uiPrefix` (`"trkgetPatch"`). The quoted-literal
 form matters: a plain "is the name mentioned anywhere" search hides `morphSet` behind the unrelated
 JS local `let morphSet = [...]` in `webui/index.html`, and reports eight names instead of nine.
-zpwr-daw runs that comparison as a test (`test/webeditor-native-fn-coverage.test.js`) against the
+zpwr-daw runs that comparison as an automated test against the
 frontend it bundles, so a newly registered name is either wired or explained before it ships.
 
 **Hosting a VST3 / AU in a block.** The `Plugin` block (`include/zpc/PluginBlock.h`) processes cabled
@@ -195,7 +195,7 @@ is also addressable **by id** from a saved command chain. Ids come from structur
 the label: a tab is `tab.<data-pane>`, a header button is `action.<element-id>`, an analyzer is a
 literal (`audit.patch`, `audit.sum-map`, `audit.euclid-orbit`, `audit.session-proof`,
 `terminal.toggle`). A label is a translated string, so an id derived from one would rename itself
-on a locale switch and break every saved chain; `webui/zpc-command-palette.test.mjs` pins that by
+on a locale switch and break every saved chain; a node test pins that by
 re-reading the same DOM with every label rewritten and demanding an identical id set. The
 vocabulary is republished on init, on every palette open, and immediately before the router
 resolves an id, so a host-gated tab that reveals itself after boot (PRODUCE / ZTRANSLATE / PDF in
@@ -225,7 +225,7 @@ browsing them.
 
 **Euclid Orbit** (zpc palette -> "Euclid Orbit", `webui/zpc-euclid-mirror.js`) — the modulated Euclidean rhythm, drawn. Steps/pulses/rotation are ordinary modulation *destinations* — `PatchCore.h:1252-1261` sums every route targeting a node into its parameter vector before the block runs, and `doEuclid` re-reads Pulses/Steps/Rotate from that vector on every block (`MidiModules.cpp:285-287`), so an LFO on Pulses does not smear one rhythm, it walks the patch through a **sequence of different rhythms**. Because the engine casts each parameter to `int`, that map is piecewise constant: the patch visits a finite **orbit** of exact Euclidean patterns with exact switch-over points, and both are solved in closed form (each parameter is affine in the modulator scalar, so a breakpoint is one division) rather than sampled. The modal lists the orbit, scrubs the modulator, and draws the live ring with the unmodulated rhythm ghosted behind it. Read-only: it never edits the patch.
 
-The engine has **two** Euclidean generators and they disagree. `zpc/midi/Euclidean.h`'s `euclidean()` is Bjorklund and rotates the pattern *left*; `MidiModules.cpp`'s `euclidStep()` is the Bresenham distribution and rotates *right*. They agree on E(3,8) (the tresillo, `x..x..x.`) and differ on E(5,8) — `x.xx.xx.` against `x.x.xx.` — which are rotations of one another, so the difference survives a casual look while still putting the onsets on different steps. `SeqEuclid` and `EuclidMel` use the first; `EuclideanGate`, `EuclideanAccentVelocity`, `EuclidComplementGate` and `EuclideanVelocity` use the second. Euclid Orbit selects the generator per block type rather than picking one, and both of its ports are pinned to `tests/euclid_golden.txt` — the same table `EuclidMirrorTest` re-derives from the shipping C++ — so the rhythm drawn cannot drift from the rhythm played. Its block table (which parameter index carries Pulses/Steps/Rotate, and which generator each handler calls) is extracted from `src/midi/MidiModules.cpp` by the node test rather than restated, so re-ordering a block's parameters fails a test instead of silently pointing the mirror at the wrong knob.
+The engine has **two** Euclidean generators and they disagree. `zpc/midi/Euclidean.h`'s `euclidean()` is Bjorklund and rotates the pattern *left*; `MidiModules.cpp`'s `euclidStep()` is the Bresenham distribution and rotates *right*. They agree on E(3,8) (the tresillo, `x..x..x.`) and differ on E(5,8) — `x.xx.xx.` against `x.x.xx.` — which are rotations of one another, so the difference survives a casual look while still putting the onsets on different steps. `SeqEuclid` and `EuclidMel` use the first; `EuclideanGate`, `EuclideanAccentVelocity`, `EuclidComplementGate` and `EuclideanVelocity` use the second. Euclid Orbit selects the generator per block type rather than picking one, and both of its ports are pinned to `tests/euclid_golden.txt` — the same table the C++ golden-file test re-derives from the shipping code — so the rhythm drawn cannot drift from the rhythm played. Its block table (which parameter index carries Pulses/Steps/Rotate, and which generator each handler calls) is extracted from `src/midi/MidiModules.cpp` by the node test rather than restated, so re-ordering a block's parameters fails a test instead of silently pointing the mirror at the wrong knob.
 
 **PERFORM tab** — a play surface that drives the host-automatable soft-key macros (each is a real APVTS param via the soft-key relays, so everything below records as host automation):
 
@@ -309,51 +309,25 @@ Depends only on `juce::juce_core`. Consumers add it via `add_subdirectory` and l
 
 ```sh
 cmake -B build -DZPC_JUCE_DIR=/path/to/JUCE
-cmake --build build --target PatchCoreTest
-build/PatchCoreTest_artefacts/Debug/PatchCoreTest
+cmake --build build            # or --target <name> for one headless executable
 ```
 
-`GlobalModsTest` (built when `juce::juce_audio_basics` is available) covers the global-modulator bus:
+Headless test executables live in `tests/` and are declared in `CMakeLists.txt`; each is a
+console app whose binary lands under `build/<name>_artefacts/Debug/`. Some are gated on
+extra JUCE modules (audio basics/formats/dsp/processors) or on the vendored `zdsp-core`
+submodule and are skipped when those targets are unavailable. The latency, spectral-bake and
+DSP-pack tests build the real audio registry and check the shipping DSP, not mirrors of it.
 
-```sh
-cmake --build build --target GlobalModsTest
-build/GlobalModsTest_artefacts/Debug/GlobalModsTest
-```
-
-`LatencyTest` covers intra-patch latency alignment: it re-measures every declared block
-group delay against the shipping DSP, cross-checks the table against each block's own
-description, and proves that a latent branch and a direct branch summed together arrive on
-the same sample. `SpectralBakeTest` covers the single-cycle spectral bake (pitch detection,
-harmonic resynthesis, band limiting, and the refusal cases).
-
-```sh
-cmake --build build --target LatencyTest SpectralBakeTest
-build/LatencyTest_artefacts/Debug/LatencyTest
-build/SpectralBakeTest_artefacts/Debug/SpectralBakeTest
-```
-
-`EuclidMirrorTest` locks the Euclidean rhythm the engine plays to the one the editor
-draws: it replays `tests/euclid_golden.txt` through the shipping `euclidean()` and
-demands an exact match, and `webui/zpc-euclid-mirror.test.mjs` replays the same file
-through the JS port. Either side drifting fails one of the two. `zpc/midi/Euclidean.h`
-is JUCE-free, so unlike every target above this one is a plain `add_executable` that
-needs no JUCE checkout:
-
-```sh
-cmake --build build --target EuclidMirrorTest
-build/EuclidMirrorTest tests/euclid_golden.txt   # or: ctest -R EuclidMirrorTest
-```
+The Euclidean rhythm the engine plays is locked to the one the editor draws through
+`tests/euclid_golden.txt`: the C++ side replays it through the shipping `euclidean()` and
+the JS port replays the same file, so either side drifting fails. `zpc/midi/Euclidean.h` is
+JUCE-free, so that executable is a plain `add_executable` that needs no JUCE checkout and
+is registered with `ctest`.
 
 The webui analyzers are plain ESM with their own node tests (no bundler, no package.json):
 
 ```sh
-node webui/zpc-patch-audit.test.mjs
-node webui/zpc-mod-reach.test.mjs
-node webui/zpc-sum-map.test.mjs
-node webui/zpc-note-safety.test.mjs
-node webui/zpc-euclid-mirror.test.mjs
-node --test webui/zpc-junction-meter.test.mjs
-node --test webui/zpc-command-palette.test.mjs
+node --test webui/*.test.mjs
 ```
 
 ### ASCII string-literal lint
@@ -397,7 +371,7 @@ python3 scripts/lint_ascii_strings.py # or run it directly over the source tree
 | `include/zpc/Traktor.h`     | Barberpole / Mulholland / Bouncer / Beatmasher |
 | `include/zpc/Traktor2.h`    | Spinback / Iceverb / PeakFilter / BeatSlicer / ReverseGrain / PeakPhaser / FilterLFO / PeakFlanger |
 | `include/zpc/Latency.h`     | Per-block group-delay table + intra-patch latency alignment (longest-path relaxation over `topoOrder`) |
-| `include/zpc/Analog.h`, `AnalogExtra*.h` | Classic-analog hardware models, each defined by its specific circuit nonlinearity |
+| `include/zpc/Analog.h`, `AnalogExtra.h`, `AnalogExtra2.h`, `AnalogExtra3.h` | Classic-analog hardware models, each defined by its specific circuit nonlinearity |
 | `include/zpc/Circuit.h`     | `zpc::ckt` component-level circuit-simulation primitives (diode and reactive companion models) |
 | `include/zpc/TubeAmp.h`     | `zpc::tube` physics-based guitar amp models |
 | `include/zpc/PhysicalModel.h` | `zpc::phys` physical-modelling framework behind the Physical category |
@@ -415,21 +389,14 @@ python3 scripts/lint_ascii_strings.py # or run it directly over the source tree
 | `include/zpc/PluginBlock.h`, `PluginHost.h` | VST3/AU hosting as a graph block and as a master-bus insert |
 | `include/zpc/Recorder.h`    | Real-time-safe output recorder (lock-free ring to a float WAV writer) |
 | `include/zpc/midi/`         | Note-stream pack: `MidiModules.h`, `NoteGraphHost.h`, arpeggiator, chord/scale engines, Euclidean, cellular-automaton generators (`src/midi/`) |
-| `include/zpc/dsp/SpectralBake.h` | Freeze a live signal into one band-limited single-cycle wavetable frame (pitch detect → harmonic resynthesis) |
-| `webui/zpc-note-safety.js`  | NOTE SAFETY: static hung-note + polyphony-budget prover over a note-stream graph |
+| `include/zpc/dsp/`          | JUCE-free synthesis primitives: `Filter.h`, `VirtualAnalogOscillator.h`, `WavetableBank.h` (`src/dsp/WavetableBank.cpp`), `WavetableOscillator.h`, and `SpectralBake.h` (freeze a live signal into one band-limited single-cycle wavetable frame) |
+| `webui/`                    | Shared web editor assets and client-side analyzers: `zpc-patch-audit.js`, `zpc-mod-reach.js`, `zpc-sum-map.js`, `zpc-junction-meter.js`, `zpc-note-safety.js` (static hung-note + polyphony-budget prover), `zpc-euclid-mirror.js`, `zpc-command-palette.js` |
 | `src/PatchCore.cpp`         | Routing/topo/mod-matrix/eval + core modules + serialization/migration |
 | `src/ScriptEngine.cpp`      | Expression VM implementation |
-| `tests/PatchCoreTest.cpp`   | Headless unit test |
-| `tests/GlobalModsTest.cpp`  | Headless `GlobalMods` test (slot layout, MIDI routing, generated sources) |
-| `tests/LatencyTest.cpp`     | Headless latency-alignment test (re-measures the declared delays against the real DSP) |
-| `tests/SpectralBakeTest.cpp`| Headless spectral-bake test (pitch detection, resynthesis fidelity, refusal cases) |
-| `tests/PatchGraphTest.cpp`  | Headless graph-layer test (topo order, cycle handling) |
-| `tests/LayeredEngineTest.cpp` | Headless `LayeredEngine` test (layers, mute/solo/gain, serialization round-trip) |
-| `tests/DspModulesTest.cpp`  | Headless DSP module pack test (Scala, Multisample, Traktor, Valhalla, Physical) |
-| `tests/MidiModulesTest.cpp` | Headless note-stream pack test (registry builds, finite output, no hung notes) |
-| `tests/HostSupportTest.cpp` | Headless `HostSupport` test (CPU meter, RSS, host-state XML round-trips) |
-| `tests/EuclidMirrorTest.cpp`| Euclidean golden-file test shared with the JS port |
-| `tests/ZdspCheck.cpp`       | Compile + link check for the shared zdsp-core headers |
+| `tests/`                   | Headless test executables and the Euclidean golden file shared with the JS port |
+| `tools/`                   | Developer tools: DSP benchmark and seed-module generator |
+| `scripts/`                 | Doc generators (block catalog, HTML/PDF, port report, plugin manuals) and the ASCII string-literal lint |
+| `docs/`                    | Generated and hand-written documentation site |
 
 ---
 
