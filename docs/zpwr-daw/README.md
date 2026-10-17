@@ -136,6 +136,7 @@ and the mono float graph, shared across all four products (`libs/zpwr-patch-core
 - **per-track render** — `processBlock` feeds each layer's note output to that
   track's instrument Plugin node, runs the stereo graph for the block, and sums it
   into the master with the layer's **gain · pan (equal-power) · width (mid/side)**.
+- **track device chain** — each track hosts an ordered list of VST3/AU plugins (`TrackDevices.h`): instrument devices render from the track's MIDI and sum into the track, effect devices process its stereo audio in place, all before width/gain/pan. Chains persist in the session (`devices` per track). The PATCH tab shows the TRACK CHAIN ribbon (`MIDI IN → MIDI FX → INSTRUMENT → AUDIO FX → INSERTS → OUT`, `webui/devices/track-devices.js`): click an instrument/FX stage to switch graphs, pick an instrument or insert from a scanned-plugin menu, open its editor window, bypass, remove, drag to reorder. Native functions: `loadTrackInstrument`, `dawTrackInstrument`, `dawOpenInstrument`, `dawRemoveInstrument`, `dawDevices`, `dawAddDevice`, `dawRemoveDevice`, `dawMoveDevice`, `dawBypassDevice`, `dawOpenDevice`. The ribbon follows the active track via patch-core's `window.zpcNav` / `zpc-layerbar` event. `automation.js` from zgui-core is embedded as `zgui-automation.js` to avoid a basename collision with the clip-engine module.
 - **mod → mix** — the global mod control patch (LFOs/envs/MIDI/soft-keys) and each
   layer's own mod routes modulate Master + per-layer Vol/Pan/Width (the GLOBAL MOD
   / LAYER MOD patch-panel tabs).
