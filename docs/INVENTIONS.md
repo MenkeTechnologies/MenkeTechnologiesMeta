@@ -104,7 +104,7 @@ frontends declare `features = [… "jit-disk-cache" …]` on `fusevm` (arb, awkr
 groovyrs, javars, kotlinrs, node-js, phplang, pythonrs, rlang, rubylang, scalars, strykelang,
 vimlrs, zshrs `Cargo.toml`; tclrs `Cargo.toml:105`). Editor path:
 `zmax/zmax-term/src/commands/scripting/mod.rs` `load_init_scripts` → `vimlrs::fusevm_bridge::eval_file`
-(`:1209`; the `:source` path `source_viml_file` calls it at `:821`) → `vimlrs/src/fusevm_bridge.rs:8316` `eval_file` (rkyv bytecode cache, `script_cache::try_load` `:8329`) + `enable_tracing_jit` `:7310`; elisp `load`/`require` → `elisprs/src/host.rs:6336` `intrinsic_load` →
+(`:1092`) → `vimlrs/src/fusevm_bridge.rs:7089` (rkyv bytecode cache) + `enable_tracing_jit` `:6106`; elisp `load`/`require` → `elisprs/src/host.rs:6336` `intrinsic_load` →
 `run_top_forms` (`elisprs/src/lib.rs:113`) → `run_chunk` (`elisprs/src/host.rs:7013`,
 `enable_tracing_jit` `:6993`).
 *Caveat:* persistent native/AOT caches exist (JVM AppCDS/JWarmup, .NET ReadyToRun, V8 code
@@ -140,16 +140,12 @@ prelude (~73k objects) is embedded per binary.
 **7. Standalone JIT-compiled Vim script outside any editor** — `high`
 vimlrs runs ordinary `.vim` scripts as standalone programs with a tracing JIT that
 compiles hot numeric loops to native code — Vimscript outside a Vim/Neovim host with
-real JIT acceleration. *Basis:* `vimlrs/src/fusevm_bridge.rs:7310` `enable_tracing_jit()`
-(in `apply_jit_setting`, `:7308`; `VIMLRS_NO_JIT` forces the interpreter);
-`src/compile_viml.rs`; 17 trace-JIT proof tests (16 `*_traces_on_jit`-style tests in
-`src/fusevm_bridge.rs` asserting `trace_is_compiled`, plus `src/tiers.rs:280`) assert loop bodies
-lower to `Op::GetSlot/SetSlot/NumLt/Add` with no `CallBuiltin`; `for i in range(N)` lowers to a
-native counter loop with no list materialized. *Caveat:* only numeric/float/bitwise loops trace;
-builtin surface is the 492-row `BUILTIN_ARGC` table (`src/ported/eval/funcs_argc.rs:16-507`, generated
-from Neovim's `eval.lua`), with the rest of `funcs.c` marked pending (`README.md:61,82`);
-`:command`/`:autocmd` now ship (`README.md:117`, CI self-tests `examples/user_commands.vim`,
-`examples/autocommands.vim`).
+real JIT acceleration. *Basis:* `vimlrs/src/fusevm_bridge.rs:3836` `enable_tracing_jit()`;
+`src/compile_viml.rs`; 17 trace-JIT proof tests assert loop bodies lower to
+`Op::GetSlot/SetSlot/NumLt/Add` with no `CallBuiltin`; `for i in range(N)` lowers to a
+native counter loop with no list materialized. *Caveat:* self-described "early"; only
+numeric/float/bitwise loops trace; builtin surface ~113 of Neovim's `funcs.c`;
+`:command`/`:autocmd` unimplemented.
 
 **8. Vim script AOT-compiled to a standalone native executable** — `high`
 A `.vim` script AOT-compiles to a self-contained native binary with no Vim, no
@@ -677,16 +673,11 @@ every alias/function/var/bind/complete/source mutation produced by **any** plugi
 framework (zinit/oh-my-zsh/prezto/antidote/antigen/zplug/zpwr) at per-definition
 granularity, as typed ordered events over a versioned serde wire protocol the daemon
 ingests and replays into live state. *Basis:* `src/recorder/mod.rs` (`RecordEvent` with
-`order_idx`/`ts_ns`/22 `DefKind`s); daemon ingest `daemon/ops.rs:1478`
-(`op_recorder_ingest`); replay in `src/extensions/canonical_apply.rs`; tests
-`recorder_harness.rs` (33 tests over 25 numbered `tests/recorder_corpus/` scripts plus zinit and
-`.zshrc` fixtures; `recorder_end_state_replays_into_a_shell` replays a recording into
-`zshrs -i -c` and reads every table back), `recorder_zsh_functions.rs` (1202 functions).
-*Caveat:* a *state-mutation* recorder, not PTY/keystroke capture; replay now restores a
-live-table end-state snapshot (function source, autoload stubs, typed parameters, options,
-`zmodload -F` features, zstyle, widgets, keymaps), but traps other than `TRAP*` functions and
-pending `sched` entries are not replayed (`docs/RECORDER.md:1009-1010`); must re-run on new
-plugin installs.
+`order_idx`/`ts_ns`/22 `DefKind`s); daemon ingest `daemon/ops.rs:1396`; replay in
+`canonical_apply.rs`; tests `recorder_harness.rs` (24 scripts),
+`recorder_zsh_functions.rs` (~1200 functions). *Caveat:* a *state-mutation* recorder, not
+PTY/keystroke capture; replay is partial (inline function bodies, `zmodload`, sourced
+files not replayed); must re-run on new plugin installs.
 
 **22. Open wire protocol for third-party shell recorders** — `low`
 A shell-agnostic recorder ingest protocol (`recorder_ingest`/`definitions_emit`/SSE
@@ -1075,13 +1066,9 @@ interception) rather than an imported SDK. *Basis:* `ai.rs` (6,638 L: agent loop
 multi-provider dispatch, SSE streaming, prompt caching, vision/PDF, batch API, sqlite
 RAG, `ai_filter/map/sort/classify/match/dedupe`); `ai_sugar.rs` desugars
 `tool fn`/`mcp_server` (build-time JSON-schema-from-signature); `mcp.rs` (1,249 L,
-JSON-RPC stdio + streamable-HTTP client). The server side ships too: `mcp_server "name" { tool … }`
-desugars (`ai_sugar.rs:471`) to `mcp_server_start`, served by `run_stdio_server`
-(`mcp.rs:965`) answering `initialize`, `tools/list` (JSON schema from the tool signature) and
-`tools/call`. **Run-verified** on stryke v0.17.60: a one-tool `mcp_server` script fed
-`initialize`/`tools/list`/`tools/call` returned all three JSON-RPC results. *Caveat:*
-in-process/offline model deferred (local = HTTP to a running Ollama/LM Studio server,
-`ai.rs:322,346`); the server transport is stdio only; Anthropic-first.
+JSON-RPC stdio + streamable-HTTP). *Caveat:* in-process/offline model deferred (local =
+shell-out to Ollama/LM Studio); server-side `mcp_server { }` DSL pending (only client
+ships); Anthropic-first.
 
 **46. Inline Rust FFI blocks compiled to cdylib at runtime** — `high`
 `rust { … }` blocks embedded in stryke source compile to a cdylib via
@@ -1725,18 +1712,17 @@ angle.
 
 ## VI. Language connectors & data ecosystem
 
-**106. First-party connector ecosystem for a Perl5-like language (32 packages in 33 repos)** — `med`
+**106. First-party connector ecosystem for a Perl5-like language (32 packages)** — `med`
 strykelang ships a 32-package first-party connector ecosystem spanning cloud (AWS/GCP/Azure),
 orchestration (Docker, k8s), messaging (Kafka, ZeroMQ), 9+ databases (Postgres/MySQL/MSSQL/
 Mongo/Redis/Scylla/Neo4j/ClickHouse/DuckDB), columnar (Arrow/Parquet/Polars/Spark), search
-(Elasticsearch/OpenSearch), gRPC, browser/GUI automation, web scraping, email, a headless
-terminal emulator, office I/O, and MCP — breadth of native data/cloud connectivity not previously
-offered for a Perl5-lineage language. *Basis:* 33 `stryke-*` submodules in the monorepo (counting
-`stryke-demo`, the demo runner); 32 of the 33 READMEs carry the `[stryke-package]` badge
+(Elasticsearch/OpenSearch), gRPC, browser/GUI automation, office I/O, and MCP — breadth of
+native data/cloud connectivity not previously offered for a Perl5-lineage language. *Basis:*
+32 `stryke-*` dirs in the monorepo; 31 of the 32 READMEs carry the `[stryke-package]` badge
 (`stryke-app` does not). *Caveat:* "first for a Perl5-like language" is a framing claim; tiers
 vary in maturity; breadth, not any single deep integration, is the novelty.
-`stryke-demo/README.md:19,65` covers only the 14 packages it ships live demos for (a single
-`s install` pulls those 14, per its `stryke.toml` `[deps]`) — it is not evidence for the full 32.
+`stryke-demo/README.md:17,65` covers only the 14 packages it ships live demos for (a single
+`s install` pulls those 14) — it is not evidence for the full 32.
 
 **107. No-FFI "policy layer" connectors built entirely from language core builtins** — `med`
 Several connectors are pure-`.stk` packages (zero FFI table, zero cdylib, zero helper binary)
@@ -1804,14 +1790,11 @@ shipping both upstream binaries — `grc` (the launcher: parses options, matches
 against `grc.conf`, runs the command, pipes output through `grcat`) and `grcat` (the regexp→ANSI
 colouriser reading stdin). It reuses upstream's own config verbatim via a vendored `grc` submodule
 (`grc.conf` + 83 `colourfiles/conf.*`), so existing grc configs and colourfiles work unchanged.
-*Basis:* `grcrs/src/{grcrs,grcatrs}.rs` (~1,686 LOC: 587 + 1,099); vendored upstream tree
-`vendor/grc/` (83 colourfiles; a plain directory, not a submodule); MIT for the Rust code
-(`LICENSE`, `Cargo.toml` `license = "MIT"`; `README.md:244` "Ports grc's behaviour, not its
-source"), while the vendored upstream files keep upstream's GPL-2.0-or-later
-(`vendor/grc/debian/copyright`); Homebrew formula `menketechnologies/menketech/grcrs` (v1.13.8).
+*Basis:* `grcrs/src/{grcrs,grcatrs}.rs` (~1021 LOC); `vendor/grc` submodule (83 colourfiles);
+GPL-2.0-or-later (matching upstream); Homebrew formula `menketechnologies/menketech/grcrs`.
 *Caveat:* a faithful port, not a new capability — the "first Rust port of grc" framing is the
 claim; "none found" is a search result, not proof. Novelty is the port + config parity, not new
-functionality (beyond a grcrs-only `trend`/`key`/`metric` colourfile extension, `README.md:58`).
+functionality.
 
 **115. Temp-file stack as a CLI data structure** — `low`
 An original concept (not a rewrite): a flock-protected stack of temporary files exposed as a
@@ -1824,9 +1807,8 @@ A native single-binary Rust port of Python `powerline-status` that is drop-in co
 existing `powerline/config` themes and eliminates Python's ~50–150 ms per-render
 interpreter-startup tax, validated by 462 parity tests that run the upstream Python interpreter
 and assert byte/value-identical output. *Basis:* `powerliners/src/ported/`, `src/extensions/`,
-`src/bin/`; 134/137 upstream `.py` files DONE (97.8%); 2,590 `#[test]` fns under `src/`; the 462
-parity tests live in `tests/parity_against_upstream.rs` (plus 45 byte-for-byte scenarios in
-`tests/daemon_parity.rs`); per-line `// py:NNN` citations. *Caveat:* a faithful port; novelty is the engineering rigor + perf win, not new
+`src/bin/`; 134/137 upstream `.py` files DONE (97.8%); 2473 lib tests; per-line `// py:NNN`
+citations. *Caveat:* a faithful port; novelty is the engineering rigor + perf win, not new
 functionality (powerline-go exists but isn't a byte-parity port).
 
 **117. Multi-dialect SQL DDL → dual-stack (Spring + Rust/Loco) REST backend codegen** — `low`
@@ -1845,8 +1827,8 @@ dedup) extracted as one engine (rlib/staticlib/cdylib + C ABI + header-only C++ 
 mountable webui) so the same citation engine embeds inside other GUI apps. *Basis:*
 `zcite/crates/zcite-core/src/{schema,model,store,search,bib,csl,import,export,identifier,pdf,
 duplicates,webdav,zotero,ffi}.rs`; `include/zcite_core.{h,hpp}`; `webui/`;
-`zcite/crates/zcite-core/PORT_REPORT.md:9,13-17` self-assesses 95.8% weighted Zotero coverage
-(88 full / 8 partial / 0 missing / 4 out-of-scope, over 96 features). *Caveat:*
+`zcite/crates/zcite-core/PORT_REPORT.md:9,13-17` self-assesses 96.6% weighted Zotero coverage
+(82 full / 6 partial / 0 missing / 4 out-of-scope, over 88 features). *Caveat:*
 "in development"; a reimplementation of Zotero — the novelty is the embeddable-engine packaging.
 
 **119. Multi-dialect raw-packet network scanner in safe Rust** — `low`
@@ -2214,15 +2196,15 @@ intent and feeds fills into the roll-up. *Basis:*
 `traderview-db/src/{alpaca,ibkr,schwab,tastytrade,tradier}_trading.rs` + the five matching
 `*_pump.rs`, `webull.rs` (read-only, no pump), `broker_dispatcher.rs`. *Caveat:* WIP — only Alpaca fully wired; others return `integration_pending`.
 
-**136. ~1,700-module dependency-light pure-Rust quant compute library** — `high`
-`traderview-core` is a ~321k-LOC, ~1,700-module (1,725 `.rs` files under `src/`) pure-compute quant library: exotic option pricers
+**136. ~1,600-module dependency-light pure-Rust quant compute library** — `high`
+`traderview-core` is a ~297k-LOC, ~1,600-module pure-compute quant library: exotic option pricers
 (semi-analytic Heston, American LSMC, Asian/barrier/lookback/chooser/cliquet/quanto, Garman-Kohlhagen,
 Bachelier, Black76, swaption), first/second-order + portfolio Greeks, fixed income (Nelson-Siegel-
 Svensson, key-rate/effective/Macaulay durations, OAS), microstructure (Kyle's lambda, VPIN, Amihud,
 order-flow imbalance), forensic scores (Altman Z, Beneish M, Piotroski F, Zmijewski), and stats/ML
 (GARCH/GJR, Kalman family, ARIMA, Markov-switching, ridge/lasso/elastic-net/quantile regression,
 wavelet, bootstrap) — with a self-contained complex type to stay dependency-free, zero
-`todo!`/`unimplemented!`, 1,718 of the 1,725 files carrying `#[cfg(test)]`. *Caveat:* breadth over depth; many are one-shot
+`todo!`/`unimplemented!`, each `#[cfg(test)]`. *Caveat:* breadth over depth; many are one-shot
 calculators not wired into the workflow.
 
 **137. Real-time market-data ingestion mesh + derived live scanners** — `high`
@@ -2797,22 +2779,17 @@ desktop product's primary readout — not the co-loading itself. "None found," n
 deliberately low.
 
 *Supporting architecture (not itself claimed as a first):* zthrottle's storage monitor is backed by a
-persistent SQLite directory index built by a full filesystem walk on a cold/wiped DB (streamed,
-committed every 20k entries so a mid-walk restart keeps progress). Automatic writes come from the
-`zt-storage-watch` thread: a `notify` FSEvents/inotify watch on `$HOME`, debounced (1.5 s quiet, ≥3 s
-between fires), collecting up to 50,000 distinct changed paths per burst into a targeted `update_paths`
-that re-sizes only the changed dirs and propagates the byte delta to ancestors instead of re-walking; a
-new `target/` is found by re-walking from its nearest indexed ancestor. Since 2026-08-02 that thread also
-runs a **full** descent of `$HOME` (`refresh_tree_ex(…, full = true)`) at every launch (cold-start
-reconcile, for dirs created while the app was closed), whenever a burst exceeds the 50,000-path cap or
-the watcher reports an error such as an inotify queue overflow, and — when no watcher can be
-established — on a 120 s periodic reconcile whose first tick and every tenth (~20 min) are full
-descents. Reads are instant; every other write is a user action (refresh/reindex/delete/junk-pattern
-`reflag` in one SQL pass/size freshen). *Basis:* `zthrottle-core/src/sys.rs`
-(`index_tree`/`refresh_tree_ex`/`update_paths`), `treedb.rs`, the `zt-storage-watch` thread in
-`app/src-tauri/src/main.rs` (cold start, 50,000 cap, overflow reconcile, degraded periodic loop). *Not claimed:* fast local indexers exist
+persistent SQLite directory index built by a **single** full filesystem walk on a cold/wiped DB (streamed,
+committed every 20k dirs so a mid-walk restart keeps progress); thereafter the fs-watch hook is the
+**only** automatic writer — a `notify` FSEvents/inotify watch on `$HOME`, debounced (1.5 s quiet, ≥3 s
+between fires, ≤64 coalesced dirs), driving a targeted `update_paths` that re-sizes only the changed dirs
+and propagates the byte delta to ancestors instead of re-walking; a new `target/` is found by re-walking
+from its nearest indexed ancestor. Reads are instant; every other write is a user action
+(refresh/reindex/delete/junk-pattern `reflag` in one SQL pass/size freshen). *Basis:*
+`zthrottle-core/src/sys.rs` (`index_tree`/`refresh_tree`/`update_paths`), `treedb.rs`, the
+`zt-storage-watch` thread in `app/src-tauri/src/main.rs`. *Not claimed:* fast local indexers exist
 (Everything, macOS `mds`, `fswatch`); this is a well-executed instance of a known pattern, documented for
-its audit (event-driven targeted updates, full descents at launch and on overflow), not as a novelty.
+its audit (full scan once → hooks-only), not as a novelty.
 
 **173. ★ zvcs — a git-shadowing superset that makes many-writer, submodule-heavy version control lock-free via a per-repo FIFO coordinator daemon** — `high`
 Stock git guards index writes with an `O_EXCL` `.git/index.lock`: a contended writer does not wait, it *fails* (`fatal: Unable to create '.git/index.lock': File exists`), so under many concurrent automated agents committing across a meta-repo of nested submodules the lock becomes a thundering herd of retries with no fairness — the exact contention documented throughout this project's own history. zvcs ships a single binary named **`git`** that shadows stock git on `PATH`; git-compatible porcelain is served natively through a vendored port of **gitoxide** (`src/ported/gix-*`, ~1,387 Rust files) so tools on PATH (RustRover, `gh`, cargo) see identical behavior against the same on-disk `.git`. On top of that it adds a **superset of `z*` verbs** stock git structurally cannot have (the authoritative set is `dispatch::SUPERSET_VERBS` in `src/extensions/src/dispatch.rs`, listed live by `git zverbs` — no count is transcribed here so it cannot go stale as verbs are added) — grouping into coordination (`zdaemon`/`zclaim`/`zunclaim`/`zwho`/`zstatus`, daemon-supervised `zjob`/`zjobs`), submodule discipline (`zsync`/`zbump`/`zforeach`/`zup`/`zworktree`/`zrepos`), state archaeology (`zsnapshot`/`zrestore`/`zsnapshots`, `zstash`/`zunstash`/`zstashes`, `zundo`, `zlog`, `zreindex`), and workflow (`zcommit`/`zpush`/`zrepl`/`zhook`). The three load-bearing ones: **`git zdaemon`** — a per-repo coordinator daemon that replaces the `index.lock` flock with a FIFO userspace barrier (a single `worker_loop` owns the abstract critical section and drains an mpsc channel, keeping a `VecDeque` of requests in strict arrival order; clients speak `ACQUIRE`/`GRANTED`/`RELEASE` over a Unix-domain socket and a dropped or EOF'd connection auto-releases), so N writers serialize first-come-first-served instead of racing; **`git zsync`** — reconcile every submodule to its tracked mainline (`origin/main` / `origin/master`), fast-forward only, keeping it *attached* so detached HEAD never happens; and **`git zbump`** — forward-only submodule gitlink bumps that advance a parent's pointer only when the submodule's new HEAD is a descendant of the recorded one. *Basis:* `zvcs/src/extensions/src/superset/zdaemon.rs` (`worker_loop`, the `VecDeque` FIFO queue, the `ACQUIRE`/`RELEASE` protocol over `UnixListener`/`UnixStream` + `mpsc`); `src/extensions/src/lock.rs` (`RepoLock::acquire` and the RAII `Drop` that emits `RELEASE`); `src/extensions/src/superset/zsync.rs`, `zbump.rs`; `src/extensions/src/dispatch.rs` (superset-verb vs git-compat routing); git engine at `src/ported/gix-*`; the shadow binary is declared `[[bin]] name = "git"` in `src/extensions/Cargo.toml`. **Test-verified:** `src/extensions/tests/coordination.rs::daemon_serializes_concurrent_writers` spawns the real `git zdaemon start`, races N threads that each `RepoLock::acquire` → mark occupancy → release, and asserts the peak observed critical-section occupancy is exactly 1 (a broken lock would exceed 1). *Caveat:* gitoxide (git in Rust) predates this and is the vendored engine, not the claim; daemon-mediated locking exists in other VCS. The candidate-first is the packaging — a **git-shadowing** superset whose FIFO `zdaemon` makes many-writer *automated* workflows over nested submodules lock-free and fair, with `zsync` / `zbump` codifying the attached, forward-only submodule discipline this project already enforces by hand. "None found," not proven; search not exhaustive.

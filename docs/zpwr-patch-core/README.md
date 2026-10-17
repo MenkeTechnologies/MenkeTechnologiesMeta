@@ -392,7 +392,7 @@ python3 scripts/lint_ascii_strings.py # or run it directly over the source tree
 | `include/zpc/SampleLoad.h`  | Host-side audio-file decode into the shared `SampleStore` (Sampler) |
 | `include/zpc/SfzLoad.h`     | `.sfz` parser → `MultiSampleStore` regions (Multisampler) |
 | `include/zpc/Scala.h`       | Scala `.scl` → per-MIDI-note cents table for synth-voice microtuning |
-| `include/zpc/Valhalla.h`    | Plate / Shimmer / FreqEcho space effects |
+| `include/zpc/Valhalla.h`    | Plate / Shimmer / FreqEcho space effects; 64 Valhalla-category 8-line FDN reverb voicings (VintageVerb, Supermassive, ValhallaRoom and ValhallaPlate mode categories); 8 FutureVerb-style modes (Room to Nonlin); 4 ValhallaShimmer-style diffuse-delay-line reverbs with pitch-shifted feedback |
 | `include/zpc/Physical.h`    | Pluck (Karplus-Strong) / Multitap / MSEG |
 | `include/zpc/Synthesis.h`   | Modal / LowPassGate / Blown / Bowed / FOF / WaveTerrain / Pulsar / Scanned (synthesis methods) |
 | `include/zpc/Traktor.h`     | Barberpole / Mulholland / Bouncer / Beatmasher |

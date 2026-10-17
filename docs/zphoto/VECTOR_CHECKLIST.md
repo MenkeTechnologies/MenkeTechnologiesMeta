@@ -3,7 +3,7 @@
 Vector graphics mode is a **separate engine** inside `zphoto-core` (module `src/vector.rs`,
 command namespace `vec.*`) that renders into the existing raster [`Layer`] stack, so every raster
 facility (opacity, blend modes, masks, project/PSD save, filters) applies to vector output. SVG is
-the interchange format; AI (a PDF container) and SVG import route through `zpdf-core`.
+the interchange format; AI (a PDF container) and SVG import are parsed by the engine itself (`vec.open`; FlateDecode streams are inflated in-engine).
 
 Status: ✅ done · 🚧 in progress · ⬜ not started · N/A out of scope.
 
@@ -23,6 +23,7 @@ Status: ✅ done · 🚧 in progress · ⬜ not started · N/A out of scope.
 | Ellipse | `vec.ellipse {x,y,width,height}` | ✅ |
 | Polygon | `vec.polygon {cx,cy,r,sides}` | ✅ |
 | Star | `vec.star {cx,cy,r1,r2,points}` | ✅ |
+| Graph tools (Column, Stacked Column, Bar, Stacked Bar, Line, Area, Scatter, Pie, Radar) | `vec.graph {type,data,labels?,series?,colors?}` — grouped editable artwork on a nice-number axis | ✅ |
 | Line segment | `vec.line {x0,y0,x1,y1}` | ✅ |
 | Arc tool | `vec.arc {cx,cy,rx,ry,start,end}` — open elliptical-arc sweep sampled to anchors | ✅ |
 | Spiral tool | `vec.spiral {cx,cy,r,winds,decay}` — logarithmic spiral winding inward, 24 anchors/turn | ✅ |

@@ -123,7 +123,7 @@
             <span class="sep">/</span>
             <a href="https://docs.rs/zshrs" target="_blank" rel="noopener noreferrer">docs.rs</a>
           </nav>
-          <p class="docs-build-line">zshrs v0.13.47 · Anti-fork architecture · 48 coreutils builtins · VM-executed parallel · Bytecode caching · JIT · <a href="reference.html" style="color: var(--cyan);">Full reference</a> · <a href="daemon-report.html" style="color: var(--cyan);">Daemon impl map</a> · <a href="report.html" style="color: var(--cyan);">Coverage report</a> · <a href="port_report.html" style="color: var(--cyan);">Port report</a> · <a href="parity_report.html" style="color: var(--cyan);">Parity report</a></p>
+          <p class="docs-build-line">zshrs v0.13.48 · Anti-fork architecture · 48 coreutils builtins · VM-executed parallel · Bytecode caching · JIT · <a href="reference.html" style="color: var(--cyan);">Full reference</a> · <a href="daemon-report.html" style="color: var(--cyan);">Daemon impl map</a> · <a href="report.html" style="color: var(--cyan);">Coverage report</a> · <a href="port_report.html" style="color: var(--cyan);">Port report</a> · <a href="parity_report.html" style="color: var(--cyan);">Parity report</a></p>
         </div>
         <div class="tutorial-toolbar">
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
@@ -236,7 +236,7 @@
           </div>
           <div class="cat-card">
             <h4>Parallelism as grammar rather than library</h4>
-            <p><code>pmap</code>, <code>pgrep</code>, <code>peach</code>, <code>barrier</code>, <code>async</code> and <code>await</code> are VM-dispatched builtins (fusevm IDs 210&ndash;215), not library calls: the body compiles once and runs on pooled VMs with zero forks. <code>make -j</code>, <code>xargs -P</code> and GNU parallel all sit outside the shell language. This is inside it.</p>
+            <p><code>pmap</code>, <code>pgrep</code>, <code>peach</code>, <code>barrier</code>, <code>async</code> and <code>await</code> are shell builtins scheduled on a per-process rayon worker pool, not library calls; each item runs in a fresh <code>zshrs</code> process (never <code>sh -c</code>), and the chunked forms (<code>pmap_chunked</code>, <code>par_lines</code>, <code>par_walk</code>) run many items per process. <code>make -j</code>, <code>xargs -P</code> and GNU parallel all sit outside the shell language. This is inside it.</p>
           </div>
         </div>
 
@@ -308,7 +308,7 @@
         <div class="cat-grid">
           <div class="cat-card">
             <h4>Two axes of emulation fidelity, both available</h4>
-            <p><code>--sh</code> reproduces <code>/bin/sh</code>; <code>--sh --zsh</code> reproduces zsh&rsquo;s <em>model</em> of <code>/bin/sh</code>. The bare POSIX modes use XSI <code>echo</code> where zsh&rsquo;s <code>emulate sh</code> sets <code>BSD_ECHO</code>, and <code>--bash</code> accepts bash&rsquo;s own <code>set -o</code> names including the six zsh has no option for. Eight Bourne-family dialects on one bytecode core, each verified against its actual reference shell rather than against zsh&rsquo;s approximation. No precedent found for offering both notions of fidelity as distinct modes.</p>
+            <p><code>--sh</code> reproduces <code>/bin/sh</code>; <code>--sh --zsh</code> reproduces zsh&rsquo;s <em>model</em> of <code>/bin/sh</code>. The bare POSIX modes use XSI <code>echo</code> where zsh&rsquo;s <code>emulate sh</code> sets <code>BSD_ECHO</code>, and <code>--bash</code> accepts bash&rsquo;s own <code>set -o</code> names including the six zsh has no option for. Eight Bourne-family dialects on one bytecode core, each verified against its actual reference shell rather than against zsh&rsquo;s approximation (the matrix prefers the newest installed reference &mdash; bash 5.3 and ksh93u+m, not macOS&rsquo;s bash 3.2 and ksh93u+ 2012 &mdash; and compares the zsh-style legs with real <code>zsh</code> running <code>emulate sh</code> / <code>emulate ksh</code>; each way runs shared and per-dialect corpora, generated operator grids and per-way-tagged data files, in parallel, every script in an empty scratch directory with a 30&nbsp;s limit). No precedent found for offering both notions of fidelity as distinct modes.</p>
           </div>
           <div class="cat-card">
             <h4>A hybrid port: native spine, interpreted leaves, one tree</h4>
@@ -444,7 +444,7 @@
           <li><strong><code>src/recorder/</code> &mdash; 1 file, feature-gated.</strong> Every symbol <code>#[cfg(feature = "recorder")]</code>; deleted by rustc when the feature is off. Compiled into the separate <code>zshrs-recorder</code> binary, never the default <code>zshrs</code> build.</li>
           <li><strong><code>src/zsh/</code> &mdash; vendored upstream.</strong> Read-only reference. The C spec; never modified.</li>
         </ul>
-        <p>Lexer + parser ports live in <code>src/ported/lex.rs</code> and <code>src/ported/parse.rs</code> (no separate <code>parse/</code> crate). Workspace siblings: <code>daemon/</code> (43 files, <code>zshrs-daemon</code>), <code>znative/</code> (1 file, the published plugin-ABI SDK), and <code>runtime/</code> (1 file, <code>zshrs-runtime</code> — emits <code>libzsh.a</code> for AOT linking without making <code>cargo install zshrs</code> build it) &mdash; <code>[workspace] members = [".", "daemon", "znative", "runtime"]</code> in root <code>Cargo.toml</code>; <code>compsys</code> was folded into the main <code>zshrs</code> crate (no longer a standalone sibling). Vendored: <code>vendor/fish/</code> (157 files, fish-style reader/highlighter/abbreviations), <code>bins/</code> (5 entry points: <code>zshrs</code>, <code>zshrs-recorder</code> with <code>required-features = ["recorder"]</code>, <code>zd</code> with <code>required-features = ["zd"]</code>, <code>bench-autoload</code>, <code>parity-fuzz</code> with <code>required-features = ["parity-fuzz"]</code>). 965 <code>.rs</code> files total &middot; 1,017,528 Rust LOC (<code>git ls-files '*.rs' | xargs wc -l</code>, 2026-10-05). Test count: 21,394 <code>#[test]</code> markers across the tree (<code>rg &#39;^\s*#\[test\]&#39;</code>, the same anchored count the engineering report prints).</p>
+        <p>Lexer + parser ports live in <code>src/ported/lex.rs</code> and <code>src/ported/parse.rs</code> (no separate <code>parse/</code> crate). Workspace siblings: <code>daemon/</code> (43 files, <code>zshrs-daemon</code>), <code>znative/</code> (1 file, the published plugin-ABI SDK), and <code>runtime/</code> (1 file, <code>zshrs-runtime</code> — emits <code>libzsh.a</code> for AOT linking without making <code>cargo install zshrs</code> build it) &mdash; <code>[workspace] members = [".", "daemon", "znative", "runtime"]</code> in root <code>Cargo.toml</code>; <code>compsys</code> was folded into the main <code>zshrs</code> crate (no longer a standalone sibling). Vendored: <code>vendor/fish/</code> (157 files, fish-style reader/highlighter/abbreviations), <code>bins/</code> (entry points: <code>zshrs</code>, <code>zshrs-recorder</code> with <code>required-features = ["recorder"]</code>, <code>zd</code> with <code>required-features = ["zd"]</code>). 965 <code>.rs</code> files total &middot; 1,017,528 Rust LOC (<code>git ls-files '*.rs' | xargs wc -l</code>, 2026-10-05). Test count: 21,394 <code>#[test]</code> markers across the tree (<code>rg &#39;^\s*#\[test\]&#39;</code>, the same anchored count the engineering report prints).</p>
       </section>
 
       <!-- ════════════════════════════════════════════════════════════ -->
@@ -464,7 +464,7 @@
           <tr><td><code>date</code>/<code>hostname</code>/<code>uname</code></td><td>fork + exec</td><td><span class="highlight">Direct syscall</span></td><td>3000-8000x</td></tr>
           <tr><td><code>sleep</code>/<code>mktemp</code>/<code>touch</code></td><td>fork + exec</td><td><span class="highlight">Builtin</span> &mdash; zero fork</td><td>2000-5000x</td></tr>
           <tr><td><code>xattr</code> operations</td><td>fork + exec xattr</td><td><span class="highlight">Direct syscall</span></td><td>2000-5000x</td></tr>
-          <tr><td><code>pmap</code>/<code>pgrep</code>/<code>peach</code></td><td>fork N times to sh -c</td><td><span class="highlight">VM execution</span> &mdash; zero fork</td><td>Nx</td></tr>
+          <tr><td><code>pmap</code>/<code>pgrep</code>/<code>peach</code></td><td>fork N times to sh -c</td><td><span class="highlight">worker pool</span> &mdash; fresh zshrs per item, or per chunk</td><td>Nx</td></tr>
           <tr><td><code>$(cmd)</code></td><td>fork + pipe + exec</td><td>In-process stdout capture via <code>dup2</code></td><td>&mdash;</td></tr>
           <tr><td><code>&lt;(cmd)</code> / <code>&gt;(cmd)</code></td><td>fork + FIFO</td><td>Worker pool thread + FIFO</td><td>&mdash;</td></tr>
           <tr><td>Glob <code>**/*.rs</code></td><td>Single-threaded <code>opendir</code></td><td>Parallel <code>walkdir</code> per-subdir on pool</td><td>&mdash;</td></tr>
@@ -522,7 +522,7 @@ uname  date  mktemp</div>
           <div class="cat-card"><h4>Parallel Glob</h4><p><code>**/</code> recursive walk split per-subdir across pool</p></div>
           <div class="cat-card"><h4>Metadata Prefetch</h4><p>Glob qualifiers: one parallel <code>stat</code> batch, zero syscalls after</p></div>
           <div class="cat-card"><h4>PATH Rehash</h4><p>Parallel <code>readdir</code> across every PATH directory</p></div>
-          <div class="cat-card"><h4>History Writes</h4><p>Daemon-side writes via IPC &mdash; prompt never waits, zero client SQLite handle</p></div>
+          <div class="cat-card"><h4>History Writes</h4><p>Off the prompt path: daemon-side writes via IPC, and the shell&rsquo;s own <code>zshrs_history.db</code> written by a background thread (WAL, no per-commit fsync) &mdash; accepting a command never waits on the file</p></div>
         </div>
       </section>
 
@@ -593,10 +593,10 @@ uname  date  mktemp</div>
             <h4>catalog.db (SQLite mirror)</h4>
             <p>Daemon-hydrated FTS5-indexed mirror of all rkyv contents. Used ONLY by
             <code>dbview</code> and <code>zcache</code> introspection &mdash; never read on the
-            hot path. Clients have ZERO SQLite handles. The daemon's own FTS5 history
+            hot path. Clients hold no handle on it. The daemon's own FTS5 history
             (<code>history.db</code>) sits next to it; the shell's user-facing history is
             <code>zshrs_history</code> (flat zsh-extended-history-format text) plus a sibling
-            FTS5 index <code>zshrs_history.db</code>, both in <code>$ZSHRS_HOME</code>.</p>
+            FTS5 index <code>zshrs_history.db</code>, both in <code>$ZSHRS_HOME</code>. The index uses a WAL journal with <code>synchronous=NORMAL</code> and a 2&nbsp;s busy timeout, and the shell writes it from a background writer thread (drained, bounded at 3&nbsp;s, on exit), so many shells sharing it never stall each other&rsquo;s prompt.</p>
           </div>
         </div>
 
@@ -1230,14 +1230,18 @@ Every subsequent call (client path, ZERO daemon RTT):
       <section class="tutorial-section">
         <h2><span class="section-num">[0x07]</span> EXCLUSIVE BUILTINS</h2>
 
-        <h3>Parallel Primitives (VM-executed, zero fork)</h3>
+        <h3>Parallel Primitives (worker pool)</h3>
         <table class="arch-table">
           <tr><th>Builtin</th><th>Description</th></tr>
           <tr><td><code>async</code> / <code>await</code></td><td>Ship work to pool, collect result</td></tr>
-          <tr><td><code>pmap</code></td><td>Parallel map with ordered output &mdash; compiles to bytecode, runs on VM, zero forks</td></tr>
-          <tr><td><code>pgrep</code></td><td>Parallel filter &mdash; compiles to bytecode, runs on VM, zero forks</td></tr>
-          <tr><td><code>peach</code></td><td>Parallel for-each, unordered &mdash; compiles to bytecode, runs on VM, zero forks</td></tr>
+          <tr><td><code>pmap</code></td><td>Parallel map with ordered output &mdash; worker pool, one fresh zshrs process per item</td></tr>
+          <tr><td><code>pgrep</code></td><td>Parallel filter &mdash; worker pool, one fresh zshrs process per item</td></tr>
+          <tr><td><code>peach</code></td><td>Parallel for-each, unordered &mdash; worker pool, one fresh zshrs process per item</td></tr>
           <tr><td><code>barrier</code></td><td>Run all commands in parallel, wait for all</td></tr>
+          <tr><td><code>puniq</code> / <code>psort</code></td><td>Parallel distinct / stable sort of operands or stdin lines</td></tr>
+          <tr><td><code>pfirst</code> / <code>pany</code></td><td>Lowest-position / any item for which the command succeeds</td></tr>
+          <tr><td><code>pmap_chunked</code></td><td><code>pmap</code> with one shell process per chunk of N items</td></tr>
+          <tr><td><code>par_lines</code> / <code>par_walk</code></td><td>One command per line of a file / per path of a tree, parallel, ordered output</td></tr>
         </table>
 
         <h3>AOP / Debugging</h3>
@@ -1324,6 +1328,68 @@ git diff --cached | <span class="keyword">ai</span> -v msg -s <span class="strin
       </section>
 
       <!-- ════════════════════════════════════════════════════════════ -->
+      <section class="tutorial-section" id="parity-matrix">
+        <h2><span class="section-num">[0x07a]</span> NINE-WAY PARITY MATRIX</h2>
+
+        <p>Every dialect is checked against its <em>real reference shell</em>, not against zsh&rsquo;s
+        approximation of it. <code>tests/emulation_parity.rs</code> runs the same scripts through
+        <code>zshrs --X</code> and the real shell X and compares standard output and the exit-status
+        sign. The two zsh-style rows keep zsh semantics on purpose, so their reference is
+        <code>zsh</code> itself running <code>emulate sh</code> / <code>emulate ksh</code>.</p>
+
+        <table class="arch-table">
+          <tr><th>Way</th><th>zshrs</th><th>Reference</th><th>Corpora it runs</th></tr>
+            <tr><td><strong>zsh</strong></td><td><code>--zsh</code></td><td>zsh 5.9.2</td><td>shared + extended + zsh-only</td></tr>
+            <tr><td><strong>bash</strong></td><td><code>--bash</code></td><td>bash 5.3</td><td>shared + extended + real-shell + bash-only + bash/ksh + bash/ksh/mksh</td></tr>
+            <tr><td><strong>ksh</strong></td><td><code>--ksh</code></td><td>ksh93u+m</td><td>shared + extended + real-shell + ksh-only + bash/ksh + bash/ksh/mksh</td></tr>
+            <tr><td><strong>sh</strong></td><td><code>--sh</code></td><td>the host <code>/bin/sh</code> (skipped where it is dash)</td><td>shared + real-shell</td></tr>
+            <tr><td><strong>dash</strong></td><td><code>--dash</code></td><td>dash</td><td>shared + real-shell + dash family + dash-only</td></tr>
+            <tr><td><strong>sh/zsh-style</strong></td><td><code>--sh --zsh</code></td><td>zsh <code>emulate sh</code></td><td>shared</td></tr>
+            <tr><td><strong>ksh/zsh-style</strong></td><td><code>--ksh --zsh</code></td><td>zsh <code>emulate ksh</code></td><td>shared + extended</td></tr>
+            <tr><td><strong>mksh</strong></td><td><code>--mksh</code></td><td>mksh</td><td>shared + real-shell + bash/ksh/mksh + pdksh</td></tr>
+            <tr><td><strong>ash</strong></td><td><code>--ash</code></td><td>ash</td><td>shared + real-shell + dash family</td></tr>
+        </table>
+        <p><code>--pdksh</code> is a tenth, optional way: it runs wherever a <code>pdksh</code> reference is installed.</p>
+
+        <h3 style="color: var(--cyan); margin-top: 1.6rem;">What each way runs</h3>
+        <div class="cat-grid">
+          <div class="cat-card">
+            <h4>Hand-written corpora</h4>
+            <p>Portable scripts every shell must run identically, plus per-dialect corpora for what only
+            some shells have: arrays, <code>[[ ]]</code>, <code>(( ))</code>, <code>typeset</code>, ksh93&rsquo;s
+            <code>print</code> and <code>.sh.*</code>, bash&rsquo;s <code>declare</code>, dash&rsquo;s quirks.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Generated operator grids</h4>
+            <p>Pattern removal against every operand and pattern; <code>-</code> <code>:-</code> <code>+</code>
+            <code>:+</code> <code>=</code> <code>:=</code> against unset, empty and set variables; every arithmetic
+            operator over sign, zero and shift operands; <code>case</code> subjects against pattern shapes;
+            <code>test</code> operators; IFS shapes; <code>printf</code> conversions; positionals and exit statuses.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Cross-dialect data file</h4>
+            <p><code>"$@"</code> / <code>"$*"</code> under several IFS values, nested expansions, <code>break N</code>,
+            function scope, redirections and here-documents, the <code>set -e</code> matrix, traps,
+            <code>read</code>, globbing, command substitution, <code>getopts</code>, quoting, <code>cd</code> and
+            <code>umask</code>.</p>
+          </div>
+          <div class="cat-card">
+            <h4>Dialect data file, tagged per way</h4>
+            <p>Each script lists the ways it was measured identical on. A script a shell does not have is left out of
+            that shell&rsquo;s list &mdash; never edited to pass.</p>
+          </div>
+        </div>
+
+        <h3 style="color: var(--cyan); margin-top: 1.6rem;">How it runs</h3>
+        <ul>
+          <li>Ways run in parallel; each script has a 30&nbsp;s limit, so a hung shell is a divergence, not a stuck job.</li>
+          <li>Every script runs in an empty scratch directory: a stray redirection cannot read or leave a file.</li>
+          <li>The newest installed reference wins (bash 5.3 and ksh93u+m ahead of macOS&rsquo;s bash 3.2 and ksh93u+ 2012), because zshrs reports those versions.</li>
+          <li>The run prints a per-way table &mdash; cases, mismatches, and the exact reference binary and release.</li>
+          <li>A missing reference is a skip; <code>ZSHRS_REQUIRE_REF_SHELLS</code> makes a missing required one fatal.</li>
+        </ul>
+      </section>
+
       <section class="tutorial-section">
         <h2><span class="section-num">[0x07b]</span> SHELL LANGUAGE FEATURES</h2>
 
