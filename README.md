@@ -15,8 +15,8 @@
 [![Tier 5](https://img.shields.io/badge/tier_5-20_editor%20%2F%20tmux-purple.svg)](#tier-5--editor--multiplexer-plugins-20)
 [![Tier 6](https://img.shields.io/badge/tier_6-23_apps_+_web%20+%20APIs-orange.svg)](#tier-6--apps-extensions-web--web-apis-23)
 [![Tier 7](https://img.shields.io/badge/tier_7-9_znative_plugins-blue.svg)](#tier-7--znative-plugins-9)
-[![Rust](https://img.shields.io/badge/rust-5.5M_LOC-orange.svg)](#0x09-code-volume)
-[![Code](https://img.shields.io/badge/code-14.1M_lines-brightgreen.svg)](#0x09-code-volume)
+[![Rust](https://img.shields.io/badge/rust-5.6M_LOC-orange.svg)](#0x09-code-volume)
+[![Code](https://img.shields.io/badge/code-14.2M_lines-brightgreen.svg)](#0x09-code-volume)
 [![Website](https://img.shields.io/badge/website-menketechnologies.github.io-blue.svg)](https://menketechnologies.github.io/)
 [![App Store](https://img.shields.io/badge/app_store-storefront-red.svg)](https://menketechnologies.github.io/app-store/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -533,7 +533,7 @@ Live GitHub Actions status for every submodule in one table — scan the whole o
 | 6 — Apps, extensions, web & web-APIs | [`zgui-bridge`](https://github.com/MenkeTechnologies/zgui-bridge) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zdsp-core`](https://github.com/MenkeTechnologies/zdsp-core) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-theme`](https://github.com/MenkeTechnologies/zpwr-theme) | [![CI](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/zpwr-theme/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/zpwr-theme?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/zpwr-theme/tags) |
-| 6 — Apps, extensions, web & web-APIs | [`app-store`](https://github.com/MenkeTechnologies/app-store) | [![CI](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/app-store?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/app-store/tags) |
+| 6 — Apps, extensions, web & web-APIs | [`app-store`](https://github.com/MenkeTechnologies/app-store) | [![CI](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/ci.yml) [![jekyll-gh-pages](https://github.com/MenkeTechnologies/app-store/actions/workflows/jekyll-gh-pages.yml/badge.svg?branch=main)](https://github.com/MenkeTechnologies/app-store/actions/workflows/jekyll-gh-pages.yml) | — | [![Version](https://img.shields.io/github/v/tag/MenkeTechnologies/app-store?sort=semver&label=&color=blue)](https://github.com/MenkeTechnologies/app-store/tags) |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-license`](https://github.com/MenkeTechnologies/zpwr-license) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`zpwr-account`](https://github.com/MenkeTechnologies/zpwr-account) | — | — | — |
 | 6 — Apps, extensions, web & web-APIs | [`MenkeTechnologiesPublications`](https://github.com/MenkeTechnologies/MenkeTechnologiesPublications) | — | — | — |
@@ -775,30 +775,30 @@ Measured with `tokei` across the full recursive working tree, **de-duplicated by
 <!-- BEGIN gen-code-volume:languages -->
 | Language | Code | Files |
 |---|---:|---:|
-| Rust | 5,515,807 | 13,509 |
-| JSON | 2,383,872 | 1,085 |
-| TeX | 1,977,591 | 369 |
-| JavaScript | 752,631 | 4,741 |
-| HTML | 640,769 | 1,426 |
-| C Header | 388,536 | 1,915 |
-| C++ | 384,567 | 1,135 |
+| Rust | 5,555,582 | 13,704 |
+| JSON | 2,385,124 | 1,085 |
+| TeX | 2,085,390 | 391 |
+| JavaScript | 754,605 | 4,753 |
+| HTML | 644,390 | 1,428 |
+| C Header | 389,328 | 1,916 |
+| C++ | 384,780 | 1,135 |
 | Python | 309,181 | 1,213 |
-| Zsh | 287,816 | 1,412 |
+| Zsh | 287,835 | 1,412 |
 | C | 263,782 | 446 |
-| Stryke (`.stk`) | 202,444 | 3,405 |
-| Shell | 147,116 | 4,031 |
-| Vim Script | 130,643 | 1,118 |
-| CSS | 119,116 | 461 |
-| Perl | 108,686 | 1,833 |
-| AWK | 83,296 | 2,251 |
+| Stryke (`.stk`) | 202,505 | 3,411 |
+| Shell | 148,068 | 4,033 |
+| Vim Script | 130,815 | 1,124 |
+| CSS | 119,142 | 461 |
+| Perl | 108,983 | 1,852 |
+| AWK | 83,301 | 2,252 |
 | C++ Header | 73,791 | 261 |
-| TOML | 43,990 | 917 |
+| TOML | 44,022 | 918 |
 | Scheme | 40,223 | 1,189 |
 | Kotlin | 31,747 | 315 |
 | SQL | 29,408 | 123 |
 | Objective-C++ | 20,833 | 65 |
-| *Other (90 languages)* | 126,402 | 1,708 |
-| **Total** | **14,062,247** | **46,310** |
+| *Other (90 languages)* | 126,902 | 1,709 |
+| **Total** | **14,219,737** | **46,583** |
 <!-- END gen-code-volume:languages -->
 
 The JSON mass is dominated by `traderview` frontend i18n locales plus `zpwr-synth` factory-preset banks; the remainder is fixtures, completion data, and bytecode/cache snapshots. The Perl mass is `strykelang/parity/cases` — hand-written parity scripts that pin `strykelang` behavior 1:1 against Perl 5.
@@ -809,13 +809,13 @@ Largest single repos by source (same exclusions; `.stk` counted as above):
 | Repo | Primary | Secondary |
 |---|---:|---:|
 | `traderview` | JSON 1,581,775 | Rust 782,230 |
-| `MenkeTechnologiesPublications` | TeX 1,969,156 | HTML 163,091 |
+| `MenkeTechnologiesPublications` | TeX 2,076,743 | HTML 165,685 |
 | `zpwr-fx` | C++ 333,839 | C Header 306,882 |
-| `zshrs` | Rust 660,859 | Zsh 59,121 |
-| `zvcs` | Rust 771,108 | Shell 12,678 |
-| `strykelang` | Rust 422,266 | Stryke 162,579 |
-| `zmax` | Rust 395,386 | JSON 183,295 |
-| `docs` | HTML 407,277 | JavaScript 7,129 |
+| `zshrs` | Rust 673,413 | Zsh 59,139 |
+| `zvcs` | Rust 781,349 | Shell 12,678 |
+| `strykelang` | Rust 423,117 | Stryke 162,640 |
+| `zmax` | Rust 395,739 | JSON 183,623 |
+| `docs` | HTML 407,964 | JavaScript 7,129 |
 | `Audio-Haxor` | Rust 141,215 | JSON 121,709 |
 | `pythonrs` | Python 244,732 | Rust 94,539 |
 <!-- END gen-code-volume:repos -->
@@ -831,7 +831,7 @@ Every line above is hand-authored. The standard software-engineering productivit
 |---:|---:|---:|
 | 100/day (optimistic ceiling) | ~920,000 | **~15×** |
 | 50/day (mid estimate) | ~460,000 | **~31×** |
-| 20/day (conservative) | ~184,000 | **~76×** |
+| 20/day (conservative) | ~184,000 | **~77×** |
 
 The defensible floor is **≥15 engineer-careers of authored code, produced in one** — it uses the *highest* productivity baseline, so the multiple only grows under any more realistic assumption.
 <!-- END gen-code-volume:careers -->
