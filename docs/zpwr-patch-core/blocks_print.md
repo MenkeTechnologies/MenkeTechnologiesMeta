@@ -2,12 +2,12 @@
 
 # Catalog at a glance
 
-\textbf{4238 blocks} across \textbf{25 categories} and the consuming plugins, including 194 component-level analog-circuit models and 441 control / modulation (CV-badge) sources.
+\textbf{4314 blocks} across \textbf{25 categories} and the consuming plugins, including 194 component-level analog-circuit models and 441 control / modulation (CV-badge) sources.
 
 \medskip\noindent\begin{tabular}{@{}ll@{}}
-\textcolor{accentPink}{\textbf{In plugin}} & \textcolor{neonCyan}{zpwr-fx 3366}\quad\textcolor{neonMagenta}{zpwr-synth 3675}\quad\textcolor{neonYellow}{zpwr-midi-fx 563} \\[3pt]
-\textcolor{accentPink}{\textbf{Registry}} & Audio 3366\quad Synth 309\quad MIDI 563 \\[3pt]
-\textcolor{accentPink}{\textbf{Output jack}} & \textcolor{neonCyan}{Audio 3482}\quad\textcolor{neonYellow}{MIDI 563}\quad\textcolor{neonGreen}{CV 193} \\
+\textcolor{accentPink}{\textbf{In plugin}} & \textcolor{neonCyan}{zpwr-fx 3442}\quad\textcolor{neonMagenta}{zpwr-synth 3751}\quad\textcolor{neonYellow}{zpwr-midi-fx 563} \\[3pt]
+\textcolor{accentPink}{\textbf{Registry}} & Audio 3442\quad Synth 309\quad MIDI 563 \\[3pt]
+\textcolor{accentPink}{\textbf{Output jack}} & \textcolor{neonCyan}{Audio 3558}\quad\textcolor{neonYellow}{MIDI 563}\quad\textcolor{neonGreen}{CV 193} \\
 \end{tabular}
 
 \medskip\noindent\textbf{By category} (block count, largest first):
@@ -22,10 +22,10 @@
 \textcolor{bodyText}{Filter}\dotfill\textcolor{neonCyan}{168}\\
 \textcolor{bodyText}{Analog}\dotfill\textcolor{neonCyan}{155}\\
 \textcolor{bodyText}{Utility}\dotfill\textcolor{neonCyan}{151}\\
+\textcolor{bodyText}{Reverb}\dotfill\textcolor{neonCyan}{119}\\
 \textcolor{bodyText}{Effect}\dotfill\textcolor{neonCyan}{57}\\
 \textcolor{bodyText}{Delay}\dotfill\textcolor{neonCyan}{53}\\
 \textcolor{bodyText}{Harmony}\dotfill\textcolor{neonCyan}{51}\\
-\textcolor{bodyText}{Reverb}\dotfill\textcolor{neonCyan}{43}\\
 \textcolor{bodyText}{Routing}\dotfill\textcolor{neonCyan}{30}\\
 \textcolor{bodyText}{Pitch}\dotfill\textcolor{neonCyan}{29}\\
 \textcolor{bodyText}{Amp}\dotfill\textcolor{neonCyan}{24}\\
@@ -110,7 +110,7 @@ An icon glyph precedes each block name; then its badges, then `in:` its input ja
 \legicon{cabinet} & \textcolor{bodyText}{Speaker cabinet} & \legicon{circuit} & \textcolor{bodyText}{Analog circuit} & \legicon{block} & \textcolor{bodyText}{Other} \\[5pt]
 \end{tabular}
 
-# Audio (zpwr-fx / shared pack) (3366 blocks)
+# Audio (zpwr-fx / shared pack) (3442 blocks)
 
 ## Amp (24)
 
@@ -17884,7 +17884,7 @@ Zero-cross-locked ramp: measures the input period from its rising zero crossings
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
-## Reverb (43)
+## Reverb (119)
 
 \phantomsection\label{blk:Aetherizer}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Aetherizer}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
@@ -17898,9 +17898,111 @@ All-pass diffusion chain: four first-order all-pass stages in series smear phase
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:Ambience}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Ambience}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Ambience voicing of the 8-line FDN reverb (Valhalla VintageVerb Ambience category): very short lines, fast decay and strong early reflections that add space around a source without an audible tail. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Andromeda}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Andromeda}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Andromeda voicing of the 8-line FDN reverb (Valhalla Supermassive Andromeda category): Sagittarius's ~400 ms swell-in with very long lines and a 28 s default RT60, an enormous slow-blooming wash. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Aquarius}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Aquarius}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Aquarius voicing of the 8-line FDN reverb (Valhalla Supermassive Aquarius category): the echo-focused EchoVerb mode (a modified feedback delay network): sparse, single-diffuser lines whose echoes follow Size, moving between delays, delays with reverb and reverb with pre-delay as Density rises. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:Ascend}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Ascend}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Pitch-rising shimmer reverb: a long delay whose feedback is pitch-shifted up an octave (granular two-tap) and damped, so the tail ascends and blooms into ethereal pads. Size sets the delay length, Shimmer the octave-up feedback amount and Damp the tail brightness. Lush on pads, vocals and ambient guitar - see Crystals for reverse+pitch and Gravity for huge inverted tails.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:BrightHall}\blockicon{reverb}\textcolor{neonCyan}{\textbf{BrightHall}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Bright-hall voicing of the 8-line FDN reverb (Valhalla VintageVerb Bright Hall category): like ConcertHall but with almost no loop damping so the tail keeps its top end, and a slightly shorter RT60. Size scales the lines, Decay sets RT60, Damp darkens, Density sets diffusion, Mix blends. Open, airy hall.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:BrightRoom}\blockicon{reverb}\textcolor{neonCyan}{\textbf{BrightRoom}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+BrightRoom voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Bright Room category): a lush, shinier-than-life reverb with deep modulation and a somewhat slower attack. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Capricorn}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Capricorn}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Capricorn voicing of the 8-line FDN reverb (Valhalla Supermassive Capricorn category): fast attack, short decay and medium echo density. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Cassiopeia}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Cassiopeia}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Cassiopeia voicing of the 8-line FDN reverb (Valhalla Supermassive Cassiopeia category): many feeding-back echoes - 160 ms lines, minimal diffusion and a 10 s default RT60 - suited to dub-style repeats. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Cathedral}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Cathedral}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Cathedral voicing of the 8-line FDN reverb (Valhalla VintageVerb Cathedral category): 130 ms lines and an 8 s default RT60 with moderate damping and a trace of early reflections, for the long, dense decay of a stone nave. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Centaurus}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Centaurus}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Centaurus voicing of the 8-line FDN reverb (Valhalla Supermassive Centaurus category): slower attack (the input onset is smeared over ~40 ms) and a shorter decay with some sustain in the body of the tail. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Chamber1979}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Chamber1979}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Late-70s chamber voicing of the 8-line FDN reverb (Valhalla VintageVerb Chamber1979 category): three-stage diffusion, slightly stronger modulation and a darker, shorter-sounding loop than Chamber, for the grainier density of early digital chambers. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:ChamberVerb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ChamberVerb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Chamber voicing of the 8-line FDN reverb (Valhalla VintageVerb Chamber category): medium-short lines with dense four-stage diffusion and gentle modulation for a transparent, dense tail with a little early-reflection definition. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:ChaoticChamber}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ChaoticChamber}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Chaotic-chamber voicing of the 8-line FDN reverb (Valhalla VintageVerb Chaotic Chamber category): chamber-length lines with random-walk modulation at 0.8 Hz and 1.2 ms depth, a dense but restless tail. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:ChaoticHall}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ChaoticHall}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Chaotic-hall voicing of the 8-line FDN reverb (Valhalla VintageVerb Chaotic Hall category): hall-length lines whose delay times jump to new random targets at 0.7 Hz with 1.8 ms depth, so the tail's colour and image keep changing. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:ChaoticNeutral}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ChaoticNeutral}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Chaotic-neutral voicing of the 8-line FDN reverb (Valhalla VintageVerb Chaotic Neutral category): mid-length lines with gentle 0.6 ms random-walk modulation at 0.5 Hz, enough to break up metallic ringing without obvious movement. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:ChorusSpace}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ChorusSpace}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Chorus-space voicing of the 8-line FDN reverb (Valhalla VintageVerb Chorus Space category): deep 2.5 ms sine modulation at 1.4 Hz on every line, so the tail detunes into a lush chorused shimmer. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:CirrusMajor}\blockicon{reverb}\textcolor{neonCyan}{\textbf{CirrusMajor}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+CirrusMajor voicing of the 8-line FDN reverb (Valhalla Supermassive Cirrus Major category): fast attack, low-to-medium echo density and strange repeating patterns from a single sparse diffuser stage. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:CirrusMinor}\blockicon{reverb}\textcolor{neonCyan}{\textbf{CirrusMinor}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+CirrusMinor voicing of the 8-line FDN reverb (Valhalla Supermassive Cirrus Minor category): fast attack, low echo density and strange repetitive patterns, smaller than CirrusMajor. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -17934,6 +18036,12 @@ Comb swarm: four damped feedback combs at closely-detuned incommensurate delays 
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:ConcertHall}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ConcertHall}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Concert-hall voicing of an 8-line feedback-delay-network reverb (Valhalla VintageVerb Concert Hall category): long lines, four-stage allpass diffusion, light slow modulation and a few percent of early reflections. Size scales the lines, Decay sets the exact RT60, Damp darkens the tail, Density sets the diffuser coefficient, Mix blends wet and dry. Smooth, wide late-70s/early-80s hall tail.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:Convolution}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Convolution}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Convolution reverb: input is buffered into blocks and convolved with an impulse response via partitioned FFT, then streamed back with block latency. The IR comes from the node config (an audio file path loads that real IR, otherwise a decay time in seconds generates a decaying-noise tail); PreDelay offsets the wet by 0 to 200 ms, Tone is a one-pole low-pass on the wet, and Mix blends dry/wet. Use it to place sounds in real spaces or to apply any captured IR.
@@ -17952,6 +18060,30 @@ Shimmer reverb: a 4-line FDN whose output is pitch-shifted an octave up and re-i
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:DarkChamber}\blockicon{reverb}\textcolor{neonCyan}{\textbf{DarkChamber}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+DarkChamber voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Dark Chamber category): LargeChamber, bigger and darker, with deeper detuning modulation. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:DarkRoom}\blockicon{reverb}\textcolor{neonCyan}{\textbf{DarkRoom}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+DarkRoom voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Dark Room category): a lo-fi dark room: the loop runs through an 11-bit quantiser and a 2x sample-and-hold (no content above about 12 kHz, noisy interpolation like the Lexicon 224 / EMT 250 it draws on) with modest early reflections. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:DarkSpace}\blockicon{reverb}\textcolor{neonCyan}{\textbf{DarkSpace}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+DarkSpace voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Dark Space category): long lines with a heavily damped loop, cleaner modulated delays than Dark Room, lower initial echo density (two thin diffusers) and a delayed onset. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:DenseRoom}\blockicon{reverb}\textcolor{neonCyan}{\textbf{DenseRoom}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+DenseRoom voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Dense Room category): LargeRoom with a denser distribution of early echoes and a brighter tone. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:Diffuser}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Diffuser}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Allpass diffuser: a cascade of four Schroeder all-pass sections with prime-spaced delays smears transients into a short, dense burst without adding a reverb tail or colouring the magnitude spectrum - the diffusion stage that lives inside reverbs, exposed on its own to thicken percussion, blur clicks, or pre-soften a signal before further processing. Amount sets the all-pass coefficient (smear density), Size scales the delay times, and Mix blends against the dry signal.
@@ -17961,6 +18093,18 @@ Allpass diffuser: a cascade of four Schroeder all-pass sections with prime-space
 \phantomsection\label{blk:DiffusorComb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{DiffusorComb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Diffused comb: a pair of allpass diffusers smear the input before it enters a tuned damped comb, so the comb's metallic resonance is softened into a smooth, dense, plate-like ring rather than a sharp peak - between a resonator and a small reverb.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:DirtyHall}\blockicon{reverb}\textcolor{neonCyan}{\textbf{DirtyHall}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Dirty-hall voicing of the 8-line FDN reverb (Valhalla VintageVerb Dirty Hall category): ConcertHall's lines with a 10-bit quantiser and 2x sample-and-hold inside the loop, giving a gritty, lo-fi hall tail that degrades as it decays. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:DirtyPlate}\blockicon{reverb}\textcolor{neonCyan}{\textbf{DirtyPlate}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Dirty-plate voicing of the 8-line FDN reverb (Valhalla VintageVerb Dirty Plate category): SmoothPlate with the loop passed through a 9-bit quantiser and a 3x sample-and-hold, so every recirculation adds the aliasing grit of early low-resolution converters. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -18006,6 +18150,54 @@ Reverb that can latch into an infinite-hold freeze mode, sustaining the current 
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:FVCathedral}\blockicon{reverb}\textcolor{neonCyan}{\textbf{FVCathedral}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Cathedral mode of the FutureVerb-style reverb: a huge open reverb with a slowish attack and a very long low-frequency decay (shape it with Low Cut: lower settings boost the low-frequency damping time for big dark spaces); keep Mod Depth low for a realistic rolling decay. Decay (RT60), Size, Early/Late, Density, Mod Rate/Depth, High Cut, Color and Mix.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:FVChamber}\blockicon{reverb}\textcolor{neonCyan}{\textbf{FVChamber}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Chamber mode of the FutureVerb-style reverb: the classic echo chamber, with more low-end decay than Room and denser early reflections; with Mod Depth at 0 it is a plain 1960s-style studio chamber. Decay (RT60), Size, Early/Late, Density, Mod Rate/Depth, High Cut, Low Cut, Color and Mix as on the other FutureVerb modes.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:FVFrozen}\blockicon{reverb}\textcolor{neonCyan}{\textbf{FVFrozen}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Frozen mode of the FutureVerb-style reverb: a freeze reverb that eventually stops - the input hangs in a sonic cloud with a flat decay whose duration follows Size (3 s at 0, 60 s at 1; Decay is not used). Attack sets an instant hit or a fade-in over up to 800 ms; Density, Mod Rate/Depth, High Cut, Low Cut, Color and Mix as on the other FutureVerb modes.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:FVHall}\blockicon{reverb}\textcolor{neonCyan}{\textbf{FVHall}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Hall mode of the FutureVerb-style reverb: a lush, spacious concert hall with a medium-fast to slow attack set by Early/Late (turn it up to move the listener further back); raise Mod Depth for epic vocals or set it to 0 for a realistic orchestral hall. Decay (RT60), Size, Density, Mod Rate/Depth, High Cut, Low Cut, Color and Mix.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:FVNonlin}\blockicon{reverb}\textcolor{neonCyan}{\textbf{FVNonlin}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Nonlin mode of the FutureVerb-style reverb: a classic nonlinear (gated) reverb - a flat-decay dense tail cut by a gate whose time follows Size (30 ms at 0 to 1 s at 1; Decay is not used), re-armed by each input transient. Attack pushes the sound up front or melts it into the mix. Density, Mod Rate/Depth, High Cut, Low Cut, Color and Mix as on the other FutureVerb modes.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:FVPlate}\blockicon{reverb}\textcolor{neonCyan}{\textbf{FVPlate}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Plate mode of the FutureVerb-style reverb: a cross between a physical plate and a clearer digital plate, with no early reflections, less boom than a real plate and none of the usual digital-plate artifacts. Decay (RT60), Size, Early/Late, Density, Mod Rate/Depth, High Cut, Low Cut, Color and Mix.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:FVRoom}\blockicon{reverb}\textcolor{neonCyan}{\textbf{FVRoom}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Room mode of the FutureVerb-style reverb: a clean, realistic basic room, good for short drum rooms and vocal ambiences as well as bigger rooms. Decay is the RT60 (0.2 to 70 s), Size the network size, Early/Late moves the listener away from the source (fewer early reflections, slower attack), Density the initial echo density, Mod Rate/Depth the random-LFO modulation, High Cut and Low Cut the loop damping, Color Bright/Neutral/Dark/Studio the overall tone.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:FVSpace}\blockicon{reverb}\textcolor{neonCyan}{\textbf{FVSpace}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Space mode of the FutureVerb-style ambient reverb: lush and huge with an open sound and far more control over attack and decay than the older ambient algorithms. Attack sets the fade-in time (up to 800 ms), Decay the RT60, Size the network size, plus Density, Mod Rate/Depth, High Cut, Low Cut, Color and Mix.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:GatedReverb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{GatedReverb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Gated reverb: a dense reverb whose tail is cut off abruptly by a gate that closes when the dry input falls quiet, the explosive, truncated drum-reverb sound of 1980s records.
@@ -18015,6 +18207,12 @@ Gated reverb: a dense reverb whose tail is cut off abruptly by a gate that close
 \phantomsection\label{blk:GatedVerb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{GatedVerb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Reverb whose wet tail is muted by a fast envelope-driven gate, so the reverb only passes while the dry input stays above a threshold. Size sets the room length and Damp the high-frequency decay, Threshold sets the level below which the tail is cut, and Mix blends the gated reverb against the dry signal. Reproduces the abrupt, chopped-off reverb of 80s drum production.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Gemini}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Gemini}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Gemini voicing of the 8-line FDN reverb (Valhalla Supermassive Gemini category, the conventional smooth reverb): instant attack, natural exponential decay, and smoothest at high Density. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -18030,9 +18228,63 @@ Oversized 4-line feedback delay network (FDN) reverb, each line damped by a low-
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:GreatAnnihilator}\blockicon{reverb}\textcolor{neonCyan}{\textbf{GreatAnnihilator}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Great Annihilator voicing of the 8-line FDN reverb (Valhalla Supermassive Great Annihilator category): Centaurus's slow attack with much longer lines and a 20 s default RT60 for a massive, enveloping tail. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Hall1984}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Hall1984}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Mid-80s digital-hall voicing of the 8-line FDN reverb (Valhalla VintageVerb Hall1984 category): longer lines, strong diffusion, slow shallow modulation spread across the network and a warmer damped tail. Size, Decay (RT60), Damp, Density and Mix as on the other FDN modes. Dense, warm, slightly dark hall.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Hydra}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Hydra}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Hydra voicing of the 8-line FDN reverb (Valhalla Supermassive Hydra category): long lush exponential decay that is very sensitive to Density - at zero Density the diffuser is bypassed and the lines read as discrete echoes, and raising it quickly thickens them into a wash. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:Iceverb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Iceverb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Four lowpass-damped comb filters form the reverb body, then a self-oscillating resonant state-variable filter is applied to the tail for a cold, ringing sheen. Size sets the comb feedback/decay (up to 0.95), Color sets the resonant filter frequency (~100 Hz..14 kHz), Icing sets its resonance toward self-oscillation, and Mix blends wet against dry. High Icing makes the tail sing into a metallic, icy ring.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:LargeChamber}\blockicon{reverb}\textcolor{neonCyan}{\textbf{LargeChamber}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+LargeChamber voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Large Chamber category): a large chamber with smooth detuning modulation. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:LargeMagellanicCloud}\blockicon{reverb}\textcolor{neonCyan}{\textbf{LargeMagellanicCloud}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Large Magellanic Cloud voicing of the 8-line FDN reverb (Valhalla Supermassive Large Magellanic Cloud category): a long reverb with long repeating echoes - a single sparse diffuser stage lets the discrete line echoes stay audible - a medium (~100 ms) attack and a 12 s default RT60. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:LargeRoom}\blockicon{reverb}\textcolor{neonCyan}{\textbf{LargeRoom}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+LargeRoom voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Large Room category): a big room with a wide spatial impression and smooth detuning modulation. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Leo}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Leo}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Leo voicing of the 8-line FDN reverb (Valhalla Supermassive Leo category, the largest, densest, lushest mode): 150 ms lines, four-stage diffusion at high coefficient and a 14 s default RT60 with light modulation. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Libra}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Libra}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Libra voicing of the 8-line FDN reverb (Valhalla Supermassive Libra category): a slower-attack mode that can act as a delay or a lush reverb, with balanced modulation that can also give a smooth chorus, covering larger halls and ambient sounds. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:LV426}\blockicon{reverb}\textcolor{neonCyan}{\textbf{LV426}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+LV426 voicing of the 8-line FDN reverb (Valhalla ValhallaRoom LV-426 category): a dark, deep space reverb with a higher initial echo density than the other dark modes. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -18048,6 +18300,12 @@ Feedback-delay-network reverb (Valhalla Supermassive style): four modulated dela
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:MediumRoom}\blockicon{reverb}\textcolor{neonCyan}{\textbf{MediumRoom}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+MediumRoom voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Medium Room category): a room sparser than LargeRoom with more random modulation. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:ModEchoVerb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ModEchoVerb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Fused reverb and modulated delay: the input feeds a wow-modulated feedback delay and a short comb reverb tank at once, blending echo and space in one block.
@@ -18060,9 +18318,39 @@ Reverb whose room size is continuously modulated by a sine LFO, detuning the tai
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:Narcissus}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Narcissus}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Narcissus voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Narcissus category): a dark, lush, wide reverb whose random modulation quickly builds into rich chorusing. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:NonlinVerb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{NonlinVerb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Nonlinear 4-line FDN reverb whose wet tail is gated by an envelope follower: a transient above the running level retriggers a hold, then the gain holds flat before cutting off. Size scales the short base delay times up to 5x, while Hold sets how long (10-500 ms) the tail sustains at full level before it decays away. Mix sets dry/wet; the held-then-cut behaviour gives gated, non-natural reverb bursts rather than a smooth decay.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Nostromo}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Nostromo}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Nostromo voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Nostromo category): a deep, dark, echoing reverb with very sparse early echoes, slow density build (~60 ms onset smear) and random modulation. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Orion}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Orion}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Orion voicing of the 8-line FDN reverb (Valhalla Supermassive Orion category): sparse, out-of-time echoes - 200 ms lines, one thin diffuser stage and random-walk modulation - that are heavily damped so each repeat filters out quickly. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Palace}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Palace}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Palace voicing of the 8-line FDN reverb (Valhalla VintageVerb Palace category): the longest lines of the set (150 ms) with a 10 s default RT60 and strong diffusion, a larger room that ranges up to cathedral-scale spaces. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Pisces}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Pisces}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Pisces voicing of the 8-line FDN reverb (Valhalla Supermassive Pisces category): the larger sibling of Aquarius: the same echo-forward network with denser, lusher reverb tails. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -18072,15 +18360,99 @@ Plate reverb: the input runs through four series allpass diffusers and then into
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:PlateAdamantium}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateAdamantium}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateAdamantium voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Adamantium category): the mode closest to older plates: lower modal density (short lines, three diffusers), a dense upper midrange and lots of high-frequency air. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateAluminum}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateAluminum}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateAluminum voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Aluminum category): a plate/chamber hybrid with much higher modal density than the first four plate modes (long lines, strong four-stage diffusion). Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateBrass}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateBrass}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateBrass voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Brass category): a plate with a sharper onset than Chrome, Steel and Cobalt and a fairly bright tone. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateChrome}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateChrome}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateChrome voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Chrome category): a fairly neutral plate with a soft (not sharp) attack and a tone that is bright without being too bright. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateCobalt}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateCobalt}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateCobalt voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Cobalt category): a plate darker than Chrome. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateCopper}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateCopper}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateCopper voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Copper category): a high-modal-density plate/chamber hybrid, deeper and darker than Aluminum. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateLithium}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateLithium}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateLithium voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Lithium category): a big mode with chamber-like modal density, a soft attack and a tamed high-frequency response. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateOsmium}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateOsmium}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateOsmium voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Osmium category): a dark plate with a big, booming low end (longer lines, heavy high-frequency damping). Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateRadium}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateRadium}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateRadium voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Radium category): a chamber/plate hybrid (the mono engine models it as one dense plate; the original uses two parallel mono plates to keep the input's stereo image). Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:PlateReverb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateReverb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Plate reverb: a pair of all-pass input diffusers feed a damped recirculating delay tank (the Dattorro topology), producing the dense, bright, metallic-smooth decay of a studio plate rather than a room.
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:PlateSteel}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateSteel}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateSteel voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Steel category): like Chrome but darker. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateTitanium}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateTitanium}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateTitanium voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Titanium category): a plate with the lower modal density of Adamantium and a darker tone. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:PlateUnobtanium}\blockicon{reverb}\textcolor{neonCyan}{\textbf{PlateUnobtanium}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+PlateUnobtanium voicing of the 8-line FDN reverb (Valhalla ValhallaPlate Unobtanium category): a bright, high-modal-density plate/chamber hybrid with a longer high-frequency decay than the other plates. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Pleiades}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Pleiades}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Pleiades voicing of the 8-line FDN reverb (Valhalla Supermassive Pleiades category): fast attack, smooth decay, high echo density and filtering in the feedback loop for a transparent, realistic reverb. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:Plonk}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Plonk}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Modal resonator (Rings/Plonk-style): excites a bank of five tuned band-pass resonators with the input, imposing the ringing modes of a struck object - bar, plate, bell, drumhead - onto any signal. Tune sets the fundamental, Structure morphs the partials from a harmonic stack toward inharmonic metallic ratios, Decay sets the ring time (resonator Q), and Mix the wet blend. Feed it drums, noise or a synth for plucked, struck and resonated tones. Distinct from the single-mode Resonator and the self-struck Modal oscillator.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:RandomSpace}\blockicon{reverb}\textcolor{neonCyan}{\textbf{RandomSpace}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Random-space voicing of the 8-line FDN reverb (Valhalla VintageVerb Random Space category): line lengths wander on smoothed random targets rather than a sine, so the tail never repeats a modulation cycle, with three-stage diffusion and no early reflections. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -18096,9 +18468,33 @@ Reverb whose wet level swells up from silence after each detected onset, fading 
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:Room}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Room}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Small-room voicing of the 8-line FDN reverb (Valhalla VintageVerb Room category): short lines, three-stage diffusion, little modulation and prominent early reflections for a defined sense of walls. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Sagittarius}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Sagittarius}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Sagittarius voicing of the 8-line FDN reverb (Valhalla Supermassive Sagittarius category): a very long attack (the input is smeared over ~400 ms) so the reverb swells in slowly behind the source, with a medium-long decay. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Sanctuary}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Sanctuary}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Sanctuary voicing of the 8-line FDN reverb (Valhalla VintageVerb Sanctuary category): very long lines with a 7 s default RT60, slow shallow modulation and a dark loop for a large reverent space with no early reflections. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:SchroederAP}\blockicon{reverb}\textcolor{neonCyan}{\textbf{SchroederAP}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Schroeder all-pass diffuser: the classic flat-magnitude, phase-smearing all-pass that thickens transients into a diffuse tail - one reverb-grade diffusion stage you can chain or use alone.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Scorpio}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Scorpio}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Scorpio voicing of the 8-line FDN reverb (Valhalla Supermassive Scorpio category): fast attack, shorter decay, high echo density and filtering in the feedback loop for a realistic reverb decay. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -18108,15 +18504,63 @@ Shimmer reverb: a delay line whose feedback path is pitch-shifted by a two-windo
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:ShimmerBigStereo}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ShimmerBigStereo}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Big Stereo mode of the ValhallaShimmer-style diffuse-delay-line reverb (mono engine): eight cascaded allpass diffusors around a long delay line for very large spaces and reverbs that fade in and out slowly, with a pitch-shifted feedback path. Pitch, Pitch Mode, Feedback, Diffusion, Size, Low/High Cut, Mod Rate/Depth, Color and Mix as on ShimmerMono.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:ShimmerMediumStereo}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ShimmerMediumStereo}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Medium Stereo mode of the ValhallaShimmer-style diffuse-delay-line reverb (mono engine): six allpass diffusors around a medium delay line, lower echo density than Big, the traditional hall voicing and a fast build of pitch-shifted harmonics. Pitch, Pitch Mode, Feedback, Diffusion, Size, Low/High Cut, Mod Rate/Depth, Color and Mix as on ShimmerMono.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:ShimmerMono}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ShimmerMono}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Mono mode of the ValhallaShimmer-style diffuse-delay-line reverb: ten cascaded modulated allpass diffusors around a long delay line (very large base size, very high echo density, slow fade-in) with a pitch-shifted feedback path. Pitch (-12 to +12 st) and Pitch Mode (Single / Dual / SingleReverse / DualReverse / Bypass) shape the shimmer, Feedback its build, Diffusion the echo density (0 = a straight delay, ~0.618 = equal attack and decay, above 0.9 = very long decay), Size the delay lengths, Low/High Cut the feedback filters, Mod Rate/Depth the random diffusor modulation, Color Bright or Dark (steep ~10 kHz loss), Mix a power-complementary crossfade.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:ShimmerSmallStereo}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ShimmerSmallStereo}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Small Stereo mode of the ValhallaShimmer-style diffuse-delay-line reverb (mono engine): three allpass diffusors around a short delay line for small rooms and chorused short ambiences; more coloured and noticeably less dense than the larger modes. Pitch, Pitch Mode, Feedback, Diffusion, Size, Low/High Cut, Mod Rate/Depth, Color and Mix as on ShimmerMono.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:ShimmerVerb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{ShimmerVerb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Shimmer reverb: the reverb's feedback path is granular-pitch-shifted up an octave each pass, so the tail blooms into an ethereal, ever-rising angelic wash - the signature ambient/post-rock reverb.
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:Sirius}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Sirius}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Sirius voicing of the 8-line FDN reverb (Valhalla Supermassive Sirius category): fast attack, smooth decay and filtered feedback, with echo density from low to very high via Density. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:SlewVerb}\blockicon{reverb}\textcolor{neonCyan}{\textbf{SlewVerb}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Slew-limiter wash: six slew-rate limiters in series, fed back on the last stage, smear every edge into a soft triangular blur that pools into a short ambient tail - a reverb-like space built entirely from slew limiting, no delay lines.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:SmoothPlate}\blockicon{reverb}\textcolor{neonCyan}{\textbf{SmoothPlate}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Smooth-plate voicing of the 8-line FDN reverb (Valhalla VintageVerb Smooth Plate category): no early reflections, maximum diffusion, bright loop and moderate modulation for an instantly dense, even plate-like wash. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:SmoothRandomSpace}\blockicon{reverb}\textcolor{neonCyan}{\textbf{SmoothRandomSpace}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Smooth-random voicing of the 8-line FDN reverb (Valhalla VintageVerb Smooth Random category): RandomSpace with a fourth diffuser stage, a slower random walk and shallower depth, for a diffuse tail whose colouration drifts gently. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:SmoothRoom}\blockicon{reverb}\textcolor{neonCyan}{\textbf{SmoothRoom}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Smooth-room voicing of the 8-line FDN reverb (Valhalla VintageVerb Smooth Room category): Room's line length with a fourth diffuser stage, stronger modulation and fewer early reflections to hide the discrete echoes. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -18138,9 +18582,21 @@ Spring reverb: an all-pass-dispersed feedback delay recreates the chirpy, boingy
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
+\phantomsection\label{blk:Sulaco}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Sulaco}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Sulaco voicing of the 8-line FDN reverb (Valhalla ValhallaRoom Sulaco category): a dark reverb with lush sine modulation and a well-centred image. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
 \phantomsection\label{blk:Sympathetic}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Sympathetic}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
 Sympathetic-string resonator bank: four high-Q tuned resonators (like the drone strings of a sitar or the undamped strings of a piano) ring in sympathy with the input, voiced as a chord above the Tune root. Tune sets the root pitch, Decay how long the strings ring (resonator Q), Spread the chord voicing, and Mix the resonated blend. Feed it a plucked or percussive source for shimmering resonant tails - distinct from reverb and from a single modal resonator.
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:Virgo}\blockicon{reverb}\textcolor{neonCyan}{\textbf{Virgo}}\thinspace\textcolor{accentPink}{\footnotesize[REV]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
+
+Virgo voicing of the 8-line FDN reverb (Valhalla Supermassive Virgo category, the smallest and sparsest mode): 18 ms lines with a single low-coefficient diffuser stage and a short 1.2 s RT60, a tight sparse ambience. Size, Decay (RT60), Damp, Density, Mix and Color (era: Now / 1980s / 1970s - older eras downsample the loop harder and flatten the modulation).
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -25616,7 +26072,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
-# Index (4238 blocks, alphabetical)
+# Index (4314 blocks, alphabetical)
 
 \begin{multicols}{3}
 \small\raggedright\setlength{\parindent}{0pt}\setlength{\parskip}{1pt}
@@ -25694,6 +26150,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:AltoFluteVoice}{\textcolor{neonCyan}{AltoFluteVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AltoFluteVoice}}\\
 \hyperlink{blk:AltoSaxVoice}{\textcolor{neonCyan}{AltoSaxVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AltoSaxVoice}}\\
 \hyperlink{blk:AmariField}{\textcolor{neonCyan}{AmariField}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AmariField}}\\
+\hyperlink{blk:Ambience}{\textcolor{neonCyan}{Ambience}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Ambience}}\\
 \hyperlink{blk:Amicable}{\textcolor{neonCyan}{Amicable}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Amicable}}\\
 \hyperlink{blk:Ampeg}{\textcolor{neonCyan}{Ampeg}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Ampeg}}\\
 \hyperlink{blk:Ampex}{\textcolor{neonCyan}{Ampex}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Ampex}}\\
@@ -25703,6 +26160,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:AMRadio}{\textcolor{neonCyan}{AMRadio}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AMRadio}}\\
 \hyperlink{blk:AnalogClip}{\textcolor{neonCyan}{AnalogClip}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AnalogClip}}\\
 \hyperlink{blk:Analyzer}{\textcolor{neonCyan}{Analyzer}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Analyzer}}\\
+\hyperlink{blk:Andromeda}{\textcolor{neonCyan}{Andromeda}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Andromeda}}\\
 \hyperlink{blk:Angklung}{\textcolor{neonCyan}{Angklung}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Angklung}}\\
 \hyperlink{blk:AngleGrinderOsc}{\textcolor{neonCyan}{AngleGrinderOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AngleGrinderOsc}}\\
 \hyperlink{blk:AnishchenkoOsc}{\textcolor{neonCyan}{AnishchenkoOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AnishchenkoOsc}}\\
@@ -25720,6 +26178,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:Applause}{\textcolor{neonCyan}{Applause}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Applause}}\\
 \hyperlink{blk:ApplauseOsc}{\textcolor{neonCyan}{ApplauseOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ApplauseOsc}}\\
 \hyperlink{blk:Appoggiatura}{\textcolor{neonCyan}{Appoggiatura}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Appoggiatura}}\\
+\hyperlink{blk:Aquarius}{\textcolor{neonCyan}{Aquarius}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Aquarius}}\\
 \hyperlink{blk:AR}{\textcolor{neonCyan}{AR}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AR}}\\
 \hyperlink{blk:AradhanaOsc}{\textcolor{neonCyan}{AradhanaOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:AradhanaOsc}}\\
 \hyperlink{blk:ArcFurnace}{\textcolor{neonCyan}{ArcFurnace}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ArcFurnace}}\\
@@ -25996,6 +26455,8 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:BriansBrain}{\textcolor{neonCyan}{BriansBrain}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:BriansBrain}}\\
 \hyperlink{blk:BriggsRauscher}{\textcolor{neonCyan}{BriggsRauscher}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:BriggsRauscher}}\\
 \hyperlink{blk:BrightCV}{\textcolor{neonCyan}{BrightCV}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:BrightCV}}\\
+\hyperlink{blk:BrightHall}{\textcolor{neonCyan}{BrightHall}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:BrightHall}}\\
+\hyperlink{blk:BrightRoom}{\textcolor{neonCyan}{BrightRoom}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:BrightRoom}}\\
 \hyperlink{blk:Brit412}{\textcolor{neonCyan}{Brit412}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Brit412}}\\
 \hyperlink{blk:BrockHommes}{\textcolor{neonCyan}{BrockHommes}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:BrockHommes}}\\
 \hyperlink{blk:BrookOsc}{\textcolor{neonCyan}{BrookOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:BrookOsc}}\\
@@ -26057,6 +26518,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:CantorStaircase}{\textcolor{neonCyan}{CantorStaircase}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CantorStaircase}}\\
 \hyperlink{blk:CapacitorWhineOsc}{\textcolor{neonCyan}{CapacitorWhineOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CapacitorWhineOsc}}\\
 \hyperlink{blk:CapLeak}{\textcolor{neonCyan}{CapLeak}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CapLeak}}\\
+\hyperlink{blk:Capricorn}{\textcolor{neonCyan}{Capricorn}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Capricorn}}\\
 \hyperlink{blk:CapSag}{\textcolor{neonCyan}{CapSag}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CapSag}}\\
 \hyperlink{blk:CardiacAlternans}{\textcolor{neonCyan}{CardiacAlternans}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CardiacAlternans}}\\
 \hyperlink{blk:CardiacPurkinje}{\textcolor{neonCyan}{CardiacPurkinje}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CardiacPurkinje}}\\
@@ -26073,6 +26535,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:CasioCZ}{\textcolor{neonCyan}{CasioCZ}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CasioCZ}}\\
 \hyperlink{blk:Cassette}{\textcolor{neonCyan}{Cassette}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Cassette}}\\
 \hyperlink{blk:CassiniOsc}{\textcolor{neonCyan}{CassiniOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CassiniOsc}}\\
+\hyperlink{blk:Cassiopeia}{\textcolor{neonCyan}{Cassiopeia}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Cassiopeia}}\\
 \hyperlink{blk:Castanets}{\textcolor{neonCyan}{Castanets}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Castanets}}\\
 \hyperlink{blk:CastanetsVoice}{\textcolor{neonCyan}{CastanetsVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CastanetsVoice}}\\
 \hyperlink{blk:Catalan}{\textcolor{neonCyan}{Catalan}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Catalan}}\\
@@ -26082,6 +26545,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:CatalanParityGate}{\textcolor{neonCyan}{CatalanParityGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CatalanParityGate}}\\
 \hyperlink{blk:CatalanVelocity}{\textcolor{neonCyan}{CatalanVelocity}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CatalanVelocity}}\\
 \hyperlink{blk:CatenaryOsc}{\textcolor{neonCyan}{CatenaryOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CatenaryOsc}}\\
+\hyperlink{blk:Cathedral}{\textcolor{neonCyan}{Cathedral}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Cathedral}}\\
 \hyperlink{blk:CatmullRomOsc}{\textcolor{neonCyan}{CatmullRomOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CatmullRomOsc}}\\
 \hyperlink{blk:CatPurrOsc}{\textcolor{neonCyan}{CatPurrOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CatPurrOsc}}\\
 \hyperlink{blk:CauchyNoise}{\textcolor{neonCyan}{CauchyNoise}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CauchyNoise}}\\
@@ -26104,6 +26568,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:CelloVoiceWG}{\textcolor{neonCyan}{CelloVoiceWG}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CelloVoiceWG}}\\
 \hyperlink{blk:CellularNeuralNet}{\textcolor{neonCyan}{CellularNeuralNet}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CellularNeuralNet}}\\
 \hyperlink{blk:CEM3320}{\textcolor{neonCyan}{CEM3320}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CEM3320}}\\
+\hyperlink{blk:Centaurus}{\textcolor{neonCyan}{Centaurus}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Centaurus}}\\
 \hyperlink{blk:CenteredCubeGate}{\textcolor{neonCyan}{CenteredCubeGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CenteredCubeGate}}\\
 \hyperlink{blk:CenteredDecagonalGate}{\textcolor{neonCyan}{CenteredDecagonalGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CenteredDecagonalGate}}\\
 \hyperlink{blk:CenteredHexagonal}{\textcolor{neonCyan}{CenteredHexagonal}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CenteredHexagonal}}\\
@@ -26121,7 +26586,9 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:ChainRattleOsc}{\textcolor{neonCyan}{ChainRattleOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChainRattleOsc}}\\
 \hyperlink{blk:ChainsawOsc}{\textcolor{neonCyan}{ChainsawOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChainsawOsc}}\\
 \hyperlink{blk:Chamber}{\textcolor{neonCyan}{Chamber}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Chamber}}\\
+\hyperlink{blk:Chamber1979}{\textcolor{neonCyan}{Chamber1979}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Chamber1979}}\\
 \hyperlink{blk:ChamberOrganVoice}{\textcolor{neonCyan}{ChamberOrganVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChamberOrganVoice}}\\
+\hyperlink{blk:ChamberVerb}{\textcolor{neonCyan}{ChamberVerb}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChamberVerb}}\\
 \hyperlink{blk:Champernowne}{\textcolor{neonCyan}{Champernowne}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Champernowne}}\\
 \hyperlink{blk:ChampernowneSeq}{\textcolor{neonCyan}{ChampernowneSeq}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChampernowneSeq}}\\
 \hyperlink{blk:Chance}{\textcolor{neonCyan}{Chance}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Chance}}\\
@@ -26139,7 +26606,10 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:ChaosLfoFilter}{\textcolor{neonCyan}{ChaosLfoFilter}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChaosLfoFilter}}\\
 \hyperlink{blk:ChaosOsc}{\textcolor{neonCyan}{ChaosOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChaosOsc}}\\
 \hyperlink{blk:ChaosVoice}{\textcolor{neonCyan}{ChaosVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChaosVoice}}\\
+\hyperlink{blk:ChaoticChamber}{\textcolor{neonCyan}{ChaoticChamber}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChaoticChamber}}\\
 \hyperlink{blk:ChaoticFiberLaser}{\textcolor{neonCyan}{ChaoticFiberLaser}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChaoticFiberLaser}}\\
+\hyperlink{blk:ChaoticHall}{\textcolor{neonCyan}{ChaoticHall}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChaoticHall}}\\
+\hyperlink{blk:ChaoticNeutral}{\textcolor{neonCyan}{ChaoticNeutral}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChaoticNeutral}}\\
 \hyperlink{blk:ChaoticReed}{\textcolor{neonCyan}{ChaoticReed}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChaoticReed}}\\
 \hyperlink{blk:ChapmanRichardsOsc}{\textcolor{neonCyan}{ChapmanRichardsOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChapmanRichardsOsc}}\\
 \hyperlink{blk:Character}{\textcolor{neonCyan}{Character}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Character}}\\
@@ -26193,6 +26663,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:ChordVoicing}{\textcolor{neonCyan}{ChordVoicing}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChordVoicing}}\\
 \hyperlink{blk:Chorus}{\textcolor{neonCyan}{Chorus}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Chorus}}\\
 \hyperlink{blk:ChorusEns}{\textcolor{neonCyan}{ChorusEns}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChorusEns}}\\
+\hyperlink{blk:ChorusSpace}{\textcolor{neonCyan}{ChorusSpace}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChorusSpace}}\\
 \hyperlink{blk:ChorusUnisonOsc}{\textcolor{neonCyan}{ChorusUnisonOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChorusUnisonOsc}}\\
 \hyperlink{blk:ChossatGolubitsky}{\textcolor{neonCyan}{ChossatGolubitsky}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChossatGolubitsky}}\\
 \hyperlink{blk:ChromaticReson}{\textcolor{neonCyan}{ChromaticReson}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ChromaticReson}}\\
@@ -26219,6 +26690,8 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:CircularPrime}{\textcolor{neonCyan}{CircularPrime}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CircularPrime}}\\
 \hyperlink{blk:CircularPrimeGate}{\textcolor{neonCyan}{CircularPrimeGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CircularPrimeGate}}\\
 \hyperlink{blk:CIRProcess}{\textcolor{neonCyan}{CIRProcess}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CIRProcess}}\\
+\hyperlink{blk:CirrusMajor}{\textcolor{neonCyan}{CirrusMajor}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CirrusMajor}}\\
+\hyperlink{blk:CirrusMinor}{\textcolor{neonCyan}{CirrusMinor}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CirrusMinor}}\\
 \hyperlink{blk:Clamp}{\textcolor{neonCyan}{Clamp}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Clamp}}\\
 \hyperlink{blk:ClampToRange}{\textcolor{neonCyan}{ClampToRange}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ClampToRange}}\\
 \hyperlink{blk:Clap}{\textcolor{neonCyan}{Clap}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Clap}}\\
@@ -26315,6 +26788,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:Compressor}{\textcolor{neonCyan}{Compressor}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Compressor}}\\
 \hyperlink{blk:CompUpward}{\textcolor{neonCyan}{CompUpward}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:CompUpward}}\\
 \hyperlink{blk:ComputerBootOsc}{\textcolor{neonCyan}{ComputerBootOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ComputerBootOsc}}\\
+\hyperlink{blk:ConcertHall}{\textcolor{neonCyan}{ConcertHall}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ConcertHall}}\\
 \hyperlink{blk:ConfirmBlipOsc}{\textcolor{neonCyan}{ConfirmBlipOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ConfirmBlipOsc}}\\
 \hyperlink{blk:Conga}{\textcolor{neonCyan}{Conga}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Conga}}\\
 \hyperlink{blk:Conga808}{\textcolor{neonCyan}{Conga808}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Conga808}}\\
@@ -26456,6 +26930,9 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:DaisyWorld}{\textcolor{neonCyan}{DaisyWorld}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DaisyWorld}}\\
 \hyperlink{blk:DansgaardOeschger}{\textcolor{neonCyan}{DansgaardOeschger}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DansgaardOeschger}}\\
 \hyperlink{blk:Darbuka}{\textcolor{neonCyan}{Darbuka}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Darbuka}}\\
+\hyperlink{blk:DarkChamber}{\textcolor{neonCyan}{DarkChamber}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DarkChamber}}\\
+\hyperlink{blk:DarkRoom}{\textcolor{neonCyan}{DarkRoom}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DarkRoom}}\\
+\hyperlink{blk:DarkSpace}{\textcolor{neonCyan}{DarkSpace}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DarkSpace}}\\
 \hyperlink{blk:Daxophone}{\textcolor{neonCyan}{Daxophone}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Daxophone}}\\
 \hyperlink{blk:DayGrowth}{\textcolor{neonCyan}{DayGrowth}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DayGrowth}}\\
 \hyperlink{blk:DblPendulum}{\textcolor{neonCyan}{DblPendulum}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DblPendulum}}\\
@@ -26492,6 +26969,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:Deltoid}{\textcolor{neonCyan}{Deltoid}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Deltoid}}\\
 \hyperlink{blk:DeluxeRev}{\textcolor{neonCyan}{DeluxeRev}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DeluxeRev}}\\
 \hyperlink{blk:DengToggle}{\textcolor{neonCyan}{DengToggle}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DengToggle}}\\
+\hyperlink{blk:DenseRoom}{\textcolor{neonCyan}{DenseRoom}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DenseRoom}}\\
 \hyperlink{blk:Dequan}{\textcolor{neonCyan}{Dequan}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Dequan}}\\
 \hyperlink{blk:DequanLiOsc}{\textcolor{neonCyan}{DequanLiOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DequanLiOsc}}\\
 \hyperlink{blk:Derangement}{\textcolor{neonCyan}{Derangement}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Derangement}}\\
@@ -26561,6 +27039,8 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:DiphthongOsc}{\textcolor{neonCyan}{DiphthongOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DiphthongOsc}}\\
 \hyperlink{blk:DirichletKernelOsc}{\textcolor{neonCyan}{DirichletKernelOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DirichletKernelOsc}}\\
 \hyperlink{blk:DirichletPick}{\textcolor{neonCyan}{DirichletPick}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DirichletPick}}\\
+\hyperlink{blk:DirtyHall}{\textcolor{neonCyan}{DirtyHall}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DirtyHall}}\\
+\hyperlink{blk:DirtyPlate}{\textcolor{neonCyan}{DirtyPlate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DirtyPlate}}\\
 \hyperlink{blk:DishClatterOsc}{\textcolor{neonCyan}{DishClatterOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DishClatterOsc}}\\
 \hyperlink{blk:DismissSwooshOsc}{\textcolor{neonCyan}{DismissSwooshOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DismissSwooshOsc}}\\
 \hyperlink{blk:DispDelay}{\textcolor{neonCyan}{DispDelay}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:DispDelay}}\\
@@ -26967,6 +27447,14 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:Fuzz}{\textcolor{neonCyan}{Fuzz}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Fuzz}}\\
 \hyperlink{blk:FuzzFace}{\textcolor{neonCyan}{FuzzFace}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FuzzFace}}\\
 \hyperlink{blk:FuzzFactory}{\textcolor{neonCyan}{FuzzFactory}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FuzzFactory}}\\
+\hyperlink{blk:FVCathedral}{\textcolor{neonCyan}{FVCathedral}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FVCathedral}}\\
+\hyperlink{blk:FVChamber}{\textcolor{neonCyan}{FVChamber}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FVChamber}}\\
+\hyperlink{blk:FVFrozen}{\textcolor{neonCyan}{FVFrozen}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FVFrozen}}\\
+\hyperlink{blk:FVHall}{\textcolor{neonCyan}{FVHall}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FVHall}}\\
+\hyperlink{blk:FVNonlin}{\textcolor{neonCyan}{FVNonlin}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FVNonlin}}\\
+\hyperlink{blk:FVPlate}{\textcolor{neonCyan}{FVPlate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FVPlate}}\\
+\hyperlink{blk:FVRoom}{\textcolor{neonCyan}{FVRoom}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FVRoom}}\\
+\hyperlink{blk:FVSpace}{\textcolor{neonCyan}{FVSpace}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FVSpace}}\\
 \hyperlink{blk:FZ1}{\textcolor{neonCyan}{FZ1}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:FZ1}}\\
 \hyperlink{blk:Gabber}{\textcolor{neonCyan}{Gabber}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Gabber}}\\
 \hyperlink{blk:GaborAtomOsc}{\textcolor{neonCyan}{GaborAtomOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GaborAtomOsc}}\\
@@ -27027,6 +27515,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:GeigerNoise}{\textcolor{neonCyan}{GeigerNoise}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GeigerNoise}}\\
 \hyperlink{blk:GeigerOsc}{\textcolor{neonCyan}{GeigerOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GeigerOsc}}\\
 \hyperlink{blk:GeluShaper}{\textcolor{neonCyan}{GeluShaper}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GeluShaper}}\\
+\hyperlink{blk:Gemini}{\textcolor{neonCyan}{Gemini}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Gemini}}\\
 \hyperlink{blk:Gendy}{\textcolor{neonCyan}{Gendy}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Gendy}}\\
 \hyperlink{blk:GeneralizedExtremeOsc}{\textcolor{neonCyan}{GeneralizedExtremeOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GeneralizedExtremeOsc}}\\
 \hyperlink{blk:GeneralizedGammaOsc}{\textcolor{neonCyan}{GeneralizedGammaOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GeneralizedGammaOsc}}\\
@@ -27141,6 +27630,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:GrayCodeVelocity}{\textcolor{neonCyan}{GrayCodeVelocity}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GrayCodeVelocity}}\\
 \hyperlink{blk:GrayFold}{\textcolor{neonCyan}{GrayFold}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GrayFold}}\\
 \hyperlink{blk:GrayScott}{\textcolor{neonCyan}{GrayScott}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GrayScott}}\\
+\hyperlink{blk:GreatAnnihilator}{\textcolor{neonCyan}{GreatAnnihilator}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GreatAnnihilator}}\\
 \hyperlink{blk:GreenbergHastings}{\textcolor{neonCyan}{GreenbergHastings}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GreenbergHastings}}\\
 \hyperlink{blk:GreyNoise}{\textcolor{neonCyan}{GreyNoise}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GreyNoise}}\\
 \hyperlink{blk:GridConduction}{\textcolor{neonCyan}{GridConduction}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:GridConduction}}\\
@@ -27180,6 +27670,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:HailOsc}{\textcolor{neonCyan}{HailOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HailOsc}}\\
 \hyperlink{blk:HalfCauchyOsc}{\textcolor{neonCyan}{HalfCauchyOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HalfCauchyOsc}}\\
 \hyperlink{blk:HalfLogisticOsc}{\textcolor{neonCyan}{HalfLogisticOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HalfLogisticOsc}}\\
+\hyperlink{blk:Hall1984}{\textcolor{neonCyan}{Hall1984}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Hall1984}}\\
 \hyperlink{blk:HalleyFractal}{\textcolor{neonCyan}{HalleyFractal}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HalleyFractal}}\\
 \hyperlink{blk:Halton}{\textcolor{neonCyan}{Halton}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Halton}}\\
 \hyperlink{blk:HaltonSeq}{\textcolor{neonCyan}{HaltonSeq}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HaltonSeq}}\\
@@ -27331,6 +27822,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:HurdyGurdy}{\textcolor{neonCyan}{HurdyGurdy}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HurdyGurdy}}\\
 \hyperlink{blk:HurdyGurdyVoice}{\textcolor{neonCyan}{HurdyGurdyVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HurdyGurdyVoice}}\\
 \hyperlink{blk:HurtOsc}{\textcolor{neonCyan}{HurtOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HurtOsc}}\\
+\hyperlink{blk:Hydra}{\textcolor{neonCyan}{Hydra}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Hydra}}\\
 \hyperlink{blk:Hyper4Wing}{\textcolor{neonCyan}{Hyper4Wing}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Hyper4Wing}}\\
 \hyperlink{blk:HyperbolicChirpOsc}{\textcolor{neonCyan}{HyperbolicChirpOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HyperbolicChirpOsc}}\\
 \hyperlink{blk:HyperbolicDistOsc}{\textcolor{neonCyan}{HyperbolicDistOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:HyperbolicDistOsc}}\\
@@ -27559,6 +28051,9 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:LaplaceNoise}{\textcolor{neonCyan}{LaplaceNoise}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LaplaceNoise}}\\
 \hyperlink{blk:LaplaceQuantileOsc}{\textcolor{neonCyan}{LaplaceQuantileOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LaplaceQuantileOsc}}\\
 \hyperlink{blk:LaplaceResonanceOsc}{\textcolor{neonCyan}{LaplaceResonanceOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LaplaceResonanceOsc}}\\
+\hyperlink{blk:LargeChamber}{\textcolor{neonCyan}{LargeChamber}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LargeChamber}}\\
+\hyperlink{blk:LargeMagellanicCloud}{\textcolor{neonCyan}{LargeMagellanicCloud}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LargeMagellanicCloud}}\\
+\hyperlink{blk:LargeRoom}{\textcolor{neonCyan}{LargeRoom}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LargeRoom}}\\
 \hyperlink{blk:LargestPrimeFactor}{\textcolor{neonCyan}{LargestPrimeFactor}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LargestPrimeFactor}}\\
 \hyperlink{blk:LarsenHowl}{\textcolor{neonCyan}{LarsenHowl}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LarsenHowl}}\\
 \hyperlink{blk:Laser}{\textcolor{neonCyan}{Laser}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Laser}}\\
@@ -27581,6 +28076,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:Lengyel}{\textcolor{neonCyan}{Lengyel}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Lengyel}}\\
 \hyperlink{blk:LengyelEpstein}{\textcolor{neonCyan}{LengyelEpstein}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LengyelEpstein}}\\
 \hyperlink{blk:LennardJonesOsc}{\textcolor{neonCyan}{LennardJonesOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LennardJonesOsc}}\\
+\hyperlink{blk:Leo}{\textcolor{neonCyan}{Leo}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Leo}}\\
 \hyperlink{blk:Leonardo}{\textcolor{neonCyan}{Leonardo}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Leonardo}}\\
 \hyperlink{blk:LeonardoGate}{\textcolor{neonCyan}{LeonardoGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LeonardoGate}}\\
 \hyperlink{blk:LeonardoVelocity}{\textcolor{neonCyan}{LeonardoVelocity}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LeonardoVelocity}}\\
@@ -27596,6 +28092,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:LFGlottal}{\textcolor{neonCyan}{LFGlottal}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LFGlottal}}\\
 \hyperlink{blk:LFO}{\textcolor{neonCyan}{LFO}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LFO}}\\
 \hyperlink{blk:LFSR}{\textcolor{neonCyan}{LFSR}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LFSR}}\\
+\hyperlink{blk:Libra}{\textcolor{neonCyan}{Libra}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Libra}}\\
 \hyperlink{blk:LibrationOsc}{\textcolor{neonCyan}{LibrationOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LibrationOsc}}\\
 \hyperlink{blk:LightSwitchOsc}{\textcolor{neonCyan}{LightSwitchOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LightSwitchOsc}}\\
 \hyperlink{blk:LimaconOsc}{\textcolor{neonCyan}{LimaconOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LimaconOsc}}\\
@@ -27694,6 +28191,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:LuckyNumberGate}{\textcolor{neonCyan}{LuckyNumberGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LuckyNumberGate}}\\
 \hyperlink{blk:LugiatoLefever}{\textcolor{neonCyan}{LugiatoLefever}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LugiatoLefever}}\\
 \hyperlink{blk:LuteVoice}{\textcolor{neonCyan}{LuteVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LuteVoice}}\\
+\hyperlink{blk:LV426}{\textcolor{neonCyan}{LV426}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LV426}}\\
 \hyperlink{blk:LyapunovFractal}{\textcolor{neonCyan}{LyapunovFractal}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LyapunovFractal}}\\
 \hyperlink{blk:LychrelMap}{\textcolor{neonCyan}{LychrelMap}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LychrelMap}}\\
 \hyperlink{blk:LyndonWords}{\textcolor{neonCyan}{LyndonWords}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:LyndonWords}}\\
@@ -27758,6 +28256,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:MeantoneTune}{\textcolor{neonCyan}{MeantoneTune}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:MeantoneTune}}\\
 \hyperlink{blk:Median3}{\textcolor{neonCyan}{Median3}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Median3}}\\
 \hyperlink{blk:MedianClean}{\textcolor{neonCyan}{MedianClean}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:MedianClean}}\\
+\hyperlink{blk:MediumRoom}{\textcolor{neonCyan}{MediumRoom}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:MediumRoom}}\\
 \hyperlink{blk:Megaphone}{\textcolor{neonCyan}{Megaphone}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Megaphone}}\\
 \hyperlink{blk:MegastableSine}{\textcolor{neonCyan}{MegastableSine}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:MegastableSine}}\\
 \hyperlink{blk:Mellotron}{\textcolor{neonCyan}{Mellotron}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Mellotron}}\\
@@ -27938,6 +28437,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:NarayanaGate}{\textcolor{neonCyan}{NarayanaGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NarayanaGate}}\\
 \hyperlink{blk:NarayanaVelocity}{\textcolor{neonCyan}{NarayanaVelocity}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NarayanaVelocity}}\\
 \hyperlink{blk:NarcissisticGate}{\textcolor{neonCyan}{NarcissisticGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NarcissisticGate}}\\
+\hyperlink{blk:Narcissus}{\textcolor{neonCyan}{Narcissus}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Narcissus}}\\
 \hyperlink{blk:NasalFormant}{\textcolor{neonCyan}{NasalFormant}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NasalFormant}}\\
 \hyperlink{blk:NasalOsc}{\textcolor{neonCyan}{NasalOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NasalOsc}}\\
 \hyperlink{blk:NBody}{\textcolor{neonCyan}{NBody}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NBody}}\\
@@ -27995,6 +28495,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:NoseHoover}{\textcolor{neonCyan}{NoseHoover}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NoseHoover}}\\
 \hyperlink{blk:NoseHooverMod}{\textcolor{neonCyan}{NoseHooverMod}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NoseHooverMod}}\\
 \hyperlink{blk:NoseHooverOsc}{\textcolor{neonCyan}{NoseHooverOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NoseHooverOsc}}\\
+\hyperlink{blk:Nostromo}{\textcolor{neonCyan}{Nostromo}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Nostromo}}\\
 \hyperlink{blk:Notch}{\textcolor{neonCyan}{Notch}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Notch}}\\
 \hyperlink{blk:NotchBank}{\textcolor{neonCyan}{NotchBank}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NotchBank}}\\
 \hyperlink{blk:NotchFilter}{\textcolor{neonCyan}{NotchFilter}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:NotchFilter}}\\
@@ -28075,6 +28576,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:OreNumberGate}{\textcolor{neonCyan}{OreNumberGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:OreNumberGate}}\\
 \hyperlink{blk:Organ}{\textcolor{neonCyan}{Organ}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Organ}}\\
 \hyperlink{blk:OrganBeatOsc}{\textcolor{neonCyan}{OrganBeatOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:OrganBeatOsc}}\\
+\hyperlink{blk:Orion}{\textcolor{neonCyan}{Orion}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Orion}}\\
 \hyperlink{blk:Ornstein}{\textcolor{neonCyan}{Ornstein}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Ornstein}}\\
 \hyperlink{blk:OrnsteinUhlenbeck}{\textcolor{neonCyan}{OrnsteinUhlenbeck}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:OrnsteinUhlenbeck}}\\
 \hyperlink{blk:OrnsteinUhlenbeckProc}{\textcolor{neonCyan}{OrnsteinUhlenbeckProc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:OrnsteinUhlenbeckProc}}\\
@@ -28099,6 +28601,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:PAF}{\textcolor{neonCyan}{PAF}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PAF}}\\
 \hyperlink{blk:PafOsc}{\textcolor{neonCyan}{PafOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PafOsc}}\\
 \hyperlink{blk:PagerOsc}{\textcolor{neonCyan}{PagerOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PagerOsc}}\\
+\hyperlink{blk:Palace}{\textcolor{neonCyan}{Palace}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Palace}}\\
 \hyperlink{blk:Palindrome}{\textcolor{neonCyan}{Palindrome}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Palindrome}}\\
 \hyperlink{blk:PalindromeGate}{\textcolor{neonCyan}{PalindromeGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PalindromeGate}}\\
 \hyperlink{blk:PalindromicPrimeGate}{\textcolor{neonCyan}{PalindromicPrimeGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PalindromicPrimeGate}}\\
@@ -28253,6 +28756,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:PiriformOsc}{\textcolor{neonCyan}{PiriformOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PiriformOsc}}\\
 \hyperlink{blk:Pisano}{\textcolor{neonCyan}{Pisano}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Pisano}}\\
 \hyperlink{blk:PisanoSeq}{\textcolor{neonCyan}{PisanoSeq}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PisanoSeq}}\\
+\hyperlink{blk:Pisces}{\textcolor{neonCyan}{Pisces}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Pisces}}\\
 \hyperlink{blk:PistonPumpOsc}{\textcolor{neonCyan}{PistonPumpOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PistonPumpOsc}}\\
 \hyperlink{blk:Pitch2Midi}{\textcolor{neonCyan}{Pitch2Midi}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Pitch2Midi}}\\
 \hyperlink{blk:PitchBendLFO}{\textcolor{neonCyan}{PitchBendLFO}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PitchBendLFO}}\\
@@ -28280,9 +28784,22 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:PlasmaLangmuirOsc}{\textcolor{neonCyan}{PlasmaLangmuirOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlasmaLangmuirOsc}}\\
 \hyperlink{blk:PlasmaSheath}{\textcolor{neonCyan}{PlasmaSheath}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlasmaSheath}}\\
 \hyperlink{blk:Plate}{\textcolor{neonCyan}{Plate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Plate}}\\
+\hyperlink{blk:PlateAdamantium}{\textcolor{neonCyan}{PlateAdamantium}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateAdamantium}}\\
+\hyperlink{blk:PlateAluminum}{\textcolor{neonCyan}{PlateAluminum}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateAluminum}}\\
+\hyperlink{blk:PlateBrass}{\textcolor{neonCyan}{PlateBrass}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateBrass}}\\
+\hyperlink{blk:PlateChrome}{\textcolor{neonCyan}{PlateChrome}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateChrome}}\\
+\hyperlink{blk:PlateCobalt}{\textcolor{neonCyan}{PlateCobalt}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateCobalt}}\\
+\hyperlink{blk:PlateCopper}{\textcolor{neonCyan}{PlateCopper}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateCopper}}\\
+\hyperlink{blk:PlateLithium}{\textcolor{neonCyan}{PlateLithium}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateLithium}}\\
 \hyperlink{blk:PlateModeOsc}{\textcolor{neonCyan}{PlateModeOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateModeOsc}}\\
+\hyperlink{blk:PlateOsmium}{\textcolor{neonCyan}{PlateOsmium}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateOsmium}}\\
+\hyperlink{blk:PlateRadium}{\textcolor{neonCyan}{PlateRadium}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateRadium}}\\
 \hyperlink{blk:PlateReson}{\textcolor{neonCyan}{PlateReson}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateReson}}\\
 \hyperlink{blk:PlateReverb}{\textcolor{neonCyan}{PlateReverb}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateReverb}}\\
+\hyperlink{blk:PlateSteel}{\textcolor{neonCyan}{PlateSteel}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateSteel}}\\
+\hyperlink{blk:PlateTitanium}{\textcolor{neonCyan}{PlateTitanium}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateTitanium}}\\
+\hyperlink{blk:PlateUnobtanium}{\textcolor{neonCyan}{PlateUnobtanium}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PlateUnobtanium}}\\
+\hyperlink{blk:Pleiades}{\textcolor{neonCyan}{Pleiades}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Pleiades}}\\
 \hyperlink{blk:Plexi}{\textcolor{neonCyan}{Plexi}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Plexi}}\\
 \hyperlink{blk:PLL}{\textcolor{neonCyan}{PLL}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PLL}}\\
 \hyperlink{blk:PLLChaos}{\textcolor{neonCyan}{PLLChaos}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:PLLChaos}}\\
@@ -28478,6 +28995,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:RandomGateWalk}{\textcolor{neonCyan}{RandomGateWalk}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RandomGateWalk}}\\
 \hyperlink{blk:RandomHoldVelocity}{\textcolor{neonCyan}{RandomHoldVelocity}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RandomHoldVelocity}}\\
 \hyperlink{blk:RandomPanCC}{\textcolor{neonCyan}{RandomPanCC}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RandomPanCC}}\\
+\hyperlink{blk:RandomSpace}{\textcolor{neonCyan}{RandomSpace}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RandomSpace}}\\
 \hyperlink{blk:RandomTelegraph}{\textcolor{neonCyan}{RandomTelegraph}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RandomTelegraph}}\\
 \hyperlink{blk:RandomWalk}{\textcolor{neonCyan}{RandomWalk}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RandomWalk}}\\
 \hyperlink{blk:RanduNoise}{\textcolor{neonCyan}{RanduNoise}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RanduNoise}}\\
@@ -28639,6 +29157,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:RogersRamanujan2}{\textcolor{neonCyan}{RogersRamanujan2}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RogersRamanujan2}}\\
 \hyperlink{blk:Roll}{\textcolor{neonCyan}{Roll}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Roll}}\\
 \hyperlink{blk:RollingPolygon}{\textcolor{neonCyan}{RollingPolygon}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RollingPolygon}}\\
+\hyperlink{blk:Room}{\textcolor{neonCyan}{Room}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Room}}\\
 \hyperlink{blk:RoosterCrowOsc}{\textcolor{neonCyan}{RoosterCrowOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RoosterCrowOsc}}\\
 \hyperlink{blk:RootRaisedCosineOsc}{\textcolor{neonCyan}{RootRaisedCosineOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:RootRaisedCosineOsc}}\\
 \hyperlink{blk:Rose}{\textcolor{neonCyan}{Rose}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Rose}}\\
@@ -28687,6 +29206,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:SaddleNodeFlow}{\textcolor{neonCyan}{SaddleNodeFlow}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SaddleNodeFlow}}\\
 \hyperlink{blk:SafePrimeGate}{\textcolor{neonCyan}{SafePrimeGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SafePrimeGate}}\\
 \hyperlink{blk:SagClip}{\textcolor{neonCyan}{SagClip}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SagClip}}\\
+\hyperlink{blk:Sagittarius}{\textcolor{neonCyan}{Sagittarius}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Sagittarius}}\\
 \hyperlink{blk:SaitoHysteresis}{\textcolor{neonCyan}{SaitoHysteresis}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SaitoHysteresis}}\\
 \hyperlink{blk:SakaryaOsc}{\textcolor{neonCyan}{SakaryaOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SakaryaOsc}}\\
 \hyperlink{blk:Sallen}{\textcolor{neonCyan}{Sallen}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Sallen}}\\
@@ -28702,6 +29222,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:SampleRot}{\textcolor{neonCyan}{SampleRot}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SampleRot}}\\
 \hyperlink{blk:SampleSkip}{\textcolor{neonCyan}{SampleSkip}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SampleSkip}}\\
 \hyperlink{blk:SamuelsonOsc}{\textcolor{neonCyan}{SamuelsonOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SamuelsonOsc}}\\
+\hyperlink{blk:Sanctuary}{\textcolor{neonCyan}{Sanctuary}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Sanctuary}}\\
 \hyperlink{blk:Sandpile}{\textcolor{neonCyan}{Sandpile}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Sandpile}}\\
 \hyperlink{blk:SandpileSOC}{\textcolor{neonCyan}{SandpileSOC}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SandpileSOC}}\\
 \hyperlink{blk:Sandstorm}{\textcolor{neonCyan}{Sandstorm}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Sandstorm}}\\
@@ -28748,6 +29269,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:SchumannResonanceOsc}{\textcolor{neonCyan}{SchumannResonanceOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SchumannResonanceOsc}}\\
 \hyperlink{blk:SchusterMap}{\textcolor{neonCyan}{SchusterMap}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SchusterMap}}\\
 \hyperlink{blk:Scoop}{\textcolor{neonCyan}{Scoop}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Scoop}}\\
+\hyperlink{blk:Scorpio}{\textcolor{neonCyan}{Scorpio}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Scorpio}}\\
 \hyperlink{blk:ScrapeFlutter}{\textcolor{neonCyan}{ScrapeFlutter}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ScrapeFlutter}}\\
 \hyperlink{blk:Scratch}{\textcolor{neonCyan}{Scratch}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Scratch}}\\
 \hyperlink{blk:ScreamLead}{\textcolor{neonCyan}{ScreamLead}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ScreamLead}}\\
@@ -28819,6 +29341,10 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:ShimizuMorioka}{\textcolor{neonCyan}{ShimizuMorioka}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShimizuMorioka}}\\
 \hyperlink{blk:ShimizuOsc}{\textcolor{neonCyan}{ShimizuOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShimizuOsc}}\\
 \hyperlink{blk:Shimmer}{\textcolor{neonCyan}{Shimmer}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Shimmer}}\\
+\hyperlink{blk:ShimmerBigStereo}{\textcolor{neonCyan}{ShimmerBigStereo}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShimmerBigStereo}}\\
+\hyperlink{blk:ShimmerMediumStereo}{\textcolor{neonCyan}{ShimmerMediumStereo}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShimmerMediumStereo}}\\
+\hyperlink{blk:ShimmerMono}{\textcolor{neonCyan}{ShimmerMono}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShimmerMono}}\\
+\hyperlink{blk:ShimmerSmallStereo}{\textcolor{neonCyan}{ShimmerSmallStereo}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShimmerSmallStereo}}\\
 \hyperlink{blk:ShimmerVerb}{\textcolor{neonCyan}{ShimmerVerb}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShimmerVerb}}\\
 \hyperlink{blk:ShinrikiOsc}{\textcolor{neonCyan}{ShinrikiOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShinrikiOsc}}\\
 \hyperlink{blk:ShipHornOsc}{\textcolor{neonCyan}{ShipHornOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ShipHornOsc}}\\
@@ -28863,6 +29389,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:SIR}{\textcolor{neonCyan}{SIR}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SIR}}\\
 \hyperlink{blk:Siren}{\textcolor{neonCyan}{Siren}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Siren}}\\
 \hyperlink{blk:SirenOsc}{\textcolor{neonCyan}{SirenOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SirenOsc}}\\
+\hyperlink{blk:Sirius}{\textcolor{neonCyan}{Sirius}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Sirius}}\\
 \hyperlink{blk:SIRS}{\textcolor{neonCyan}{SIRS}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SIRS}}\\
 \hyperlink{blk:SIRSpatial}{\textcolor{neonCyan}{SIRSpatial}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SIRSpatial}}\\
 \hyperlink{blk:SIS}{\textcolor{neonCyan}{SIS}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SIS}}\\
@@ -28932,7 +29459,10 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:SmoothnessVelocity}{\textcolor{neonCyan}{SmoothnessVelocity}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SmoothnessVelocity}}\\
 \hyperlink{blk:SmoothNumberGate}{\textcolor{neonCyan}{SmoothNumberGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SmoothNumberGate}}\\
 \hyperlink{blk:SmoothNumberSeq}{\textcolor{neonCyan}{SmoothNumberSeq}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SmoothNumberSeq}}\\
+\hyperlink{blk:SmoothPlate}{\textcolor{neonCyan}{SmoothPlate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SmoothPlate}}\\
 \hyperlink{blk:SmoothRandom}{\textcolor{neonCyan}{SmoothRandom}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SmoothRandom}}\\
+\hyperlink{blk:SmoothRandomSpace}{\textcolor{neonCyan}{SmoothRandomSpace}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SmoothRandomSpace}}\\
+\hyperlink{blk:SmoothRoom}{\textcolor{neonCyan}{SmoothRoom}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SmoothRoom}}\\
 \hyperlink{blk:Smoothstep}{\textcolor{neonCyan}{Smoothstep}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Smoothstep}}\\
 \hyperlink{blk:SMR}{\textcolor{neonCyan}{SMR}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SMR}}\\
 \hyperlink{blk:SN76489Osc}{\textcolor{neonCyan}{SN76489Osc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SN76489Osc}}\\
@@ -29176,6 +29706,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:SubwayOsc}{\textcolor{neonCyan}{SubwayOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SubwayOsc}}\\
 \hyperlink{blk:SuccessChimeOsc}{\textcolor{neonCyan}{SuccessChimeOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SuccessChimeOsc}}\\
 \hyperlink{blk:SujathaOsc}{\textcolor{neonCyan}{SujathaOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SujathaOsc}}\\
+\hyperlink{blk:Sulaco}{\textcolor{neonCyan}{Sulaco}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Sulaco}}\\
 \hyperlink{blk:SulPonticelloVoice}{\textcolor{neonCyan}{SulPonticelloVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:SulPonticelloVoice}}\\
 \hyperlink{blk:Sum}{\textcolor{neonCyan}{Sum}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Sum}}\\
 \hyperlink{blk:Summit}{\textcolor{neonCyan}{Summit}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Summit}}\\
@@ -29637,6 +30168,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:ViolinBowOsc}{\textcolor{neonCyan}{ViolinBowOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ViolinBowOsc}}\\
 \hyperlink{blk:ViolinVoice}{\textcolor{neonCyan}{ViolinVoice}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ViolinVoice}}\\
 \hyperlink{blk:ViolinVoiceWG}{\textcolor{neonCyan}{ViolinVoiceWG}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:ViolinVoiceWG}}\\
+\hyperlink{blk:Virgo}{\textcolor{neonCyan}{Virgo}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:Virgo}}\\
 \hyperlink{blk:VirtualBass}{\textcolor{neonCyan}{VirtualBass}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:VirtualBass}}\\
 \hyperlink{blk:VocalFilter}{\textcolor{neonCyan}{VocalFilter}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:VocalFilter}}\\
 \hyperlink{blk:VocalFoldChaos}{\textcolor{neonCyan}{VocalFoldChaos}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:VocalFoldChaos}}\\
