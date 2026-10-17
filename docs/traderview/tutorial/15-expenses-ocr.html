@@ -61,7 +61,7 @@
       </div>
 
       <h2 class="tutorial-title"><span class="step-hash">15.</span>Expenses + receipt OCR — Schedule C without a SaaS</h2>
-      <p class="tutorial-subtitle">Statement parsers for Amazon / BoA / Chase / Apple Card, on-device receipt OCR via Apple Vision (macOS) or Tesseract (fallback), 20-bucket Schedule-C taxonomy, merchant canonicalization with learned mappings, duplicate detection, full-text search. $0 / receipt, no LLMs, no paid APIs.</p>
+      <p class="tutorial-subtitle">Statement parsers for Amazon / BoA / Chase / Apple Card, on-device receipt OCR (Apple Vision on macOS, Tesseract, PaddleOCR), 20-bucket Schedule-C taxonomy, merchant canonicalization with learned mappings, duplicate detection, full-text search. $0 / receipt, no LLMs, no paid APIs.</p>
 
       <section class="tutorial-section">
         <h2>Why this is in a trading app</h2>
@@ -89,11 +89,13 @@
           <li><strong>Date</strong> — parsed flexibly (handles US / EU / ISO).</li>
           <li><strong>Itemized lines</strong> — for receipts that include them.</li>
         </ul>
-        <p>Two backends:</p>
+        <p>Backends (every available one runs and the results are fused per field):</p>
         <ul>
           <li><strong>Apple Vision (macOS only)</strong> — wraps <code>VNRecognizeTextRequest</code> via a Swift bridge. Fast, accurate on printed receipts, free.</li>
-          <li><strong>Tesseract (fallback)</strong> — used on Linux / Windows and on macOS if Vision isn't available. Slower, less accurate on thermal-printed receipts, free.</li>
+          <li><strong>Tesseract</strong> — psm 4 and psm 6 passes on Linux / Windows and on macOS. Slower, less accurate on thermal-printed receipts, free.</li>
+          <li><strong>PaddleOCR</strong> — pure-Rust ONNX (<code>pure-onnx-ocr</code>) DBNet + SVTR with orientation classifiers; compiled in by default, active once the model files are in <code>$APP_DATA_DIR/traderview/models/paddleocr/</code>.</li>
         </ul>
+        <p>PDF receipts with a text layer skip OCR and are read directly via <code>lopdf</code>; image-only PDFs need to be re-uploaded as an image.</p>
         <p>The OCR pass is async (Tokio task per receipt); the upload returns immediately and the parsed fields populate when ready. Re-OCR is a button per row — useful when you tweak the OCR config or rotate the source image.</p>
       </section>
 
