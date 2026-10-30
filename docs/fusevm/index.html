@@ -658,7 +658,7 @@ b.emit(Op::AwkSubstr(<span class="var">3</span>), <span class="var">1</span>);  
         <table class="arch-table">
           <tr><th>Tier</th><th>Trigger</th><th>Coverage</th><th>Speculation</th></tr>
           <tr><td><code>Linear</code></td><td>first call</td><td>Straight-line expression chunks; returns <code>Value</code> (int or float)</td><td>None — IR matches bytecode exactly</td></tr>
-          <tr><td><code>Block</code></td><td>≥ 1 invocation (default)</td><td>Whole-chunk CFG (loops, branches, fused backedges)</td><td>None — slot ops assume i64</td></tr>
+          <tr><td><code>Block</code></td><td>≥ 1 invocation (default)</td><td>Whole-chunk CFG (loops, branches, fused backedges, kept-value jumps, <code>LogAnd</code>/<code>LogOr</code>, globals)</td><td>Entry check, no deopt: every slot and every referenced global must be a native <code>Int</code>/<code>Float</code>, else the interpreter runs the chunk</td></tr>
           <tr><td><code>Tracing</code></td><td>≥ 50 backedges through any loop header</td><td>Hot path through anything; recorded loop body compiled with type-specialized IR</td><td>Slot-type entry guard + per-branch <code>brif</code> guards; deopts to interpreter on guard miss</td></tr>
         </table>
 
@@ -827,6 +827,17 @@ std::fs::write(<span class="string">"traces.json"</span>, serde_json::to_vec(&am
         intra-chunk <code>Op::Call</code>/<code>Op::Return</code>, whose target is only known at run time —
         without the native code ever reading the <code>VM</code> struct layout. The interpreter dispatch loop
         is gone; the <em>work</em> each op does is unchanged.</p>
+
+        <p style="font-size: 13px; color: var(--text-dim); line-height: 1.7;">
+        <strong>Large chunks.</strong> Cranelift's register allocator is superlinear in function size, so a
+        threaded chunk longer than <code>THREADED_SEGMENT_OPS</code> is split. Nothing lives in SSA values
+        across ops (the operand stack, frames and slots are in the <code>VM</code>; only the next ip passes
+        between op blocks), so every op boundary is a safe split point. Each fixed-size ip range becomes a local
+        segment function that returns any ip it does not own; the exported driver routes it to the owning
+        segment, so the <code>exec_op</code> sequence, and therefore behaviour, is unchanged. Segments compile
+        on one worker per core, each with its own Cranelift <code>Context</code>, and are defined into the
+        module in index order, so the object bytes do not depend on the thread count. Smaller chunks and the
+        register-native lowering keep one function.</p>
 
         <h3 style="color: var(--accent); font-family: 'Orbitron', sans-serif; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1.5rem;">Native op specialization</h3>
         <p style="font-size: 14px; line-height: 1.8; color: var(--text);">
