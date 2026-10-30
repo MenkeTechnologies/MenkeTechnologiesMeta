@@ -168,10 +168,13 @@ factory params), authored as data in
 [`libs/zpwr-clip-engine/webui/devices/devices.js`](libs/zpwr-clip-engine/webui/devices/devices.js):
 the roster covers devices across the DAW's **three track types**:
 
-- **Instruments** (MIDI-in / stereo-out) — mono-block synth voices whose source
-  block is pitched by the note: Mallet (Modal), Wind (Blown), Strings (Bowed),
-  Vocal (FOF), Pluck (Low-Pass Gate), Pulsar, Terrain, Scanned, and a two-block
-  source→filter voice. The user opens the device and edits its DSP blocks.
+- **Instruments** (MIDI-in / stereo-out) — mono-block synth voices. A pitched
+  source block reads the played note: Mallet (Modal), Wind (Blown), Strings (Bowed),
+  Vocal (FOF), Pluck (Low-Pass Gate), Pulsar, Terrain, Scanned, Analog, Drift,
+  Operator, Electric, Meld, Wavetable, and a two-block source→filter voice. A drum
+  voice fires on each note-on instead: Drum Sampler (plays a loaded sample slot)
+  and the DS drum synths (Kick, Snare, Clap, HH, Tom, Cymbal, FM, Clang). The
+  user opens the device and edits its DSP blocks.
 - **Audio FX** (per-track stereo graph) — EQ Eight, Compressor, Reverb, Delay/Echo,
   Auto Filter (Filter swept by an LFO), Saturator, Chorus, Phaser, Redux, Gate,
   Limiter, Vocoder…
@@ -306,6 +309,7 @@ It carries these pieces:
 | Arrangement audio clips | `include/zpc/AudioClip.h`, `include/zpc/ClipAudio.h`, `app/src/PluginEditor.cpp` | One `AudioClipPlayer` for the arrangement: samples decode by path on a worker pool (`clipAudioLoadPath`, first existing candidate wins), Ableton-warped clips render once per tempo (`clipAudioRender` — pitch-preserving WSOLA per warp segment, Re-Pitch as a resample, transpose on top), and every voice carries its track so `processBlock` renders it into that track's signal ahead of its graph, devices and fader. Transport start and loop wraps enter audio already under way part-way through. |
 | Track routing | `app/src/PluginProcessor.cpp` (`setRouting`), `libs/zpwr-clip-engine/webui/clip/clip-seq.js` (`routingSpec`) | Groups, return tracks and the master are ordinary tracks that sum their inputs: each track's post-fader output goes to its group, else the master track when the project has one, else the main out; sends feed other tracks pre- (after the devices) or post-fader. Tracks render sources-first (topological order; a link that would close a cycle is dropped), and a bus stays audible under solo. A track's graph reads its signal (instrument voice + clips + bus input) as `Src_In` when the patch uses it, so built-in effects process the track. |
 | Mixer meters | `libs/zpwr-patch-core/include/zpc/MixerMeters.h` | Post-fader peak per track, master peak and momentary loudness (BS.1770 K-weighting, ~400 ms), read by the MIXER tab (`getMixerMeters`) and the `mixer.meters` bus verb. |
+| Freeze / Bounce to Audio | `app/src/TrackBounce.h`, `libs/zpwr-clip-engine/webui/grid/ableton-bounce.js`, `libs/zpwr-clip-engine/webui/clip/clip-seq.js` (`bounceTrack`) | The track menu's **Bounce to new track**, **Freeze**, **Unfreeze** and **Flatten**. The page plays the track's arranged region (plus one bar of tail) while the host records that track after its devices and before its fader, sends and pan into a 32-bit float WAV (`dawBounceStart` / `dawBounceStop`, over `zpc::WavRecorder`). The WAV comes back as an unwarped audio part on a new audio track below the source, so it saves and reloads like an imported Live clip. Freeze also silences the source track (its `frozen` field names the audio track); Unfreeze deletes the audio track, Flatten deletes the source. The capture runs in real time, because the page's clock plays the notes, and is armed in the same turn that starts playback, so it begins within one audio block of the region's first step. `TrackBounceTest` decodes the WAV and checks it holds exactly the armed track. |
 | Out-of-process plugin scan | `libs/zpwr-patch-core/include/zpc/PluginScanWorker.h`, `app/src/PluginScannerMain.cpp` | The startup plugin scan probes each VST3 in the `ZpwrPluginScanner` worker shipped in every bundle's `Contents/MacOS`; a plugin that crashes it or hangs past 60 s is blacklisted while the DAW keeps running. Audio Units are listed from the component registry without being opened. `ZpwrPluginScanner --probe VST3 <file>` diagnoses one plugin. |
 | C ABI (FFI) | `include/zpc/capi/clip_engine.h`, `src/capi/clip_engine.cpp` | `extern "C"` surface over `ClipEngine` so Rust hosts drive the same engine the JUCE plugins drive. |
 | Rust bindings | `bindings/rust/` | `zpwr-clip-engine-sys` (raw decls, compiles the C ABI via `cc`) + `zpwr-clip-engine` (safe wrapper). |
