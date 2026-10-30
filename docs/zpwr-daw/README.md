@@ -301,7 +301,12 @@ It carries these pieces:
 | Native-fn coverage gate | `test/webeditor-native-fn-coverage.test.js` | `zpc::WebEditor` registers 155 native functions and never removes one (a registered name is an ABI an out-of-tree host may depend on), so a name nobody calls is indistinguishable from a wiring bug. This test parses the `pfx("name")` registrations out of `WebEditor.h`, parses the frontend bundle list out of `app/CMakeLists.txt`, and asserts every registered name is either called by a bundled file or carries a self-naming `no frontend caller (<name>):` note within 30 lines of its own registration. 9 names are on the explained list — see the table in `libs/zpwr-patch-core/README.md` for each one's reason and consumer. Reachability is decided by the quoted-string-literal test ``/['"`][A-Za-z0-9_]*name['"`]/``, because a caller writes the name verbatim or composes it onto the graph's `uiPrefix` (`"trkgetPatch"`); the looser "is it mentioned" test reports eight, hiding `morphSet` behind an unrelated JS local of the same name in `index.html`. |
 | Pure C++ engine | `include/zpc/ClipEngine.h` | JUCE-free pattern model + swung step clock + event queue. Timing/length semantics ported verbatim from the clip.js fallback sequencer. `ClipEvent::Logic` (additive over `NoteOn`/`NoteOff`) schedules verified logic clips via `setLogicClips` on the same timebase. |
 | MIDI File export | `include/zpc/MidiFile.h`, `libs/zpwr-clip-engine/webui/grid/export/midi.js` | Renders a pattern to a Type-0 Standard MIDI File — import the sequencer into any compatible DAW (Ableton, FL, Logic, Reaper). Byte-identical C++ and JS exporters. |
-| Ableton `.als` import | `libs/zpwr-clip-engine/webui/grid/als-import.js` | Reads an Ableton Live Set (gzip XML) into a project — tracks, clips, MIDI notes, tempo, time signature, arrangement placement, locators, audio-clip paths. Float-time notes (fractional grid-step + exact beat length). Dependency-free XML parser; verified across Live 8.2.1 → Live 12.2. |
+| Ableton `.als` import | `libs/zpwr-clip-engine/webui/grid/als-import.js` | Reads an Ableton Live Set (gzip XML) into a project — tracks, returns and master with native routing (groups, pre/post sends), faders, MIDI clips with loops unrolled, audio clips that play (samples resolved beside the set, warps rendered at the set tempo, loops, transpose, gain, fades), tempo and meter changes, the Session view, locators. Float-time notes (fractional grid-step + exact beat length). Dependency-free XML parser; element paths checked against Live 10.0, 11.0 and 12.0 sets. |
+| Session clip launcher (per-track) | `libs/zpwr-clip-engine/webui/grid/ableton-launcher.js` | Live-style per-track clip slots as a pure state machine: each track plays one clip and launches it independently of the scene, on a global or per-clip launch quantization (None, bars, note values, triplets). Trigger / Gate / Toggle / Repeat launch modes, per-clip Legato, track stop buttons, scene launch that respects removed slot stop buttons, and Follow Actions A/B (chance weights, linked or unlinked follow time, multiplier, groups split by empty slots, jump). `advance(state, grid, beat, rng)` returns exact-beat start/stop events with the clip play offset; randomness is an injected rng. Not yet driving the Session view tick in `clip-seq.js`, which still launches whole scenes. |
+| Arrangement audio clips | `include/zpc/AudioClip.h`, `include/zpc/ClipAudio.h`, `app/src/PluginEditor.cpp` | One `AudioClipPlayer` for the arrangement: samples decode by path on a worker pool (`clipAudioLoadPath`, first existing candidate wins), Ableton-warped clips render once per tempo (`clipAudioRender` — pitch-preserving WSOLA per warp segment, Re-Pitch as a resample, transpose on top), and every voice carries its track so `processBlock` renders it into that track's signal ahead of its graph, devices and fader. Transport start and loop wraps enter audio already under way part-way through. |
+| Track routing | `app/src/PluginProcessor.cpp` (`setRouting`), `libs/zpwr-clip-engine/webui/clip/clip-seq.js` (`routingSpec`) | Groups, return tracks and the master are ordinary tracks that sum their inputs: each track's post-fader output goes to its group, else the master track when the project has one, else the main out; sends feed other tracks pre- (after the devices) or post-fader. Tracks render sources-first (topological order; a link that would close a cycle is dropped), and a bus stays audible under solo. A track's graph reads its signal (instrument voice + clips + bus input) as `Src_In` when the patch uses it, so built-in effects process the track. |
+| Mixer meters | `libs/zpwr-patch-core/include/zpc/MixerMeters.h` | Post-fader peak per track, master peak and momentary loudness (BS.1770 K-weighting, ~400 ms), read by the MIXER tab (`getMixerMeters`) and the `mixer.meters` bus verb. |
+| Out-of-process plugin scan | `libs/zpwr-patch-core/include/zpc/PluginScanWorker.h`, `app/src/PluginScannerMain.cpp` | The startup plugin scan probes each VST3 in the `ZpwrPluginScanner` worker shipped in every bundle's `Contents/MacOS`; a plugin that crashes it or hangs past 60 s is blacklisted while the DAW keeps running. Audio Units are listed from the component registry without being opened. `ZpwrPluginScanner --probe VST3 <file>` diagnoses one plugin. |
 | C ABI (FFI) | `include/zpc/capi/clip_engine.h`, `src/capi/clip_engine.cpp` | `extern "C"` surface over `ClipEngine` so Rust hosts drive the same engine the JUCE plugins drive. |
 | Rust bindings | `bindings/rust/` | `zpwr-clip-engine-sys` (raw decls, compiles the C ABI via `cc`) + `zpwr-clip-engine` (safe wrapper). |
 | Note-stream module pack | `include/zpc/midi/`, `src/midi/` | Chord / Arp / Scale / Euclidean / Game-of-Life / Brian-Brain / Langton + the chord & scale engines, all as `ModuleInfoT<NoteStream>` modules. The MIDI counterpart to the header-only audio pack. |
@@ -318,7 +323,9 @@ the rest of the suite exposes, so one script drives the DAW and the other apps t
 use App
 val $daw = App::open("zpwr-daw")           # dials $TMPDIR/zgui/zpwr-daw.sock
 
-$daw->call("project.import", %{ text => $als })     # an Ableton Live Set, straight in
+val %report = %{ $daw->call("project.import", %{ text => $als, path => $file }) }   # an Ableton Live Set: samples resolve beside $file
+$daw->call("transport.play", %{ bar => 64 })      # play from bar 64
+val %levels = %{ $daw->call("mixer.meters") }      # dB per track, master peak + LUFS
 $daw->call("track.add", %{ type => "audio" })
 $daw->call("clip.video.gaussblur")                  # any clip-editor command, by id
 val %verdict = %{ $daw->call("session.proof") }     # the whole-session verification gate
@@ -675,10 +682,20 @@ loads.
 **Importing an Ableton Live Set (`.als`).** The project loader also accepts
 `.als` — `.als` is gzip XML, so the same reader decompresses it, sees the
 `<Ableton>` root, and routes it through `libs/zpwr-clip-engine/webui/grid/als-import.js`
-(`alsToProject`) instead of the JSON path. It brings in tracks, clips, MIDI
-notes, tempo, time signature, arrangement placement, locators, and audio-clip
-sample paths — the cross-DAW interop Bitwig ships. Devices/plugins, automation
-envelopes and audio warping have no target in the clip model and are dropped.
+(`alsToProject`) instead of the JSON path. It brings in tracks, return tracks and
+the master (as tracks, routed natively: groups, sends pre/post, master bus), each
+strip's fader, device chains (VST3 / AU plugins with their Live settings, racks,
+Simpler / Sampler / Drum Rack pads as native sampler zones, the built-in effects
+that have a converter), MIDI clips with loops unrolled (each
+track's notes reach only that track's instruments), audio clips that play (samples
+found beside the set, warped clips rendered at the set's tempo, loops, transpose,
+gain, fades), tempo and meter changes, the Session view and locators. Clips that
+share a bar on one track merge into one clip on that track (MIDI notes, or audio
+parts each with its own sample), because the arranger places one clip per
+whole-bar cell. Automation envelopes, clip envelopes and grooves are not converted
+yet; the `importReport` bus state lists every device that was not. Open it with the CLIP toolbar's **⤒ OPEN** button (a native
+chooser, so the set's samples resolve relative to it); the import report lists
+any sample that was not found. Full rules: `libs/zpwr-clip-engine/README.md`.
 Notes keep their exact time: a fractional start is encoded in the grid-step key
 and the exact length in a `bl` (beats) field, so an imported groove is not
 quantized to the 16th grid.
