@@ -173,8 +173,10 @@ the roster covers devices across the DAW's **three track types**:
   Vocal (FOF), Pluck (Low-Pass Gate), Pulsar, Terrain, Scanned, Analog, Drift,
   Operator, Electric, Meld, Wavetable, and a two-block source→filter voice. A drum
   voice fires on each note-on instead: Drum Sampler (plays a loaded sample slot)
-  and the DS drum synths (Kick, Snare, Clap, HH, Tom, Cymbal, FM, Clang). The
-  user opens the device and edits its DSP blocks.
+  and the DS drum synths (Kick, Snare, Clap, HH, Tom, Cymbal, FM, Clang). Impulse
+  layers eight one-shot sample slots in parallel, each behind a `KeyGate` so it
+  sounds only on its key (the white keys C3 to C4). The user opens the device and
+  edits its DSP blocks.
 - **Audio FX** (per-track stereo graph) — EQ Eight, Compressor, Reverb, Delay/Echo,
   Auto Filter (Filter swept by an LFO), Saturator, Chorus, Phaser, Redux, Gate,
   Limiter, Vocoder…

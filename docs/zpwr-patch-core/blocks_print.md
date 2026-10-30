@@ -2,12 +2,12 @@
 
 # Catalog at a glance
 
-\textbf{4314 blocks} across \textbf{25 categories} and the consuming plugins, including 194 component-level analog-circuit models and 441 control / modulation (CV-badge) sources.
+\textbf{4315 blocks} across \textbf{25 categories} and the consuming plugins, including 194 component-level analog-circuit models and 441 control / modulation (CV-badge) sources.
 
 \medskip\noindent\begin{tabular}{@{}ll@{}}
-\textcolor{accentPink}{\textbf{In plugin}} & \textcolor{neonCyan}{zpwr-fx 3442}\quad\textcolor{neonMagenta}{zpwr-synth 3751}\quad\textcolor{neonYellow}{zpwr-midi-fx 563} \\[3pt]
-\textcolor{accentPink}{\textbf{Registry}} & Audio 3442\quad Synth 309\quad MIDI 563 \\[3pt]
-\textcolor{accentPink}{\textbf{Output jack}} & \textcolor{neonCyan}{Audio 3558}\quad\textcolor{neonYellow}{MIDI 563}\quad\textcolor{neonGreen}{CV 193} \\
+\textcolor{accentPink}{\textbf{In plugin}} & \textcolor{neonCyan}{zpwr-fx 3443}\quad\textcolor{neonMagenta}{zpwr-synth 3752}\quad\textcolor{neonYellow}{zpwr-midi-fx 563} \\[3pt]
+\textcolor{accentPink}{\textbf{Registry}} & Audio 3443\quad Synth 309\quad MIDI 563 \\[3pt]
+\textcolor{accentPink}{\textbf{Output jack}} & \textcolor{neonCyan}{Audio 3559}\quad\textcolor{neonYellow}{MIDI 563}\quad\textcolor{neonGreen}{CV 193} \\
 \end{tabular}
 
 \medskip\noindent\textbf{By category} (block count, largest first):
@@ -21,7 +21,7 @@
 \textcolor{bodyText}{Distortion}\dotfill\textcolor{neonCyan}{174}\\
 \textcolor{bodyText}{Filter}\dotfill\textcolor{neonCyan}{168}\\
 \textcolor{bodyText}{Analog}\dotfill\textcolor{neonCyan}{155}\\
-\textcolor{bodyText}{Utility}\dotfill\textcolor{neonCyan}{151}\\
+\textcolor{bodyText}{Utility}\dotfill\textcolor{neonCyan}{152}\\
 \textcolor{bodyText}{Reverb}\dotfill\textcolor{neonCyan}{119}\\
 \textcolor{bodyText}{Effect}\dotfill\textcolor{neonCyan}{57}\\
 \textcolor{bodyText}{Delay}\dotfill\textcolor{neonCyan}{53}\\
@@ -110,7 +110,7 @@ An icon glyph precedes each block name; then its badges, then `in:` its input ja
 \legicon{cabinet} & \textcolor{bodyText}{Speaker cabinet} & \legicon{circuit} & \textcolor{bodyText}{Analog circuit} & \legicon{block} & \textcolor{bodyText}{Other} \\[5pt]
 \end{tabular}
 
-# Audio (zpwr-fx / shared pack) (3442 blocks)
+# Audio (zpwr-fx / shared pack) (3443 blocks)
 
 ## Amp (24)
 
@@ -14634,9 +14634,9 @@ Sambas flow: a Sambas-type three-dimensional system engineered with no equilibri
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
-\phantomsection\label{blk:Sampler}\blockicon{wave}\textcolor{neonCyan}{\textbf{Sampler}}\thinspace\textcolor{accentLight}{\footnotesize[OSC]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: —}\quad\textcolor{neonCyan}{out: Audio}
+\phantomsection\label{blk:Sampler}\blockicon{wave}\textcolor{neonCyan}{\textbf{Sampler}}\thinspace\textcolor{accentLight}{\footnotesize[OSC]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Trigger, Pitch (CV)}\quad\textcolor{neonCyan}{out: Audio}
 
-Reads one of the 8 shared SampleStore slots with linear interpolation, advancing a playback position scaled by pitch and the slot/host sample-rate ratio, then scaled by Level. Slot picks the source, Pitch transposes -24 to +24 semitones, Start sets the entry point (0 to 0.99 of the buffer), and Loop chooses whether playback wraps back to Start or stops at the end. Useful for looped wavetable-style sources or one-shot sample playback depending on Loop.
+Reads one of the 8 shared SampleStore slots with linear interpolation, advancing a playback position scaled by pitch and the slot/host sample-rate ratio, then scaled by Level. Slot picks the source, Pitch transposes -24 to +24 semitones, Start sets the entry point (0 to 0.99 of the buffer), and Loop chooses whether playback wraps back to Start or stops at the end. A rising edge on in0 (Trigger) restarts playback from Start, and a note-number Pitch CV on in1 transposes by its distance from C3 (MIDI 60); unpatched, it plays free-running at Pitch. Useful for looped wavetable-style sources or one-shot sample playback depending on Loop.
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -17076,9 +17076,9 @@ Octave saw stack: sums sawtooths at successive octaves above the fundamental wit
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
-\phantomsection\label{blk:Wavetable}\blockicon{wave}\textcolor{neonCyan}{\textbf{Wavetable}}\thinspace\textcolor{accentLight}{\footnotesize[OSC]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: —}\quad\textcolor{neonCyan}{out: Audio}
+\phantomsection\label{blk:Wavetable}\blockicon{wave}\textcolor{neonCyan}{\textbf{Wavetable}}\thinspace\textcolor{accentLight}{\footnotesize[OSC]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Pitch (CV)}\quad\textcolor{neonCyan}{out: Audio}
 
-Wavetable oscillator: it advances a phase at Freq and reads single-cycle frames loaded from the node config, interpolating both within and between frames. Position (0 to 1) morphs across the frame stack, Warp (-1 to +1) phase-distorts the read pointer for timbral bending, Freq sets pitch (20 to 8000 Hz), and Level scales output. A pure generator (no inputs) that sweeps from one waveform to another as Position moves.
+Wavetable oscillator: it advances a phase at Freq and reads single-cycle frames loaded from the node config, interpolating both within and between frames. Position (0 to 1) morphs across the frame stack, Warp (-1 to +1) phase-distorts the read pointer for timbral bending, Freq sets pitch (20 to 8000 Hz) unless a note-number Pitch CV is patched into in0, and Level scales output. A generator that sweeps from one waveform to another as Position moves.
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -19916,7 +19916,7 @@ Mid/side stereo widener: decomposes the L/R pair into mid (sum) and side (differ
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
-## Utility (147)
+## Utility (148)
 
 \phantomsection\label{blk:Abs}\blockicon{utility}\textcolor{neonCyan}{\textbf{Abs}}\thinspace\textcolor{textDim}{\footnotesize[UTL]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Audio}\quad\textcolor{neonCyan}{out: Audio}
 
@@ -20323,6 +20323,12 @@ Schmitt trigger with memory: the output latches High once in0 rises above the up
 \phantomsection\label{blk:Integrator}\blockicon{utility}\textcolor{neonCyan}{\textbf{Integrator}}\thinspace\textcolor{textDim}{\footnotesize[UTL]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Signal, Reset}\quad\textcolor{neonCyan}{out: Audio}
 
 Leaky integrator / accumulator (CV): sums in0 over time so a constant input ramps and a periodic input is smoothed and phase-shifted a quarter cycle. Rate scales the input before accumulation, Leak bleeds the accumulator toward zero (0 = a near-perfect integrator that holds, higher = a shorter-memory smoother), and a rising edge on in1 resets the sum to zero. The running output is safety-limited. Distinct from Slew (which rate-limits a signal) and Counter (which counts edges).
+
+\smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
+
+\phantomsection\label{blk:KeyGate}\blockicon{utility}\textcolor{neonCyan}{\textbf{KeyGate}}\thinspace\textcolor{textDim}{\footnotesize[UTL]}\thinspace\textcolor{neonCyan}{\footnotesize[FX]}\thinspace\textcolor{neonMagenta}{\footnotesize[SYNTH]}\quad\textcolor{textDim}{in: Signal, Note}\quad\textcolor{neonCyan}{out: Audio}
+
+Key gate: passes in0 only while the note number on in1 rounds to Key, and outputs silence for every other key - splits one voice graph into per-key branches, the way Impulse plays its eight sample slots on the keys C3 to C4. Patch the voice Note into in1 and a sound source into in0.
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
@@ -26072,7 +26078,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 
 \smallskip\noindent\textcolor{neonCyan}{\rule{0.32\linewidth}{0.6pt}}
 
-# Index (4314 blocks, alphabetical)
+# Index (4315 blocks, alphabetical)
 
 \begin{multicols}{3}
 \small\raggedright\setlength{\parindent}{0pt}\setlength{\parskip}{1pt}
@@ -27987,6 +27993,7 @@ Sustain-pedal simulation: while Hold is engaged, note-offs are captured so the n
 \hyperlink{blk:KeyboardSplit3}{\textcolor{neonCyan}{KeyboardSplit3}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:KeyboardSplit3}}\\
 \hyperlink{blk:KeyboardTypeOsc}{\textcolor{neonCyan}{KeyboardTypeOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:KeyboardTypeOsc}}\\
 \hyperlink{blk:KeyClickOsc}{\textcolor{neonCyan}{KeyClickOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:KeyClickOsc}}\\
+\hyperlink{blk:KeyGate}{\textcolor{neonCyan}{KeyGate}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:KeyGate}}\\
 \hyperlink{blk:KeyJingleOsc}{\textcolor{neonCyan}{KeyJingleOsc}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:KeyJingleOsc}}\\
 \hyperlink{blk:KeySwitch}{\textcolor{neonCyan}{KeySwitch}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:KeySwitch}}\\
 \hyperlink{blk:KeyTrack}{\textcolor{neonCyan}{KeyTrack}}\,\dotfill\,\textcolor{textDim}{\pageref{blk:KeyTrack}}\\
