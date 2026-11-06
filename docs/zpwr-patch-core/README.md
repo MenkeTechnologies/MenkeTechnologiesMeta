@@ -172,7 +172,7 @@ plugin scan and the node's `PluginNodeState` — so the block card renders a **�
 where the host wired `EditorConfig::loadPluginIntoNode`, and the button calls that native function
 with the block index. The guard is per-graph (the native fn is registered under the graph's
 `uiPrefix`), so a host that wires the picker on one graph and not another gets the button on exactly
-the one that can serve it. The host's `PluginHost::startScan()` runs the sweep on a background thread (the cached list keeps serving `listJson()` / `create()` until the new one is installed) and `scanStatusJson()` reports per-format progress and the plugin being probed for the UI to poll; `scan()` remains the blocking variant.
+the one that can serve it. The host's `PluginHost::startScan()` runs the sweep on a background thread with a dead-man's-pedal file (`plugin-scan.pedal` beside the list cache) so a plugin that crashes the host mid-probe is blacklisted on the next scan. When the host ships the `ZpwrPluginScanner` worker beside its binary (`zpc/PluginScanWorker.h`, the out-of-process scanner ported from JUCE's AudioPluginHost), each plugin is probed in that worker instead: a plugin that crashes it, or gives no answer within 60 s, is blacklisted while the host keeps running. Audio Units are listed from the system component registry without being opened (`describeAudioUnits`), so an AU whose open never returns cannot freeze the message thread (the cached list keeps serving `listJson()` / `create()` until the new one is installed) and `scanStatusJson()` reports per-format progress and the plugin being probed for the UI to poll; `scan()` remains the blocking variant.
 
 **EZ mode** (for beginners): set `EditorConfig::autoWire` to a function that returns the current patch with the standard signal path connected, and the UI shows an **⚡ EZ WIRE** button. `zpc::autoWireChain(patch, inputSource, takesAudio)` is the ready-made chain (input → blocks in order → outputs) for linear hosts; the optional `takesAudio` predicate skips blocks that do not belong in the signal path, and `zpc::audioChainFilter(registry)` builds one that admits a block only when its first input carries audio (an input labelled Trig / Gate / Clock / Sync / Reset / Strike / CV / Pitch, or no input at all, marks a modulator or source). Unset, every non-None block is chained, which note-stream hosts rely on (there a Gate input is the note path); a synth supplies its own voice-topology wiring. Param enum labels: a `ParamSpec` with non-empty `names` renders as a labelled dropdown instead of a knob.
 
@@ -322,7 +322,10 @@ The Euclidean rhythm the engine plays is locked to the one the editor draws thro
 `tests/euclid_golden.txt`: the C++ side replays it through the shipping `euclidean()` and
 the JS port replays the same file, so either side drifting fails. `zpc/midi/Euclidean.h` is
 JUCE-free, so that executable is a plain `add_executable` that needs no JUCE checkout and
-is registered with `ctest`.
+is registered with `ctest`. The `zpc/dsp/` synthesis primitives (state-variable filter,
+supersaw oscillator, wavetable bank + oscillator) are JUCE-free too and get the same treatment:
+a plain `ctest` executable that compiles `src/dsp/WavetableBank.cpp` directly. Plain
+executables land in `build/` itself, not under `_artefacts/`.
 
 The webui analyzers are plain ESM with their own node tests (no bundler, no package.json):
 
@@ -388,7 +391,7 @@ python3 scripts/lint_ascii_strings.py # or run it directly over the source tree
 | `include/zpc/StereoGraph.h` | Stereo patch graph: one cable carries L/R (`StereoPluginBlock.h` is its plugin host block) |
 | `include/zpc/PluginBlock.h`, `PluginHost.h` | VST3/AU hosting as a graph block and as a master-bus insert |
 | `include/zpc/Recorder.h`    | Real-time-safe output recorder (lock-free ring to a float WAV writer) |
-| `include/zpc/midi/`         | Note-stream pack: `MidiModules.h`, `NoteGraphHost.h`, arpeggiator, chord/scale engines, Euclidean, cellular-automaton generators (`src/midi/`) |
+| `include/zpc/midi/`         | Note-stream pack: `MidiModules.h`, `NoteGraphHost.h` (the layered note-graph driver; its gated form lets only some layers hear MIDI In, for per-track input monitoring), arpeggiator, chord/scale engines, Euclidean, cellular-automaton generators (`src/midi/`) |
 | `include/zpc/dsp/`          | JUCE-free synthesis primitives: `Filter.h`, `VirtualAnalogOscillator.h`, `WavetableBank.h` (`src/dsp/WavetableBank.cpp`), `WavetableOscillator.h`, and `SpectralBake.h` (freeze a live signal into one band-limited single-cycle wavetable frame) |
 | `webui/`                    | Shared web editor assets and client-side analyzers: `zpc-patch-audit.js`, `zpc-mod-reach.js`, `zpc-sum-map.js`, `zpc-junction-meter.js`, `zpc-note-safety.js` (static hung-note + polyphony-budget prover), `zpc-euclid-mirror.js`, `zpc-command-palette.js` |
 | `src/PatchCore.cpp`         | Routing/topo/mod-matrix/eval + core modules + serialization/migration |
