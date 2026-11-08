@@ -724,7 +724,8 @@ loads.
 (`alsToProject`) instead of the JSON path. It brings in tracks, return tracks and
 the master (as tracks, routed natively: groups, sends pre/post, master bus), each
 strip's fader, device chains (VST3 / AU plugins with their Live settings, racks,
-Simpler / Sampler / Drum Rack pads as native sampler zones, the built-in effects
+Simpler / Sampler / Impulse / Drum Rack pads as native sampler zones (Impulse's linked slots 7 and 8
+choking each other), the built-in effects
 that have a converter), MIDI clips with loops unrolled (each
 track's notes reach only that track's instruments), audio clips that play (samples
 found beside the set, warped clips rendered at the set's tempo, loops, transpose,
